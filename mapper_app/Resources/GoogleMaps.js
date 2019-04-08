@@ -216,15 +216,15 @@ function setUserMap(map, title)
  return null;
 }
 
-User_MapType = new google.maps.ImageMapType(
-{
- getTileUrl: Get_User_MapType ,
- tileSize: new google.maps.Size(256, 256),
- isPng: true,
- alt: userMap,
- name: userMapTitle,
- maxZoom: 19
-});
+//User_MapType = new google.maps.ImageMapType(
+//{
+// getTileUrl: Get_User_MapType ,
+// tileSize: new google.maps.Size(256, 256),
+// isPng: true,
+// alt: userMap,
+// name: userMapTitle,
+// maxZoom: 19
+//});
 
 // Class to calculate distance and bearing
 function bearing(startLat, startLon, endLat, endLon)
