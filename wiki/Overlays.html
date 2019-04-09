@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Overlays</title></head><body>
+<h1>Overlays</h1>
+When locating the route of a long-gone streetcar line, often the route
+travels on private right of way which since has been obscured by
+subsequent construction. Also, street alignments may have been changed
+or eliminated due to highway construction, urban renewal or other
+activities. In such cases, having access to historical maps will allow
+you to locate where a route ran. <br>
+<br>
+One source of historical maps, in the US is the USGS. They have made
+many historical topographic maps available on-line, free of charge,
+at&nbsp;&nbsp;&nbsp; <a href="http://ngmdb.usgs.gov/maps/TopoView/">USGS Map Store</a>.
+While historical topgraphic maps may be very useful in locating
+abandoned private right of way, these maps rarely identify city streets
+(except for main thoroughfares). However, most cities over the years
+have had numerous maps published showing far more detail than is
+available on USGS topographic maps. One source of such maps is the <a href="http://www.davidrumsey.com/view/georeferenced-maps">David Rumsey Map Collection</a>.
+This collection has thouands of maps. More importantly, they are
+georeferenced which means that any point on the map can be specified as
+a latitude and longitude coordinate. This in turn allows them to be
+displayed over Mapper's Google Maps or Open Street Map display. <br>
+<br>
+Since these maps are available on line, it is possible to display them
+as an overlay in Mapper. In order to do this, you must gather some
+information and setup the map as an overlay in Mapper. <br>
+<br>
+The first thing to do is to find a suitable map. The David Rumsey Map
+Collection link has a Map Finder. The Map finder displays a red dot for
+every georeferenced map in the collection. So, zoom in and click on a
+dot. The details of the map will be displayed: <img style="width: 800px; height: 450px;" alt="" src="file:///home/allen/Projects/mapper_QT/mapper/wiki/images/CincinnatiMap.png"><br>
+You can then click on the map to open it as an overlay on a Google maps <img style="width: 800px; height: 450px;" alt="" src="file:///home/allen/Projects/mapper_QT/mapper/wiki/images/CincinnatiMap2.png">Now,
+in the upper right hand of this screen, click on "Embed OGC WMTS
+tiles". The next screen will be displayed with one or more rectangular
+boxes. Click on the one titled "Polynomial". Next will be shown the
+selected map displayed as an overlay on Google Maps. In the right hand
+column of the screen is a list of Web viewers. The one titled "Google
+Maps Api (KlokanTech) should be highlighted in gray. " Click on "Source
+Code". <br>
+<img style="width: 1200px; height: 675px;" alt="" src="file:///home/allen/Projects/mapper_QT/mapper/wiki/images/CincinnatiMap3.png"><br>
+This is the HTML code that we need to extract some information to be
+entered into the Update Overlay Information dialog. Select "Edit
+Overlay List" from the Tools menu. <img style="width: 529px; height: 506px;" alt="" src="images/Cinncinnati4.png"><br>
+<ol>
+  <li>From the HTML, enter the minimum and maximum zoom levels. <br>
+  </li>
+  <li>Fill in the latitude and longitude of the map bounds from the mapBounds defintion in the HTML: <br>
+    <pre id="code" style="display: inline;"><span class="kwd">var</span><span class="pln"> mapBounds </span><span class="pun">=</span><span class="pln"> </span><span class="kwd">new</span><span class="pln"> google</span><span class="pun">.</span><span class="pln">maps</span><span class="pun">.</span><span class="typ">LatLngBounds</span><span class="pun">(</span><span class="pln"><br>              </span><span class="kwd">new</span><span class="pln"> google</span><span class="pun">.</span><span class="pln">maps</span><span class="pun">.</span><span class="typ">LatLng</span><span class="pun">(</span><span class="lit">39.069253</span><span class="pun">,</span><span class="pln"> </span><span class="pun">-</span><span class="lit">84.570544</span><span class="pun">),</span><span class="pln"><br>              </span><span class="kwd">new</span><span class="pln"> google</span><span class="pun">.</span><span class="pln">maps</span><span class="pun">.</span><span class="typ">LatLng</span><span class="pun">(</span><span class="lit">39.174521</span><span class="pun">,</span><span class="pln"> </span><span class="pun">-</span><span class="lit">84.472617</span><span class="pun">));</span><span class="pln"></span></pre>
+  </li>
+  <li>Fill in the url information from the HTML. This is one or more
+URLs separated by commas between the first pair of square brackets in
+the return statement. Enter each url on a new line in the Url text edit
+box. Hint: replace all occurrences of '", "' with line-feed and then
+delete any remaining double quotes. <br>
+    <pre id="code" style="display: inline;"><span class="pln">          </span><span class="kwd">return</span><span class="pln"> </span><span class="pun">[</span><span class="str">"http://georeferencer-0.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/szsnr7t8zSOvKiaLHZfKNS/201505301418-MmqGIv/polynomial/{z}/{x}/{y}.png"</span><span class="pun">,</span><span class="str">"http://georeferencer-1.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/szsnr7t8zSOvKiaLHZfKNS/201505301418-MmqGIv/polynomial/{z}/{x}/{y}.png"</span><span class="pun">,</span><span class="str">"http://georeferencer-2.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/szsnr7t8zSOvKiaLHZfKNS/201505301418-MmqGIv/polynomial/{z}/{x}/{y}.png"</span><span class="pun">,</span><span class="str">"http://georeferencer-3.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/szsnr7t8zSOvKiaLHZfKNS/201505301418-MmqGIv/polynomial/{z}/{x}/{y}.png"</span><span class="pun">][(</span><span class="pln">x</span><span class="pun">+</span><span class="pln">y</span><span class="pun">)%</span><span class="lit">4</span><span class="pun">].</span><span class="pln">replace</span><span class="pun">(</span><span class="str">'{z}'</span><span class="pun">,</span><span class="pln">z</span><span class="pun">).</span><span class="pln">replace</span><span class="pun">(</span><span class="str">'{x}'</span><span class="pun">,</span><span class="pln">x</span><span class="pun">).</span><span class="pln">replace</span><span class="pun">(</span><span class="str">'{y}'</span><span class="pun">,</span><span class="pln">y</span><span class="pun">);</span><span class="pln"> </span><span class="pun">},</span><span class="pln"></span></pre>
+  </li>
+  <li>A description is optional. <br>
+  </li>
+  <li>Click on "OK" or "ADD" to add the new overlay to the list of
+overlays, The overlay can now be selected for a City in the Edit City
+Info dialog and then subsequently selected to be displayed from the
+Overlays.</li>
+</ol>
+<a href="Documentation.htm">Documentation</a><br>
+<br>
+
+  
+
+</body></html>
