@@ -25,7 +25,8 @@ public:
   MAXZOOM,
   OPACITY,
   LOCAL,
-
+  SOURCE,
+  URLS,
   NUMCOLUMNS
  };
  void setCity(int, QHash<QString, Overlay*>* selected);

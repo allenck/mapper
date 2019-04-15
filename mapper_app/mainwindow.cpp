@@ -122,7 +122,7 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  m_server = new QWebSocketServer(QStringLiteral("WebViewBridge"), QWebSocketServer::NonSecureMode);
  if (!m_server->listen(QHostAddress::LocalHost, 12345))
  {
-  qFatal("Failed to open web socket server.");
+  //qFatal("Failed to open web socket server.");
   return;
  }
  qDebug() << "listening on localhost:12345";
@@ -166,8 +166,8 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 //#endif
 // connect(m_overlays, SIGNAL(downloaded()), this, SLOT(loadOverlayData()));
  // get list of localhost's mbtiles overlays
- m_overlays = new FileDownloader(QUrl("http://localhost/map_tiles/mbtiles.php"),this);
- connect(m_overlays, SIGNAL(downloaded()), this, SLOT(loadMbtilesData()));
+ //m_overlays = new FileDownloader(QUrl("http://localhost/map_tiles/mbtiles.php"),this);
+ m_overlays = new FileDownloader(QUrl("http://localhost/tileserver/"),this);connect(m_overlays, SIGNAL(downloaded()), this, SLOT(loadMbtilesData()));
 
  createActions();
  createMenus();
@@ -456,6 +456,7 @@ void mainWindow::loadMbtilesData()
  QString data;
  data = m_overlays->downloadedData();
  if(data.startsWith("<!DOCTYPE HTML PUBLIC")) return;
+ if(data.startsWith("<!DOCTYPE html")) return;
  loadData(data, "mbtiles");
 }
 

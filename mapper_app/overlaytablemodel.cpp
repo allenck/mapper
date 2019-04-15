@@ -63,10 +63,11 @@ Qt::ItemFlags OverlayTableModel::flags(const QModelIndex &index) const
  }
  if(index.column() == LOCAL)
  {
-  if(overlayList.at(index.row())->bLocal)
-   return Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
-  else
-   return Qt::NoItemFlags;
+//  if(overlayList.at(index.row())->bLocal)
+//   return Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
+//  else
+//   return Qt::NoItemFlags;
+     return Qt::ItemIsEnabled;
  }
  return Qt::ItemIsEnabled;
 }
@@ -92,6 +93,11 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
 //   return _selected->contains(overlayList.at(row)->name);
 //  case LOCAL:
 //   return overlayList.at(row)->source == "mbtiles" || overlayList.at(row)->source == "tileserver";
+  case SOURCE:
+      return overlayList.at(row)->source;
+  case URLS:
+      return overlayList.at(row)->urls.at(0);
+
   default:
    break;
   }

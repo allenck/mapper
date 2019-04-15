@@ -52,7 +52,10 @@ void AddGeoreferencedDialog::on_buttonBoxAccepted()
  if(config->overlayList.keys().contains(name))
   ov = config->overlayList.value(name);
  else
+ {
   ov = new Overlay(name);
+  config->overlayList.insert(name, ov);
+ }
  ov->bounds = bounds->toString();
  ov->minZoom = ui->sbMinZoom->value();
  ov->maxZoom = ui->sbMaxZoom->value();
@@ -156,6 +159,7 @@ void AddGeoreferencedDialog::validateValues()
  QString txt = ui->edUrl->toPlainText();
  if(txt == "" && ui->comboBox->currentText()== "georeferencer")
  {
+  ui->edUrl->setEnabled(true);
   ui->lblErr->setText(tr("One or more valid urls must be specified"));
   return;
  }
@@ -166,8 +170,10 @@ void AddGeoreferencedDialog::validateValues()
   foreach (QString s, l)
   {
    s = s.trimmed();
+   QUrl url(s);
    if(s == "") continue;
-   if((s.endsWith("/{z}/{x}/{y}.png") || s.endsWith("/{z}/{x}/{y}.jpg"))  && s.startsWith("http://"))
+   if((s.contains("/{z}/{x}/{y}.png") || s.contains("/{z}/{x}/{y}.jpg"))
+           && (s.startsWith("http://") || s.startsWith("https://"))&& url.isValid())
     continue;
    ui->lblErr->setText(tr("The url(s) are invalid." ));
    return;

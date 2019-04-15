@@ -25,6 +25,8 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  ui->tableView->setSortingEnabled(true);
  ui->tableView->setAlternatingRowColors(true);
  ui->tableView->resizeColumnsToContents();
+ ui->tableView->setColumnWidth(OverlayTableModel::NAME, 500);
+ ui->tableView->setColumnWidth(OverlayTableModel::DESCRIPTION, 300);
  bRefreshing = false;
 
  //connect(ui->tableView, SIGNAL(activated(QModelIndex)), this, SLOT(onClicked(QModelIndex)));
