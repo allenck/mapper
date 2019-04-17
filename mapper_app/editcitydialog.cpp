@@ -75,7 +75,7 @@ void EditCityDialog::newCity(int i)
   }
  }
 
- model->setCity(i, cityOverlays);
+ model->setCity(i);
 }
 
 void EditCityDialog::cbCitysSelectionChanged(int i)
@@ -91,7 +91,7 @@ void EditCityDialog::cbCitysSelectionChanged(int i)
  c = config->cityList.at(i);
  cityId = i;
  newCity(i);
- model->setCity(i, cityOverlays);
+ model->setCity(i);
  dirty = false;
  ui->editLatitude->setText(QString::number(c->center.lat()));
  ui->editLongitude->setText(QString::number(c->center.lon()));

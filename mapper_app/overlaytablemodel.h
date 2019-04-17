@@ -29,7 +29,7 @@ public:
   URLS,
   NUMCOLUMNS
  };
- void setCity(int, QHash<QString, Overlay*>* selected);
+ void setCity(int);
 signals:
  void setDirty();
  void overlaySelectionChanged(QModelIndex index, bool checked);
@@ -37,7 +37,6 @@ signals:
 private:
  Configuration* config;
  int currCityId;
- QHash<QString, Overlay*>* _selected;
  QList<Overlay*> overlayList; // list of available overlays.
 };
 
