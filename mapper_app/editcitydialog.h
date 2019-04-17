@@ -34,6 +34,9 @@ private slots:
  void OnDescriptionChanged(bool);
  void ok_clicked();
  void on_setDirty();
+ void onLatitudeChanged();
+ void onLongitudeChanged();
+
 
 private:
  Ui::EditCityDialog *ui;
@@ -49,6 +52,7 @@ private:
  QHash<QString, Overlay*>* cityOverlays;
  void newCity(int i);
  bool dirty;
+ void closeEvent(QCloseEvent *event);
 };
 
 #endif // EDITCITYDIALOG_H

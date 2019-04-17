@@ -75,9 +75,10 @@ void Configuration::saveSettings()
   settings->remove("");
   settings->endGroup();
   settings->beginWriteArray("overlays");
-  for(int j=0; j < c->overlays.count(); j++)
+  int oCount = c->overlayList().count();
+  for(int j=0; j < c->overlayList().count(); j++)
   {
-   Overlay* ov = c->overlays.at(j);
+   Overlay* ov = c->overlayList().at(j);
    settings->setArrayIndex(j);
    settings->setValue("id", j);
    settings->setValue("name", ov->name);
@@ -143,7 +144,7 @@ void Configuration::getSettings()
   nc->setPort(0);
 
   Overlay* ov = new Overlay("St_Louis_historical_topo");
-  newCity->overlays.append(ov);
+  newCity->overlayList().append(ov);
 
   newCity->curOverlayId = 0;
   newCity->bShowOverlay =true;
@@ -271,13 +272,13 @@ void Configuration::getSettings()
    if(no->source == "tileserver" && no->urls.isEmpty()) // Linux
     no->urls.append("http://localhost/tileserver.php");
    bool bFound = false;
-   if(no->source == "georeferencer")
+   if(no->source == "georeferencer") // add to global list
    {
     if(!overlayList.keys().contains(no->name))
      overlayList.insert(no->name, no);
    }
    if(!bFound)
-    nc->overlays.append(no);
+    nc->addOverlay(no);
   }
   // TODO: create a dialog to add overlays like this
   if(nc->name == "St. Louis, MO")
@@ -289,7 +290,7 @@ void Configuration::getSettings()
    ov->minZoom = 0;
    ov->urls << "http://georeferencer-0.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-1.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-2.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-3.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png";
    bool bFound = false;
-   foreach (Overlay* o, nc->overlays)
+   foreach (Overlay* o, nc->overlayList())
    {
     if(o->name == ov->name)
     {
@@ -299,7 +300,7 @@ void Configuration::getSettings()
     }
    }
    if(!bFound)
-    nc->overlays.append(ov);
+    nc->overlayList().append(ov);
   }
   if(nc->name == "Louisville, KY")
   {
@@ -310,7 +311,7 @@ void Configuration::getSettings()
    ov->minZoom = 0;
    ov->urls << "http://georeferencer-0.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-1.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-2.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-3.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png";
    bool bFound = false;
-   foreach (Overlay* o, nc->overlays)
+   foreach (Overlay* o, nc->overlayList())
    {
     if(o->name == ov->name)
     {
@@ -320,16 +321,16 @@ void Configuration::getSettings()
     }
    }
    if(!bFound)
-    nc->overlays.append(ov);
+    nc->overlayList().append(ov);
   }
 //        if(nc->id == currentCityId)
 //            currConnection = nc->connections.at(nc->curConnectionId);
   settings.endArray();
 
-  if(nc->overlays.isEmpty())
+  if(nc->overlayList().isEmpty())
    nc->bShowOverlay = false;
   nc->curOverlayId = settings.value("currOverlay").toInt();
-  if(nc->overlays.count()== 0)
+  if(nc->overlayList().count()== 0)
    nc->curOverlayId = -1;
   cityList.append(nc);
  }
@@ -356,13 +357,13 @@ void Configuration::getSettings()
 
 void Configuration::setOverlay(Overlay* ov)
 {
- for(int i=0; i < currCity->overlays.count(); i++)
+ for(int i=0; i < currCity->overlayList().count(); i++)
  {
-  Overlay* o  =  currCity->overlays.at(i);
+  Overlay* o  =  currCity->overlayList().at(i);
   if(ov->name == o->name)
   {
    o->opacity = ov->opacity;
-   currCity->overlays.replace(i, o);
+   currCity->overlayList().replace(i, o);
   }
  }
 }
@@ -468,4 +469,3 @@ QSqlDatabase Connection::configure(QString cName)
   return db;
 }
 
-QSqlDatabase Connection::getDb() { return db;}

@@ -166,8 +166,8 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 //#endif
 // connect(m_overlays, SIGNAL(downloaded()), this, SLOT(loadOverlayData()));
  // get list of localhost's mbtiles overlays
- //m_overlays = new FileDownloader(QUrl("http://localhost/map_tiles/mbtiles.php"),this);
- m_overlays = new FileDownloader(QUrl("http://localhost/tileserver/"),this);connect(m_overlays, SIGNAL(downloaded()), this, SLOT(loadMbtilesData()));
+ m_overlays = new FileDownloader(QUrl("http://localhost/map_tiles/mbtiles.php"),this);
+ //m_overlays = new FileDownloader(QUrl("http://localhost/tileserver/"),this);connect(m_overlays, SIGNAL(downloaded()), this, SLOT(loadMbtilesData()));
 
  createActions();
  createMenus();
@@ -338,7 +338,7 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   geocoderRequestAct->setChecked(config->currCity->bGeocoderRequest);
   m_bridge->processScript("setGeocoderRequest", config->currCity->bGeocoderRequest?"true":"false");
 
-  if(config->currCity->overlays.count()> 0)
+  if(config->currCity->overlayList().count()> 0)
   {
    //QTimer::singleShot(10000, this, SLOT(mapInit()));
    //chkShowOverlayChanged(config->currCity->bShowOverlay);
@@ -456,7 +456,7 @@ void mainWindow::loadMbtilesData()
  QString data;
  data = m_overlays->downloadedData();
  if(data.startsWith("<!DOCTYPE HTML PUBLIC")) return;
- if(data.startsWith("<!DOCTYPE html")) return;
+ //if(data.startsWith("<!DOCTYPE html")) return;
  loadData(data, "mbtiles");
 }
 
@@ -584,24 +584,26 @@ void mainWindow::fillOverlayMenu()
  overlayMenu->clear();
  overlaySignalMapper = new QSignalMapper(this);
  overlayActionGroup = new QActionGroup(this);
- for(int i = 0; i < config->currCity->overlays.count(); i++)
+ for(int i = 0; i < config->currCity->overlayList().count(); i++)
  {
-  QString ov = config->currCity->overlays.at(i)->name;
+  QString ov = config->currCity->overlayList().at(i)->name;
   if(ov == "")
       continue;
   QAction *act = new QAction(ov, this);
   act->setData(i);
   act->setCheckable(true);
-  act->setToolTip(config->currCity->overlays.at(i)->description);
+  act->setToolTip(config->currCity->overlayList().at(i)->description);
   overlayActions.append(act);
   actionGroup->addAction(act);
   connect(act, SIGNAL(triggered()), overlaySignalMapper, SLOT(map()));
   overlaySignalMapper->setMapping(act, i);
   overlayMenu->addAction(act);
   //if(config->currCity->curOverlayId == i)
-  if(config->currCity->curOverlayId >=0 && ov == config->currCity->overlays.at(config->currCity->curOverlayId)->name)
+  if(config->currCity->curOverlayId >=0 && ov == config->currCity->overlayList().at(config->currCity->curOverlayId)->name)
    act->setChecked(true);
   //act->setToolTip(config->currCity->overlays.at(config->currCity->curOverlayId)->description);
+  if(!ui->chkShowOverlay->isEnabled())
+   ui->chkShowOverlay->setEnabled(true);
  }
  connect(overlaySignalMapper,SIGNAL(mapped(int)),this, SLOT(newOverlay(int)));
 }
@@ -1126,7 +1128,7 @@ void mainWindow::newCity(int ix )
 }
 void mainWindow::newOverlay(int ix)
 {
- Overlay* cOv = config->currCity->overlays.at(ix);
+ Overlay* cOv = config->currCity->overlayList().at(ix);
  if(cOv->source == "")
  {
   if(config->localOverlayList.contains( cOv->name))
@@ -1146,9 +1148,9 @@ void mainWindow::newOverlay(int ix)
 // m_bridge->processScript("loadOverlay", objArray);
  loadOverlay(cOv);
  bool bFound=false;
- for(int i = 0; i < config->currCity->overlays.count(); i++)
+ for(int i = 0; i < config->currCity->overlayList().count(); i++)
  {
-  Overlay* ov = config->currCity->overlays.at(i);
+  Overlay* ov = config->currCity->overlayList().at(i);
   if(currentOverlay == ov->name)
   {
    bFound = true;
@@ -2137,10 +2139,10 @@ void mainWindow::closeEvent(QCloseEvent *event)
      qApp->processEvents(QEventLoop::AllEvents,50);
      QVariant rslt = m_bridge->getRslt();
      //qDebug() << "overlay loaded " << rslt.toString();
-     if(config->currCity->overlays.isEmpty())
+     if(config->currCity->overlayList().isEmpty())
          config->currCity->curOverlayId= -1;
      else
-         if(config->currCity->curOverlayId >= config->currCity->overlays.count())
+         if(config->currCity->curOverlayId >= config->currCity->overlayList().count())
              config->currCity->curOverlayId = 0;
      if( config->currCity->curConnectionId >= 0 && config->currCity->curOverlayId >= 0 && rslt.toString() == "true")
      {
@@ -2149,7 +2151,7 @@ void mainWindow::closeEvent(QCloseEvent *event)
          int opacity = m_bridge->myRslt.toInt();
 
          City* c = config->currCity;
-         Overlay* ov = c->overlays.at(config->currCity->curOverlayId);
+         Overlay* ov = c->overlayList().at(config->currCity->curOverlayId);
          ov->opacity = opacity;
          config->setOverlay(ov);
      }
@@ -2613,7 +2615,7 @@ void mainWindow::queryOverlay()
         return;
     if(config->currCity->curOverlayId >= 0)
     {
-        Overlay* ov = config->currCity->overlays.at(config->currCity->curOverlayId );
+        Overlay* ov = config->currCity->overlayList().at(config->currCity->curOverlayId );
 //        m_bridge->processScript("loadOverlay", "'"+ov->name+"',"+QString("%1").arg(ov->opacity)+ ","+ QString::number(ov->minZoom)+ ","+ QString::number(ov->maxZoom)+ ",'"+ ov->source+ "'");
         loadOverlay(ov);
     }
@@ -3294,10 +3296,10 @@ void mainWindow::geocoderRequestToggled(bool bChecked)
 
 void mainWindow::chkShowOverlayChanged(bool bChecked)
 {
- if(config->currCity->overlays.size() == 0) return;
+ if(config->currCity->overlayList().size() == 0) return;
  if(bChecked && config->currCity->curOverlayId >= 0)
  {
-  Overlay* ov = config->currCity->overlays.at(config->currCity->curOverlayId);
+  Overlay* ov = config->currCity->overlayList().at(config->currCity->curOverlayId);
   //m_bridge->processScript("loadOverlay", "'" +ov->name+"',"+QString("%1").arg(ov->opacity));
 //  m_bridge->processScript("loadOverlay", QString("'%1',%2,%3,%4,'%5'").arg(ov->name).arg(ov->opacity).arg(ov->minZoom).arg(ov->maxZoom).arg(ov->source));
   loadOverlay(ov);

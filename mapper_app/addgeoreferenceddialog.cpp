@@ -64,7 +64,7 @@ void AddGeoreferencedDialog::on_buttonBoxAccepted()
  QString s = ui->edUrl->toPlainText();
  QStringList l = s.split("\n");
  ov->urls = l;
- config->overlayList.insert(name, ov);
+ //config->overlayList.insert(name, ov);
 }
 
 void AddGeoreferencedDialog::checkBounds()
@@ -126,6 +126,23 @@ void AddGeoreferencedDialog::on_nameEditingFinished()
    bUpdate = false;
   }
  }
+ else
+ {
+     ui->sbMinZoom->setValue(0);
+     ui->sbMaxZoom->setValue(15);
+
+     ui->swLat->setText("");
+     ui->swLon->setText("");
+     ui->neLat->setText("");
+     ui->neLon->setText("");
+     checkBounds();
+     ui->comboBox->setCurrentText("georeferencer");
+     ui->edUrl->setEnabled(true);
+     QString txt = "";
+     ui->edUrl->setText(txt);
+     ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Add"));
+     ui->description->setHtml("");
+ }
  validateValues();
 }
 
@@ -151,7 +168,7 @@ void AddGeoreferencedDialog::validateValues()
  }
 
  checkBounds();
- if(!bounds->isValid())
+ if(!bounds->checkValid())
  {
   ui->lblErr->setText(tr("Bounds are not valid"));
   return;

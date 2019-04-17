@@ -35,7 +35,7 @@ have it serve map tiles.<br>
 </h2>
 
 One source of historical maps, in the US is the USGS. They have made
-many historical topographic maps available on-line, free of charge,
+many historical topographic maps available on-line, free of charge,<samp></samp>
 at&nbsp;&nbsp;&nbsp; <a href="http://ngmdb.usgs.gov/maps/TopoView/">USGS
 Map Store</a>.
 While historical topgraphic maps may be very useful in locating
@@ -70,6 +70,7 @@ page that is displayed, there is a frame titled "Use in GIS apps" and click on "
 
 <img style="width: 1200px; height: 675px;" alt="" src="images/CincinnatiMap3.png"><br>
 In the box titled "XYZ link", copy the value to the clipboard or somewhere safe as we will be using it later. 
+<!-- https://maps.georeferencer.com/georeferences/152685741432/2017-02-20T14:25:19.132722Z/map/{z}/{x}/{y}.png?key=mpP5xNUZ8b1t9mFrcFfI-->
 This is the HTML code that we need to extract some information to be
 entered into the Update Overlay Information dialog. 
 <img style="width: 1200px; height: 675px;" alt="" src="images/CincinnatiMap4.png"><br>
@@ -78,9 +79,9 @@ Overlay List" from the Tools menu. <img style="width: 529px; height: 506px;" alt
 <p>Before we leave this page, we need to determine another piece of information. Copy the text in "Web Map Tile Service (WMTS) to the clipboard.
 Open a new browser window or tab and paste the value into the browser's URL entry. The browser should then display a lot of XML
 data. The part we are interested in looks like this:<br>
-<code><ows:LowerCorner>-84.615188 39.049050</ows:LowerCorner></code><br>
-<code><ows:UpperCorner>-84.421203 39.182438</ows:UpperCorner></code><br>
-These numbers are the longitude and latitude of the bounding rectangle. The "LowerCorner" is the SW corner and the 
+<code>&lt;ows:LowerCorner&gt;-84.615188 39.049050&lt;/ows:LowerCorner&gt;</code><br>
+<code>&lt;ows:UpperCorner&gt;-84.421203 39.182438&lt;/ows:UpperCorner&gt;</code><br>
+These pairs of numbers are the longitude and latitude of the bounding rectangle. The "LowerCorner" is the SW corner and the 
 "UpperCorner" is the NE corner. 
 
 <ol>

@@ -280,82 +280,16 @@ void SegmentInfo::displaySegment(QString date, QString color, bool bClearFirst)
  objArray << segmentId << routeNames<<description<<oneWay<<color<< tracks << dash << pointList.count()*2 << points;
  webViewBridge::instance()->processScript("createSegment", objArray);
 }
-LatLng::LatLng()
-{
-    latitude = 0;
-    longitude = 0;
-    bValid=false;
-}
-LatLng::~LatLng() {}
-LatLng::LatLng(const LatLng& other) { latitude = other.latitude; longitude = other.longitude;}
-/// <summary>
-/// Create new LatLng
-/// </summary>
-/// <param name="Lat"></param>
-/// <param name="Lon"></param>
-LatLng::LatLng(double Lat, double Lon)
-{
-    latitude = Lat;
-    longitude = Lon;
-    if(Lat==0 && Lon ==0)
-     bValid = false;
-    else
-     bValid=true;
-}
-/// <summary>
-/// get or set latitude
-/// </summary>
-double LatLng::lat() const
-{
-    return latitude;
-}
-void LatLng::setLat(double val)
-{
-    latitude = val;
-    bValid = true;
-}
 
-/// <summary>
-/// get longitude
-/// </summary>
-double LatLng::lon() const
-{
-    return longitude;
-}
-void LatLng::setLon(double val)
-{
-    longitude = val;
-    bValid=true;
-}
 
-bool LatLng::isValid(){return bValid;}
-
-QString LatLng::ToString()
-{
-    QString strLat = QString("%1").arg(latitude);
-    QString strLon = QString("%1").arg(longitude);
-    return "lat: " + strLat + " lon: " + strLon;
-}
-
-QString LatLng::str()
-{
- QString strLat = QString("%1").arg(latitude,0,'f',8);
- QString strLon = QString("%1").arg(longitude,0,'f',8);
- return strLat + "," + strLon;
-}
-
-bool LatLng::operator ==(const LatLng pt)
-{
-    return pt.latitude == this->latitude && pt.longitude == this->longitude;
-}
-
-Bounds::Bounds()
+Bounds::Bounds() : QRectF(QPointF(180,-90), QPointF(-180, 90))
 {
  _swPt = LatLng(90,180);
  _nePt = LatLng(-90,-180);
 bBoundsValid = false;
 }
-Bounds::Bounds(LatLng sw, LatLng ne)
+
+Bounds::Bounds(LatLng sw, LatLng ne) : QRectF(QPointF(sw.x(), ne.y()), QPointF(ne.x(), sw.y()))
 {
  _swPt = sw;
  _nePt = ne;
@@ -364,7 +298,7 @@ Bounds::Bounds(LatLng sw, LatLng ne)
  else
   bBoundsValid = false;
 }
-Bounds::Bounds(QString bnds)
+Bounds::Bounds(QString bnds) : QRectF()
 {
  _swPt = LatLng(90,180);
  _nePt = LatLng(-90,-180);
@@ -392,13 +326,23 @@ Bounds::Bounds(QString bnds)
  }
 }
 Bounds::~Bounds(){}
-Bounds::Bounds(const Bounds &other)
+Bounds::Bounds(const Bounds &other) : QRectF()
 {
  _swPt = other._swPt;
  _nePt = other._nePt;
 }
 
 bool Bounds::isValid() { return bBoundsValid;}
+bool Bounds::checkValid()
+{
+ if(!_swPt.isValid())
+  return false;
+ if(!_nePt.isValid())
+  return false;
+ if(_swPt.lat() < _nePt.lat() && _swPt.lon() < _nePt.lon())
+  return true;
+ return false;
+}
 bool Bounds::updateBounds(LatLng pt)
 {
  if (pt.lat() < _swPt.lat())
@@ -425,4 +369,10 @@ LatLng Bounds::nePt() { return _nePt;}
 QString Bounds::toString()
 {
  return QString("%1,%2, %3,%4").arg(_swPt.lon(),14,'g',11).arg(_swPt.lat(),14,'g',11).arg(_nePt.lon(),14,'g',11).arg(_nePt.lat(),14,'g',11);
+}
+
+bool Bounds::contains(const QPointF &p) const
+{
+ if(p.x() >= _swPt.lon() && p.x() <= _nePt.lon() && p.y() >= _swPt.lat() && p.y()< _nePt.lat()) return true;
+ return false;
 }

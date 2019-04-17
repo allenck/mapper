@@ -44,7 +44,11 @@ SOURCES += main.cpp\
     htmltextedit.cpp \
     $$PWD/mapview.cpp \
     editsegmentdialog.cpp \
-    $$PWD/overlaytablemodel.cpp
+    $$PWD/overlaytablemodel.cpp \
+    $$PWD/htmldelegate.cpp \
+    $$PWD/city.cpp \
+    $$PWD/connection.cpp \
+    $$PWD/latlng.cpp
 
 
 HEADERS  += mainwindow.h \
@@ -93,7 +97,11 @@ HEADERS  += mainwindow.h \
     htmltextedit.h \
     $$PWD/mapview.h \
     editsegmentdialog.h \
-    $$PWD/overlaytablemodel.h
+    $$PWD/overlaytablemodel.h \
+    $$PWD/htmldelegate.h \
+    $$PWD/city.h \
+    $$PWD/connection.h \
+    $$PWD/latlng.h
 
 FORMS    += ui/mainwindow.ui \
     ui/dialogcopyroute.ui \

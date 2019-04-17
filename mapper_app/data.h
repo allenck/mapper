@@ -7,6 +7,9 @@
 #include <QtCore/qmath.h>
 #include <QStringList>
 #include <QPersistentModelIndex>
+#include <QRectF>
+#include "latlng.h"
+
 
 class LatLng;
 class SegmentInfo;
@@ -163,42 +166,8 @@ class routeInfo
         double length;
 };
 
-class LatLng
-{
-    private:
-        double latitude;
-        double longitude;
-        bool bValid;
-        /// <summary>
-        /// Create empty LatLng 
-        /// </summary>
-    public:
-        LatLng();
-        ~LatLng();
-        LatLng(const LatLng& other);
-        /// <summary>
-        /// Create new LatLng
-        /// </summary>
-        /// <param name="Lat"></param>
-        /// <param name="Lon"></param>
-        LatLng(double Lat, double Lon);
-        /// <summary>
-        /// get or set latitude
-        /// </summary>
-        double lat() const;
-        void setLat(double val);
-        /// <summary>
-        /// get longitude
-        /// </summary>
-        double lon() const;
-        void setLon(double val);
-        bool isValid();
-        QString ToString();
-        QString str();
-        bool operator ==(const LatLng pt);
-}; // end LatLng
-Q_DECLARE_METATYPE(LatLng)
-class Bounds
+
+class Bounds : public QRectF
 {
  public:
  Bounds();
@@ -207,12 +176,14 @@ class Bounds
  ~Bounds();
  Bounds(const Bounds& other);
  bool isValid();
+ bool checkValid();
  bool updateBounds(LatLng pt);
  bool updateBounds(Bounds bnds);
 
  LatLng swPt();
  LatLng nePt();
  QString toString();
+ bool contains(const QPointF &p) const;
 
  private:
  LatLng _swPt;

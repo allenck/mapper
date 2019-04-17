@@ -599,10 +599,6 @@ google.maps.event.addListener(this.line, "click", function(e){
  });
 } // end SegmentInfo
 
-function initialize()
-{
- initMap();
-}
 
 //function initialize()
 function initMap()
@@ -696,6 +692,11 @@ function initMap()
  //alert("initialize end");
 
 } // end initialize()
+
+function initialize()
+{
+ initMap();
+}
 
 function resizeMap()
 {

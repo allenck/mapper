@@ -7,13 +7,18 @@ OverlayTableModel::OverlayTableModel()
  currCityId = config->currentCityId;
  _selected = new QHash<QString, Overlay*>();
  overlayList = QList<Overlay*>(config->overlayList.values());
- foreach(Overlay* ov, config->cityList.at(currCityId)->overlays)
+ foreach(Overlay* ov, config->cityList.at(currCityId)->overlayList())
  {
   foreach(Overlay* ov1, overlayList)
   {
    if(ov->name == ov1->name)
    {
-    _selected->insert(ov->name, ov);
+    if(ov1->bounds.contains( config->currCity->center))
+    {
+      _selected->insert(ov->name, ov);
+      qDebug() << config->currCity->name << " center: " << config->currCity->center.toString();
+      qDebug() << ov1->name << " bounds: " << ov1->bounds.toString();
+    }
    }
   }
  }
@@ -57,6 +62,15 @@ QVariant OverlayTableModel::headerData(int section, Qt::Orientation orientation,
 
 Qt::ItemFlags OverlayTableModel::flags(const QModelIndex &index) const
 {
+ int row = index.row();
+ Overlay* ov = overlayList.at(row);
+ City* c = config->cityList.at(currCityId);
+ if(!ov->bounds.contains(c->center))
+ {
+  qDebug() << c->name << " center: " << c->center.toString();
+  qDebug() << ov->name << " bounds: " << ov->bounds.toString() << "\n";
+  return  0;
+ }
  if(index.column() == SELECTED )
  {
   return Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
@@ -105,13 +119,15 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
  if(role == Qt::CheckStateRole)
  {
   QString name = overlayList.at(index.row())->name;
+  Overlay* ov = overlayList.at(index.row());
   if(index.column() == SELECTED)
   {
-   if(_selected->contains(name))
-   {
-    overlayList.at(index.row())->source = _selected->value(name)->source;
+//   if(_selected->contains(name))
+//   {
+//    overlayList.at(index.row())->source = _selected->value(name)->source;
+   if(config->cityList.at(currCityId)->overlayList().contains(ov))
     return Qt::Checked;
-   }\
+//   }
    else
     return Qt::Unchecked;
   }
@@ -128,6 +144,7 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
 
 bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
+ Overlay* ov = overlayList.at(index.row());
  if(role == Qt::CheckStateRole)
  {
   if(index.column() == SELECTED)
@@ -135,13 +152,17 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
    QString name = overlayList.at(index.row())->name;
    if(value.toBool())
    {
-    if(!_selected->contains(name))
-     _selected->insert(name, overlayList.at(index.row()));
+//    if(!_selected->contains(name))
+//     _selected->insert(name, overlayList.at(index.row()));
+    if(!config->cityList.at(currCityId)->overlayList().contains(ov))
+     config->cityList.at(currCityId)->addOverlay(ov);
    }
    else
    {
-    if(_selected->contains(name))
-     _selected->remove(name);
+//    if(_selected->contains(name))
+//     _selected->remove(name);
+    if(config->cityList.at(currCityId)->overlayList().contains(ov))
+     config->cityList.at(currCityId)->removeOverlay(ov);
    }
    emit overlaySelectionChanged(index, value.toBool());
   }
