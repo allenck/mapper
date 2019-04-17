@@ -495,6 +495,7 @@ void mainWindow::loadData(QString data, QString source)
   overlay->source = source;
   if(source == "mbtiles")
    overlay->urls.append("http://localhost/map_tiles/mbtiles.php");
+  else
   if(source == "acksoft")
    overlay->urls.append("http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/");
  }
