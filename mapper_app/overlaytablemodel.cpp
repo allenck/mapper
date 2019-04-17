@@ -5,6 +5,7 @@ OverlayTableModel::OverlayTableModel()
 {
  config = Configuration::instance();
  currCityId = config->currentCityId;
+ overlayList = QList<Overlay*>(config->overlayList.values());
 }
 
 int OverlayTableModel::rowCount(const QModelIndex &parent) const
