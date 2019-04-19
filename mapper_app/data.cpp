@@ -294,7 +294,9 @@ Bounds::Bounds(LatLng sw, LatLng ne) : QRectF(QPointF(sw.x(), ne.y()), QPointF(n
  _swPt = sw;
  _nePt = ne;
  if(sw.lon() < ne.lon() && sw.lat() < ne.lat())
+ {
   bBoundsValid = true;
+ }
  else
   bBoundsValid = false;
 }
@@ -322,6 +324,8 @@ Bounds::Bounds(QString bnds) : QRectF()
    return;
   _swPt = LatLng(swLat, swLon);
   _nePt = LatLng(neLat, neLon);
+  setBottomLeft(_swPt);
+  setTopRight(_nePt);
   bBoundsValid = true;
  }
 }
@@ -330,6 +334,8 @@ Bounds::Bounds(const Bounds &other) : QRectF()
 {
  _swPt = other._swPt;
  _nePt = other._nePt;
+ setBottomLeft(_swPt);
+ setTopRight(_nePt);
 }
 
 bool Bounds::isValid() { return bBoundsValid;}
@@ -376,3 +382,5 @@ bool Bounds::contains(const QPointF &p) const
  if(p.x() >= _swPt.lon() && p.x() <= _nePt.lon() && p.y() >= _swPt.lat() && p.y()< _nePt.lat()) return true;
  return false;
 }
+
+LatLng Bounds::center() {return LatLng(y(), x());}

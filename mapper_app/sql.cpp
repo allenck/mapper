@@ -2660,6 +2660,25 @@ double SQL::angleDiff(double A1, double A2)
     return difference;
 
 }
+double /*static*/ SQL::distance(LatLng latlng1, LatLng latlng2)
+{
+ if (latlng1 == latlng2 )
+     return 0;
+ double R = 6371; // RADIUS OF THE EARTH IN KM
+ double dToRad = 0.0174532925;
+ double lat1 = latlng1.lat() * dToRad;
+ //double lon1 = Lon1 * dToRad;
+ double lat2 = latlng2.lat() * dToRad;
+ //double lon2 = Lon2 * dToRad;
+ double dLat = dToRad * (latlng2.lat() - latlng1.lat());
+ double dLon = dToRad * (latlng2.lon() - latlng1.lon());
+ double a = qSin(dLat / 2) * qSin(dLat / 2)
+     + qCos(lat1) * qCos(lat2)
+     * qSin(dLon / 2) * qSin(dLon / 2);
+ double c = 2 * qAtan2(qSqrt(a), qSqrt(1 - a));
+ double d = R * c;
+ return d; // distance in kilometers
+}
 /// <summary>
 /// Calculate distance in km between two points
 /// </summary>

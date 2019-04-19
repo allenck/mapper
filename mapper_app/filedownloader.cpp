@@ -31,3 +31,6 @@ QByteArray FileDownloader::downloadedData() const
 {
     return m_DownloadedData;
 }
+
+void FileDownloader::setOverlay(Overlay* ov) {this->ov = ov;}
+Overlay* FileDownloader::overlay() {return ov;}

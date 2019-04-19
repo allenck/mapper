@@ -165,6 +165,7 @@ double Distance(double Lat1, double Lon1, double Lat2, double Lon2);
     QString getPrevRouteName(QDate dt);
     QString getNextRouteName(QDate dt);
     bool testAltRoute();
+    double static distance(LatLng latlng1, LatLng latlng2);
 
 
 private:

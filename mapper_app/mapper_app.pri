@@ -48,7 +48,8 @@ SOURCES += main.cpp\
     $$PWD/htmldelegate.cpp \
     $$PWD/city.cpp \
     $$PWD/connection.cpp \
-    $$PWD/latlng.cpp
+    $$PWD/latlng.cpp \
+    $$PWD/globalmercator.cpp
 
 
 HEADERS  += mainwindow.h \
@@ -101,7 +102,8 @@ HEADERS  += mainwindow.h \
     $$PWD/htmldelegate.h \
     $$PWD/city.h \
     $$PWD/connection.h \
-    $$PWD/latlng.h
+    $$PWD/latlng.h \
+    $$PWD/globalmercator.h
 
 FORMS    += ui/mainwindow.ui \
     ui/dialogcopyroute.ui \

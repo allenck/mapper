@@ -1,5 +1,6 @@
 #include "overlaytablemodel.h"
 #include "configuration.h"
+#include "sql.h"
 
 OverlayTableModel::OverlayTableModel()
 {
@@ -49,12 +50,13 @@ Qt::ItemFlags OverlayTableModel::flags(const QModelIndex &index) const
  int row = index.row();
  Overlay* ov = overlayList.at(row);
  City* c = config->cityList.at(currCityId);
- if(!ov->bounds.contains(c->center))
+ if(!ov->bounds.contains(c->center) && SQL::distance(ov->bounds.center(), c->center) > 10)
  {
   qDebug() << c->name << " center: " << c->center.toString();
   qDebug() << ov->name << " bounds: " << ov->bounds.toString() << "\n";
   return  0;
  }
+
  if(index.column() == SELECTED )
  {
   return Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable;

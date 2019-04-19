@@ -31,6 +31,7 @@ public:
  {
   source="acksoft";
   bLocal = false;
+  bounds = Bounds();
  }
 
  Overlay(QString name, int opacity = 65)
@@ -41,7 +42,9 @@ public:
   bLocal = false;
   minZoom = 8;
   maxZoom = 16;
+  bounds = Bounds();
  }
+
  bool operator==(const Overlay &ov)
  {
   if(this->name == ov.name && this->source == ov.source) {return true;}

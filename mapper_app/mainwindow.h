@@ -274,6 +274,7 @@ private slots:
     void on_addGeoreferenced(bool);
     void on_overlayHelp();
     void on_usingHelp();
+    void processTileMapResource();
 
 private:
     //Webviewer *centralWidget;
@@ -368,6 +369,7 @@ private:
     void closeEvent(QCloseEvent *event);
     FileDownloader *m_dataCtrl;
     FileDownloader *m_overlays;
+    FileDownloader *m_tilemapresource;
     Configuration* config;
 
     qint32 m_SegmentId;

@@ -7,6 +7,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 
+class Overlay;
 class FileDownloader : public QObject
 {
     Q_OBJECT
@@ -16,6 +17,8 @@ public:
     virtual ~FileDownloader();
 
     QByteArray downloadedData() const;
+    void setOverlay(Overlay* ov);
+    Overlay* overlay();
 
 signals:
         void downloaded();
@@ -29,7 +32,7 @@ private:
     QNetworkAccessManager m_WebCtrl;
 
     QByteArray m_DownloadedData;
-
+    Overlay* ov = nullptr;
 };
 
 #endif // FILEDOWNLOADER_H

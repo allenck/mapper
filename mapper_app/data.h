@@ -184,6 +184,7 @@ class Bounds : public QRectF
  LatLng nePt();
  QString toString();
  bool contains(const QPointF &p) const;
+ LatLng center();
 
  private:
  LatLng _swPt;

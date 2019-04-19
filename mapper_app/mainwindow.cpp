@@ -168,6 +168,7 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  // get list of localhost's mbtiles overlays
  m_overlays = new FileDownloader(QUrl("http://localhost/map_tiles/mbtiles.php"),this);
  //m_overlays = new FileDownloader(QUrl("http://localhost/tileserver/"),this);connect(m_overlays, SIGNAL(downloaded()), this, SLOT(loadMbtilesData()));
+ connect(m_overlays, SIGNAL(downloaded()), this, SLOT(loadMbtilesData()));
 
  createActions();
  createMenus();
@@ -462,7 +463,7 @@ void mainWindow::loadMbtilesData()
 
 void mainWindow::loadData(QString data, QString source)
 {
- overlays = data.split('\n');
+ QStringList overlays = data.split('\n');
 
 // overlaySignalMapper = new QSignalMapper(this);
 // overlayActionGroup = new QActionGroup(this);
@@ -497,10 +498,83 @@ void mainWindow::loadData(QString data, QString source)
    overlay->urls.append("http://localhost/map_tiles/mbtiles.php");
   else
   if(source == "acksoft")
+  {
    overlay->urls.append("http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/");
+//   if(!overlay->bounds.isValid())
+//   {
+//    QEventLoop loop;
+//    m_tilemapresource = new FileDownloader("http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/" + overlay->name + "/tilemapresource.xml");
+//    m_tilemapresource->setOverlay(overlay);
+//    connect(m_tilemapresource, SIGNAL(downloaded()), this, SLOT(processTileMapResource()));
+//    loop.exec();
+//   }
+  }
+  continue;
  }
 }
 
+void mainWindow::processTileMapResource()
+{
+ QString str = m_tilemapresource->downloadedData();
+ if(str != "")
+ {
+  QDomDocument doc;
+  QString title;
+  Bounds bounds;
+  doc.setContent(str);
+  QDomElement root = doc.documentElement();
+  if(root.tagName() == "TileMap")
+  {
+   QDomElement elem = root.firstChildElement("Title");
+   if(!elem.isNull())
+    title = elem.text();
+   elem = root.firstChildElement("BoundingBox");
+   if(!elem.isNull())
+   {
+    double minx, miny, maxx, maxy;
+    minx = elem.attribute("minx").toDouble();
+    miny = elem.attribute("miny").toDouble();
+    maxx = elem.attribute("maxx").toDouble();
+    maxy = elem.attribute("maxy").toDouble();
+    bounds = Bounds(LatLng(miny, minx), LatLng(maxy, maxx));
+    if(bounds.isValid())
+    {
+     Overlay* ov = m_tilemapresource->overlay();
+     if(ov != nullptr)
+     {
+      ov->bounds = bounds;
+      if(ov->description == "")
+       ov->description = title;
+      elem = doc.firstChildElement("TileSets");
+      if(!elem.isNull())
+      {
+       QDomNodeList nl = elem.elementsByTagName("TileSet");
+       int minZoom = 30;
+       int maxZoom = 0;
+       for(int i=0; i < nl.count(); i++)
+       {
+        bool bok;
+        int zoom = nl.at(i).toElement().attribute("href").toInt(&bok);
+        if(bok)
+        {
+         if(zoom < minZoom)
+          minZoom = zoom;
+         if(zoom > maxZoom)
+          maxZoom = zoom;
+        }
+       }
+       if(minZoom != 30)
+        ov->minZoom = minZoom;
+       if(maxZoom > 0)
+        ov->maxZoom = maxZoom;
+      }
+      qDebug() <<"xml processed: " << ov->name << "descr: " << ov->description << " bounds: " << ov->bounds.toString() << " minZoom: " << ov->minZoom << " maxZoom: " << ov->maxZoom;
+     }
+    }
+   }
+  }
+ }
+}
 #ifdef WIN32
 void mainWindow::loadOverlayData()
 {
