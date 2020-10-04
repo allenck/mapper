@@ -301,6 +301,7 @@ private:
     QAction *updateRouteAct;
     QAction *updateTerminalsAct;
     //QAction *displaySegmentAct;
+    QAction* addSegmentToRouteAct;
     QAction *deleteSegmentAct;
     QAction *findDupSegmentsAct;
     QAction *findDormantSegmentsAct;

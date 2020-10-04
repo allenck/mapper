@@ -34,15 +34,15 @@ public:
     QList<RouteData> routeList;
     QList<RouteData> getRoutesByEndDate();
     QList<RouteData> getRoutesByEndDate(qint32 companyKey);
-    routeInfo getRoutePoints(qint32 route, QString name, QString date);
+    RouteInfo getRoutePoints(qint32 route, QString name, QString date);
     TerminalInfo getTerminalInfo(qint32 route, QString name, QString endDate);
     QString getAlphaRoute(qint32 route, qint32 company);
     QList<tractionTypeInfo> getTractionTypes();
-    Q_DECL_DEPRECATED QList<segmentData> getSegmentData(qint32 SegmentId);
+    Q_DECL_DEPRECATED QList<SegmentData> getSegmentData(qint32 SegmentId);
     QList<SegmentInfo> getSegmentInfo();
     SegmentInfo getSegmentInfo(qint32 segmentId);
     SegmentInfo getSegmentInfo(qint32 segmentId, bool bSuppressPrompt);
-    Q_DECL_DEPRECATED segmentData getSegmentData(qint32 pt, qint32 SegmentId);
+    Q_DECL_DEPRECATED SegmentData getSegmentData(qint32 pt, qint32 SegmentId);
     QList<SegmentInfo> getRouteSegmentsInOrder2(qint32 route, QString name, QString date);
     QList<RouteData> getRoutes(qint32 segmentid, QString date );
     QList<LatLng>  GetSegmentPoints(qint32 SegmentId);

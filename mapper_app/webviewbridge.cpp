@@ -89,6 +89,8 @@ void webViewBridge::getInfoWindowComments(double lat, double lon, int route, QSt
 // receive result of function
 void webViewBridge::scriptResult(QVariant value)
 {
+ if(value.isNull())
+  return;
  myRslt = value;
  bResultReceived = true;
  emit on_scriptResult(value);
@@ -96,6 +98,7 @@ void webViewBridge::scriptResult(QVariant value)
 
 void webViewBridge::scriptArrayResult(QVariantList value)
 {
+    if(value.isEmpty()) return;
  myList = value;
  bResultReceived = true;
  emit on_scriptArrayResult(value);

@@ -651,7 +651,7 @@ void editConnectionsDlg::populateDatabases()
 
 QString editConnectionsDlg::getDatabase()
 {
- if(!openTestDb()) return false;
+ if(!openTestDb()) return QString();
 
  QSqlQuery query = QSqlQuery(db);
  QString dbName ="";

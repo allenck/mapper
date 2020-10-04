@@ -46,6 +46,7 @@
 #include <QFileInfo>
 #include <QApplication>
 #include <QProcess>
+#include "sql.h"
 
 QString mainWindow::pwd = "";
 QString mainWindow::pgmDir = "";
@@ -286,6 +287,7 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui->cbRoute->addAction(updateTerminalsAct);
 
   ui->cbSegments->setContextMenuPolicy(Qt::ActionsContextMenu);
+  ui->cbSegments->addAction(addSegmentToRouteAct);
   ui->cbSegments->addAction(deleteSegmentAct);
   ui->cbSegments->addAction(findDupSegmentsAct);
   ui->cbSegments->addAction(findDormantSegmentsAct);
@@ -458,7 +460,8 @@ void mainWindow::loadMbtilesData()
  data = m_overlays->downloadedData();
  if(data.startsWith("<!DOCTYPE HTML PUBLIC")) return;
  //if(data.startsWith("<!DOCTYPE html")) return;
- loadData(data, "mbtiles");
+ if(!data.startsWith("Exception"))
+  loadData(data, "mbtiles");
 }
 
 void mainWindow::loadData(QString data, QString source)
@@ -769,9 +772,30 @@ void mainWindow::createActions()
  editSegmentAct = new QAction("Edit Segment", this);
  connect(editSegmentAct, SIGNAL(triggered()), this, SLOT(On_editSegment_triggered()));
 
- findDupSegmentsAct=new QAction(tr("display duplicate segments"),this);
- findDupSegmentsAct->setToolTip(tr("display a list of duplicate segments"));
+ findDupSegmentsAct=new QAction(tr("Display duplicate segments"),this);
+ findDupSegmentsAct->setToolTip(tr("Display a list of duplicate segments"));
  connect(findDupSegmentsAct, SIGNAL(triggered()),this, SLOT(findDupSegments()));
+
+ addSegmentToRouteAct = new QAction(tr("Add segment to route"), this);
+ connect(addSegmentToRouteAct, &QAction::triggered, [=]{
+     int ix = ui->cbSegments->currentIndex();
+     int segmentId = ui->cbSegments->itemData(ix).toInt();
+     SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId, true);
+
+     int row =         ui->cbRoute->currentIndex();
+     if(row < 0) return;
+     RouteData rd = ((RouteData)routeList.at(row));
+     bool b = SQL::instance()->addSegmentToRoute(rd.route, rd.name, rd.startDate.toString("yyyy/MM/dd"), rd.endDate.toString("yyyy/MM/dd"),
+                                        si.segmentId, rd.companyKey,
+                                        rd.tractionType, "?", -1, -1, 0, 0, 0, 0);
+    if(b)
+    {
+        m_bridge->processScript("clearPolyline", QString("%1").arg(segmentId));
+        SegmentInfo si = sql->getSegmentInfo(segmentId);
+        displaySegment(segmentId, si.description, si.oneWay, /*ttColors[e.tractionType]*/getColor(rd.tractionType), true);
+
+    }
+ });
 
  findDormantSegmentsAct = new QAction(tr("Find dormant segments"),this);
  findDupSegmentsAct->setToolTip(tr("Display a lists of segments that are dormat, i.e. not in service"));
@@ -1471,7 +1495,7 @@ void mainWindow::on_createKmlFile_triggered()
 {
  int row =         ui->cbRoute->currentIndex();
  RouteData rd = ((RouteData)routeList.at(row));
- routeInfo ri = sql->getRoutePoints(rd.route,rd.name, ui->dateEdit->text());
+ RouteInfo ri = sql->getRoutePoints(rd.route,rd.name, ui->dateEdit->text());
  Kml* kml = new Kml(ri );
  QString fileName = QFileDialog::getOpenFileName(this,"Create Kml file", QDir::homePath(),"Kml files (*.kml");
  if(!fileName.isEmpty())
@@ -1492,7 +1516,7 @@ void mainWindow::On_displayRoute(RouteData rd)
  if(!ui->chkNoClear->isChecked())
   btnClearClicked();
 
- routeInfo ri = sql->getRoutePoints(rd.route,rd.name, ui->dateEdit->text());
+ RouteInfo ri = sql->getRoutePoints(rd.route,rd.name, ui->dateEdit->text());
 
 // LatLng startPt =  LatLng();
 // LatLng endPt =  LatLng();
@@ -1761,7 +1785,7 @@ void mainWindow::refreshSegmentCB()
     for(int i=0; i < cbSegmentInfoList.count(); i++)
     {
      SegmentInfo sI = ((SegmentInfo)cbSegmentInfoList.at(i));
-     ui->cbSegments->addItem(sI.ToString());
+     ui->cbSegments->addItem(sI.ToString(), sI.segmentId);
     }
     m_bridge->processScript("addModeOff");
     addPointModeAct->setChecked(false);
@@ -2401,7 +2425,7 @@ void mainWindow::cbSegmentsSelectedValueChanged(qint32 row)
 
 
     displaySegment(m_SegmentId, ui->txtSegment->text(), (ui->chkOneWay->checkState()?"Y":"N"), (!ui->chkOneWay->checkState() ? "#00FF00" : "#045fb4"), true);
-
+#if 0
     // Display Start and end markers
     sI = sql->getSegmentInfo(m_SegmentId);
     m_bridge->processScript("addMarker", QString("%1").arg(0)+ ","+ QString("%1").arg(sI.startLat,0,'f',8) + "," + QString("%1").arg(sI.startLon,0,'f',8)+ ","+"1"+",'',"+QString("%1").arg(m_SegmentId));
@@ -2412,6 +2436,7 @@ void mainWindow::cbSegmentsSelectedValueChanged(qint32 row)
         objArray<<sI.startLat<<sI.startLon;
         m_bridge->processScript("setCenter", objArray);
     }
+#endif
 }
 
 void mainWindow::txtSegment_TextChanged(QString text)

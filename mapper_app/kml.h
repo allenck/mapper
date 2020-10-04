@@ -11,13 +11,13 @@ class segmentGroup;
 class QDomElement;
 class QDomDocument;
 class SQL;
-class routeInfo;
+class RouteInfo;
 class RouteData;
 class Kml : public QObject
 {
  Q_OBJECT
 public:
- explicit Kml(routeInfo ri, QObject *parent = 0);
+ explicit Kml(RouteInfo ri, QObject *parent = 0);
  bool createKml(QString fileName, QString color);
  /*public*/ QDomDocument newDocument(QDomElement root);
  /*public*/ void addDefaultInfo(QDomElement root);
@@ -28,7 +28,7 @@ signals:
 public slots:
 
 private:
- routeInfo ri;
+ RouteInfo ri;
  SegmentInfo si;
  SQL* sql;
  QDomDocument doc;

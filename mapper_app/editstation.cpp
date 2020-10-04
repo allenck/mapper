@@ -150,7 +150,7 @@ void editStation::setStationId(StationInfo sti)
       ui->txtGeodbLocId->setText(QString("%1").arg(sti.geodb_loc_id));
   ui->dateStart->setDateTime( sti.startDate);
   ui->dateEnd->setDateTime(sti.endDate);
-  QList<segmentData> pointList = sql->getSegmentData(_segmentId);
+  QList<SegmentData> pointList = sql->getSegmentData(_segmentId);
   if (pointList.isEmpty())
       _pt = 0;
   else
@@ -159,7 +159,7 @@ void editStation::setStationId(StationInfo sti)
    //foreach (segmentData sd in pointList)
    for(int i=0; i < pointList.count(); i ++)
    {
-    segmentData sd = pointList.at(i);
+    SegmentData sd = pointList.at(i);
     if (_latLng ==  LatLng(sd.startLat, sd.startLon))
     {
      break;

@@ -108,12 +108,12 @@ static bool to_enum(int n)
  }
 }
 
-class segmentData
+class SegmentData
 {
     public:
         //explicit segmentData(QObject *parent = 0);
-        segmentData();
-        segmentData(qint32 Pt, qint32 SId);
+        SegmentData();
+        SegmentData(qint32 Pt, qint32 SId);
         qint32 key;
         qint32 SegmentId;
         qint32 sequence;
@@ -129,7 +129,6 @@ class segmentData
         qint32 route;
         QString alphaRoute;
         bool oneWay;
-
 };
 
 class segmentGroup
@@ -147,22 +146,22 @@ class segmentGroup
         qint32	tractionType;
         RouteType routeType;
         double startLat, startLon, endLat, endLon;
-        Q_DECL_DEPRECATED QList<segmentData> data ;      // array of segmentdata objects
+        Q_DECL_DEPRECATED QList<SegmentData> data ;      // array of segmentdata objects
         QList<LatLng> points;
         ~segmentGroup();
 };
 
-class routeInfo
+class RouteInfo
 {
 	public:
         //explicit routeInfo(QObject *parent = 0);
-        routeInfo();
+        RouteInfo();
         qint32	route;
         QString routeName;
         qint32	tractionType;
         //QList<segmentGroup> segments;  // array of segmentGroup objects
         QList<SegmentInfo> segments;
-        ~routeInfo();
+        ~RouteInfo();
         double length;
 };
 
@@ -326,7 +325,7 @@ class SegmentInfo
 	public:
  QString description;
  QString oneWay;
- qint32 segmentId;
+ qint32 segmentId = -1;
  qint32 lineSegments;
  qint32 points;
  double length;

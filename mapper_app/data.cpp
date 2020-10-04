@@ -112,7 +112,7 @@ segmentGroup::~segmentGroup()
 //{
 
 //}
-segmentData::segmentData()
+SegmentData::SegmentData()
 {
  key = -1;
  SegmentId = -1;
@@ -123,7 +123,7 @@ segmentData::segmentData()
  oneWay = false;
 }
 
-segmentData::segmentData(qint32 Pt, qint32 SId)
+SegmentData::SegmentData(qint32 Pt, qint32 SId)
 {
  key = -1;
  SegmentId = SId;
@@ -134,13 +134,13 @@ segmentData::segmentData(qint32 Pt, qint32 SId)
  oneWay = false;
 }
 
-routeInfo::routeInfo()
+RouteInfo::RouteInfo()
 {
  route= -1;
  length = 0;
 }
 
-routeInfo::~routeInfo()
+RouteInfo::~RouteInfo()
 {
 
 }

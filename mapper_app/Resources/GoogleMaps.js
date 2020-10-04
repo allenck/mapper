@@ -162,7 +162,11 @@ function processScript3(func, objArray, count)
       if( fRslt instanceof Array)
           webViewBridge.scriptArrayResult( fRslt);
       else
+      {
+          if(fRslt === 0)
+              alert(call);
           webViewBridge.scriptResult( fRslt);
+      }
   }
   catch (err)
   {

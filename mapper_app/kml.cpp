@@ -1,6 +1,6 @@
 #include "kml.h"
 
-Kml::Kml(routeInfo ri, QObject *parent) :
+Kml::Kml(RouteInfo ri, QObject *parent) :
   QObject(parent)
 {
  this->ri = ri;

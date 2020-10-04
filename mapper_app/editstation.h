@@ -56,7 +56,7 @@ private:
 
     SQL* sql;
     SegmentInfo si;
-    segmentData sd;
+    SegmentData sd;
     void setRadioButtons();
     bool bDisplayStationMarkers;
     bool bUpdateExisting;

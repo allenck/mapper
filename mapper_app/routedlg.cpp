@@ -1744,7 +1744,7 @@ void RouteDlg::checkDirection(QString routeDirection)
         //companyData cd = (companyData)cbCompany.SelectedItem;
         companyKey = _companyList.at(ui->cbCompany->currentIndex()).companyKey;
     }
-    QList<segmentData> myArray;
+    QList<SegmentData> myArray;
 
     if (siReverse.segmentId< 1)
     {
@@ -1785,7 +1785,7 @@ void RouteDlg::checkDirection(QString routeDirection)
                     //foreach (segmentData sd in myArray)
                     for(int i =0; i < myArray.count()-1; i++)
                     {
-                        segmentData sd = myArray.at(i);
+                        SegmentData sd = myArray.at(i);
                         sql->addPoint(seq, siReverse.segmentId, sd.endLat, sd.endLon, sd.startLat, sd.startLon, sd.streetName);
                         seq++;
                     }

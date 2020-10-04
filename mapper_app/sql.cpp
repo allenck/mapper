@@ -548,9 +548,9 @@ routeInfo SQL::GetRoutePoints(qint32 route, QString name, QString date)
  return ri;
 }
 #else
-routeInfo SQL::getRoutePoints(qint32 route, QString name, QString date)
+RouteInfo SQL::getRoutePoints(qint32 route, QString name, QString date)
 {
- routeInfo ri = routeInfo();
+ RouteInfo ri = RouteInfo();
  SegmentInfo si = SegmentInfo();
  //segmentData sd =  segmentData();
  QSqlQuery query;
@@ -574,11 +574,11 @@ routeInfo SQL::getRoutePoints(qint32 route, QString name, QString date)
   SQLERROR(query);
 //      db.close();
 //      exit(EXIT_FAILURE);
-   return routeInfo();
+   return RouteInfo();
  }
  if(!query.isActive())
  {
-     return routeInfo();
+     return RouteInfo();
  }
  while (query.next())
  {
@@ -601,7 +601,7 @@ routeInfo SQL::getRoutePoints(qint32 route, QString name, QString date)
  }
  if (!query.isActive())
  {
-  return routeInfo();
+  return RouteInfo();
  }
  while (query.next())
  {
@@ -1064,10 +1064,10 @@ void SQL::populatePointList(SegmentInfo* sI)
 /// </summary>
 /// <param name="SegmentId"></param>
 /// <returns></returns>
-QList<segmentData> SQL::getSegmentData(qint32 SegmentId)
+QList<SegmentData> SQL::getSegmentData(qint32 SegmentId)
 {
-    QList<segmentData> myArray;
-    segmentData sd;
+    QList<SegmentData> myArray;
+    SegmentData sd;
     //double endLat = 0, endLon = 0;
     try
     {
@@ -1091,7 +1091,7 @@ QList<segmentData> SQL::getSegmentData(qint32 SegmentId)
         //                myArray = new LatLng[myReader.RecordsAffected];
         while (query.next())
         {
-            sd = segmentData();
+            sd = SegmentData();
             sd.startLat = query.value(0).toDouble();
             sd.startLon = query.value(1).toDouble();
             sd.endLat = query.value(2).toDouble();
@@ -1109,10 +1109,10 @@ QList<segmentData> SQL::getSegmentData(qint32 SegmentId)
     }
     return myArray;
 }
-segmentData SQL::getSegmentData(qint32 pt, qint32 SegmentId)
+SegmentData SQL::getSegmentData(qint32 pt, qint32 SegmentId)
 {
  int lastSequence = -1;
- segmentData sd = segmentData(pt, SegmentId);
+ SegmentData sd = SegmentData(pt, SegmentId);
  try
  {
   if(!dbOpen())
@@ -5173,8 +5173,8 @@ bool SQL::updateCompany(qint32 companyKey, qint32 route)
 /// <returns></returns>
 bool SQL::updateSegmentDates()
 {
-    QList<segmentData> myArray;
-    segmentData sd;
+    QList<SegmentData> myArray;
+    SegmentData sd;
     int rows = 0;
     try
     {
@@ -5199,7 +5199,7 @@ bool SQL::updateSegmentDates()
         }
         while (query.next())
         {
-            sd = segmentData();
+            sd = SegmentData();
             sd.SegmentId = query.value(0).toInt();
             sd.startDate = query.value(1).toDateTime();
             sd.endDate = query.value(2).toDateTime();
@@ -5208,7 +5208,7 @@ bool SQL::updateSegmentDates()
         //foreach(segmentData sd1 in myArray)
         for(int i=0; i<myArray.count(); i++)
         {
-            segmentData sd1 = (segmentData)myArray.at(i);
+            SegmentData sd1 = (SegmentData)myArray.at(i);
             QString CommandText = "update Segments set startDate = '" + sd1.startDate.toString("yyyy/MM/dd")+ "', endDate = '" + sd1.endDate.toString("yyyy/MM/dd") + "',lastUpdate=:lastUpdate where segmentid = " + QString("%1").arg(sd1.SegmentId);
             query.prepare(CommandText);
             query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
