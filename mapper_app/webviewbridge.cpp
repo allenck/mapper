@@ -1,5 +1,6 @@
 #include "webviewbridge.h"
 #include "mainwindow.h"
+#include <QDebug>
 
 webViewBridge* webViewBridge::_instance = NULL;
 
@@ -9,6 +10,7 @@ webViewBridge::webViewBridge(QObject *parent)
  m_parent = parent;
  _instance = this;
 }
+
 webViewBridge::webViewBridge(LatLng latLng, int zoom, QString maptype, QObject *parent)
  : QObject(parent)
 {
@@ -89,6 +91,7 @@ void webViewBridge::getInfoWindowComments(double lat, double lon, int route, QSt
 // receive result of function
 void webViewBridge::scriptResult(QVariant value)
 {
+ qDebug() << "scriptResult" << value;
  if(value.isNull())
   return;
  myRslt = value;

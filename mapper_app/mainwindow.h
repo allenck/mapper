@@ -349,17 +349,17 @@ private:
     TerminalInfo m_terminalInfo;
     RouteData _rd;
     bool m_bAddMode;
-    bool b_cbSegments_TextChanged;
-    bool b_cbRoutes_TextChanged;
-    bool bStreetChanged;
-    bool bSegmentChanged;
-    bool bRefreshingSegments;
-    bool bDisplayStationMarkers;
-    bool bDisplayTerminalMarkers;
-    bool bDisplayRouteComments;
-    bool bCbRouteRefreshing;
-    bool bNoDisplay;
-    bool bDisplayWebDebug;
+    bool b_cbSegments_TextChanged = false;
+    bool b_cbRoutes_TextChanged = false;
+    bool bStreetChanged = false;
+    bool bSegmentChanged = false;
+    bool bRefreshingSegments = false;
+    bool bDisplayStationMarkers = false;
+    bool bDisplayTerminalMarkers = false;
+    bool bDisplayRouteComments = false;
+    bool bCbRouteRefreshing = false;
+    bool bNoDisplay = false;
+    bool bDisplayWebDebug = false;
     QStringList overlays;
 
     void createActions();

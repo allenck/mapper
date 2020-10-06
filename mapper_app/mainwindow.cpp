@@ -337,6 +337,8 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   displayStationMarkersAct->setChecked(bDisplayStationMarkers);
   bDisplayTerminalMarkers = config->currCity->bDisplayTerminalMarkers;
   displayTerminalMarkersAct->setChecked(bDisplayTerminalMarkers);
+  displayTerminalMarkersToggeled(bDisplayTerminalMarkers);
+
   displayRouteCommentsAct->setChecked(config->currCity->bDisplayRouteComments);
   geocoderRequestAct->setChecked(config->currCity->bGeocoderRequest);
   m_bridge->processScript("setGeocoderRequest", config->currCity->bGeocoderRequest?"true":"false");
@@ -1675,12 +1677,16 @@ default:
      rc.ci.comments.insert(i,"<input type='button' name='prev' value='<' onClick='prevRouteComment()'/><input type='button' name='next' value='>' onClick='nextRouteComment()'/>");
     }
     objArray.clear();
-    objArray << infoLat <<infoLon<< rc.ci.comments<<rc.route<< rc.date.toString("yyyy/MM/dd");
-    m_bridge->processScript("displayRouteInfo", objArray);
-    m_bridge->processScript("showRouteInfo", bDisplayRouteComments?"true": "false");
+    objArray << infoLat <<infoLon<< rc.ci.comments << rc.route << rc.date.toString("yyyy/MM/dd");
+    if(bDisplayRouteComments)
+    {
+        m_bridge->processScript("displayRouteInfo", objArray);
+        m_bridge->processScript("showRouteInfo", bDisplayRouteComments?"true": "false");
+    }
    }
   }
 }
+
 void mainWindow::getInfoWindowComments(double lat, double lon, int route, QString date, int func)
 {
  QDate dt = QDate::fromString(date, "yyyy/MM/dd");

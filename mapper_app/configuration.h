@@ -55,8 +55,8 @@ public:
 
 struct query
 {
- bool b_stop_query_on_error;
- bool b_sql_execute_after_loading;
+ bool b_stop_query_on_error = false;
+ bool b_sql_execute_after_loading = false;
  QString s_query_path;
  QByteArray geometry;
 };
@@ -75,8 +75,8 @@ public:
  qint32 currentCityId;
  query q;
  static Configuration* instance();
- bool bDisplayWebDebug;
- bool bRunInBrowser;
+ bool bDisplayWebDebug = false;
+ bool bRunInBrowser = false;
  QStringList localOverlayList;
  QStringList georeferencedList;
  QString path;

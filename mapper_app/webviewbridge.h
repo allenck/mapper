@@ -10,7 +10,7 @@ class webViewBridge : public QObject
 public:
     explicit webViewBridge(QObject *parent = 0);
     webViewBridge(LatLng latLng, int zoom, QString maptype, QObject *parent = 0);
-    QObject* m_parent;
+    QObject* m_parent = nullptr;
 //    int browseWindowWidth;
 //    int browseWindowHeight;
 //    int curBrowseWindowWidth();

@@ -48,7 +48,7 @@ var bAdding = false;
 
 var rtStartMarker= null;
 var rtEndMarker = null;
-var infowindow;
+var infowindow = null;
 var osm_MapType;
 var stationArray = null;
 var overlay=null;
@@ -95,7 +95,10 @@ function processScript(func, parms)
    if( fRslt instanceof Array)
     webViewBridge.scriptArrayResult( fRslt);
    else
-    webViewBridge.scriptResult( fRslt);
+   {
+    if(webViewBridge.scriptResult !== null)
+        webViewBridge.scriptResult( fRslt);
+   }
   }
   catch (err)
   {
@@ -121,7 +124,8 @@ function processScript2(func, parms, name, value)
       var myFucn = new Function(call);
       var fRslt = myFucn();
       if(fRslt === null) return;
-      webViewBridge.scriptResult( fRslt);
+      if(webViewBridge.scriptResult !== null)
+          webViewBridge.scriptResult( fRslt);
   }
   catch (err)
   {
@@ -165,7 +169,8 @@ function processScript3(func, objArray, count)
       {
           if(fRslt === 0)
               alert(call);
-          webViewBridge.scriptResult( fRslt);
+          if(webViewBridge.scriptResult !== null)
+              webViewBridge.scriptResult( fRslt);
       }
   }
   catch (err)
@@ -737,7 +742,7 @@ function createSegment(segmentId, routeName, segmentName, oneWay, color, tracks,
   circle.setMap();
   circle = null;
  }
- if(infowindow)
+ if(infowindow !== null)
  {
   infowindow.setMap();
   infowindow = null;
@@ -1037,7 +1042,7 @@ if(circle)
   circle.setMap();
   circle = null;
 }
-if(infowindow)
+if(infowindow !== null)
 {
   infowindow.setMap();
   infowindow = null;
@@ -1121,7 +1126,7 @@ if(infowindow)
           rtEndMarker.setMap();
           rtEndMarker = null;
       }
-      if(infowindow)
+      if(infowindow !== null)
       {
           infowindow.setMap();
           infowindow = null;
@@ -1396,6 +1401,7 @@ google.maps.event.addListener(marker, "dblclick", function()
       }
       return new google.maps.LatLngBounds(new google.maps.LatLng(swlat, swlng), new google.maps.LatLng(nelat, nelng));
   }
+
   function displayTerminalMarkers(bDisplay)
   {
       //alert("display terminal markers");
@@ -2077,13 +2083,14 @@ function showRouteInfo(bDisplay)
   }
   else
   {
-     infowindow .setMap();
+     infowindow.setMap();
   }
  }
 }
+
 function displayRouteInfo(lat, lon, HTMLText, route, date)
 {
- if(infowindow != null)
+ if(infowindow !== null)
  {
   infowindow.setMap();
   infowindow = null;

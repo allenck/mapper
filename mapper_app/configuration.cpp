@@ -187,9 +187,9 @@ void Configuration::getSettings()
   nc->lastRoute = settings.value("lastRoute",0).toInt();
   nc->lastRouteName = settings.value("lastRouteName").toString();
   nc->lastRouteEndDate = settings.value("lastRouteEndDate").toString();
-  nc->bDisplayStationMarkers = settings.value("displayStationMarkers").toBool();
-  nc->bDisplayRouteComments = settings.value("displayRouteComments").toBool();
-  nc->bDisplayTerminalMarkers = settings.value("displayTerminalMarkers").toBool();
+  nc->bDisplayStationMarkers = settings.value("displayStationMarkers",false).toBool();
+  nc->bDisplayRouteComments = settings.value("displayRouteComments",false).toBool();
+  nc->bDisplayTerminalMarkers = settings.value("displayTerminalMarkers",false).toBool();
   nc->bShowOverlay = settings.value("showOverlay").toBool();
   nc->companyKey = settings.value("companyKey").toInt();
   nc->routeSortType = settings.value("routeSortType").toInt();
