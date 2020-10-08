@@ -1811,7 +1811,7 @@ function getStationMarkerIconType(stationKey)
           marker.setPosition(p);
       }
       updatePoly(d);
-      if(p.bStop == true)
+      if(p.bStop === true)
       {
           var content = p.content +
               "<p><img src='" + image[images.stop] + "' onclick='stopAnimation();' title='click to stop'/>  " +
@@ -2096,7 +2096,7 @@ function displayRouteInfo(lat, lon, HTMLText, route, date)
   infowindow = null;
  }
 
- infowindow = new google.maps.InfoWindow({content:date+HTMLText, position:new google.maps.LatLng(lat, lon)});
+ infowindow = new google.maps.InfoWindow({content:date+HTMLText, position:new google.maps.LatLng(lat, lon)}, 'return 0');
  //infowindow.setMap(map);
  infowindow.route = route;
  infowindow.date = date;
@@ -2107,11 +2107,13 @@ function displayRouteInfo(lat, lon, HTMLText, route, date)
 function nextRouteComment()
 {
  webViewBridge.getInfoWindowComments(infowindow.lat, infowindow.lon, infowindow.route, infowindow.date, 1);
+ return 0;
 }
 
 function prevRouteComment()
 {
  webViewBridge.getInfoWindowComments(infowindow.lat, infowindow.lon, infowindow.route, infowindow.date, -1);
+ return 0;
 }
 
 function setDefaultOptions()

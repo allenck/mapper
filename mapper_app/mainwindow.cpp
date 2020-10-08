@@ -1669,15 +1669,17 @@ default:
    {
     rc = sql->getRouteComment(0, dt, -1);
    }
-   if(rc.route >= 0)
+   if(rc.route >= 0 && rc.ci.comments != "")
    {
+//       if(rc.ci.comments == "")
+//           rc.ci.comments = "<body></body><";
     int i = rc.ci.comments.indexOf("</body>");
     if(i > 0)
     {
      rc.ci.comments.insert(i,"<input type='button' name='prev' value='<' onClick='prevRouteComment()'/><input type='button' name='next' value='>' onClick='nextRouteComment()'/>");
     }
     objArray.clear();
-    objArray << infoLat <<infoLon<< rc.ci.comments << rc.route << rc.date.toString("yyyy/MM/dd");
+    objArray << infoLat <<infoLon << rc.ci.comments << rc.route << rc.date.toString("yyyy/MM/dd");
     if(bDisplayRouteComments)
     {
         m_bridge->processScript("displayRouteInfo", objArray);
