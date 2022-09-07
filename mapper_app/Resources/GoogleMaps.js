@@ -646,7 +646,8 @@ function initMap()
         });
     });
 
- google.maps.event.addDomListener(mapDiv, 'resize', function(){
+ //google.maps.event.addDomListener(mapDiv, 'resize', function(){ deprecated
+    google.maps.event.addListener(mapDiv, 'resize', function(){
      google.maps.event.trigger(map, 'resize');
     });
  //new google.maps.LatLng(21.291982, -157.821856),
@@ -2102,6 +2103,7 @@ function displayRouteInfo(lat, lon, HTMLText, route, date)
  infowindow.date = date;
  infowindow.lat = lat;
  infowindow.lon = lon;
+ return 0;
 }
 
 function nextRouteComment()

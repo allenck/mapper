@@ -5,6 +5,7 @@
 #include "../console/systemconsole.h"
 #include "../console/consoleinterface.h"
 #include <QString>
+#include "myapplication.h"
 
 #if QT_VERSION < 0x050000
 void myMessageOutput(QtMsgType type, const char *msg)
@@ -72,7 +73,10 @@ int main(int argc, char *argv[])
 # endif
 #endif
  QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
- QApplication a(argc, argv);
+ //QApplication a(argc, argv);
+ QApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
+ MyApplication a(argc, argv);
+
  mainWindow w(argc, argv);
  w.show();
 

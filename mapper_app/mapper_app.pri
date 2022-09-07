@@ -1,4 +1,6 @@
 SOURCES += main.cpp\
+    $$PWD/exceptions.cpp \
+    $$PWD/myapplication.cpp \
     mainwindow.cpp \
     webviewbridge.cpp \
     sql.cpp \
@@ -53,6 +55,8 @@ SOURCES += main.cpp\
 
 
 HEADERS  += mainwindow.h \
+    $$PWD/exceptions.h \
+    $$PWD/myapplication.h \
     webviewbridge.h \
     sql.h \
     data.h \
