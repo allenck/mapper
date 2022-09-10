@@ -1,15 +1,14 @@
 #include "checkroute.h"
 
-checkRoute::checkRoute(QList<SegmentInfo> list, Configuration *cfg, QObject *parent)
+checkRoute::checkRoute(QList<SegmentInfo> list, Configuration *cfg, QObject *parent) : QObject(parent)
 {
-    Q_UNUSED(parent)
     segmentInfoList = segmentInfoList_old = list;
     config = cfg;
     //sql->setConfig(config);
     sql = SQL::instance();
     bError = checkConnectingSegments();
-
 }
+
 bool checkRoute::checkConnectingSegments()
 {
     notConnectedList.clear();

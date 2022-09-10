@@ -4614,7 +4614,7 @@ bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QStri
 {
     bool ret = false;
     int rows = 0;
-    name.trimmed();
+    name = name.trimmed();
     QString CommandText;
     QString segStartDate = "", segEndDate = "";
     try

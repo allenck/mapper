@@ -3772,6 +3772,7 @@ bool mainWindow::openWebWindow()
      return false;
     }
    }
+
    QFile file(tempDir+ QDir::separator() + "GoogleMaps.js");
    if(file.exists())
    {
@@ -3785,6 +3786,7 @@ bool mainWindow::openWebWindow()
     qDebug() << "copy failed:" << ":///GoogleMaps.js" << " to " << tempDir+ QDir::separator() + "GoogleMaps.js" << file.errorString();
     //return false;
    }
+
    if(!QFile(tempDir+ QDir::separator() + "WebChannel.js").exists())
    {
     if(!QFile::copy(":///scripts/WebChannel.js", tempDir+ QDir::separator() + "WebChannel.js" ))
