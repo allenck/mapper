@@ -8659,15 +8659,23 @@ void SQL::checkTables(QSqlDatabase db)
   {
    addColumn("Segments", "street", "text");
   }
+
   if(!doesColumnExist("Companies", "routePrefix"))
   {
    addColumn("Companies", "routePrefix", "varchar(10)");
   }
+
+  if(!doesColumnExist("Companies", "info"))
+  {
+   addColumn("Companies", "info", "varchar(50)");
+  }
+
   if(!doesColumnExist("altRoute", "routePrefix") || !testAltRoute())
   {
    //addColumn("altRoute", "routePrefix", "varchar(10)");
    executeScript(":/recreateAltRoute.sql",db);
   }
+
   if(!doesColumnExist("Stations", "suffix"))
   {
    //addColumn("altRoute", "routePrefix", "varchar(10)");
