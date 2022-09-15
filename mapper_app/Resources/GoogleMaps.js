@@ -167,8 +167,8 @@ function processScript3(func, objArray, count)
           webViewBridge.scriptArrayResult( fRslt);
       else
       {
-          if(fRslt === 0)
-              alert(call);
+//          if(fRslt === 0)
+//              alert(call);
           if(webViewBridge.scriptResult !== null)
               webViewBridge.scriptResult( fRslt);
       }

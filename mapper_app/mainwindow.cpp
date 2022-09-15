@@ -1427,9 +1427,9 @@ void mainWindow::refreshRoutes()
     {
          RouteData rd = (RouteData)routeList.at(i);
          QString rdStartDate = rd.startDate.toString("yyyy/MM/dd");
-                 ui->cbRoute->addItem(rd.toString());
+            ui->cbRoute->addItem(rd.toString());
          if( rd.toString() == currText)
-                     ui->cbRoute->setCurrentIndex(i);
+            ui->cbRoute->setCurrentIndex(i);
     }
     ui->sbRoute->setRange(0, routeList.count());
 
@@ -1465,7 +1465,7 @@ void mainWindow::txtRouteNbrLeave()
     {
          RouteData rd = (RouteData)routeList.at(i);
          QString rdStartDate = rd.startDate.toString("yyyy/MM/dd");
-                 ui->cbRoute->addItem(rd.toString());
+         ui->cbRoute->addItem(rd.toString());
     }
     ui->sbRoute->setRange(0, routeList.count());
 

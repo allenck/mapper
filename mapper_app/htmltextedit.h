@@ -2,10 +2,11 @@
 #define HTMLTEXTEDIT_H
 
 #include <QTextEdit>
+#include <QTextBrowser>
 #include <QAction>
 
 class Configuration;
-class HtmlTextEdit : public QTextEdit
+class HtmlTextEdit : public QTextBrowser
 {
  Q_OBJECT
 public:
@@ -35,7 +36,7 @@ private:
  Configuration* config;
 
 private slots:
- void showContextMenu(const QPoint &pt);
+ void showContextMenu(QPoint pt);
  void OnBoldAction(bool checked);
  void OnItalicAction(bool checked);
  void OnUnderlineAct(bool checked);

@@ -7,7 +7,7 @@
 #include <QTextDocumentFragment>
 
 HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
-  QTextEdit(parent)
+  QTextBrowser(parent)
 {
  config = Configuration::instance();
  connect(this, SIGNAL(selectionChanged()), this, SLOT(OnSelectionChanged()));
@@ -46,7 +46,7 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
  connect(setColorBlackAct, SIGNAL(triggered(bool)), this, SLOT(OnSetColorBlackAct(bool)));
  connect(setColorGrayAct, SIGNAL(triggered(bool)),this, SLOT(OnSetColorGrayAct(bool)));
  this->setContextMenuPolicy(Qt::CustomContextMenu);
- connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showContextMenu(const QPoint &)));
+ connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showContextMenu(QPoint)));
  connect(setFontAct, SIGNAL(triggered()), this, SLOT(OnSetFontAct()));
  connect(pasteHtmlAct, SIGNAL(triggered()),this, SLOT(OnPasteHtmlAct()) );
  connect(pasteSaved, SIGNAL(triggered()), this, SLOT(OnPasteSaved()));
@@ -56,7 +56,7 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
  setDirty(false);
 }
 
-void HtmlTextEdit::showContextMenu(const QPoint &pt)
+void HtmlTextEdit::showContextMenu(QPoint pt)
 {
  const QClipboard *clipboard = QApplication::clipboard();
  const QMimeData *mimeData = clipboard->mimeData();
@@ -89,6 +89,10 @@ void HtmlTextEdit::showContextMenu(const QPoint &pt)
   italicAction->setChecked(this->fontItalic());
 
   menu->addAction(copySaved);
+ }
+ else
+ {
+  menu->addAction((pasteHtmlAct));
  }
  if(config->currCity->savedClipboard.length()>0)
  {
@@ -235,7 +239,10 @@ void HtmlTextEdit::OnSetFontAct()
 void HtmlTextEdit::OnPasteHtmlAct()
 {
     const QClipboard *clipboard = QApplication::clipboard();
+    QString clipText = clipboard->text();
     const QMimeData *mimeData = clipboard->mimeData();
+    QString mimeText = mimeData->text();
+
      if (mimeData->hasHtml()) {
          this->setHtml(mimeData->html());
          //setTextFormat(Qt::RichText);
