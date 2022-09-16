@@ -344,7 +344,7 @@ private:
     QActionGroup  *overlayActionGroup;
     QString  currentOverlay;
     QList<tractionTypeInfo> tractionTypeList;
-    QList<CompanyData> companyList;
+    QList<CompanyData*> companyList;
 
     TerminalInfo m_terminalInfo;
     RouteData _rd;

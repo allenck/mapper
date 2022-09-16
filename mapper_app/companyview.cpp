@@ -22,6 +22,7 @@ CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
 
     model = new QSqlTableModel(this, db);
     model->setTable("Companies");
+    model->setSort(1, Qt::AscendingOrder);
     connect(model, SIGNAL(primeInsert(int,QSqlRecord&)), this, SLOT(On_primeInsert(int,QSqlRecord&)));
     //model->setQuery("select * from Companies");
     connect(model, SIGNAL(beforeUpdate(int,QSqlRecord&)), this, SLOT(On_primeInsert(int,QSqlRecord&)));

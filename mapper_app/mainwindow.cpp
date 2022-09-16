@@ -1413,7 +1413,7 @@ void mainWindow::refreshRoutes()
     if(ixCompany > 0)
     {
         //companyKey = ui->cbCompany->itemData(ixCompany).Int;
-        companyKey = companyList.at(ixCompany-1).companyKey;
+        companyKey = companyList.at(ixCompany-1)->companyKey;
 
     }
     int ix = ui->cbRoute->currentIndex();
@@ -1447,7 +1447,7 @@ void mainWindow::txtRouteNbrLeave()
     if(ixCompany > 0)
     {
         //companyKey = ui->cbCompany->itemData(ixCompany).Int;
-        companyKey = companyList.at(ixCompany-1).companyKey;
+        companyKey = companyList.at(ixCompany-1)->companyKey;
 
     }
     qint32 newRoute = sql->getNumericRoute(txt, &txtAlpha, &bIsAlpha, companyKey);
@@ -1807,8 +1807,8 @@ void mainWindow::refreshCompanies()
     companyList = sql->getCompanies();
     for(int i=0; i < companyList.count(); i++)
     {
-        CompanyData cd = companyList.at(i);
-        ui->cbCompany->addItem(cd.name, cd.companyKey);
+        CompanyData* cd = companyList.at(i);
+        ui->cbCompany->addItem(cd->name, cd->companyKey);
     }
     if(routeDlg != NULL)
      routeDlg->fillCompanies();

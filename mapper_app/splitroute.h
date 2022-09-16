@@ -27,7 +27,7 @@ private:
     Configuration *config;
     RouteData _rd, _newRoute;
     QList<RouteData> routeDataList;
-    QList<CompanyData> _companyList;
+    QList<CompanyData*> _companyList;
     qint32 _routeNbr1, _routeNbr2;
     QString _alphaRoute1, _alphaRoute2;
     bool bRoute1Changed, bRoute2Changed;

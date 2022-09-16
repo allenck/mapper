@@ -73,8 +73,8 @@ public:
     QList<SegmentInfo> getIntersectingSegments(double lat, double lon, double radius, RouteType type);
     bool updateRecord(SegmentInfo si);
     bool updateSegmentDescription(qint32 SegmentId, QString description, QString oneWay, int tracks, double length);
-    QList<CompanyData> getCompanies();
-    CompanyData getCompany(qint32 companyKey);
+    QList<CompanyData *> getCompanies();
+    CompanyData *getCompany(qint32 companyKey);
     QList<RouteData> getRouteSegmentsForDate(qint32 route, QString name, QString date);
     QList<RouteData> getRouteSegmentsForDate(qint32 segmentId, QString date);
     qint32 addAltRoute(QString routeAlpha, QString routePrefix);

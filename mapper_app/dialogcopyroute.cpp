@@ -58,7 +58,7 @@ void DialogCopyRoute::fillCompanies()
     //foreach (companyData cd in _companyList)
     for(int i = 0; i<_companyList.count(); i++)
     {
-     ui->cbCompany->addItem(((CompanyData)_companyList.at(i)).toString(), _companyList.at(i).companyKey);
+     ui->cbCompany->addItem(((CompanyData*)_companyList.at(i))->toString(), _companyList.at(i)->companyKey);
     }
     //cbCompany.Text = "";
 
@@ -98,9 +98,9 @@ void DialogCopyRoute::setRouteData(RouteData value)
             ui->dateStart->setDate( rd.startDate);
             ui->dateEnd->setDate( rd.endDate);
             int j=0;
-            foreach(CompanyData cd, _companyList)
+            foreach(CompanyData* cd, _companyList)
             {
-                if( cd.companyKey == rd.companyKey)
+                if( cd->companyKey == rd.companyKey)
                 {
                     ui->cbCompany->setCurrentIndex(j);
                     break;
@@ -190,7 +190,7 @@ void DialogCopyRoute::txtRouteNbr_Leave()      // SLOT
                 for(int j=0; j < _companyList.count(); j++)
                 {
                     cd = _companyList.at(j);
-                    if (companyKey == cd.companyKey)
+                    if (companyKey == cd->companyKey)
                     {
                         ui->cbCompany->setCurrentIndex(j);
                         //cbCompany.SelectedText = cd.ToString();
@@ -242,7 +242,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
 
         return;
     }
-    _routeNbr = sql->addAltRoute(ui->txtRouteNbr->text(), cd.routePrefix);
+    _routeNbr = sql->addAltRoute(ui->txtRouteNbr->text(), cd->routePrefix);
     RouteData rd;
     qint32 ix = ui->cbRoutes->currentIndex();
     rd = routeDataList.at(ix);
@@ -266,7 +266,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
         for (int i =0; i < myArray.count(); i++)
         {
             RouteData rd1 = myArray.at(i);
-            if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(), ui->dateStart->text(), ui->dateEnd->text(), rd1.lineKey, ((CompanyData)_companyList.at(ui->cbCompany->currentIndex())).companyKey, /*cbTractionType.SelectedIndex + 1*/tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave) == false)
+            if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(), ui->dateStart->text(), ui->dateEnd->text(), rd1.lineKey, ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey, /*cbTractionType.SelectedIndex + 1*/tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave) == false)
             {
                 ui->lblHelp->setText(tr("add failed"));
                 //System.Media.SystemSounds.Asterisk.Play();
@@ -289,7 +289,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
                 sql->deleteRouteSegment(_routeNbr, ui->txtRouteName->text(), rd2.lineKey, ui->dateStart->text(), ui->dateEnd->text());
             }
 
-            if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(), ui->dateStart->text(), ui->dateEnd->text(), rd1.lineKey, ((CompanyData)_companyList.at(ui->cbCompany->currentIndex())).companyKey, /*cbTractionType.SelectedIndex + 1*/tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave) == false)
+            if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(), ui->dateStart->text(), ui->dateEnd->text(), rd1.lineKey, ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey, /*cbTractionType.SelectedIndex + 1*/tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave) == false)
             {
                 ui->lblHelp->setText(tr("add failed"));
                 //System.Media.SystemSounds.Asterisk.Play();
@@ -336,7 +336,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
             {
                 sql->deleteRouteSegment(_routeNbr, ui->txtRouteName->text(), rd2.lineKey, ui->dateStart->text(), ui->dateEnd->text());
             }
-            if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(), ui->dateStart->text(), ui->dateEnd->text(), rd1.lineKey, ((CompanyData)_companyList.at(ui->cbCompany->currentIndex())).companyKey, /*cbTractionType.SelectedIndex + 1*/tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave) == false)
+            if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(), ui->dateStart->text(), ui->dateEnd->text(), rd1.lineKey, ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey, /*cbTractionType.SelectedIndex + 1*/tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave) == false)
             {
                 ui->lblHelp->setText(tr("add failed"));
                 //System.Media.SystemSounds.Asterisk.Play();
@@ -353,7 +353,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     _rd.name = ui->txtRouteName->text();
     _rd.startDate = ui->dateStart->date();
     _rd.endDate = ui->dateEnd->date();
-    _rd.companyKey = ((CompanyData)_companyList.at(ui->cbCompany->currentIndex())).companyKey;
+    _rd.companyKey = ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey;
     _rd.tractionType = ((tractionTypeInfo)tractionList.at(ui->cbTractionType->currentIndex())).tractionType;
 
     this->accept();
@@ -365,27 +365,27 @@ void DialogCopyRoute::cbCompany_SelectedIndexChanged(int row) // SLOT
     Q_UNUSED(row)
     ui->lblHelp->setText("");
     //companyData cd = sql->getCompany(cbCompany.SelectedIndex);
-    CompanyData cd = _companyList.at(ui->cbCompany->currentIndex());
-    if (cd.name == "")
+    cd = _companyList.at(ui->cbCompany->currentIndex());
+    if (cd->name == "")
         return;
 
-    if (ui->dateEnd->date() < cd.startDate || ui->dateStart->date() > cd.endDate)
+    if (ui->dateEnd->date() < cd->startDate || ui->dateStart->date() > cd->endDate)
     {
         ui->lblHelp->setText(tr("Company not valid for specified dates!"));
         //System.Media.SystemSounds.Question.Play();
         ui->dateStart->setFocus();
     }
-    if (ui->dateStart->date() < cd.startDate)
-        ui->dateStart->setDate(cd.startDate);
-    if (ui->dateEnd->date() > cd.endDate)
-        ui->dateEnd->setDate(cd.endDate);
+    if (ui->dateStart->date() < cd->startDate)
+        ui->dateStart->setDate(cd->startDate);
+    if (ui->dateEnd->date() > cd->endDate)
+        ui->dateEnd->setDate(cd->endDate);
 }
 
 void DialogCopyRoute::dateStart_ValueChanged()   //SLOT
 {
     ui->lblHelp->setText("");
-    CompanyData cd = _companyList.at(ui->cbCompany->currentIndex());
-    if(ui->dateStart->date() < cd.startDate)
+    cd = _companyList.at(ui->cbCompany->currentIndex());
+    if(ui->dateStart->date() < cd->startDate)
     {
         ui->lblHelp->setText(tr("start date is prior to company's start date"));
         QApplication::beep();
@@ -402,16 +402,16 @@ void DialogCopyRoute::dateStart_ValueChanged()   //SLOT
 void DialogCopyRoute::dateEnd_ValueChanged()   //SLOT
 {
     ui->lblHelp->setText("");
-    CompanyData cd = _companyList.at(ui->cbCompany->currentIndex());
+    cd = _companyList.at(ui->cbCompany->currentIndex());
     if(ui->dateStart->dateTime() > ui->dateEnd->dateTime())
     {
-        ui->lblHelp->setText(tr("end date must be after company start date (")+ cd.startDate.toString("yyyy/MM/dd")+")");
+        ui->lblHelp->setText(tr("end date must be after company start date (")+ cd->startDate.toString("yyyy/MM/dd")+")");
         QApplication::beep();
         ui->dateStart->setFocus();
     }
-    if(ui->dateEnd->date() > cd.endDate)
+    if(ui->dateEnd->date() > cd->endDate)
     {
-        ui->lblHelp->setText(tr("end date is after to company's end date (")+ cd.endDate.toString("yyyy/MM/dd")+")");
+        ui->lblHelp->setText(tr("end date is after to company's end date (")+ cd->endDate.toString("yyyy/MM/dd")+")");
         QApplication::beep();
         ui->dateEnd->setFocus();
     }

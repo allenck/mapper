@@ -156,8 +156,8 @@ void RouteDlg::setRouteNbr(qint32 rt)
     //foreach( companyData cd in _companyList)
     for(int i=0;i<_companyList.count();i++)
     {
-        CompanyData cd =(CompanyData)_companyList.at(i);
-        if(companyKey == cd.companyKey)
+        CompanyData* cd =(CompanyData*)_companyList.at(i);
+        if(companyKey == cd->companyKey)
         {
             ui->cbCompany->setCurrentIndex(i);
            // cbCompany.SelectedText = cd.ToString();
@@ -212,8 +212,8 @@ void RouteDlg::setRouteData(RouteData value)
   //cbCompany.SelectedIndex = i;
   for(int i=0;i<_companyList.count();i++)
   {
-   CompanyData cd =(CompanyData)_companyList.at(i);
-   if(companyKey == cd.companyKey)
+   CompanyData* cd =(CompanyData*)_companyList.at(i);
+   if(companyKey == cd->companyKey)
    {
     ui->cbCompany->setCurrentIndex(i);
       // cbCompany.SelectedText = cd.ToString();
@@ -415,8 +415,8 @@ void RouteDlg::txtRouteName_Leave()
                 //i = cbCompany.FindString(rd.companyKey.ToString(), -1);
                 for( int j=0; j < _companyList.count(); j++)
                 {
-                    CompanyData cd = (CompanyData)_companyList.at(j);
-                    if(cd.companyKey == rd.companyKey)
+                    CompanyData* cd = (CompanyData*)_companyList.at(j);
+                    if(cd->companyKey == rd.companyKey)
                     {
                         ui->cbCompany->setCurrentIndex(j);
                         break;
@@ -506,8 +506,8 @@ void RouteDlg::fillCompanies()
     //foreach (companyData cd in _companyList)
     for(int i=0; i < _companyList.count(); i++)
     {
-        CompanyData cd = (CompanyData)_companyList.at(i);
-        ui->cbCompany->addItem(cd.toString(), cd.companyKey);
+        CompanyData* cd = (CompanyData*)_companyList.at(i);
+        ui->cbCompany->addItem(cd->toString(), cd->companyKey);
         //count++;
     }
     //cbCompany.SelectedIndex = 0;
@@ -688,8 +688,8 @@ void RouteDlg::setCompany(qint32 companyKey)
   //foreach (companyData cd in _companyList)
   for(int i =0; i < _companyList.count(); i++)
   {
-   CompanyData cd = _companyList.at(i);
-   if (cd.companyKey == companyKey)
+   CompanyData* cd = _companyList.at(i);
+   if (cd->companyKey == companyKey)
    {
        ui->cbCompany->setCurrentIndex(i);
        break;
@@ -980,7 +980,7 @@ void RouteDlg::checkUpdate(QString func)
         ui->lblHelpText->setText(tr("Select a company"));
         return;
     }
-    CompanyData cd = _companyList.at(ui->cbCompany->currentIndex());
+    CompanyData* cd = _companyList.at(ui->cbCompany->currentIndex());
 
     if(ui->dateEnd->date() < ui->dateStart->date())
     {
@@ -989,18 +989,18 @@ void RouteDlg::checkUpdate(QString func)
         ui->lblHelpText->setText(tr("End date must be later"));
         return;
     }
-    if(ui->dateStart->date() < cd.startDate)
+    if(ui->dateStart->date() < cd->startDate)
     {
         ui->btnAdd->setEnabled(false);
-        ui->lblHelpText->setText(tr("can not be before company start date (")+ cd.startDate.toString("yyyy/MM/dd")+")");
+        ui->lblHelpText->setText(tr("can not be before company start date (")+ cd->startDate.toString("yyyy/MM/dd")+")");
         //ui->cbCompany->setFocus();
         return;
     }
 
-    if(ui->dateEnd->date()> cd.endDate)
+    if(ui->dateEnd->date()> cd->endDate)
     {
         ui->btnAdd->setEnabled(false);
-        ui->lblHelpText->setText(tr("can not be after company end date (")+ cd.endDate.toString("yyyy/MM/dd")+")");
+        ui->lblHelpText->setText(tr("can not be after company end date (")+ cd->endDate.toString("yyyy/MM/dd")+")");
         //ui->cbCompany->setFocus();
         return;
     }
@@ -1352,8 +1352,8 @@ void RouteDlg::btnDelete_Click()              // SLOT
 
  if (ui->cbCompany->currentIndex() >= 0)
  {
-  CompanyData cd = _companyList.at(ui->cbCompany->currentIndex());
-  companyKey = cd.companyKey;
+  CompanyData* cd = _companyList.at(ui->cbCompany->currentIndex());
+  companyKey = cd->companyKey;
  }
  QString direction = "";
  si = sql->getSegmentInfo(_SegmentId);
@@ -1524,7 +1524,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
 
  if (ui->cbCompany->currentIndex() >= 0)
  {
-  companyKey = _companyList.at(ui->cbCompany->currentIndex()).companyKey;
+  companyKey = _companyList.at(ui->cbCompany->currentIndex())->companyKey;
  }
  else
  {
@@ -1635,9 +1635,9 @@ void RouteDlg::btnAdd_Click()         // SLOT
  }
  if (ui->btnAdd->text() == "Add")
  {
-  CompanyData cd = sql->getCompany(companyKey);
+  CompanyData* cd = sql->getCompany(companyKey);
      //if (_routeNbr == -1 && _alphaRoute != "")
-  _routeNbr = sql->addAltRoute(ui->txtRouteNbr->text(), cd.routePrefix);
+  _routeNbr = sql->addAltRoute(ui->txtRouteNbr->text(), cd->routePrefix);
      if (sql->doesRouteSegmentExist(_routeNbr, ui->cbRouteName->currentText(), _SegmentId, ui->dateStart->text(), ui->dateEnd->text()) == false)
      {
          int tractionType = _tractionList.at(ui->cbTractionType->currentIndex()).tractionType;
@@ -1672,8 +1672,8 @@ void RouteDlg::btnAdd_Click()         // SLOT
   QString alpha = sql->getAlphaRoute(_routeNbr, companyKey);
   if (alpha == "")
   {
-   CompanyData cd = sql->getCompany(companyKey);
-      _routeNbr = sql->addAltRoute(_alphaRoute, cd.routePrefix);
+   CompanyData* cd = sql->getCompany(companyKey);
+      _routeNbr = sql->addAltRoute(_alphaRoute, cd->routePrefix);
   }
   int tractionType = _tractionList.at(ui->cbTractionType->currentIndex()).tractionType;
   if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(), ui->dateEnd->text(), _SegmentId, companyKey, /*cbTractionType.SelectedIndex+1*/tractionType, direction, normalEnter, normalLeave, reverseEnter, reverseLeave))
@@ -1742,7 +1742,7 @@ void RouteDlg::checkDirection(QString routeDirection)
     if (ui->cbCompany->currentIndex() >= 0)
     {
         //companyData cd = (companyData)cbCompany.SelectedItem;
-        companyKey = _companyList.at(ui->cbCompany->currentIndex()).companyKey;
+        companyKey = _companyList.at(ui->cbCompany->currentIndex())->companyKey;
     }
     QList<SegmentData> myArray;
 
@@ -2027,7 +2027,7 @@ void RouteDlg::displayDates(QString str)
 void RouteDlg::cbCompany_SelectedIndexChanged(int i)
 {
  if(i < 0) return;
- CompanyData cd = _companyList.at(i);
+ CompanyData* cd = _companyList.at(i);
  if(i < 0)
  {
      ui->lblHelpText->setText(tr("Select a company"));
@@ -2035,22 +2035,22 @@ void RouteDlg::cbCompany_SelectedIndexChanged(int i)
  }
  CalculateDates();
 
- if(cd.startDate > _rd.startDate)
+ if(cd->startDate > _rd.startDate)
  {
-     ui->lblHelpText->setText(tr("company start date (")+ cd.startDate.toString("yyyy/MM/dd") + tr(") is later than route start date"));
+     ui->lblHelpText->setText(tr("company start date (")+ cd->startDate.toString("yyyy/MM/dd") + tr(") is later than route start date"));
      QApplication::beep();
      ui->cbCompany->setFocus();
      return;
  }
- if(cd.endDate < _rd.endDate)
+ if(cd->endDate < _rd.endDate)
  {
-     ui->lblHelpText->setText(tr("company end date (")+cd.endDate.toString("yyyy/MM/dd")+ tr(") is before route's' end date"));
+     ui->lblHelpText->setText(tr("company end date (")+cd->endDate.toString("yyyy/MM/dd")+ tr(") is before route's' end date"));
      QApplication::beep();
      ui->cbCompany->setFocus();
      return;
  }
- if(ui->dateEnd->date() > cd.endDate)
-     ui->dateEnd->setDate(cd.endDate);
+ if(ui->dateEnd->date() > cd->endDate)
+     ui->dateEnd->setDate(cd->endDate);
  checkUpdate(__FUNCTION__);
 }
 
@@ -2062,9 +2062,9 @@ void RouteDlg::OnNewCity()
 
 void RouteDlg::CalculateDates()
 {
- CompanyData cd = _companyList.at(ui->cbCompany->currentIndex());
- minDate = cd.startDate;
- maxDate = cd.endDate;
+ CompanyData* cd = _companyList.at(ui->cbCompany->currentIndex());
+ minDate = cd->startDate;
+ maxDate = cd->endDate;
  //si = sql->getSegmentInfo(_SegmentId);
 // if(QDate::fromString(si.startDate, "yyyy/MM/dd") > minDate)
 //  minDate = QDate::fromString(si.startDate, "yyyy/MM/dd");

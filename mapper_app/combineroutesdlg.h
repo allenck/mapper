@@ -30,7 +30,7 @@ private:
     QString _alphaRoute;
     RouteData _rd1;
     RouteData _rd2;
-    CompanyData companyData;
+    CompanyData* companyData;
 
 private slots:
     void on_txtNewRouteNbr_editingFinished();

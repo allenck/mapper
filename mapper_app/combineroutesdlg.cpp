@@ -103,7 +103,7 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
     }
 
     sql->BeginTransaction("combineRoutes");
-    _routeNbr = sql->addAltRoute(ui->txtNewRouteNbr->text(), companyData.routePrefix);
+    _routeNbr = sql->addAltRoute(ui->txtNewRouteNbr->text(), companyData->routePrefix);
     _alphaRoute = ui->txtNewRouteNbr->text();
 
     QList<RouteData> myArray;

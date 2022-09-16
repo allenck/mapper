@@ -49,6 +49,7 @@ SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
 
     myParent->ui->tabWidget->setTabText(1, "Intersecting Segments");
 }
+
 void SegmentView::Resize (int oldcount,int newcount)
 {
     Q_UNUSED(oldcount)
@@ -232,7 +233,7 @@ void SegmentView::itemSelectionChanged(QModelIndex index)
     else
     {
         SegmentInfo si = sql->getSegmentInfo(segmentId);
-        parent->displaySegment(segmentId, si.description, si.oneWay, si.oneWay == "N" ? "#00FF00" : "#045fb4", true);
+        //parent->displaySegment(segmentId, si.description, si.oneWay, si.oneWay == "N" ? "#00FF00" : "#045fb4", true);
+        parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
     }
-
 }

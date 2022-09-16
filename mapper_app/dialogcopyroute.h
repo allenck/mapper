@@ -25,7 +25,7 @@ private:
     Ui::DialogCopyRoute *ui;
 
     QList<RouteData> routeDataList;
-    QList<CompanyData> _companyList;
+    QList<CompanyData*> _companyList;
     QList<tractionTypeInfo> tractionList;
     SQL* sql;
     int _routeNbr;
@@ -33,7 +33,7 @@ private:
     bool bRouteChanged;
     Configuration *config;
     RouteData _rd;
-    CompanyData cd;
+    CompanyData* cd = nullptr;
     void refreshRoutes();
     void fillCompanies();
     void fillTractionTypes();

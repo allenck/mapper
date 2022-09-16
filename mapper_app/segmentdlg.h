@@ -44,7 +44,7 @@ private:
     bool bOriginalChanged;
     bool bNewChanged;
     bool bRouteChanged;
-    QList<CompanyData> _companyList;
+    QList<CompanyData*> _companyList;
     QList<tractionTypeInfo> _tractionTypeList;
     QList<QString> _routeNameList;
     QList<QString> _routeTypeList;

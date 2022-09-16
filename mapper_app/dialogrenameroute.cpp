@@ -76,9 +76,9 @@ void DialogRenameRoute::btnOK_Click()
         return;
     }
     sql->BeginTransaction("RenameRoute");
-    CompanyData cd = sql->getCompany(rd.companyKey);
+    CompanyData* cd = sql->getCompany(rd.companyKey);
 
-    _routeNbr = sql->addAltRoute(ui->txtNewRouteNbr->text(), cd.routePrefix);
+    _routeNbr = sql->addAltRoute(ui->txtNewRouteNbr->text(), cd->routePrefix);
 
     //foreach (routeData rd1 in myArray)
     for(int i=0; i < myArray.count(); i++)

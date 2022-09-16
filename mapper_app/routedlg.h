@@ -50,7 +50,7 @@ private:
     qint32 _routeNbr;
     QString _alphaRoute;
     QList<RouteData> _segmentInfoList;
-    QList<CompanyData> _companyList;
+    QList<CompanyData*> _companyList;
     QList<tractionTypeInfo> _tractionList;
     QList<QString> _routeNamesList;
     SQL* sql;

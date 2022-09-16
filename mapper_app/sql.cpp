@@ -4,6 +4,8 @@
 #include "mainwindow.h"
 #include <sqlite3.h>
 //#include "c:\progra~1\sqlite3_3_13\src\sqlite3.h"
+#include <algorithm>
+
 
 SQL* SQL::_instance = NULL;
 
@@ -4422,10 +4424,10 @@ bool SQL::updateRecord(SegmentInfo sd)
 /// Get a list of companies
 /// </summary>
 /// <returns></returns>
-QList<CompanyData> SQL::getCompanies()
+QList<CompanyData*> SQL::getCompanies()
 {
- QList<CompanyData> myArray;
- CompanyData cd ;
+ QList<CompanyData*> myArray;
+ CompanyData* cd;
  QSqlDatabase db = QSqlDatabase::database();
 
  QString CommandText;
@@ -4444,30 +4446,33 @@ QList<CompanyData> SQL::getCompanies()
  }
  while (query.next())
  {
-     cd = CompanyData();
-     cd.companyKey = query.value(0).toInt();
-     cd.name = query.value(1).toString();
+     cd = new CompanyData();
+     cd->companyKey = query.value(0).toInt();
+     cd->name = query.value(1).toString();
      if(query.value(2).isNull())
-         cd.startDate = QDate();
+         cd->startDate = QDate();
      else
-         cd.startDate = query.value(2).toDate();
+         cd->startDate = query.value(2).toDate();
      if (query.value(3).isNull())
-         cd.endDate = QDate();
+         cd->endDate = QDate();
      else
-         cd.endDate = query.value(3).toDate();
-     cd.firstRoute = query.value(4).toInt();
-     cd.lastRoute = query.value(5).toInt();
+         cd->endDate = query.value(3).toDate();
+     cd->firstRoute = query.value(4).toInt();
+     cd->lastRoute = query.value(5).toInt();
      myArray.append(cd);
  }
+ std::sort(myArray.begin(), myArray.end(), [](const CompanyData* a, const CompanyData* b) -> bool { return a->name < b->name; });
+
  return myArray;
 }
+
 /// <summary>
 /// Get the data for a company
 /// </summary>
 /// <returns></returns>
-CompanyData SQL::getCompany(qint32 companyKey)
+CompanyData* SQL::getCompany(qint32 companyKey)
 {
-    CompanyData cd;
+    CompanyData* cd = nullptr;
     try
     {
         if(!dbOpen())
@@ -4491,20 +4496,20 @@ CompanyData SQL::getCompany(qint32 companyKey)
         }
         while (query.next())
         {
-            cd = CompanyData();
-            cd.companyKey = query.value(0).toInt();
-            cd.name = query.value(1).toString();
+            cd = new CompanyData();
+            cd->companyKey = query.value(0).toInt();
+            cd->name = query.value(1).toString();
             if(query.value(2).isNull())
-                cd.startDate = QDate();
+                cd->startDate = QDate();
             else
-                cd.startDate = query.value(2).toDate();
+                cd->startDate = query.value(2).toDate();
             if (query.value(3).isNull())
-                cd.endDate = QDate();
+                cd->endDate = QDate();
             else
-                cd.endDate = query.value(3).toDate();
-            cd.firstRoute = query.value(4).toInt();
-            cd.lastRoute = query.value(5).toInt();
-            cd.routePrefix = query.value(6).toString();
+                cd->endDate = query.value(3).toDate();
+            cd->firstRoute = query.value(4).toInt();
+            cd->lastRoute = query.value(5).toInt();
+            cd->routePrefix = query.value(6).toString();
         }
     }
     catch (std::exception e)
@@ -4751,7 +4756,7 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDat
         qDebug()<<"invalid company key: " + QString("%1").arg(companyKey);
         exit(EXIT_FAILURE);
     }
-    CompanyData cd = getCompany(companyKey);
+    CompanyData* cd = getCompany(companyKey);
     if(routeNbr != 9998 && routeNbr != 9999)
         updateCompany(companyKey, routeNbr);
 
@@ -4823,7 +4828,7 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDat
         qDebug()<<"invalid company key: " + QString("%1").arg(companyKey);
         return ret;
     }
-    CompanyData cd = getCompany(companyKey);
+    CompanyData* cd = getCompany(companyKey);
     if(routeNbr != 9998 && routeNbr != 9999)
         updateCompany(companyKey, routeNbr);
 
@@ -5101,7 +5106,7 @@ bool SQL::updateCompany(qint32 companyKey, qint32 route)
         qDebug()<<"Invalid value " + QString("%1").arg(route) + " for route";
     bool ret = false;
     int rows = 0;
-    CompanyData cd = CompanyData();
+    CompanyData* cd ;
     try
     {
         if(!dbOpen())
@@ -5125,30 +5130,30 @@ bool SQL::updateCompany(qint32 companyKey, qint32 route)
         }
         while (query.next())
         {
-            cd = CompanyData();
-            cd.companyKey = query.value(0).toInt();
-            cd.name = query.value(1).toString();
+            cd = new CompanyData();
+            cd->companyKey = query.value(0).toInt();
+            cd->name = query.value(1).toString();
             if (query.value(2).isNull())
-                cd.startDate =  QDate();
+                cd->startDate =  QDate();
             else
-                cd.startDate = query.value(2).toDate();
+                cd->startDate = query.value(2).toDate();
             if (query.value(3).isNull())
-                cd.endDate =  QDate();
+                cd->endDate =  QDate();
             else
-                cd.endDate = query.value(3).toDate();
-            cd.firstRoute = query.value(4).toInt();
-            cd.lastRoute =query.value(5).toInt();
+                cd->endDate = query.value(3).toDate();
+            cd->firstRoute = query.value(4).toInt();
+            cd->lastRoute =query.value(5).toInt();
         }
 
-        if (cd.firstRoute < 1 || route < cd.firstRoute)
-            cd.firstRoute = route;
-        if (route > cd.lastRoute)
-            cd.lastRoute = route;
+        if (cd->firstRoute < 1 || route < cd->firstRoute)
+            cd->firstRoute = route;
+        if (route > cd->lastRoute)
+            cd->lastRoute = route;
 
         if(config->currConnection->servertype() != "MsSql")
-            CommandText = "Update Companies set  firstRoute= " +QString("%1").arg( cd.firstRoute) + ", lastRoute = " + QString("%1").arg(cd.lastRoute) + ",lastUpdate=:lastUpdate where `key` = " + QString("%1").arg(companyKey);
+            CommandText = "Update Companies set  firstRoute= " +QString("%1").arg( cd->firstRoute) + ", lastRoute = " + QString("%1").arg(cd->lastRoute) + ",lastUpdate=:lastUpdate where `key` = " + QString("%1").arg(companyKey);
         else
-            CommandText = "Update companies set  firstRoute= " +QString("%1").arg( cd.firstRoute) + ", lastRoute = " + QString("%1").arg(cd.lastRoute) + ",lastUpdate=:lastUpdate where [key] = " + QString("%1").arg(companyKey);
+            CommandText = "Update companies set  firstRoute= " +QString("%1").arg( cd->firstRoute) + ", lastRoute = " + QString("%1").arg(cd->lastRoute) + ",lastUpdate=:lastUpdate where [key] = " + QString("%1").arg(companyKey);
         query.prepare(CommandText);
         query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
         bQuery = query.exec();

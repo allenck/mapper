@@ -28,7 +28,7 @@ SegmentDlg::SegmentDlg(Configuration *cfg, QWidget *parent) :
  connect(ui->txtOriginalName, SIGNAL(editingFinished()),this,SLOT(txtOriginalName_Leave()));
  connect(ui->txtNewName, SIGNAL(textChanged(QString)), this, SLOT(txtNewName_TextChanged(QString)));
  connect(ui->txtNewName, SIGNAL(editingFinished()),this,SLOT(txtNewName_Leave()));
- connect(ui->txtRouteNbr, SIGNAL(textChanged(QString)), this,SLOT(txtRouteName_TextChanged(QString)));
+ //connect(ui->txtRouteNbr, SIGNAL(textChanged(QString)), this,SLOT(txtRouteName_TextChanged(QString)));
  connect(ui->txtRouteNbr, SIGNAL(editingFinished()),this, SLOT(txtRouteNbr_Leave()));
  connect(ui->cbRouteName, SIGNAL(signalFocusOut()),this, SLOT(cbRouteName_Leave()));
  connect(ui->btnCancel,SIGNAL(clicked()), this, SLOT(btnCancel_click()));
@@ -236,8 +236,8 @@ void SegmentDlg::setRouteData(RouteData value)
         //qint32 companyKey = sql->getDefaultCompany(_routeNbr, ui->dateEnd->dateTime().toString("yyyy/MM/dd"));
         for (i=0;i < _companyList.count(); i++)
         {
-            CompanyData cd = (CompanyData)_companyList.at(i);
-            if(cd.companyKey == _rd.companyKey)
+            CompanyData* cd = (CompanyData*)_companyList.at(i);
+            if(cd->companyKey == _rd.companyKey)
             {
                 ui->cbCompany->setCurrentIndex(i);
                 break;
@@ -257,22 +257,22 @@ void SegmentDlg::fillCompanies()
     //foreach (companyData cd in _companyList)
     for(int i = 0; i< _companyList.count(); i++)
     {
-     CompanyData cd = _companyList.at(i);
-     ui->cbCompany->addItem(cd.toString(), cd.companyKey);
+     CompanyData* cd = _companyList.at(i);
+     ui->cbCompany->addItem(cd->toString(), cd->companyKey);
     }
     //cbCompany.SelectedIndex = 0;
 
 }
 void SegmentDlg::cbCompany_currentIndexChanged(int companyKey)
 {
- CompanyData cd = _companyList.at(companyKey);
- if(ui->dateStart->date() < cd.startDate)
+ CompanyData* cd = _companyList.at(companyKey);
+ if(ui->dateStart->date() < cd->startDate)
  {
-  ui->dateStart->setDate(cd.startDate);
+  ui->dateStart->setDate(cd->startDate);
  }
- if(ui->dateEnd->date() > cd.endDate)
+ if(ui->dateEnd->date() > cd->endDate)
  {
-  ui->dateEnd->setDate(cd.endDate);
+  ui->dateEnd->setDate(cd->endDate);
  }
 }
 
@@ -314,7 +314,7 @@ void SegmentDlg::checkUpdate()
          ui->btnOK->setEnabled(false);
          return;
      }
-     CompanyData cd = _companyList.at(ui->cbCompany->currentIndex());
+     CompanyData* cd = _companyList.at(ui->cbCompany->currentIndex());
  }
  ui->btnOK->setEnabled(true);
 }
@@ -399,8 +399,8 @@ void SegmentDlg::txtRouteNbr_Leave()    // SLOT
              //foreach (companyData cd in _companyList)
              for(int j = 0; j < _companyList.count(); j++)
              {
-                 CompanyData cd =_companyList.at(j);
-                 if (companyKey == cd.companyKey)
+                 CompanyData* cd =_companyList.at(j);
+                 if (companyKey == cd->companyKey)
                  {
                      ui->cbCompany->setCurrentIndex(j);
                      //cbCompany.SelectedText = cd.ToString();
@@ -640,8 +640,8 @@ void SegmentDlg::btnOK_Click()  // SLOT
   // get the company key selected
   if (ui->cbCompany->currentIndex() >= 0)
   {
-   CompanyData cd = _companyList.at(ui->cbCompany->currentIndex());
-   companyKey = cd.companyKey;
+   CompanyData* cd = _companyList.at(ui->cbCompany->currentIndex());
+   companyKey = cd->companyKey;
   }
   else
   {
@@ -720,9 +720,9 @@ void SegmentDlg::btnOK_Click()  // SLOT
    routeSegment = _SegmentId;
   else
    routeSegment = _newSegmentId;
-  CompanyData cd = sql->getCompany(ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt());
+  CompanyData* cd = sql->getCompany(ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt());
   if (_routeNbr == -1 && _alphaRoute != "")
-   _routeNbr = sql->addAltRoute(_alphaRoute, cd.routePrefix);
+   _routeNbr = sql->addAltRoute(_alphaRoute, cd->routePrefix);
   if (_routeNbr > 0)
   {
    int tractionType = _tractionTypeList.at(ui->cbTractionType->currentIndex()).tractionType;
@@ -735,9 +735,9 @@ void SegmentDlg::btnOK_Click()  // SLOT
     QString alpha = sql->getAlphaRoute(_routeNbr,companyKey);
     if (alpha == "")
     {
-     CompanyData cd = sql->getCompany(ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt());
+     CompanyData* cd = sql->getCompany(ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt());
 
-     _routeNbr = sql->addAltRoute(_alphaRoute, cd.routePrefix);
+     _routeNbr = sql->addAltRoute(_alphaRoute, cd->routePrefix);
     }
     if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(), ui->dateEnd->text(), routeSegment, companyKey, /*cbTractionType.SelectedIndex*/tractionType, direction, normalEnter, normalLeave, reverseEnter, reverseLeave))
      ui->lblErrorText->setText(tr( "Add Error"));
