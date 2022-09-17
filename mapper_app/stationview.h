@@ -42,12 +42,14 @@ public:
     bool insertRows(int position, int rows, const QModelIndex &index=QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index=QModelIndex());
     QList< StationInfo > getList();
-    void reset();
     void addStation(StationInfo sti);
     void changeStation(StationInfo sti);
+    void setStationList(QList<StationInfo> stationList);
+
 signals:
 
 public slots:
+    void reset();
 
 private:
     QList<StationInfo> listOfStations;
@@ -62,11 +64,13 @@ public:
     void showStations();
     static StationView* instance();
 
+
 signals:
 
 public slots:
     void itemSelectionChanged(QModelIndex index );
     void changeStation(QString typeOfChg, StationInfo sti);
+    StationViewTableModel* model() {return sourceModel;}
 
 private:
     QObject *m_parent;

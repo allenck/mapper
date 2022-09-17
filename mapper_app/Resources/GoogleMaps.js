@@ -91,7 +91,7 @@ function processScript(func, parms)
    //eval(call);
    var myFucn = new Function(call);
    var fRslt = myFucn();
-      if(fRslt === null) return;
+   if(fRslt === null) return;
    if( fRslt instanceof Array)
     webViewBridge.scriptArrayResult( fRslt);
    else
@@ -106,6 +106,7 @@ function processScript(func, parms)
    alert("Error occured calling " + func + " '"+ parms + "'\n" + txt);
   }
 }
+
 // deprecated
 function processScript2(func, parms, name, value)
 {

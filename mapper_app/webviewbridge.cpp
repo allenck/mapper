@@ -92,7 +92,8 @@ void webViewBridge::getInfoWindowComments(double lat, double lon, int route, QSt
 void webViewBridge::scriptResult(QVariant value)
 {
  if(value == 0)
-  value = QVariant();
+  //value = QVariant();
+  return;
  qDebug() << "scriptResult" << value;
  if(value.isNull())
   return;

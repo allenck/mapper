@@ -1,4 +1,4 @@
-#include <QtGui>
+﻿#include <QtGui>
 #ifndef USE_WEBENGINE
 #include <QtWebKit>
 #include <QWebFrame>
@@ -1760,6 +1760,10 @@ void mainWindow::onCbRouteIndexChanged(int row)
  routeDlg->setRouteData(_rd);
 
  routeView->updateRouteView();
+
+ stationView->model()->setStationList(sql->getStations(m_routeNbr, m_routeName, m_currRouteEndDate));
+ stationView->model()->reset();
+
 }
 
 //void MainWindow::onResize()
@@ -2540,6 +2544,7 @@ void mainWindow::cbRoutes_Leave()
   b_cbRoutes_TextChanged = false;
  }
 }
+
 QString mainWindow::getRouteMarkerImagePath(QString route, bool isStart)
 {
     QString work = m_resourcePath;

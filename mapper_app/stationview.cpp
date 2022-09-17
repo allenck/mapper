@@ -73,7 +73,8 @@ void StationView::showStations()
     //SQL sql;
     mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
     //sql->setConfig( myParent->getConfiguration());
-    QList<StationInfo> stationList =   sql->getStations();
+    //QList<StationInfo> stationList =   sql->getStations();
+    QList<StationInfo> stationList =   sql->getStations(myParent->m_routeNbr, myParent->m_routeName, myParent->m_currRouteEndDate);
     if(stationList.isEmpty())
         return;
     ui->setSortingEnabled(false);
@@ -255,6 +256,11 @@ StationViewTableModel::StationViewTableModel(QList<StationInfo> stationList,  QO
      listOfStations = stationList;
  }
 
+void StationViewTableModel::setStationList(QList<StationInfo> stationList)
+{
+ listOfStations = stationList;
+}
+
  int StationViewTableModel::rowCount(const QModelIndex &parent) const
  {
      Q_UNUSED(parent);
@@ -406,6 +412,7 @@ StationViewTableModel::StationViewTableModel(QList<StationInfo> stationList,  QO
 
      return false;
  }
+
  void StationViewTableModel::reset()
  {
      //QAbstractTableModel::reset();
