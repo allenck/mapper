@@ -8557,6 +8557,7 @@ bool SQL::doesConstraintExist(QString tbName, QString name)
  }
  return false;
 }
+
 bool SQL::addColumn(QString tbName, QString name, QString type)
 {
  QSqlDatabase db = QSqlDatabase();
@@ -8570,18 +8571,18 @@ bool SQL::addColumn(QString tbName, QString name, QString type)
   CommandText = "alter table " + tbName + " add column " + name + " " + type +"";
  else
   CommandText = "alter table dbo." + tbName + " add " + name + " " + type +" ";
-  query.prepare(CommandText);
-  //query.bindValue(":tbName",tbName);
-  //query.bindValue(":column", name);
-  bQuery = query.exec();
-  if(!bQuery)
-  {
-   QSqlError err = query.lastError();
-   qDebug() << err.text() + "\n";
-   qDebug() << CommandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-   return false;
-  }
-  return true;
+ query.prepare(CommandText);
+ //query.bindValue(":tbName",tbName);
+ //query.bindValue(":column", name);
+ bQuery = query.exec();
+ if(!bQuery)
+ {
+  QSqlError err = query.lastError();
+  qDebug() << err.text() + "\n";
+  qDebug() << CommandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+  return false;
+ }
+ return true;
 }
 
 bool SQL::updateTractionType(qint32 tractionType, QString description, QString displayColor, int routeType, QSqlDatabase  db)
@@ -8651,6 +8652,7 @@ bool SQL::updateTractionType(qint32 tractionType, QString description, QString d
     return ret;
 }
 
+// check tables to see if alteratios need to be made
 void SQL::checkTables(QSqlDatabase db)
 {
  // check for presence of Parameters table.
@@ -8704,6 +8706,11 @@ void SQL::checkTables(QSqlDatabase db)
   {
    //addColumn("altRoute", "routePrefix", "varchar(10)");
    executeScript(":/recreateStationTable.sql",db);
+  }
+  if(!doesColumnExist("Routes", "BiDirectional"))
+  {
+   addColumn("Routes", "BiDirectional", "char(1)");
+   executeScript(":/addBidirectional.sql",db);
   }
  }
 }

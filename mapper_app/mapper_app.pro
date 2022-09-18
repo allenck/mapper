@@ -111,6 +111,7 @@ win32:{
 #}
 
 DISTFILES += \
+    Resources/addBiDirectionalToRoutes.sql \
     Resources/scripts \
     Resources/scripts/qwebchannel.js \
     Resources/GoogleMaps2.htm \
