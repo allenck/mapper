@@ -2,13 +2,12 @@
 
 #include "data.h"
 #include "mainwindow.h"
-#include <sqlite3.h>
-//#include "c:\progra~1\sqlite3_3_13\src\sqlite3.h"
+//#include <sqlite3.h>
+#include "/home/allen/Qt/5.15.2/Src/qtbase/src/3rdparty/sqlite/sqlite3.h"
 #include <algorithm>
 
 
 SQL* SQL::_instance = NULL;
-
 SQL::SQL()
 {
  currentTransaction = "";
@@ -1289,9 +1288,9 @@ QList<SegmentInfo> SQL::getRouteSegmentsInOrder2(qint32 route, QString name, QSt
   {
    QString  CommandText;
    if(firstTry)
-    CommandText = "Select c.startLat, c.startLon, c.endLat, c.endLon, c.segmentId, c.description, c.oneWay, b.direction, b.next, b.prev, b.normalEnter, b.normalLeave, b.reverseEnter, b.reverseLeave, b.startDate, b.endDate, c.length, c.tracks, c.pointArray from Routes b join Segments c on c.segmentId = LineKey where b.Route = " + QString("%1").arg(route) + " and Name = '" + name + "' and '" + date + "' between b.StartDate and b.endDate order by b.startDate, b.endDate, c.segmentid";
+    CommandText = "Select c.startLat, c.startLon, c.endLat, c.endLon, c.segmentId, c.description, c.oneWay, b.direction, b.next, b.prev, b.normalEnter, b.normalLeave, b.reverseEnter, b.reverseLeave, b.startDate, b.endDate, c.length, c.tracks, c.pointArray, b.OneWay from Routes b join Segments c on c.segmentId = LineKey where b.Route = " + QString("%1").arg(route) + " and Name = '" + name + "' and '" + date + "' between b.StartDate and b.endDate order by b.startDate, b.endDate, c.segmentid";
   else
-    CommandText = "Select c.startLat, c.startLon, c.endLat, c.endLon, c.segmentId, c.description, c.oneWay, b.direction, b.next, b.prev, b.normalEnter, b.normalLeave, b.reverseEnter, b.reverseLeave, b.startDate, b.endDate, c.length, c.tracks, c.pointArray from Routes b join Segments c on c.segmentId = LineKey where b.Route = " + QString("%1").arg(route) + " and Name = '" + name + "'  order by b.startDate, b.endDate, c.segmentid";
+    CommandText = "Select c.startLat, c.startLon, c.endLat, c.endLon, c.segmentId, c.description, c.oneWay, b.direction, b.next, b.prev, b.normalEnter, b.normalLeave, b.reverseEnter, b.reverseLeave, b.startDate, b.endDate, c.length, c.tracks, c.pointArray, b.OneWay from Routes b join Segments c on c.segmentId = LineKey where b.Route = " + QString("%1").arg(route) + " and Name = '" + name + "'  order by b.startDate, b.endDate, c.segmentid";
   // Note: 1st Query fails if route has a single segment
   QSqlQuery query = QSqlQuery(db);
   bool bQuery = query.exec(CommandText);
@@ -1336,7 +1335,7 @@ QList<SegmentInfo> SQL::getRouteSegmentsInOrder2(qint32 route, QString name, QSt
     si.startLon = startLon;
     si.bearingStart = Bearing(startLat, startLon, endLat, endLon);
     si.description = query.value(5).toString();
-    si.oneWay = query.value(6).toString();
+//    si.oneWay = query.value(6).toString();
     si.next = query.value(8).toInt();
     si.prev = query.value(9).toInt();
     si.normalEnter = query.value(10).toInt();
@@ -1355,6 +1354,7 @@ QList<SegmentInfo> SQL::getRouteSegmentsInOrder2(qint32 route, QString name, QSt
    si.checkTracks();
    si.setPoints(query.value(18).toString());
    si.checkTracks();
+   si.oneWay = query.value(19).toString();
 //  }
 //  if (currSegment != -1)
 //  {
@@ -1483,7 +1483,8 @@ QList<RouteData> SQL::getRoutes(qint32 segmentid, QString date )
             throw std::exception();
         QSqlDatabase db = QSqlDatabase::database();
 
-        QString CommandText = "select a.route, name, startdate, endDate, companyKey, tractionType, routeAlpha from Routes a join altRoute b on a.route = b.route where lineKey = " + QString("%1").arg(segmentid) +
+        QString CommandText = "select a.route, name, startdate, endDate, companyKey, tractionType, routeAlpha from Routes a "
+            "join altRoute b on a.route = b.route where lineKey = " + QString("%1").arg(segmentid) +
             " and '" + date + "' between startDate and endDate";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(CommandText);
@@ -4726,7 +4727,8 @@ bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QStri
 /// <param name="SegmentId"></param>
 /// <returns></returns>
 bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId,
-    qint32 companyKey, qint32 tractionType, QString direction, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave)
+    qint32 companyKey, qint32 tractionType, QString direction, qint32 normalEnter, qint32 normalLeave,
+                            qint32 reverseEnter, qint32 reverseLeave, QString oneWay)
 {
     bool ret = false;
     int rows = 0;
@@ -4768,7 +4770,20 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDat
 
         BeginTransaction("addSegmentToRoute");
 
-        QString CommandText = "INSERT INTO Routes(Route, Name, StartDate, EndDate, LineKey, companyKey, tractionType, direction, normalEnter, normalleave, reverseEnter, reverseLeave) VALUES(" + QString("%1").arg(routeNbr) + ", '" + routeName.trimmed() + "', '" + startDate + "', '" + endDate + "'," + QString("%1").arg(SegmentId) + ", " + QString("%1").arg(companyKey)+"," + QString("%1").arg(tractionType)+",'" + QString("%1").arg(direction) +"', " +  QString("%1").arg(normalEnter) + "," + QString("%1").arg(normalLeave) + "," + QString("%1").arg(reverseEnter) + ", " + QString("%1").arg(reverseLeave) + ")";
+        QString CommandText = "INSERT INTO Routes(Route, Name, StartDate, EndDate, LineKey, companyKey, tractionType, direction, normalEnter, normalleave, reverseEnter, reverseLeave, OneWay) VALUES("
+           + QString("%1").arg(routeNbr) + ", '"
+           + routeName.trimmed() + "', '"
+           + startDate + "', '"
+           + endDate + "', " + QString("%1").arg(SegmentId) + ", "
+           + QString("%1").arg(companyKey) +","
+           + QString("%1").arg(tractionType) +",'"
+           + QString("%1").arg(direction) +"', "
+           + QString("%1").arg(normalEnter) + ","
+           + QString("%1").arg(normalLeave) + ","
+           + QString("%1").arg(reverseEnter) + ", "
+           + QString("%1").arg(reverseLeave) + ", '"
+           + QString("%1").arg(oneWay)
+           + "')";
         qDebug() << CommandText;
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(CommandText);
@@ -4798,7 +4813,8 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDat
 }
 
 bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId,
-    qint32 companyKey, qint32 tractionType, QString direction, qint32 next, qint32 prev, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave)
+    qint32 companyKey, qint32 tractionType, QString direction, qint32 next, qint32 prev,
+    qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString oneWay)
 {
     bool ret = false;
     int rows = 0;
@@ -4840,7 +4856,7 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDat
 
         //BeginTransaction("addSegmentToRoute");
 
-        QString CommandText = "INSERT INTO Routes(Route, Name, StartDate, EndDate, LineKey, companyKey, tractionType, direction, next, prev, normalEnter, normalleave, reverseEnter, reverseLeave) VALUES(" + QString("%1").arg(routeNbr) + ", '"
+        QString CommandText = "INSERT INTO Routes(Route, Name, StartDate, EndDate, LineKey, companyKey, tractionType, direction, next, prev, normalEnter, normalleave, reverseEnter, reverseLeave, oneWay) VALUES(" + QString("%1").arg(routeNbr) + ", '"
                 + routeName.trimmed() + "', '"
                 + startDate + "', '"
                 + endDate + "',"
@@ -4853,7 +4869,8 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDat
                 + QString("%1").arg(normalEnter) + ","
                 + QString("%1").arg(normalLeave) + ","
                 + QString("%1").arg(reverseEnter) + ", "
-                + QString("%1").arg(reverseLeave) + ")";
+                + QString("%1").arg(reverseLeave) + ", "
+                + QString("%1").arg(oneWay)  + ")";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(CommandText);
         if(!bQuery)
@@ -5458,7 +5475,8 @@ QList<RouteData> SQL::getRouteSegmentsBySegment(qint32 segmentId)
             throw std::exception();
         QSqlDatabase db = QSqlDatabase::database();
 
-        QString CommandText = "Select a.route, name, startDate, endDate, lineKey, companyKey, tractionType, direction, normalEnter, normalLeave, reverseEnter, reverseLeave, routeAlpha from Routes a join altRoute b on a.route = b.route where lineKey = " + QString("%1").arg(segmentId) + " order by routeAlpha, name, endDate";
+        QString CommandText = "Select a.route, name, startDate, endDate, lineKey, companyKey, tractionType, direction, normalEnter, normalLeave, reverseEnter, reverseLeave, routeAlpha, OneWay"
+              " from Routes a join altRoute b on a.route = b.route where lineKey = " + QString("%1").arg(segmentId) + " order by routeAlpha, name, endDate";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(CommandText);
         if(!bQuery)
@@ -5483,6 +5501,7 @@ QList<RouteData> SQL::getRouteSegmentsBySegment(qint32 segmentId)
             rd.reverseLeave = query.value(11).toInt();
             rd.alphaRoute = query.value(12).toString();
             QString rdStartDate= rd.startDate.toString("yyyy/MM/dd");
+            rd.oneWay = query.value(13).toString();
             myArray.append(rd);
         }
 //    }
@@ -5514,7 +5533,7 @@ QList<RouteData> SQL::getRouteDataForRouteName(qint32 route, QString name)
         QString CommandText;
         if(config->currConnection->servertype() != "MsSql")
         {
-            CommandText = "select min(a.startdate), Max(a.enddate), Name, a.route, b.`Key`, tractionType, routeAlpha from Routes a join Companies b on " + QString("%1").arg(route) + " between firstRoute and lastRoute join altRoute c on a.route = c.route where a.Route = " + QString("%1").arg(route) + " and Name = '" + name + "' group by a.StartDate, a.endDate, Name, a.route, b.`Key`, tractionType, routeAlpha";
+            CommandText = "select min(a.startdate), Max(a.enddate), Name, a.route, b.`Key`, tractionType, routeAlpha, a.OneWay from Routes a join Companies b on " + QString("%1").arg(route) + " between firstRoute and lastRoute join altRoute c on a.route = c.route where a.Route = " + QString("%1").arg(route) + " and Name = '" + name + "' group by a.StartDate, a.endDate, Name, a.route, b.`Key`, tractionType, routeAlpha";
         }
         else
         {
@@ -5544,6 +5563,7 @@ QList<RouteData> SQL::getRouteDataForRouteName(qint32 route, QString name)
             rd.companyKey = query.value(4).toInt();
             rd.tractionType = query.value(5).toInt();
             rd.alphaRoute = query.value(6).toString();
+            rd.oneWay = query.value(6).toString();
             myArray.append(rd);
         }
         //rd.companyKey = -1;
@@ -6275,7 +6295,7 @@ try
   QList<RouteData> routes;
 
 
-  CommandText = "SELECT a.route, name, a.startDate, a.endDate, companyKey, tractionType, routeAlpha, normalEnter, normalLeave, reverseEnter, reverseLeave from Routes a join Segments b on LineKey = b.SegmentId join altRoute c on a.route = c.route where SegmentId = " + QString("%1").arg(SegmentId);
+  CommandText = "SELECT a.route, name, a.startDate, a.endDate, companyKey, tractionType, routeAlpha, normalEnter, normalLeave, reverseEnter, reverseLeave, OneWay from Routes a join Segments b on LineKey = b.SegmentId join altRoute c on a.route = c.route where SegmentId = " + QString("%1").arg(SegmentId);
   bQuery = query.exec(CommandText);
   if(!bQuery)
   {
@@ -6298,6 +6318,7 @@ try
    rd.reverseEnter = query.value(9).toInt();
    rd.reverseLeave = query.value(10).toInt();
    rd.lineKey = SegmentId;
+   rd.oneWay = query.value(11).toString();
    routes.append( rd);
   }
 
@@ -6327,7 +6348,8 @@ try
 
    if (count == 0)
    {
-    CommandText = "insert into Routes ( route, name, startDate, endDate, lineKey, companyKey, tractionType, normalEnter, normalLeave, reverseEnter, reverseLeave) values (" + QString("%1").arg(rd1.route) + ", '" + rd1.name + "', '" +  rd1.startDate.toString("yyyy/MM/dd") +   "', '" +  rd1.endDate.toString("yyyy/MM/dd") + "', " +                     QString("%1").arg(newSegmentId) + "," + QString("%1").arg(rd1.companyKey) + "," + QString("%1").arg(rd1.tractionType) + "," +                    QString("%1").arg(normalEnter) + "," + QString("%1").arg(rd1.normalLeave) + "," + QString("%1").arg(rd1.reverseEnter) + "," + QString("%1").arg(reverseLeave) + ")";
+
+    CommandText = "insert into Routes ( route, name, startDate, endDate, lineKey, companyKey, tractionType, normalEnter, normalLeave, reverseEnter, reverseLeave, OneWay) values (" + QString("%1").arg(rd1.route) + ", '" + rd1.name + "', '" +  rd1.startDate.toString("yyyy/MM/dd") +   "', '" +  rd1.endDate.toString("yyyy/MM/dd") + "', " + QString("%1").arg(newSegmentId) + "," + QString("%1").arg(rd1.companyKey) + "," + QString("%1").arg(rd1.tractionType) + "," + QString("%1").arg(normalEnter) + "," + QString("%1").arg(rd1.normalLeave) + "," + QString("%1").arg(rd1.reverseEnter) + "," + QString("%1").arg(reverseLeave) + "," + rd1.oneWay +")";
     bQuery = query.exec(CommandText);
     if(!bQuery)
     {
@@ -6390,7 +6412,8 @@ RouteData SQL::getRouteData(qint32 route, qint32 SegmentId, QString startDate, Q
  RouteData rd = RouteData();
  QSqlDatabase db = QSqlDatabase::database();
 
- QString CommandText = "Select a.route, name, startDate, endDate, companyKey, tractionType, routeAlpha from Routes a  join altRoute b on a.route = b.route where a.route = " + QString("%1").arg(route) + " and lineKey = " + QString("%1").arg(SegmentId) +  " and endDate = '" + endDate + "'";
+ QString CommandText = "Select a.route, name, startDate, endDate, companyKey, tractionType, routeAlpha, OneWay"
+    " from Routes a  join altRoute b on a.route = b.route where a.route = " + QString("%1").arg(route) + " and lineKey = " + QString("%1").arg(SegmentId) +  " and endDate = '" + endDate + "'";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(CommandText);
  if(!bQuery)
@@ -6414,6 +6437,7 @@ RouteData SQL::getRouteData(qint32 route, qint32 SegmentId, QString startDate, Q
   rd.lineKey = SegmentId;
   rd.companyKey = query.value(4).toInt();
   rd.tractionType = query.value(5).toInt();
+  rd.oneWay = query.value(5).toString();
  }
 
  return rd;
@@ -6427,7 +6451,9 @@ RouteData SQL::getRouteData(qint32 route, qint32 SegmentId, QString startDate, Q
 /// <param name="endDate"></param>
 /// <param name="SegmentId"></param>
 /// <returns></returns>
-bool SQL::updateSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId, qint32 companyKey, qint32 tractionType, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave)
+bool SQL::updateSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate,
+                               qint32 SegmentId, qint32 companyKey, qint32 tractionType,
+                               qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString TwoWay)
 {
     bool ret = false;
     int rows = 0;
@@ -6441,7 +6467,7 @@ bool SQL::updateSegmentToRoute(qint32 routeNbr, QString routeName, QString start
         QSqlDatabase db = QSqlDatabase::database();
         BeginTransaction("updateSegmentToRoute");
 
-        QString CommandText = "Update Routes set companyKey= " +QString("%1").arg( companyKey) + ", tractionType=" + QString("%1").arg(tractionType) + ", normalEnter = " + QString("%1").arg(normalEnter) + ", normalLeave= " + QString("%1").arg(normalLeave) + ", reverseEnter= " + QString("%1").arg(reverseEnter) + ", reverseLeave = " + QString("%1").arg(reverseLeave) + ",lastUpdate=:lastUpdate where route = " + QString("%1").arg(routeNbr) + " and Name= '" + routeName + "' and LineKey = " + QString("%1").arg(SegmentId) + " and StartDate= '" + startDate + "' and EndDate= '" + endDate + "'";
+        QString CommandText = "Update Routes set companyKey= " +QString("%1").arg( companyKey) + ", tractionType=" + QString("%1").arg(tractionType) + ", normalEnter = " + QString("%1").arg(normalEnter) + ", normalLeave= " + QString("%1").arg(normalLeave) + ", reverseEnter= " + QString("%1").arg(reverseEnter) + ", reverseLeave = " + QString("%1").arg(reverseLeave) + ", TwoWay = " + TwoWay + ",lastUpdate=:lastUpdate where route = " + QString("%1").arg(routeNbr) + " and Name= '" + routeName + "' and LineKey = " + QString("%1").arg(SegmentId) + " and StartDate= '" + startDate + "' and EndDate= '" + endDate + "'";
         QSqlQuery query = QSqlQuery(db);
         query.prepare(CommandText);
         query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
@@ -6482,7 +6508,7 @@ RouteData SQL::getSegmentInfoForRouteDates(qint32 route, QString name, qint32 se
             throw std::exception();
         QSqlDatabase db = QSqlDatabase::database();
 
-        QString CommandText = "SELECT a.Route,Name,StartDate,EndDate,LineKey,CompanyKey,tractionType,direction, normalEnter, normalLeave, reverseEnter, reverseLeave, routeAlpha from Routes a join altRoute c on a.route = c.route where a.Route = " + QString("%1").arg(route) + " and ('" + startDate + "' between startDate and endDate or  '" + endDate + "' between startDate and endDate) and name = '" + name + "' and a.LineKey = " + QString("%1").arg(segmentId);
+        QString CommandText = "SELECT a.Route,Name,StartDate,EndDate,LineKey,CompanyKey,tractionType,direction, normalEnter, normalLeave, reverseEnter, reverseLeave, routeAlpha, OneWay from Routes a join altRoute c on a.route = c.route where a.Route = " + QString("%1").arg(route) + " and ('" + startDate + "' between startDate and endDate or  '" + endDate + "' between startDate and endDate) and name = '" + name + "' and a.LineKey = " + QString("%1").arg(segmentId);
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(CommandText);
         if(!bQuery)
@@ -6514,8 +6540,8 @@ RouteData SQL::getSegmentInfoForRouteDates(qint32 route, QString name, qint32 se
             rd.reverseEnter = query.value(10).toInt();
             rd.reverseLeave = query.value(11).toInt();
             rd.alphaRoute = query.value(12).toString();
+            rd.oneWay = query.value(13).toString();
         }
-
     }
     catch (std::exception e)
     {
@@ -6898,7 +6924,8 @@ QList<RouteData> SQL::getConflictingRouteSegments(qint32 route, QString name, QS
             throw std::exception();
         QSqlDatabase db = QSqlDatabase::database();
 
-        QString CommandText = "Select a.route, name, startDate, endDate, lineKey, tractionType, companyKey, direction, normalEnter, normalLeave, reverseEnter, reverseLeave, routeAlpha from Routes a join altRoute b on a.route = b.route where (startDate between '" + startDate + "' and '" + endDate + "' or endDate between '" + startDate + "' and '" + endDate + "') and a.route = " + QString("%1").arg(route) + " and name = '" + name + "' and endDate <> '" + endDate + "' and lineKey = " + QString("%1").arg(segmentId);
+        QString CommandText = "Select a.route, name, startDate, endDate, lineKey, tractionType, companyKey, direction, normalEnter, normalLeave, reverseEnter, reverseLeave, routeAlpha, OneWay"
+            " from Routes a join altRoute b on a.route = b.route where (startDate between '" + startDate + "' and '" + endDate + "' or endDate between '" + startDate + "' and '" + endDate + "') and a.route = " + QString("%1").arg(route) + " and name = '" + name + "' and endDate <> '" + endDate + "' and lineKey = " + QString("%1").arg(segmentId);
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(CommandText);
         if(!bQuery)
@@ -6924,13 +6951,13 @@ QList<RouteData> SQL::getConflictingRouteSegments(qint32 route, QString name, QS
             rd.normalLeave = query.value(9).toInt();
             rd.reverseEnter = query.value(10).toInt();
             rd.reverseLeave = query.value(11).toInt();
+            rd.oneWay = query.value(12).toString();
             myArray.append(rd);
         }
     }
     catch (std::exception e)
     {
         myExceptionHandler(e);
-
     }
 
     return myArray;
@@ -8259,6 +8286,7 @@ bool SQL::loadSqlite3Functions()
     {
      int result;
 //     result = sqlite3_enable_load_extension(handle, 1);
+     QString ver = sqlite3_libversion();
      sqlite3_db_config(handle, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION, 1, &result);
      if(result == 1  && QString(sqlite3_libversion()) != "3.27.2")
      {
@@ -8707,11 +8735,13 @@ void SQL::checkTables(QSqlDatabase db)
    //addColumn("altRoute", "routePrefix", "varchar(10)");
    executeScript(":/recreateStationTable.sql",db);
   }
-  if(!doesColumnExist("Routes", "BiDirectional"))
+#if 1
+  if(!doesColumnExist("Routes", "OneWay"))
   {
-   addColumn("Routes", "BiDirectional", "char(1)");
-   executeScript(":/addBidirectional.sql",db);
+   addColumn("Routes", "OneWay", "char(1) default 'Y'");
+   executeScript(":/updateOneWay.sql",db);
   }
+#endif
  }
 }
 

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>477</width>
-    <height>413</height>
+    <height>421</height>
    </rect>
   </property>
   <property name="font">
@@ -19,72 +19,6 @@
    <string>Dialog</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0" colspan="10">
-    <widget class="QComboBox" name="cbSegments">
-     <property name="toolTip">
-      <string>Select an existing route segment to update</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0" colspan="2">
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>Company:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="2" colspan="8">
-    <widget class="QComboBox" name="cbCompany">
-     <property name="editable">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Route:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="1" colspan="3">
-    <widget class="QLineEdit" name="txtRouteNbr">
-     <property name="maxLength">
-      <number>8</number>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="4" colspan="6">
-    <widget class="CComboBox" name="cbRouteName">
-     <property name="editable">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0" colspan="2">
-    <widget class="QLabel" name="label_3">
-     <property name="text">
-      <string>Traction type:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="3" colspan="4">
-    <widget class="QComboBox" name="cbTractionType"/>
-   </item>
-   <item row="3" column="7" colspan="3">
-    <widget class="QCheckBox" name="chkLockDate">
-     <property name="text">
-      <string>Lock date</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="0" colspan="2">
-    <widget class="QLabel" name="label_4">
-     <property name="text">
-      <string>Start Date:</string>
-     </property>
-    </widget>
-   </item>
    <item row="4" column="3" colspan="3">
     <widget class="QDateEdit" name="dateStart">
      <property name="minimumDate">
@@ -94,27 +28,6 @@
        <day>16</day>
       </date>
      </property>
-     <property name="displayFormat">
-      <string>yyyy/MM/dd</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="7" colspan="3">
-    <widget class="QCheckBox" name="chkOtherRoutes">
-     <property name="text">
-      <string>Check other routes</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0" colspan="2">
-    <widget class="QLabel" name="label_5">
-     <property name="text">
-      <string>End Date:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="3" colspan="3">
-    <widget class="QDateEdit" name="dateEnd">
      <property name="displayFormat">
       <string>yyyy/MM/dd</string>
      </property>
@@ -148,14 +61,35 @@
      </layout>
     </widget>
    </item>
-   <item row="6" column="0" colspan="10">
+   <item row="2" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Route:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="3" colspan="3">
+    <widget class="QDateEdit" name="dateEnd">
+     <property name="displayFormat">
+      <string>yyyy/MM/dd</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0" colspan="10">
     <widget class="QLabel" name="lblSegmentText">
      <property name="text">
       <string>Segment description</string>
      </property>
     </widget>
    </item>
-   <item row="7" column="0" colspan="3">
+   <item row="0" column="0" colspan="10">
+    <widget class="QComboBox" name="cbSegments">
+     <property name="toolTip">
+      <string>Select an existing route segment to update</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0" colspan="3">
     <widget class="QGroupBox" name="groupBox2">
      <property name="font">
       <font>
@@ -193,83 +127,21 @@
      </layout>
     </widget>
    </item>
-   <item row="7" column="3" colspan="3">
-    <widget class="QGroupBox" name="groupBox3">
-     <property name="font">
-      <font>
-       <pointsize>9</pointsize>
-      </font>
+   <item row="4" column="7" colspan="3">
+    <widget class="QCheckBox" name="chkOtherRoutes">
+     <property name="text">
+      <string>Check other routes</string>
      </property>
-     <property name="toolTip">
-      <string>Select how to leave the segment</string>
-     </property>
-     <property name="title">
-      <string>Normal leave:</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
-      <item>
-       <widget class="QRadioButton" name="rbNToLeft">
-        <property name="text">
-         <string>To left</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QRadioButton" name="rbNAhead">
-        <property name="text">
-         <string>Ahead</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QRadioButton" name="rbNToRight">
-        <property name="text">
-         <string>To right</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
     </widget>
    </item>
-   <item row="7" column="6" colspan="3">
-    <widget class="QGroupBox" name="groupBox4">
-     <property name="font">
-      <font>
-       <pointsize>9</pointsize>
-      </font>
+   <item row="10" column="2" colspan="3">
+    <widget class="QPushButton" name="btnDelete">
+     <property name="text">
+      <string>Delete</string>
      </property>
-     <property name="toolTip">
-      <string>Select how a 2-way segment is entered in the reverse direction</string>
-     </property>
-     <property name="title">
-      <string>Reverse enter:</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_3">
-      <item>
-       <widget class="QRadioButton" name="rbRFromLeft">
-        <property name="text">
-         <string>From left</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QRadioButton" name="rbRFromBack">
-        <property name="text">
-         <string>From back</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QRadioButton" name="rbRFromRight">
-        <property name="text">
-         <string>From right</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
     </widget>
    </item>
-   <item row="7" column="9">
+   <item row="8" column="9">
     <widget class="QGroupBox" name="groupBox5">
      <property name="font">
       <font>
@@ -307,7 +179,141 @@
      </layout>
     </widget>
    </item>
-   <item row="8" column="0" colspan="10">
+   <item row="3" column="3" colspan="4">
+    <widget class="QComboBox" name="cbTractionType"/>
+   </item>
+   <item row="10" column="8" colspan="2">
+    <widget class="QPushButton" name="btnOK">
+     <property name="text">
+      <string>Close </string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="3" colspan="3">
+    <widget class="QGroupBox" name="groupBox3">
+     <property name="font">
+      <font>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="toolTip">
+      <string>Select how to leave the segment</string>
+     </property>
+     <property name="title">
+      <string>Normal leave:</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QRadioButton" name="rbNToLeft">
+        <property name="text">
+         <string>To left</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="rbNAhead">
+        <property name="text">
+         <string>Ahead</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="rbNToRight">
+        <property name="text">
+         <string>To right</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="4" column="0" colspan="2">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Start Date:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="0" colspan="2">
+    <widget class="QPushButton" name="btnAdd">
+     <property name="toolTip">
+      <string>Add or update segment to route</string>
+     </property>
+     <property name="text">
+      <string>Add</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2" colspan="8">
+    <widget class="QComboBox" name="cbCompany">
+     <property name="editable">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="6" colspan="3">
+    <widget class="QGroupBox" name="groupBox4">
+     <property name="font">
+      <font>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="toolTip">
+      <string>Select how a 2-way segment is entered in the reverse direction</string>
+     </property>
+     <property name="title">
+      <string>Reverse enter:</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <item>
+       <widget class="QRadioButton" name="rbRFromLeft">
+        <property name="text">
+         <string>From left</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="rbRFromBack">
+        <property name="text">
+         <string>From back</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="rbRFromRight">
+        <property name="text">
+         <string>From right</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="2">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Company:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="5" colspan="3">
+    <widget class="QPushButton" name="btnUpdateTurn">
+     <property name="toolTip">
+      <string>Add or update with suggested turn info</string>
+     </property>
+     <property name="text">
+      <string>Update Turn</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0" colspan="2">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>End Date:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0" colspan="10">
     <widget class="QLabel" name="lblHelpText">
      <property name="palette">
       <palette>
@@ -351,37 +357,38 @@
      </property>
     </widget>
    </item>
-   <item row="9" column="0" colspan="2">
-    <widget class="QPushButton" name="btnAdd">
-     <property name="toolTip">
-      <string>Add or update segment to route</string>
-     </property>
-     <property name="text">
-      <string>Add</string>
+   <item row="2" column="1" colspan="3">
+    <widget class="QLineEdit" name="txtRouteNbr">
+     <property name="maxLength">
+      <number>8</number>
      </property>
     </widget>
    </item>
-   <item row="9" column="2" colspan="3">
-    <widget class="QPushButton" name="btnDelete">
-     <property name="text">
-      <string>Delete</string>
+   <item row="2" column="4" colspan="6">
+    <widget class="CComboBox" name="cbRouteName">
+     <property name="editable">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
-   <item row="9" column="5" colspan="3">
-    <widget class="QPushButton" name="btnUpdateTurn">
-     <property name="toolTip">
-      <string>Add or update with suggested turn info</string>
-     </property>
+   <item row="3" column="0" colspan="2">
+    <widget class="QLabel" name="label_3">
      <property name="text">
-      <string>Update Turn</string>
+      <string>Traction type:</string>
      </property>
     </widget>
    </item>
-   <item row="9" column="8" colspan="2">
-    <widget class="QPushButton" name="btnOK">
+   <item row="3" column="7" colspan="3">
+    <widget class="QCheckBox" name="chkLockDate">
      <property name="text">
-      <string>Close </string>
+      <string>Lock date</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QCheckBox" name="cbOneWay">
+     <property name="text">
+      <string>One Way</string>
      </property>
     </widget>
    </item>

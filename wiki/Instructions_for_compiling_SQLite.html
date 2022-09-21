@@ -16,15 +16,16 @@ Compiling SQLite</h2>
 <ol>
   <li>Download the latest SQLite Amalgamated source from <a href="https://www.sqlite.org/download.html">SQLite download page</a>. In this case, we will download sqlite-amalgamation-3270200.zip</li>
   <li>Extract the zip file to a location of your choosing.</li>
+  <li>Open a terminal window (Linux)
   <li>Compile the SQLite source files. Depending on which operating system you are on, follow the instructions explained <a href="https://www.sqlite.org/howtocompile.html">here</a>. In my case, I extracted the zip file into a directory called "Projects:.</li>
-  <li>In order for Mapper to work properly, SQLite must be compiled with the <span style="font-weight: bold;">SQLITE_ENABLE_LOAD_EXTENSION </span>specitied. Since I am on linux, my compile&nbsp; command to compile and link the SQLite3 shared library, <span style="font-style: italic;">libsqlite3,so</span> looks like this:&nbsp;
+  <li>In order for Mapper to work properly, SQLite must be compiled with the <span style="font-weight: bold;">SQLITE_ENABLE_LOAD_EXTENSION </span>specified. Since I am on linux, my compile&nbsp; command to compile and link the SQLite3 shared library, <span style="font-style: italic;">libsqlite3.so</span> looks like this:&nbsp;
     <div class="post-body entry-content" id="post-body-3536462308028011752" itemprop="description articleBody"><div><span style="font-family: monospace;">gcc
 -c -fPIC -DSQLITE_ENABLE_LOAD_EXTENSION -DSQLITE_OMIT_COMPLETE
 -DSQLITE_ENABLE_FTS3 -DSQLITE_ENABLE_FTS3_PARENTHESIS
 -DSQLITE_ENABLE_RTREE sqlite3.c</span><br>
 </div><div style="font-family: monospace;">gcc -shared -o libsqlite3.so -fPIC sqlite3.o -ldl -lpthread</div></div>
   </li>
-  <li>To create a command line app: <span style="font-family: monospace;">gcc shell.c -o sqlite3 -lsqlite3</span><br>
+  <li>To create a command line app: <span style="font-family: monospace;">gcc -I ~/sqlite sqlite3.c shell.c -o sqlite3 -ldl -pthread</span><br>
     <br>
   </li>
   <li>The output <span style="font-style: italic;">libsqlite3.so</span> library on linux should be copied to

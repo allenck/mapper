@@ -202,7 +202,7 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  if(!resource.exists())
   resource.mkdir(m_resourcePath);
 
- connect(ui->chkOneWay, SIGNAL(toggled(bool)), this, SLOT(chkOneWay_Leave(bool)));
+ //connect(ui->chkOneWay, SIGNAL(toggled(bool)), this, SLOT(chkOneWay_Leave(bool)));
  connect(ui->saveImage, SIGNAL(clicked(bool)), this, SLOT(On_saveImage_clicked()));
 
  config->saveSettings();
@@ -266,7 +266,7 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   if(!config->bRunInBrowser)
    connect(webView, SIGNAL(loadStarted()), this, SLOT(linkActivated()));
   connect(ui->btnBack, SIGNAL(clicked()), this, SLOT(pageBack()));
-  connect(ui->chkOneWay, SIGNAL(clicked(bool)), this, SLOT(chkOneWay_Leave(bool)));
+  //connect(ui->chkOneWay, SIGNAL(clicked(bool)), this, SLOT(chkOneWay_Leave(bool)));
   connect(ui->cbCompany, SIGNAL(currentIndexChanged(int)), this, SLOT(cbCompanySelectionChanged(int)));
   connect(ui->sbRoute, SIGNAL(actionTriggered(int)), this,  SLOT(sbRouteTriggered(int)));
   connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbrLeave()) );
@@ -789,7 +789,7 @@ void mainWindow::createActions()
      RouteData rd = ((RouteData)routeList.at(row));
      bool b = SQL::instance()->addSegmentToRoute(rd.route, rd.name, rd.startDate.toString("yyyy/MM/dd"), rd.endDate.toString("yyyy/MM/dd"),
                                         si.segmentId, rd.companyKey,
-                                        rd.tractionType, "?", -1, -1, 0, 0, 0, 0);
+                                        rd.tractionType, "?", -1, -1, 0, 0, 0, 0, rd.oneWay);
     if(b)
     {
         m_bridge->processScript("clearPolyline", QString("%1").arg(segmentId));
@@ -1334,7 +1334,10 @@ void mainWindow::btnDeleteSegment_Click()   //SLOT
                             }
                         if (sql->doesRouteSegmentExist(rd.route, rd.name, siDup.segmentId, rd.startDate.toString("yyyy/MM/dd"), rd.endDate.toString("yyyy/MM/dd")))
                                 continue;
-                            if (!sql->addSegmentToRoute(rd.route, rd.name, rd.startDate.toString("yyyy/MM/dd"), rd.endDate.toString("yyyy/MM/dd"), siDup.segmentId, rd.companyKey, rd.tractionType, rd.direction, rd.normalEnter, rd.normalLeave, rd.reverseEnter, rd.reverseLeave))
+                            if (!sql->addSegmentToRoute(rd.route, rd.name, rd.startDate.toString("yyyy/MM/dd"),
+                                                        rd.endDate.toString("yyyy/MM/dd"), siDup.segmentId, rd.companyKey,
+                                                        rd.tractionType, rd.direction, rd.normalEnter,
+                                                        rd.normalLeave, rd.reverseEnter, rd.reverseLeave, rd.oneWay))
                             {
                                 //infoPanel.Text = "Update Error";
                                 statusBar()->showMessage(tr("Update failed"));
@@ -1855,10 +1858,10 @@ void mainWindow::segmentSelected(qint32 pt, qint32 SegmentId)
  ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(si.pointList.count()));
  ui->cbSegments->findText(si.ToString(), Qt::MatchExactly);
  //txtOneWay.Text = si.oneWay;
- if(si.oneWay == "Y")
-     ui->chkOneWay->setChecked(true);
- else
-     ui->chkOneWay->setChecked(false);
+// if(si.oneWay == "Y")
+//     ui->chkOneWay->setChecked(true);
+// else
+//     ui->chkOneWay->setChecked(false);
  //getArray();
  m_points = si.pointList;
  m_nbrPoints = m_points.size();
@@ -2327,7 +2330,7 @@ void mainWindow::btnSplit_Click()    // SLOT
    routeDlg->setSegmentId( m_SegmentId);
 
   ui->txtSegment->setText( sql->getSegmentDescription(m_SegmentId));
-  ui->chkOneWay->setChecked(sql->getSegmentOneWay(m_SegmentId) == "Y");
+  //ui->chkOneWay->setChecked(sql->getSegmentOneWay(m_SegmentId) == "Y");
 
 
   // Refresh the Segments combobox
@@ -2339,14 +2342,14 @@ void mainWindow::btnSplit_Click()    // SLOT
 
   // redisplay the original altered segment
   ui->txtSegment->setText(sql->getSegmentDescription(segmentDlg.SegmentId()));
-  ui->chkOneWay->setChecked("Y"== sql->getSegmentOneWay(segmentDlg.SegmentId()));
-  displaySegment(segmentDlg.SegmentId(), ui->txtSegment->text(), ui->chkOneWay->isChecked()?"Y":"N", "#b45f04", true);
+  //ui->chkOneWay->setChecked("Y"== sql->getSegmentOneWay(segmentDlg.SegmentId()));
+  displaySegment(segmentDlg.SegmentId(), ui->txtSegment->text(), sql->getSegmentOneWay(segmentDlg.newSegmentId()), "#b45f04", true);
 
   // display the new segment
   ui->txtSegment->setText(sql->getSegmentDescription(segmentDlg.newSegmentId()));
-  ui->chkOneWay->setChecked("Y" == sql->getSegmentOneWay(segmentDlg.newSegmentId()));
+  //ui->chkOneWay->setChecked("Y" == sql->getSegmentOneWay(segmentDlg.newSegmentId()));
 
-  displaySegment(segmentDlg.newSegmentId(), ui->txtSegment->text(), ui->chkOneWay->isChecked()?"Y":"N", "#b45f04", false);
+  displaySegment(segmentDlg.newSegmentId(), ui->txtSegment->text(), sql->getSegmentOneWay(segmentDlg.newSegmentId()), "#b45f04", false);
 
   ui->btnFirst->setEnabled(true);
   ui->btnNext->setEnabled(true);
@@ -2436,7 +2439,7 @@ void mainWindow::cbSegmentsSelectedValueChanged(qint32 row)
     }
 
 
-    displaySegment(m_SegmentId, ui->txtSegment->text(), (ui->chkOneWay->checkState()?"Y":"N"), (!ui->chkOneWay->checkState() ? "#00FF00" : "#045fb4"), true);
+    displaySegment(m_SegmentId, ui->txtSegment->text(), sI.oneWay, sI.oneWay=="Y" ? "#00FF00" : "#045fb4", true);
 #if 0
     // Display Start and end markers
     sI = sql->getSegmentInfo(m_SegmentId);
@@ -2468,7 +2471,7 @@ void mainWindow::txtSegment_Leave( )
  if (bSegmentChanged)
  {
   SegmentInfo si = sql->getSegmentInfo(m_SegmentId);
-  sql->updateSegmentDescription(m_SegmentId, ui->txtSegment->text(), (ui->chkOneWay->checkState()?"Y":"N"), ui->sbTracks->value(), si.length);
+  sql->updateSegmentDescription(m_SegmentId, ui->txtSegment->text(), si.oneWay, ui->sbTracks->value(), si.length);
   bSegmentChanged = false;
   int segmentId = m_SegmentId;
   refreshSegmentCB();
@@ -2971,11 +2974,11 @@ void mainWindow::txtStreetName_Leave()
    si.tracks = ui->sbTracks->value();
    bUpdate = true;
   }
-  if((ui->chkOneWay->isChecked()?"Y":"N") != si.oneWay)
-  {
-   si.oneWay = ui->chkOneWay->isChecked()?"Y":"N";
-   bUpdate = true;
-  }
+//  if((ui->chkOneWay->isChecked()?"Y":"N") != si.oneWay)
+//  {
+//   si.oneWay = ui->chkOneWay->isChecked()?"Y":"N";
+//   bUpdate = true;
+//  }
   if(bUpdate)
   {
    //SQL mySql;
@@ -3151,7 +3154,7 @@ void mainWindow::addSegment()
          dash = 3;
 
         QVariantList objArray;
-        objArray << m_SegmentId << segmentDlg.routeName()<<ui->txtSegment->text()<<(ui->chkOneWay?"Y":"N")<<getColor(segmentDlg.tractionType())<<si.tracks << dash;
+        objArray << m_SegmentId << segmentDlg.routeName()<<ui->txtSegment->text()<<rd.oneWay<<getColor(segmentDlg.tractionType())<<si.tracks << dash;
         m_bridge->processScript("createSegment",objArray);
 
         //webBrowser1.Document.InvokeScript("addModeOn");
@@ -3534,13 +3537,13 @@ void mainWindow::chkOneWay_toggled(bool bChecked)
  SegmentInfo si = sql->getSegmentInfo(m_SegmentId);
  if(bChecked)
  {
-  ui->sbTracks->setEnabled(false);
-  ui->sbTracks->setValue(1);
+  //ui->sbTracks->setEnabled(false);
+  ui->sbTracks->setValue(si.tracks);
  }
  else
  {
   ui->sbTracks->setValue(si.tracks);
-  ui->sbTracks->setEnabled(true);
+  //ui->sbTracks->setEnabled(true);
  }
  bSegmentChanged = true;
  txtSegment_Leave();
@@ -3711,7 +3714,7 @@ void mainWindow::updateSegmentInfoDisplay(SegmentInfo si)
   ui->txtSegment->setText( si.description);
   if(si.oneWay == "Y")
   {
-   ui->chkOneWay->setChecked(true);
+//   ui->chkOneWay->setChecked(true);
    ui->sbTracks->setValue(1);
    ui->sbTracks->setEnabled(false);
   }

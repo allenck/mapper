@@ -81,6 +81,7 @@ public:
     qint32 reverseLeave;        // Not defined for one Way
     QString oneWay;
     int next, prev;
+    QString biDirectional;
 
     QString toString();
     ~RouteData();

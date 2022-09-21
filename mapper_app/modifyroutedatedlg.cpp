@@ -49,20 +49,20 @@ RouteData* ModifyRouteDateDlg::getRouteData()
 }
 void ModifyRouteDateDlg::dateTimePicker1_ValueChanged(QDate date) //SLOT
 {
-ui->lblError->setText("");
-if (ui->rbStart->isChecked())
-{
- if (date >= _rd->endDate)
+ ui->lblError->setText("");
+ if (ui->rbStart->isChecked())
  {
-  ui->lblError->setText(tr("Invalid date"));
-  //System.Media.SystemSounds.Exclamation.Play();
-  ui->dateTimePicker1->setFocus();
-  QApplication::beep();
+  if (date >= _rd->endDate)
+  {
+   ui->lblError->setText(tr("Invalid date"));
+   //System.Media.SystemSounds.Exclamation.Play();
+   ui->dateTimePicker1->setFocus();
+   QApplication::beep();
 
-  return;
+   return;
+  }
  }
-}
-else
+ else
  if (ui->rbEnd->isChecked())
  {
   if (date <= _rd->startDate)

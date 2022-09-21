@@ -137,7 +137,10 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
 
     foreach(RouteData rd1, myArray)
     {
-        if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->text(), ui->endDate->date().toString("yyyy/MM/dd"), rd1.lineKey, rd1.companyKey, rd1.tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave) == false)
+        if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->text(),
+                                   ui->endDate->date().toString("yyyy/MM/dd"), rd1.lineKey, rd1.companyKey,
+                                   rd1.tractionType, rd1.direction,
+                                   rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave, rd1.oneWay) == false)
         {
             ui->lblHelp->setText(tr("add failed: route ")+ QString("%1").arg(_routeNbr));
             //System.Media.SystemSounds.Asterisk.Play();
@@ -149,7 +152,10 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
 
     foreach(RouteData rd1, myArray)
     {
-        if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->text(), ui->endDate->date().toString("yyyy/MM/dd"), rd1.lineKey, rd1.companyKey, rd1.tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave) == false)
+        if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->text(),
+                                   ui->endDate->date().toString("yyyy/MM/dd"), rd1.lineKey, rd1.companyKey,
+                                   rd1.tractionType, rd1.direction,
+                                   rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave, rd1.oneWay) == false)
         {
             ui->lblHelp->setText(tr("add failed"));
             //System.Media.SystemSounds.Asterisk.Play();

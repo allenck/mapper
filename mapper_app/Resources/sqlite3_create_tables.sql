@@ -96,6 +96,7 @@ CREATE TABLE if not exists `Routes` (
   `StartDate` date NOT NULL,
   `EndDate` date NOT NULL,
   `LineKey` int(11) NOT NULL,
+  `OneWay` char(1) DEFAULT 'Y',
   `CompanyKey` int(11) NOT NULL DEFAULT 0,
   `tractionType` int(11) NOT NULL DEFAULT 0,
   `Direction` varchar(6) NOT NULL DEFAULT ' ',

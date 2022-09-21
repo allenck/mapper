@@ -668,6 +668,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
   if (ui->chkNewOneWay->isChecked())
    newName += " (1 way)";
   QString strOneWay = ui->chkNewOneWay->isChecked()?"Y":"N";
+  QString strBiDirectional = ui->chkNewOneWay->isChecked()?"N":"Y";
   RouteType rt = (RouteType)ui->cbRouteType->currentIndex();
   QList<LatLng> pointList = QList<LatLng>();
   _newSegmentId = sql->addSegment(newName, strOneWay, ui->sbTracks->value(), rt, pointList, & bAlreadyExists);
@@ -739,7 +740,9 @@ void SegmentDlg::btnOK_Click()  // SLOT
 
      _routeNbr = sql->addAltRoute(_alphaRoute, cd->routePrefix);
     }
-    if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(), ui->dateEnd->text(), routeSegment, companyKey, /*cbTractionType.SelectedIndex*/tractionType, direction, normalEnter, normalLeave, reverseEnter, reverseLeave))
+    if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(), ui->dateEnd->text(), routeSegment,
+                                companyKey, /*cbTractionType.SelectedIndex*/tractionType, direction,
+                                normalEnter, normalLeave, reverseEnter, reverseLeave, ui->chkNewOneWay?"Y":"N"))
      ui->lblErrorText->setText(tr( "Add Error"));
     streetName = ui->txtOriginalName->text();
     //if (routeChanged != null)
@@ -750,7 +753,10 @@ void SegmentDlg::btnOK_Click()  // SLOT
    }
    else
    {
-    if (!sql->updateSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(), ui->dateEnd->text(), routeSegment, companyKey, /*cbTractionType.SelectedIndex*/tractionType, normalEnter, normalLeave, reverseEnter, reverseLeave))
+    QString strBiDirectional = ui->chkNewOneWay->isChecked()?"N":"Y";
+
+    if (!sql->updateSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(), ui->dateEnd->text(), routeSegment, companyKey, /*cbTractionType.SelectedIndex*/tractionType,
+                                   normalEnter, normalLeave, reverseEnter, reverseLeave, strBiDirectional))
      ui->lblErrorText->setText(tr( "Update Error"));
     //if (routeChanged != null)
     RouteChangedEventArgs args =  RouteChangedEventArgs(_routeNbr, ui->cbRouteName->currentText(), routeSegment, tractionType, companyKey, ui->dateEnd->date(), "Update");

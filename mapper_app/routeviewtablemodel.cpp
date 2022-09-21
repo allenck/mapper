@@ -21,7 +21,7 @@ RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtSta
  bSelectedRowChanged = false;
  bIsSequenced = false;
  listOfSegments = segmentInfoList;
- saveSegmentInfoList = segmentInfoList;
+ saveSegmentInfoList = QList<SegmentInfo>(segmentInfoList);
  this->dtEnd = dtEnd;
  this->dtStart = dtStart;
  startDate = dtStart.toString("yyyy/MM/dd");
@@ -157,8 +157,8 @@ QVariant RouteViewTableModel::headerData(int section, Qt::Orientation orientatio
             return tr("Name");
         case ONEWAY:
             return tr("1Way");
-    case TRACKS:
-        return tr("Tracks");
+        case TRACKS:
+            return tr("Tracks");
         case NEXT:
             return tr("Next");
         case PREV:
@@ -226,26 +226,26 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
 //         else
 //             return false;
   QDate dt;
-  int tracks;
+//  int tracks;
   switch(index.column())
   {
    case ONEWAY:
    {
     QString s = value.toString().toUpper();
-    if(tracks == 2)
-    {
-     si.oneWay = "N";
-     break;
-    }
+//    if(tracks == 2)
+//    {
+//     si.oneWay = "N";
+//     break;
+//    }
     if(s == "N" || s== "Y")
      si.oneWay = s;
     break;
    }
-  case TRACKS:
-    tracks = value.toInt();
-    if(tracks == 1 || tracks == 2)
-     si.tracks = tracks;
-    break;
+//  case TRACKS:
+//    tracks = value.toInt();
+//    if(tracks == 1 || tracks == 2)
+//     si.tracks = tracks;
+//    break;
    case STARTDATE:
       dt = value.toDate();
       if(dt.isValid())
@@ -315,7 +315,7 @@ Qt::ItemFlags RouteViewTableModel::flags(const QModelIndex &index) const
     case ONEWAY: // 1Way
      return QAbstractTableModel::flags(index) | Qt::ItemIsEditable | Qt::ItemIsEnabled;
     case TRACKS:
-     return QAbstractTableModel::flags(index) | Qt::ItemIsEditable | Qt::ItemIsEnabled;
+     return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
     case NEXT: // next
     case PREV: // prev
     case SEQ: // seq
@@ -368,7 +368,8 @@ void RouteViewTableModel::commitChanges()
  {
   int row = changedRows.at(i)->row;
   //SegmentInfo si = sourceModel->getList().at(row);
-  SegmentInfo si = saveSegmentInfoList.at(row);
+//  SegmentInfo si = saveSegmentInfoList.at(row);
+  SegmentInfo si = listOfSegments.at(row);
 //  for(int j = 0; j < sourceModel->listOfSegments.count(); j++)
 //  {
 //   if(sourceModel->listOfSegments.at(j).segmentId == sourceModel->changedRows.at(i)->segmentId)
@@ -394,7 +395,7 @@ void RouteViewTableModel::commitChanges()
   }
 
   SQL::instance()->BeginTransaction("updateRoute");
-  if(siOld.oneWay != si.oneWay || siOld.tracks != si.tracks || siOld.length != si.length  || siOld.bNeedsUpdate)
+  if(siOld.oneWay != si.oneWay /*|| siOld.tracks != si.tracks*/ || siOld.length != si.length  || siOld.bNeedsUpdate)
   {
    SQL::instance()->updateSegmentDescription(si.segmentId, si.description, si.oneWay, si.tracks, si.length);
   }
@@ -405,14 +406,14 @@ void RouteViewTableModel::commitChanges()
   {
    // add back segment used before route start date
    QString newEndDate = QDate::fromString(startDate, "yyyy/MM/dd").addDays(-1).toString("yyyy/MM/dd");
-   if(!SQL::instance()->addSegmentToRoute(route, name, si.startDate, newEndDate, si.segmentId, rd.companyKey, rd.tractionType, si.bearing.strDirection(),si.next, si.prev, si.normalEnter, si.normalLeave, si.reverseEnter, si.reverseLeave))
+   if(!SQL::instance()->addSegmentToRoute(route, name, si.startDate, newEndDate, si.segmentId, rd.companyKey, rd.tractionType, si.bearing.strDirection(),si.next, si.prev, si.normalEnter, si.normalLeave, si.reverseEnter, si.reverseLeave, rd.oneWay))
        return;
   }
 
   if(siOld.endDate > endDate)
   {
    QString newStartDate = QDate::fromString(endDate, "yyyy/MM/dd").addDays(+1).toString("yyyy/MM/dd");
-   if(!SQL::instance()->addSegmentToRoute(route, name, newStartDate, si.endDate, si.segmentId, rd.companyKey, rd.tractionType, si.bearing.strDirection(),si.next, si.prev, si.normalEnter, si.normalLeave, si.reverseEnter, si.reverseLeave))
+   if(!SQL::instance()->addSegmentToRoute(route, name, newStartDate, si.endDate, si.segmentId, rd.companyKey, rd.tractionType, si.bearing.strDirection(),si.next, si.prev, si.normalEnter, si.normalLeave, si.reverseEnter, si.reverseLeave, rd.oneWay))
        return;
   }
   if(changedRows.at(i)->bDeleted)
@@ -422,13 +423,17 @@ void RouteViewTableModel::commitChanges()
   }
   if(changedRows.at(i)->bChanged && !changedRows.at(i)->bDeleted)
   {
-      if(!SQL::instance()->addSegmentToRoute(route, name, si.startDate, si.endDate, si.segmentId, rd.companyKey, rd.tractionType, si.bearing.strDirection(),si.next, si.prev, si.normalEnter, si.normalLeave, si.reverseEnter, si.reverseLeave))
+      if(!SQL::instance()->addSegmentToRoute(route, name, si.startDate, si.endDate, si.segmentId, rd.companyKey, rd.tractionType, si.bearing.strDirection(),si.next, si.prev, si.normalEnter, si.normalLeave, si.reverseEnter, si.reverseLeave, si.oneWay))
           return;
   }
+  if(changedRows.at(i)->bDeleted)
+   removeRow(row);
+
   changedRows.at(i)->bChanged = false;
   changedRows.at(i)->bDeleted = false;
+  si.bNeedsUpdate = false;
   SQL::instance()->CommitTransaction("updateRoute");
-  removeRow(row);
+  saveSegmentInfoList.replace(i, si);
  }
  changedRows.clear();
  //myParent->refreshRoutes();

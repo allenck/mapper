@@ -116,6 +116,7 @@ DISTFILES += \
     Resources/scripts/qwebchannel.js \
     Resources/GoogleMaps2.htm \
     Resources/GoogleMaps2b.htm \
+    Resources/updateOneWay.sql \
     Resources/white.png \
     Resources/orange.png \
     Resources/tram.png \

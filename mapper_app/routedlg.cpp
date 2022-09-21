@@ -49,6 +49,7 @@ RouteDlg::RouteDlg(Configuration *cfg, QWidget *parent) :
     connect(ui->rbRToRight, SIGNAL(toggled(bool)), this,  SLOT(rbRToRight_CheckedChanged(bool)));
     connect(ui->cbCompany, SIGNAL(currentIndexChanged(int)), this, SLOT(cbCompany_SelectedIndexChanged(int )));
     connect(ui->dateEnd, SIGNAL(editingFinished()), this, SLOT(dateEnd_Leave()) );
+    connect(ui->cbOneWay, SIGNAL(toggled(bool)), this, SLOT(cbOneWay_checkedChanged(bool)));
 //    connect(this, SIGNAL(setStartDate(QDate)), ui->dateStart, SLOT(setDate(QDate)));
 //    connect(this,SIGNAL(setEndDate(QDate)), ui->dateEnd, SLOT(setDate(QDate)));
     connect(ui->dateStart, SIGNAL(editingFinished()), this, SLOT(dateStart_Leave()));
@@ -95,6 +96,8 @@ void RouteDlg::setSegmentId(qint32 segmentid)
   }
  }
  //ui->cbSegments->setFocus();
+ ui->cbOneWay->setChecked(si.oneWay == "Y");
+ ui->cbOneWay->setEnabled(si.tracks==1);
  if (si.oneWay == "Y")
  {
      ui->groupBox1->setVisible(true);
@@ -1383,7 +1386,10 @@ void RouteDlg::btnDelete_Click()              // SLOT
  if (_rd.route >0 && ui->dateStart->date() < _rd.startDate)
  {
   int tractionType = _tractionList.at(ui->cbTractionType->currentIndex()).tractionType;
-  if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(),                                   _rd.startDate.addDays(-1).toString("yyyy/MM/dd"), _SegmentId, _rd.companyKey, /*cbTractionType.SelectedIndex + 1*/tractionType, direction, normalEnter, normalLeave, reverseEnter, reverseLeave))
+  if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(),
+                              _rd.startDate.addDays(-1).toString("yyyy/MM/dd"), _SegmentId, _rd.companyKey,
+                              /*cbTractionType.SelectedIndex + 1*/tractionType, direction,
+                              normalEnter, normalLeave, reverseEnter, reverseLeave, ui->cbOneWay?"Y":"N"))
   {
       ui->lblHelpText->setText(tr("deleteRoute failed!"));
       //System.Media.SystemSounds.Beep.Play();
@@ -1395,7 +1401,9 @@ void RouteDlg::btnDelete_Click()              // SLOT
  {
      int tractionType = _tractionList.at(ui->cbTractionType->currentIndex()).tractionType;
 
-     if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), _rd.endDate.addDays(1).toString("yyyy/MM/dd"),                                     ui->dateEnd->text(), _SegmentId, companyKey, /*cbTractionType.SelectedIndex + 1*/tractionType, direction, normalEnter, normalLeave, reverseEnter, reverseLeave))
+     if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), _rd.endDate.addDays(1).toString("yyyy/MM/dd"),
+                                 ui->dateEnd->text(), _SegmentId, companyKey, /*cbTractionType.SelectedIndex + 1*/tractionType,
+                                 direction, normalEnter, normalLeave, reverseEnter, reverseLeave, ui->cbOneWay?"Y":"N"))
      {
          ui->lblHelpText->setText(tr("deleteRoute failed!"));
          //System.Media.SystemSounds.Beep.Play();
@@ -1584,7 +1592,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
                      sql->addSegmentToRoute(rd.route, rd.name, rd.startDate.toString("yyyy/MM/dd"),
                                              ui->dateStart->dateTime().addDays(-1).toString("yyyy/MM/dd"), rd.lineKey,
                          rd.companyKey, rd.tractionType, rd.direction,
-                         rd.normalEnter, rd.normalLeave, rd.reverseEnter, rd.reverseLeave);
+                         rd.normalEnter, rd.normalLeave, rd.reverseEnter, rd.reverseLeave, ui->cbOneWay?"Y":"N");
                      break;
                  case QMessageBox::No:
                      break;
@@ -1607,8 +1615,8 @@ void RouteDlg::btnAdd_Click()         // SLOT
                  sql->deleteRouteSegment(rd.route, rd.name, rd.lineKey, rd.startDate.toString("yyyy/MM/dd"), rd.endDate.toString("yyyy/MM/dd"));
                  sql->addSegmentToRoute(rd.route, rd.name, rd.startDate.toString("yyyy/MM/dd"),
                                          ui->dateEnd->dateTime().addDays(1).toString("yyyy/MM/dd"), rd.lineKey,
-                         rd.companyKey, rd.tractionType, rd.direction,
-                         rd.normalEnter, rd.normalLeave, rd.reverseEnter, rd.reverseLeave);
+                                         rd.companyKey, rd.tractionType, rd.direction,
+                                         rd.normalEnter, rd.normalLeave, rd.reverseEnter, rd.reverseLeave, ui->cbOneWay?"Y":"N");
                      break;
                  case QMessageBox::No:
                      break;
@@ -1641,7 +1649,9 @@ void RouteDlg::btnAdd_Click()         // SLOT
      if (sql->doesRouteSegmentExist(_routeNbr, ui->cbRouteName->currentText(), _SegmentId, ui->dateStart->text(), ui->dateEnd->text()) == false)
      {
          int tractionType = _tractionList.at(ui->cbTractionType->currentIndex()).tractionType;
-         if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(), ui->dateEnd->text(), _SegmentId, companyKey, /*cbTractionType.SelectedIndex+1*/tractionType, direction, normalEnter, normalLeave, reverseEnter, reverseLeave))
+         if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(), ui->dateEnd->text(),
+                                     _SegmentId, companyKey, /*cbTractionType.SelectedIndex+1*/tractionType, direction,
+                                     normalEnter, normalLeave, reverseEnter, reverseLeave, ui->cbOneWay?"Y":"N"))
          {
              ui->lblHelpText->setText(tr( "Add Error"));
              //System.Media.SystemSounds.Beep.Play();
@@ -1676,7 +1686,9 @@ void RouteDlg::btnAdd_Click()         // SLOT
       _routeNbr = sql->addAltRoute(_alphaRoute, cd->routePrefix);
   }
   int tractionType = _tractionList.at(ui->cbTractionType->currentIndex()).tractionType;
-  if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(), ui->dateEnd->text(), _SegmentId, companyKey, /*cbTractionType.SelectedIndex+1*/tractionType, direction, normalEnter, normalLeave, reverseEnter, reverseLeave))
+  if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(), ui->dateEnd->text(),
+                              _SegmentId, companyKey, /*cbTractionType.SelectedIndex+1*/tractionType, direction,
+                              normalEnter, normalLeave, reverseEnter, reverseLeave, ui->cbOneWay?"Y":"N"))
   {
    ui->lblHelpText->setText(tr( "Update Error"));
    //System.Media.SystemSounds.Beep.Play();
@@ -1701,7 +1713,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
              switch(rslt)
              {
                  case QMessageBox::Yes:
-                     sql->updateSegmentToRoute(ri.rd.route, ri.rd.name, ri.rd.startDate.toString("yyyy/MM/dd"), ri.rd.endDate.toString("yyyy/MM/dd"), ri.rd.lineKey, ri.rd.companyKey, ri.rd.tractionType, normalEnter, normalLeave, reverseEnter, reverseLeave);
+                     sql->updateSegmentToRoute(ri.rd.route, ri.rd.name, ri.rd.startDate.toString("yyyy/MM/dd"), ri.rd.endDate.toString("yyyy/MM/dd"), ri.rd.lineKey, ri.rd.companyKey, ri.rd.tractionType, normalEnter, normalLeave, reverseEnter, reverseLeave, ri.rd.biDirectional);
                      break;
                  default:
                      break;
@@ -1803,7 +1815,9 @@ void RouteDlg::checkDirection(QString routeDirection)
                             return;
                         }
                         int tractionType = _tractionList.at(ui->cbTractionType->currentIndex()).tractionType;
-                        if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(), ui->dateEnd->text(), siReverse.segmentId, companyKey, /*cbTractionType.SelectedIndex+1*/tractionType, siReverse.direction, normalEnter, normalLeave, reverseEnter, reverseLeave))
+                        if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(), ui->dateEnd->text(),
+                                                    siReverse.segmentId, companyKey, /*cbTractionType.SelectedIndex+1*/tractionType,
+                                                    siReverse.direction, normalEnter, normalLeave, reverseEnter, reverseLeave, ui->cbOneWay?"Y":"N"))
                         {
                             ui->lblHelpText->setText(tr( "Update Error"));
                             //System.Media.SystemSounds.Beep.Play();
@@ -1917,7 +1931,10 @@ void RouteDlg::checkDirection(QString routeDirection)
 
             QString direction = si.bearing.strDirection();
             int tractionType = _tractionList.at(ui->cbTractionType->currentIndex()).tractionType;
-            if (sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), rd.startDate.toString("yyyy/MM/dd"), rd.endDate.toString("yyyy/MM/dd"), siReverse.segmentId, companyKey, /*cbTractionType.SelectedIndex+1*/tractionType, direction, normalEnter, normalLeave, reverseEnter, reverseLeave))
+            if (sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), rd.startDate.toString("yyyy/MM/dd"),
+                                       rd.endDate.toString("yyyy/MM/dd"), siReverse.segmentId, companyKey,
+                                       /*cbTractionType.SelectedIndex+1*/tractionType, direction,
+                                       normalEnter, normalLeave, reverseEnter, reverseLeave, ui->cbOneWay?"Y":"N"))
             fillComboBox();
             checkUpdate(__FUNCTION__);
 //            if(SegmentChanged != null)
@@ -2103,5 +2120,25 @@ void RouteDlg::CalculateDates()
 // ui->dateEnd->setMinimumTime(QTime::fromString("00:00.00", "hh:mm.ss"));
 
  QDate de = ui->dateEnd->date();
+
+}
+
+void RouteDlg::cbOneWay_checkedChanged(bool oneWay)
+{
+ if (oneWay)
+ {
+     ui->groupBox1->setVisible(true);
+     ui->groupBox4->setVisible(false);
+     ui->groupBox5->setVisible(false);
+     ui->rbNormal->setText(si.bearing.strDirection());
+     ui->rbReverse->setText( si.bearing.strReverseDirection());
+     ui->rbNormal->setChecked(true);
+ }
+ else
+ {
+  ui->groupBox1->setVisible(false);
+  ui->groupBox4->setVisible(true);
+  ui->groupBox5->setVisible(true);
+ }
 
 }

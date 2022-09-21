@@ -266,7 +266,11 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
         for (int i =0; i < myArray.count(); i++)
         {
             RouteData rd1 = myArray.at(i);
-            if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(), ui->dateStart->text(), ui->dateEnd->text(), rd1.lineKey, ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey, /*cbTractionType.SelectedIndex + 1*/tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave) == false)
+            if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(), ui->dateStart->text(),
+                                       ui->dateEnd->text(), rd1.lineKey,
+                                       ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey,
+                                       /*cbTractionType.SelectedIndex + 1*/tractionType, rd1.direction,
+                                       rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave, rd1.oneWay) == false)
             {
                 ui->lblHelp->setText(tr("add failed"));
                 //System.Media.SystemSounds.Asterisk.Play();
@@ -289,7 +293,10 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
                 sql->deleteRouteSegment(_routeNbr, ui->txtRouteName->text(), rd2.lineKey, ui->dateStart->text(), ui->dateEnd->text());
             }
 
-            if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(), ui->dateStart->text(), ui->dateEnd->text(), rd1.lineKey, ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey, /*cbTractionType.SelectedIndex + 1*/tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave) == false)
+            if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(), ui->dateStart->text(), ui->dateEnd->text(), rd1.lineKey,
+                                       ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey,
+                                       /*cbTractionType.SelectedIndex + 1*/tractionType, rd1.direction,
+                                       rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave, rd1.oneWay) == false)
             {
                 ui->lblHelp->setText(tr("add failed"));
                 //System.Media.SystemSounds.Asterisk.Play();
@@ -312,7 +319,8 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
             {
                 if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(),
                     rd2.startDate.toString("yyyy/MM/dd"), (ui->dateStart->dateTime().addDays(-1)).toString("yyyy/MM/dd"),
-                    rd2.lineKey, rd2.companyKey, rd2.tractionType, rd2.direction, rd2.normalEnter, rd2.normalLeave, rd2.reverseEnter, rd2.reverseLeave) == false)
+                    rd2.lineKey, rd2.companyKey, rd2.tractionType, rd2.direction, rd2.normalEnter,
+                    rd2.normalLeave, rd2.reverseEnter, rd2.reverseLeave, rd2.oneWay) == false)
                 {
                     ui->lblHelp->setText(tr("add failed"));
                     //System.Media.SystemSounds.Asterisk.Play();
@@ -323,8 +331,9 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
             if (rd2.endDate > ui->dateEnd->date())
             {
                 if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(),
-                                            (ui->dateEnd->dateTime().addDays(1)).toString("yyyy/MM/dd"), rd2.endDate.toString("yyyy/MM/dd"),
-                    rd2.lineKey, rd2.companyKey, rd2.tractionType, rd2.direction, rd2.normalEnter, rd2.normalLeave, rd2.reverseEnter, rd2.reverseLeave) == false)
+                    (ui->dateEnd->dateTime().addDays(1)).toString("yyyy/MM/dd"), rd2.endDate.toString("yyyy/MM/dd"),
+                    rd2.lineKey, rd2.companyKey, rd2.tractionType, rd2.direction,
+                    rd2.normalEnter, rd2.normalLeave, rd2.reverseEnter, rd2.reverseLeave, rd2.oneWay) == false)
                 {
                     ui->lblHelp->setText(tr("add failed"));
                     //System.Media.SystemSounds.Asterisk.Play();
@@ -336,7 +345,10 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
             {
                 sql->deleteRouteSegment(_routeNbr, ui->txtRouteName->text(), rd2.lineKey, ui->dateStart->text(), ui->dateEnd->text());
             }
-            if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(), ui->dateStart->text(), ui->dateEnd->text(), rd1.lineKey, ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey, /*cbTractionType.SelectedIndex + 1*/tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave) == false)
+            if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(), ui->dateStart->text(), ui->dateEnd->text(), rd1.lineKey,
+                     ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey,
+                     /*cbTractionType.SelectedIndex + 1*/tractionType, rd1.direction,
+                     rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave, rd1.oneWay) == false)
             {
                 ui->lblHelp->setText(tr("add failed"));
                 //System.Media.SystemSounds.Asterisk.Play();

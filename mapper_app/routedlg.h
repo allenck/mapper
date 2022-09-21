@@ -112,6 +112,7 @@ private slots:
     void cbCompany_SelectedIndexChanged(int i);
     void dateStart_Leave();
     void dateEnd_Leave();
+    void cbOneWay_checkedChanged(bool);
 
 };
 

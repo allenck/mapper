@@ -81,9 +81,9 @@ public:
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate, QString routeStartDate, QString routeEndDate);
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate);
     bool addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId,
-        qint32 companyKey, qint32 tractionType, QString direction, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave);
+        qint32 companyKey, qint32 tractionType, QString direction, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString oneWay);
     bool addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId,
-        qint32 companyKey, qint32 tractionType, QString direction, qint32 next, qint32 prev, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave);
+        qint32 companyKey, qint32 tractionType, QString direction, qint32 next, qint32 prev, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString oneWay);
     qint32 getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * bAlphaRoute, int companyKey);
     bool updateTerminals(qint32 route, QString name, QString startDate, QString endDate, qint32 startSegment, QString startWhichEnd, qint32 endSegment, QString endWhichEnd);
     QList<RouteData> getRouteInfo(qint32 route);
@@ -108,7 +108,7 @@ double Distance(double Lat1, double Lon1, double Lat2, double Lon2);
     qint32 addSegment(QString Description, QString OneWay, int tracks, RouteType routeType, const QList<LatLng> pointList, bool * bAlreadyExists);
     qint32 splitSegment(qint32 pt, qint32 SegmentId, QString oldDesc, QString oldOneWay, QString newDesc, QString newOneWay, RouteType routeType, RouteType newRouteType, int oldTracks, int newTracks, QString oldStreet, QString newStreet);
     RouteData getRouteData(qint32 route, qint32 SegmentId, QString startDate, QString endDate);
-    bool updateSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId, qint32 companyKey, qint32 tractionType, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave);
+    bool updateSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId, qint32 companyKey, qint32 tractionType, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString biDirectional);
     RouteData getSegmentInfoForRouteDates(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate);
     bool deleteRoute(qint32 route, QString name, QString startDate, QString endDate);
     bool modifyRouteDate(RouteData* rd, bool bStartDate, QDate dt, QString name1, QString name2);
