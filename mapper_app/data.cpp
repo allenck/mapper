@@ -87,9 +87,32 @@ RouteData::RouteData()
 {
  route=-1;
 }
+
 RouteData::~RouteData()
 {
 
+}
+
+RouteData::RouteData(const RouteData& o)
+{
+ route = o.route;
+ alphaRoute = o.alphaRoute;;
+ //baseRoute = o.baseRoute;
+ name = o.name;
+ defaultDate = o.defaultDate;
+ startDate = o.startDate;
+ endDate = o.endDate;
+ companyKey = o.companyKey;
+ lineKey = o.lineKey;
+ tractionType = o.tractionType;
+ direction = o.direction;
+ normalEnter = o.normalEnter;
+ normalLeave = o.normalLeave;
+ reverseEnter = o.reverseEnter;        // Not defined for one Way
+ reverseLeave = o.reverseLeave;        // Not defined for one Way
+ oneWay = o.oneWay;
+ next= o.next;
+ prev= o.prev;
 }
 
 QString RouteData::toString()

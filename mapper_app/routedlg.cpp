@@ -1713,7 +1713,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
              switch(rslt)
              {
                  case QMessageBox::Yes:
-                     sql->updateSegmentToRoute(ri.rd.route, ri.rd.name, ri.rd.startDate.toString("yyyy/MM/dd"), ri.rd.endDate.toString("yyyy/MM/dd"), ri.rd.lineKey, ri.rd.companyKey, ri.rd.tractionType, normalEnter, normalLeave, reverseEnter, reverseLeave, ri.rd.biDirectional);
+                     sql->updateSegmentToRoute(ri.rd.route, ri.rd.name, ri.rd.startDate.toString("yyyy/MM/dd"), ri.rd.endDate.toString("yyyy/MM/dd"), ri.rd.lineKey, ri.rd.companyKey, ri.rd.tractionType, normalEnter, normalLeave, reverseEnter, reverseLeave, ri.rd.oneWay);
                      break;
                  default:
                      break;

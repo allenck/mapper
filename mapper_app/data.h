@@ -66,7 +66,7 @@ public:
     RouteData();
     qint32 route;
     QString alphaRoute;
-    qint32 baseRoute;
+    //qint32 baseRoute;
     QString name;
     QDate defaultDate;
     QDate startDate;
@@ -81,10 +81,10 @@ public:
     qint32 reverseLeave;        // Not defined for one Way
     QString oneWay;
     int next, prev;
-    QString biDirectional;
 
     QString toString();
     ~RouteData();
+    RouteData(const RouteData&);
 signals:
 
 public slots:
@@ -376,20 +376,10 @@ class SegmentInfo
  {
   QString str;
   QString strSegment = QString("%1").arg(segmentId);
-  if (description.contains('('))
-  {
-   if (oneWay == "Y")
-       str = description + " Seg=" + QString("%1").arg(segmentId);
+   if (tracks == 1)
+       str = description + " (single)" + " Seg=" + QString("%1").arg(segmentId);
    else
-       str = description + " Seg=" + QString("%1").arg(segmentId);
-  }
-  else
-  {
-   if (oneWay == "Y")
-       str = description + " (1 way)" + " Seg=" + QString("%1").arg(segmentId);
-   else
-       str = description + " (2 way)" + " Seg=" + QString("%1").arg(segmentId);
-  }
+       str = description + " (double)" + " Seg=" + QString("%1").arg(segmentId);
   return str;
  }
 

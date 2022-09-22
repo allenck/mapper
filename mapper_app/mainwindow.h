@@ -232,7 +232,7 @@ private slots:
     void displayTerminalMarkersToggeled(bool bChecked);
     void displayRouteCommentsToggled(bool bChecked);
     void chkShowOverlayChanged(bool bChecked);
-    void chkOneWay_Leave(bool bChecked);
+//    void chkOneWay_Leave(bool bChecked);
     void sbRouteTriggered(int sliderAction);
     void txtRouteNbrLeave();
     void On_saveImage_clicked();

@@ -1458,7 +1458,7 @@ void mainWindow::txtRouteNbrLeave()
     for(int i = routeList.count()-1; i >= 0; i--)
     {
         RouteData rd = (RouteData)routeList.at(i);
-        if(rd.baseRoute != newRoute)
+//        if(rd.baseRoute != newRoute)
             routeList.removeAt(i);
     }
     int len = routeList.count();
@@ -3549,15 +3549,15 @@ void mainWindow::chkOneWay_toggled(bool bChecked)
  txtSegment_Leave();
 }
 
-void mainWindow::chkOneWay_Leave(bool bChecked)
-{
- SegmentInfo si = sql->getSegmentInfo(m_SegmentId);
- if(!bChecked)
-  ui->sbTracks->setEnabled(true);
+//void mainWindow::chkOneWay_Leave(bool bChecked)
+//{
+// SegmentInfo si = sql->getSegmentInfo(m_SegmentId);
+// if(!bChecked)
+//  ui->sbTracks->setEnabled(true);
 
- sql->updateSegmentDescription(m_SegmentId, ui->txtSegment->text(), bChecked?"Y":"N", si.tracks, si.length);
- refreshSegmentCB();
-}
+// sql->updateSegmentDescription(m_SegmentId, ui->txtSegment->text(), bChecked?"Y":"N", si.tracks, si.length);
+// refreshSegmentCB();
+//}
 
 void mainWindow::exportDb()
 {
@@ -3712,17 +3712,17 @@ void mainWindow::updateSegmentInfoDisplay(SegmentInfo si)
  {
   ui->txtStreet->setText( si.streetName);
   ui->txtSegment->setText( si.description);
-  if(si.oneWay == "Y")
-  {
-//   ui->chkOneWay->setChecked(true);
-   ui->sbTracks->setValue(1);
-   ui->sbTracks->setEnabled(false);
-  }
-  else
-  {
-   ui->sbTracks->setEnabled(true);
-   ui->sbTracks->setValue(si.tracks);
-  }
+  //  if(si.oneWay == "Y")
+  //  {
+  ////   ui->chkOneWay->setChecked(true);
+  //   ui->sbTracks->setValue(1);
+  //   ui->sbTracks->setEnabled(false);
+  //  }
+  //  else
+  //  {
+  //   ui->sbTracks->setEnabled(true);
+  ui->sbTracks->setValue(si.tracks);
+  //  }
   //txtOneWay.Text = sI.oneWay;
  }
  ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(si.pointList.count()));
