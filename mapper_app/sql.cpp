@@ -296,11 +296,11 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
      throw std::exception();
  QSqlDatabase db = QSqlDatabase::database();
  if(companyKey < 1)
-  //CommandText = "Select distinct a.route, name, a.endDate, a.companyKey, tractionType, routeAlpha/*, c.baseRoute*/ from Routes a join altRoute c on a.route =  c.route group by a.route, name, a.endDate, a.companykey,tractionType, c.routeAlpha/*, c.baseRoute*/ order by c.routeAlpha, name, a.endDate";
-  CommandText = "Select distinct a.route, name, a.endDate, a.companyKey, tractionType, routeAlpha from Routes a join altRoute c on a.route =  c.route group by a.route, name, a.endDate, a.companykey,tractionType, c.routeAlpha order by c.routeAlpha, name, a.endDate";
+  //CommandText = "Select distinct a.route, name, a.endDate, a.companyKey, tractionType/*, routeAlpha, c.baseRoute*/ from Routes a join altRoute c on a.route =  c.route group by a.route, name, a.endDate, a.companykey,tractionType, c.routeAlpha/*, c.baseRoute*/ order by c.routeAlpha, name, a.endDate";
+  CommandText = "Select distinct a.route, name, a.endDate /*, a.companyKey, tractionType, routeAlpha*/ from Routes a join altRoute c on a.route =  c.route group by a.route, name, a.endDate/*, a.companykey,tractionType, c.routeAlpha*/ order by c.routeAlpha, name, a.endDate";
  else
   //CommandText = "Select distinct a.route, name, a.endDate, a.companyKey, tractionType, routeAlpha/*, c.baseRoute*/ from Routes a join altRoute c on a.route = c.route  where a.companyKey = " + QString("%1").arg(companyKey)+ " group by a.route, name, a.endDate, a.companykey, tractionType, c.routeAlpha/*, c.baseRoute*/ order by c.routeAlpha, name, a.endDate";
-  CommandText = "Select distinct a.route, name, a.endDate, a.companyKey, tractionType, routeAlpha from Routes a join altRoute c on a.route = c.route  where a.companyKey = " + QString("%1").arg(companyKey)+ " group by a.route, name, a.endDate, a.companykey, tractionType, c.routeAlpha order by c.routeAlpha, name, a.endDate";
+  CommandText = "Select distinct a.route, name, a.endDate /*, a.companyKey, tractionType*/, routeAlpha from Routes a join altRoute c on a.route = c.route  where a.companyKey = " + QString("%1").arg(companyKey)+ " group by a.route, name, a.endDate/*, a.companykey, tractionType, c.routeAlpha*/ order by c.routeAlpha, name, a.endDate";
  query = QSqlQuery(db);
  bool bQuery = query.exec(CommandText);
  if(!bQuery)
@@ -315,31 +315,32 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
    date = query.value(2).toDate();
    currDateStr = currDate.toString("yyyy/MM/dd");
    dateStr = date.toString("yyyy/MM/dd");
-   if(route == currRoute && currName == name && currDateStr == dateStr)
+   if(route == currRoute && currName == name && /*currDateStr == dateStr*/date == currDate)
        continue;
    else
    {
-    if (currRoute != -1)
-    {
-     list.append(rd);
-     rd = RouteData();
-    }
+//    if (currRoute != -1)
+//    {
+//     list.append(rd);
+//     rd = RouteData();
+//    }
     currRoute = route;
     currName = name;
     currDate = date;
     rd.route = route;
     rd.name = name;
     rd.endDate = date;
-    rd.companyKey = query.value(3).toInt();
-    rd.tractionType = query.value(4).toInt();
-    rd.alphaRoute = query.value(5).toString();
+//    rd.companyKey = query.value(3).toInt();
+//    rd.tractionType = query.value(4).toInt();
+    rd.alphaRoute = query.value(3).toString();
 //    rd.baseRoute = query.value(6).toInt();
 //    if(rd.baseRoute == 0)
 //     rd.baseRoute = route;
+    list.append(rd);
    }
 
-  if(currRoute!= -1)
-   list.append(rd);
+//  if(currRoute!= -1)
+//   list.append(rd);
   }
   //foreach(routeData rd1 in list)
   for(int i=0; i < list.size(); i++)
@@ -1290,7 +1291,7 @@ QList<SegmentInfo> SQL::getRouteSegmentsInOrder2(qint32 route, QString name, QSt
   {
    QString  CommandText;
    if(firstTry)
-    CommandText = "Select c.startLat, c.startLon, c.endLat, c.endLon, c.segmentId, c.description, c.oneWay, b.direction, b.next, b.prev, b.normalEnter, b.normalLeave, b.reverseEnter, b.reverseLeave, b.startDate, b.endDate, c.length, c.tracks, c.pointArray, b.OneWay from Routes b join Segments c on c.segmentId = LineKey where b.Route = " + QString("%1").arg(route) + " and Name = '" + name + "' and '" + date + "' between b.StartDate and b.endDate order by b.startDate, b.endDate, c.segmentid";
+    CommandText = "Select c.startLat, c.startLon, c.endLat, c.endLon, c.segmentId, c.description, c.oneWay, b.direction, b.next, b.prev, b.normalEnter, b.normalLeave, b.reverseEnter, b.reverseLeave, b.startDate, b.endDate, c.length, c.tracks, c.pointArray, b.OneWay from Routes b join Segments c on c.segmentId = LineKey where b.Route = " + QString("%1").arg(route) + " and Name = '" + name + "' and '" + date + "' between b.StartDate and b.endDate and b.endDate <= '"+ date + "' order by b.startDate, b.endDate, c.segmentid";
    else
     CommandText = "Select c.startLat, c.startLon, c.endLat, c.endLon, c.segmentId, c.description, c.oneWay, b.direction, b.next, b.prev, b.normalEnter, b.normalLeave, b.reverseEnter, b.reverseLeave, b.startDate, b.endDate, c.length, c.tracks, c.pointArray, b.OneWay from Routes b join Segments c on c.segmentId = LineKey where b.Route = " + QString("%1").arg(route) + " and Name = '" + name + "'  order by b.startDate, b.endDate, c.segmentid";
    // Note: 1st Query fails if route has a single segment

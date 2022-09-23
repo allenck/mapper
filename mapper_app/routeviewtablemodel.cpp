@@ -275,7 +275,7 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
   changeEntry->bChanged=true;
   changeEntry->bDeleted = false;
   changeEntry->segmentId = si.segmentId;
-  changeEntry->si = &si;
+  changeEntry->si = si;
   int i;
   for(i=0; i < changedRows.count(); i++)
   {
@@ -369,7 +369,8 @@ void RouteViewTableModel::commitChanges()
   int row = changedRows.at(i)->row;
   //SegmentInfo si = sourceModel->getList().at(row);
 //  SegmentInfo si = saveSegmentInfoList.at(row);
-  SegmentInfo si = listOfSegments.at(row);
+  //SegmentInfo si = listOfSegments.at(row);
+  SegmentInfo si = changedRows.at(i)->si;
 //  for(int j = 0; j < sourceModel->listOfSegments.count(); j++)
 //  {
 //   if(sourceModel->listOfSegments.at(j).segmentId == sourceModel->changedRows.at(i)->segmentId)
@@ -380,7 +381,7 @@ void RouteViewTableModel::commitChanges()
 //  }
   if(si.segmentId != changedRows.at(i)->segmentId)
   {
-      qDebug() << "Error, wrong segmentId found!";
+      qDebug() << "Error, wrong segmentId found! " << si.segmentId << " vs << changedRows.at(i)->segmentId";
       return;
   }
   //segmentInfo siOld = segmentInfoList.at(row);
@@ -480,7 +481,7 @@ void RouteViewTableModel::deleteRow(qint32 segmentId, const QModelIndex &index)
   if(si.segmentId == segmentId )
   {
    rc->row= i;
-   rc->si = &si;
+   rc->si = SegmentInfo(si);
    break;
   }
  }

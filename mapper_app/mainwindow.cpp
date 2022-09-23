@@ -1430,6 +1430,7 @@ void mainWindow::refreshRoutes()
     {
          RouteData rd = (RouteData)routeList.at(i);
          QString rdStartDate = rd.startDate.toString("yyyy/MM/dd");
+//         if(ui->cbRoute->findText(rd.toString())< 0)
             ui->cbRoute->addItem(rd.toString());
          if( rd.toString() == currText)
             ui->cbRoute->setCurrentIndex(i);

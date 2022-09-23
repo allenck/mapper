@@ -480,12 +480,12 @@ public:
     bool bChanged;
     bool bDeleted;
     qint32 segmentId;
-    SegmentInfo* si;
+    SegmentInfo si;
     QString startDate;
     QString endDate;
     RowChanged()
     {
-     si = NULL;
+     si = SegmentInfo();
      segmentId = -1;
      row = -1;
      bChanged = false;
