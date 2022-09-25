@@ -751,6 +751,68 @@ TerminalInfo SQL::getTerminalInfo(qint32 route, QString name, QString endDate)
 
  return ti;
 }
+
+// return a list of TerminalInfo's using a segment
+QList<TerminalInfo> SQL::getTerminalInfoUsingSegment(int segmentId)
+{
+ QSqlDatabase db = QSqlDatabase::database();
+ QString CommandText;
+
+ if(config->currConnection->servertype() != "MsSql")
+     CommandText = "select route, name, a.startDate, a.endDate, startSegment, startWhichEnd, endSegment, endWhichEnd, "
+     "b.startLat, b.startLon, b.endLat, b.endLon, c.startLat, c.startLon, c.endLat, c.endLon "
+     "from Terminals a " \
+     "join Segments b on b.segmentId = startSegment " \
+     "join Segments c on c.segmentId = endSegment " \
+     "where " + QString("%1").arg(segmentId) + " in (startSegment, endSegment)";
+ else
+     CommandText = "select route, name, a.startDate, a.endDate, startSegment, startWhichEnd, endSegment, endWhichEnd, "
+         "b.startLat, b.startLon, b.endLat, b.endLon, c.startLat, c.startLon, c.endLat, c.endLon "
+         "from Terminals a " \
+         "full outer join Segments b on b.segmentId = startSegment " \
+         "full outer join Segments c on c.segmentId = endSegment " \
+     "where " + QString("%1").arg(segmentId) + " in (startSegment, endSegment)";
+
+ QList<TerminalInfo> list;
+ QSqlQuery query = QSqlQuery(db);
+ bool bQuery = query.exec(CommandText);
+ if(!bQuery)
+ {
+  SQLERROR(query);
+     db.close();
+     exit(EXIT_FAILURE);
+ }
+ if (!query.isActive())
+ {
+  TerminalInfo ti;
+  ti.route = query.value(0).toInt();
+  ti.name = query.value(1).toString();
+  ti.startDate = query.value(2).toDateTime();
+  ti.endDate = query.value(3).toDateTime();
+  ti.startSegment = query.value(4).toInt();
+  ti.startWhichEnd = query.value(5).toString();
+  ti.endSegment = query.value(6).toInt();
+  ti.endWhichEnd = query.value(7).toString();
+
+  if (ti.startSegment > 0)
+  {
+      if(ti.startWhichEnd == "S" )
+          ti.startLatLng =  LatLng(query.value(8).toDouble(), query.value(9).toDouble());
+      else
+          ti.startLatLng =  LatLng(query.value(10).toDouble(), query.value(11).toDouble());
+  }
+  if (ti.endSegment > 0 )
+  {
+      if (ti.endWhichEnd == "S")
+          ti.endLatLng =  LatLng(query.value(12).toDouble(),query.value(13).toDouble());
+      else
+          ti.endLatLng =  LatLng(query.value(14).toDouble(), query.value(15).toDouble());
+  }
+  list.append(ti);
+ }
+ return list;
+}
+
 QString SQL::getAlphaRoute(qint32 route, qint32 company)
 {
  QString routeAlpha = "";
@@ -4917,7 +4979,14 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDat
     return ret;
 }
 
-bool SQL::updateTerminals(qint32 route, QString name, QString startDate, QString endDate, qint32 startSegment, QString startWhichEnd, qint32 endSegment, QString endWhichEnd)
+bool SQL::updateTerminals(TerminalInfo ti)
+{
+ return  updateTerminals(ti.route, ti.name, ti.startDate.toString("yyyy/MM/dd"), ti.endDate.toString("yyyy/MM/dd"), ti.startSegment, ti.startWhichEnd,
+                         ti.endSegment, ti.endWhichEnd);
+}
+
+bool SQL::updateTerminals(qint32 route, QString name, QString startDate, QString endDate,
+                          qint32 startSegment, QString startWhichEnd, qint32 endSegment, QString endWhichEnd)
 {
     bool ret = false;
     int rows = 0;
@@ -8903,6 +8972,7 @@ bool SQL::deleteAndReplaceSegmentWith(int segmentId1, int segmentId2)
    RollbackTransaction("replaceSegment");
    return false;
   }
+
   int cnt = getCountOfStationsUsingSegment(segmentId1);
   if(cnt)
   {
@@ -8918,6 +8988,22 @@ bool SQL::deleteAndReplaceSegmentWith(int segmentId1, int segmentId2)
     qDebug() << "number of stations updated not equal expected" << rows << " vs " << cnt;
     RollbackTransaction("replaceSement");
     return false;
+   }
+  }
+  QList<TerminalInfo> terminals = getTerminalInfoUsingSegment(segmentId1);
+  if(terminals.count())
+  {
+   foreach(TerminalInfo ti, terminals)
+   {
+    if(ti.startSegment == segmentId1)
+     ti.startSegment = segmentId2;
+    if(ti.endSegment == segmentId1)
+     ti.endSegment = segmentId2;
+    if(!updateTerminals(ti))
+    {
+     RollbackTransaction("replaceSegment");
+     return false;
+    }
    }
   }
   CommitTransaction("replaceSegment");

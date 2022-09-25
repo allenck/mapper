@@ -232,7 +232,7 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   dupSegmentView = new DupSegmentView(config, this);
   connect(routeView, SIGNAL(selectSegment(int)), this, SLOT(selectSegment(int)));
   connect(dupSegmentView, SIGNAL(selectSegment(int)), this, SLOT(selectSegment(int)));
-  ui->tabWidget->removeTab(6);
+  //ui->tabWidget->removeTab(6);
 
   // setup routeDlg
   routeDlg = new RouteDlg(config, this);
@@ -3604,8 +3604,8 @@ void mainWindow::findDupSegments()
         qApp->processEvents();
 
     }
-    if(ui->tabWidget->count() < 7)
-     ui->tabWidget->addTab(ui->tblDupSegments,"DuplicateSegments");
+//    if(ui->tabWidget->count() < 7)
+//     ui->tabWidget->addTab(ui->tblDupSegments,"DuplicateSegments");
     dupSegmentView->showDupSegments(myArray);
     this->setCursor(QCursor(Qt::ArrowCursor));
     //NotYetInplemented();
