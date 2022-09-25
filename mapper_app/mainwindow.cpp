@@ -778,7 +778,7 @@ void mainWindow::createActions()
  connect(editSegmentAct, SIGNAL(triggered()), this, SLOT(On_editSegment_triggered()));
 
  findDupSegmentsAct=new QAction(tr("Show duplicate segments view"),this);
- findDupSegmentsAct->setToolTip(tr("Display a list of duplicate segments"));
+ findDupSegmentsAct->setToolTip(tr("Display a view of duplicate segments"));
  connect(findDupSegmentsAct, SIGNAL(triggered()),this, SLOT(findDupSegments()));
 
  addSegmentToRouteAct = new QAction(tr("Add segment to route"), this);

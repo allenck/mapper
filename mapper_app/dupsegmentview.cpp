@@ -69,8 +69,8 @@ void DupSegmentView::showDupSegments(QList<SegmentInfo> dupSegmentList)
     connect(selectSegmentAct, SIGNAL(triggered(bool)), this, SLOT(On_selectSegmentAct(bool)));
     deleteDuplicateAct = new QAction(tr("Delete dup segment"),this);
     connect(deleteDuplicateAct, &QAction::triggered, [=]{
-     QString msg = tr("Do you want to delete segment %1 which is duplicate to segment %2?\
-        \nAnd use %2 in Routes and Stations?").arg(dupSegmentId).arg(segmentId);
+     QString msg = tr("Do you want to delete segment %1 which is duplicate to segment %2"
+        " and use %2 instead in Routes and Stations? Or delete %2 and use %1 instead?").arg(dupSegmentId).arg(segmentId);
      msg = msg + QString(tr("\nSegment %1 is used by %2 routes").arg(dupSegmentId).arg(sql->getCountOfRoutesUsingSegment(dupSegmentId)));
      msg = msg + QString(tr("\nSegment %1 is used by %2 routes").arg(segmentId).arg(sql->getCountOfRoutesUsingSegment(segmentId)));
 
@@ -78,7 +78,44 @@ void DupSegmentView::showDupSegments(QList<SegmentInfo> dupSegmentList)
      QPushButton* delete1Button = msgBox.addButton(tr("Delete segment %1").arg(dupSegmentId), QMessageBox::ActionRole);
      QPushButton* delete2Button = msgBox.addButton(tr("Delete segment %1").arg(segmentId), QMessageBox::ActionRole);
      QPushButton* abortButton =  msgBox.addButton(QMessageBox::Abort);
+     msgBox.setDefaultButton(abortButton);
 
+     QString detailedText;
+     QList<RouteData> list = sql->getRouteSegmentsBySegment(dupSegmentId);
+     if(list.count())
+     {
+      detailedText = detailedText + tr("segmentId %1 is used by routes:").arg(dupSegmentId);
+      for(int i=0; i < list.count(); i++)
+      {
+       detailedText = detailedText + tr("\n%1 %2 %3->%4").arg(list.at(i).route).arg(list.at(i).name).arg(list.at(i).startDate.toString("yyyy/MM/dd")).arg(list.at(i).endDate.toString("yyyy/MM/dd"));
+      }
+     }
+     else
+     {
+      detailedText = detailedText + tr("segmentId %1 is not used!").arg(dupSegmentId);
+     }
+
+     list = sql->getRouteSegmentsBySegment(segmentId);
+     if(list.count())
+     {
+      detailedText = detailedText + tr("\n\nsegmentId %1 is used by routes:").arg(segmentId);
+      for(int i=0; i < list.count(); i++)
+      {
+       detailedText = detailedText + tr("\n%1 %2 %3->%4").arg(list.at(i).route).arg(list.at(i).name).arg(list.at(i).startDate.toString("yyyy/MM/dd")).arg(list.at(i).endDate.toString("yyyy/MM/dd"));
+      }
+     }
+     else
+     {
+      detailedText = detailedText + tr("\nsegmentId %1 is not used!").arg(segmentId);
+     }
+     msgBox.setDetailedText(detailedText);
+
+     if((si1.tracks == 1 && si2.tracks == si1.tracks) && (si1.direction != si2.direction) )
+     {
+      msgBox.setIcon(QMessageBox::Warning);
+      msg = msg + tr("\n\nWarning: the two segments are single tracks in opposite directions.");
+      msg = msg + tr("\nand one should not deleted unless not used!");
+     }
      msgBox.exec();
      if(msgBox.clickedButton() == delete1Button)
      {
@@ -116,7 +153,14 @@ void DupSegmentView::tablev_customContextMenu( const QPoint& pt)
         qint32 row = modelRow = sourceModelIndex.row();
         QList<SegmentInfo> list = sourceModel->getList();
         segmentId = list.at(row).segmentId;
+        si1 = list.at(row);
         dupSegmentId = list.at(row).next;
+        for(int i = 0; i < list.size(); i++)
+         if(list.at(i).segmentId == dupSegmentId)
+         {
+          si2 = list.at(i);
+          break;
+         }
         currSi = list.at(row);
 
         menu.addAction(selectSegmentAct);
