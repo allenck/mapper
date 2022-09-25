@@ -86,6 +86,8 @@ void Bearing::calculate()
 RouteData::RouteData()
 {
  route=-1;
+ companyKey = -1;
+ lineKey = -1;
 }
 
 RouteData::~RouteData()

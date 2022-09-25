@@ -1,5 +1,7 @@
 #include "dupsegmentview.h"
 #include "sql.h"
+#include <QMessageBox>
+#include "exceptions.h"
 
 DupSegmentView::DupSegmentView(Configuration *cfg, QObject *parent) :
     QObject(parent)
@@ -28,6 +30,7 @@ DupSegmentView::DupSegmentView(Configuration *cfg, QObject *parent) :
     ui->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
 }
+
 void DupSegmentView::Resize (int oldcount,int newcount)
 {
     Q_UNUSED(oldcount)
@@ -64,7 +67,36 @@ void DupSegmentView::showDupSegments(QList<SegmentInfo> dupSegmentList)
     myParent->ui->tabWidget->setTabText(6, tr("Duplicate Segments"));
     selectSegmentAct = new QAction(tr("SelectSegment"),this);
     connect(selectSegmentAct, SIGNAL(triggered(bool)), this, SLOT(On_selectSegmentAct(bool)));
+    deleteDuplicateAct = new QAction(tr("Delete dup segment"),this);
+    connect(deleteDuplicateAct, &QAction::triggered, [=]{
+     QString msg = tr("Do you want to delete segment %1 which is duplicate to segment %2?\
+        \nAnd use %2 in Routes and Stations?").arg(dupSegmentId).arg(segmentId);
+     msg = msg + QString(tr("\nSegment %1 is used by %2 routes").arg(dupSegmentId).arg(sql->getCountOfRoutesUsingSegment(dupSegmentId)));
+     msg = msg + QString(tr("\nSegment %1 is used by %2 routes").arg(segmentId).arg(sql->getCountOfRoutesUsingSegment(segmentId)));
 
+     QMessageBox msgBox(QMessageBox::Question, "Delete segment?", msg);
+     QPushButton* delete1Button = msgBox.addButton(tr("Delete segment %1").arg(dupSegmentId), QMessageBox::ActionRole);
+     QPushButton* delete2Button = msgBox.addButton(tr("Delete segment %1").arg(segmentId), QMessageBox::ActionRole);
+     QPushButton* abortButton =  msgBox.addButton(QMessageBox::Abort);
+
+     msgBox.exec();
+     if(msgBox.clickedButton() == delete1Button)
+     {
+      if(sql->deleteAndReplaceSegmentWith(dupSegmentId, segmentId))
+      {
+       sourceModel->deleteRow(modelRow);
+      }
+     }
+     else if(msgBox.clickedButton() == delete2Button)
+     {
+      if(sql->deleteAndReplaceSegmentWith(segmentId, dupSegmentId))
+      {
+       sourceModel->deleteRow(modelRow);
+      }
+     }
+
+     return;
+    });
 }
 
 //create table input context menu
@@ -81,11 +113,14 @@ void DupSegmentView::tablev_customContextMenu( const QPoint& pt)
         //qint32 col =model->currentIndex().column();
         QModelIndex modelIndex = indexes.at(0);
         QModelIndex sourceModelIndex = ((QSortFilterProxyModel*)ui->model())->mapToSource(modelIndex);
-        qint32 row = sourceModelIndex.row();
+        qint32 row = modelRow = sourceModelIndex.row();
         QList<SegmentInfo> list = sourceModel->getList();
         segmentId = list.at(row).segmentId;
+        dupSegmentId = list.at(row).next;
+        currSi = list.at(row);
 
         menu.addAction(selectSegmentAct);
+        menu.addAction(deleteDuplicateAct);
         menu.exec(QCursor::pos());
     }
 }
@@ -209,20 +244,22 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentInfo> dupSegment
          case 1:
              return si.description;
          case 2:
-             return si.oneWay;
+             return si.tracks;
          case 3:
              return si.streetName;
          case 4:
-             if (si.oneWay == "Y")
-                 return(si.bearing.strDirection());
-            else
-                 return (si.bearing.strDirection() + "-" + si.bearing.strReverseDirection());
+//             if (si.oneWay == "Y")
+//                 return(si.bearing.strDirection());
+//            else
+//                 return (si.bearing.strDirection() + "-" + si.bearing.strReverseDirection());
+             return si.direction;
          case 5:
              return QString("%1").arg(si.next);
         }
      }
      return QVariant();
  }
+
  QVariant dupSegmentViewTableModel::headerData(int section, Qt::Orientation orientation, int role) const
  {
      if (role != Qt::DisplayRole)
@@ -236,7 +273,7 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentInfo> dupSegment
              case 1:
                  return tr("Name");
              case 2:
-                 return tr("1 Way");
+                 return tr("Tracks");
              case 3:
                  return tr("Street");
              case 4:
@@ -320,4 +357,21 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentInfo> dupSegment
  QList< SegmentInfo > dupSegmentViewTableModel::getList()
  {
      return listOfSegments;
+ }
+
+ void dupSegmentViewTableModel::deleteRow(int row)
+ {
+  if(row >= listOfSegments.size())
+   throw Exception(tr("invalid row %1").arg(row));
+  int otherSegment = listOfSegments.at(row).next;
+  listOfSegments.removeAt(row);
+  for(int i=0; i < listOfSegments.count(); i++)
+  {
+   if(listOfSegments.at(i).next == otherSegment)
+   {
+    listOfSegments.removeAt(i);
+    break;
+   }
+  }
+  reset();
  }

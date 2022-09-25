@@ -94,7 +94,7 @@ public:
     parameters getParameters();
     QList<RouteData> getRouteSegmentsBySegment(qint32 segmentId);
     QList<RouteData> getRouteDataForRouteName(qint32 route, QString name);
-double Distance(double Lat1, double Lon1, double Lat2, double Lon2);
+    double Distance(double Lat1, double Lon1, double Lat2, double Lon2);
     QList<SegmentInfo> getIntersectingRouteSegmentsAtPoint(double lat, double lon, double radius, qint32 route, QString routeName, QString date);
     QDate getRoutesEarliestDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
     QDate getRoutesLatestDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
@@ -166,6 +166,9 @@ double Distance(double Lat1, double Lon1, double Lat2, double Lon2);
     QString getNextRouteName(QDate dt);
     bool testAltRoute();
     double static distance(LatLng latlng1, LatLng latlng2);
+    int getCountOfRoutesUsingSegment(int segmentId);
+    int getCountOfStationsUsingSegment(int segmentId);
+    bool deleteAndReplaceSegmentWith(int segmentId1, int segmentId2);
 
 
 private:

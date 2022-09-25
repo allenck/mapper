@@ -43,6 +43,7 @@ public:
     bool removeRows(int position, int rows, const QModelIndex &index=QModelIndex());
     QList< SegmentInfo > getList();
     void reset();
+    void deleteRow(int row);
 
 signals:
 
@@ -75,13 +76,15 @@ private:
     QTableView* ui;
     dupSegmentViewTableModel *sourceModel;
     dupSegmentViewSortProxyModel *proxymodel;
-    qint32 segmentId;
+    qint32 segmentId, dupSegmentId;
     int curRow, curCol;
     bool boolGetItemTableView(QTableView *table);
     QModelIndex currentIndex;
     QMenu menu;
     QAction* selectSegmentAct;
-
+    QAction* deleteDuplicateAct;
+    SegmentInfo currSi;
+    qint32 modelRow = -1;
 private slots:
     void Resize (int oldcount,int newcount);
     void On_selectSegmentAct(bool);

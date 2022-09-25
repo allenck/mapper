@@ -364,7 +364,6 @@ private:
 
     void createActions();
     void createMenus();
-    void refreshSegmentCB();
     void lookupStreetName(SegmentInfo sd);
     QString getColor(qint32 tractionType);
     void closeEvent(QCloseEvent *event);
@@ -396,6 +395,7 @@ private slots:
     void on_runInBrowser(bool);
     void onWebSocketClosed();
     void loadOverlayData();
+    void refreshSegmentCB();
 
 protected:
     //void resizeEvent(QResizeEvent *event);

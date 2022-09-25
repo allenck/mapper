@@ -271,6 +271,9 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   connect(ui->sbRoute, SIGNAL(actionTriggered(int)), this,  SLOT(sbRouteTriggered(int)));
   connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbrLeave()) );
   connect(ui->sbTracks, SIGNAL(valueChanged(int)), this, SLOT(sbTracks_valueChanged(int)));
+  connect(ui->rbSingle, SIGNAL(toggled(bool)), this, SLOT(refreshSegmentCB()));
+  connect(ui->rbDouble, SIGNAL(toggled(bool)), this, SLOT(refreshSegmentCB()));
+  connect(ui->rbBoth, SIGNAL(toggled(bool)), this, SLOT(refreshSegmentCB()));
 
   // Context menus
   ui->cbRoute->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -774,7 +777,7 @@ void mainWindow::createActions()
  editSegmentAct = new QAction("Edit Segment", this);
  connect(editSegmentAct, SIGNAL(triggered()), this, SLOT(On_editSegment_triggered()));
 
- findDupSegmentsAct=new QAction(tr("Display duplicate segments"),this);
+ findDupSegmentsAct=new QAction(tr("Show duplicate segments view"),this);
  findDupSegmentsAct->setToolTip(tr("Display a list of duplicate segments"));
  connect(findDupSegmentsAct, SIGNAL(triggered()),this, SLOT(findDupSegments()));
 
@@ -800,7 +803,7 @@ void mainWindow::createActions()
  });
 
  findDormantSegmentsAct = new QAction(tr("Find dormant segments"),this);
- findDupSegmentsAct->setToolTip(tr("Display a lists of segments that are dormat, i.e. not in service"));
+ findDupSegmentsAct->setToolTip(tr("Display a lists of segments that are dormant, i.e. not in service"));
 // TODO: find dormant segments
  connect(findDormantSegmentsAct, SIGNAL(triggered()), this, SLOT(NotYetInplemented()));
 
@@ -1801,7 +1804,10 @@ void mainWindow::refreshSegmentCB()
     for(int i=0; i < cbSegmentInfoList.count(); i++)
     {
      SegmentInfo sI = ((SegmentInfo)cbSegmentInfoList.at(i));
-     ui->cbSegments->addItem(sI.ToString(), sI.segmentId);
+     if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
+        (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
+        ui->rbBoth->isChecked())
+      ui->cbSegments->addItem(sI.ToString(), sI.segmentId);
     }
     m_bridge->processScript("addModeOff");
     addPointModeAct->setChecked(false);
