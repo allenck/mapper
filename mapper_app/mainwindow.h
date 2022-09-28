@@ -156,6 +156,8 @@ public:
     Q_DECL_DEPRECATED Configuration* getConfiguration();
     void updateStation(qint32 stationKey, qint32 segmentId);
     void moveStationMarker(qint32 stationKey, qint32 segmentId, double lat, double lon);
+    void moveRouteComment(int route, QString date, double latitude, double longitude, int companyKey);
+
     RouteViewTableModel *sourceModel;
     void displaySegment(qint32 segmentId, QString segmentName, QString oneWay, QString color, bool bClearFirst);
     static QString pwd;

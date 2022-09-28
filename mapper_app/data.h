@@ -500,6 +500,7 @@ struct routeComments
     QDate date;
     qint32 infoKey;
     commentInfo ci;
+    LatLng pos;
     qint32 companyKey;
 };
 Q_DECLARE_METATYPE(RouteType)

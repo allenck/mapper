@@ -23,14 +23,14 @@ var image = ["http://maps.google.com/mapfiles/marker.png",
   "http://maps.google.com/mapfiles/shadow50.png",
   "http://acksoft.dyndns.biz/picturegallery/images/17.png",
   "http://acksoft.dyndns.biz/picturegallery/images/129.png",
-  "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/yellowblank.png",
+  "qrc:/yellowblank.png",
   "http://hpstorage.acksoft.dyndns.biz/picturegallery/images/sbahn_small.png",
   "http://hpstorage.acksoft.dyndns.biz/picturegallery/images/ubahn_small.png",
   "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/tram.png",
   "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/tram.shadow.png",
   "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/white.png",
   "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/blue-red-blank.png",
-  "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/orange.png",
+  "qrc:/orange.png",
   "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/BVGTram.png",
   "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/subway.png",
   "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/subway.shadow.png",
@@ -1423,6 +1423,7 @@ google.maps.event.addListener(marker, "dblclick", function()
       }
       return null;
   }
+
   function addRouteStartMarker( lat, lon, image)
   {
 //      this.lat = lat;
@@ -1457,6 +1458,7 @@ google.maps.event.addListener(marker, "dblclick", function()
       });
       return null;
   }
+
   function addRouteEndMarker( lat, lon, image)
   {
       if(rtEndMarker !== null)
@@ -1720,6 +1722,77 @@ function getStationMarkerIconType(stationKey)
  });
  return rVal;
 }
+function displayStationMarker(stationKey, bDisplay)
+{
+ if(!stationArray)
+    return ;
+ var count = stationArray.getLength();
+ console.error("displayStationMarker " + stationKey + " count = " + count);
+ stationArray.forEach(function(element, index)
+ {
+  if(index >= count)
+    return;
+  if(element && element.stationKey === stationKey)
+  {
+   element.setVisible(bDisplay)
+   webViewBridge.setDebug("stationMarker " + stationKey + " is now visible " + element.getVisible());
+  }
+ });
+}
+
+function updateStationMarker(stationKey, typeIcon)
+{
+ if(!stationArray)
+    return ;
+ var icon = getIcon(typeIcon)
+ var shadow = getShadow(typeIcon);
+
+
+ var count = stationArray.getLength();
+ console.error("displayStationMarker " + stationKey + " count = " + count);
+ stationArray.forEach(function(element, index)
+ {
+  if(index >= count)
+    return;
+  if(element && element.stationKey === stationKey)
+  {
+   element.setIcon(icon);
+   element.typeIcon = typeIcon;
+  }
+ });
+}
+
+function isStationMarkerDisplayed(stationKey)
+{
+ var count = stationArray.getLength();
+ var rVal = "false";
+ stationArray.forEach(function(element, index)
+ {
+  if(index >= count)
+  {
+   console.error("stationKey " + stationKey + " not found");
+   return "false";
+  }
+  if(element  && element.stationKey === stationKey)
+  {
+    console.log("stationKey " + stationKey + " is visible " + element.getVisible());
+    if(element.getVisible())
+        return "visible";
+    else
+        return "hidden";
+  }
+ });
+ console.error("stationKey " + stationKey + " not found 2");
+ return rVal;
+}
+window.addEventListener("beforeunload", function (e) {
+  var confirmationMessage = "\o/";
+  /* Do you small action code here */
+    alert("closing");
+  (e || window.event).returnValue = confirmationMessage; //Gecko + IE
+  return confirmationMessage;                            //Webkit, Safari, Chrome
+});
+console.log("GoogleMaps.js loaded!");
 
   var animationPath =null;
   var animationPoly = null;
@@ -1869,6 +1942,7 @@ function getStationMarkerIconType(stationKey)
           }
           var contentString = results[0].formatted_address + '<br/>' +
               '<b>Country code:</b> ' + CountryNameCode;
+
           var infowindow = new google.maps.InfoWindow({content: contentString});
           infowindow.open(map,marker);
 
@@ -2075,7 +2149,8 @@ function setOverlayOpacity(Opacity) {
  }
 }
 
-function showRouteInfo(bDisplay)
+// Option to display RouteComments
+function showRouteComment(bDisplay)
 {
  if(infowindow !== null)
  {
@@ -2090,20 +2165,48 @@ function showRouteInfo(bDisplay)
  }
 }
 
-function displayRouteInfo(lat, lon, HTMLText, route, date)
+function displayRouteComment(lat, lon, HTMLText, route, date, companyKey)
 {
  if(infowindow !== null)
  {
   infowindow.setMap();
   infowindow = null;
  }
+ if(lat === 0 && lon === 0)
+ {
+  lat = map.getCenter().lat;
+  lon = map.getCenter().lon;
+ }
 
- infowindow = new google.maps.InfoWindow({content:date+HTMLText, position:new google.maps.LatLng(lat, lon)}, 'return 0');
+ // infowindow = new google.maps.InfoWindow({content:date+HTMLText, position:new google.maps.LatLng(lat, lon)}, 'return 0');
+ infowindow = new google.maps.InfoWindow({content:date+HTMLText, maxwidth: 70}, 'return 0');
+ var icon = {url: "qrc:/white.png"};
+ marker = new google.maps.Marker({
+       position: new google.maps.LatLng(lat, lon),
+       map: map,
+       icon: icon,
+       zIndex: 10,
+       draggable: true,
+       visible: true,
+       title: "comment"
+     });
+
  //infowindow.setMap(map);
  infowindow.route = route;
  infowindow.date = date;
  infowindow.lat = lat;
  infowindow.lon = lon;
+ infowindow.companyKey = companyKey
+
+ google.maps.event.addListener(marker, "dragend", function(pt) {
+  //window.external.SetDebug("drag end " + pt.latLng.lat() + ", " + pt.latLng.lng());
+  webViewBridge.moveRouteComment(infowindow.route, infowindow.date, pt.latLng.lat(), pt.latLng.lng(), infowindow.companyKey);
+ })
+ google.maps.event.addListener(infowindow, "closeclick", function(){
+     marker.setVisible(false);
+ })
+ infowindow.open(map, marker);
+ // })
  return 0;
 }
 
@@ -2143,74 +2246,3 @@ function isOverlayLoaded()
 
 //google.maps.event.addDomListener(window, "load", initialize);
 
-function displayStationMarker(stationKey, bDisplay)
-{
- if(!stationArray)
-    return ;
- var count = stationArray.getLength();
- console.error("displayStationMarker " + stationKey + " count = " + count);
- stationArray.forEach(function(element, index)
- {
-  if(index >= count)
-    return;
-  if(element && element.stationKey === stationKey)
-  {
-   element.setVisible(bDisplay)
-   webViewBridge.setDebug("stationMarker " + stationKey + " is now visible " + element.getVisible());
-  }
- });
-}
-
-function updateStationMarker(stationKey, typeIcon)
-{
- if(!stationArray)
-    return ;
- var icon = getIcon(typeIcon)
- var shadow = getShadow(typeIcon);
-
-
- var count = stationArray.getLength();
- console.error("displayStationMarker " + stationKey + " count = " + count);
- stationArray.forEach(function(element, index)
- {
-  if(index >= count)
-    return;
-  if(element && element.stationKey === stationKey)
-  {
-   element.setIcon(icon);
-   element.typeIcon = typeIcon;
-  }
- });
-}
-
-function isStationMarkerDisplayed(stationKey)
-{
- var count = stationArray.getLength();
- var rVal = "false";
- stationArray.forEach(function(element, index)
- {
-  if(index >= count)
-  {
-   console.error("stationKey " + stationKey + " not found");
-   return "false";
-  }
-  if(element  && element.stationKey === stationKey)
-  {
-    console.log("stationKey " + stationKey + " is visible " + element.getVisible());
-    if(element.getVisible())
-        return "visible";
-    else
-        return "hidden";
-  }
- });
- console.error("stationKey " + stationKey + " not found 2");
- return rVal;
-}
-window.addEventListener("beforeunload", function (e) {
-  var confirmationMessage = "\o/";
-  /* Do you small action code here */
-    alert("closing");
-  (e || window.event).returnValue = confirmationMessage; //Gecko + IE
-  return confirmationMessage;                            //Webkit, Safari, Chrome
-});
-console.log("GoogleMaps.js loaded!");

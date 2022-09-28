@@ -49,5 +49,7 @@
         <file>darkred-dot.png</file>
         <file>scripts/ExtDraggableObject.js</file>
         <file>scripts/opacityControl.js</file>
+        <file>addBiDirectionalToRoutes.sql</file>
+        <file>recreateRouteComments.sql</file>
     </qresource>
 </RCC>

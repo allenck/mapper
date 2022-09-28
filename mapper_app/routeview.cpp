@@ -125,41 +125,62 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
     {
         //menu = QMenu(m_parent*);
      menu.clear();
-        menu.addAction(copyAction);
-        menu.addAction(pasteAction);
-        QItemSelectionModel * model = ui->selectionModel();
-        QModelIndexList indexes = model->selectedIndexes();
-        //qint32 row = model->currentIndex().row();
-        //qint32 col =model->currentIndex().column();
-        QModelIndex Index = indexes.at(0);
-        QString txtSegmentId = Index.data().toString();
-        txtSegmentId.replace("!", "");
-        txtSegmentId.replace("*", "");
-        qint32 segmentId = txtSegmentId.toInt();
-        if(sourceModel->isSegmentMarkedForDelete(segmentId))
-            menu.addAction(unDeleteSegmentAct);
-        else
-            menu.addAction(deleteSegmentAct);
-        //if(curRow == 0)
-        menu.addAction(selectSegmentAct);
-        menu.addAction(reSequenceAction);
+     menu.addAction(copyAction);
+     menu.addAction(pasteAction);
+     QItemSelectionModel * model = ui->selectionModel();
+     QModelIndexList indexes = model->selectedIndexes();
+     //qint32 row = model->currentIndex().row();
+     //qint32 col =model->currentIndex().column();
+     QModelIndex Index = indexes.at(0);
+     QString txtSegmentId = Index.data().toString();
+     txtSegmentId.replace("!", "");
+     txtSegmentId.replace("*", "");
+     qint32 segmentId = txtSegmentId.toInt();
+     if(sourceModel->isSegmentMarkedForDelete(segmentId))
+         menu.addAction(unDeleteSegmentAct);
+     else
+         menu.addAction(deleteSegmentAct);
+     //if(curRow == 0)
+     menu.addAction(selectSegmentAct);
+     menu.addAction(reSequenceAction);
 //        if(!startTerminal)
 //        {
-        startTerminal = menu.addMenu(tr("Set start terminal..."));
-        startTerminal->addAction(startTerminalStartAct);
-        startTerminal->addAction(startTerminalEndAct);
-        endTerminal =menu.addMenu(tr("Set end terminal..."));
-        endTerminal->addAction(endTerminalStartAct);
-        endTerminal->addAction(endTerminalEndAct);
+     TerminalInfo ti = SQL::instance()->getTerminalInfo(route,name, endDate);
+     startTerminal = menu.addMenu(tr("Set start terminal..."));
+     QActionGroup* startGroup = new QActionGroup(this);
+     startTerminal->addAction(startTerminalStartAct);
+     startTerminalStartAct->setCheckable(true);
+     startTerminal->addAction(startTerminalEndAct);
+     startGroup->addAction(startTerminalStartAct);
+     startGroup->addAction(startTerminalEndAct);
+     startTerminalEndAct->setCheckable(true);
+     if(ti.startSegment == segmentId && ti.startWhichEnd=="S")
+      startTerminalStartAct->setChecked(true);
+     else
+      startTerminalEndAct->setChecked(true);
+
+     endTerminal =menu.addMenu(tr("Set end terminal..."));
+     QActionGroup* endGroup = new QActionGroup(this);
+     endTerminal->addAction(endTerminalStartAct);
+     endTerminalStartAct->setCheckable(true);
+     endTerminal->addAction(endTerminalEndAct);
+     endTerminalEndAct->setCheckable(true);
+     endGroup->addAction(endTerminalStartAct);
+     endGroup->addAction(endTerminalEndAct);
+     if(ti.endSegment == segmentId && ti.endWhichEnd=="S")
+      endTerminalStartAct->setChecked(true);
+     else
+      endTerminalEndAct->setChecked(true);
+
 //        }
-        menu.addAction(editSegmentAct);
-        if(sourceModel->changedRows.count() > 0)
-        {
-            menu.addSeparator();
-            menu.addAction(saveChangesAct);
-        }
-        menu.exec(QCursor::pos());
-    }
+     menu.addAction(editSegmentAct);
+     if(sourceModel->changedRows.count() > 0)
+     {
+         menu.addSeparator();
+         menu.addAction(saveChangesAct);
+     }
+     menu.exec(QCursor::pos());
+ }
 }
 //get QTableView selected item
 bool RouteView::boolGetItemTableView(QTableView *table)

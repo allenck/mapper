@@ -90,7 +90,7 @@ void RouteCommentsDlg::btnCancel_Clicked()
 
 void RouteCommentsDlg::btnDelete_Clicked()
 {
-    sql->deleteRouteComment(&_rc);
+    sql->deleteRouteComment(_rc);
     this->close();
 }
 
@@ -163,7 +163,8 @@ void RouteCommentsDlg::OnDateLeave()
 
 void RouteCommentsDlg::OnRouteTextChanged(QString text)
 {
- bRouteChanged = true;
+ if(!text.isEmpty())
+  bRouteChanged = true;
 }
 
 void RouteCommentsDlg::outputChanges()
@@ -173,7 +174,7 @@ void RouteCommentsDlg::outputChanges()
   _rc.ci.comments = ui->txtComments->toHtml();
   _rc.ci.tags = ui->txtTags->text();
   //qDebug()<< _rc.ci.comments;
-  sql->updateRouteComment(& _rc);
+  sql->updateRouteComment( _rc);
 
   bIsDirty = false;
   setWindowTitle(tr("Route Comments"));
@@ -231,7 +232,7 @@ void RouteCommentsDlg::setDirty(bool b)
 
 void RouteCommentsDlg::OnDirtySet(bool bDirty)
 {
- if(bDirty)
+ if(bDirty && !ui->txtComments->toPlainText().isEmpty())
  {
   ui->btnOK->setEnabled(true);
   ui->btnApply->setEnabled(true);

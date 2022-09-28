@@ -120,6 +120,8 @@ CREATE TABLE if not exists `RouteComments` (
   `date` date NOT NULL,
   `commentKey` int(11) NOT NULL,
   `companyKey` int(11) NOT NULL,
+  `latitude` decimal(15,5) NOT NULL DEFAULT '0.00000',
+  `longitude` decimal(15,5) NOT NULL DEFAULT '0.00000',
   `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   constraint pk PRIMARY KEY (`route`,`date`)
 );

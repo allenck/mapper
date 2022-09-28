@@ -143,9 +143,10 @@ public:
     QList<StationInfo> getStationsLikeName(QString);
     bool updateRoute(qint32 route, QString name, QString endDate, qint32 segmentId, qint32 next, qint32 prev);
     int updateRouteDate(int segmentId, QString startDate, QString endDate);
+    QDate getFirstCommentDate(qint32 route, QDate date, qint32 companyKey);
     routeComments getRouteComment(qint32 route, QDate date, qint32 companyKey);
-    bool updateRouteComment(routeComments *rc);
-    bool deleteRouteComment(routeComments *rc);
+    bool updateRouteComment(routeComments rc);
+    bool deleteRouteComment(routeComments rc);
     routeComments getNextRouteComment(qint32 route, QDate date, qint32 companyKey);
     routeComments getPrevRouteComment(qint32 route, QDate date, qint32 companyKey);
     QStringList showDatabases(QString Connection, QString servertype);

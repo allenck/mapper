@@ -82,6 +82,7 @@ void webViewBridge::selectSegment(qint32 i, qint32 SegmentId)
  emit segmentSelected(i, SegmentId);
 }
 
+// Display a route comment for date.
 void webViewBridge::getInfoWindowComments(double lat, double lon, int route, QString date, int func)
 {
  mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
@@ -243,6 +244,12 @@ void webViewBridge::moveStationMarker(qint32 stationKey, qint32 segmentId, doubl
     mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
     parent->moveStationMarker(stationKey, segmentId, lat, lng);
 }
+void webViewBridge::moveRouteComment(qint32 route, QString date, double lat, double lng, int companyKey)
+{
+    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
+    parent->moveRouteComment(route, date, lat, lng, companyKey);
+}
+
 
 void webViewBridge::mapInit()
 {

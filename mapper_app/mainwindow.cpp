@@ -1668,13 +1668,21 @@ default:
    objArray << bounds.swPt().lat() << bounds.swPt().lon() << bounds.nePt().lat() << bounds.nePt().lon();
    m_bridge->processScript("fitMapBounds", objArray);
   }
-  if(!(infoLat == 0 && infoLon ==0))
+
+
+  //if(!(infoLat == 0 && infoLon ==0))
   {
    QDate dt = QDate::fromString(m_currRouteStartDate, "yyyy/MM/dd");
+   dt = sql->getFirstCommentDate(m_routeNbr, dt, rd.companyKey);
    routeComments rc = sql->getRouteComment(m_routeNbr, dt, -1);
    if(rc.infoKey < 0)
    {
     rc = sql->getRouteComment(0, dt, -1);
+   }
+   if(rc.pos.lat() && rc.pos.lon())
+   {
+    infoLat = rc.pos.lat();
+    infoLon = rc.pos.lon();
    }
    if(rc.route >= 0 && rc.ci.comments != "")
    {
@@ -1686,11 +1694,11 @@ default:
      rc.ci.comments.insert(i,"<input type='button' name='prev' value='<' onClick='prevRouteComment()'/><input type='button' name='next' value='>' onClick='nextRouteComment()'/>");
     }
     objArray.clear();
-    objArray << infoLat <<infoLon << rc.ci.comments << rc.route << rc.date.toString("yyyy/MM/dd");
+    objArray << infoLat << infoLon << rc.ci.comments << rc.route << rc.date.toString("yyyy/MM/dd") << rc.companyKey ;
     if(bDisplayRouteComments)
     {
-        m_bridge->processScript("displayRouteInfo", objArray);
-        m_bridge->processScript("showRouteInfo", bDisplayRouteComments?"true": "false");
+        m_bridge->processScript("displayRouteComment", objArray);
+        m_bridge->processScript("showRouteComment", bDisplayRouteComments?"true": "false");
     }
    }
   }
@@ -1700,6 +1708,8 @@ void mainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
 {
  QDate dt = QDate::fromString(date, "yyyy/MM/dd");
  routeComments rc;
+ double latitude = lat;
+ double longitude = lon;
 
  if(func < 0)
  {
@@ -1735,9 +1745,14 @@ void mainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
   QVariantList objArray;
 
   objArray.clear();
-  objArray << lat <<lon<< rc.ci.comments<<rc.route<< rc.date.toString("yyyy/MM/dd");
-  m_bridge->processScript("displayRouteInfo", objArray);
-  m_bridge->processScript("showRouteInfo", bDisplayRouteComments?"true": "false");
+  if(rc.pos.lat() != 0 && rc.pos.lon() != 0)
+  {
+   latitude = rc.pos.lat();
+   longitude = rc.pos.lon();
+  }
+  objArray << latitude <<longitude<< rc.ci.comments<<rc.route<< rc.date.toString("yyyy/MM/dd");
+  m_bridge->processScript("displayRouteComment", objArray);
+  m_bridge->processScript("showRouteComment", bDisplayRouteComments?"true": "false");
  }
 }
 
@@ -2809,6 +2824,7 @@ void mainWindow::insertPoint(int SegmentId, qint32 i, double newLat, double newL
     si = sql->getSegmentInfo(m_SegmentId);
     lookupStreetName(si);
     ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(si.pointList.count()));
+    ui->btnSplit->setEnabled(true);
 }
 //void MainWindow::btnDisplay_Click() // SLOT
 //{
@@ -3408,7 +3424,7 @@ void mainWindow::displayTerminalMarkersToggeled(bool bChecked)
 void mainWindow::displayRouteCommentsToggled(bool bChecked)
 {
     bDisplayRouteComments = bChecked;
-    m_bridge->processScript("showRouteInfo", bChecked?"true":"false");
+    m_bridge->processScript("showRouteComment", bChecked?"true":"false");
 }
 
 void mainWindow::geocoderRequestToggled(bool bChecked)
@@ -3537,6 +3553,13 @@ void mainWindow::moveStationMarker(qint32 stationKey, qint32 segmentId, double l
     objArray.clear();
     objArray << lat<< lon << (bDisplayStationMarkers?true:false)<<sti.segmentId<<sti.stationName<<stationKey<<sti.infoKey<<ci.comments<<sti.markerType;
     m_bridge->processScript("addStationMarker",objArray);
+}
+
+void mainWindow::moveRouteComment(int route, QString date, double latitude, double longitude, int companyKey)
+{
+ routeComments rc = sql->getRouteComment(route, QDate::fromString(date, "yyyy/MM/dd"), companyKey);
+ rc.pos = LatLng(latitude, longitude);
+ sql->updateRouteComment(rc);
 }
 
 void mainWindow::chkOneWay_toggled(bool bChecked)
