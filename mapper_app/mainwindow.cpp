@@ -296,6 +296,7 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui->cbSegments->addAction(findDormantSegmentsAct);
   ui->cbSegments->addAction(selectSegmentAct);
   ui->cbSegments->addAction(editSegmentAct);
+  ui->cbSegments->addAction(splitSegmentAct);
 
   connect(ui->cbSegments, SIGNAL(signalFocusOut()), this, SLOT( cbSegments_Leave()));
   connect(ui->cbRoute, SIGNAL(signalFocusOut()), this, SLOT(cbRoutes_Leave()));
@@ -814,6 +815,14 @@ void mainWindow::createActions()
  addRouteAct = new QAction(tr("Add new Route"),this);
  addRouteAct->setToolTip(tr("Add a new route"));
  connect(addRouteAct, SIGNAL(triggered()), this, SLOT(AddRoute()));
+
+ splitSegmentAct = new QAction(tr("Split segment at adate"),this);
+ connect(splitSegmentAct, &QAction::triggered, [=]{
+  SplitSegmentDlg* splitSegment = new SplitSegmentDlg(m_SegmentId);
+  int ret = splitSegment->exec();
+  if(ret == QDialog::Accepted)
+   refreshSegmentCB();
+ });
 
  addPointModeAct = new QAction(tr("Add point mode"), this);
  addPointModeAct->setToolTip(tr("Toggle 'add point' mode. If on, points can be added to the currenly selected segment."));
@@ -1818,11 +1827,11 @@ void mainWindow::refreshSegmentCB()
     //foreach (segmentInfo sI in cbSegmentInfoList)
     for(int i=0; i < cbSegmentInfoList.count(); i++)
     {
-     SegmentInfo sI = ((SegmentInfo)cbSegmentInfoList.at(i));
+     SegmentInfo sI = cbSegmentInfoList.at(i);
      if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
         (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
         ui->rbBoth->isChecked())
-      ui->cbSegments->addItem(sI.ToString(), sI.segmentId);
+      ui->cbSegments->addItem(sI.toString(), sI.segmentId);
     }
     m_bridge->processScript("addModeOff");
     addPointModeAct->setChecked(false);
@@ -1878,7 +1887,7 @@ void mainWindow::segmentSelected(qint32 pt, qint32 SegmentId)
  //txtSegment.Text = si.description;
  ui->txtSegment->setText(si.description);
  ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(si.pointList.count()));
- ui->cbSegments->findText(si.ToString(), Qt::MatchExactly);
+ ui->cbSegments->findText(si.toString(), Qt::MatchExactly);
  //txtOneWay.Text = si.oneWay;
 // if(si.oneWay == "Y")
 //     ui->chkOneWay->setChecked(true);
@@ -3762,8 +3771,11 @@ void mainWindow::On_editSegment_triggered()
 {
  SegmentInfo si = cbSegmentInfoList.at(ui->cbSegments->currentIndex());
  EditSegmentDialog dlg(si.segmentId,this);
- dlg.exec();
+ int ret = dlg.exec();
+ if(ret == QDialog::Accepted)
+  refreshSegmentCB();
 }
+
 //#ifdef USE_WEBENGINE
 void mainWindow::on_linkClicked(QUrl url)
 {

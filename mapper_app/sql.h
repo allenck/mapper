@@ -12,6 +12,7 @@
 #include "data.h"
 #include "configuration.h"
 #include <QMessageBox>
+#include "exceptions.h"
 
 class QSqldatabase;
 class QSqlError;
@@ -81,6 +82,7 @@ public:
     qint32 addAltRoute(QString routeAlpha, QString routePrefix);
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate, QString routeStartDate, QString routeEndDate);
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate);
+    bool addSegmentToRoute(RouteData rd,SegmentInfo);
     bool addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId,
         qint32 companyKey, qint32 tractionType, QString direction, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString oneWay);
     bool addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId,
@@ -172,12 +174,13 @@ public:
     int getCountOfRoutesUsingSegment(int segmentId);
     int getCountOfStationsUsingSegment(int segmentId);
     bool deleteAndReplaceSegmentWith(int segmentId1, int segmentId2);
+    bool updateSegmentDates(SegmentInfo* si);
 
 
 private:
     SQL();
     static SQL* _instance;
-    void myExceptionHandler(std::exception e);
+    void myExceptionHandler(Exception e);
     bool updateSegmentDates();
     void updateSegmentDates(qint32 segmentId);
     Configuration *config;

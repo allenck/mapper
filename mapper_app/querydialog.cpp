@@ -366,7 +366,7 @@ QString s_Search; //=tab_search->objectName();
   sa_Message_Text.append(QString(tr("%1 Query-Row%2 returned.")).arg(i_Message_Total).arg(s_Search));
   s_Search="";
  }
- sa_Message_Text.append(QString(tr("Rows effected : %1 ")).arg(i_Message_Rows_effected));
+ sa_Message_Text.append(QString(tr("Rows affected : %1 ")).arg(i_Message_Rows_effected));
  for (int i=0; i<sa_Message_Text.count(); i++)
   s_Search+=sa_Message_Text[i]+"\n";
  ui->queryResultText->setPlainText(s_Search);

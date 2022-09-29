@@ -2179,7 +2179,7 @@ function displayRouteComment(lat, lon, HTMLText, route, date, companyKey)
  }
 
  // infowindow = new google.maps.InfoWindow({content:date+HTMLText, position:new google.maps.LatLng(lat, lon)}, 'return 0');
- infowindow = new google.maps.InfoWindow({content:date+HTMLText, maxwidth: 70}, 'return 0');
+ infowindow = new google.maps.InfoWindow({content:date+HTMLText, maxwidth: 70}/*, 'return 0'*/);
  var icon = {url: "qrc:/white.png"};
  marker = new google.maps.Marker({
        position: new google.maps.LatLng(lat, lon),

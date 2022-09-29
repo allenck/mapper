@@ -30,7 +30,8 @@ private:
  SegmentInfo* si;
  SegmentInfo* saveSi;
  void setUpdate();
- QPushButton* btnUpdate;
+ //QPushButton* btnUpdate;
+ QPushButton* btnVerifyDates;
  bool b_cbSegments_TextChanged;
  void common();
  bool bStartDateEdited;
@@ -48,7 +49,7 @@ private slots:
  void On_txtDescription_editingFinished();
  void On_dtBegin_dateChanged(QDate);
  void On_dtEnd_dateChanged(QDate);
- void On_btnUpdate_clicked();
+ void On_btnSave_clicked();
  void On_cbSegmentsTextChanged(QString );
  void On_cbSegments_Leave();
  void On_dtBegin_editingFinished();

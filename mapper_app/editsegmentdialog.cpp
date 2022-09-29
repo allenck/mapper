@@ -29,8 +29,8 @@ EditSegmentDialog::EditSegmentDialog(int segmentId, QWidget *parent) :
    break;
   }
  }
-
 }
+
 void EditSegmentDialog::common()
 {
  ui->setupUi(this);
@@ -45,11 +45,24 @@ void EditSegmentDialog::common()
  QStringList routeTypes = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
  ui->cbRouteType->addItems(routeTypes);
 
- btnUpdate = new QPushButton(tr("&Update"));
- btnUpdate->setEnabled(false);
- ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
- ui->buttonBox->addButton(btnUpdate, QDialogButtonBox::ActionRole);
- connect(btnUpdate, SIGNAL(clicked()), this, SLOT(On_btnUpdate_clicked()));
+// btnUpdate = new QPushButton(tr("&Update"));
+// btnUpdate->setEnabled(false);
+ ui->buttonBox->button(QDialogButtonBox::Save)->setEnabled(false);
+// ui->buttonBox->addButton(btnUpdate, QDialogButtonBox::ActionRole);
+// connect(btnUpdate, SIGNAL(clicked()), this, SLOT(On_btnUpdate_clicked()));
+ connect(ui->buttonBox, &QDialogButtonBox::accepted, [=]{
+  On_btnSave_clicked();
+  accept();
+ });
+ btnVerifyDates = new QPushButton(tr("Verify dates"));
+ ui->buttonBox->addButton(btnVerifyDates, QDialogButtonBox::ButtonRole::ApplyRole);
+ connect(btnVerifyDates, &QPushButton::clicked, [=]{
+  if(sql->updateSegmentDates(si))
+  {
+   ui->dtBegin->setDate(QDate::fromString(si->startDate, "yyyy/MM/dd"));
+   ui->dtEnd->setDate(QDate::fromString(si->endDate, "yyyy/MM/dd"));
+  }
+ });
 
  connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(On_cbSegments_currentIndexChanged(int)));
  fillSegments();
@@ -84,18 +97,20 @@ void EditSegmentDialog::fillSegments()
  qSort(segmentlist.begin(), segmentlist.end(),compareSegmentInfoByName1);
  foreach (SegmentInfo si, segmentlist)
  {
-  ui->cbSegments->addItem(si.ToString(), si.segmentId);
+  ui->cbSegments->addItem(si.toString(), si.segmentId);
  }
 }
 
 void EditSegmentDialog::On_cbSegments_currentIndexChanged(int i)
 {
+ if(i<0)
+  return;
  SegmentInfo newSi = segmentlist.at(i);
  this->si = new SegmentInfo(newSi);
  si->tracks = newSi.tracks;
  this->saveSi = new SegmentInfo(newSi);
- btnUpdate->setEnabled(false);
- ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
+// btnUpdate->setEnabled(false);
+ ui->buttonBox->button(QDialogButtonBox::Save)->setEnabled(false);
  bStartDateEdited = false;
  bEndDateEdited = false;
 
@@ -114,8 +129,8 @@ void EditSegmentDialog::On_cbSegments_currentIndexChanged(int i)
 
  sql->getSegmentDates(si);
  if(si->bNeedsUpdate)
-  btnUpdate->setEnabled(true);
- ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
+//  btnUpdate->setEnabled(true);
+ ui->buttonBox->button(QDialogButtonBox::Save)->setEnabled(true);
  ui->txtRoutes->setText(QString::number(si->routeCount));
 }
 
@@ -240,8 +255,8 @@ void EditSegmentDialog::setUpdate()
  if(!si->bNeedsUpdate)
  {
   si->bNeedsUpdate = true;
-  btnUpdate->setEnabled(true);
-  ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
+//  btnUpdate->setEnabled(true);
+  ui->buttonBox->button(QDialogButtonBox::Save)->setEnabled(true);
  }
 }
 
@@ -281,10 +296,10 @@ void EditSegmentDialog::On_cbSegments_Leave()
 
 void EditSegmentDialog::On_buttonBox_accepted()
 {
- On_btnUpdate_clicked();
+ On_btnSave_clicked();
 }
 
-void EditSegmentDialog::On_btnUpdate_clicked()
+void EditSegmentDialog::On_btnSave_clicked()
 {
  if(ui->dtBegin->date() > ui->dtEnd->date())
  {
@@ -327,8 +342,8 @@ void EditSegmentDialog::On_btnUpdate_clicked()
  }
  sql->CommitTransaction("updateSegment");
 
- btnUpdate->setEnabled(false);
- ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
+// btnUpdate->setEnabled(false);
+// ui->buttonBox->button(QDialogButtonBox::Save)->setEnabled(false);
 
  m_bridge->processScript("isSegmentDisplayed", QString("%1").arg(si->segmentId));
  while(!m_bridge->isResultReceived())
@@ -338,6 +353,8 @@ void EditSegmentDialog::On_btnUpdate_clicked()
  //displaySegment(si->SegmentId, si.description, si.oneWay, m_segmentColor, true);
   si->displaySegment(ui->dtEnd->date().toString("yyyy/MM/dd"),m_segmentColor, true);
  }
+ fillSegments();
+
 }
 
 void EditSegmentDialog::On_segmentStatusSignal(QString txt, QString color)

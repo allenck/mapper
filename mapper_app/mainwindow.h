@@ -37,6 +37,8 @@
 #include "routecommentsdlg.h"
 #include "querydialog.h"
 #include <QToolTip>
+#include "splitsegmentdlg.h"
+
 class SQL;
 class QWidgetAction;
 class RouteViewTableModel;
@@ -336,7 +338,7 @@ private:
     QAction* addGeoreferencedOverlayAct;
     QAction* overlayHelp;
     QAction* usingMapper;
-
+    QAction* splitSegmentAct;
     QList<QAction*> cityActions;
     QSignalMapper *signalMapper;
     QActionGroup  *actionGroup;

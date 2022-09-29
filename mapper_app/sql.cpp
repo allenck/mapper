@@ -5,7 +5,6 @@
 //#include <sqlite3.h>
 #include "/home/allen/Qt/5.15.2/Src/qtbase/src/3rdparty/sqlite/sqlite3.h"
 #include <algorithm>
-#include "exceptions.h"
 
 SQL* SQL::_instance = NULL;
 SQL::SQL()
@@ -169,10 +168,10 @@ void SQL::RollbackTransaction (QString name)
  currentTransaction = "";
 }
 
-void SQL::myExceptionHandler(std::exception e)
+void SQL::myExceptionHandler(Exception e)
 {
     Q_UNUSED(e)
-    qDebug() << "exception ";
+    qDebug() << "SQL exception ";
     QSqlDatabase db = QSqlDatabase::database();
     db.close();
     exit(EXIT_FAILURE);
@@ -293,7 +292,7 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
  QDate currDate, date;
  QString currDateStr, dateStr;
  if(!dbOpen())
-     throw std::exception();
+     throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
  if(companyKey < 1)
   //CommandText = "Select distinct a.route, name, a.endDate, a.companyKey, tractionType/*, routeAlpha, c.baseRoute*/ from Routes a join altRoute c on a.route =  c.route group by a.route, name, a.endDate, a.companykey,tractionType, c.routeAlpha/*, c.baseRoute*/ order by c.routeAlpha, name, a.endDate";
@@ -427,7 +426,7 @@ routeInfo SQL::GetRoutePoints(qint32 route, QString name, QString date)
  try
  {
   if(!dbOpen())
-      throw std::exception();
+      throw Exception(tr("database not open: %1").arg(__LINE__));
   QSqlDatabase db = QSqlDatabase::database();
   QString strRoute = QString("%1").arg( route);
   CommandText = "select name, tractionType from Routes where route = " + strRoute + " and '" + date + "' between startDate and endDate";
@@ -473,7 +472,7 @@ routeInfo SQL::GetRoutePoints(qint32 route, QString name, QString date)
   while (query.next())
   {
    SegmentId = query.value(5).toInt();
-   sequence = query.value(6).toInt();;
+   sequence = query.value(6).toInt());
    distance = query.value(11).toDouble();
    sDistance = query.value(11).toString();
    sOneWay = query.value(8).toString();
@@ -545,7 +544,7 @@ routeInfo SQL::GetRoutePoints(qint32 route, QString name, QString date)
   }
   ri.segments.append(sg);
  }
- catch (std::exception& e)
+ catch (Exception& e)
  {
   myExceptionHandler(e);
  }
@@ -567,7 +566,7 @@ RouteInfo SQL::getRoutePoints(qint32 route, QString name, QString date)
  //ri.segments = QList<segmentData>();
  qint32 SegmentId;
  if(!dbOpen())
-      throw std::exception();
+      throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
  QString strRoute = QString("%1").arg( route);
  CommandText = "select name, tractionType from Routes where route = " + strRoute + " and '" + date + "' between startDate and endDate";
@@ -662,7 +661,7 @@ TerminalInfo SQL::getTerminalInfo(qint32 route, QString name, QString endDate)
  try
  {
   if(!dbOpen())
-      throw std::exception();
+      throw Exception("dataase not open");
   QSqlDatabase db = QSqlDatabase::database();
   QString strRoute = QString("%1").arg(route);
 
@@ -744,7 +743,7 @@ TerminalInfo SQL::getTerminalInfo(qint32 route, QString name, QString endDate)
   ti.name = name;
 
  }
- catch (std::exception& e)
+ catch (Exception e)
  {
      myExceptionHandler(e);
  }
@@ -852,7 +851,7 @@ QStringList SQL::getAlphaRoutes(QString text)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "select routeAlpha from altRoute " \
@@ -876,7 +875,7 @@ QStringList SQL::getAlphaRoutes(QString text)
         }
 
     }
-    catch (std::exception& e)
+    catch (Exception& e)
     {
         myExceptionHandler(e);
     }
@@ -891,7 +890,7 @@ QList<tractionTypeInfo> SQL::getTractionTypes()
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "select tractionType, description, displayColor,routeType, icon from TractionTypes";
@@ -915,7 +914,7 @@ QList<tractionTypeInfo> SQL::getTractionTypes()
         }
         
     }
-    catch (std::exception& e)
+    catch (Exception& e)
     {
         myExceptionHandler(e);
 
@@ -1024,7 +1023,7 @@ SegmentInfo SQL::getSegmentInfo(qint32 segmentId, bool bSuppressPrompt)
      if(sI.pointList.count() > 1)
      {
       sI.bearingStart = Bearing(sI.startLat, sI.startLon, sI.pointList.at(1).lat(), sI.pointList.at(1).lon());
-     sI.bearingEnd = Bearing(sI.pointList.at(sI.points-2).lat(), sI.pointList.at(sI.points-2).lon(), sI.endLat, sI.endLon);
+      sI.bearingEnd = Bearing(sI.pointList.at(sI.points-2).lat(), sI.pointList.at(sI.points-2).lon(), sI.endLat, sI.endLon);
      }
 
  }
@@ -1033,6 +1032,43 @@ SegmentInfo SQL::getSegmentInfo(qint32 segmentId, bool bSuppressPrompt)
   populatePointList(&sI);
  }
  return sI;
+}
+
+// update segment begin/end dates based on route usage
+bool SQL::updateSegmentDates(SegmentInfo* si)
+{
+ QSqlDatabase db = QSqlDatabase::database();
+ QString CommandText;
+ QSqlQuery query = QSqlQuery(db);
+ bool bQuery;
+ CommandText = "select min(startDate), max(EndDate) from routes where linekey = " +QString("%1").arg(si->segmentId);
+ bQuery = query.exec(CommandText);
+ if(!bQuery)
+ {
+  SQLERROR(query);
+    db.close();
+    exit(EXIT_FAILURE);
+ }
+ if (!query.isActive())
+ {
+  return  false;
+ }
+ while (query.next())
+ {
+  si->startDate = query.value(0).toString();
+  si->endDate = query.value(1).toString();
+ }
+ CommandText = "update Segments set startDate = '" + si->startDate
+   + "', enddate = '" + si->endDate
+   + "' where segmentId = " + QString("%1").arg(si->segmentId);
+ bQuery = query.exec(CommandText);
+ if(!bQuery)
+ {
+  SQLERROR(query);
+    db.close();
+    exit(EXIT_FAILURE);
+ }
+ return true;
 }
 
 // used to populate segmentInfo conversion
@@ -1138,7 +1174,7 @@ QList<SegmentData> SQL::getSegmentData(qint32 SegmentId)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "SELECT StartLat,StartLon,EndLat,EndLon,StreetName,Sequence,Length FROM LineSegment where SegmentId = " + QString("%1").arg(SegmentId) + " order by sequence desc";
@@ -1169,7 +1205,7 @@ QList<SegmentData> SQL::getSegmentData(qint32 SegmentId)
         }
         //myArray.Add(new LatLng(endLat, endLon));
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -1182,7 +1218,7 @@ SegmentData SQL::getSegmentData(qint32 pt, qint32 SegmentId)
  try
  {
   if(!dbOpen())
-      throw std::exception();
+      throw Exception(tr("database not open: %1").arg(__LINE__));
   QSqlDatabase db = QSqlDatabase::database();
 
   // Retrieve the current ending location for pt.
@@ -1234,7 +1270,7 @@ SegmentData SQL::getSegmentData(qint32 pt, qint32 SegmentId)
       sd.distance = query.value(6).toDouble();
   }
  }
- catch (std::exception& e)
+ catch (Exception& e)
  {
     myExceptionHandler(e);
  }
@@ -1346,7 +1382,7 @@ QList<SegmentInfo> SQL::getRouteSegmentsInOrder2(qint32 route, QString name, QSt
 // try
 // {
   if(!dbOpen())
-      throw std::exception();
+      throw Exception(tr("database not open: %1").arg(__LINE__));
   QSqlDatabase db = QSqlDatabase::database();
   bool firstTry = true;
   while (true)
@@ -1441,7 +1477,7 @@ QList<SegmentInfo> SQL::getRouteSegmentsInOrder2(qint32 route, QString name, QSt
    break;
   }
 // }
-// catch (std::exception& e)
+// catch (Exception& e)
 // {
 //     myExceptionHandler(e);
 // }
@@ -1550,7 +1586,7 @@ QList<RouteData> SQL::getRoutes(qint32 segmentid, QString date )
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "select a.route, name, startdate, endDate, companyKey, tractionType, routeAlpha from Routes a "
@@ -1581,7 +1617,7 @@ QList<RouteData> SQL::getRoutes(qint32 segmentid, QString date )
             myArray.append(rd);
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         //myExceptionHandler(e);
 
@@ -1602,7 +1638,7 @@ QList<LatLng>  SQL::GetSegmentPoints(qint32 SegmentId)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
 //        QString CommandText = "Select StartLat, StartLon, EndLat, EndLon from LineSegment where SegmentId = " + QString("%1").arg(SegmentId) + " order by sequence";
@@ -1639,7 +1675,7 @@ QList<LatLng>  SQL::GetSegmentPoints(qint32 SegmentId)
         }
 //        myArray.append(  LatLng(endLat, endLon));
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         //myExceptionHandler(e);
     }
@@ -1659,7 +1695,7 @@ QList<segmentData> SQL::getIntersectingSegments(double lat, double lon, double r
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon, a.[key], a.sequence, a.length, a.streetName from LineSegment a join Segments b on a.segmentId = b.segmentId where b.type = " + QString("%1").arg(type )+ " and (distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", a.startLat, a.startLon) < " + QString("%1").arg(radius,0,'f',8 )+ " OR distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", a.endLat, a.endLon) < " + QString("%1").arg(radius,0,'f',8) + ") order by segmentId, sequence";
@@ -1738,7 +1774,7 @@ QList<segmentData> SQL::getIntersectingSegments(double lat, double lon, double r
             myArray.append(sd);
 
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         //myExceptionHandler(e);
 
@@ -1766,7 +1802,7 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
  try
  {
   if(!dbOpen())
-      throw std::exception();
+      throw Exception(tr("database not open: %1").arg(__LINE__));
   QSqlDatabase db = QSqlDatabase::database();
 
   QString CommandText;
@@ -1862,7 +1898,7 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
   if(curSegmentDistance < radius)
       myArray.append(si);
  }
- catch (std::exception e)
+ catch (Exception e)
  {
      //myExceptionHandler(e);
  }
@@ -1886,7 +1922,7 @@ QList<segmentData> SQL::getIntersectingSegmentsWithRoute(double lat, double lon,
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText;
@@ -1977,7 +2013,7 @@ QList<segmentData> SQL::getIntersectingSegmentsWithRoute(double lat, double lon,
             myArray.append(sd);
 
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
 
@@ -2002,7 +2038,7 @@ QList<segmentData> SQL::getIntersectingSegments(double lat, double lon, double r
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText;
@@ -2085,7 +2121,7 @@ QList<segmentData> SQL::getIntersectingSegments(double lat, double lon, double r
             myArray.append(sd);
 
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         //myExceptionHandler(e);
 
@@ -2109,7 +2145,7 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
  try
  {
   if(!dbOpen())
-      throw std::exception();
+      throw Exception(tr("database not open: %1").arg(__LINE__));
   QSqlDatabase db = QSqlDatabase::database();
 
   QString CommandText;
@@ -2181,7 +2217,7 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
   if (curSegmentDistance < radius)
    myArray.append(si);
  }
- catch (std::exception e)
+ catch (Exception e)
  {
   //myExceptionHandler(e);
  }
@@ -2282,7 +2318,7 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentInfo> segmentList,
  bool bfirstSegment = true;
 
  if(!dbOpen())
-  throw std::exception();
+  throw Exception(tr("database not open: %1").arg(__LINE__));
 
  //foreach (segmentInfo si0 in segmentList)
  for(int i = 0; i < segmentList.count(); i ++)
@@ -2626,7 +2662,7 @@ qint32 SQL::getNbrPoints(qint32 segmentId)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "select points from Segments where segmentid = " + QString("%1").arg(segmentId);
@@ -2651,7 +2687,7 @@ qint32 SQL::getNbrPoints(qint32 segmentId)
             points= query.value(0).toInt();
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         //myExceptionHandler(e);
     }
@@ -2664,7 +2700,7 @@ public ArrayList updateLikeRoutes(int segmentid, int route, string name, string 
     ArrayList intersectList = new ArrayList();
     routeIntersects ri = new routeIntersects();
     segmentInfo si = getSegmentInfo(segmentid);  // get some info about the segment.
-    ArrayList  myArray = new ArrayList();;
+    ArrayList  myArray = new ArrayList());
     compareSegmentDataClass compareSegments = new compareSegmentDataClass();
 
     // get a list of all the routes using this segment on this date
@@ -2802,7 +2838,7 @@ bool SQL::updateSegmentDescription(qint32 SegmentId, QString description, QStrin
  qint32 rows = 0;
 
  if(!dbOpen())
-     throw std::exception();
+     throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
  QString street;
  int ix = description.indexOf(",");
@@ -2856,7 +2892,7 @@ bool SQL::addPoint( qint32 pt, qint32 SegmentId, double BeginLat, double BeginLo
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         BeginTransaction("addPoint");
@@ -2884,7 +2920,7 @@ bool SQL::addPoint( qint32 pt, qint32 SegmentId, double BeginLat, double BeginLo
 
     }
 
-    catch (std::exception e)
+    catch (Exception e)
     {
         //myExceptionHandler(e);
     }
@@ -2913,7 +2949,7 @@ bool SQL::movePoint(qint32 pt, qint32 SegmentId, double BeginLat, double BeginLo
  try
  {
   if(!dbOpen())
-      throw std::exception();
+      throw Exception(tr("database not open: %1").arg(__LINE__));
   QSqlDatabase db = QSqlDatabase::database();
   QString CommandText;
 
@@ -3125,7 +3161,7 @@ bool SQL::movePoint(qint32 pt, qint32 SegmentId, double BeginLat, double BeginLo
   CommitTransaction("movePoint");
   ret = true;
  }
- catch(std::exception e)
+ catch(Exception e)
  {
      //myExceptionHandler(e);
  }
@@ -3215,7 +3251,7 @@ bool SQL::updateSegment(qint32 SegmentId)
  si.segmentId = SegmentId;
 
  if(!dbOpen())
-     throw std::exception();
+     throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
  BeginTransaction("UpdateSegment");
 
@@ -3315,7 +3351,7 @@ StationInfo SQL::getStationInfo(qint32 stationKey)
  StationInfo sti = StationInfo();
 
  if(!dbOpen())
-     throw std::exception();
+     throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
 
  QString CommandText = "SELECT stationKey, a.name, latitude, longitude, a.SegmentId, infoKey, startDate, endDate, geodb_loc_id, routeType, a.route, markerType from Stations a left join altRoute r on r.route = a.route where stationKey = " + QString("%1").arg(stationKey);
@@ -3363,7 +3399,7 @@ StationInfo SQL::getStationInfo(QString name)
  StationInfo sti =  StationInfo();
 
  if(!dbOpen())
-     throw std::exception();
+     throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
 
  QString CommandText = "SELECT stationKey, a.name, latitude, longitude, a.SegmentId, infoKey, startDate, endDate, markerType  from Stations a where name = '" + name + "'";
@@ -3410,7 +3446,7 @@ bool SQL::updateStation(qint32 stationKey, qint32 infoKey)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         BeginTransaction("updateStation");
 
@@ -3435,7 +3471,7 @@ bool SQL::updateStation(qint32 stationKey, qint32 infoKey)
             ret = true;
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         //myExceptionHandler(e);
     }
@@ -3449,7 +3485,7 @@ bool SQL::updateStationRoute(qint32 stationKey, qint32 route) // not used
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         BeginTransaction("updateStation");
 
@@ -3472,7 +3508,7 @@ bool SQL::updateStationRoute(qint32 stationKey, qint32 route) // not used
             ret = true;
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         //myExceptionHandler(e);
     }
@@ -3486,7 +3522,7 @@ bool SQL::updateStation(qint32 stationKey, LatLng latLng)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         BeginTransaction("updateStation");
 
@@ -3510,7 +3546,7 @@ bool SQL::updateStation(qint32 stationKey, LatLng latLng)
             ret = true;
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         //myExceptionHandler(e);
     }
@@ -3525,7 +3561,7 @@ bool SQL::updateStation(qint32 stationKey, LatLng latLng, qint32 segmentId)
 //    try
 //    {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         BeginTransaction("updateStation");
 
@@ -3578,7 +3614,7 @@ bool SQL::updateStation(qint32 stationKey, LatLng latLng, qint32 segmentId)
             ret = true;
         }
 //    }
-//    catch (std::exception e)
+//    catch (Exception e)
 //    {
 //        //myExceptionHandler(e);
 //    }
@@ -3594,7 +3630,7 @@ bool SQL::updateStation(qint32 stationKey,  qint32 route, qint32 lineSegmentId, 
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         BeginTransaction("updateStation");
 
@@ -3650,7 +3686,7 @@ bool SQL::updateStation(qint32 stationKey,  qint32 route, qint32 lineSegmentId, 
         }
 
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -3671,7 +3707,7 @@ bool SQL::updateStation(qint32 geodb_loc_id, qint32 stationKey, LatLng latLng)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "update Stations set latitude = " + QString("%1").arg(latLng.lat(),0,'f',8) + ", longitude = " + QString("%1").arg(latLng.lon(),0,'f',8) + ",lastUpdate=:lastUpdate where geodb_loc_id = " + QString("%1").arg(geodb_loc_id);
@@ -3691,7 +3727,7 @@ bool SQL::updateStation(qint32 geodb_loc_id, qint32 stationKey, LatLng latLng)
         if (rows > 0)
             ret = true;
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -3704,7 +3740,7 @@ bool SQL::updateStationLineSegment(qint32 route, qint32 lineSegmentId, LatLng pt
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "update Stations set lineSegmentId = " + QString("%1").arg(lineSegmentId) + ", latitude = " + QString("%1").arg(pt.lat(),0,'f', 8) + ",longitude = " + QString("%1").arg(pt.lon(),0, 'f',8) + ",lastUpdate=:lastUpdate where route = " + QString("%1").arg(route);
@@ -3724,7 +3760,7 @@ bool SQL::updateStationLineSegment(qint32 route, qint32 lineSegmentId, LatLng pt
         if (rows > 0)
             ret = true;
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -3737,7 +3773,7 @@ bool SQL::updateStationLineSegment(qint32 geodb_loc_id, qint32 route, qint32 lin
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "update Stations set lineSegmentId = " + QString("%1").arg(lineSegmentId) + ", latitude = "+QString("%1").arg(pt.lat(),0,'f',8) + ",longitude = " + QString("%1").arg(pt.lon(),0,'f',8)  +",lastUpdate=:lastUpdate where geodb_loc_id = " + QString("%1").arg(geodb_loc_id)+ " and route ="+QString("%1").arg(route);
@@ -3757,7 +3793,7 @@ bool SQL::updateStationLineSegment(qint32 geodb_loc_id, qint32 route, qint32 lin
         if (rows > 0)
             ret = true;
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -3771,7 +3807,7 @@ bool SQL::updateStation(qint32 stationKey, qint32 infoKey, QString name, qint32 
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "update Stations set infoKey = " + QString("%1").arg(infoKey) + ", name ='" + name + "', segmentId =" + QString("%1").arg(segmentId)+ ", startDate='" + startDate + "',endDate='" + endDate + "',markerType='" + markerType +"',lastUpdate=:lastUpdate where stationKey = " + QString("%1").arg(stationKey);
@@ -3788,7 +3824,7 @@ bool SQL::updateStation(qint32 stationKey, qint32 infoKey, QString name, qint32 
         if (rows > 0)
             ret = true;
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -3802,7 +3838,7 @@ StationInfo SQL::getStationAtPoint(LatLng pt)
     {
 
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText;
@@ -3840,7 +3876,7 @@ StationInfo SQL::getStationAtPoint(LatLng pt)
 
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         //myExceptionHandler(e);
     }
@@ -3904,7 +3940,7 @@ LatLng SQL::getPointOnSegment(qint32 pt, qint32 segmentId)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         QString CommandText = "select endLat, endLon, points from Segments where segmentId = " + QString("%1").arg(segmentId);
         QSqlQuery query = QSqlQuery(db);
@@ -3943,7 +3979,7 @@ LatLng SQL::getPointOnSegment(qint32 pt, qint32 segmentId)
             }
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
        myExceptionHandler(e);
     }
@@ -3978,7 +4014,7 @@ bool SQL::insertPoint(qint32 pt, qint32 SegmentId, double newLat, double newLon,
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         BeginTransaction("insertPoint");
 
@@ -4032,7 +4068,7 @@ bool SQL::insertPoint(qint32 pt, qint32 SegmentId, double newLat, double newLon,
         {
             startLat = query.value(0).toDouble();
             startLon = query.value(1).toDouble();
-            endLat = query.value(2).toDouble();;
+            endLat = query.value(2).toDouble();
             endLon = query.value(3).toDouble();
             StreetName = query.value(4).toString();
         }
@@ -4141,7 +4177,7 @@ bool SQL::insertPoint(qint32 pt, qint32 SegmentId, double newLat, double newLon,
         ret = true;
 
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
        //myExceptionHandler(e);
     }
@@ -4163,7 +4199,7 @@ bool SQL::deletePoint(qint32 pt, qint32 SegmentId, qint32 nbrPts)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         BeginTransaction("deletePoint");
 
@@ -4330,7 +4366,7 @@ bool SQL::deletePoint(qint32 pt, qint32 SegmentId, qint32 nbrPts)
         ret = true;
 
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         //myExceptionHandler(e);
     }
@@ -4343,7 +4379,7 @@ QString SQL::getSegmentOneWay(qint32 SegmentId)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "Select OneWay from Segments where SegmentId = " + QString("%1").arg(SegmentId);
@@ -4362,7 +4398,7 @@ QString SQL::getSegmentOneWay(qint32 SegmentId)
             description = query.value(0).toString();
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -4375,7 +4411,7 @@ bool SQL::doesSegmentExist(QString descr, QString oneWay)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "select count(*) from Segments where description = '" +
@@ -4401,7 +4437,7 @@ bool SQL::doesSegmentExist(QString descr, QString oneWay)
         if (count > 0)
             ret = true;
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -4413,7 +4449,7 @@ QString SQL::getSegmentDescription(qint32 SegmentId)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "Select description from Segments where SegmentId = " + QString("%1").arg(SegmentId);
@@ -4432,7 +4468,7 @@ QString SQL::getSegmentDescription(qint32 SegmentId)
             description = query.value(0).toString();
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -4451,7 +4487,7 @@ bool SQL::updateRecord(SegmentInfo sd)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         Q_ASSERT(sd.startLat != 0);
@@ -4494,7 +4530,7 @@ bool SQL::updateRecord(SegmentInfo sd)
         ret = true;
 
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -4556,7 +4592,7 @@ CompanyData* SQL::getCompany(qint32 companyKey)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText;
@@ -4594,7 +4630,7 @@ CompanyData* SQL::getCompany(qint32 companyKey)
             cd->routePrefix = query.value(6).toString();
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
 
@@ -4715,7 +4751,7 @@ bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QStri
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         BeginTransaction("deleteRoute");
         if(config->currConnection->servertype() == "MsSql")
@@ -4792,11 +4828,16 @@ bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QStri
         CommitTransaction("deleteRoute");
         ret = true;
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
     return ret;
+}
+bool SQL::addSegmentToRoute(RouteData rd, SegmentInfo si)
+{
+  return addSegmentToRoute( rd.route, rd.name, rd.startDate.toString("yyyy/MM/dd"), rd.endDate.toString("yyyy/MM/dd"), si.segmentId, rd.companyKey, si.tractionType,
+                     si.direction, si.normalEnter, si.normalLeave, si.reverseEnter, si.reverseLeave, si.oneWay);
 }
 /// <summary>
 /// Adds a new route segment
@@ -4846,7 +4887,7 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDat
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         BeginTransaction("addSegmentToRoute");
@@ -4886,7 +4927,7 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDat
         CommitTransaction("addSegmentToRoute");
         ret = true;
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -4932,7 +4973,7 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDat
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         //BeginTransaction("addSegmentToRoute");
@@ -4972,7 +5013,7 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDat
         //CommitTransaction("addSegmentToRoute");
         ret = true;
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -4997,7 +5038,7 @@ bool SQL::updateTerminals(qint32 route, QString name, QString startDate, QString
     {
         int count =0;
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         if(config->currConnection->servertype() == "MsSql")
          CommandText = "select count(*),startSegment, startWhichEnd, endSegment, endWhichEnd from Terminals where route = " + QString("%1").arg(route) + " and endDate = '" + endDate + "' and LTRIM(RTRIM(name)) = '" + name.trimmed() + "' group by startSegment, startWhichEnd, endSegment, endWhichEnd";
@@ -5072,7 +5113,7 @@ bool SQL::updateTerminals(qint32 route, QString name, QString startDate, QString
                 ret = true;
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -5161,7 +5202,7 @@ QList<RouteData> SQL::getRouteInfo(qint32 route)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "Select distinct a.route, name, startDate, endDate, routeAlpha from Routes a join altRoute b on a.route = b.route where a.route = " + QString("%1").arg(route) + " group by a.route, name, startDate, endDate, routeAlpha";
@@ -5188,7 +5229,7 @@ QList<RouteData> SQL::getRouteInfo(qint32 route)
             myArray.append(rd);
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
 
@@ -5215,7 +5256,7 @@ bool SQL::updateCompany(qint32 companyKey, qint32 route)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         QString CommandText;
         BeginTransaction("updateCompanies");
@@ -5276,7 +5317,7 @@ bool SQL::updateCompany(qint32 companyKey, qint32 route)
             ret = true;
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
 
@@ -5297,7 +5338,7 @@ bool SQL::updateSegmentDates()
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText ="Select segmentid, min(b.StartDate), MAX(b.EndDate) from Segments a join Routes b on LineKey = SegmentId group by b.LineKey, SegmentId";
@@ -5346,7 +5387,7 @@ bool SQL::updateSegmentDates()
             }
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
 
@@ -5365,7 +5406,7 @@ void SQL::updateSegmentDates(qint32 SegmentId)
     int rows = 0;
 
     if(!dbOpen())
-        throw std::exception();
+        throw Exception(tr("database not open: %1").arg(__LINE__));
     QSqlDatabase db = QSqlDatabase::database();
 
     QString CommandText = "select min(startDate), max(endDate) from Routes where linekey = " + QString("%1").arg(SegmentId);
@@ -5437,7 +5478,7 @@ QList<QString> SQL::getRouteNames(qint32 route)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "Select distinct name from Routes where route = " + QString("%1").arg(route) + " order by name";
@@ -5460,7 +5501,7 @@ QList<QString> SQL::getRouteNames(qint32 route)
             myArray.append(query.value(0).toString());
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
 
@@ -5476,7 +5517,7 @@ qint32 SQL::getRouteCompany(qint32 route)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "Select companyKey from Routes where route = " + QString("%1").arg(route);
@@ -5495,7 +5536,7 @@ qint32 SQL::getRouteCompany(qint32 route)
             companyKey = query.value(0).toInt();
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -5512,7 +5553,7 @@ parameters SQL::getParameters()
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "select lat, lon, title, city, minDate, maxDate, alphaRoutes from Parameters";
@@ -5543,7 +5584,7 @@ parameters SQL::getParameters()
                 parms.bAlphaRoutes = true;
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -5560,11 +5601,13 @@ QList<RouteData> SQL::getRouteSegmentsBySegment(qint32 segmentId)
 //    try
 //    {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
-        QString CommandText = "Select a.route, name, startDate, endDate, lineKey, companyKey, tractionType, direction, normalEnter, normalLeave, reverseEnter, reverseLeave, routeAlpha, OneWay"
-              " from Routes a join altRoute b on a.route = b.route where lineKey = " + QString("%1").arg(segmentId) + " order by routeAlpha, name, endDate";
+        QString CommandText = "Select a.route, name, startDate, endDate, lineKey, companyKey, tractionType, direction, "
+              "normalEnter, normalLeave, reverseEnter, reverseLeave, routeAlpha, OneWay"
+              " from Routes a join altRoute b on a.route = b.route where lineKey = " + QString("%1").arg(segmentId)
+              + " order by routeAlpha, name, endDate";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(CommandText);
         if(!bQuery)
@@ -5593,7 +5636,7 @@ QList<RouteData> SQL::getRouteSegmentsBySegment(qint32 segmentId)
             myArray.append(rd);
         }
 //    }
-//    catch (std::exception e)
+//    catch (Exception e)
 //    {
 //        myExceptionHandler(e);
 
@@ -5615,7 +5658,7 @@ QList<RouteData> SQL::getRouteDataForRouteName(qint32 route, QString name)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText;
@@ -5657,7 +5700,7 @@ QList<RouteData> SQL::getRouteDataForRouteName(qint32 route, QString name)
         //rd.companyKey = -1;
         //rd.tractionType = 1;
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
 
@@ -5680,7 +5723,7 @@ QDate SQL::getRoutesEarliestDateForSegment(qint32 route, QString name, qint32 Se
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "Select Min(startDate) from Routes where route = " + QString("%1").arg(route) + " and name = '" + name +"'  and startDate < '" + date + "'  group  by startDate order by startDate desc";
@@ -5703,7 +5746,7 @@ QDate SQL::getRoutesEarliestDateForSegment(qint32 route, QString name, qint32 Se
             dt = query.value(0).toDate();
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
 
@@ -5726,7 +5769,7 @@ QDate SQL::getRoutesLatestDateForSegment(qint32 route, QString name, qint32 Segm
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "Select Max(endDate) from Routes where route = " + QString("%1").arg(route) + " and name = '" + name + "'  and endDate < '" + date + "'  group  by endDate order by endDate asc";
@@ -5749,7 +5792,7 @@ QDate SQL::getRoutesLatestDateForSegment(qint32 route, QString name, qint32 Segm
             dt = query.value(0).toDate();
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
 
@@ -5772,7 +5815,7 @@ QDate SQL::getRoutesNextDateForSegment(qint32 route, QString name, qint32 Segmen
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "Select min(startDate) from Routes where route = " + QString("%1").arg(route) + " and name = '" + name + "'  and startDate >= '" + date + "'  group  by startDate order by startDate desc";
@@ -5795,7 +5838,7 @@ QDate SQL::getRoutesNextDateForSegment(qint32 route, QString name, qint32 Segmen
             dt = query.value(0).toDate();
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
 
@@ -5810,7 +5853,7 @@ bool SQL::doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QS
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "select count(*) from Routes where route = " +
@@ -5836,7 +5879,7 @@ bool SQL::doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QS
         if (count > 0)
             ret = true;
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -5903,7 +5946,7 @@ bool SQL::deleteSegment(qint32 SegmentId)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         BeginTransaction("deleteSegment");
@@ -5957,7 +6000,7 @@ bool SQL::deleteSegment(qint32 SegmentId)
         }
         ret = true;
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -5975,7 +6018,7 @@ qint32 SQL::getDefaultCompany(qint32 route, QString date)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText;
@@ -5999,7 +6042,7 @@ qint32 SQL::getDefaultCompany(qint32 route, QString date)
         }
 
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
 
@@ -6013,7 +6056,7 @@ LatLng SQL::getPointInfo(qint32 pt, qint32 SegmentId)
     {
 
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         // Retrieve the current start location for pt-1 to calculate the length
         QString CommandText = "Select StartLat, StartLon from [dbo].[LineSegment] where SegmentId = " +         QString("%1").arg(SegmentId) + " and sequence = " + QString("%1").arg(pt);
@@ -6037,7 +6080,7 @@ LatLng SQL::getPointInfo(qint32 pt, qint32 SegmentId)
             pi.setLon(query.value(1).toDouble());
         }
     }
-     catch (std::exception e)
+     catch (Exception e)
      {
          myExceptionHandler(e);
      }
@@ -6050,7 +6093,7 @@ qint32 SQL::addCompany(QString name, qint32 route, QString startDate, QString en
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText;
@@ -6109,7 +6152,7 @@ qint32 SQL::addCompany(QString name, qint32 route, QString startDate, QString en
             }
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
 
@@ -6133,7 +6176,7 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
  try
  {
  if(!dbOpen())
-    throw std::exception();
+    throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
  BeginTransaction("addSegment");
 
@@ -6201,7 +6244,7 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
   }
 
  }
- catch (std::exception e)
+ catch (Exception e)
  {
     myExceptionHandler(e);
  }
@@ -6227,7 +6270,7 @@ int rows = 0, newSegmentId=-1;
 try
 {
  if(!dbOpen())
-    throw std::exception();
+    throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
  QSqlQuery query = QSqlQuery(db);
  QString CommandText;
@@ -6482,7 +6525,7 @@ try
   CommitTransaction("splitSegment");
 
  }
- catch (std::exception e)
+ catch (Exception e)
  {
   myExceptionHandler(e);
  }
@@ -6551,7 +6594,7 @@ bool SQL::updateSegmentToRoute(qint32 routeNbr, QString routeName, QString start
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         BeginTransaction("updateSegmentToRoute");
 
@@ -6592,7 +6635,7 @@ bool SQL::updateSegmentToRoute(qint32 routeNbr, QString routeName, QString start
 
         ret = true;
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -6605,7 +6648,7 @@ RouteData SQL::getSegmentInfoForRouteDates(qint32 route, QString name, qint32 se
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "SELECT a.Route,Name,StartDate,EndDate,LineKey,CompanyKey,tractionType,direction, normalEnter, normalLeave, reverseEnter, reverseLeave, routeAlpha, OneWay from Routes a join altRoute c on a.route = c.route where a.Route = " + QString("%1").arg(route) + " and ('" + startDate + "' between startDate and endDate or  '" + endDate + "' between startDate and endDate) and name = '" + name + "' and a.LineKey = " + QString("%1").arg(segmentId);
@@ -6643,7 +6686,7 @@ RouteData SQL::getSegmentInfoForRouteDates(qint32 route, QString name, qint32 se
             rd.oneWay = query.value(13).toString();
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -6664,7 +6707,7 @@ bool SQL::deleteRoute(qint32 route, QString name, QString startDate, QString end
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         BeginTransaction("deleteRoute");
 
@@ -6696,7 +6739,7 @@ bool SQL::deleteRoute(qint32 route, QString name, QString startDate, QString end
         CommitTransaction("deleteRoute");
         ret = true;
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -7041,7 +7084,7 @@ QList<RouteData> SQL::getConflictingRouteSegments(qint32 route, QString name, QS
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "Select a.route, name, startDate, endDate, lineKey, tractionType, companyKey, direction, normalEnter, normalLeave, reverseEnter, reverseLeave, routeAlpha, OneWay"
@@ -7075,7 +7118,7 @@ QList<RouteData> SQL::getConflictingRouteSegments(qint32 route, QString name, QS
             myArray.append(rd);
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -7238,7 +7281,7 @@ bool SQL::isRouteUsedOnDate(qint32 route, qint32 segmentId,  QString date)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "select count(*) from Routes where route = " + QString("%1").arg(route) + " and lineKey= " + QString("%1").arg(segmentId) + " and '"+ date + "' between startDate and endDate";
@@ -7263,7 +7306,7 @@ bool SQL::isRouteUsedOnDate(qint32 route, qint32 segmentId,  QString date)
         if (count > 0)
             ret = true;
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -7275,7 +7318,7 @@ QList<StationInfo> SQL::getStations(qint32 route, QString name, QString date)
  bool bZeroRoutes = false;
  QList<StationInfo> myArray;
  if(!dbOpen())
-    throw std::exception();
+    throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
  QString CommandText;
  QSqlQuery query = QSqlQuery(db);
@@ -7441,7 +7484,7 @@ QList<StationInfo> SQL::getStations()
 {
  QList<StationInfo> myArray;
  if(!dbOpen())
-     throw std::exception();
+     throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
 
  QString CommandText;
@@ -7520,7 +7563,7 @@ commentInfo SQL::getComments(qint32 infoKey)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "SELECT commentKey, comments, tags from Comments where commentKey = " + QString("%1").arg(infoKey);
@@ -7555,7 +7598,7 @@ commentInfo SQL::getComments(qint32 infoKey)
             ci.tags = query.value(2).toString();
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -7575,7 +7618,7 @@ int SQL::addComment(QString comments, QString tags)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         BeginTransaction("addComment");
 
@@ -7633,7 +7676,7 @@ int SQL::addComment(QString comments, QString tags)
             CommitTransaction("addComment");
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -7655,7 +7698,7 @@ bool SQL::updateComment(qint32 infoKey, QString comments, QString tags)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         //if(config->currConnection->servertype() != "MySql")
         {
@@ -7683,7 +7726,7 @@ bool SQL::updateComment(qint32 infoKey, QString comments, QString tags)
         if (rows > 0)
             rtn = true;
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -7696,7 +7739,7 @@ bool SQL::deleteComment(qint32 infoKey)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "delete from Comments where commentKey = " + QString("%1").arg(infoKey);
@@ -7714,7 +7757,7 @@ bool SQL::deleteComment(qint32 infoKey)
         if (rows > 0)
             rtn = true;
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -7726,7 +7769,7 @@ QDate SQL::getFirstCommentDate(qint32 route, QDate date, qint32 companyKey)
 {
  QDate result = date;
  if(!dbOpen())
-     throw std::exception();
+     throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
 
  QString CommandText = "select min(date) from RouteComments where route = " + QString("%1").arg(route)
@@ -7774,7 +7817,7 @@ routeComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "SELECT r.commentKey, c.commentKey, r.companyKey, comments, tags, r.latitude, r.longitude "
@@ -7827,7 +7870,7 @@ routeComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
             }
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -7844,7 +7887,7 @@ bool SQL::updateRouteComment(routeComments rc)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         QSqlQuery query = QSqlQuery(db);
         if(rc.infoKey == -1)
@@ -7919,7 +7962,7 @@ bool SQL::updateRouteComment(routeComments rc)
         }
 
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -7934,7 +7977,7 @@ bool SQL::deleteRouteComment(routeComments rc)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         QSqlQuery query = QSqlQuery(db);
 
@@ -7966,7 +8009,7 @@ bool SQL::deleteRouteComment(routeComments rc)
 
 
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -7992,7 +8035,7 @@ routeComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyK
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "SELECT r.commentKey, c.commentKey, comments, tags, date, r.companyKey "
@@ -8039,7 +8082,7 @@ routeComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyK
 
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -8066,7 +8109,7 @@ routeComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 companyK
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "SELECT r.commentKey, c.commentKey, comments, tags, date, r.companyKey from Comments c join RouteComments r on r.commentKey = c.commentKey where r.route = "+ QString("%1").arg(route) +" and r.date  = (SELECT MAX( date ) FROM RouteComments WHERE route ="+ QString("%1").arg(route) +" AND date < '"+date.toString("yyyy/MM/dd")+"')";
@@ -8108,7 +8151,7 @@ routeComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 companyK
 
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -8123,7 +8166,7 @@ qint32 SQL::addStation(QString name, LatLng location, qint32 lineSegmentId, Rout
    try
    {
        if(!dbOpen())
-           throw std::exception();
+           throw Exception(tr("database not open: %1").arg(__LINE__));
        QSqlDatabase db = QSqlDatabase::database();
 
 
@@ -8164,7 +8207,7 @@ qint32 SQL::addStation(QString name, LatLng location, qint32 lineSegmentId, Rout
            }
        }
    }
-   catch (std::exception e)
+   catch (Exception e)
    {
        myExceptionHandler(e);
    }
@@ -8180,7 +8223,7 @@ qint32 SQL::addStation(QString name, LatLng location, qint32 lineSegmentId, QStr
    try
    {
        if(!dbOpen())
-           throw std::exception();
+           throw Exception(tr("database not open: %1").arg(__LINE__));
        QSqlDatabase db = QSqlDatabase::database();
 
 
@@ -8223,7 +8266,7 @@ qint32 SQL::addStation(QString name, LatLng location, qint32 lineSegmentId, QStr
            }
        }
    }
-   catch (std::exception e)
+   catch (Exception e)
    {
        myExceptionHandler(e);
    }
@@ -8238,7 +8281,7 @@ qint32 SQL::addStation(QString name, LatLng location, qint32 segmentId, QString 
    try
    {
        if(!dbOpen())
-           throw std::exception();
+           throw Exception(tr("database not open: %1").arg(__LINE__));
        QSqlDatabase db = QSqlDatabase::database();
 
        QString CommandText = "select stationKey from Stations where name ='"+ name + "' and startDate ='" + startDate + "' and endDate = '" + endDate + "'";
@@ -8298,7 +8341,7 @@ qint32 SQL::addStation(QString name, LatLng location, qint32 segmentId, QString 
            }
        }
    }
-   catch (std::exception e)
+   catch (Exception e)
    {
        myExceptionHandler(e);
    }
@@ -8313,7 +8356,7 @@ bool SQL::deleteStation(qint32 stationKey)
     try
     {
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
         QString CommandText = "delete from Stations where stationKey = " + QString("%1").arg(stationKey);
@@ -8331,7 +8374,7 @@ bool SQL::deleteStation(qint32 stationKey)
         if (rows > 0)
             ret = true;
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -8556,7 +8599,7 @@ bool SQL::checkSegments()
  try
  {
   if(!dbOpen())
-   throw std::exception();
+   throw Exception(tr("database not open: %1").arg(__LINE__));
 
   CommandText = "Select SegmentId, description, OneWay, startDate, endDate, length, points, startLat, startLon, endLat, EndLon, type, tracks from Segments ";
   bQuery = query.exec(CommandText);
@@ -8594,7 +8637,7 @@ bool SQL::checkSegments()
    myArray.append(sI);
   }
  }
- catch (std::exception& e)
+ catch (Exception& e)
  {
      myExceptionHandler(e);
  }
@@ -8791,7 +8834,7 @@ bool SQL::updateTractionType(qint32 tractionType, QString description, QString d
     {
         int count =0;
         if(!dbOpen())
-            throw std::exception();
+            throw Exception(tr("database not open: %1").arg(__LINE__));
         //QSqlDatabase db = db;
         commandText = "select count(*) from TractionTypes where tractionType = " + QString("%1").arg(tractionType);
         QSqlQuery query = QSqlQuery(db);
@@ -8842,7 +8885,7 @@ bool SQL::updateTractionType(qint32 tractionType, QString description, QString d
                 ret = true;
         }
     }
-    catch (std::exception e)
+    catch (Exception e)
     {
         myExceptionHandler(e);
     }
@@ -9097,3 +9140,4 @@ bool SQL::deleteAndReplaceSegmentWith(int segmentId1, int segmentId2)
  CommitTransaction("replaceSegment");
  return true;
 }
+

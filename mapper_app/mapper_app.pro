@@ -156,8 +156,10 @@ FORMS += \
     addgeoreferenceddialog.ui
 
 HEADERS += \
-    addgeoreferenceddialog.h
+    addgeoreferenceddialog.h \
+    ui/splitsegmentdlg.h
 
 SOURCES += \
-    addgeoreferenceddialog.cpp
+    addgeoreferenceddialog.cpp \
+    ui/splitsegmentdlg.cpp
 

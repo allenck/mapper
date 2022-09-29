@@ -353,9 +353,9 @@ class SegmentInfo
  bool bNeedsUpdate;
  int routeCount;
 
- SegmentInfo(QObject *parent = nullptr)
+ SegmentInfo()
  {
-  Q_UNUSED(parent)
+  //Q_UNUSED(parent)
   segmentId = -1;
   description = "";
   oneWay = "";
@@ -372,14 +372,20 @@ class SegmentInfo
   endDate = "2050/12/31";
  }
 
- QString ToString()
+
+ QString toString()
  {
   QString str;
+  QStringList routeTypes = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
+
+  if(routeType < 0 || routeType>= routeTypes.count())
+   routeType = (RouteType)0;
+  QString trackType = routeTypes.at(routeType);
   QString strSegment = QString("%1").arg(segmentId);
    if (tracks == 1)
-       str = description + " (single)" + " Seg=" + QString("%1").arg(segmentId);
+       str = description + QString("(single/%2) Seg=%1").arg(segmentId).arg(trackType);
    else
-       str = description + " (double)" + " Seg=" + QString("%1").arg(segmentId);
+       str = description + QString(" (double/%2) Seg=%1").arg(segmentId).arg(trackType);
   return str;
  }
 
@@ -485,7 +491,7 @@ public:
     QString endDate;
     RowChanged()
     {
-     si = SegmentInfo();
+     //si = SegmentInfo();
      segmentId = -1;
      row = -1;
      bChanged = false;
