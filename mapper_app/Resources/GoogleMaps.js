@@ -380,32 +380,32 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
 
  var icons = [
      [{
-          icon: lineSymbol, //0
+          icon: lineSymbol, //0 Surface
           offset: '0%',
           repeat: '6px'
       }],
      [{
-          icon: lineSymbol, //1
+          icon: lineSymbol, //1 Surface PRW
           offset: '50%',
           repeat: '15px'
       }],
      [{
-          icon: doubleLine, // 2
+          icon: doubleLine, // 2 Rapid Transit
           offset: '0%',
           repeat: '6px'
       }],
      [{
-       icon: singleTick, // 3
+       icon: singleTick, // 3 Subway
        offset: '0%',
        repeat: '6px'
      }],
      [{
-       icon: doubleTick, //4
+       icon: doubleTick, //4 Rail
        offset: '0%',
        repeat: '6px'
      }],
      [{
-          icon: doubleLine, //5 Subway
+          icon: doubleLine, //5 Incline
           offset: '70%',
           repeat: '10px'
       }]

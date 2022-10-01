@@ -171,7 +171,7 @@ void SQL::RollbackTransaction (QString name)
 void SQL::myExceptionHandler(Exception e)
 {
     Q_UNUSED(e)
-    qDebug() << "SQL exception ";
+    qDebug() << "SQL exception " << e.msg;
     QSqlDatabase db = QSqlDatabase::database();
     db.close();
     exit(EXIT_FAILURE);
@@ -4610,8 +4610,8 @@ CompanyData* SQL::getCompany(qint32 companyKey)
             db.close();
             exit(EXIT_FAILURE);
         }
-        if(query.numRowsAffected()== 0)
-         throw  Exception(tr("company key %1 invalid").arg(companyKey));
+//        if(query.numRowsAffected()== 0)
+//         throw  Exception(tr("company key %1 invalid").arg(companyKey));
         while (query.next())
         {
             cd = new CompanyData();
@@ -6164,7 +6164,7 @@ qint32 SQL::addCompany(QString name, qint32 route, QString startDate, QString en
 /// </summary>
 /// <param name="Description"></param>
 /// <returns></returns>
-qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteType routeType, const QList<LatLng> pointList, bool *bAlreadyExists)
+qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteType routeType, const QList<LatLng> pointList, bool *bAlreadyExists, bool forceInsert)
 {
  int rows = 0;
  int SegmentId = -1;
@@ -6180,7 +6180,10 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
  QSqlDatabase db = QSqlDatabase::database();
  BeginTransaction("addSegment");
 
- QString CommandText = "Select SegmentId from Segments where Description = '" + Description + "' and OneWay= '" + OneWay + "'";
+ QString CommandText = "Select SegmentId from Segments where Description = '" + Description
+   + "' and tracks = " + QString("%1").arg(tracks)
+   + " and type = "  + QString("%1").arg(routeType)
+   + " and OneWay= '" + OneWay + "'";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(CommandText);
  if(!bQuery)
@@ -6196,7 +6199,7 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
   SegmentId = query.value(0).toInt();
  }
 
- if (SegmentId > 0)
+ if (SegmentId > 0 && !forceInsert)
  {
   *(bAlreadyExists) = true;
   return SegmentId;
@@ -8383,33 +8386,55 @@ bool SQL::deleteStation(qint32 stationKey)
 
 bool SQL::updateRoute(qint32 route, QString name, QString endDate, qint32 segmentId, qint32 next, qint32 prev)
 {
-    bool ret = false;
-    int rows = 0;
-        QSqlDatabase db = QSqlDatabase::database();
+ bool ret = false;
+ int rows = 0;
+ QSqlDatabase db = QSqlDatabase::database();
 
-        QString CommandText = "update Routes set next = "+ QString("%1").arg(next) + ", prev="+ QString("%1").arg(prev)+ ",lastUpdate=:lastUpdate where route ="+QString("%1").arg(route)+ " and name ='"+name+"' and endDate='"+endDate+"' and lineKey="+QString("%1").arg(segmentId);
-        QSqlQuery query = QSqlQuery(db);
-        query.prepare(CommandText);
-        query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-        bool bQuery = query.exec();
-        if(!bQuery)
-        {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << CommandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
-        }
-        rows = query.numRowsAffected();
-        if (rows > 0)
-            ret = true;
-    return ret;
+ QString CommandText = "update Routes set next = " + QString("%1").arg(next)
+             + ", prev=" + QString("%1").arg(prev)+ ",lastUpdate=:lastUpdate"
+             " where route ="+QString("%1").arg(route)
+             + " and name ='"+name+"' and endDate='"+endDate
+             +"' and lineKey="+QString("%1").arg(segmentId);
+ QSqlQuery query = QSqlQuery(db);
+ query.prepare(CommandText);
+ query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
+ bool bQuery = query.exec();
+ if(!bQuery)
+ {
+     QSqlError err = query.lastError();
+     qDebug() << err.text() + "\n";
+     qDebug() << CommandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+     db.close();
+     exit(EXIT_FAILURE);
+ }
+ rows = query.numRowsAffected();
+ if (rows > 0)
+     ret = true;
+ return ret;
 }
 
 int SQL::updateRouteDate(int segmentId, QString startDate, QString endDate)
 {
  QSqlDatabase db = QSqlDatabase::database();
- QString CommandText = "Update Routes set startDate = '" + startDate + "', endDate='" + endDate+ "' where lineKey =" +QString::number(segmentId);
+ QString CommandText = "Update Routes set startDate = '" + startDate
+             + "', endDate='" + endDate+ "'"
+             " where lineKey =" +QString::number(segmentId);
+ QSqlQuery query = QSqlQuery(db);
+ if(!query.exec(CommandText))\
+ {
+  SQLERROR(query);
+  return -1;
+ }
+ return query.numRowsAffected();
+}
+
+int SQL::updateRouteSegment(int segmentId, QString startDate, QString endDate, int newSegmentId)
+{
+ QSqlDatabase db = QSqlDatabase::database();
+ QString CommandText = "Update Routes set startDate = '" + startDate
+             + "', endDate='" + endDate+ "'"
+             + ", linekey = " +QString::number(newSegmentId)
+             + " where lineKey =" +QString::number(segmentId);
  QSqlQuery query = QSqlQuery(db);
  if(!query.exec(CommandText))\
  {

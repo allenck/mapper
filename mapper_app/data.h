@@ -352,6 +352,7 @@ class SegmentInfo
  qint8 tracks;
  bool bNeedsUpdate;
  int routeCount;
+ static QStringList ROUTETYPES;// = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
 
  SegmentInfo()
  {
@@ -376,11 +377,11 @@ class SegmentInfo
  QString toString()
  {
   QString str;
-  QStringList routeTypes = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
+  //QStringList routeTypes = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
 
-  if(routeType < 0 || routeType>= routeTypes.count())
+  if(routeType < 0 || routeType>= ROUTETYPES.count())
    routeType = (RouteType)0;
-  QString trackType = routeTypes.at(routeType);
+  QString trackType = ROUTETYPES.at(routeType);
   QString strSegment = QString("%1").arg(segmentId);
    if (tracks == 1)
        str = description + QString("(single/%2) Seg=%1").arg(segmentId).arg(trackType);

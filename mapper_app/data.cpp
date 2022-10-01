@@ -169,6 +169,9 @@ RouteInfo::~RouteInfo()
 {
 
 }
+
+/*static*/ QStringList SegmentInfo::ROUTETYPES = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
+
 void SegmentInfo::addPoint(LatLng pt)
 {
  pointList.append(pt);

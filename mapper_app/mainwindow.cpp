@@ -816,7 +816,7 @@ void mainWindow::createActions()
  addRouteAct->setToolTip(tr("Add a new route"));
  connect(addRouteAct, SIGNAL(triggered()), this, SLOT(AddRoute()));
 
- splitSegmentAct = new QAction(tr("Split segment at adate"),this);
+ splitSegmentAct = new QAction(tr("Split segment at a date"),this);
  connect(splitSegmentAct, &QAction::triggered, [=]{
   SplitSegmentDlg* splitSegment = new SplitSegmentDlg(m_SegmentId);
   int ret = splitSegment->exec();
@@ -1070,6 +1070,7 @@ void mainWindow::txtSegment_customContextMenu(const QPoint &)
  QAction* edit = new QAction(tr("Edit segment"), this);
  menu->addAction(edit);
  connect(edit, SIGNAL(triggered(bool)), this, SLOT(On_editSegment_triggered()));
+ menu->addAction(splitSegmentAct);
  menu->addAction(updateRouteAct);
  menu->exec(QCursor::pos());
 

@@ -1,5 +1,6 @@
 #include "splitsegmentdlg.h"
 #include "ui_splitsegmentdlg.h"
+#include "data.h"
 
 bool compareSegmentInfo(const SegmentInfo & s1, const SegmentInfo & s2)
 {
@@ -31,19 +32,19 @@ SplitSegmentDlg::SplitSegmentDlg(int segmentId, QWidget *parent) :
  });
 
 
- QStringList routeTypes = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
- ui->cbTrackType1->addItems(routeTypes);
- ui->cbTrackType2->addItems(routeTypes);
+ //QStringList routeTypes = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
+ ui->cbTrackType1->addItems(SegmentInfo::ROUTETYPES);
+ ui->cbTrackType2->addItems(SegmentInfo::ROUTETYPES);
 
  connect(ui->dateFrom1, &QDateTimeEdit::dateChanged, [=]{
 
  });
- connect(ui->dateTo1, &QDateTimeEdit::dateChanged, [=]{
+ connect(ui->dateTo1, &QDateTimeEdit::editingFinished, [=]{
   ui->dateFrom2->setDate(ui->dateTo1->date().addDays(1));
  });
 
- connect(ui->dateFrom2, &QDateTimeEdit::dateChanged, [=]{
-  ui->dateTo1->setDate(ui->dateTo1->date().addDays(-1));
+ connect(ui->dateFrom2, &QDateTimeEdit::editingFinished, [=]{
+  ui->dateTo1->setDate(ui->dateFrom2->date().addDays(-1));
  });
 
  connect(ui->btnCancel, &QPushButton::clicked, [=]{
@@ -110,7 +111,7 @@ bool SplitSegmentDlg::processChanges()
  SQL::instance()->BeginTransaction("splitSegment");
 
  bool exists = false;
- int newSegmentId = SQL::instance()->addSegment(siNew.description, siNew.oneWay, siNew.tracks, siNew.routeType, siNew.pointList, &exists);
+ int newSegmentId = SQL::instance()->addSegment(siNew.description, siNew.oneWay, siNew.tracks, siNew.routeType, siNew.pointList, &exists, true);
  if(exists || newSegmentId <= 0)
  {
   SQL::instance()->RollbackTransaction("splitSegment");
@@ -123,34 +124,46 @@ bool SplitSegmentDlg::processChanges()
   return false;
  }
 
- foreach(RouteData rd, routes)
+ int routesChanged = 0;
+ if(ui->chkUpdateAffectedRoutes)
  {
-  if(rd.lineKey != si.segmentId)
-   continue;
-  if(si.endDate <= rd.endDate.toString("yyyy/MM/dd") && si.startDate >= rd.startDate.toString("yyyy/MM/dd"))
+  foreach(RouteData rd, routes)
   {
-   if(!SQL::instance()->updateRouteDate(si.segmentId, rd.startDate.toString("yyyy/MM/dd"), si.endDate))
+   if(rd.lineKey != si.segmentId)
+    continue;
+   if(si.endDate <= rd.endDate.toString("yyyy/MM/dd") && si.startDate >= rd.startDate.toString("yyyy/MM/dd"))
    {
-    SQL::instance()->RollbackTransaction("splitSegment");
-    return false;
+    if(!SQL::instance()->updateRouteDate(si.segmentId, rd.startDate.toString("yyyy/MM/dd"), si.endDate))
+    {
+     SQL::instance()->RollbackTransaction("splitSegment");
+     return false;
+    }
+    siNew.endDate = rd.endDate.toString("yyyy/MM/dd");
+    if(!SQL::instance()->addSegmentToRoute(rd, siNew))
+    {
+     SQL::instance()->RollbackTransaction("splitSegment");
+     return false;
+    }
+    continue;
    }
-   siNew.endDate = rd.endDate.toString("yyyy/MM/dd");
-   if(!SQL::instance()->addSegmentToRoute(rd, siNew))
+   if(rd.startDate.toString("yyyy/MM/dd") > si.endDate)
    {
-    SQL::instance()->RollbackTransaction("splitSegment");
-    return false;
+    //if(!SQL::instance()->updateRoute(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"), newSegmentId, rd.next, rd.prev))
+    if(!SQL::instance()->updateRouteSegment(rd.lineKey, rd.startDate.toString("yyyy/MM/dd"),rd.endDate.toString("yyyy/MM/dd"),newSegmentId))
+    {
+     SQL::instance()->RollbackTransaction("splitSegment");
+     return false;
+    }
    }
-   continue;
-  }
-  if(rd.startDate.toString("yyyy/MM/dd") > si.endDate)
-  {
-   if(!SQL::instance()->updateRoute(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"), newSegmentId, rd.next, rd.prev))
-   {
-    SQL::instance()->RollbackTransaction("splitSegment");
-    return false;
-   }
+   routesChanged++;
   }
  }
+ QPalette palette = ui->lblHelp->palette();
+ QBrush brush(QColor(0, 255, 127, 255));
+ palette.setBrush(QPalette::Inactive, QPalette::WindowText, brush);
+ ui->lblHelp->setPalette(palette);
+
+ ui->lblHelp->setText(tr("new segment %1 created; %2 routes changed").arg(newSegmentId).arg(routesChanged));
  SQL::instance()->CommitTransaction("splitSegment");
  return true;
 }

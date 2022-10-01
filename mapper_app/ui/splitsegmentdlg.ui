@@ -162,7 +162,28 @@
      </layout>
     </widget>
    </item>
-   <item row="3" column="0">
+   <item row="4" column="0" colspan="2">
+    <widget class="QCheckBox" name="chkUpdateAffectedRoutes">
+     <property name="text">
+      <string>Update affected routes</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="2">
+    <widget class="QPushButton" name="btnCancel">
+     <property name="text">
+      <string>Cancel</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="3">
+    <widget class="QPushButton" name="btnOK">
+     <property name="text">
+      <string>OK</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0" colspan="4">
     <widget class="QLabel" name="lblHelp">
      <property name="palette">
       <palette>
@@ -202,28 +223,10 @@
       </palette>
      </property>
      <property name="text">
-      <string>TextLabel</string>
+      <string>Enter date when a segment's route type was changed.</string>
      </property>
-    </widget>
-   </item>
-   <item row="4" column="0" colspan="2">
-    <widget class="QCheckBox" name="chkUpdateAffectedRoutes">
-     <property name="text">
-      <string>Update affected routes</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="2">
-    <widget class="QPushButton" name="btnCancel">
-     <property name="text">
-      <string>Cancel</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="3">
-    <widget class="QPushButton" name="btnOK">
-     <property name="text">
-      <string>OK</string>
+     <property name="wordWrap">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
