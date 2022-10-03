@@ -1594,7 +1594,8 @@ void mainWindow::On_displayRoute(RouteData rd)
   else if(si.routeType == Subway)
    dash = 3;
   objArray.clear();
-  objArray <<   si.segmentId<< ri.routeName <<  si.description << si.oneWay << color << si.tracks << dash << points.count();
+  objArray <<   si.segmentId<< ri.routeName <<  si.description << si.oneWay << color << si.tracks
+             << dash << si.trackUsage << points.count();
   objArray.append(points);
   m_bridge->processScript("createSegment",objArray);
 
@@ -1834,6 +1835,8 @@ void mainWindow::refreshSegmentCB()
         ui->rbBoth->isChecked())
       ui->cbSegments->addItem(sI.toString(), sI.segmentId);
     }
+    if(m_SegmentId >0)
+     ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(m_SegmentId));
     m_bridge->processScript("addModeOff");
     addPointModeAct->setChecked(false);
     bRefreshingSegments = false;
@@ -2503,7 +2506,7 @@ void mainWindow::txtSegment_Leave( )
  if (bSegmentChanged)
  {
   SegmentInfo si = sql->getSegmentInfo(m_SegmentId);
-  sql->updateSegmentDescription(m_SegmentId, ui->txtSegment->text(), si.oneWay, ui->sbTracks->value(), si.length);
+  sql->updateSegmentDescription(m_SegmentId, ui->txtSegment->text(), si.oneWay, ui->sbTracks->value(), si.length, si.trackUsage);
   bSegmentChanged = false;
   int segmentId = m_SegmentId;
   refreshSegmentCB();

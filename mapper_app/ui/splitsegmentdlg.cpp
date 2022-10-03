@@ -13,15 +13,7 @@ SplitSegmentDlg::SplitSegmentDlg(int segmentId, QWidget *parent) :
   ui(new Ui::SplitSegmentDlg)
 {
  ui->setupUi(this);
- ui->cbSegments->clear();
- cbSegmentInfoList = SQL::instance()->getSegmentInfo();
- qSort(cbSegmentInfoList.begin(), cbSegmentInfoList.end(),compareSegmentInfo);
- //foreach (segmentInfo sI in cbSegmentInfoList)
- for(int i=0; i < cbSegmentInfoList.count(); i++)
- {
-  SegmentInfo si = cbSegmentInfoList.at(i);
-  ui->cbSegments->addItem(si.toString(), si.segmentId);
- }
+ refreshSegments();
  setSegment(segmentId);
  ui->dateFrom1->setEnabled(false);
  ui->dateTo2->setEnabled(false);
@@ -29,11 +21,13 @@ SplitSegmentDlg::SplitSegmentDlg(int segmentId, QWidget *parent) :
  connect(ui->cbSegments, &QComboBox::currentTextChanged, [=]{
   si = cbSegmentInfoList.at(ui->cbSegments->currentIndex());
   setSegment(si.segmentId);
+
  });
 
 
  //QStringList routeTypes = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
  ui->cbTrackType1->addItems(SegmentInfo::ROUTETYPES);
+ ui->cbTrackType1->setCurrentIndex(si.routeType);
  ui->cbTrackType2->addItems(SegmentInfo::ROUTETYPES);
 
  connect(ui->dateFrom1, &QDateTimeEdit::dateChanged, [=]{
@@ -41,19 +35,36 @@ SplitSegmentDlg::SplitSegmentDlg(int segmentId, QWidget *parent) :
  });
  connect(ui->dateTo1, &QDateTimeEdit::editingFinished, [=]{
   ui->dateFrom2->setDate(ui->dateTo1->date().addDays(1));
+  ui->btnOK->setEnabled(true);
+  ui->btnApply->setEnabled(true);
+
  });
 
  connect(ui->dateFrom2, &QDateTimeEdit::editingFinished, [=]{
   ui->dateTo1->setDate(ui->dateFrom2->date().addDays(-1));
+  ui->btnOK->setEnabled(true);
+  ui->btnApply->setEnabled(true);
  });
 
  connect(ui->btnCancel, &QPushButton::clicked, [=]{
   reject();
  });
  connect(ui->btnOK, &QPushButton::clicked, [=]{
-  if(processChanges())
-  accept();
+  bool result = processChanges();
+  if(result)
+   accept();
  });
+ connect(ui->btnApply, &QPushButton::clicked, [=]{
+  bool result = processChanges();
+  if(result)
+  {
+   ui->btnOK->setEnabled(false);
+   ui->btnApply->setEnabled(false);
+  }
+  refreshSegments();
+ });
+ ui->btnOK->setEnabled(false);
+ ui->btnApply->setEnabled(false);
 
 }
 
@@ -61,6 +72,19 @@ SplitSegmentDlg::SplitSegmentDlg(int segmentId, QWidget *parent) :
 SplitSegmentDlg::~SplitSegmentDlg()
 {
  delete ui;
+}
+
+void SplitSegmentDlg::refreshSegments()
+{
+  ui->cbSegments->clear();
+  cbSegmentInfoList = SQL::instance()->getSegmentInfo();
+  qSort(cbSegmentInfoList.begin(), cbSegmentInfoList.end(),compareSegmentInfo);
+  //foreach (segmentInfo sI in cbSegmentInfoList)
+  for(int i=0; i < cbSegmentInfoList.count(); i++)
+  {
+   SegmentInfo si = cbSegmentInfoList.at(i);
+   ui->cbSegments->addItem(si.toString(), si.segmentId);
+  }
 }
 
 void SplitSegmentDlg::setupDates(SegmentInfo si){
@@ -91,6 +115,9 @@ void SplitSegmentDlg::setSegment(int segmentId)
  ui->cbTrackType1->setCurrentIndex(si.routeType);
  ui->cbTrackType2->setCurrentIndex(si.routeType);
 
+ ui->btnOK->setEnabled(true);
+ ui->btnApply->setEnabled(true);
+
 }
 
 bool SplitSegmentDlg::processChanges()
@@ -115,7 +142,7 @@ bool SplitSegmentDlg::processChanges()
  if(exists || newSegmentId <= 0)
  {
   SQL::instance()->RollbackTransaction("splitSegment");
-  return false;
+   return false;
  }
 
  if(!SQL::instance()->updateSegment(&si))
@@ -131,21 +158,33 @@ bool SplitSegmentDlg::processChanges()
   {
    if(rd.lineKey != si.segmentId)
     continue;
-   if(si.endDate <= rd.endDate.toString("yyyy/MM/dd") && si.startDate >= rd.startDate.toString("yyyy/MM/dd"))
+
+   // If split date is between route segment's start and en dates
+   if( rd.endDate.toString("yyyy/MM/dd") > si.endDate
+       &&  rd.startDate.toString("yyyy/MM/dd") < si.startDate)
    {
     if(!SQL::instance()->updateRouteDate(si.segmentId, rd.startDate.toString("yyyy/MM/dd"), si.endDate))
     {
      SQL::instance()->RollbackTransaction("splitSegment");
      return false;
     }
+    // remainder of route segment > solit date, add new segment to route
     siNew.endDate = rd.endDate.toString("yyyy/MM/dd");
     if(!SQL::instance()->addSegmentToRoute(rd, siNew))
     {
      SQL::instance()->RollbackTransaction("splitSegment");
      return false;
     }
+    routesChanged++;
+
     continue;
    }
+
+   // route segment's end date is before split date, nothing to do
+   if(rd.endDate.toString("yyyy/MM/dd") < si.endDate)
+    continue;
+
+   // if route segment's start date is after split date, use new segment
    if(rd.startDate.toString("yyyy/MM/dd") > si.endDate)
    {
     //if(!SQL::instance()->updateRoute(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"), newSegmentId, rd.next, rd.prev))
@@ -155,6 +194,7 @@ bool SplitSegmentDlg::processChanges()
      return false;
     }
    }
+
    routesChanged++;
   }
  }

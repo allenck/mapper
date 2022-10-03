@@ -118,6 +118,8 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
        return si.description;
    case ONEWAY:
        return si.oneWay;
+   case USAGE:
+       return si.trackUsage;
    case TRACKS:
        return si.tracks;
    case NEXT:
@@ -159,6 +161,8 @@ QVariant RouteViewTableModel::headerData(int section, Qt::Orientation orientatio
             return tr("1Way");
         case TRACKS:
             return tr("Tracks");
+        case USAGE:
+            return tr("Usage");
         case NEXT:
             return tr("Next");
         case PREV:
@@ -241,6 +245,13 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
      si.oneWay = s;
     break;
    }
+  case USAGE:
+  {
+   QString s = value.toString().toUpper();
+   if(s == "B" || s=="L" || s == "R" || s == " ")
+    si.trackUsage = s;
+   break;
+  }
 //  case TRACKS:
 //    tracks = value.toInt();
 //    if(tracks == 1 || tracks == 2)
@@ -288,7 +299,7 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
       emit rowChange(row, si.segmentId, false, true);
   }
   listOfSegments.replace(row, si);
-  emit(dataChanged(index, index));
+  emit dataChanged(index, index);
 
   return true;
  }
@@ -313,6 +324,7 @@ Qt::ItemFlags RouteViewTableModel::flags(const QModelIndex &index) const
     case NAME:
      return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
     case ONEWAY: // 1Way
+    case USAGE:
      return QAbstractTableModel::flags(index) | Qt::ItemIsEditable | Qt::ItemIsEnabled;
     case TRACKS:
      return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
@@ -398,7 +410,7 @@ void RouteViewTableModel::commitChanges()
   SQL::instance()->BeginTransaction("updateRoute");
   if(siOld.oneWay != si.oneWay /*|| siOld.tracks != si.tracks*/ || siOld.length != si.length  || siOld.bNeedsUpdate)
   {
-   SQL::instance()->updateSegmentDescription(si.segmentId, si.description, si.oneWay, si.tracks, si.length);
+   SQL::instance()->updateSegmentDescription(si.segmentId, si.description, si.oneWay, si.tracks, si.length, si.trackUsage);
   }
 
   if(!SQL::instance()->deleteRouteSegment(route, name, si.segmentId, siOld.startDate, siOld.endDate))

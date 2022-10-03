@@ -21,10 +21,10 @@ SplitRoute::SplitRoute(Configuration *cfg, QWidget *parent) :
     connect(ui->txtNewRouteName1, SIGNAL(textEdited(QString)), this, SLOT(txtNewRouteName1_Leave()));
     connect(ui->txtNewRouteName2, SIGNAL(textEdited(QString)), this, SLOT(txtNewRouteName2_Leave()));
     connect(ui->dateFrom1, SIGNAL(editingFinished()), this, SLOT(dateFrom1_Leave()));
-    connect(ui->dateFrom2, SIGNAL(dateChanged(QDate)), this, SLOT(dateFrom2_ValueChanged()));
+    connect(ui->dateFrom2, SIGNAL(editingFinished()), this, SLOT(dateFrom2_ValueChanged()));
     connect(ui->dateFrom2, SIGNAL(editingFinished()),this, SLOT(dateFrom2_Leave()));
     connect(ui->dateTo1, SIGNAL(editingFinished()), this, SLOT(dateTo1_Leave()));
-    connect(ui->dateTo1, SIGNAL(dateChanged(QDate)), this, SLOT(dateTo1_ValueChanged()));
+    connect(ui->dateTo1, SIGNAL(editingFinished()), this, SLOT(dateTo1_ValueChanged()));
     connect(ui->dateTo2, SIGNAL(editingFinished()), this, SLOT(dateTo2_Leave()));
     connect(ui->btnOK, SIGNAL(clicked()), this, SLOT(btnOK_Click()));
     connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(Cancel_Click()));
@@ -34,6 +34,7 @@ SplitRoute::~SplitRoute()
 {
     delete ui;
 }
+
 /// <summary>
 /// Sets a reference to the current configuration
 /// </summary>

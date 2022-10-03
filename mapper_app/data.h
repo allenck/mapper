@@ -80,6 +80,7 @@ public:
     qint32 reverseEnter;        // Not defined for one Way
     qint32 reverseLeave;        // Not defined for one Way
     QString oneWay;
+    QString trackUsage;
     int next, prev;
 
     QString toString();
@@ -352,6 +353,8 @@ class SegmentInfo
  qint8 tracks;
  bool bNeedsUpdate;
  int routeCount;
+ QString trackUsage;
+
  static QStringList ROUTETYPES;// = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
 
  SegmentInfo()

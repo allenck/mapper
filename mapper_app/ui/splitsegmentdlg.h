@@ -24,6 +24,7 @@ class SplitSegmentDlg : public QDialog
   SegmentInfo si;
   void setupDates(SegmentInfo si);
   bool processChanges();
+  void refreshSegments();
 };
 
 #endif // SPLITSEGMENTDLG_H

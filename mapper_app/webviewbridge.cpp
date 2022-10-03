@@ -256,3 +256,8 @@ void webViewBridge::mapInit()
  mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
  parent->mapInit();
 }
+
+void webViewBridge::debug(QString text)
+{
+ qDebug() << text;
+}

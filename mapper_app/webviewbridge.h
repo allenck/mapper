@@ -88,6 +88,7 @@ public slots:
     void segmentStatus(QString txt, QString color);
     void getInfoWindowComments(double lat, double lon, int route, QString date, int func);
     void mapInit();
+    void debug(QString text);
 
 private slots:
 

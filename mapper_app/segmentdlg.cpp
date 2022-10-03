@@ -133,7 +133,7 @@ void SegmentDlg::setSegmentId(qint32 value)
   bSplitting = true;
   this->setWindowTitle(tr("Split Segment"));
   ui->gbOriginal->setVisible(true);
-  ui->gbOriginal->setTitle(tr("Originalsegment:"));
+  ui->gbOriginal->setTitle(tr("Original segment:"));
   ui->gbNew->setTitle(tr("New segment:"));
   ui->txtOriginalName->setText( sql->getSegmentDescription(_SegmentId));
   ui->chkOriginalOneWay->setChecked(si.oneWay== "Y");

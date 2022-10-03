@@ -74,7 +74,7 @@ public:
     //QList<segmentData> getIntersectingSegments(double lat, double lon, double radius, RouteType type) __attribute_deprecated__;
     QList<SegmentInfo> getIntersectingSegments(double lat, double lon, double radius, RouteType type);
     bool updateRecord(SegmentInfo si);
-    bool updateSegmentDescription(qint32 SegmentId, QString description, QString oneWay, int tracks, double length);
+    bool updateSegmentDescription(qint32 SegmentId, QString description, QString oneWay, int tracks, double length, QString trackUsage);
     QList<CompanyData *> getCompanies();
     CompanyData *getCompany(qint32 companyKey);
     QList<RouteData> getRouteSegmentsForDate(qint32 route, QString name, QString date);

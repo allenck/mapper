@@ -35,6 +35,7 @@ public:
      NAME,
      TRACKS,
      ONEWAY,
+     USAGE,
      NEXT,
      PREV,
      DIR,
