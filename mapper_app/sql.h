@@ -74,7 +74,7 @@ public:
     //QList<segmentData> getIntersectingSegments(double lat, double lon, double radius, RouteType type) __attribute_deprecated__;
     QList<SegmentInfo> getIntersectingSegments(double lat, double lon, double radius, RouteType type);
     bool updateRecord(SegmentInfo si);
-    bool updateSegmentDescription(qint32 SegmentId, QString description, QString oneWay, int tracks, double length, QString trackUsage);
+    bool updateSegmentDescription(qint32 SegmentId, QString description, QString oneWay, int tracks, double length);
     QList<CompanyData *> getCompanies();
     CompanyData *getCompany(qint32 companyKey);
     QList<RouteData> getRouteSegmentsForDate(qint32 route, QString name, QString date);
@@ -86,7 +86,7 @@ public:
     bool addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId,
         qint32 companyKey, qint32 tractionType, QString direction, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString oneWay);
     bool addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId,
-        qint32 companyKey, qint32 tractionType, QString direction, qint32 next, qint32 prev, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString oneWay);
+        qint32 companyKey, qint32 tractionType, QString direction, qint32 next, qint32 prev, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString oneWay, QString trackUsage);
     qint32 getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * bAlphaRoute, int companyKey);
     bool updateTerminals(TerminalInfo ti);
     bool updateTerminals(qint32 route, QString name, QString startDate, QString endDate, qint32 startSegment, QString startWhichEnd, qint32 endSegment, QString endWhichEnd);
@@ -143,7 +143,7 @@ public:
     bool updateStation(qint32 stationKey,  qint32 route, qint32 lineSegmentId, qint32 segmentId, QString startDate, QString EndDate, qint32 *newStationId, int point);
 //    QList<segmentData> getIntersectingSegmentsWithRoute(double lat, double lon, double radius, RouteType type) __attribute_deprecated__;
     QList<StationInfo> getStationsLikeName(QString);
-    bool updateRoute(qint32 route, QString name, QString endDate, qint32 segmentId, qint32 next, qint32 prev);
+    bool updateRoute(qint32 route, QString name, QString endDate, qint32 segmentId, qint32 next, qint32 prev, QString trackUsage);
     int updateRouteDate(int segmentId, QString startDate, QString endDate);
     int updateRouteSegment(int segmentId, QString startDate, QString endDate, int newSegment);
     QDate getFirstCommentDate(qint32 route, QDate date, qint32 companyKey);

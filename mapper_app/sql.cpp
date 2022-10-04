@@ -2850,7 +2850,7 @@ double SQL::Distance(double Lat1, double Lon1, double Lat2, double Lon2)
     return d; // distance in kilometers
 }
 
-bool SQL::updateSegmentDescription(qint32 SegmentId, QString description, QString oneWay, int tracks, double length, QString trackUsage)
+bool SQL::updateSegmentDescription(qint32 SegmentId, QString description, QString oneWay, int tracks, double length)
 {
  qint32 rows = 0;
 
@@ -2868,7 +2868,6 @@ bool SQL::updateSegmentDescription(qint32 SegmentId, QString description, QStrin
    "', oneWay = '" + oneWay + "', tracks="+QString::number(tracks) +
    ", street = '" +street +
    "', length=" +QString::number(length,'g',8)+
-   "', trackUsage = '" + trackUsage + "'"
    ", lastUpdate=:lastUpdate where SegmentId = " + QString("%1").arg(SegmentId);
  QSqlQuery query = QSqlQuery(db);
  query.prepare(CommandText);
@@ -4955,7 +4954,7 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDat
 
 bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId,
     qint32 companyKey, qint32 tractionType, QString direction, qint32 next, qint32 prev,
-    qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString oneWay)
+    qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString oneWay, QString trackUsage)
 {
     bool ret = false;
     int rows = 0;
@@ -4997,7 +4996,7 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDat
 
         //BeginTransaction("addSegmentToRoute");
 
-        QString CommandText = "INSERT INTO Routes(Route, Name, StartDate, EndDate, LineKey, companyKey, tractionType, direction, next, prev, normalEnter, normalleave, reverseEnter, reverseLeave, oneWay) VALUES(" + QString("%1").arg(routeNbr) + ", '"
+        QString CommandText = "INSERT INTO Routes(Route, Name, StartDate, EndDate, LineKey, companyKey, tractionType, direction, next, prev, normalEnter, normalleave, reverseEnter, reverseLeave, oneWay, trackUsage) VALUES(" + QString("%1").arg(routeNbr) + ", '"
                 + routeName.trimmed() + "', '"
                 + startDate + "', '"
                 + endDate + "',"
@@ -5011,7 +5010,8 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDat
                 + QString("%1").arg(normalLeave) + ","
                 + QString("%1").arg(reverseEnter) + ", "
                 + QString("%1").arg(reverseLeave) + ", '"
-                + QString("%1").arg(oneWay)  + "')";
+                + QString("%1").arg(oneWay)  + "', '"
+                + trackUsage + "')";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(CommandText);
         if(!bQuery)
@@ -8406,13 +8406,14 @@ bool SQL::deleteStation(qint32 stationKey)
     return ret;
 }
 
-bool SQL::updateRoute(qint32 route, QString name, QString endDate, qint32 segmentId, qint32 next, qint32 prev)
+bool SQL::updateRoute(qint32 route, QString name, QString endDate, qint32 segmentId, qint32 next, qint32 prev, QString trackUsage)
 {
  bool ret = false;
  int rows = 0;
  QSqlDatabase db = QSqlDatabase::database();
 
  QString CommandText = "update Routes set next = " + QString("%1").arg(next)
+             + ", trackUsage  = '" + trackUsage + "'"
              + ", prev=" + QString("%1").arg(prev)+ ",lastUpdate=:lastUpdate"
              " where route ="+QString("%1").arg(route)
              + " and name ='"+name+"' and endDate='"+endDate

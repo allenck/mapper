@@ -343,6 +343,7 @@ var lineSymbol = {
     path: 'M 0,-1 0,1',
     strokeOpacity: 1,
     strokeWeight: 1,
+    name:  "lineSymbol",
     scale: 3
 };
 
@@ -350,42 +351,49 @@ var tickSymbol =
 {
     path: 'M -1,0 1,0',
     strokeOpacity: 1,
-    strokeWeight:1
+    strokeWeight:1,
+    name:  "tickSymbol"
+
 };
 
 var singleTick =
 {
     path: 'M -1,0 1,0 M 0,-1 0,1',
     strokeOpacity: 1,
-    strokeWeight:1
+    strokeWeight:1,
+    name:  "singleTick"
 };
 
 var doubleTick =
 {
     path: 'M -1.5,0 1.5,0 M 0.5,-1 0.5,1 M -0.5,-1 -0.5,1',
     strokeOpacity: 1,
-    strokeWeight:1
+    strokeWeight:1,
+    name:  "doubleTick"
 };
 
 var doubleLine = {
-       path: 'M 0.5,-1 0.5,1 M -0.5,-1 -0.5,1',
-       strokeOpacity: 1,
-       strokeWeight: 1,
-       scale: 3
+    path: 'M 0.5,-1 0.5,1 M -0.5,-1 -0.5,1',
+    strokeOpacity: 1,
+    strokeWeight: 1,
+    scale: 3,
+    name:  "doubleLine"
 };
 
 var lineL = {
-       path: 'M 0.5,-1 0.5,1' ,
-       strokeOpacity: 1,
-       strokeWeight: 1,
-       scale: 3
+    path: 'M -1.5,0 1.5,0 M 0.5,-1 0.5,1' ,
+    strokeOpacity: 1,
+    strokeWeight: 1,
+    scale: 3,
+    name:  "lineL"
 };
 
 var lineR = {
-       path: 'M -0.5,-1 -0.5,1',
-       strokeOpacity: 1,
-       strokeWeight: 1,
-       scale: 3
+    path: 'M -1.5,0 1.5,0 M -0.5,-1 -0.5,1',
+    strokeOpacity: 1,
+    strokeWeight: 1,
+    scale: 3,
+    name:  "lineR"
 };
 
 // class to contain segment info
@@ -396,32 +404,32 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
     webViewBridge.debug("segment " + SegmentId + " usage: " + trackUsage);
     var icons = [
      [{
-          icon: lineSymbol, //0 Surface
+          icon: lineSymbol, //0 Single track
           offset: '0%',
           repeat: '6px'
       }],
      [{
-          icon: lineSymbol, //1 Surface PRW
+          icon: lineSymbol, //1 Incline
           offset: '50%',
           repeat: '15px'
       }],
      [{
-          icon: doubleLine, // 2 Rapid Transit
+          icon: doubleLine, // 2 double track street
           offset: '0%',
           repeat: '6px'
       }],
      [{
-          icon: singleTick, // 3 Subway
+          icon: singleTick, // 3 Single track PRW
           offset: '0%',
           repeat: '6px'
      }],
      [{
-          icon: doubleTick, //4 Rail
+          icon: doubleTick, //4 Double track PRW
           offset: '0%',
           repeat: '6px'
      }],
      [{
-          icon: doubleLine, //5 Incline
+          icon: doubleLine, //5 Subway
           offset: '70%',
           repeat: '10px'
      }]
@@ -437,11 +445,11 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
       }],
     ];
     var j = 0, k=0;
-    if(tracks === 2) j=2;
-    if(tracks===2 && dash ===2 ) j= 4;
-    if(tracks ===1 && dash ===2) j= 3;
-    if(dash === 1) j = 1;
-    if(dash === 3) j = 5;
+    if(tracks === 2) j=2;   // double track street
+    if(tracks===2 && dash ===2 ) j= 4; // double track PRW
+    if(tracks ===1 && dash ===2) j= 3; // single track PRW
+    if(dash === 1) j = 1; // incline
+    if(dash === 3) j = 5; // Subway
     if(trackUsage === "L")
     {
         j = 6;
@@ -449,10 +457,10 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
     }
     else if(trackUsage === "R")
     {
-        j= 7;
+        j = 7;
         k = 6;
     }
-    if(j >=6)
+    if(j > 5)
     {
      this.grayLine = new google.maps.Polyline(
      {
@@ -464,6 +472,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
      });
 
      webViewBridge.debug("grayline created for " + SegmentId);
+     this.grayLine.segmentId = SegmentId
     }
 
     //console.error("tracks =" + tracks + " index = " + j);
@@ -477,7 +486,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
     });
 
 
-    //this.line.segmentId = SegmentId;
+    this.line.segmentId = SegmentId;
     this.segmentId = SegmentId;
     this.routeName = routeName;
     this.segmentName = segmentName;
@@ -489,7 +498,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
     }
 
     this.getGrayLine = function(){
-        return grayLine;
+        return newGrayLine;
     }
 
     this.getArrow = function(){
@@ -506,6 +515,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
 
     var points = 0;
     var newline = this.line;
+    var newGrayLine = this.grayLine;
 
     this.getInfo = function () {
         return this.segmentName + " route:" + this.routeName;
@@ -732,7 +742,7 @@ var mapDiv = document.getElementById("map-canvas");
 
 function createSegment(segmentId, routeName, segmentName, oneWay, color, tracks, dash, trackUsage, points )
 {
-    console.info("SegmentId "+ segmentId + "usage: "+ trackUsage);
+    webViewBridge.setDebug("SegmentId "+ segmentId + "usage: "+ trackUsage);
     newSegment = new SegmentInfo(segmentId, routeName, segmentName, oneWay, color, tracks, dash, trackUsage );
 
     // if(weight !== 0 && weight !==3)
@@ -770,35 +780,45 @@ function createSegment(segmentId, routeName, segmentName, oneWay, color, tracks,
     }
     if(arguments.length > 8)
     {
-    //alert(points + " " + arguments.length);
-    var path = line.getPath();
+        //alert(points + " " + arguments.length);
+        var path = line.getPath();
 
-    for(var i=0; i < points; i +=2)
-    {
-        path.push(new google.maps.LatLng(arguments[i+9], arguments[i+10]));
-    }
-    if(grayLine)
-    {
-        var grayPath = grayLine.getPath();
         for(var i=0; i < points; i +=2)
         {
-            grayPath.push(new google.maps.LatLng(arguments[i+9], arguments[i+10]));
+            path.push(new google.maps.LatLng(arguments[i+9], arguments[i+10]));
         }
-    }
+        if(grayLine)
+        {
+            var grayPath = grayLine.getPath();
+            webViewBridge.debug("grayLine: segmentid="+grayLine.getSegmentId+ " path = "+ grayPath);
+            for(var i=0; i < points; i +=2)
+            {
+                grayPath.push(new google.maps.LatLng(arguments[i+9], arguments[i+10]));
+            }
+        }
 
-    getPoints();
-    placeArrow(path);
+        getPoints();
+        placeArrow(path);
     }
     if(typeof points == 'array')
     {
-    var path = line.getPath();
+        path = line.getPath();
 
-    for(var i=0; i < points.length; i +=2)
-    {
-      path.push(new google.maps.LatLng(points[i], points[i+1]));
-    }
-    getPoints();
-    placeArrow(path);
+        for( i=0; i < points.length; i +=2)
+        {
+          path.push(new google.maps.LatLng(points[i], points[i+1]));
+        }
+        if(grayLine)
+        {
+            grayPath = grayLine.getPath();
+            webViewBridge.debug("grayLine: segmentid="+grayLine.segmentId+ " path = "+ grayPath);
+            for(i=0; i < points; i +=2)
+            {
+                grayPath.push(new google.maps.LatLng(arguments[i+9], arguments[i+10]));
+            }
+        }
+        getPoints();
+        placeArrow(path);
     }
     return null;
 }
@@ -861,6 +881,11 @@ function hiLiteSelectedLine()
   restoreSelectedLine();
  }
  line.setOptions({strokeColor: "#04b4B4"});
+ if(grayLine)
+ {
+    grayLine.setOptions({strokeColor: "#dedede"});
+ }
+
  if(Arrow)
  {
   var poly;
@@ -1261,7 +1286,7 @@ function placeArrow(path)
   currSegment.setArrow(new myArrow(left.lat(), left.lng(), path.getAt(len-1).lat(), path.getAt(len-1).lng(), right.lat(), right.lng(), currSegment.getColor()));
   }
  }
-}
+}  // end placeArrow()
 
 function getPoints()
 {

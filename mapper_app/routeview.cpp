@@ -584,7 +584,7 @@ void RouteView::updateTerminals()
     for(int i =0; i < segmentInfoList.count(); i++)
     {
         SegmentInfo si = segmentInfoList.at(i);
-        SQL::instance()->updateRoute(route, name, endDate, si.segmentId, si.next, si.prev);
+        SQL::instance()->updateRoute(route, name, endDate, si.segmentId, si.next, si.prev, si.trackUsage);
     }
 
     SQL::instance()->updateTerminals(route, name, startDate, endDate, startSeg, startWhichEnd, endSeg, endWhichEnd);
@@ -593,6 +593,7 @@ void RouteView::updateTerminals()
     updateRouteView();
     myParent->setCursor(QCursor(Qt::ArrowCursor));
 }
+
 bool RouteView::isSequenced()
 {
     return bIsSequenced;

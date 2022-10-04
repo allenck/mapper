@@ -793,7 +793,7 @@ void mainWindow::createActions()
      RouteData rd = ((RouteData)routeList.at(row));
      bool b = SQL::instance()->addSegmentToRoute(rd.route, rd.name, rd.startDate.toString("yyyy/MM/dd"), rd.endDate.toString("yyyy/MM/dd"),
                                         si.segmentId, rd.companyKey,
-                                        rd.tractionType, "?", -1, -1, 0, 0, 0, 0, rd.oneWay);
+                                        rd.tractionType, "?", -1, -1, 0, 0, 0, 0, rd.oneWay, rd.trackUsage);
     if(b)
     {
         m_bridge->processScript("clearPolyline", QString("%1").arg(segmentId));
@@ -2506,7 +2506,7 @@ void mainWindow::txtSegment_Leave( )
  if (bSegmentChanged)
  {
   SegmentInfo si = sql->getSegmentInfo(m_SegmentId);
-  sql->updateSegmentDescription(m_SegmentId, ui->txtSegment->text(), si.oneWay, ui->sbTracks->value(), si.length, si.trackUsage);
+  sql->updateSegmentDescription(m_SegmentId, ui->txtSegment->text(), si.oneWay, ui->sbTracks->value(), si.length);
   bSegmentChanged = false;
   int segmentId = m_SegmentId;
   refreshSegmentCB();
