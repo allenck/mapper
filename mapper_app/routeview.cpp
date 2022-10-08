@@ -1,4 +1,4 @@
-//#include "routeview.h"
+#include "routeview.h"
 #include "sql.h"
 //#include <QHeaderView>
 #include "mainwindow.h"
@@ -12,7 +12,6 @@ RouteView::RouteView(QObject* parent )
     config = Configuration::instance();
 
     //sql.setConfig(config);
-    //headers << "" << "Item" << "Name" << "1 way" << "Next" << "Prev" << "Dir" << "Seq" << "RSeq" << "StartDate" << "EndDate";
     mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
     ui = myParent->ui->tblRouteView;
     connect(ui->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
@@ -20,10 +19,10 @@ RouteView::RouteView(QObject* parent )
     //ui->setColumnCount(headers.count());
     //ui->setHorizontalHeaderLabels(headers);
 
-    ui->resizeColumnsToContents();
+    //ui->resizeColumnsToContents();
 
     ui->setAlternatingRowColors(true);
-    ui->setColumnWidth(0,25);
+
     //m_myParent = myParent;
     ui->setSelectionBehavior(QAbstractItemView::SelectRows );
     ui->setSelectionMode( QAbstractItemView::SingleSelection );
@@ -81,6 +80,15 @@ RouteView::RouteView(QObject* parent )
     sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"), QDate::fromString(endDate, "yyyy/MM/dd"), segmentInfoList);
     saveChangesAct = new QAction(tr("Commit changes"),this);
     saveChangesAct->setStatusTip(tr("Save any uncommitted changes"));
+    showColumnsAct = new QAction(tr("Hide extra columns"),this);
+    showColumnsAct->setCheckable(true);
+    connect(showColumnsAct, &QAction::toggled, [=]{
+     bool b = showColumnsAct->isChecked();
+     ui->setColumnHidden(RouteViewTableModel::NEXT, b);
+     ui->setColumnHidden(RouteViewTableModel::PREV, b);
+     ui->setColumnHidden(RouteViewTableModel::SEQ, b);
+     ui->setColumnHidden(RouteViewTableModel::RSEQ, b);
+    });
     //connect(saveChangesAct, SIGNAL(triggered()), sourceModel, SLOT(commitChanges()));
     connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(commitChanges()));
 
@@ -94,7 +102,11 @@ RouteView::RouteView(QObject* parent )
     connect(ui, SIGNAL(clicked(QModelIndex)), this, SLOT(itemSelectionChanged(QModelIndex)));
     connect(sourceModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), ui,
             SLOT(dataChanged(QModelIndex,QModelIndex)));
-    //connect(myParent->saveChangesAct, SIGNAL(triggered()), sourceModel, SLOT(commitChanges()));
+
+    ui->setColumnWidth(0,8);
+    ui->setColumnWidth(RouteViewTableModel::TYPE, 20);
+    ui->setColumnWidth(RouteViewTableModel::DISTANCE, 29);
+    ui->setColumnWidth(RouteViewTableModel::TRACKS, 5);
 
     connect(webViewBridge::instance(), SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(on_segmentSelected(int,int)));
 
@@ -141,6 +153,7 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
      else
          menu.addAction(deleteSegmentAct);
      //if(curRow == 0)
+     menu.addAction(saveChangesAct);
      menu.addAction(selectSegmentAct);
      menu.addAction(reSequenceAction);
 //        if(!startTerminal)
@@ -172,14 +185,17 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
      else
       endTerminalEndAct->setChecked(true);
 
-//        }
+//        }     menu.addAction(saveChangesAct);
+
      menu.addAction(editSegmentAct);
+     menu.addAction(showColumnsAct);
      if(sourceModel->changedRows.count() > 0)
      {
          menu.addSeparator();
          menu.addAction(saveChangesAct);
      }
      menu.exec(QCursor::pos());
+
  }
 }
 //get QTableView selected item
@@ -755,7 +771,7 @@ void RouteView::checkChanges()
  {
   QMessageBox::StandardButtons rslt;
   mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
-  rslt = QMessageBox::warning(myParent,tr("Save changes"), tr("There are uncommited changes to the current route. Do you wish to save them?") , QMessageBox::Save | QMessageBox::Discard|QMessageBox::Cancel);
+  rslt = QMessageBox::warning(myParent,tr("Commit changes"), tr("There are uncommited changes to the current route. Do you wish to save them?") , QMessageBox::Save | QMessageBox::Discard|QMessageBox::Cancel);
   switch (rslt)
   {
   case QMessageBox::Save:

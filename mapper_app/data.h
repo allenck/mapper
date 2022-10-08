@@ -131,6 +131,7 @@ class SegmentData
         qint32 route;
         QString alphaRoute;
         bool oneWay;
+        int tracks;
 };
 
 class segmentGroup

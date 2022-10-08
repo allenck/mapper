@@ -37,6 +37,7 @@ RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtSta
   if(ti.endSegment == si.segmentId)
    endRow = i;
  }
+
 }
 
 int RouteViewTableModel::rowCount(const QModelIndex &parent) const
@@ -48,7 +49,7 @@ int RouteViewTableModel::rowCount(const QModelIndex &parent) const
 int RouteViewTableModel::columnCount(const QModelIndex &parent) const
 {
  Q_UNUSED(parent);
- return DISTANCE+1;
+ return ENDDATE+1;
 }
 
 QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
@@ -122,6 +123,8 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
        return si.trackUsage;
    case TRACKS:
        return si.tracks;
+   case TYPE:
+       return SegmentInfo::ROUTETYPES.at(si.routeType);
    case NEXT:
        return si.next;
    case PREV:
@@ -160,9 +163,11 @@ QVariant RouteViewTableModel::headerData(int section, Qt::Orientation orientatio
         case ONEWAY:
             return tr("1Way");
         case TRACKS:
-            return tr("Tracks");
+            return tr("Trk");
         case USAGE:
-            return tr("Usage");
+            return tr("Use");
+        case TYPE:
+            return tr("RouteType");
         case NEXT:
             return tr("Next");
         case PREV:
@@ -177,8 +182,8 @@ QVariant RouteViewTableModel::headerData(int section, Qt::Orientation orientatio
             return tr("StartDate");
         case ENDDATE:
             return tr("EndDate");
-    case DISTANCE:
-     return tr("Distance");
+        case DISTANCE:
+         return tr("Distance");
 
         default:
             return QVariant();

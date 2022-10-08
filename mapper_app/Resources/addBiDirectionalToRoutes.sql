@@ -12,6 +12,7 @@ CREATE TABLE `Routes` (
                `EndDate` date NOT NULL,
                `LineKey` int(11) NOT NULL,
                `OneWay` char(1) DEFAULT 'Y',
+               `TrackUsage` text check(`TrackUsage` in ('B', 'L', 'R', ' ')) default ' ' NOT NULL,
                `CompanyKey` int(11) NOT NULL DEFAULT 0,
                `tractionType` int(11) NOT NULL DEFAULT 0,
                `Direction` varchar(6) NOT NULL DEFAULT ' ',

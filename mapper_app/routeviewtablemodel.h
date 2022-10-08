@@ -34,16 +34,17 @@ public:
      SEGMENTID,
      NAME,
      TRACKS,
+     TYPE,
      ONEWAY,
      USAGE,
+     DISTANCE,
      NEXT,
      PREV,
      DIR,
      SEQ,
      RSEQ,
      STARTDATE,
-     ENDDATE,
-     DISTANCE
+     ENDDATE
     };
     int getRow(int segmentId);
     void commitChanges();

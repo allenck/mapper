@@ -72,7 +72,7 @@ private:
     int _normalEnter, _normalLeave, _reverseEnter, _reverseLeave;
     QString strNoRoute;
     void fillTractionTypes();
-    void fillComboBox();
+    void fillSegmentsComboBox();
     void checkUpdate(QString str);
     void setDefaultTurnInfo();
     void checkTurnInfo();
@@ -90,10 +90,10 @@ private slots:
     void txtRouteName_Leave();
     void cbSegments_SelectedIndexChanged(int i);
     void btnOK_click();
-    void groupBox2_Leave();
-    void groupBox3_Leave();
-    void groupBox4_Leave();
-    void groupBox5_Leave();
+    void gbNormalEnter_Leave();
+    void gbNormalLeave_Leave();
+    void gbReverseEnter_Leave();
+    void gbReverseLeave_Leave();
     void btnDelete_Click();
     void btnUpdateTurn_Click();
     void btnAdd_Click();

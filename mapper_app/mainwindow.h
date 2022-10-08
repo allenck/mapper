@@ -228,7 +228,7 @@ private slots:
     //void btnDisplay_Click();
     //void chkShowWindow_CheckedChanged();
     void btnSplit_Click();
-    void selectSegment();
+//    void selectSegment();
     void AddRoute();
     void addModeToggled(bool isChecked);
     void reloadMap();

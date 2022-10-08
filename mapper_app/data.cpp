@@ -88,11 +88,11 @@ RouteData::RouteData()
  route=-1;
  companyKey = -1;
  lineKey = -1;
+ trackUsage = " ";
 }
 
 RouteData::~RouteData()
 {
-
 }
 
 RouteData::RouteData(const RouteData& o)
@@ -115,6 +115,7 @@ RouteData::RouteData(const RouteData& o)
  oneWay = o.oneWay;
  next= o.next;
  prev= o.prev;
+ trackUsage = o.trackUsage;
 }
 
 QString RouteData::toString()
@@ -305,7 +306,7 @@ void SegmentInfo::displaySegment(QString date, QString color, bool bClearFirst)
  else if(routeType == Subway)
   dash = 3;
  objArray.clear();
- objArray << segmentId << routeNames<<description<<oneWay<<color<< tracks << dash << pointList.count()*2 << points;
+ objArray << segmentId << routeNames<<description<<oneWay<<color<< tracks << dash << routeType << " " << pointList.count()*2 << points;
  webViewBridge::instance()->processScript("createSegment", objArray);
 }
 

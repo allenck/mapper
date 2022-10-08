@@ -774,7 +774,10 @@ void mainWindow::createActions()
 
  selectSegmentAct=new QAction(tr("Select segment"),this);
  selectSegmentAct->setToolTip(tr("Select and display segment"));
- connect(selectSegmentAct,SIGNAL(triggered()), this, SLOT(selectSegment()));
+ //connect(selectSegmentAct,SIGNAL(triggered()), this, SLOT(selectSegment()));
+ connect(selectSegmentAct, &QAction::triggered, [=]{
+  cbSegmentsSelectedValueChanged(ui->cbSegments->currentData().toInt());
+});
  editSegmentAct = new QAction("Edit Segment", this);
  connect(editSegmentAct, SIGNAL(triggered()), this, SLOT(On_editSegment_triggered()));
 
@@ -808,7 +811,7 @@ void mainWindow::createActions()
 // TODO: find dormant segments
  connect(findDormantSegmentsAct, SIGNAL(triggered()), this, SLOT(NotYetInplemented()));
 
- saveChangesAct = new QAction(tr("Save changes"), this);
+ saveChangesAct = new QAction(tr("Commit changes"), this);
  saveChangesAct->setStatusTip(tr("Commit changes to database"));
  connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(saveChanges()));
 
@@ -1350,7 +1353,7 @@ void mainWindow::btnDeleteSegment_Click()   //SLOT
                             if (!sql->addSegmentToRoute(rd.route, rd.name, rd.startDate.toString("yyyy/MM/dd"),
                                                         rd.endDate.toString("yyyy/MM/dd"), siDup.segmentId, rd.companyKey,
                                                         rd.tractionType, rd.direction, rd.normalEnter,
-                                                        rd.normalLeave, rd.reverseEnter, rd.reverseLeave, rd.oneWay))
+                                                        rd.normalLeave, rd.reverseEnter, rd.reverseLeave, rd.oneWay, rd.trackUsage))
                             {
                                 //infoPanel.Text = "Update Error";
                                 statusBar()->showMessage(tr("Update failed"));
@@ -1571,7 +1574,8 @@ void mainWindow::On_displayRoute(RouteData rd)
  for(int i = 0; i< ri.segments.count(); i++)
  {
   SegmentInfo si = ri.segments.at(i);
-
+  if(si.segmentId == 367)
+   qDebug() << "halt";
   objArray.clear();
   objArray << si.segmentId;
   m_bridge->processScript("clearPolyline", objArray);
@@ -1594,8 +1598,8 @@ void mainWindow::On_displayRoute(RouteData rd)
   else if(si.routeType == Subway)
    dash = 3;
   objArray.clear();
-  objArray <<   si.segmentId<< ri.routeName <<  si.description << si.oneWay << color << si.tracks
-             << dash << si.trackUsage << points.count();
+  objArray <<   si.segmentId << ri.routeName <<  si.description << si.oneWay << color << si.tracks
+             << dash << si.routeType << si.trackUsage << points.count();
   objArray.append(points);
   m_bridge->processScript("createSegment",objArray);
 
@@ -2433,16 +2437,26 @@ void mainWindow::displaySegment(qint32 segmentId, QString segmentName, QString o
     return;
 }
 
-void mainWindow::selectSegment( )
-{
- cbSegmentsSelectedValueChanged(ui->cbSegments->currentIndex());
-}
+//void mainWindow::selectSegment( )
+//{
+// cbSegmentsSelectedValueChanged(ui->cbSegments->currentData().toInt());
+//}
 
-void mainWindow::cbSegmentsSelectedValueChanged(qint32 row)
+void mainWindow::cbSegmentsSelectedValueChanged(qint32 index)
 {
     if(bRefreshingSegments)
         return;
     SegmentInfo sI;
+    int segmentId = ui->cbSegments->currentData().toInt();
+    int row = -1;
+    for(int i = 0; i < cbSegmentInfoList.count(); i++)
+    {
+     if(cbSegmentInfoList.at(i).segmentId == segmentId)
+     {
+      row = i;
+      break;
+     }
+    }
     if(row < 0)
         return;
     if(row >= cbSegmentInfoList.count())
@@ -2560,6 +2574,7 @@ void mainWindow::cbRoutesTextChanged(QString text)
     Q_UNUSED(text)
     b_cbRoutes_TextChanged = true;
 }
+
 void mainWindow::cbRoutes_Leave()
 {
  QString text =         ui->cbRoute->currentText();
@@ -3190,7 +3205,9 @@ void mainWindow::addSegment()
          dash = 3;
 
         QVariantList objArray;
-        objArray << m_SegmentId << segmentDlg.routeName()<<ui->txtSegment->text()<<rd.oneWay<<getColor(segmentDlg.tractionType())<<si.tracks << dash;
+        objArray << m_SegmentId << segmentDlg.routeName()<<ui->txtSegment->text()
+                 <<rd.oneWay<<getColor(segmentDlg.tractionType())<<si.tracks << dash
+                << si.routeType << si.trackUsage << 0;
         m_bridge->processScript("createSegment",objArray);
 
         //webBrowser1.Document.InvokeScript("addModeOn");

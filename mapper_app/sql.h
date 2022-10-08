@@ -84,7 +84,7 @@ public:
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate);
     bool addSegmentToRoute(RouteData rd,SegmentInfo);
     bool addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId,
-        qint32 companyKey, qint32 tractionType, QString direction, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString oneWay);
+        qint32 companyKey, qint32 tractionType, QString direction, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString oneWay, QString trackUsage);
     bool addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId,
         qint32 companyKey, qint32 tractionType, QString direction, qint32 next, qint32 prev, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString oneWay, QString trackUsage);
     qint32 getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * bAlphaRoute, int companyKey);
@@ -176,7 +176,7 @@ public:
     int getCountOfStationsUsingSegment(int segmentId);
     bool deleteAndReplaceSegmentWith(int segmentId1, int segmentId2);
     bool updateSegmentDates(SegmentInfo* si);
-
+    QList<SegmentData> getUnusedSegments();
 
 private:
     SQL();

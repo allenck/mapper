@@ -72,6 +72,7 @@ private:
     QAction *saveChangesAct;
     QAction* selectSegmentAct;
     QAction *editSegmentAct;
+    QAction* showColumnsAct;
 
     QMenu *startTerminal;
     QMenu *endTerminal;

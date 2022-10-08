@@ -380,8 +380,23 @@ var doubleLine = {
     name:  "doubleLine"
 };
 
+var lineLT = {
+    path: 'M -1.5,0 1.5,0  M 0.5,-1 0.5,1',
+    strokeOpacity: 1,
+    strokeWeight: 1,
+    scale: 3,
+    name:  "lineLT"
+};
+
+var lineRT = {
+    path: 'M -1.5,0 1.5,0  M -0.5,-1 -0.5,1',
+    strokeOpacity: 1,
+    strokeWeight: 1,
+    scale: 3,
+    name:  "lineRT"
+};
 var lineL = {
-    path: 'M -1.5,0 1.5,0 M 0.5,-1 0.5,1' ,
+    path: 'M 0.5,-1 0.5,1' ,
     strokeOpacity: 1,
     strokeWeight: 1,
     scale: 3,
@@ -389,7 +404,7 @@ var lineL = {
 };
 
 var lineR = {
-    path: 'M -1.5,0 1.5,0 M -0.5,-1 -0.5,1',
+    path: 'M -0.5,-1 -0.5,1',
     strokeOpacity: 1,
     strokeWeight: 1,
     scale: 3,
@@ -397,7 +412,7 @@ var lineR = {
 };
 
 // class to contain segment info
-function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, dash, trackUsage )
+function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, dash, routeType, trackUsage )
 {
     this.type = "SegmentInfo";
     var grayLine = null;
@@ -443,8 +458,19 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
           offset: '0%',
           repeat: '6px'
       }],
+     [{
+         icon: lineLT, // 8 left line
+         offset: '0%',
+         repeat: '6px'
+      }],
+     [{
+         icon: lineRT, // 9 right line
+         offset: '0%',
+         repeat: '6px'
+      }],
     ];
-    var j = 0, k=0;
+
+    var j = 0;  // Single track street
     if(tracks === 2) j=2;   // double track street
     if(tracks===2 && dash ===2 ) j= 4; // double track PRW
     if(tracks ===1 && dash ===2) j= 3; // single track PRW
@@ -452,39 +478,86 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
     if(dash === 3) j = 5; // Subway
     if(trackUsage === "L")
     {
-        j = 6;
-        k = 7;
+        var iconIx = 7;
+        var symbol = [{icon: lineR, // 7 right line
+                          offset: '0%',
+                          repeat: '6px'}];
+        if(routeType === 1)
+        {// PRW
+             iconIx = 9;
+             symbol = [{icon: lineRT, // 7 right line
+                              offset: '0%',
+                              repeat: '6px'}];
+
+        }
+        this.line = new google.maps.Polyline(
+        {
+            strokeColor: Color,
+            strokeOpacity: 0,
+            icons: symbol, //icons[iconIx],
+            segmentId: SegmentId
+         });
+
+        this.grayLine = new google.maps.Polyline(
+        {
+            strokeColor: "#A9A9A9",
+            strokeOpacity: 0,
+            //strokeWeight: weight,
+            icons: [{icon: lineL, // 7 right line
+                             offset: '0%',
+                             repeat: '6px'
+                         }],
+            segmentId: SegmentId
+        });
+        webViewBridge.debug("segment= " + SegmentId + " trackUsage =" + trackUsage  + " routeType="+ routeType + " icon index=" +iconIx );
     }
-    else if(trackUsage === "R")
+    if(trackUsage === "R")
     {
-        j = 7;
-        k = 6;
-    }
-    if(j > 5)
-    {
-     this.grayLine = new google.maps.Polyline(
-     {
-        strokeColor: "#D3D3D3",
+        iconIx = 6;
+        symbol = [{icon: lineL, // 7 right line
+                          offset: '0%',
+                          repeat: '6px'}];
+        if(routeType === 1) // PRW
+        {
+             iconIx = 8;
+            symbol = [{icon: lineLT, // 7 right line
+                              offset: '0%',
+                              repeat: '6px'}];
+        }
+         this.line = new google.maps.Polyline(
+         {
+             strokeColor: Color,
+             strokeOpacity: 0,
+             icons: symbol,//icons[iconIx],
+             segmentId: SegmentId
+        });
+
+        this.grayLine = new google.maps.Polyline(
+        {
+        strokeColor: "#A9A9A9",
         strokeOpacity: 0,
         //strokeWeight: weight,
-        icons: icons[k],
+        icons: [{icon: lineR, // 7 right line
+                             offset: '0%',
+                             repeat: '6px'
+                         }],
         segmentId: SegmentId
-     });
+        });
+        webViewBridge.debug("segment= " + SegmentId + " trackUsage =" + trackUsage  + " routeType="+ routeType + " icon index=" +iconIx );
 
-     webViewBridge.debug("grayline created for " + SegmentId);
-     this.grayLine.segmentId = SegmentId
     }
-
-    //console.error("tracks =" + tracks + " index = " + j);
-    this.line = new google.maps.Polyline(
+    if(trackUsage === 'B' || trackUsage === ' ')
     {
-        strokeColor: Color,
-        strokeOpacity: 0,
-        //strokeWeight: weight,
-        icons: icons[j],
-        segmentId: SegmentId
-    });
-
+        //console.error("tracks =" + tracks + " index = " + j);
+        this.line = new google.maps.Polyline(
+        {
+            strokeColor: Color,
+            strokeOpacity: 0,
+            //strokeWeight: weight,
+            icons: icons[j],
+            segmentId: SegmentId
+        });
+    }
 
     this.line.segmentId = SegmentId;
     this.segmentId = SegmentId;
@@ -549,37 +622,69 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
     // events
     // Select segment (click)
     google.maps.event.addListener(this.line, "click", function(e){
+        webViewBridge.setDebug("sId = " + SegmentId + " " + segmentName);
+        line = newline;
+        Arrow = arrow;
+        color = Color;
+        //currSegment = this;
+        hiLiteSelectedLine();
 
-    webViewBridge.setDebug("sId = " + SegmentId + " " + segmentName);
-    line = newline;
-    Arrow = arrow;
-    color = Color;
-    //currSegment = this;
-    hiLiteSelectedLine();
-
-    var path = line.getPath();
-    var len = path.getLength();
-    var begin, end,bounds;
-    webViewBridge.setLen(len);
-    var i;
-    var mIx = 1;
-    for(i=0; i < path.getLength()-1; i++)
-    {
-      begin = path.getAt(i);
-      end = path.getAt(i+1);
-      bounds = SetBounds( begin, end);
-      if( bounds.contains(e.latLng)){
-          break;
-      }
-    }
-    if(i>0)
-      mIx=0;
-    //addMarker(i, e.latLng.lat(), e.latLng.lng(), mIx, segmentName + " route:" + routeName);
-    addMarker(i, begin.lat(), begin.lng(), mIx, segmentName + " route:" + routeName, SegmentId);
-    //OK            window.external.selectSegment(i, SegmentId);
-    webViewBridge.selectSegment(i, SegmentId);
-    addModeOff();
+        var path = line.getPath();
+        var len = path.getLength();
+        var begin, end,bounds;
+        webViewBridge.setLen(len);
+        var i;
+        var mIx = 1;
+        for(i=0; i < path.getLength()-1; i++)
+        {
+          begin = path.getAt(i);
+          end = path.getAt(i+1);
+          bounds = SetBounds( begin, end);
+          if( bounds.contains(e.latLng)){
+              break;
+          }
+        }
+        if(i>0)
+          mIx=0;
+        //addMarker(i, e.latLng.lat(), e.latLng.lng(), mIx, segmentName + " route:" + routeName);
+        addMarker(i, begin.lat(), begin.lng(), mIx, segmentName + " route:" + routeName, SegmentId);
+        //OK            window.external.selectSegment(i, SegmentId);
+        webViewBridge.selectSegment(i, SegmentId);
+        addModeOff();
     });
+
+    if(grayLine)
+        google.maps.event.addListener(this.line, "click", function(e){
+            webViewBridge.setDebug("sId = " + SegmentId + " " + segmentName);
+            line = newline;
+            Arrow = arrow;
+            color = Color;
+            //currSegment = this;
+            hiLiteSelectedLine();
+
+            var path = grayLine.getPath();
+            var len = path.getLength();
+            var begin, end,bounds;
+            webViewBridge.setLen(len);
+            var i;
+            var mIx = 1;
+            for(i=0; i < path.getLength()-1; i++)
+            {
+              begin = path.getAt(i);
+              end = path.getAt(i+1);
+              bounds = SetBounds( begin, end);
+              if( bounds.contains(e.latLng)){
+                  break;
+              }
+            }
+            if(i>0)
+              mIx=0;
+            //addMarker(i, e.latLng.lat(), e.latLng.lng(), mIx, segmentName + " route:" + routeName);
+            addMarker(i, begin.lat(), begin.lng(), mIx, segmentName + " route:" + routeName, SegmentId);
+            //OK            window.external.selectSegment(i, SegmentId);
+            webViewBridge.selectSegment(i, SegmentId);
+            addModeOff();
+        });
 
 
     google.maps.event.addListener(this.line, "rightclick", function(e)
@@ -740,10 +845,10 @@ function resizeMap()
 var mapDiv = document.getElementById("map-canvas");
 }
 
-function createSegment(segmentId, routeName, segmentName, oneWay, color, tracks, dash, trackUsage, points )
+function createSegment(segmentId, routeName, segmentName, oneWay, color, tracks, dash, routeType, trackUsage, points )
 {
     webViewBridge.setDebug("SegmentId "+ segmentId + "usage: "+ trackUsage);
-    newSegment = new SegmentInfo(segmentId, routeName, segmentName, oneWay, color, tracks, dash, trackUsage );
+    newSegment = new SegmentInfo(segmentId, routeName, segmentName, oneWay, color, tracks, dash, routeType, trackUsage );
 
     // if(weight !== 0 && weight !==3)
     //  alert(newSegment.getInfo() + " args=" + arguments.length);
@@ -785,15 +890,15 @@ function createSegment(segmentId, routeName, segmentName, oneWay, color, tracks,
 
         for(var i=0; i < points; i +=2)
         {
-            path.push(new google.maps.LatLng(arguments[i+9], arguments[i+10]));
+            path.push(new google.maps.LatLng(arguments[i+10], arguments[i+11]));
         }
         if(grayLine)
         {
             var grayPath = grayLine.getPath();
-            webViewBridge.debug("grayLine: segmentid="+grayLine.getSegmentId+ " path = "+ grayPath);
+            webViewBridge.debug("grayLine: segmentid="+grayLine.segmentId+ " path = "+ grayPath);
             for(var i=0; i < points; i +=2)
             {
-                grayPath.push(new google.maps.LatLng(arguments[i+9], arguments[i+10]));
+                grayPath.push(new google.maps.LatLng(arguments[i+10], arguments[i+11]));
             }
         }
 
@@ -814,7 +919,7 @@ function createSegment(segmentId, routeName, segmentName, oneWay, color, tracks,
             webViewBridge.debug("grayLine: segmentid="+grayLine.segmentId+ " path = "+ grayPath);
             for(i=0; i < points; i +=2)
             {
-                grayPath.push(new google.maps.LatLng(arguments[i+9], arguments[i+10]));
+                grayPath.push(new google.maps.LatLng(arguments[i+10], arguments[i+11]));
             }
         }
         getPoints();
@@ -1046,6 +1151,19 @@ siArray.forEach(function(si, ix)
               path.pop();
           }
           line.setPath(path);
+
+          if(grayLine)
+          {
+              grayLine = si.getGrayLine();
+              grayLine.setMap(null);
+              path = grayLine.getPath();
+              while(path.getLength() > 0)
+              {
+                  path.pop();
+              }
+              grayLine.setPath(path);
+          }
+
           //siArray.removeAt(ix);
           line = null;
           Arrow = si.getArrow();
