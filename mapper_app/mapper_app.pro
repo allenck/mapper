@@ -113,11 +113,13 @@ win32:{
 DISTFILES += \
     Resources/addBiDirectionalToRoutes.sql \
     Resources/recreateRouteComments.sql \
+    Resources/restructure_routes.sql \
     Resources/scripts \
     Resources/scripts/qwebchannel.js \
     Resources/GoogleMaps2.htm \
     Resources/GoogleMaps2b.htm \
     Resources/updateOneWay.sql \
+    Resources/updaterouteoneway.sql \
     Resources/white.png \
     Resources/orange.png \
     Resources/tram.png \

@@ -58,6 +58,15 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
    }
   }
   connect(ui->cbConnections, SIGNAL(currentIndexChanged(int)), this, SLOT(On_cbConnections_CurrentIndexChanged(int)));
+  connect(ui->rollback_toolButton, &QToolButton::clicked, [=]{
+   try{
+   SQL::instance()->RollbackTransaction("");
+   }
+   catch(Exception e)
+   {
+
+   }
+  });
 }
 
 QueryDialog::~QueryDialog()

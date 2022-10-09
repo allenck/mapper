@@ -58,6 +58,7 @@ var bGeocoderRequest = false;
 var User_MapType = null;
 console.log("GoogleMaps.js line 58!");
 
+
 var connected = false;
 //We use this function because connect statements resolve their target once, immediately
 //not at signal emission so they must be connected once the webViewBridge object has been added to the frame
@@ -309,7 +310,7 @@ return new google.maps.LatLng(rLat / dToRad, rLon / dToRad);
 }
 
 // class to create an arrow
-function myArrow(lLat, lLon, mLat, mLon, rLat, rLon, color)
+function myArrow(lLat, lLon, mLat, mLon, rLat, rLon, color, segmentId)
 {
     this.type = "myArrow";
     this.getInfo = function () {
@@ -317,12 +318,14 @@ function myArrow(lLat, lLon, mLat, mLon, rLat, rLon, color)
     }
     this.mLat = mLat;
     this.mLon = mLon;
+    var segment = segmentId;
     //alert("Arrow" + lLat+" "+ lLon+" "+  mLat+" "+  mLon+" "+  rLat+" "+  rLon+" "+  color);
     var polyPath = new Array();
     polyPath[0] = new google.maps.LatLng(lLat, lLon);
     polyPath[1] = new google.maps.LatLng(mLat, mLon);
     polyPath[2] = new google.maps.LatLng(rLat, rLon);
     var polygon = new google.maps.Polygon({map: map, paths: polyPath, strokeColor: color, fillColor: color, strokeWeight:1, fillOpacity: .75, strokeOpacity: .75});
+
 
     this.setMap = function(value){
         polygon.setMap(value);
@@ -336,7 +339,21 @@ function myArrow(lLat, lLon, mLat, mLon, rLat, rLon, color)
     this.getPath = function(){
         return polyPath;
     }
+    this.getSegment = function()
+    {
+     return segment;
+    }
+    // Select segment (click)
+    google.maps.event.addListener(polygon, "click", function(){
+//        alert("arrow clicked on " + segment);
+        selectSegment(segment);
+    });
+
 }
+
+var zoomIx;
+var zoomOffset;
+var offsets = [.5, .6, .7, .8, .9, 1.0];
 
 // Define a symbol using SVG path notation, with an opacity of 1.
 var lineSymbol = {
@@ -353,7 +370,6 @@ var tickSymbol =
     strokeOpacity: 1,
     strokeWeight:1,
     name:  "tickSymbol"
-
 };
 
 var singleTick =
@@ -366,14 +382,18 @@ var singleTick =
 
 var doubleTick =
 {
-    path: 'M -1.5,0 1.5,0 M 0.5,-1 0.5,1 M -0.5,-1 -0.5,1',
+    path: 'M -1.5,0 1.5,0 M 1.0,-1 1.0,1 M -1.0,-1 -1.0,1',
     strokeOpacity: 1,
     strokeWeight:1,
     name:  "doubleTick"
 };
 
+var pArray = ["M 0.5,-1 0.5,1 M -0.5,-1 -0.5,1", "M 0.6,-1 0.6,1 M -0.6,-1 -0.6,1",
+        "M 0.7,-1 0.7,1 M -0.7,-1 -0.7,1","M 0.8,-1 0.8,1 M -0.8,-1 -0.8,1",
+        "M 0.9,-1 0.9,1 M -0.9,-1 -0.9,1","M 1.0,-1 1.0,1 M -1.0,-1 -1.0,1"]
 var doubleLine = {
-    path: 'M 0.5,-1 0.5,1 M -0.5,-1 -0.5,1',
+    //path: 'M 0.5,-1 0.5,1 M -0.5,-1 -0.5,1',
+    path: "M 1.0,-1 1.0,1 M -1.0,-1 -1.0,1",
     strokeOpacity: 1,
     strokeWeight: 1,
     scale: 3,
@@ -381,7 +401,7 @@ var doubleLine = {
 };
 
 var lineLT = {
-    path: 'M -1.5,0 1.5,0  M 0.5,-1 0.5,1',
+    path: 'M -1.5,0 1.5,0  M 1.0,-1 1.0,1',
     strokeOpacity: 1,
     strokeWeight: 1,
     scale: 3,
@@ -389,14 +409,14 @@ var lineLT = {
 };
 
 var lineRT = {
-    path: 'M -1.5,0 1.5,0  M -0.5,-1 -0.5,1',
+    path: 'M -1.5,0 1.5,0  M -1.0,-1 -1.0,1',
     strokeOpacity: 1,
     strokeWeight: 1,
     scale: 3,
     name:  "lineRT"
 };
 var lineL = {
-    path: 'M 0.5,-1 0.5,1' ,
+    path: 'M 1.0,-1 1.0,1' ,
     strokeOpacity: 1,
     strokeWeight: 1,
     scale: 3,
@@ -404,7 +424,7 @@ var lineL = {
 };
 
 var lineR = {
-    path: 'M -0.5,-1 -0.5,1',
+    path: 'M -1.0,-1 -1.0,1',
     strokeOpacity: 1,
     strokeWeight: 1,
     scale: 3,
@@ -836,7 +856,15 @@ function initMap()
 
 function initialize()
 {
- initMap();
+    initMap();
+
+    google.maps.event.addListener(map, "zoom_changed", function() {
+     webViewBridge.displayZoom(map.getZoom());
+    });
+    zoomIx = map.getZoom()-17;
+    zoomOffset = offsets[zoomIx];
+    //alert("zoomOffset = " + zoomOffset);
+
 }
 
 function resizeMap()
@@ -1151,10 +1179,12 @@ siArray.forEach(function(si, ix)
               path.pop();
           }
           line.setPath(path);
+          line = null;
 
+          grayLine = si.getGrayLine();
           if(grayLine)
           {
-              grayLine = si.getGrayLine();
+
               grayLine.setMap(null);
               path = grayLine.getPath();
               while(path.getLength() > 0)
@@ -1162,10 +1192,10 @@ siArray.forEach(function(si, ix)
                   path.pop();
               }
               grayLine.setPath(path);
+              grayLine = null;
           }
 
           //siArray.removeAt(ix);
-          line = null;
           Arrow = si.getArrow();
           if(Arrow )
           {
@@ -1231,7 +1261,7 @@ if(infowindow !== null)
           try{
               if(si.segmentId && si.segmentId == segmentId)
               {
-                  si.setArrow ( new myArrow(lLat, lLon, mLat, mLon, rLat, rLon, si.getColor()));
+                  si.setArrow (  myArrow(lLat, lLon, mLat, mLon, rLat, rLon, si.getColor(), segmentId));
               }
           }
           catch (err)
@@ -1241,6 +1271,7 @@ if(infowindow !== null)
 
       });
   }
+
   // Clear all the lines from the map
   function clearAll()
   {
@@ -1257,6 +1288,19 @@ if(infowindow !== null)
           }
           line.setPath(path);
           line = null;
+
+          grayLine = si.getGrayLine();
+          if(grayLine)
+          {
+              grayLine.setMap(null);
+              path = grayLine.getPath();
+              while(path.getLength() > 0)
+              {
+                  path.pop();
+              }
+              grayLine.setPath(path);
+              grayLine = null;
+          }
           var oneWay = si.oneWay;
           Arrow = si.getArrow();
          // alert(Arrow.getInfo());
@@ -1383,7 +1427,7 @@ function deletePoint(pt)
  placeArrow(path);
 }
 
-function placeArrow(path)
+function placeArrow(path, segment)
 {
  if(path.getLength() > 1)
  {
@@ -1401,7 +1445,7 @@ function placeArrow(path)
   var brng = new bearing(path.getAt(len-1).lat(), path.getAt(len-1).lng(),path.getAt(len-2).lat(), path.getAt(len-2).lng() );
   var left = pointRadialDistance( new google.maps.LatLng(path.getAt(len-1).lat(), path.getAt(len-1).lng()), brng.getBearing()-15, .020);
   var right = pointRadialDistance( new google.maps.LatLng(path.getAt(len-1).lat(), path.getAt(len-1).lng()), brng.getBearing()+15, .020);
-  currSegment.setArrow(new myArrow(left.lat(), left.lng(), path.getAt(len-1).lat(), path.getAt(len-1).lng(), right.lat(), right.lng(), currSegment.getColor()));
+  currSegment.setArrow(new myArrow(left.lat(), left.lng(), path.getAt(len-1).lat(), path.getAt(len-1).lng(), right.lat(), right.lng(), currSegment.getColor(), currSegment.segmentId));
   }
  }
 }  // end placeArrow()

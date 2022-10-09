@@ -199,7 +199,7 @@ void SegmentView::addToRoute()
  else
  {
   SegmentInfo si = sql->getSegmentInfo(SegmentId);
-  parent->displaySegment(SegmentId, si.description, si.oneWay, si.oneWay == "N" ? "#00FF00" : "#045fb4", true);
+  parent->displaySegment(SegmentId, si.description, si.oneWay, si.oneWay == "N" ? "#00FF00" : "#045fb4", " ", true);
  }
  parent->routeDlg->setSegmentId(SegmentId); // do before setting route!
  int ix = parent->ui->cbRoute->currentIndex();

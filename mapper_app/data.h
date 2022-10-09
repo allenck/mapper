@@ -13,38 +13,6 @@
 
 class LatLng;
 class SegmentInfo;
-class RouteChangedEventArgs
-{
-public:
-    RouteChangedEventArgs()
-    {
-
-    }
-
-    RouteChangedEventArgs(QString type, qint32 s, qint32 tt)
-    {
-     typeOfChange = type;
-     routeSegment = s;
-     tractionType =tt;
-    }
-    RouteChangedEventArgs( qint32 r, QString n, qint32 s, qint32 tt, qint32 ck, QDate de, QString type)
-    {
-     routeNbr = r;
-     RouteName = n;
-     routeSegment = s;
-     tractionType = tt;
-     companyKey =ck;
-     dateEnd = de;
-     typeOfChange = type;
-    }
-    qint32 routeNbr;
-    QString RouteName;
-    qint32 routeSegment;
-    qint32 tractionType;
-    qint32 companyKey;
-    QDate dateEnd;
-    QString typeOfChange;
-};
 #if 0
 class segmentChangedEventArgs
 {
@@ -403,7 +371,7 @@ class SegmentInfo
  void movePoint(int ptNum, LatLng pt);
  void deletePoint(int ptnum);
  void checkTracks();
- void displaySegment(QString date, QString color, bool bClearFirst);
+ void displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst);
 
 };
 
@@ -514,5 +482,54 @@ struct routeComments
     LatLng pos;
     qint32 companyKey;
 };
+
+class RouteChangedEventArgs
+{
+public:
+    RouteChangedEventArgs()
+    {
+
+    }
+
+    RouteChangedEventArgs(RouteData rd, QString type)
+    {
+     typeOfChange = type;
+     this->rd = rd;
+     routeNbr = rd.route;
+     this->routeName = rd.name;
+     this->routeSegment = rd.lineKey;
+     tractionType = rd.tractionType;
+     companyKey =rd.companyKey;
+     dateEnd = rd.endDate;
+    }
+
+    RouteChangedEventArgs(QString type, qint32 s, qint32 tt)
+    {
+     typeOfChange = type;
+     routeSegment = s;
+     tractionType =tt;
+
+    }
+
+    RouteChangedEventArgs( qint32 r, QString n, qint32 s, qint32 tt, qint32 ck, QDate de, QString type)
+    {
+     routeNbr = r;
+     routeName = n;
+     routeSegment = s;
+     tractionType = tt;
+     companyKey =ck;
+     dateEnd = de;
+     typeOfChange = type;
+    }
+    qint32 routeNbr;
+    QString routeName;
+    qint32 routeSegment;
+    qint32 tractionType;
+    qint32 companyKey;
+    QDate dateEnd;
+    QString typeOfChange;
+    RouteData rd;
+};
+
 Q_DECLARE_METATYPE(RouteType)
 #endif // DATA_H

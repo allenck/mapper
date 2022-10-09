@@ -264,7 +264,7 @@ void SegmentInfo::checkTracks()
  }
 }
 
-void SegmentInfo::displaySegment(QString date, QString color, bool bClearFirst)
+void SegmentInfo::displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst)
 {
  QVariantList points, objArray;
  QList<RouteData> myArray ;
@@ -306,7 +306,7 @@ void SegmentInfo::displaySegment(QString date, QString color, bool bClearFirst)
  else if(routeType == Subway)
   dash = 3;
  objArray.clear();
- objArray << segmentId << routeNames<<description<<oneWay<<color<< tracks << dash << routeType << " " << pointList.count()*2 << points;
+ objArray << segmentId << routeNames<<description<<oneWay<<color<< tracks << dash << routeType << trackUsage << pointList.count()*2 << points;
  webViewBridge::instance()->processScript("createSegment", objArray);
 }
 

@@ -1,9 +1,13 @@
 BEGIN TRANSACTION;
 CREATE TEMPORARY TABLE `t_routes` (`Route`, `Name`, `StartDate`, `EndDate`, `LineKey`,
-   `OneWay`, `CompanyKey`, `tractionType`, `Direction`, `next`, `prev`,
+   `OneWay`, `trackUsage`, `CompanyKey`, `tractionType`, `Direction`, `next`, `prev`,
    `normalEnter`, `normalLeave`,
    `reverseEnter`, `reverseLeave`, `lastUpdate`);
-INSERT INTO `t_routes` (`Route`, `Name`, `StartDate`, `EndDate`, `LineKey`, `OneWay`,   `CompanyKey`, `tractionType`, `Direction`, `next`, `prev`, `normalEnter`,`normalLeave`, `reverseEnter`,   `reverseLeave`, `lastUpdate`) SELECT `Route`, `Name`, `StartDate`, `EndDate`, `LineKey`, `OneWay`, `CompanyKey`,`tractionType`,`Direction`, `next`, `prev`, `normalEnter`, `normalLeave`, `reverseEnter`,   `reverseLeave`, `lastUpdate` from `Routes`;
+INSERT INTO `t_routes` (`Route`, `Name`, `StartDate`, `EndDate`, `LineKey`, `OneWay`, `trackUsage`,
+   `CompanyKey`, `tractionType`, `Direction`, `next`, `prev`, `normalEnter`,
+   `normalLeave`, `reverseEnter`, `reverseLeave`, `lastUpdate`)
+ SELECT `Route`, `Name`, `StartDate`, `EndDate`, `LineKey`, `OneWay`, `trackUsage`, `CompanyKey`,`tractionType`,
+   `Direction`, `next`, `prev`, `normalEnter`, `normalLeave`, `reverseEnter`, `reverseLeave`, `lastUpdate` from `Routes`;
 DROP TABLE `Routes`;
 CREATE TABLE `Routes` (
                `Route` int(11) NOT NULL,
@@ -23,15 +27,16 @@ CREATE TABLE `Routes` (
                `reverseEnter` int(11) NOT NULL DEFAULT 0,
                `reverseLeave` int(11) NOT NULL DEFAULT 0,
                `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-               constraint pk PRIMARY key (`Route`,`Name`,`StartDate`,`EndDate`,`LineKey`),
+               constraint pk PRIMARY key (`Route`,`Name`,`StartDate`,`EndDate`,`LineKey`, `companyKey`,
+               `OneWay`, `trackUsage` ),
                CONSTRAINT `Routes_ibfk_1` FOREIGN KEY (`LineKey`) REFERENCES `Segments` (`SegmentId`),
                CONSTRAINT `Routes_ibfk_3` FOREIGN KEY (`CompanyKey`) REFERENCES `Companies` (`key`),
                CONSTRAINT `Routes_ibfk_4` FOREIGN KEY (`tractionType`) REFERENCES `TractionTypes` (`tractionType`),
                CONSTRAINT `Routes_ibfk_5` FOREIGN KEY (`Route`) REFERENCES `altRoute` (`route`));
-INSERT INTO `Routes` (`Route`, 'Name', `StartDate`, `EndDate`, `LineKey`, OneWay, `CompanyKey`,
+INSERT INTO `Routes` (`Route`, 'Name', `StartDate`, `EndDate`, `LineKey`, `OneWay`, `trackUsage`, `CompanyKey`,
                `tractionType`, `Direction`, `next`, `prev`, `normalEnter`, `normalLeave`, `reverseEnter`,
                `reverseLeave`, `lastUpdate`)
-SELECT `Route`, 'Name', `StartDate`, `EndDate`, `LineKey`, OneWay, `CompanyKey`,
+SELECT `Route`, 'Name', `StartDate`, `EndDate`, `LineKey`, `OneWay`, `trackUsage`, `CompanyKey`,
    `tractionType`, `Direction`, `next`, `prev`, `normalEnter`, `normalLeave`, `reverseEnter`,
    `reverseLeave`, `lastUpdate` from `t_Routes`;
 UPDATE Routes set OneWay =  (select oneway from segments where routes.linekey = segments.segmentid)

@@ -9050,6 +9050,7 @@ void SQL::checkTables(QSqlDatabase db)
     addColumn("Routes", "TrackUsage", "ENUM('N', 'B', 'R')");
    }
    // TODO: add Sql Server syntax
+   executeScript(":/restructure_routes.sql");
   }
 
   if(!doesColumnExist("RouteComments", "latitude"))

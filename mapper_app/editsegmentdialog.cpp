@@ -351,10 +351,9 @@ void EditSegmentDialog::On_btnSave_clicked()
  if (m_segmentStatus == "Y")
  {
  //displaySegment(si->SegmentId, si.description, si.oneWay, m_segmentColor, true);
-  si->displaySegment(ui->dtEnd->date().toString("yyyy/MM/dd"),m_segmentColor, true);
+  si->displaySegment(ui->dtEnd->date().toString("yyyy/MM/dd"),m_segmentColor, si->trackUsage, true);
  }
  fillSegments();
-
 }
 
 void EditSegmentDialog::On_segmentStatusSignal(QString txt, QString color)

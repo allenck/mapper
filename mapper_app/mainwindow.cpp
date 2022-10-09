@@ -801,7 +801,7 @@ void mainWindow::createActions()
     {
         m_bridge->processScript("clearPolyline", QString("%1").arg(segmentId));
         SegmentInfo si = sql->getSegmentInfo(segmentId);
-        displaySegment(segmentId, si.description, si.oneWay, /*ttColors[e.tractionType]*/getColor(rd.tractionType), true);
+        displaySegment(segmentId, si.description, si.oneWay, /*ttColors[e.tractionType]*/getColor(rd.tractionType), rd.trackUsage, true);
 
     }
  });
@@ -1301,7 +1301,22 @@ void mainWindow::btnDeleteSegment_Click()   //SLOT
     SegmentInfo sI;
     int ix = ui->cbSegments->currentIndex();
     //            sI = (segmentInfo)segmentInfoList[ix];
-    sI = (SegmentInfo)cbSegmentInfoList.at(ix);
+    //sI = (SegmentInfo)cbSegmentInfoList.at(ix);
+    int segmentId =  ui->cbSegments->currentData().toInt();
+    int row = -1;
+    for(int i = 0; i < cbSegmentInfoList.count(); i++)
+    {
+     if(cbSegmentInfoList.at(i).segmentId == segmentId)
+     {
+      row = i;
+      break;
+     }
+    }
+    if(row < 0)
+        return;
+    if(row >= cbSegmentInfoList.count())
+        return;
+    sI = (SegmentInfo)cbSegmentInfoList.at(row);
     if (sI.segmentId < 1)
     {
         //System.Media.SystemSounds.Beep.Play();
@@ -2382,13 +2397,13 @@ void mainWindow::btnSplit_Click()    // SLOT
   // redisplay the original altered segment
   ui->txtSegment->setText(sql->getSegmentDescription(segmentDlg.SegmentId()));
   //ui->chkOneWay->setChecked("Y"== sql->getSegmentOneWay(segmentDlg.SegmentId()));
-  displaySegment(segmentDlg.SegmentId(), ui->txtSegment->text(), sql->getSegmentOneWay(segmentDlg.newSegmentId()), "#b45f04", true);
+  displaySegment(segmentDlg.SegmentId(), ui->txtSegment->text(), sql->getSegmentOneWay(segmentDlg.newSegmentId()), "#b45f04", " ", true);
 
   // display the new segment
   ui->txtSegment->setText(sql->getSegmentDescription(segmentDlg.newSegmentId()));
   //ui->chkOneWay->setChecked("Y" == sql->getSegmentOneWay(segmentDlg.newSegmentId()));
 
-  displaySegment(segmentDlg.newSegmentId(), ui->txtSegment->text(), sql->getSegmentOneWay(segmentDlg.newSegmentId()), "#b45f04", false);
+  displaySegment(segmentDlg.newSegmentId(), ui->txtSegment->text(), sql->getSegmentOneWay(segmentDlg.newSegmentId()), "#b45f04", " ", false);
 
   ui->btnFirst->setEnabled(true);
   ui->btnNext->setEnabled(true);
@@ -2420,10 +2435,10 @@ void mainWindow::btnSplit_Click()    // SLOT
 /// <param name="oneWay"></param>
 /// <param name="color"></param>
 /// <param name="bClearFirst">true to clear the line first</param>
-void mainWindow::displaySegment(qint32 segmentId, QString segmentName, QString oneWay, QString color, bool bClearFirst)
+void mainWindow::displaySegment(qint32 segmentId, QString segmentName, QString oneWay, QString color, QString trackUsage, bool bClearFirst)
 {
     SegmentInfo si = sql->getSegmentInfo(segmentId);
-    si.displaySegment(ui->dateEdit->text(),color, bClearFirst);
+    si.displaySegment(ui->dateEdit->text(),color, trackUsage, bClearFirst);
     m_currPoint = 0;
     ui->lblPoint->setText(QString::number(m_currPoint));
 
@@ -2488,7 +2503,7 @@ void mainWindow::cbSegmentsSelectedValueChanged(qint32 index)
     }
 
 
-    displaySegment(m_SegmentId, ui->txtSegment->text(), sI.oneWay, sI.oneWay=="Y" ? "#00FF00" : "#045fb4", true);
+    displaySegment(m_SegmentId, ui->txtSegment->text(), sI.oneWay, sI.oneWay=="Y" ? "#00FF00" : "#045fb4", " ", true);
 #if 0
     // Display Start and end markers
     sI = sql->getSegmentInfo(m_SegmentId);
@@ -2826,7 +2841,7 @@ void mainWindow::updateIntersection(qint32 i, double newLat, double newLon)
   else
    movePoint(m_SegmentId, m_nbrPoints -1, newLat, newLon);
   //displaySegment(sd.SegmentId, sql->getSegmentDescription(si.SegmentId), oneWay, oneWay == "N" ? "#00FF00" : "#045fb4", true);
-  displaySegment(si.segmentId, si.description, si.oneWay, si.oneWay == "N" ? "#00FF00" : "#045fb4", true);
+  displaySegment(si.segmentId, si.description, si.oneWay, si.oneWay == "N" ? "#00FF00" : "#045fb4", " ",  true);
  }
  m_SegmentId = currSegment;
 }
@@ -3322,7 +3337,7 @@ void mainWindow::segmentChanged(qint32 changedSegment, qint32 newSegment)
     {
      SegmentInfo si = sql->getSegmentInfo(newSegment);
 
-     displaySegment(newSegment, si.description, si.oneWay, m_segmentColor, true);
+     displaySegment(newSegment, si.description, si.oneWay, m_segmentColor, " ", true);
     }
 }
 void mainWindow::segmentStatus(QString str, QString color)
@@ -3340,10 +3355,10 @@ void mainWindow::segmentDlg_routeChanged(RouteChangedEventArgs args)
         for(int i=0; i<routeList.count(); i++)
         {
             RouteData rd = (RouteData)routeList.at(i);
-            if (rd.route == args.routeNbr && rd.name == args.RouteName && args.dateEnd == rd.endDate)
+            if (rd.route == args.routeNbr && rd.name == args.routeName && args.dateEnd == rd.endDate)
             {
                 //cbRoutes.SelectedItem = rd;
-                        ui->cbRoute->setCurrentIndex(i);
+                ui->cbRoute->setCurrentIndex(i);
                 break;
             }
         }
@@ -3360,10 +3375,11 @@ void mainWindow::RouteChanged(RouteChangedEventArgs args)
 {
  //SQL sql;
  refreshRoutes();
+ RouteData rd = args.rd;
  for(int i=0; i < routeList.count(); i++)
  {
-  RouteData rd = routeList.at(i);
-  if(rd.route == args.routeNbr && args.RouteName == rd.name && rd.endDate == args.dateEnd)
+  RouteData rd1 = routeList.at(i);
+  if(rd1.route == args.routeNbr && args.routeName == rd1.name && rd1.endDate == args.dateEnd)
   {
    bCbRouteRefreshing = true;
    ui->cbRoute->setCurrentIndex(i);
@@ -3386,8 +3402,8 @@ void mainWindow::RouteChanged(RouteChangedEventArgs args)
 //        objArray[0] = e.SegmentId;
 //        webBrowser1.Document.InvokeScript("clearPolyline", objArray); // clears the old line
   m_bridge->processScript("clearPolyline", QString("%1").arg(args.routeSegment));
-  SegmentInfo si = sql->getSegmentInfo(args.routeSegment);
-  displaySegment(args.routeSegment, si.description, si.oneWay, /*ttColors[e.tractionType]*/getColor(args.tractionType), true);
+  //SegmentInfo si = sql->getSegmentInfo(args.routeSegment);
+  displaySegment(args.routeSegment, rd.name, rd.oneWay, /*ttColors[e.tractionType]*/getColor(args.tractionType), " ", true);
  }
  routeView->updateRouteView();
 }

@@ -1788,8 +1788,9 @@ void RouteDlg::btnAdd_Click()         // SLOT
  {
      int tractionType = _tractionList.at(ui->cbTractionType->currentIndex()).tractionType;
      //routeChanged(this, new routeChangedEventArgs(_routeNbr, ui->cbRouteName->currentText(), _SegmentId, /*cbTractionType.SelectedIndex + 1*/tractionType, companyKey, dateEnd.Value, btnAdd.Text == "Add" ? routeChangedType.Add : routeChangedType.Update));
-     RouteChangedEventArgs args =RouteChangedEventArgs(_routeNbr, ui->cbRouteName->currentText(), _SegmentId, /*cbTractionType.SelectedIndex + 1*/tractionType, companyKey, ui->dateEnd->date(), ui->btnAdd->text() == "Add" ? "Add" : "Update");
-     emit routeChangedEvent(args);
+//     RouteChangedEventArgs args =RouteChangedEventArgs(_routeNbr, ui->cbRouteName->currentText(), _SegmentId, /*cbTractionType.SelectedIndex + 1*/tractionType, companyKey, ui->dateEnd->date(), ui->btnAdd->text() == "Add" ? "Add" : "Update");
+    RouteChangedEventArgs args = RouteChangedEventArgs(_rd, ui->btnAdd->text() == "Add" ? "Add" : "Update");
+    emit routeChangedEvent(args);
  }
 
  //fillCompanies();
@@ -1799,6 +1800,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
  bAddMode = false;
 
 }
+
 void RouteDlg::checkDirection(QString routeDirection)
 {
     if (si.oneWay != "Y")
@@ -2216,6 +2218,8 @@ void RouteDlg::cbOneWay_checkedChanged(bool oneWay)
   ui->gbReverseEnter->setVisible(true);
   ui->gbReverseLeave->setVisible(true);
   ui->gbUsage->setVisible(false);
+  ui->rbLeft->setChecked(false);
+  ui->rbRight->setChecked(false);
  }
 
 }

@@ -51,5 +51,6 @@
         <file>scripts/opacityControl.js</file>
         <file>addBiDirectionalToRoutes.sql</file>
         <file>recreateRouteComments.sql</file>
+        <file>rollback.png</file>
     </qresource>
 </RCC>

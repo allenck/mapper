@@ -161,7 +161,7 @@ public:
     void moveRouteComment(int route, QString date, double latitude, double longitude, int companyKey);
 
     RouteViewTableModel *sourceModel;
-    void displaySegment(qint32 segmentId, QString segmentName, QString oneWay, QString color, bool bClearFirst);
+    void displaySegment(qint32 segmentId, QString segmentName, QString oneWay, QString color, QString trackUsage, bool bClearFirst);
     static QString pwd;
     static QString pgmDir;
 #ifndef USE_WEBENGINE

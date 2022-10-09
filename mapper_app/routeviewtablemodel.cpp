@@ -248,6 +248,10 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
 //    }
     if(s == "N" || s== "Y")
      si.oneWay = s;
+    if(s == "N")
+    {
+     si.trackUsage = " ";
+    }
     break;
    }
   case USAGE:
@@ -426,6 +430,8 @@ void RouteViewTableModel::commitChanges()
    SQL::instance()->updateSegmentDescription(si.segmentId, si.description, si.oneWay, si.tracks, si.length);
   }
 
+  if(si.oneWay == "N")
+   si.trackUsage = " ";
   if(siOld.trackUsage != si.trackUsage)
   {
    if(!SQL::instance()->updateRoute(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"), rd.lineKey, rd.next, rd.prev, si.trackUsage ))
