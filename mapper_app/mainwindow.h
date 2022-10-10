@@ -183,6 +183,7 @@ public slots:
     void refreshCompanies();
     void segmentStatus(QString str, QString color);
     void saveChanges();
+    void On_displayRoute(RouteData);
 
 private slots:
     void about();
@@ -243,7 +244,6 @@ private slots:
     void on_createKmlFile_triggered();
     void fillOverlayMenu();
     void queryOverlay();
-    void On_displayRoute(RouteData);
 
     // webViewBridge
     void addPoint(int pt, double lat, double lon);

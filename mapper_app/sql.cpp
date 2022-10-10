@@ -6587,7 +6587,11 @@ RouteData SQL::getRouteData(qint32 route, qint32 SegmentId, QString startDate, Q
 
  QString CommandText = "Select a.route, name, startDate, endDate, companyKey, tractionType,"
                        "routeAlpha, a.OneWay, a.TrackUsage "
-    " from Routes a  join altRoute b on a.route = b.route where a.route = " + QString("%1").arg(route) + " and lineKey = " + QString("%1").arg(SegmentId) +  " and endDate = '" + endDate + "'";
+                       " from Routes a "
+                       " join altRoute b on a.route = b.route"
+                       " where a.route = " + QString("%1").arg(route)
+                       + " and lineKey = " + QString("%1").arg(SegmentId)
+                       + " and endDate = '" + endDate + "'";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(CommandText);
  if(!bQuery)

@@ -147,13 +147,22 @@ void RouteDlg::setSegmentId(qint32 segmentid)
  }
 
  RouteData rd = sql->getRouteData(_routeNbr, segmentid, ui->dateStart->date().toString("yyyy/MM/dd"), ui->dateEnd->date().toString("yyyy/MM/dd"));
- ui->dateStart->setDate(rd.startDate);
- ui->dateEnd->setDate(rd.endDate);
- bSegmentChanging = false;
- //ui->txtRouteNbr->setFocus();
-
+ if(rd.lineKey < 0)
+ {
+  ui->btnAdd->setText(tr("Add"));
+  ui->btnAdd->setEnabled(true);
+ }
+ else
+ {
+  ui->dateStart->setDate(rd.startDate);
+  ui->dateEnd->setDate(rd.endDate);
+  bSegmentChanging = false;
+  //ui->txtRouteNbr->setFocus();
+ }
 
  CalculateDates();
+
+
 }
 
 void RouteDlg::setRouteNbr(qint32 rt)
@@ -1799,6 +1808,8 @@ void RouteDlg::btnAdd_Click()         // SLOT
  ui->btnAdd->setEnabled( false);
  bAddMode = false;
 
+ myParent->On_displayRoute(_rd);
+
 }
 
 void RouteDlg::checkDirection(QString routeDirection)
@@ -2028,6 +2039,7 @@ void RouteDlg::checkDirection(QString routeDirection)
  checkUpdate(__FUNCTION__);
 
 }
+
 void RouteDlg::rbNFromLeft_CheckedChanged(bool bChecked)
 {
     if(bChecked)
