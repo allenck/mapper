@@ -18,27 +18,30 @@ var image = ["http://maps.google.com/mapfiles/marker.png",
   "http://maps.google.com/mapfiles/shadow50.png",
   "http://www.google.com/mapfiles/arrow.png",
   "http://www.google.com/mapfiles/arrowshadow.png",
-  "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/greenblank.png",
-  "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/blueblank.png",
-  "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/redblank.png",
+  "http://maps.google.com/mapfiles/kml/paddle/grn-blank.png",
+  "http://maps.google.com/mapfiles/kml/paddle/blu-blank.png",
+  "http://maps.google.com/mapfiles/kml/paddle/pink-blank.png",
   "http://maps.google.com/mapfiles/shadow50.png",
   "http://acksoft.dyndns.biz/picturegallery/images/17.png",
   "http://acksoft.dyndns.biz/picturegallery/images/129.png",
-  "qrc:/yellowblank.png",
+  "http://maps.google.com/mapfiles/kml/paddle/ylw-blank.png",
   "http://hpstorage.acksoft.dyndns.biz/picturegallery/images/sbahn_small.png",
   "http://hpstorage.acksoft.dyndns.biz/picturegallery/images/ubahn_small.png",
-  "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/tram.png",
-  "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/tram.shadow.png",
-  "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/white.png",
-  "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/blue-red-blank.png",
-  "qrc:/orange.png",
-  "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/BVGTram.png",
-  "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/subway.png",
-  "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/subway.shadow.png",
+  "http:10.0.1.101:1080/public/map_tiles/tram.png",
+  "http:10.0.1.101:1080/public/map_tiles/tram.shadow.png",
+  //"http:10.0.1.101:1080/public/map_tiles/white.png",
+  "http://maps.google.com/mapfiles/kml/paddle/wht-blank.png",
+  "http:10.0.1.101:1080/public/map_tiles/blue-red-blank.png",
+  "http://maps.google.com/mapfiles/kml/paddle/orange-blank.png",
+  "http:10.0.1.101:1080/public/map_tiles/BVGTram.png",
+  "http:10.0.1.101:1080/public/map_tiles/subway.png",
+  "http:10.0.1.101:1080/public/map_tiles/subway.shadow.png",
+  "http://maps.google.com/mapfiles/kml/paddle/purple-blank.png"
 ];
 var images = {"default":0, "start":1, "end":2, "shadow":3, "arrow":4, "arrowShadow":5,
   "smallGreen":6, "smallBlue":7,"smallRed":8,"smallShadow":9,"stop":10,"resume":11,"smallYellow":12,
-  "sbahn":13, "ubahn":14, "tram":15, "tramshadow":16, "smallWhite":17, "blue-red":18, "orange":19, "bvgtram":20, "subway":21, "subwayshadow":22};
+  "sbahn":13, "ubahn":14, "tram":15, "tramshadow":16, "smallWhite":17, "blue-red":18, "orange":19, "bvgtram":20,
+  "subway":21, "subwayshadow":22, "purple":23};
 var marker = null;
 var selectedLine = null;
 var selectedLineClr = "#FF0000";
@@ -208,7 +211,7 @@ function Get_User_MapType(tile, zoom)
 {
 var ymax = 1 << zoom;
 var y = ymax - tile.y -1;
-return "http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/" + userMap +"/"  +zoom+"/"+tile.x+"/"+tile.x+"_"+y+"_"+zoom+".png";
+return "http:10.0.1.101:1080/public/map_tiles/" + userMap +"/"  +zoom+"/"+tile.x+"/"+tile.x+"_"+y+"_"+zoom+".png";
 }
 
 function setUserMap(map, title)
@@ -1928,7 +1931,7 @@ function getStationMarkerIconType(stationKey)
  {
   if(index >= count)
    return rVal;
-  if(element && element != 'undefined' && element.stationKey == stationKey)
+  if(element && element != 'undefined' && element.stationKey === stationKey)
   {
    //alert("icontype = " + element.typeIcon);
    rVal =  element.typeIcon;
@@ -1937,6 +1940,7 @@ function getStationMarkerIconType(stationKey)
  });
  return rVal;
 }
+
 function displayStationMarker(stationKey, bDisplay)
 {
  if(!stationArray)
@@ -2372,10 +2376,12 @@ function showRouteComment(bDisplay)
   if(bDisplay)
   {
       infowindow.setMap(map);
+
   }
   else
   {
      infowindow.setMap();
+     infowindow.marker.setMap();
   }
  }
 }
@@ -2395,8 +2401,8 @@ function displayRouteComment(lat, lon, HTMLText, route, date, companyKey)
 
  // infowindow = new google.maps.InfoWindow({content:date+HTMLText, position:new google.maps.LatLng(lat, lon)}, 'return 0');
  infowindow = new google.maps.InfoWindow({content:date+HTMLText, maxwidth: 70}/*, 'return 0'*/);
- var icon = {url: "qrc:/white.png"};
- marker = new google.maps.Marker({
+ var icon = image[images.purple];
+ this.marker = new google.maps.Marker({
        position: new google.maps.LatLng(lat, lon),
        map: map,
        icon: icon,
@@ -2413,14 +2419,14 @@ function displayRouteComment(lat, lon, HTMLText, route, date, companyKey)
  infowindow.lon = lon;
  infowindow.companyKey = companyKey
 
- google.maps.event.addListener(marker, "dragend", function(pt) {
+ google.maps.event.addListener(this.marker, "dragend", function(pt) {
   //window.external.SetDebug("drag end " + pt.latLng.lat() + ", " + pt.latLng.lng());
   webViewBridge.moveRouteComment(infowindow.route, infowindow.date, pt.latLng.lat(), pt.latLng.lng(), infowindow.companyKey);
  })
  google.maps.event.addListener(infowindow, "closeclick", function(){
-     marker.setVisible(false);
+     this.marker.setVisible(false);
  })
- infowindow.open(map, marker);
+ infowindow.open(map, this.marker);
  // })
  return 0;
 }

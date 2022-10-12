@@ -155,13 +155,16 @@ INCLUDEPATH += $$PWD/'../../../../Program Files/Sqlite3_3_13/src'
 DEPENDPATH += $$PWD/'../../../../Program Files/Sqlite3_3_13/src'
 
 FORMS += \
-    addgeoreferenceddialog.ui
+    addgeoreferenceddialog.ui \
+    ui/replacesegmentdialog.ui
 
 HEADERS += \
     addgeoreferenceddialog.h \
+    ui/replacesegmentdialog.h \
     ui/splitsegmentdlg.h
 
 SOURCES += \
     addgeoreferenceddialog.cpp \
+    ui/replacesegmentdialog.cpp \
     ui/splitsegmentdlg.cpp
 

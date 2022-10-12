@@ -1862,18 +1862,12 @@ void RouteDlg::checkDirection(QString routeDirection)
           siReverse.description = SegmentDescription(si.description).ReverseDescription() + " (1 way) " +  siReverse.bearing.strDirection();
 
           bool bAlreadyExists = false;
+          seq =0;
           siReverse.segmentId = sql->addSegment(siReverse.description, "Y", si.tracks, siReverse.routeType, siReverse.pointList, & bAlreadyExists);
           if (siReverse.segmentId != -1 && !bAlreadyExists)
           {
-              myArray = sql->getSegmentData(si.segmentId);
-              seq = 0;
-              //foreach (segmentData sd in myArray)
-              for(int i =0; i < myArray.count()-1; i++)
-              {
-                  SegmentData sd = myArray.at(i);
-                  sql->addPoint(seq, siReverse.segmentId, sd.endLat, sd.endLon, sd.startLat, sd.startLon, sd.streetName);
-                  seq++;
-              }
+              SegmentData sd = sql->getSegmentData(si.segmentId);
+              sql->addPoint(seq, siReverse.segmentId, sd.endLat, sd.endLon, sd.startLat, sd.startLon, sd.streetName);
           }
           int ix = ui->cbSegments->currentIndex();
           if (ix >= 0)
@@ -2232,6 +2226,8 @@ void RouteDlg::cbOneWay_checkedChanged(bool oneWay)
   ui->gbUsage->setVisible(false);
   ui->rbLeft->setChecked(false);
   ui->rbRight->setChecked(false);
+  if(si.tracks == 2)
+   ui->gbUsage->setVisible(true);
  }
 
 }

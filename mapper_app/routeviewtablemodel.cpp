@@ -419,8 +419,8 @@ void RouteViewTableModel::commitChanges()
   RouteData rd = SQL::instance()->getRouteData(route, si.segmentId, si.startDate, si.endDate);
   if(rd.route <= 0)
   {
-      qDebug()<< "route data not found";
-      qDebug() << "route="+ QString("%1").arg(route)+ " segmentId="+ QString("%1").arg(siOld.segmentId)+ " "+ siOld.startDate + " "+siOld.endDate;
+      qDebug()<< "route data not found:";
+      qDebug() << " route="+ QString("%1").arg(route)+ " segmentId="+ QString("%1").arg(siOld.segmentId)+ " "+ siOld.startDate + " "+siOld.endDate;
       return;
   }
 

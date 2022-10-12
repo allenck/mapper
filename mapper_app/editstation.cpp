@@ -150,23 +150,23 @@ void editStation::setStationId(StationInfo sti)
       ui->txtGeodbLocId->setText(QString("%1").arg(sti.geodb_loc_id));
   ui->dateStart->setDateTime( sti.startDate);
   ui->dateEnd->setDateTime(sti.endDate);
-  QList<SegmentData> pointList = sql->getSegmentData(_segmentId);
-  if (pointList.isEmpty())
-      _pt = 0;
-  else
-  {
-   _pt = 0;
-   //foreach (segmentData sd in pointList)
-   for(int i=0; i < pointList.count(); i ++)
-   {
-    SegmentData sd = pointList.at(i);
-    if (_latLng ==  LatLng(sd.startLat, sd.startLon))
-    {
-     break;
-    }
-    _pt++;
-   }
-  }
+//  QList<SegmentData> pointList = sql->getSegmentData(_segmentId);
+//  if (pointList.isEmpty())
+//      _pt = 0;
+//  else
+//  {
+//   _pt = 0;
+//   //foreach (segmentData sd in pointList)
+//   for(int i=0; i < pointList.count(); i ++)
+//   {
+//    SegmentData sd = pointList.at(i);
+//    if (_latLng ==  LatLng(sd.startLat, sd.startLon))
+//    {
+//     break;
+//    }
+//    _pt++;
+//   }
+//  }
   markerType = sti.markerType;
   ui->cbIcons->setCurrentIndex(ui->cbIcons->findData(sti.markerType));
   ui->cbIcons->setCurrentIndex(ui->cbIcons->findData(markerType));
@@ -250,7 +250,7 @@ void editStation::setRadioButtons()
     }
 
     // closest point check
-    sd = sql->getSegmentData(_pt, _segmentId);
+    sd = sql->getSegmentData(/*_pt,*/ _segmentId);
     sti = sql->getStationAtPoint( LatLng(sd.startLat, sd.startLon));
     if (sti.stationKey >= 0)
         ui->rbClosestPoint->setEnabled(false);
@@ -280,23 +280,24 @@ void editStation::btnOK_Click()
    if (sql->Distance(si.startLat, si.startLon, _latLng.lat(), _latLng.lon()) <
            sql->Distance(si.endLat, si.endLon, _latLng.lat(), _latLng.lon()))
    {
-    _latLng = LatLng(si.startLat, si.startLon);
-    sd = sql->getSegmentData(0, _segmentId);
-    _lineSegmentId = sd.key;
-   }
-   else
-   {
-    _latLng =  LatLng(si.endLat, si.endLon);
-    sd = sql->getSegmentData(si.lineSegments - 1, _segmentId);
-    _lineSegmentId = sd.key;
+//    _latLng = LatLng(si.startLat, si.startLon);
+//    sd = sql->getSegmentData(0, _segmentId);
+//    _lineSegmentId = sd.key;
+//   }
+//   else
+//   {
+//    _latLng =  LatLng(si.endLat, si.endLon);
+//    sd = sql->getSegmentData(si.lineSegments - 1, _segmentId);
+//    _lineSegmentId = sd.key;
+    sd = sql->getSegmentData(_segmentId);
    }
   }
   else if (ui->rbClosestPoint->isChecked())
   {
-   sd = sql->getSegmentData(_pt, _segmentId);
+   sd = sql->getSegmentData(/*_pt,*/ _segmentId);
    //_latLng = new LatLng(sd.startLat, sd.startLon);
    //sd = sql->getSegmentData(_pt, _segmentId);
-   _lineSegmentId = sd.key;
+   _lineSegmentId = sd.SegmentId;
    if (sql->Distance(si.startLat, si.startLon, _latLng.lat(), _latLng.lon()) <
            sql->Distance(si.endLat, si.endLon, _latLng.lat(), _latLng.lon()))
        _latLng =  LatLng(sd.startLat, sd.startLon);

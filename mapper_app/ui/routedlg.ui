@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>502</width>
+    <width>506</width>
     <height>490</height>
    </rect>
   </property>
@@ -21,6 +21,9 @@
   <layout class="QGridLayout" name="gridLayout">
    <item row="7" column="0">
     <widget class="QCheckBox" name="cbOneWay">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click if this route segment is one way.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>One Way</string>
      </property>
@@ -39,6 +42,9 @@
       <font>
        <pointsize>9</pointsize>
       </font>
+     </property>
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The direction that this route segment heads. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="title">
       <string>Direction:</string>
@@ -359,6 +365,9 @@
    </item>
    <item row="7" column="1" colspan="4">
     <widget class="QGroupBox" name="gbUsage">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the direction of travel is the same as the definition of the segement, select &amp;quot;Right&amp;quot; else select &amp;quot;L&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="title">
       <string>Usage</string>
      </property>

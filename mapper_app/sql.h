@@ -40,11 +40,10 @@ public:
     QList<TerminalInfo> getTerminalInfoUsingSegment(int segmentId);
     QString getAlphaRoute(qint32 route, qint32 company);
     QList<tractionTypeInfo> getTractionTypes();
-    Q_DECL_DEPRECATED QList<SegmentData> getSegmentData(qint32 SegmentId);
     QList<SegmentInfo> getSegmentInfo();
     SegmentInfo getSegmentInfo(qint32 segmentId);
     SegmentInfo getSegmentInfo(qint32 segmentId, bool bSuppressPrompt);
-    Q_DECL_DEPRECATED SegmentData getSegmentData(qint32 pt, qint32 SegmentId);
+    SegmentData getSegmentData(qint32 SegmentId);
     QList<SegmentInfo> getRouteSegmentsInOrder2(qint32 route, QString name, QString date);
     QList<RouteData> getRoutes(qint32 segmentid, QString date );
     QList<LatLng>  GetSegmentPoints(qint32 SegmentId);
@@ -82,11 +81,16 @@ public:
     qint32 addAltRoute(QString routeAlpha, QString routePrefix);
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate, QString routeStartDate, QString routeEndDate);
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate);
-    bool addSegmentToRoute(RouteData rd,SegmentInfo);
-    bool addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId,
-        qint32 companyKey, qint32 tractionType, QString direction, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString oneWay, QString trackUsage);
-    bool addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId,
-        qint32 companyKey, qint32 tractionType, QString direction, qint32 next, qint32 prev, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString oneWay, QString trackUsage);
+    bool addSegmentToRoute(RouteData rd);
+    QT_DEPRECATED bool addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate,
+                           qint32 SegmentId, qint32 companyKey, qint32 tractionType, QString direction,
+                           qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave,
+                           QString oneWay, QString trackUsage);
+    bool addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate,
+                           qint32 SegmentId, qint32 companyKey, qint32 tractionType, QString direction,
+                           qint32 next, qint32 prev,
+                           qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave,
+                           QString oneWay, QString trackUsage);
     qint32 getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * bAlphaRoute, int companyKey);
     bool updateTerminals(TerminalInfo ti);
     bool updateTerminals(qint32 route, QString name, QString startDate, QString endDate, qint32 startSegment, QString startWhichEnd, qint32 endSegment, QString endWhichEnd);
@@ -177,7 +181,9 @@ public:
     bool deleteAndReplaceSegmentWith(int segmentId1, int segmentId2);
     bool updateSegmentDates(SegmentInfo* si);
     QList<SegmentData> getUnusedSegments();
-
+    bool replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegments);
+signals:
+    void details(QString);
 private:
     SQL();
     static SQL* _instance;

@@ -26,40 +26,6 @@ public:
     qint32 newSegment;
 };
 #endif
-class RouteData
-{
-
-public:
-    //explicit routeData(QObject *parent = 0);
-    RouteData();
-    qint32 route;
-    QString alphaRoute;
-    //qint32 baseRoute;
-    QString name;
-    QDate defaultDate;
-    QDate startDate;
-    QDate endDate;
-    qint32 companyKey;
-    qint32 lineKey;
-    qint32 tractionType;
-    QString direction;
-    qint32 normalEnter;
-    qint32 normalLeave;
-    qint32 reverseEnter;        // Not defined for one Way
-    qint32 reverseLeave;        // Not defined for one Way
-    QString oneWay;
-    QString trackUsage;
-    int next, prev;
-
-    QString toString();
-    ~RouteData();
-    RouteData(const RouteData&);
-signals:
-
-public slots:
-
-};
-
 enum RouteType { Surface, SurfacePRW, RapidTransit, Subway, Rail, Incline, Other };
 static bool to_enum(int n)
 {
@@ -78,29 +44,154 @@ static bool to_enum(int n)
  }
 }
 
+
+class Bearing
+{
+ private:
+  double R; // RADIUS OF THE EARTH IN KM
+
+  double dToRad;
+  double lat1;
+  double lon1;
+  double lat2;
+  double lon2;
+  double dLat;
+  double dLon;
+  double brng;
+  QStringList strNormal;
+  QStringList strReverse;
+  QString _strDirection;
+  QList<qint32> reverseDirection;
+  qint32 direction;
+  double d; // distance
+ public:
+ Bearing();
+
+ Bearing(LatLng start, LatLng end);
+ /// <summary>
+ /// Constructor
+ /// </summary>
+ /// <param name="startLat"></param>
+ /// <param name="startLon"></param>
+ /// <param name="endLat"></param>
+ /// <param name="endLon"></param>
+ Bearing(double startLat, double startLon, double endLat, double endLon);
+private:
+ void common();
+ void calculate();
+public:
+ qint32 getDirection()
+ {
+     return direction;
+ }
+ qint32 getReverseDirection()
+ {
+     return reverseDirection[direction];
+ }
+ double getBearing()
+ {
+  return brng;
+ }
+ /// <summary>
+ /// gets distance in km
+ /// </summary>
+ double Distance() {return d;}
+ /// <summary>
+ /// gets the direction string, e.g. "N", "NE", etc.
+ /// </summary>
+ QString strDirection()
+ {
+  if(direction < 0 || direction > 7)
+   return "?";
+  return strNormal.at(direction);
+ }
+ /// <summary>
+ ///  gets the reverse direction string, e.g. "S", "SW", etc.
+ /// </summary>
+ QString strReverseDirection()
+ {
+  if(direction < 0 || direction > 7)
+   return "?";
+  return strReverse.at(direction);
+ }
+ /// <summary>
+ /// set a direction string, e.g. "N", "NE", etc.
+ /// </summary>
+ void DirectionString(QString value)
+ {
+     _strDirection = value;
+ }
+ /// <summary>
+ /// return the reverse direction for DirectionString
+ /// </summary>
+ QString ReverseDirectionString()
+ {
+     int i;
+     for (i = 0; i < strNormal.size(); i++)
+     {
+         if (_strDirection == strNormal[i])
+             return strReverse[i];
+     }
+     return "";
+ }
+};
 class SegmentData
 {
     public:
         //explicit segmentData(QObject *parent = 0);
         SegmentData();
-        SegmentData(qint32 Pt, qint32 SId);
-        qint32 key;
         qint32 SegmentId;
-        qint32 sequence;
+        qint32 tracks;
+        RouteType type;
         double startLat, startLon, endLat, endLon;
-        double distance;
+        double length;
+        int points;
         QString streetName;
         QString description;
-        QDateTime startDate;
-        QDateTime endDate;
-        RouteType routeType;
-        QString whichEnd;
-        qint32 endSegment;
-        qint32 route;
-        QString alphaRoute;
-        bool oneWay;
-        int tracks;
+        QDate startDate;
+        QDate endDate;
+        QString direction;
+        Bearing bearing;
 };
+
+class RouteData
+{
+
+public:
+    //explicit routeData(QObject *parent = 0);
+    RouteData();
+    qint32 route;
+    QString alphaRoute;
+    QString name;
+    QDate defaultDate;
+    QDate startDate;
+    QDate endDate;
+    qint32 companyKey;
+    qint32 lineKey;
+    qint32 tractionType;
+    QString direction;
+    qint32 normalEnter;
+    qint32 normalLeave;
+    qint32 reverseEnter;        // Not defined for one Way
+    qint32 reverseLeave;        // Not defined for one Way
+    QString oneWay;
+    QString trackUsage;
+    int next, prev;
+    LatLng startLatLng;
+    LatLng endLatLng;
+    SegmentData* sd = nullptr;
+    Bearing* bearing = nullptr;
+
+    QString toString();
+    ~RouteData();
+    RouteData(const RouteData&);
+signals:
+
+public slots:
+
+};
+
+
 
 class segmentGroup
 {
@@ -117,7 +208,7 @@ class segmentGroup
         qint32	tractionType;
         RouteType routeType;
         double startLat, startLon, endLat, endLon;
-        Q_DECL_DEPRECATED QList<SegmentData> data ;      // array of segmentdata objects
+        QList<SegmentData> data ;      // array of segmentdata objects
         QList<LatLng> points;
         ~segmentGroup();
 };
@@ -200,96 +291,6 @@ class tractionTypeInfo
         }
 };
 
-class Bearing
-{
-	private:
-  double R; // RADIUS OF THE EARTH IN KM
-
-  double dToRad;
-  double lat1;
-  double lon1;
-  double lat2;
-  double lon2;
-  double dLat;
-  double dLon;
-  double brng;
-  QStringList strNormal;
-  QStringList strReverse;
-  QString _strDirection;
-  QList<qint32> reverseDirection;
-  qint32 direction;
-  double d; // distance
-	public:
- Bearing();
-
- Bearing(LatLng start, LatLng end);
- /// <summary>
- /// Constructor
- /// </summary>
- /// <param name="startLat"></param>
- /// <param name="startLon"></param>
- /// <param name="endLat"></param>
- /// <param name="endLon"></param>
- Bearing(double startLat, double startLon, double endLat, double endLon);
-private:
- void common();
- void calculate();
-public:
- qint32 getDirection()
- {
-     return direction;
- }
- qint32 getReverseDirection()
- {
-     return reverseDirection[direction];
- }
- double getBearing()
- {
-  return brng;
- }
- /// <summary>
- /// gets distance in km
- /// </summary>
- double Distance() {return d;}
- /// <summary>
- /// gets the direction string, e.g. "N", "NE", etc.
- /// </summary>
- QString strDirection()
- {
-  if(direction < 0 || direction > 7)
-   return "?";
-  return strNormal.at(direction);
- }
- /// <summary>
- ///  gets the reverse direction string, e.g. "S", "SW", etc.
- /// </summary>
- QString strReverseDirection()
- {
-  if(direction < 0 || direction > 7)
-   return "?";
-  return strReverse.at(direction);
- }
- /// <summary>
- /// set a direction string, e.g. "N", "NE", etc.
- /// </summary>
- void DirectionString(QString value)
- {
-     _strDirection = value;
- }
- /// <summary>
- /// return the reverse direction for DirectionString
- /// </summary>
- QString ReverseDirectionString()
- {
-     int i;
-     for (i = 0; i < strNormal.size(); i++)
-     {
-         if (_strDirection == strNormal[i])
-             return strReverse[i];
-     }
-     return "";
- }
-};
 
 class SegmentInfo
 {

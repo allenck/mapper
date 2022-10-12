@@ -138,7 +138,8 @@ bool SplitSegmentDlg::processChanges()
  SQL::instance()->BeginTransaction("splitSegment");
 
  bool exists = false;
- int newSegmentId = SQL::instance()->addSegment(siNew.description, siNew.oneWay, siNew.tracks, siNew.routeType, siNew.pointList, &exists, true);
+ int newSegmentId = SQL::instance()->addSegment(siNew.description, siNew.oneWay, siNew.tracks, siNew.routeType,
+                                                siNew.pointList, &exists, true);
  if(exists || newSegmentId <= 0)
  {
   SQL::instance()->RollbackTransaction("splitSegment");
@@ -170,7 +171,9 @@ bool SplitSegmentDlg::processChanges()
     }
     // remainder of route segment > solit date, add new segment to route
     siNew.endDate = rd.endDate.toString("yyyy/MM/dd");
-    if(!SQL::instance()->addSegmentToRoute(rd, siNew))
+    rd.lineKey = siNew.segmentId;
+
+    if(!SQL::instance()->addSegmentToRoute(rd))
     {
      SQL::instance()->RollbackTransaction("splitSegment");
      return false;

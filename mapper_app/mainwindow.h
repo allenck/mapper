@@ -303,6 +303,7 @@ private:
     QAction *addSegmentAct;
     QAction *deleteRouteAct;
     QAction *updateRouteAct;
+    QAction *replaceSegments;
     QAction *updateTerminalsAct;
     //QAction *displaySegmentAct;
     QAction* addSegmentToRouteAct;

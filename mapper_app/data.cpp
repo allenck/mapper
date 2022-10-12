@@ -89,6 +89,7 @@ RouteData::RouteData()
  companyKey = -1;
  lineKey = -1;
  trackUsage = " ";
+ sd = new SegmentData();
 }
 
 RouteData::~RouteData()
@@ -116,6 +117,8 @@ RouteData::RouteData(const RouteData& o)
  next= o.next;
  prev= o.prev;
  trackUsage = o.trackUsage;
+ sd = o.sd;
+ bearing = o.bearing;
 }
 
 QString RouteData::toString()
@@ -140,25 +143,12 @@ segmentGroup::~segmentGroup()
 //}
 SegmentData::SegmentData()
 {
- key = -1;
  SegmentId = -1;
- sequence = -1;
  startLat = startLon = endLat = endLon=0;
- distance = 0;
+ length = 0;
  streetName = "";
- oneWay = false;
 }
 
-SegmentData::SegmentData(qint32 Pt, qint32 SId)
-{
- key = -1;
- SegmentId = SId;
- sequence = Pt;
- startLat = startLon = endLat = endLon = 0;
- distance = 0;
- streetName = "";
- oneWay = false;
-}
 
 RouteInfo::RouteInfo()
 {

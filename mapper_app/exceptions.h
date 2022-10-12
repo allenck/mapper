@@ -84,8 +84,23 @@ public:
  {name = "Exception";}
  Exception(Exception* exception) : Throwable(exception) {name = "Exception";}
  Exception(Throwable* exception) : Throwable(exception) {name = "Exception";}
-
 };
 
+class DupSegmentException : public Exception
+{
+ public:
+  DupSegmentException(QString msg) : Exception(msg) {name = "DupSegment";}
+};
+
+class IllegalArgumentException : public Exception
+{
+ public:
+  IllegalArgumentException(QString msg) : Exception(msg) {name = "IllegalArgument";}
+};
+class RecordNotFoundException : public Exception
+{
+ public:
+  RecordNotFoundException(QString msg) : Exception(msg) {name = "IllegalArgument";}
+};
 
 #endif // EXCEPTIONS_H

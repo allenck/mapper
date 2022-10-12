@@ -47,6 +47,7 @@
 #include <QApplication>
 #include <QProcess>
 #include "sql.h"
+#include "replacesegmentdialog.h"
 
 QString mainWindow::pwd = "";
 QString mainWindow::pgmDir = "";
@@ -756,6 +757,13 @@ void mainWindow::createActions()
  updateRouteAct->setStatusTip(tr("Update route information "));
  connect(updateRouteAct, SIGNAL(triggered()), this, SLOT(updateRoute()));
 
+ replaceSegments = new QAction(tr("Replace segments"),this);
+ replaceSegments->setToolTip(tr("Replace list of segments with new list of segments."));
+ connect(replaceSegments, &QAction::triggered, [=]{
+  ReplaceSegmentDialog* dlg = new ReplaceSegmentDialog();
+  dlg->exec();
+ });
+
  exportRouteAct = new QAction(tr("Export route"),this);
  exportRouteAct->setStatusTip(tr("Export specific route information "));
  connect(exportRouteAct, SIGNAL(triggered()), this, SLOT(exportRoute()));
@@ -1060,6 +1068,7 @@ void mainWindow::cbRoute_customContextMenu( const QPoint& )
     cbRouteMenu.addAction(routeCommentsAct);
     cbRouteMenu.addAction(splitRouteAct);
     cbRouteMenu.addAction(updateRouteAct);
+    cbRouteMenu.addAction(replaceSegments);
     cbRouteMenu.addAction(exportRouteAct);
     cbRouteMenu.addAction(updateTerminalsAct);
     updateTerminalsAct->setEnabled(routeView->isSequenced());
@@ -1709,6 +1718,15 @@ default:
    {
     rc = sql->getRouteComment(0, dt, -1);
    }
+   if(rc.ci.comments.isEmpty())
+   {
+    rc = sql->getNextRouteComment(m_routeNbr, dt, -1);
+    if(rc.infoKey < 0)
+    {
+     rc = sql->getNextRouteComment(0, dt, -1);
+    }
+
+   }
    if(rc.pos.lat() && rc.pos.lon())
    {
     infoLat = rc.pos.lat();
@@ -1910,13 +1928,9 @@ void mainWindow::segmentSelected(qint32 pt, qint32 SegmentId)
  //txtSegment.Text = si.description;
  ui->txtSegment->setText(si.description);
  ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(si.pointList.count()));
- ui->cbSegments->findText(si.toString(), Qt::MatchExactly);
- //txtOneWay.Text = si.oneWay;
-// if(si.oneWay == "Y")
-//     ui->chkOneWay->setChecked(true);
-// else
-//     ui->chkOneWay->setChecked(false);
- //getArray();
+ //ui->cbSegments->findText(si.toString(), Qt::MatchExactly);
+ int ix = ui->cbSegments->findData(SegmentId);
+ ui->cbSegments->setCurrentIndex(ix);
  m_points = si.pointList;
  m_nbrPoints = m_points.size();
 
@@ -1955,11 +1969,11 @@ void mainWindow::segmentSelected(qint32 pt, qint32 SegmentId)
      m_bridge->processScript("geocoderRequest", QString("%1").arg(m_latitude,0,'f',8)+ "," + QString("%1").arg(m_longitude,0,'f',8));
  //m_bridge->processScript("setCenter", QString("%1").arg(m_latitude,0,'f',8)+ "," + QString("%1").arg(m_longitude,0,'f',8));
 
- qint32 ix =         ui->cbRoute->currentIndex();
- if (ix >= 0)
+ qint32 irx =         ui->cbRoute->currentIndex();
+ if (irx >= 0)
  {
   RouteData rd = RouteData();
-  rd = (RouteData)routeList.at(ix);
+  rd = (RouteData)routeList.at(irx);
   if(routeDlg)
    routeDlg->setRouteData(rd);
 
@@ -3567,7 +3581,8 @@ void mainWindow::moveStationMarker(qint32 stationKey, qint32 segmentId, double l
   int stationKey = sql->addStation(sti.stationName,LatLng(sti.latitude, sti.longitude),segmentId,si.startDate,si.endDate,sti.geodb_loc_id, sti.infoKey,si.routeType,sti.markerType,sti.point);
   commentInfo ci = sql->getComments(sti.infoKey);
   QVariantList objArray;
-  objArray << lat<< lon << (bDisplayStationMarkers?true:false)<<segmentId<<sti.stationName<<stationKey<<sti.infoKey<<ci.comments<<sti.markerType;
+  objArray << lat<< lon << (bDisplayStationMarkers?true:false)<<segmentId<<sti.stationName
+           <<stationKey<<sti.infoKey<<ci.comments<<sti.markerType;
   m_bridge->processScript("addStationMarker",objArray);
   // the Javascript will call this function again with the new stationKey
   stationView->changeStation("move", sti);
