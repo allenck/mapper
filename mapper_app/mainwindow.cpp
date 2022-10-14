@@ -272,9 +272,26 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   connect(ui->sbRoute, SIGNAL(actionTriggered(int)), this,  SLOT(sbRouteTriggered(int)));
   connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbrLeave()) );
   connect(ui->sbTracks, SIGNAL(valueChanged(int)), this, SLOT(sbTracks_valueChanged(int)));
-  connect(ui->rbSingle, SIGNAL(toggled(bool)), this, SLOT(refreshSegmentCB()));
-  connect(ui->rbDouble, SIGNAL(toggled(bool)), this, SLOT(refreshSegmentCB()));
-  connect(ui->rbBoth, SIGNAL(toggled(bool)), this, SLOT(refreshSegmentCB()));
+  connect(ui->rbSingle, &QRadioButton::clicked, [=]{
+   refreshSegmentCB();
+  });
+  connect(ui->rbDouble, &QRadioButton::clicked, [=]{
+   refreshSegmentCB();
+  });
+  connect(ui->rbBoth, &QRadioButton::clicked, [=]{
+   refreshSegmentCB();
+  });
+
+  QSortFilterProxyModel* proxy = new QSortFilterProxyModel(ui->cbStreets);
+  proxy->setSourceModel(ui->cbStreets->model());
+  // combo's current model must be reparented,
+  // otherwise QComboBox::setModel() will delete it
+  ui->cbStreets->model()->setParent(proxy);
+  ui->cbStreets->setModel(proxy);
+  connect(ui->cbStreets, &QComboBox::currentTextChanged, [=]{
+   if(!bRefreshingSegments)
+    refreshSegmentCB();
+  });
 
   // Context menus
   ui->cbRoute->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -1859,19 +1876,92 @@ bool compareSegmentInfoByName(const SegmentInfo & s1, const SegmentInfo & s2)
  //}
 void mainWindow::refreshSegmentCB()
 {
+ QStringList tokens;
+ QStringList tokens2;
+ QStringList streets;
+ QString description;
+
     bRefreshingSegments = true;
     ui->cbSegments->clear();
+    QString selectedStreet = "";
+    if(ui->cbStreets->currentIndex() >0)
+     selectedStreet = ui->cbStreets->currentText().trimmed();
+    ui->cbStreets->clear();
+    ui->cbStreets->addItem("");
     cbSegmentInfoList = sql->getSegmentInfo();
     qSort(cbSegmentInfoList.begin(), cbSegmentInfoList.end(),compareSegmentInfoByName);
     //foreach (segmentInfo sI in cbSegmentInfoList)
     for(int i=0; i < cbSegmentInfoList.count(); i++)
     {
      SegmentInfo sI = cbSegmentInfoList.at(i);
-     if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
-        (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
-        ui->rbBoth->isChecked())
-      ui->cbSegments->addItem(sI.toString(), sI.segmentId);
+     description = sI.description;
+     // populate streets
+     tokens = description.split(",");
+     if(tokens.count() > 1)
+     {
+      QString street = tokens.at(0).trimmed();
+      if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
+      //if(street.indexOf(" ")) street= street.mid(0, street.indexOf(" "));
+      if(ui->cbStreets->findText(street)<0)
+      {
+       ui->cbStreets->addItem(street);
+       streets.append(street);
+      }
+      if( selectedStreet == street)
+      {
+       if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
+          (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
+          ui->rbBoth->isChecked())
+        ui->cbSegments->addItem(sI.toString(), sI.segmentId);
+        continue;
+      }
+      else if(selectedStreet == "" )
+      {
+       if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
+          (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
+          ui->rbBoth->isChecked())
+        ui->cbSegments->addItem(sI.toString(), sI.segmentId);
+       continue;
+      }
+      tokens2 = tokens.at(1).split("to");
+      {
+       for(int i=0; i < tokens2.count(); i++)
+       {
+        QString street2 = tokens2.at(i);
+        street2 = tokens.at(0).trimmed();
+        if(street2.indexOf("(")) street2= street.mid(0, street2.indexOf("("));
+        //if(street2.indexOf(" ")) street2= street2.mid(0, street2.indexOf(" "));
+        if(ui->cbStreets->findText(street2)<0)
+        {
+         ui->cbStreets->addItem(street2);
+         streets.append(street2);
+        }
+        if(selectedStreet == street2)
+        {
+         if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
+            (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
+            ui->rbBoth->isChecked())
+          ui->cbSegments->addItem(sI.toString(), sI.segmentId);
+         continue;
+        }
+        else if(selectedStreet == "" )
+        {
+         if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
+            (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
+            ui->rbBoth->isChecked())
+          ui->cbSegments->addItem(sI.toString(), sI.segmentId);
+         continue;
+        }
+       }
+      }
+     }
+     else
+     {
+      tokens = sI.description.split(" ");
+     }
     }
+    ui->cbStreets->model()->sort(0);
+    ui->cbStreets->setCurrentText(selectedStreet);
     if(m_SegmentId >0)
      ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(m_SegmentId));
     m_bridge->processScript("addModeOff");
@@ -2553,21 +2643,23 @@ void mainWindow::txtSegment_Leave( )
   bSegmentChanged = false;
   int segmentId = m_SegmentId;
   refreshSegmentCB();
-  for(int i=0; i < cbSegmentInfoList.count(); i++)
-  {
-   if(cbSegmentInfoList.at(i).segmentId == segmentId)
-   {
-    ui->cbSegments->setCurrentIndex(i);
-    m_SegmentId = segmentId;
-    break;
-   }
-  }
+//  for(int i=0; i < cbSegmentInfoList.count(); i++)
+//  {
+//   if(cbSegmentInfoList.at(i).segmentId == segmentId)
+//   {
+//    ui->cbSegments->setCurrentIndex(i);
+//    m_SegmentId = segmentId;
+//    break;
+//   }
+//  }
+  ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(m_SegmentId));
  }
 }
 void mainWindow::cbSegmentsTextChanged(QString )
 {
  b_cbSegments_TextChanged = true;
 }
+
 void mainWindow::cbSegments_Leave()
 {
  if(b_cbSegments_TextChanged ==true)
@@ -2578,21 +2670,22 @@ void mainWindow::cbSegments_Leave()
   bool bOk=false;
   segmentId = text.toInt(&bOk, 10);
 
-  if (bOk)
-  {
-   //foreach (segmentInfo sI in segmentInfoList)
-   for(int i=0; i< cbSegmentInfoList.count(); i++)
-   {
-    SegmentInfo sI = (SegmentInfo)cbSegmentInfoList.at(i);
+//  if (bOk)
+//  {
+//   //foreach (segmentInfo sI in segmentInfoList)
+//   for(int i=0; i< cbSegmentInfoList.count(); i++)
+//   {
+//    SegmentInfo sI = (SegmentInfo)cbSegmentInfoList.at(i);
 
-    if (sI.segmentId == segmentId)
-    {
-     //cbSegments.SelectedItem = sI;
-     ui->cbSegments->setCurrentIndex(i);
-     break;
-    }
-   }
-  }
+//    if (sI.segmentId == segmentId)
+//    {
+//     //cbSegments.SelectedItem = sI;
+//     ui->cbSegments->setCurrentIndex(i);
+//     break;
+//    }
+//   }
+//  }
+  ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(segmentId));
  }
  b_cbSegments_TextChanged =false;
 
@@ -3320,17 +3413,18 @@ void mainWindow::selectSegment(int seg)
 {
  //segmentChanged(seg, seg);
 
- for(int i=0; i < cbSegmentInfoList.count(); i++)
- {
-  if(cbSegmentInfoList.at(i).segmentId == seg)
-  {
-      ui->cbSegments->setCurrentIndex(i);
-      m_SegmentId = seg;
-      cbSegmentsSelectedValueChanged(i);
-      otherRouteView->showRoutesUsingSegment(seg);
-      break;
-  }
- }
+// for(int i=0; i < cbSegmentInfoList.count(); i++)
+// {
+//  if(cbSegmentInfoList.at(i).segmentId == seg)
+//  {
+//      ui->cbSegments->setCurrentIndex(i);
+//      m_SegmentId = seg;
+//      cbSegmentsSelectedValueChanged(i);
+//      otherRouteView->showRoutesUsingSegment(seg);
+//      break;
+//  }
+// }
+ ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(seg));
 }
 
 void mainWindow::segmentChanged(qint32 changedSegment, qint32 newSegment)
@@ -3354,11 +3448,13 @@ void mainWindow::segmentChanged(qint32 changedSegment, qint32 newSegment)
      displaySegment(newSegment, si.description, si.oneWay, m_segmentColor, " ", true);
     }
 }
+
 void mainWindow::segmentStatus(QString str, QString color)
 {
     m_segmentStatus = str;
     m_segmentColor = color;
 }
+
 //void MainWindow::segmentDlg_routeChanged(qint32 typeOfChange, qint32 route, QString name, QString endDate)
 void mainWindow::segmentDlg_routeChanged(RouteChangedEventArgs args)
 {
@@ -3821,8 +3917,15 @@ void mainWindow::updateSegmentInfoDisplay(SegmentInfo si)
 
 void mainWindow::On_editSegment_triggered()
 {
- SegmentInfo si = cbSegmentInfoList.at(ui->cbSegments->currentIndex());
- EditSegmentDialog dlg(si.segmentId,this);
+// SegmentInfo si;
+// for(int i=0; i < segmentInfoList.count(); i++)
+// {
+//  if(segmentInfoList.at(i).segmentId == m_SegmentId)
+//   si = segmentInfoList.at(i);
+// }
+// if(si.segmentId < 0)
+//  return;
+ EditSegmentDialog dlg(m_SegmentId,this);
  int ret = dlg.exec();
  if(ret == QDialog::Accepted)
   refreshSegmentCB();

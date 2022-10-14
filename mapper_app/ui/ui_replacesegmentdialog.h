@@ -12,6 +12,7 @@
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QComboBox>
+#include <QtWidgets/QDateEdit>
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QGridLayout>
@@ -35,12 +36,14 @@ public:
     QRadioButton *rbBoth;
     QComboBox *cbSegments;
     QPlainTextEdit *newSegments;
+    QLabel *lblDetails;
     QTextEdit *details;
     QLabel *label_3;
+    QLabel *label_4;
     QRadioButton *rbDouble;
     QRadioButton *rbDelete;
-    QLabel *lblDetails;
     QDialogButtonBox *buttonBox;
+    QDateEdit *ignoreDate;
 
     void setupUi(QDialog *ReplaceSegmentDialog)
     {
@@ -87,7 +90,7 @@ public:
         lblHelp->setPalette(palette);
         lblHelp->setWordWrap(true);
 
-        gridLayout->addWidget(lblHelp, 8, 0, 1, 4);
+        gridLayout->addWidget(lblHelp, 10, 0, 1, 4);
 
         rbBoth = new QRadioButton(ReplaceSegmentDialog);
         rbBoth->setObjectName(QString::fromUtf8("rbBoth"));
@@ -104,6 +107,11 @@ public:
 
         gridLayout->addWidget(newSegments, 5, 0, 1, 4);
 
+        lblDetails = new QLabel(ReplaceSegmentDialog);
+        lblDetails->setObjectName(QString::fromUtf8("lblDetails"));
+
+        gridLayout->addWidget(lblDetails, 6, 0, 1, 1);
+
         details = new QTextEdit(ReplaceSegmentDialog);
         details->setObjectName(QString::fromUtf8("details"));
 
@@ -113,6 +121,11 @@ public:
         label_3->setObjectName(QString::fromUtf8("label_3"));
 
         gridLayout->addWidget(label_3, 0, 0, 1, 1);
+
+        label_4 = new QLabel(ReplaceSegmentDialog);
+        label_4->setObjectName(QString::fromUtf8("label_4"));
+
+        gridLayout->addWidget(label_4, 8, 0, 1, 2);
 
         rbDouble = new QRadioButton(ReplaceSegmentDialog);
         rbDouble->setObjectName(QString::fromUtf8("rbDouble"));
@@ -124,17 +137,18 @@ public:
 
         gridLayout->addWidget(rbDelete, 2, 2, 1, 1);
 
-        lblDetails = new QLabel(ReplaceSegmentDialog);
-        lblDetails->setObjectName(QString::fromUtf8("lblDetails"));
-
-        gridLayout->addWidget(lblDetails, 6, 0, 1, 1);
-
         buttonBox = new QDialogButtonBox(ReplaceSegmentDialog);
         buttonBox->setObjectName(QString::fromUtf8("buttonBox"));
         buttonBox->setOrientation(Qt::Horizontal);
         buttonBox->setStandardButtons(QDialogButtonBox::Apply|QDialogButtonBox::Cancel|QDialogButtonBox::SaveAll);
 
-        gridLayout->addWidget(buttonBox, 9, 0, 1, 4);
+        gridLayout->addWidget(buttonBox, 11, 0, 1, 4);
+
+        ignoreDate = new QDateEdit(ReplaceSegmentDialog);
+        ignoreDate->setObjectName(QString::fromUtf8("ignoreDate"));
+        ignoreDate->setDateTime(QDateTime(QDate(2000, 1, 1), QTime(0, 0, 0)));
+
+        gridLayout->addWidget(ignoreDate, 8, 2, 1, 1);
 
 
         retranslateUi(ReplaceSegmentDialog);
@@ -153,10 +167,12 @@ public:
         label_2->setText(QCoreApplication::translate("ReplaceSegmentDialog", "New segment(s):", nullptr));
         lblHelp->setText(QCoreApplication::translate("ReplaceSegmentDialog", "help", nullptr));
         rbBoth->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Both", nullptr));
+        lblDetails->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Details:", nullptr));
         label_3->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Display segments:", nullptr));
+        label_4->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Ignore after this date:", nullptr));
         rbDouble->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Double", nullptr));
         rbDelete->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Delete", nullptr));
-        lblDetails->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Details:", nullptr));
+        ignoreDate->setDisplayFormat(QCoreApplication::translate("ReplaceSegmentDialog", "yyyy/MM/dd", nullptr));
     } // retranslateUi
 
 };

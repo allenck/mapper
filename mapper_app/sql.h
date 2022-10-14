@@ -181,7 +181,7 @@ public:
     bool deleteAndReplaceSegmentWith(int segmentId1, int segmentId2);
     bool updateSegmentDates(SegmentInfo* si);
     QList<SegmentData> getUnusedSegments();
-    bool replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegments);
+    bool replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegments, QDate ignoreDate);
 signals:
     void details(QString);
 private:

@@ -438,6 +438,7 @@ var lineR = {
 function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, dash, routeType, trackUsage )
 {
     this.type = "SegmentInfo";
+    this.line = null;
     var grayLine = null;
     webViewBridge.debug("segment " + SegmentId + " usage: " + trackUsage);
     var icons = [
@@ -1221,148 +1222,150 @@ siArray.forEach(function(si, ix)
       alert("clearPolyLine: segment: " + segmentId + "\n" + txt);
   }
 
-});
-var count = stationArray.getLength();
-stationArray.forEach(function(stationMarker, ix)
-{
-  if(ix >= count)
-      return;
-  if(stationMarker && stationMarker !== 'undefined' && stationMarker.segmentId  && stationMarker.segmentId === segmentId)
-  {
-      stationMarker.setMap();
-      stationArray.removeAt(ix);
-  }
-});
-//alert("polyline " + segmentId + " cleared");
-    return null;
-}
-function clearMarker()
-{
-if(marker)
-{
-  marker.setMap();
-  marker = null;
-}
-if(circle)
-{
-  circle.setMap();
-  circle = null;
-}
-if(infowindow !== null)
-{
-  infowindow.setMap();
-  infowindow = null;
-}
-}
-  // can be called by the c# program to set an arrow.
-  function setArrow(lLat, lLon, mLat, mLon, rLat, rLon, segmentId)
-  {
-      //alert("setArrow: " + lLat+" "+ lLon+" "+  mLat+" "+  mLon+" "+  rLat+" "+  rLon+" "+  segmentId);
-      siArray.forEach(function(si, ix)
+    });
+    var count = stationArray.getLength();
+    stationArray.forEach(function(stationMarker, ix)
+    {
+      if(ix >= count)
+          return;
+      if(stationMarker && stationMarker !== 'undefined' && stationMarker.segmentId  && stationMarker.segmentId === segmentId)
       {
-          var txt="";
-          try{
-              if(si.segmentId && si.segmentId == segmentId)
-              {
-                  si.setArrow (  myArrow(lLat, lLon, mLat, mLon, rLat, rLon, si.getColor(), segmentId));
-              }
-          }
-          catch (err)
+          stationMarker.setMap();
+          stationArray.removeAt(ix);
+      }
+    });
+    //alert("polyline " + segmentId + " cleared");
+        return null;
+    }
+    function clearMarker()
+    {
+    if(marker)
+    {
+      marker.setMap();
+      marker = null;
+    }
+    if(circle)
+    {
+      circle.setMap();
+      circle = null;
+    }
+    if(infowindow !== null)
+    {
+      infowindow.setMap();
+      infowindow = null;
+    }
+}
+
+// can be called by the c# program to set an arrow.
+function setArrow(lLat, lLon, mLat, mLon, rLat, rLon, segmentId)
+{
+  //alert("setArrow: " + lLat+" "+ lLon+" "+  mLat+" "+  mLon+" "+  rLat+" "+  rLon+" "+  segmentId);
+  siArray.forEach(function(si, ix)
+  {
+      var txt="";
+      try{
+          if(si.segmentId && si.segmentId == segmentId)
           {
-              txt=err;
+              si.setArrow (  myArrow(lLat, lLon, mLat, mLon, rLat, rLon, si.getColor(), segmentId));
           }
-
-      });
-  }
-
-  // Clear all the lines from the map
-  function clearAll()
-  {
-   var path;
-      while(siArray.getLength() > 0)
+      }
+      catch (err)
       {
-          var si = siArray.pop();
-          line = si.getLine();
-          line.setMap(null);
-          path = line.getPath();
+          txt=err;
+      }
+
+  });
+}
+
+// Clear all the lines from the map
+function clearAll()
+{
+var path;
+  while(siArray.getLength() > 0)
+  {
+      var si = siArray.pop();
+      line = si.getLine();
+      line.setMap(null);
+      path = line.getPath();
+      while(path.getLength() > 0)
+      {
+          path.pop();
+      }
+      line.setPath(path);
+      line = null;
+
+      grayLine = si.getGrayLine();
+      if(grayLine)
+      {
+          grayLine.setMap(null);
+          path = grayLine.getPath();
           while(path.getLength() > 0)
           {
               path.pop();
           }
-          line.setPath(path);
-          line = null;
+          grayLine.setPath(path);
+          grayLine = null;
+      }
+      var oneWay = si.oneWay;
+      Arrow = si.getArrow();
+     // alert(Arrow.getInfo());
 
-          grayLine = si.getGrayLine();
-          if(grayLine)
-          {
-              grayLine.setMap(null);
-              path = grayLine.getPath();
-              while(path.getLength() > 0)
-              {
-                  path.pop();
-              }
-              grayLine.setPath(path);
-              grayLine = null;
-          }
-          var oneWay = si.oneWay;
-          Arrow = si.getArrow();
-         // alert(Arrow.getInfo());
-
-          if(Arrow )
-          {
-              Arrow.setMap();
-              if(Arrow.getMap())
-                  alert(Arrow.getInfo + " setmap failed");
-              var poly = Arrow.getPoly();
-              var path = Arrow.getPath();
-              path = null;
-              poly = null;
-              Arrow = null;
-          }
-          si=null;
-      }
-      if(marker)
+      if(Arrow )
       {
-          marker.setMap();
-          marker = null;
+          Arrow.setMap();
+          if(Arrow.getMap())
+              alert(Arrow.getInfo + " setmap failed");
+          var poly = Arrow.getPoly();
+          var path = Arrow.getPath();
+          path = null;
+          poly = null;
+          Arrow = null;
       }
-      if(circle)
-      {
-          circle.setMap();
-          circle = null;
-      }
-      if(poly2)
-      {
-          poly2.setMap();
-          poly2 = null;
-      }
-      if(rtStartMarker !== null)
-      {
-          rtStartMarker.setMap();
-          rtStartMarker = null;
-      }
-      if(rtEndMarker !== null)
-      {
-          rtEndMarker.setMap();
-          rtEndMarker = null;
-      }
-      if(infowindow !== null)
-      {
-          infowindow.setMap();
-          infowindow = null;
-      }
-
-      selectedLine = null;
-      while(stationArray.getLength() > 0)
-      {
-          var stationMarker = stationArray.pop();
-          stationMarker.setMap();
-          if(stationMarker.infoWindow)
-              stationMarker.infoWindow.setMap();
-          stationMarker = null;
-      }
-      return null;
+      si=null;
   }
+  if(marker)
+  {
+      marker.setMap();
+      marker = null;
+  }
+  if(circle)
+  {
+      circle.setMap();
+      circle = null;
+  }
+  if(poly2)
+  {
+      poly2.setMap();
+      poly2 = null;
+  }
+  if(rtStartMarker !== null)
+  {
+      rtStartMarker.setMap();
+      rtStartMarker = null;
+  }
+  if(rtEndMarker !== null)
+  {
+      rtEndMarker.setMap();
+      rtEndMarker = null;
+  }
+  if(infowindow !== null)
+  {
+      infowindow.setMap();
+      infowindow.marker.setMap();
+      infowindow = null;
+  }
+
+  selectedLine = null;
+  while(stationArray.getLength() > 0)
+  {
+      var stationMarker = stationArray.pop();
+      stationMarker.setMap();
+      if(stationMarker.infoWindow)
+          stationMarker.infoWindow.setMap();
+      stationMarker = null;
+  }
+  return null;
+}
 
 function insertPoint(e, line, segmentId)
 {
@@ -2388,6 +2391,7 @@ function showRouteComment(bDisplay)
 
 function displayRouteComment(lat, lon, HTMLText, route, date, companyKey)
 {
+ this.marker = null;
  if(infowindow !== null)
  {
   infowindow.setMap();
@@ -2413,6 +2417,7 @@ function displayRouteComment(lat, lon, HTMLText, route, date, companyKey)
      });
 
  //infowindow.setMap(map);
+ infowindow.marker = this.marker;
  infowindow.route = route;
  infowindow.date = date;
  infowindow.lat = lat;
@@ -2425,6 +2430,8 @@ function displayRouteComment(lat, lon, HTMLText, route, date, companyKey)
  })
  google.maps.event.addListener(infowindow, "closeclick", function(){
      this.marker.setVisible(false);
+     this.marker.setMap();
+     this.marker = null;
  })
  infowindow.open(map, this.marker);
  // })

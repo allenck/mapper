@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>510</width>
-    <height>705</height>
+    <height>723</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -488,7 +488,7 @@
             <string>The route uses the original segment. </string>
            </property>
            <property name="text">
-            <string>Use original</string>
+            <string>keep original</string>
            </property>
           </widget>
          </item>

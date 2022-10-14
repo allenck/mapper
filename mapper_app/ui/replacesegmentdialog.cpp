@@ -33,6 +33,7 @@ ReplaceSegmentDialog::ReplaceSegmentDialog(QWidget *parent) :
  enterGrp->addButton(ui->rbAdd);
  enterGrp->addButton(ui->rbDelete);
  ui->rbDelete->setChecked(true);
+ ui->ignoreDate->setDate(QDate::currentDate());
  refreshSegmentCB();
 
  connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSegmentsSelectedValueChanged(int)));
@@ -51,7 +52,7 @@ void ReplaceSegmentDialog::Process(QAbstractButton *button)
 {
  ui->details->clear();
  try{
- if(!SQL::instance()->replaceSegmentsInRoutes(ui->oldSegments->toPlainText().split(","), ui->newSegments->toPlainText().split(",")))
+ if(!SQL::instance()->replaceSegmentsInRoutes(ui->oldSegments->toPlainText().split(","), ui->newSegments->toPlainText().split(","),ui->ignoreDate->date()))
  {
   rejected();
  }

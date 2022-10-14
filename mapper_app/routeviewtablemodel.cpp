@@ -421,7 +421,7 @@ void RouteViewTableModel::commitChanges()
   {
       qDebug()<< "route data not found:";
       qDebug() << " route="+ QString("%1").arg(route)+ " segmentId="+ QString("%1").arg(siOld.segmentId)+ " "+ siOld.startDate + " "+siOld.endDate;
-      return;
+      throw RecordNotFoundException(tr("route not found: %1, segment: %2 %3 %4").arg(route).arg(siOld.segmentId).arg(siOld.startDate).arg(siOld.endDate));
   }
 
   SQL::instance()->BeginTransaction("updateRoute");

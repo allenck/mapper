@@ -37,105 +37,14 @@
          <pointsize>9</pointsize>
         </font>
        </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click on left button to display earlier route. Click on right button tp display the newer route.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
        <property name="title">
         <string/>
        </property>
        <layout class="QGridLayout" name="gridLayout">
-        <item row="3" column="3">
-         <widget class="QSpinBox" name="sbTracks">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of tracks 1 or 2&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>2</number>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="4">
-         <widget class="QCheckBox" name="chkShowOverlay">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Show an overlay over the current map type display. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Show overlay</string>
-          </property>
-         </widget>
-        </item>
-        <item row="10" column="2">
-         <widget class="QLabel" name="label">
-          <property name="font">
-           <font>
-            <pointsize>8</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>Route Nbr:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="11" column="2" colspan="2">
-         <widget class="QLineEdit" name="txtRouteNbr">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="lblSegment">
-          <property name="text">
-           <string>Segment Name:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="2">
-         <widget class="QLabel" name="lblPoint">
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="10" column="4">
-         <widget class="QLabel" name="label_3">
-          <property name="font">
-           <font>
-            <pointsize>8</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>Date:</string>
-          </property>
-         </widget>
-        </item>
         <item row="9" column="4">
-         <widget class="QPushButton" name="saveImage">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Create a snapshot of the map display. Not available when map display uses a web browser. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Save Image</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="0" colspan="2">
-         <widget class="CComboBox" name="cbSegments">
-          <property name="contextMenuPolicy">
-           <enum>Qt::ActionsContextMenu</enum>
-          </property>
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a segment from the combobox to be displayed. Or type a segment number.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="editable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="4">
          <widget class="QScrollBar" name="sbRoute">
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Scroll through available routes. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -145,108 +54,6 @@
           </property>
          </widget>
         </item>
-        <item row="7" column="4">
-         <widget class="QPushButton" name="btnDisplayRoute">
-          <property name="font">
-           <font>
-            <pointsize>8</pointsize>
-           </font>
-          </property>
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to display the currently selected route on the map. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>Display Route</string>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="0">
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Select Company:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="11" column="0" colspan="2">
-         <widget class="CComboBox" name="cbRoute">
-          <property name="minimumSize">
-           <size>
-            <width>200</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a route to be displayed or modified.  &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="editable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_6">
-          <property name="text">
-           <string>Street Name:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="4">
-         <widget class="QCheckBox" name="chkNoClear">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, the map display will not be cleared of displayed routes when a new route is displayed with &amp;quot;Display Route&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="text">
-           <string>No clear</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="4">
-         <widget class="QPushButton" name="btnBack">
-          <property name="toolTip">
-           <string>Back one page</string>
-          </property>
-          <property name="text">
-           <string>Back</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="1">
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
-          <item>
-           <widget class="QRadioButton" name="rbSingle">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to display only single track segments&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>Single</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="rbDouble">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to display only double track segments&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>Double</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="rbBoth">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to display both single and double track segments.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>Both</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
         <item row="1" column="0">
          <widget class="QLineEdit" name="txtStreet">
           <property name="toolTip">
@@ -254,14 +61,14 @@
           </property>
          </widget>
         </item>
-        <item row="9" column="0" colspan="2">
-         <widget class="QComboBox" name="cbCompany">
+        <item row="3" column="0" colspan="2">
+         <widget class="QLineEdit" name="txtSegment">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a company. Only that company's routes will be displayed. Select 'All companies' to display all routes regardless of which company.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Edit to change the current segment's description. Should be in the form: &amp;lt;street name&amp;gt;, &amp;lt;street 1&amp;gt; to &amp;lt;street 2&amp;gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
          </widget>
         </item>
-        <item row="11" column="4">
+        <item row="12" column="4">
          <widget class="QDateEdit" name="dateEdit">
           <property name="time">
            <time>
@@ -275,17 +82,55 @@
           </property>
          </widget>
         </item>
+        <item row="5" column="4">
+         <widget class="QPushButton" name="btnClear">
+          <property name="font">
+           <font>
+            <pointsize>8</pointsize>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Clear all displayed routes from map display. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Clear</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="3">
+         <widget class="QSpinBox" name="sbTracks">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of tracks 1 or 2&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>2</number>
+          </property>
+         </widget>
+        </item>
         <item row="3" column="4">
          <widget class="QCheckBox" name="chkNoPan">
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, map will not be panned or repositioned when a new route is displayed. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
-           <string>No pan</string>
+           <string>No autopan</string>
           </property>
          </widget>
         </item>
-        <item row="7" column="2">
+        <item row="10" column="4">
+         <widget class="QPushButton" name="saveImage">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Create a snapshot of the map display. Not available when map display uses a web browser. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Save Image</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="2">
          <widget class="QCheckBox" name="chkAddPt">
           <property name="toolTip">
            <string>Check to automatically turn on add point mode when selecting a segment from the combo box.</string>
@@ -295,7 +140,7 @@
           </property>
          </widget>
         </item>
-        <item row="12" column="0" colspan="5">
+        <item row="13" column="0" colspan="5">
          <widget class="QTabWidget" name="tabWidget">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
@@ -493,17 +338,135 @@
           </widget>
          </widget>
         </item>
-        <item row="10" column="0">
-         <widget class="QLabel" name="label_5">
-          <property name="text">
-           <string>Select Route:</string>
+        <item row="12" column="2" colspan="2">
+         <widget class="QLineEdit" name="txtRouteNbr">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
          </widget>
         </item>
-        <item row="3" column="2">
-         <widget class="QLabel" name="label_8">
+        <item row="7" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <widget class="QRadioButton" name="rbSingle">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to display only single track segments&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>Single</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="rbDouble">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to display only double track segments&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>Double</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="rbBoth">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to display both single and double track segments.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>Both</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="12" column="0" colspan="2">
+         <widget class="CComboBox" name="cbRoute">
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a route to be displayed or modified.  &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="editable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="0" colspan="2">
+         <widget class="CComboBox" name="cbSegments">
+          <property name="contextMenuPolicy">
+           <enum>Qt::ActionsContextMenu</enum>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a segment from the combobox to be displayed. Or type a segment number.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="editable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="11" column="4">
+         <widget class="QLabel" name="label_3">
+          <property name="font">
+           <font>
+            <pointsize>8</pointsize>
+           </font>
+          </property>
           <property name="text">
-           <string>Tracks:</string>
+           <string>Date:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="9" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Select Company:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="4">
+         <widget class="QCheckBox" name="chkNoClear">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, the map display will not be cleared of displayed routes when a new route is displayed with &amp;quot;Display Route&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>No clear</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="4">
+         <widget class="QCheckBox" name="chkShowOverlay">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Show an overlay over the current map type display. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string>Show overlay</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Select Segment:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="2">
+         <widget class="QLabel" name="lblPoint">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Index of current point&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="text">
+           <string/>
           </property>
          </widget>
         </item>
@@ -639,32 +602,78 @@
           </layout>
          </widget>
         </item>
-        <item row="6" column="0">
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>Select Segment:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="4">
-         <widget class="QPushButton" name="btnClear">
+        <item row="8" column="4">
+         <widget class="QPushButton" name="btnDisplayRoute">
           <property name="font">
            <font>
             <pointsize>8</pointsize>
            </font>
           </property>
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Clear all displayed routes from map display. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to display the currently selected route on the map. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
-           <string>Clear</string>
+           <string>Display Route</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="0" colspan="2">
-         <widget class="QLineEdit" name="txtSegment">
+        <item row="10" column="0" colspan="2">
+         <widget class="QComboBox" name="cbCompany">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Edit to change the current segment's description. Should be in the form: &amp;lt;street name&amp;gt;, &amp;lt;street 1&amp;gt; to &amp;lt;street 2&amp;gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a company. Only that company's routes will be displayed. Select 'All companies' to display all routes regardless of which company.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+         </widget>
+        </item>
+        <item row="11" column="2">
+         <widget class="QLabel" name="label">
+          <property name="font">
+           <font>
+            <pointsize>8</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Route Nbr:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="lblSegment">
+          <property name="text">
+           <string>Segment Name:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="2" colspan="2">
+         <widget class="QComboBox" name="cbStreets"/>
+        </item>
+        <item row="11" column="0">
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>Select Route:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QLabel" name="label_8">
+          <property name="text">
+           <string>Tracks:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="4">
+         <widget class="QPushButton" name="btnBack">
+          <property name="toolTip">
+           <string>Back one page</string>
+          </property>
+          <property name="text">
+           <string>Back</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>Street Name:</string>
           </property>
          </widget>
         </item>

@@ -6264,6 +6264,10 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
   LatLng pt = pointList.at(i);
   pointArray.append(pt.str());
  }
+ if(pointArray.count() < 2)
+ {
+  qDebug() << "Warning segment '" << Description << "' has less than two points!!";
+ }
  CommandText = "Insert into Segments (street, Description, OneWay, type, pointArray, tracks) values ('" +street+"','" + Description + "', '" + OneWay + "'," +   QString("%1").arg((qint32)routeType) + ",'" + pointArray+ "', " + QString::number(tracks)+ ")";
  bQuery = query.exec(CommandText);
  if(!bQuery)
@@ -9296,7 +9300,7 @@ QList<SegmentData> SQL::getUnusedSegments()
 }
 
 // given a list of segments replace them with a new segment from alist.
-bool SQL::replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegments)
+bool SQL::replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegments, QDate ignoreDate)
 {
  QSqlDatabase db = QSqlDatabase();
  QSqlQuery query = QSqlQuery(db);
@@ -9362,6 +9366,12 @@ bool SQL::replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegmen
 
   foreach(RouteData rd, list)
   {
+   if(rd.startDate > ignoreDate)
+   {
+    QString err =tr("ignoring route %1, name %2, segment %3, %4, startDate = %5").arg(rd.route).arg(rd.name).arg(rd.lineKey).arg(rd.sd->description).arg(rd.startDate.toString("yyyy/MM/dd"));
+    emit details(err);
+    continue;
+   }
    if(!SQL::deleteRouteSegment(rd.route,rd.name, rd.lineKey,rd.startDate.toString("yyyy/MM/dd"),rd.endDate.toString("yyyy/MM/dd")))
    {
     RollbackTransaction("replaceSegments");
