@@ -156,15 +156,18 @@ DEPENDPATH += $$PWD/'../../../../Program Files/Sqlite3_3_13/src'
 
 FORMS += \
     addgeoreferenceddialog.ui \
-    ui/replacesegmentdialog.ui
+    ui/replacesegmentdialog.ui \
+    ui/segmentselectionwidget.ui
 
 HEADERS += \
     addgeoreferenceddialog.h \
     ui/replacesegmentdialog.h \
+    ui/segmentselectionwidget.h \
     ui/splitsegmentdlg.h
 
 SOURCES += \
     addgeoreferenceddialog.cpp \
     ui/replacesegmentdialog.cpp \
+    ui/segmentselectionwidget.cpp \
     ui/splitsegmentdlg.cpp
 

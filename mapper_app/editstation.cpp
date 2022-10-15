@@ -251,7 +251,7 @@ void editStation::setRadioButtons()
 
     // closest point check
     sd = sql->getSegmentData(/*_pt,*/ _segmentId);
-    sti = sql->getStationAtPoint( LatLng(sd.startLat, sd.startLon));
+    sti = sql->getStationAtPoint( sd.getStartLatLng());
     if (sti.stationKey >= 0)
         ui->rbClosestPoint->setEnabled(false);
 }
@@ -297,12 +297,12 @@ void editStation::btnOK_Click()
    sd = sql->getSegmentData(/*_pt,*/ _segmentId);
    //_latLng = new LatLng(sd.startLat, sd.startLon);
    //sd = sql->getSegmentData(_pt, _segmentId);
-   _lineSegmentId = sd.SegmentId;
+   _lineSegmentId = sd.getSegmentId();
    if (sql->Distance(si.startLat, si.startLon, _latLng.lat(), _latLng.lon()) <
            sql->Distance(si.endLat, si.endLon, _latLng.lat(), _latLng.lon()))
-       _latLng =  LatLng(sd.startLat, sd.startLon);
+       _latLng =  sd.getStartLatLng();
    else
-       _latLng =  LatLng(sd.endLat, sd.endLon);
+       _latLng =  sd.getEndLatLng();
   }
   else if(!ui->rbAddPoint->isChecked())
   {

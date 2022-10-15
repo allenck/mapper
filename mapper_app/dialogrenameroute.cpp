@@ -90,8 +90,8 @@ void DialogRenameRoute::btnOK_Click()
             //System.Media.SystemSounds.Asterisk.Play();
             return;
         }
-        if (!sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text(), rd1.startDate.toString("yyyy/MM/dd"),
-            rd1.endDate.toString("yyyy/MM/dd"), rd1.lineKey,
+        if (!sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text(), rd1.startDate,
+            rd1.endDate, rd1.lineKey,
             rd1.companyKey, rd1.tractionType, rd1.direction, rd1.next, rd1.prev,
             rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave, rd1.oneWay, rd1.trackUsage))
         {

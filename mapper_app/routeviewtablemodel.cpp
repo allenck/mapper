@@ -124,7 +124,7 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
    case TRACKS:
        return si.tracks;
    case TYPE:
-       return SegmentInfo::ROUTETYPES.at(si.routeType);
+       return SegmentData::ROUTETYPES.at(si.routeType);
    case NEXT:
        return si.next;
    case PREV:
@@ -443,15 +443,19 @@ void RouteViewTableModel::commitChanges()
   if(siOld.startDate < startDate)
   {
    // add back segment used before route start date
-   QString newEndDate = QDate::fromString(startDate, "yyyy/MM/dd").addDays(-1).toString("yyyy/MM/dd");
-   if(!SQL::instance()->addSegmentToRoute(route, name, si.startDate, newEndDate, si.segmentId, rd.companyKey, rd.tractionType, si.bearing.strDirection(),si.next, si.prev, si.normalEnter, si.normalLeave, si.reverseEnter, si.reverseLeave, rd.oneWay, si.trackUsage))
+   QDate newEndDate = QDate::fromString(startDate, "yyyy/MM/dd").addDays(-1);
+   if(!SQL::instance()->addSegmentToRoute(route, name, QDate::fromString(si.startDate, "yyyy/MM/dd"), newEndDate, si.segmentId, rd.companyKey,
+                                          rd.tractionType, si.bearing.strDirection(),si.next, si.prev,
+                                          si.normalEnter, si.normalLeave, si.reverseEnter, si.reverseLeave, rd.oneWay, si.trackUsage))
        return;
   }
 
   if(siOld.endDate > endDate)
   {
-   QString newStartDate = QDate::fromString(endDate, "yyyy/MM/dd").addDays(+1).toString("yyyy/MM/dd");
-   if(!SQL::instance()->addSegmentToRoute(route, name, newStartDate, si.endDate, si.segmentId, rd.companyKey, rd.tractionType, si.bearing.strDirection(),si.next, si.prev, si.normalEnter, si.normalLeave, si.reverseEnter, si.reverseLeave, rd.oneWay, si.trackUsage))
+   QDate newStartDate = QDate::fromString(endDate, "yyyy/MM/dd").addDays(+1);
+   if(!SQL::instance()->addSegmentToRoute(route, name, newStartDate, QDate::fromString(si.endDate, "yyyy/MM/dd"), si.segmentId, rd.companyKey,
+                                          rd.tractionType, si.bearing.strDirection(),si.next, si.prev,
+                                          si.normalEnter, si.normalLeave, si.reverseEnter, si.reverseLeave, rd.oneWay, si.trackUsage))
        return;
   }
   if(changedRows.at(i)->bDeleted)
@@ -461,7 +465,10 @@ void RouteViewTableModel::commitChanges()
   }
   if(changedRows.at(i)->bChanged && !changedRows.at(i)->bDeleted)
   {
-      if(!SQL::instance()->addSegmentToRoute(route, name, si.startDate, si.endDate, si.segmentId, rd.companyKey, rd.tractionType, si.bearing.strDirection(),si.next, si.prev, si.normalEnter, si.normalLeave, si.reverseEnter, si.reverseLeave, si.oneWay, si.trackUsage))
+      if(!SQL::instance()->addSegmentToRoute(route, name, QDate::fromString(si.startDate, "yyyy/MM/dd"), QDate::fromString(si.endDate, "yyyy/MM/dd"),
+                                             si.segmentId, rd.companyKey, rd.tractionType,
+                                             si.bearing.strDirection(),si.next, si.prev, si.normalEnter, si.normalLeave,
+                                             si.reverseEnter, si.reverseLeave, si.oneWay, si.trackUsage))
           return;
   }
   if(changedRows.at(i)->bDeleted)

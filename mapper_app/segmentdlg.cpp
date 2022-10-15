@@ -742,8 +742,8 @@ void SegmentDlg::btnOK_Click()  // SLOT
     }
     QString trackUsage = " ";
     // TODO: add logic to support trackUsage!
-    if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(), ui->dateEnd->text(), routeSegment,
-                                companyKey, /*cbTractionType.SelectedIndex*/tractionType, direction,
+    if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->date(), ui->dateEnd->date(), routeSegment,
+                                companyKey, /*cbTractionType.SelectedIndex*/tractionType, direction, 0,0,
                                 normalEnter, normalLeave, reverseEnter, reverseLeave, ui->chkNewOneWay?"Y":"N", trackUsage))
      ui->lblErrorText->setText(tr( "Add Error"));
     streetName = ui->txtOriginalName->text();

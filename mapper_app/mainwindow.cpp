@@ -273,12 +273,15 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbrLeave()) );
   connect(ui->sbTracks, SIGNAL(valueChanged(int)), this, SLOT(sbTracks_valueChanged(int)));
   connect(ui->rbSingle, &QRadioButton::clicked, [=]{
+   saveStreet = ui->cbStreets->currentText();
    refreshSegmentCB();
   });
   connect(ui->rbDouble, &QRadioButton::clicked, [=]{
+   saveStreet = ui->cbStreets->currentText();
    refreshSegmentCB();
   });
   connect(ui->rbBoth, &QRadioButton::clicked, [=]{
+   saveStreet = ui->cbStreets->currentText();
    refreshSegmentCB();
   });
 
@@ -288,10 +291,11 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   // otherwise QComboBox::setModel() will delete it
   ui->cbStreets->model()->setParent(proxy);
   ui->cbStreets->setModel(proxy);
-  connect(ui->cbStreets, &QComboBox::currentTextChanged, [=]{
-   if(!bRefreshingSegments)
-    refreshSegmentCB();
+  connect(ui->cbStreets, &QComboBox::editTextChanged, [=]{
+   bCbStreets_text_changed = true;
   });
+  connect(ui->cbStreets, SIGNAL(editingFinished()), this, SLOT(cbStreets_editingFinished()));
+  connect(ui->cbStreets, SIGNAL(currentIndexChanged(int)), this, SLOT(cbStreets_currentIndexChanged(int)));
 
   // Context menus
   ui->cbRoute->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -814,13 +818,14 @@ void mainWindow::createActions()
  connect(addSegmentToRouteAct, &QAction::triggered, [=]{
      int ix = ui->cbSegments->currentIndex();
      int segmentId = ui->cbSegments->itemData(ix).toInt();
-     SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId, true);
+     //SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId, true);
+     SegmentData sd = SQL::instance()->getSegmentData(segmentId);
 
      int row =         ui->cbRoute->currentIndex();
      if(row < 0) return;
      RouteData rd = ((RouteData)routeList.at(row));
-     bool b = SQL::instance()->addSegmentToRoute(rd.route, rd.name, rd.startDate.toString("yyyy/MM/dd"), rd.endDate.toString("yyyy/MM/dd"),
-                                        si.segmentId, rd.companyKey,
+     bool b = SQL::instance()->addSegmentToRoute(rd.route, rd.name, rd.startDate, rd.endDate,
+                                        sd.getSegmentId(), rd.companyKey,
                                         rd.tractionType, "?", -1, -1, 0, 0, 0, 0, rd.oneWay, rd.trackUsage);
     if(b)
     {
@@ -1391,9 +1396,8 @@ void mainWindow::btnDeleteSegment_Click()   //SLOT
                             }
                         if (sql->doesRouteSegmentExist(rd.route, rd.name, siDup.segmentId, rd.startDate.toString("yyyy/MM/dd"), rd.endDate.toString("yyyy/MM/dd")))
                                 continue;
-                            if (!sql->addSegmentToRoute(rd.route, rd.name, rd.startDate.toString("yyyy/MM/dd"),
-                                                        rd.endDate.toString("yyyy/MM/dd"), siDup.segmentId, rd.companyKey,
-                                                        rd.tractionType, rd.direction, rd.normalEnter,
+                            if (!sql->addSegmentToRoute(rd.route, rd.name, rd.startDate, rd.endDate, siDup.segmentId, rd.companyKey,
+                                                        rd.tractionType, rd.direction, rd.next, rd.prev, rd.normalEnter,
                                                         rd.normalLeave, rd.reverseEnter, rd.reverseLeave, rd.oneWay, rd.trackUsage))
                             {
                                 //infoPanel.Text = "Update Error";
@@ -1859,114 +1863,161 @@ void mainWindow::onCbRouteIndexChanged(int row)
 //}
 bool compareSegmentInfoByName(const SegmentInfo & s1, const SegmentInfo & s2)
 {
-    return s1.description < s2.description;
+ return s1.description < s2.description;
 }
 
-//void MainWindow::resizeEvent(QResizeEvent *event)
-// {
-//     if (width() > image.width() || height() > image.height()) {
-//         int newWidth = qMax(width() + 128, image.width());
-//         int newHeight = qMax(height() + 128, image.height());
-//         resizeImage(&image, QSize(newWidth, newHeight));
-//         update();
-//     }
-//     m_bridge->processScript("resizeMap", "");
-
- //    QWidget::resizeEvent(event);
- //}
 void mainWindow::refreshSegmentCB()
 {
+ QStringList streets;
  QStringList tokens;
  QStringList tokens2;
- QStringList streets;
  QString description;
+ QString selectedStreet =ui->cbStreets->currentText();
 
-    bRefreshingSegments = true;
-    ui->cbSegments->clear();
-    QString selectedStreet = "";
-    if(ui->cbStreets->currentIndex() >0)
-     selectedStreet = ui->cbStreets->currentText().trimmed();
-    ui->cbStreets->clear();
-    ui->cbStreets->addItem("");
-    cbSegmentInfoList = sql->getSegmentInfo();
-    qSort(cbSegmentInfoList.begin(), cbSegmentInfoList.end(),compareSegmentInfoByName);
-    //foreach (segmentInfo sI in cbSegmentInfoList)
-    for(int i=0; i < cbSegmentInfoList.count(); i++)
+ bRefreshingSegments = true;
+ if(!bCbStreetsRefreshing)
+  refreshStreetsCb();
+ ui->cbSegments->clear();
+ cbSegmentInfoList = sql->getSegmentInfo();
+ qSort(cbSegmentInfoList.begin(), cbSegmentInfoList.end(),compareSegmentInfoByName);
+ //foreach (segmentInfo sI in cbSegmentInfoList)
+ for(int i=0; i < cbSegmentInfoList.count(); i++)
+ {
+  SegmentInfo sI = cbSegmentInfoList.at(i);
+  description = sI.description;
+  tokens = description.split(",");
+  if(tokens.count() > 1)
+  {
+   QString street = tokens.at(0).trimmed();
+   if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
+   if(street == selectedStreet)
+   {
+    // populate streets
+    if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
+       (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
+       ui->rbBoth->isChecked())
+     ui->cbSegments->addItem(sI.toString(), sI.segmentId);
+    continue;
+   }
+   else
+   {
+    if(selectedStreet.trimmed().isEmpty())
     {
-     SegmentInfo sI = cbSegmentInfoList.at(i);
-     description = sI.description;
      // populate streets
-     tokens = description.split(",");
-     if(tokens.count() > 1)
+     if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
+        (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
+        ui->rbBoth->isChecked())
+      ui->cbSegments->addItem(sI.toString(), sI.segmentId);
+     continue;
+    }
+   }
+   tokens2 = tokens.at(1).split("to");
+   {
+    for(int i=0; i < tokens2.count(); i++)
+    {
+     QString street = tokens2.at(i);
+     street = tokens.at(0).trimmed();
+     if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
+     //if(street2.indexOf(" ")) street2= street2.mid(0, street2.indexOf(" "));
+     if(street == selectedStreet)
      {
-      QString street = tokens.at(0).trimmed();
-      if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
-      //if(street.indexOf(" ")) street= street.mid(0, street.indexOf(" "));
-      if(ui->cbStreets->findText(street)<0)
+      // populate streets
+      if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
+         (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
+         ui->rbBoth->isChecked())
+       ui->cbSegments->addItem(sI.toString(), sI.segmentId);
+      continue;
+     }
+     else
+     {
+      if(selectedStreet.trimmed().isEmpty())
       {
-       ui->cbStreets->addItem(street);
-       streets.append(street);
-      }
-      if( selectedStreet == street)
-      {
-       if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
-          (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
-          ui->rbBoth->isChecked())
-        ui->cbSegments->addItem(sI.toString(), sI.segmentId);
-        continue;
-      }
-      else if(selectedStreet == "" )
-      {
+       // populate streets
        if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
           (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
           ui->rbBoth->isChecked())
         ui->cbSegments->addItem(sI.toString(), sI.segmentId);
        continue;
       }
-      tokens2 = tokens.at(1).split("to");
-      {
-       for(int i=0; i < tokens2.count(); i++)
-       {
-        QString street2 = tokens2.at(i);
-        street2 = tokens.at(0).trimmed();
-        if(street2.indexOf("(")) street2= street.mid(0, street2.indexOf("("));
-        //if(street2.indexOf(" ")) street2= street2.mid(0, street2.indexOf(" "));
-        if(ui->cbStreets->findText(street2)<0)
-        {
-         ui->cbStreets->addItem(street2);
-         streets.append(street2);
-        }
-        if(selectedStreet == street2)
-        {
-         if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
-            (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
-            ui->rbBoth->isChecked())
-          ui->cbSegments->addItem(sI.toString(), sI.segmentId);
-         continue;
-        }
-        else if(selectedStreet == "" )
-        {
-         if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
-            (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
-            ui->rbBoth->isChecked())
-          ui->cbSegments->addItem(sI.toString(), sI.segmentId);
-         continue;
-        }
-       }
-      }
-     }
-     else
-     {
-      tokens = sI.description.split(" ");
      }
     }
-    ui->cbStreets->model()->sort(0);
-    ui->cbStreets->setCurrentText(selectedStreet);
-    if(m_SegmentId >0)
-     ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(m_SegmentId));
-    m_bridge->processScript("addModeOff");
-    addPointModeAct->setChecked(false);
-    bRefreshingSegments = false;
+   }
+  }
+ }
+ if(m_SegmentId >0)
+  ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(m_SegmentId));
+ m_bridge->processScript("addModeOff");
+ addPointModeAct->setChecked(false);
+ bRefreshingSegments = false;
+}
+
+void mainWindow::refreshStreetsCb()
+{
+ QStringList streets;
+ QStringList tokens;
+ QStringList tokens2;
+ QString description;
+ QString selectedStreet = ui->cbStreets->currentText();
+ bCbStreetsRefreshing = true;
+
+ ui->cbStreets->clear();
+ ui->cbStreets->addItem("");
+ cbSegmentInfoList = sql->getSegmentInfo();
+ for(int i=0; i < cbSegmentInfoList.count(); i++)
+ {
+  SegmentInfo sI = cbSegmentInfoList.at(i);
+  description = sI.description;
+  tokens = description.split(",");
+  if(tokens.count() > 1)
+  {
+   QString street = tokens.at(0).trimmed();
+   if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
+   if(!streets.contains(street))
+   {
+    streets.append(street);
+   }
+   tokens2 = tokens.at(1).split("to");
+   {
+    for(int i=0; i < tokens2.count(); i++)
+    {
+     QString street2 = tokens2.at(i);
+     street2 = tokens.at(0).trimmed();
+     if(street2.indexOf("(")) street2= street.mid(0, street2.indexOf("("));
+     //if(street2.indexOf(" ")) street2= street2.mid(0, street2.indexOf(" "));
+     if(!streets.contains(street2))
+     {
+      streets.append(street2);
+     }
+    }
+   }
+  }
+  else
+  {
+   tokens = sI.description.split(" ");
+  }
+ } // end for
+ streets.sort();
+ ui->cbStreets->addItems(streets);
+ ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(selectedStreet));
+ bCbStreetsRefreshing = false;
+}
+
+void mainWindow::cbStreets_editingFinished()
+{
+ QString txt = ui->cbStreets->currentText();
+ //ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(txt));
+ if(bCbStreets_text_changed)
+ {
+  ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(txt));
+ }
+ bCbStreets_text_changed = false;
+}
+
+void mainWindow::cbStreets_currentIndexChanged(int)
+{
+ saveStreet = ui->cbStreets->currentText();
+ if(!bRefreshingSegments)
+ refreshSegmentCB();
 }
 
 void mainWindow::refreshCompanies()
@@ -3636,6 +3687,9 @@ void mainWindow::setStation(double lat, double lon, qint32 segmentId, qint32 ptI
        markerType = "blue";
        break;
    case Surface:
+       markerType = "red";
+       break;
+  case SurfacePRW:
        markerType = "red";
        break;
    default:

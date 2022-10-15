@@ -18,7 +18,7 @@ var image = ["http://maps.google.com/mapfiles/marker.png",
   "http://maps.google.com/mapfiles/shadow50.png",
   "http://www.google.com/mapfiles/arrow.png",
   "http://www.google.com/mapfiles/arrowshadow.png",
-  "http://maps.google.com/mapfiles/kml/paddle/grn-blank.png",
+  "http://maps.google.com/mapfiles/kml/paddle/grn-blank-lv.png",
   "http://maps.google.com/mapfiles/kml/paddle/blu-blank.png",
   "http://maps.google.com/mapfiles/kml/paddle/pink-blank.png",
   "http://maps.google.com/mapfiles/shadow50.png",
@@ -29,19 +29,21 @@ var image = ["http://maps.google.com/mapfiles/marker.png",
   "http://hpstorage.acksoft.dyndns.biz/picturegallery/images/ubahn_small.png",
   "http:10.0.1.101:1080/public/map_tiles/tram.png",
   "http:10.0.1.101:1080/public/map_tiles/tram.shadow.png",
-  //"http:10.0.1.101:1080/public/map_tiles/white.png",
   "http://maps.google.com/mapfiles/kml/paddle/wht-blank.png",
   "http:10.0.1.101:1080/public/map_tiles/blue-red-blank.png",
   "http://maps.google.com/mapfiles/kml/paddle/orange-blank.png",
   "http:10.0.1.101:1080/public/map_tiles/BVGTram.png",
   "http:10.0.1.101:1080/public/map_tiles/subway.png",
   "http:10.0.1.101:1080/public/map_tiles/subway.shadow.png",
-  "http://maps.google.com/mapfiles/kml/paddle/purple-blank.png"
+  "http://maps.google.com/mapfiles/kml/paddle/purple-blank.png",
+  "http://maps.google.com/mapfiles/kml/pal5/icon63l.png", // "H"
+  "http://maps.google.com/mapfiles/kml/shapes/bus.png",
+  "https://www.google.com/mapfiles/arrow.png"
 ];
 var images = {"default":0, "start":1, "end":2, "shadow":3, "arrow":4, "arrowShadow":5,
   "smallGreen":6, "smallBlue":7,"smallRed":8,"smallShadow":9,"stop":10,"resume":11,"smallYellow":12,
-  "sbahn":13, "ubahn":14, "tram":15, "tramshadow":16, "smallWhite":17, "blue-red":18, "orange":19, "bvgtram":20,
-  "subway":21, "subwayshadow":22, "purple":23};
+  "sbahn":13, "ubahn":14, "tram":15, "tramshadow":16, "smallWhite":17, "blue-red":18,
+  "orange":19, "bvgtram":20, "subway":21, "subwayshadow":22, "purple":23, "rail":24, "bus":25, "greenDownArrow":26};
 var marker = null;
 var selectedLine = null;
 var selectedLineClr = "#FF0000";
@@ -1845,6 +1847,9 @@ function getIcon(typeIcon)
       case "subway":
           icon = image[images.subway];
           break;
+      case "rail":
+          icon = image[images.rail];
+          break;
       default:
          //alert("icon type = " + typeIcon);
          icon = image[images.smallWhite];
@@ -2405,7 +2410,7 @@ function displayRouteComment(lat, lon, HTMLText, route, date, companyKey)
 
  // infowindow = new google.maps.InfoWindow({content:date+HTMLText, position:new google.maps.LatLng(lat, lon)}, 'return 0');
  infowindow = new google.maps.InfoWindow({content:date+HTMLText, maxwidth: 70}/*, 'return 0'*/);
- var icon = image[images.purple];
+ var icon = image[images.greenDownArrow];
  this.marker = new google.maps.Marker({
        position: new google.maps.LatLng(lat, lon),
        map: map,

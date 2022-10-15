@@ -11,7 +11,6 @@
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QComboBox>
 #include <QtWidgets/QDateEdit>
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QDialogButtonBox>
@@ -20,6 +19,7 @@
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QTextEdit>
+#include "segmentselectionwidget.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -27,55 +27,82 @@ class Ui_ReplaceSegmentDialog
 {
 public:
     QGridLayout *gridLayout;
-    QRadioButton *rbSingle;
+    SegmentSelectionWidget *rs;
     QLabel *label;
-    QRadioButton *rbAdd;
+    QRadioButton *rbDelete;
     QPlainTextEdit *oldSegments;
     QLabel *label_2;
-    QLabel *lblHelp;
-    QRadioButton *rbBoth;
-    QComboBox *cbSegments;
+    QRadioButton *rbAdd;
     QPlainTextEdit *newSegments;
     QLabel *lblDetails;
     QTextEdit *details;
-    QLabel *label_3;
     QLabel *label_4;
-    QRadioButton *rbDouble;
-    QRadioButton *rbDelete;
-    QDialogButtonBox *buttonBox;
     QDateEdit *ignoreDate;
+    QLabel *lblHelp;
+    QDialogButtonBox *buttonBox;
 
     void setupUi(QDialog *ReplaceSegmentDialog)
     {
         if (ReplaceSegmentDialog->objectName().isEmpty())
             ReplaceSegmentDialog->setObjectName(QString::fromUtf8("ReplaceSegmentDialog"));
-        ReplaceSegmentDialog->resize(403, 418);
+        ReplaceSegmentDialog->resize(452, 552);
         gridLayout = new QGridLayout(ReplaceSegmentDialog);
         gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
-        rbSingle = new QRadioButton(ReplaceSegmentDialog);
-        rbSingle->setObjectName(QString::fromUtf8("rbSingle"));
+        rs = new SegmentSelectionWidget(ReplaceSegmentDialog);
+        rs->setObjectName(QString::fromUtf8("rs"));
 
-        gridLayout->addWidget(rbSingle, 0, 1, 1, 1);
+        gridLayout->addWidget(rs, 0, 0, 1, 3);
 
         label = new QLabel(ReplaceSegmentDialog);
         label->setObjectName(QString::fromUtf8("label"));
 
-        gridLayout->addWidget(label, 2, 0, 1, 2);
+        gridLayout->addWidget(label, 1, 0, 1, 2);
 
-        rbAdd = new QRadioButton(ReplaceSegmentDialog);
-        rbAdd->setObjectName(QString::fromUtf8("rbAdd"));
+        rbDelete = new QRadioButton(ReplaceSegmentDialog);
+        rbDelete->setObjectName(QString::fromUtf8("rbDelete"));
 
-        gridLayout->addWidget(rbAdd, 4, 2, 1, 1);
+        gridLayout->addWidget(rbDelete, 1, 2, 1, 1);
 
         oldSegments = new QPlainTextEdit(ReplaceSegmentDialog);
         oldSegments->setObjectName(QString::fromUtf8("oldSegments"));
 
-        gridLayout->addWidget(oldSegments, 3, 0, 1, 4);
+        gridLayout->addWidget(oldSegments, 2, 0, 1, 3);
 
         label_2 = new QLabel(ReplaceSegmentDialog);
         label_2->setObjectName(QString::fromUtf8("label_2"));
 
-        gridLayout->addWidget(label_2, 4, 0, 1, 1);
+        gridLayout->addWidget(label_2, 3, 0, 1, 1);
+
+        rbAdd = new QRadioButton(ReplaceSegmentDialog);
+        rbAdd->setObjectName(QString::fromUtf8("rbAdd"));
+
+        gridLayout->addWidget(rbAdd, 3, 2, 1, 1);
+
+        newSegments = new QPlainTextEdit(ReplaceSegmentDialog);
+        newSegments->setObjectName(QString::fromUtf8("newSegments"));
+
+        gridLayout->addWidget(newSegments, 4, 0, 1, 3);
+
+        lblDetails = new QLabel(ReplaceSegmentDialog);
+        lblDetails->setObjectName(QString::fromUtf8("lblDetails"));
+
+        gridLayout->addWidget(lblDetails, 5, 0, 1, 1);
+
+        details = new QTextEdit(ReplaceSegmentDialog);
+        details->setObjectName(QString::fromUtf8("details"));
+
+        gridLayout->addWidget(details, 6, 0, 1, 3);
+
+        label_4 = new QLabel(ReplaceSegmentDialog);
+        label_4->setObjectName(QString::fromUtf8("label_4"));
+
+        gridLayout->addWidget(label_4, 7, 0, 1, 1);
+
+        ignoreDate = new QDateEdit(ReplaceSegmentDialog);
+        ignoreDate->setObjectName(QString::fromUtf8("ignoreDate"));
+        ignoreDate->setDateTime(QDateTime(QDate(2000, 1, 1), QTime(0, 0, 0)));
+
+        gridLayout->addWidget(ignoreDate, 7, 1, 1, 2);
 
         lblHelp = new QLabel(ReplaceSegmentDialog);
         lblHelp->setObjectName(QString::fromUtf8("lblHelp"));
@@ -90,65 +117,14 @@ public:
         lblHelp->setPalette(palette);
         lblHelp->setWordWrap(true);
 
-        gridLayout->addWidget(lblHelp, 10, 0, 1, 4);
-
-        rbBoth = new QRadioButton(ReplaceSegmentDialog);
-        rbBoth->setObjectName(QString::fromUtf8("rbBoth"));
-
-        gridLayout->addWidget(rbBoth, 0, 3, 1, 1);
-
-        cbSegments = new QComboBox(ReplaceSegmentDialog);
-        cbSegments->setObjectName(QString::fromUtf8("cbSegments"));
-
-        gridLayout->addWidget(cbSegments, 1, 0, 1, 4);
-
-        newSegments = new QPlainTextEdit(ReplaceSegmentDialog);
-        newSegments->setObjectName(QString::fromUtf8("newSegments"));
-
-        gridLayout->addWidget(newSegments, 5, 0, 1, 4);
-
-        lblDetails = new QLabel(ReplaceSegmentDialog);
-        lblDetails->setObjectName(QString::fromUtf8("lblDetails"));
-
-        gridLayout->addWidget(lblDetails, 6, 0, 1, 1);
-
-        details = new QTextEdit(ReplaceSegmentDialog);
-        details->setObjectName(QString::fromUtf8("details"));
-
-        gridLayout->addWidget(details, 7, 0, 1, 4);
-
-        label_3 = new QLabel(ReplaceSegmentDialog);
-        label_3->setObjectName(QString::fromUtf8("label_3"));
-
-        gridLayout->addWidget(label_3, 0, 0, 1, 1);
-
-        label_4 = new QLabel(ReplaceSegmentDialog);
-        label_4->setObjectName(QString::fromUtf8("label_4"));
-
-        gridLayout->addWidget(label_4, 8, 0, 1, 2);
-
-        rbDouble = new QRadioButton(ReplaceSegmentDialog);
-        rbDouble->setObjectName(QString::fromUtf8("rbDouble"));
-
-        gridLayout->addWidget(rbDouble, 0, 2, 1, 1);
-
-        rbDelete = new QRadioButton(ReplaceSegmentDialog);
-        rbDelete->setObjectName(QString::fromUtf8("rbDelete"));
-
-        gridLayout->addWidget(rbDelete, 2, 2, 1, 1);
+        gridLayout->addWidget(lblHelp, 8, 0, 1, 1);
 
         buttonBox = new QDialogButtonBox(ReplaceSegmentDialog);
         buttonBox->setObjectName(QString::fromUtf8("buttonBox"));
         buttonBox->setOrientation(Qt::Horizontal);
         buttonBox->setStandardButtons(QDialogButtonBox::Apply|QDialogButtonBox::Cancel|QDialogButtonBox::SaveAll);
 
-        gridLayout->addWidget(buttonBox, 11, 0, 1, 4);
-
-        ignoreDate = new QDateEdit(ReplaceSegmentDialog);
-        ignoreDate->setObjectName(QString::fromUtf8("ignoreDate"));
-        ignoreDate->setDateTime(QDateTime(QDate(2000, 1, 1), QTime(0, 0, 0)));
-
-        gridLayout->addWidget(ignoreDate, 8, 2, 1, 1);
+        gridLayout->addWidget(buttonBox, 9, 0, 1, 3);
 
 
         retranslateUi(ReplaceSegmentDialog);
@@ -161,18 +137,14 @@ public:
     void retranslateUi(QDialog *ReplaceSegmentDialog)
     {
         ReplaceSegmentDialog->setWindowTitle(QCoreApplication::translate("ReplaceSegmentDialog", "Replace Segments", nullptr));
-        rbSingle->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Single", nullptr));
         label->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Segment(s) being deleted:", nullptr));
-        rbAdd->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Add", nullptr));
-        label_2->setText(QCoreApplication::translate("ReplaceSegmentDialog", "New segment(s):", nullptr));
-        lblHelp->setText(QCoreApplication::translate("ReplaceSegmentDialog", "help", nullptr));
-        rbBoth->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Both", nullptr));
-        lblDetails->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Details:", nullptr));
-        label_3->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Display segments:", nullptr));
-        label_4->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Ignore after this date:", nullptr));
-        rbDouble->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Double", nullptr));
         rbDelete->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Delete", nullptr));
+        label_2->setText(QCoreApplication::translate("ReplaceSegmentDialog", "New segment(s):", nullptr));
+        rbAdd->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Add", nullptr));
+        lblDetails->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Details:", nullptr));
+        label_4->setText(QCoreApplication::translate("ReplaceSegmentDialog", "Ignore after this date:", nullptr));
         ignoreDate->setDisplayFormat(QCoreApplication::translate("ReplaceSegmentDialog", "yyyy/MM/dd", nullptr));
+        lblHelp->setText(QCoreApplication::translate("ReplaceSegmentDialog", "help", nullptr));
     } // retranslateUi
 
 };

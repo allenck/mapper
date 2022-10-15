@@ -26,9 +26,9 @@ SplitSegmentDlg::SplitSegmentDlg(int segmentId, QWidget *parent) :
 
 
  //QStringList routeTypes = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
- ui->cbTrackType1->addItems(SegmentInfo::ROUTETYPES);
+ ui->cbTrackType1->addItems(SegmentData::ROUTETYPES);
  ui->cbTrackType1->setCurrentIndex(si.routeType);
- ui->cbTrackType2->addItems(SegmentInfo::ROUTETYPES);
+ ui->cbTrackType2->addItems(SegmentData::ROUTETYPES);
 
  connect(ui->dateFrom1, &QDateTimeEdit::dateChanged, [=]{
 

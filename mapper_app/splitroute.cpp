@@ -430,9 +430,9 @@ void SplitRoute::btnOK_Click()
      if(rd1.startDate < ui->dateFrom1->date()  && rd1.endDate < ui->dateFrom2->date())
      {
       if (sql->addSegmentToRoute(_routeNbr1, ui->txtNewRouteName1->text(),
-                                 rd1.startDate.toString("yyyy/MM/dd"), ui->dateTo1->text(),
+                                 rd1.startDate, ui->dateTo1->date(),
                                  rd1.lineKey, _companyList.at(ui->cbCompany1->currentIndex())->companyKey,
-                                 rd1.tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave,
+                                 rd1.tractionType, rd1.direction, rd1.next, rd1.prev, rd1.normalEnter, rd1.normalLeave,
                                  rd1.reverseEnter, rd1.reverseLeave, rd1.oneWay, rd.trackUsage) == false)
       {
        ui->lblHelp->setText (tr("add failed"));
@@ -447,9 +447,9 @@ void SplitRoute::btnOK_Click()
      if(rd1.endDate > ui->dateTo2->date() )
      {
       if (sql->addSegmentToRoute(_routeNbr1, ui->txtNewRouteName1->text(),
-                                 ui->dateTo2->text(), rd1.endDate.toString("yyyy/MM/dd"),
+                                 ui->dateTo2->date(), rd1.endDate,
                                  rd1.lineKey, _companyList.at(ui->cbCompany1->currentIndex())->companyKey,
-                                 rd1.tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave,
+                                 rd1.tractionType, rd1.direction, rd1.next, rd1.prev, rd1.normalEnter, rd1.normalLeave,
                                  rd1.reverseEnter, rd1.reverseLeave, rd1.oneWay, rd.trackUsage) == false)
       {
        ui->lblHelp->setText (tr("add failed"));
@@ -462,9 +462,9 @@ void SplitRoute::btnOK_Click()
      }
 
      if (sql->addSegmentToRoute(_routeNbr1, ui->txtNewRouteName1->text(),
-                                ui->dateFrom1->text(), ui->dateTo1->text(),
+                                ui->dateFrom1->date(), ui->dateTo1->date(),
                                 rd1.lineKey, _companyList.at(ui->cbCompany1->currentIndex())->companyKey,
-                                rd1.tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave,
+                                rd1.tractionType, rd1.direction, rd1.next, rd1.prev, rd1.normalEnter, rd1.normalLeave,
                                 rd1.reverseEnter, rd1.reverseLeave, rd1.oneWay, rd1.trackUsage) == false)
      {
       ui->lblHelp->setText (tr("add failed"));
@@ -475,9 +475,9 @@ void SplitRoute::btnOK_Click()
      }
 
      if (sql->addSegmentToRoute(_routeNbr2, ui->txtNewRouteName2->text(),
-                                ui->dateFrom2->text(), ui->dateTo2->text(),
+                                ui->dateFrom2->date(), ui->dateTo2->date(),
                                 rd1.lineKey, _companyList.at(ui->cbCompany2->currentIndex())->companyKey,
-                                rd1.tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave,
+                                rd1.tractionType, rd1.direction, rd1.next, rd1.prev, rd1.normalEnter, rd1.normalLeave,
                                 rd1.reverseEnter, rd1.reverseLeave, rd1.oneWay, rd.trackUsage) == false)
      {
       ui->lblHelp->setText (tr("add failed"));

@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QButtonGroup>
 #include "data.h"
+#include "sql.h"
 
 namespace Ui {
  class ReplaceSegmentDialog;
@@ -18,9 +19,9 @@ class ReplaceSegmentDialog : public QDialog
   ~ReplaceSegmentDialog();
  public slots:
   void Process(QAbstractButton *button);
-  void cbSegmentsSelectedValueChanged(qint32 index);
-  void refreshSegmentCB();
-  void updateDetails(QString);
+//  void cbSegmentsSelectedValueChanged(qint32 index);
+//  void refreshSegmentCB();
+//  void updateDetails(QString);
 
  private:
   Ui::ReplaceSegmentDialog *ui;
@@ -28,6 +29,7 @@ class ReplaceSegmentDialog : public QDialog
   QButtonGroup* enterGrp;
   QList<SegmentInfo> cbSegmentInfoList;
   bool bRefreshingSegments;
+  SQL* sql;
 };
 
 #endif // REPLACESEGMENTDIALOG_H

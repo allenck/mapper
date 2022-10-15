@@ -40,9 +40,9 @@ public:
     QList<TerminalInfo> getTerminalInfoUsingSegment(int segmentId);
     QString getAlphaRoute(qint32 route, qint32 company);
     QList<tractionTypeInfo> getTractionTypes();
-    QList<SegmentInfo> getSegmentInfo();
-    SegmentInfo getSegmentInfo(qint32 segmentId);
-    SegmentInfo getSegmentInfo(qint32 segmentId, bool bSuppressPrompt);
+    QT_DEPRECATED QList<SegmentInfo> getSegmentInfo();
+    QList<SegmentData> getSegmentDataList();
+    QT_DEPRECATED SegmentInfo getSegmentInfo(qint32 segmentId);
     SegmentData getSegmentData(qint32 SegmentId);
     QList<SegmentInfo> getRouteSegmentsInOrder2(qint32 route, QString name, QString date);
     QList<RouteData> getRoutes(qint32 segmentid, QString date );
@@ -61,9 +61,9 @@ public:
     bool updateStation(qint32 stationKey, qint32 infoKey);
     bool updateStation(qint32 stationKey, LatLng latLng);
     bool updateStationRoute(qint32 stationKey, qint32 route);
-    Q_DECL_DEPRECATED bool insertPoint(qint32 pt, qint32 SegmentId, double newLat, double newLon);
-    Q_DECL_DEPRECATED bool insertPoint(qint32 pt, qint32 SegmentId, double newLat, double newLon,  qint32* lineSegmentKey);
-    Q_DECL_DEPRECATED bool deletePoint(qint32 pt, qint32 SegmentId, qint32 nbrPts);
+//    Q_DECL_DEPRECATED bool insertPoint(qint32 pt, qint32 SegmentId, double newLat, double newLon);
+//    Q_DECL_DEPRECATED bool insertPoint(qint32 pt, qint32 SegmentId, double newLat, double newLon,  qint32* lineSegmentKey);
+//    Q_DECL_DEPRECATED bool deletePoint(qint32 pt, qint32 SegmentId, qint32 nbrPts);
     //QList<segmentData> getIntersectingSegments(double lat, double lon, double radius) __attribute_deprecated__;
     QList<SegmentInfo> getIntersectingSegments(double lat, double lon, double radius);
 
@@ -82,11 +82,11 @@ public:
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate, QString routeStartDate, QString routeEndDate);
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate);
     bool addSegmentToRoute(RouteData rd);
-    QT_DEPRECATED bool addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate,
-                           qint32 SegmentId, qint32 companyKey, qint32 tractionType, QString direction,
-                           qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave,
-                           QString oneWay, QString trackUsage);
-    bool addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate,
+//    QT_DEPRECATED bool addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate,
+//                           qint32 SegmentId, qint32 companyKey, qint32 tractionType, QString direction,
+//                           qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave,
+//                           QString oneWay, QString trackUsage);
+    bool addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate, QDate endDate,
                            qint32 SegmentId, qint32 companyKey, qint32 tractionType, QString direction,
                            qint32 next, qint32 prev,
                            qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave,
@@ -193,7 +193,7 @@ private:
     Configuration *config;
    // bool compareSegmentData(const segmentData & sd1, const segmentData &sd2);
     QString currentTransaction;
-    void populatePointList(SegmentInfo* sI);
+    QT_DEPRECATED void populatePointList(SegmentData sd);
     bool insertRouteSegment(RouteData rd);
     bool deleteRoute(RouteData rd);
 };

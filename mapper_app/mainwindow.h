@@ -279,6 +279,8 @@ private slots:
     void on_overlayHelp();
     void on_usingHelp();
     void processTileMapResource();
+    void cbStreets_editingFinished();
+    void cbStreets_currentIndexChanged(int);
 
 private:
     //Webviewer *centralWidget;
@@ -366,6 +368,9 @@ private:
     bool bNoDisplay = false;
     bool bDisplayWebDebug = false;
     QStringList overlays;
+    bool bCbStreets_text_changed = false;
+    QString saveStreet = "";
+    bool bCbStreetsRefreshing = false;
 
     void createActions();
     void createMenus();
@@ -390,6 +395,7 @@ private:
     void loadOverlay(Overlay* ov);
     QString path, wikiRoot;
     void loadData(QString data, QString source);
+    void refreshStreetsCb();
 
 private slots:
     void createCityMenu();

@@ -83,9 +83,9 @@ void ReroutingDlg::on_btnOk_clicked()
     foreach(RouteData rd, myArray)
     {
         // copy original route before from date
-        if (sql->addSegmentToRoute(rd.route, rd.name, rd.startDate.toString("yyyy/MM/dd"),
-                                   ui->fromDate->date().addDays(-1).toString("yyyy/MM/dd"), rd.lineKey, rd.companyKey,
-                                   rd.tractionType, rd.direction,
+        if (sql->addSegmentToRoute(rd.route, rd.name, rd.startDate,
+                                   ui->fromDate->date().addDays(-1), rd.lineKey, rd.companyKey,
+                                   rd.tractionType, rd.direction, rd.next, rd.prev,
                                    rd.normalEnter, rd.normalLeave, rd.reverseEnter, rd.reverseLeave, rd.oneWay, rd.trackUsage) == false)
         {
             ui->lblHelp->setText(tr("add failed"));
@@ -95,9 +95,9 @@ void ReroutingDlg::on_btnOk_clicked()
             return;
         }
         // create new route uing new name and fromDate to toDate
-        if (sql->addSegmentToRoute(rd.route, ui->txtRoute->text(), ui->fromDate->text(),
-                                   ui->toDate->date().addDays(-1).toString("yyyy/MM/dd"), rd.lineKey, rd.companyKey,
-                                   rd.tractionType, rd.direction, rd.normalEnter,
+        if (sql->addSegmentToRoute(rd.route, ui->txtRoute->text(), ui->fromDate->date(),
+                                   ui->toDate->date().addDays(-1), rd.lineKey, rd.companyKey,
+                                   rd.tractionType, rd.direction, rd.next, rd.prev, rd.normalEnter,
                                    rd.normalLeave, rd.reverseEnter, rd.reverseLeave, rd.oneWay, rd.trackUsage) == false)
         {
             ui->lblHelp->setText(tr("add failed"));
@@ -108,8 +108,8 @@ void ReroutingDlg::on_btnOk_clicked()
             return;
         }
         // copy old route back after toDate
-        if (sql->addSegmentToRoute(rd.route, rd.name,  ui->toDate->date().toString("yyyy/MM/dd"), rd.endDate.toString("yyyy/MM/dd"),
-                                   rd.lineKey, rd.companyKey, rd.tractionType, rd.direction,
+        if (sql->addSegmentToRoute(rd.route, rd.name,  ui->toDate->date(), rd.endDate,
+                                   rd.lineKey, rd.companyKey, rd.tractionType, rd.direction, rd.next, rd.prev,
                                    rd.normalEnter, rd.normalLeave, rd.reverseEnter, rd.reverseLeave, rd.oneWay, rd.trackUsage) == false)
         {
             ui->lblHelp->setText(tr("add failed"));

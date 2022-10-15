@@ -135,23 +135,69 @@ public:
      return "";
  }
 };
+class Bounds : public QRectF
+{
+ public:
+ Bounds();
+ Bounds(LatLng sw, LatLng ne);
+ Bounds(QString bnds);
+ ~Bounds();
+ Bounds(const Bounds& other);
+ bool isValid();
+ bool checkValid();
+ bool updateBounds(LatLng pt);
+ bool updateBounds(Bounds bnds);
+
+ LatLng swPt();
+ LatLng nePt();
+ QString toString();
+ bool contains(const QPointF &p) const;
+ LatLng center();
+
+ private:
+ LatLng _swPt;
+ LatLng _nePt;
+ bool bBoundsValid;
+};
+
 class SegmentData
 {
-    public:
-        //explicit segmentData(QObject *parent = 0);
-        SegmentData();
-        qint32 SegmentId;
-        qint32 tracks;
-        RouteType type;
-        double startLat, startLon, endLat, endLon;
-        double length;
-        int points;
-        QString streetName;
-        QString description;
-        QDate startDate;
-        QDate endDate;
-        QString direction;
-        Bearing bearing;
+public:
+    //explicit segmentData(QObject *parent = 0);
+    SegmentData();
+    ~SegmentData() {}
+    SegmentData(const SegmentData&);
+    void setPoints(QString);
+    QString toString();
+    static QStringList ROUTETYPES;// = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
+    QString pointsString();
+    int getSegmentId() {return segmentId;}
+    LatLng getStartLatLng() { return LatLng(startLat, startLon);}
+    LatLng getEndLatLng() { return LatLng(endLat, endLon);}
+    QString getStreetName() { return streetName;}
+    QString getDescription() const {return description;}
+    int getTracks() {return tracks;}
+ private:
+    qint32 segmentId;
+    qint32 tracks;
+    RouteType routeType;
+    double startLat, startLon, endLat, endLon;
+    double length;
+    qint32	points;
+    QString streetName;
+    QString description;
+    QDate startDate = QDate::fromString("1880/01/01", "yyyy/MM/dd");
+    QDate endDate = QDate::fromString("2050/12/31", "yyyy/MM/dd");
+    QString direction;
+    Bearing bearing;     // bearing from start to end
+    Bearing bearingStart; // bearing of first portion from point(first +1) to point(first)
+    Bearing bearingEnd;   // bearing of last portion from point(last-1) to point(last)
+    QList<LatLng> pointList;
+    Bounds bounds;
+    QT_DEPRECATED_VARIABLE QString oneWay;
+
+    bool bNeedsUpdate = false;
+    friend class SQL;
 };
 
 class RouteData
@@ -160,6 +206,8 @@ class RouteData
 public:
     //explicit routeData(QObject *parent = 0);
     RouteData();
+    ~RouteData();
+    RouteData(const RouteData&);
     qint32 route;
     QString alphaRoute;
     QString name;
@@ -183,8 +231,6 @@ public:
     Bearing* bearing = nullptr;
 
     QString toString();
-    ~RouteData();
-    RouteData(const RouteData&);
 signals:
 
 public slots:
@@ -228,30 +274,6 @@ class RouteInfo
 };
 
 
-class Bounds : public QRectF
-{
- public:
- Bounds();
- Bounds(LatLng sw, LatLng ne);
- Bounds(QString bnds);
- ~Bounds();
- Bounds(const Bounds& other);
- bool isValid();
- bool checkValid();
- bool updateBounds(LatLng pt);
- bool updateBounds(Bounds bnds);
-
- LatLng swPt();
- LatLng nePt();
- QString toString();
- bool contains(const QPointF &p) const;
- LatLng center();
-
- private:
- LatLng _swPt;
- LatLng _nePt;
- bool bBoundsValid;
-};
 Q_DECLARE_METATYPE(Bounds)
 
 class TerminalInfo
@@ -345,35 +367,15 @@ class SegmentInfo
   startDate = "1880/01/01";
   endDate = "2050/12/31";
  }
-
-
- QString toString()
- {
-  QString str;
-  //QStringList routeTypes = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
-
-  if(routeType < 0 || routeType>= ROUTETYPES.count())
-   routeType = (RouteType)0;
-  QString trackType = ROUTETYPES.at(routeType);
-  QString strSegment = QString("%1").arg(segmentId);
-   if (tracks == 1)
-       str = description + QString("(single/%2) Seg=%1").arg(segmentId).arg(trackType);
-   else
-       str = description + QString(" (double/%2) Seg=%1").arg(segmentId).arg(trackType);
-  return str;
- }
-
  void setPoints(QString sPoints);
-
  QString pointsString();
-
  void addPoint(LatLng pt);
  void insertPoint(int ptNum, LatLng pt);
  void movePoint(int ptNum, LatLng pt);
  void deletePoint(int ptnum);
  void checkTracks();
  void displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst);
-
+ QString toString();
 };
 
 class routeIntersects

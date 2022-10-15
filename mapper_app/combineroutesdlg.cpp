@@ -137,9 +137,9 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
 
     foreach(RouteData rd1, myArray)
     {
-        if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->text(),
-                                   ui->endDate->date().toString("yyyy/MM/dd"), rd1.lineKey, rd1.companyKey,
-                                   rd1.tractionType, rd1.direction,
+        if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->date(),
+                                   ui->endDate->date(), rd1.lineKey, rd1.companyKey,
+                                   rd1.tractionType, rd1.direction, rd1.next, rd1.prev,
                                    rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave,
                                    rd1.oneWay, rd1.trackUsage) == false)
         {
@@ -153,9 +153,9 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
 
     foreach(RouteData rd1, myArray)
     {
-        if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->text(),
-                                   ui->endDate->date().toString("yyyy/MM/dd"), rd1.lineKey, rd1.companyKey,
-                                   rd1.tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave,
+        if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->date(),
+                                   ui->endDate->date(), rd1.lineKey, rd1.companyKey,
+                                   rd1.tractionType, rd1.direction, rd1.next, rd1.prev, rd1.normalEnter, rd1.normalLeave,
                                    rd1.reverseEnter, rd1.reverseLeave, rd1.oneWay, rd1.trackUsage) == false)
         {
             ui->lblHelp->setText(tr("add failed"));

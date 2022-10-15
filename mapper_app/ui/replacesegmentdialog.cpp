@@ -1,6 +1,6 @@
 #include "replacesegmentdialog.h"
 #include "ui_replacesegmentdialog.h"
-#include "sql.h"
+#include "segmentselectionwidget.h"
 
 bool compareSegmentInfo2(const SegmentInfo & s1, const SegmentInfo & s2)
 {
@@ -12,6 +12,7 @@ ReplaceSegmentDialog::ReplaceSegmentDialog(QWidget *parent) :
   ui(new Ui::ReplaceSegmentDialog)
 {
  ui->setupUi(this);
+ sql = SQL::instance();
 
  connect(ui->buttonBox, SIGNAL(clicked(QAbstractButton *)), this, SLOT(Process(QAbstractButton *)));
  connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
@@ -23,23 +24,33 @@ ReplaceSegmentDialog::ReplaceSegmentDialog(QWidget *parent) :
  connect(ui->oldSegments, &QPlainTextEdit::textChanged, [=]{
  });
 
- cbSegmentsGrp = new QButtonGroup(this);
- cbSegmentsGrp->addButton(ui->rbSingle);
- cbSegmentsGrp->addButton(ui->rbDouble);
- cbSegmentsGrp->addButton(ui->rbBoth);
- ui->rbBoth->setChecked(true);
+// cbSegmentsGrp = new QButtonGroup(this);
+// cbSegmentsGrp->addButton(ui->rs->rbSingle);
+// cbSegmentsGrp->addButton(ui->rbDouble);
+// cbSegmentsGrp->addButton(ui->rbBoth);
+// ui->rbBoth->setChecked(true);
 
  enterGrp = new QButtonGroup(this);
  enterGrp->addButton(ui->rbAdd);
  enterGrp->addButton(ui->rbDelete);
  ui->rbDelete->setChecked(true);
  ui->ignoreDate->setDate(QDate::currentDate());
- refreshSegmentCB();
+// QSortFilterProxyModel* proxy = new QSortFilterProxyModel(ui->cbStreets);
+// proxy->setSourceModel(ui->cbStreets->model());
+// // combo's current model must be reparented,
+// // otherwise QComboBox::setModel() will delete it
+// ui->cbStreets->model()->setParent(proxy);
+// ui->cbStreets->setModel(proxy);
+// connect(ui->cbStreets, &QComboBox::currentTextChanged, [=]{
+//  if(!bRefreshingSegments)
+//   refreshSegmentCB();
+// });
+// refreshSegmentCB();
 
- connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSegmentsSelectedValueChanged(int)));
- connect(ui->rbSingle, SIGNAL(toggled(bool)), this, SLOT(refreshSegmentCB()));
- connect(ui->rbDouble, SIGNAL(toggled(bool)), this, SLOT(refreshSegmentCB()));
- connect(ui->rbBoth, SIGNAL(toggled(bool)), this, SLOT(refreshSegmentCB()));
+// connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSegmentsSelectedValueChanged(int)));
+// connect(ui->rbSingle, SIGNAL(toggled(bool)), this, SLOT(refreshSegmentCB()));
+// connect(ui->rbDouble, SIGNAL(toggled(bool)), this, SLOT(refreshSegmentCB()));
+// connect(ui->rbBoth, SIGNAL(toggled(bool)), this, SLOT(refreshSegmentCB()));
 
 }
 
@@ -74,22 +85,95 @@ void ReplaceSegmentDialog::Process(QAbstractButton *button)
 
  }
 }
-
+#if 0
 void ReplaceSegmentDialog::refreshSegmentCB()
 {
- bRefreshingSegments = true;
+ QStringList tokens;
+ QStringList tokens2;
+ QStringList streets;
+ QString description;
+
+    bRefreshingSegments = true;
     ui->cbSegments->clear();
-    cbSegmentInfoList = SQL::instance()->getSegmentInfo();
+    QString selectedStreet = "";
+    if(ui->cbStreets->currentIndex() >0)
+     selectedStreet = ui->cbStreets->currentText().trimmed();
+    ui->cbStreets->clear();
+    ui->cbStreets->addItem("");
+    cbSegmentInfoList = sql->getSegmentInfo();
     qSort(cbSegmentInfoList.begin(), cbSegmentInfoList.end(),compareSegmentInfo2);
     //foreach (segmentInfo sI in cbSegmentInfoList)
     for(int i=0; i < cbSegmentInfoList.count(); i++)
     {
      SegmentInfo sI = cbSegmentInfoList.at(i);
-     if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
-        (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
-        ui->rbBoth->isChecked())
-      ui->cbSegments->addItem(sI.toString(), sI.segmentId);
+     description = sI.description;
+     // populate streets
+     tokens = description.split(",");
+     if(tokens.count() > 1)
+     {
+      QString street = tokens.at(0).trimmed();
+      if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
+      //if(street.indexOf(" ")) street= street.mid(0, street.indexOf(" "));
+      if(ui->cbStreets->findText(street)<0)
+      {
+       ui->cbStreets->addItem(street);
+       streets.append(street);
+      }
+      if( selectedStreet == street)
+      {
+       if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
+          (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
+          ui->rbBoth->isChecked())
+        ui->cbSegments->addItem(sI.toString(), sI.segmentId);
+        continue;
+      }
+      else if(selectedStreet == "" )
+      {
+       if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
+          (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
+          ui->rbBoth->isChecked())
+        ui->cbSegments->addItem(sI.toString(), sI.segmentId);
+       continue;
+      }
+      tokens2 = tokens.at(1).split("to");
+      {
+       for(int i=0; i < tokens2.count(); i++)
+       {
+        QString street2 = tokens2.at(i);
+        street2 = tokens.at(0).trimmed();
+        if(street2.indexOf("(")) street2= street.mid(0, street2.indexOf("("));
+        //if(street2.indexOf(" ")) street2= street2.mid(0, street2.indexOf(" "));
+        if(ui->cbStreets->findText(street2)<0)
+        {
+         ui->cbStreets->addItem(street2);
+         streets.append(street2);
+        }
+        if(selectedStreet == street2)
+        {
+         if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
+            (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
+            ui->rbBoth->isChecked())
+          ui->cbSegments->addItem(sI.toString(), sI.segmentId);
+         continue;
+        }
+        else if(selectedStreet == "" )
+        {
+         if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
+            (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
+            ui->rbBoth->isChecked())
+          ui->cbSegments->addItem(sI.toString(), sI.segmentId);
+         continue;
+        }
+       }
+      }
+     }
+     else
+     {
+      tokens = sI.description.split(" ");
+     }
     }
+    ui->cbStreets->model()->sort(0);
+    ui->cbStreets->setCurrentText(selectedStreet);
     bRefreshingSegments = false;
 }
 
@@ -133,3 +217,4 @@ void ReplaceSegmentDialog::updateDetails(QString txt)
 {
  ui->details->append(txt);
 }
+#endif
