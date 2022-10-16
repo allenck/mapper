@@ -144,33 +144,33 @@ segmentGroup::~segmentGroup()
 //}
 SegmentData::SegmentData()
 {
- segmentId = -1;
- startLat = startLon = endLat = endLon=0;
+ _segmentId = -1;
+ _startLat = _startLon = _endLat = _endLon=0;
  length = 0;
- streetName = "";
- bearing = bearingStart = bearingEnd =Bearing();
+ _streetName = "";
+ _bearing = _bearingStart = _bearingEnd =Bearing();
 }
 
 SegmentData::SegmentData(const SegmentData& o)
 {
- segmentId = o.segmentId;
- tracks = o.tracks;
- routeType = o.routeType;
- startLat = o.startLat;
- startLon = o.startLon;
- endLat = o.endLat;
- endLon = o.endLon;
+ _segmentId = o._segmentId;
+ _tracks = o._tracks;
+ _routeType = o._routeType;
+ _startLat = o._startLat;
+ _startLon = o._startLon;
+ _endLat = o._endLat;
+ _endLon = o._endLon;
  length = o.length;;
  points = o.points;
- streetName = o.streetName;
- description = o.description;
- startDate = o.startDate;
- endDate = o.endDate;
- direction  = o.direction;
- bearing = o.bearing;
- bearingStart = o.bearingStart;
- bearingEnd = o.bearingEnd;
- pointList = o.pointList;
+ _streetName = o._streetName;
+ _description = o._description;
+ _startDate = o._startDate;
+ _endDate = o._endDate;
+ _direction  = o._direction;
+ _bearing = o._bearing;
+ _bearingStart = o._bearingStart;
+ _bearingEnd = o._bearingEnd;
+ _pointList = o._pointList;
 }
 
 QString SegmentData::toString()
@@ -178,18 +178,52 @@ QString SegmentData::toString()
  QString str;
  //QStringList routeTypes = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
 
- if(routeType < 0 || routeType>= ROUTETYPES.count())
-  routeType = (RouteType)0;
- QString trackType = ROUTETYPES.at(routeType);
- QString strSegment = QString("%1").arg(segmentId);
-  if (tracks == 1)
-      str = description + QString("(single/%2) Seg=%1").arg(segmentId).arg(trackType);
+ if(_routeType < 0 || _routeType>= ROUTETYPES.count())
+  _routeType = (RouteType)0;
+ QString trackType = ROUTETYPES.at(_routeType);
+ QString strSegment = QString("%1").arg(_segmentId);
+  if (_tracks == 1)
+      str = _description + QString("(single/%2) Seg=%1").arg(_segmentId).arg(trackType);
   else
-      str = description + QString(" (double/%2) Seg=%1").arg(segmentId).arg(trackType);
+      str = _description + QString(" (double/%2) Seg=%1").arg(_segmentId).arg(trackType);
  return str;
 
 }
 /*static*/ QStringList SegmentData::ROUTETYPES = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
+
+void SegmentData::addPoint(LatLng pt)
+{
+ _pointList.append(pt);
+ //SQL sql;
+ SQL::instance()->updateSegment(this);
+}
+
+void SegmentData::insertPoint(int ptNum, LatLng pt)
+{
+ // insert ptNum AFTER that point.
+ _pointList.insert(ptNum +1, pt);
+ //lineSegments = pointList.count()-1;
+ //SQL sql;
+ SQL::instance()->updateSegment(this);
+}
+
+void SegmentData::movePoint(int ptNum, LatLng pt)
+{
+ if(ptNum >= _pointList.count()) return;
+ _pointList.replace(ptNum, pt);
+ //SQL sql;
+ SQL::instance()->updateSegment(this);
+}
+
+void SegmentData::deletePoint(int ptNum)
+{
+ if(ptNum < _pointList.count())
+  _pointList.removeAt(ptNum);
+ else
+  qDebug() << QString("delete point %1 from segment %2 failed").arg(ptNum).arg(_segmentId);
+ //SQL sql;
+ SQL::instance()->updateSegment(this);
+}
 
 void SegmentData::setPoints(QString sPoints)
 {
@@ -204,32 +238,32 @@ void SegmentData::setPoints(QString sPoints)
   LatLng latLng = LatLng(sl.at(i).toDouble(), sl.at(i+1).toDouble());
   if(latLng.isValid())
   {
-   pointList.append(latLng);
+   _pointList.append(latLng);
    bounds.updateBounds(latLng);
   }
  }
- for(int i = 1; i < pointList.count(); i++)
+ for(int i = 1; i < _pointList.count(); i++)
  {
-  Bearing b = Bearing(pointList.at(i-1), pointList.at(i));
+  Bearing b = Bearing(_pointList.at(i-1), _pointList.at(i));
   length += b.Distance();
-  endLat = pointList.at(i).lat();
-  endLon = pointList.at(i).lon();
+  _endLat = _pointList.at(i).lat();
+  _endLon = _pointList.at(i).lon();
  }
- if(pointList.count() > 0)
+ if(_pointList.count() > 0)
  {
-  startLat = pointList.at(0).lat();
-  startLon = pointList.at(0).lon();
+  _startLat = _pointList.at(0).lat();
+  _startLon = _pointList.at(0).lon();
  }
- points = pointList.count();
+ points = _pointList.count();
 }
 
 QString SegmentData::pointsString()
 {
  QString ps;
- for(int i=0; i < pointList.count(); i++)
+ for(int i=0; i < _pointList.count(); i++)
  {
   if(i > 0) ps.append(",");
-  LatLng pt = pointList.at(i);
+  LatLng pt = _pointList.at(i);
   ps.append(pt.str());
  }
  return ps;

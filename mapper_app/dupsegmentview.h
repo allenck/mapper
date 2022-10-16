@@ -32,7 +32,7 @@ class dupSegmentViewTableModel : public QAbstractTableModel
     Q_OBJECT
 public:
     explicit dupSegmentViewTableModel(QObject *parent = 0);
-    dupSegmentViewTableModel(QList<SegmentInfo> dupSegmentList, QObject *parent=0);
+    dupSegmentViewTableModel(QList<SegmentData> dupSegmentList, QObject *parent=0);
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
@@ -41,7 +41,7 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role=Qt::EditRole);
     bool insertRows(int position, int rows, const QModelIndex &index=QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index=QModelIndex());
-    QList< SegmentInfo > getList();
+    QList<SegmentData> getList();
     void reset();
     void deleteRow(int row);
 
@@ -49,7 +49,7 @@ signals:
 
 public slots:
 private:
-    QList<SegmentInfo> listOfSegments;
+    QList<SegmentData> listOfSegments;
 
 private slots:
 
@@ -60,7 +60,7 @@ class DupSegmentView : public QObject
     Q_OBJECT
 public:
     DupSegmentView(Configuration *cfg, QObject *parent = 0);
-    void showDupSegments(QList<SegmentInfo>dupSegmentList);
+    void showDupSegments(QList<SegmentData> dupSegmentList);
 
 
 signals:
@@ -77,15 +77,15 @@ private:
     dupSegmentViewTableModel *sourceModel;
     dupSegmentViewSortProxyModel *proxymodel;
     qint32 segmentId, dupSegmentId;
-    SegmentInfo si1;
-    SegmentInfo si2;
+    SegmentData sd1;
+    SegmentData sd2;
     int curRow, curCol;
     bool boolGetItemTableView(QTableView *table);
     QModelIndex currentIndex;
     QMenu menu;
     QAction* selectSegmentAct;
     QAction* deleteDuplicateAct;
-    SegmentInfo currSi;
+    SegmentData currSd;
     qint32 modelRow = -1;
 private slots:
     void Resize (int oldcount,int newcount);

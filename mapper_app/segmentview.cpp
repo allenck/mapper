@@ -39,7 +39,7 @@ SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
 
     ui->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
-    sourceModel = new segmentViewTableModel();
+    sourceModel = new SegmentViewTableModel();
     proxymodel = new segmentViewSortProxyModel(this);
     proxymodel->setSourceModel(sourceModel);
     ui->setModel(proxymodel);
@@ -114,36 +114,36 @@ void SegmentView::aPaste()
 
 void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
 {
-    SegmentInfo siIn;
-    SegmentInfo si;
+    SegmentData sdIn;
+    SegmentData si;
     //SQL sql;
     mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
     double a1 = 0;
 
-    siIn = sql->getSegmentInfo(SegmentId);
-    if (siIn.segmentId < 1)
+    sdIn = sql->getSegmentData(SegmentId);
+    if (sdIn.segmentId() < 1)
     {
         qDebug() << "segmentID " + QString("%1").arg(SegmentId) + " not found";
         return;
 
     }
-//    if (siIn.bearingStart == null || siIn.bearingEnd == null)
+//    if (sdIn.bearingStart == null || sdIn.bearingEnd == null)
 //        return;
-    //if (lat == siIn.startLat && lon == siIn.startLon)
-    if(qAbs(lat - siIn.startLat)< .00000001 && qAbs(lon - siIn.startLon) < .00000001)
+    //if (lat == sdIn.startLat && lon == sdIn.startLon)
+    if(qAbs(lat - sdIn.startLat())< .00000001 && qAbs(lon - sdIn.startLon()) < .00000001)
     {
-        siIn.whichEnd = "S";
-        a1 = siIn.bearingStart.getBearing();
+        sdIn.whichEnd() = "S";
+        a1 = sdIn.bearingStart().getBearing();
     }
     else
     {
-        siIn.whichEnd = "E";
-        a1 = siIn.bearingEnd.getBearing();
+        sdIn.setWhichEnd("E");
+        a1 = sdIn.bearingEnd().getBearing();
     }
     // get all the points within .020km
     myParent->setCursor(QCursor(Qt::WaitCursor));
     sourceModel->reset();
-    myArray = sql->getIntersectingSegments(lat, lon, .020, siIn.routeType);
+    myArray = sql->getIntersectingSegments(lat, lon, .020, sdIn.routeType());
     myParent->setCursor(QCursor(Qt::ArrowCursor));
 
     if(myArray.count()== 0)
@@ -151,7 +151,7 @@ void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
 
     ui->setSortingEnabled(false);
 
-    sourceModel = new segmentViewTableModel(myArray, lat, lon, myParent->m_routeNbr, myParent->m_currRouteEndDate, this);
+    sourceModel = new SegmentViewTableModel(myArray, lat, lon, myParent->m_routeNbr, myParent->m_currRouteEndDate, this);
     proxymodel->setSourceModel(sourceModel);
 
     // get the row of the start segment and the end segment

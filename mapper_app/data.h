@@ -167,35 +167,73 @@ public:
     SegmentData();
     ~SegmentData() {}
     SegmentData(const SegmentData&);
+    void addPoint(LatLng pt);
+    void insertPoint(int ptNum, LatLng pt);
+    void movePoint(int ptNum, LatLng pt);
+    void deletePoint(int ptNum);
     void setPoints(QString);
     QString toString();
     static QStringList ROUTETYPES;// = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
     QString pointsString();
-    int getSegmentId() {return segmentId;}
-    LatLng getStartLatLng() { return LatLng(startLat, startLon);}
-    LatLng getEndLatLng() { return LatLng(endLat, endLon);}
-    QString getStreetName() { return streetName;}
-    QString getDescription() const {return description;}
-    int getTracks() {return tracks;}
+    int segmentId() const {return _segmentId;}
+    void setSegmentId(int segmentId){_segmentId = segmentId;}
+    LatLng getStartLatLng() { return LatLng(_startLat, _startLon);}
+    LatLng getEndLatLng() { return LatLng(_endLat, _endLon);}
+    QString getStreetName() { return _streetName;}
+    QString getDescription() const {return _description;}
+    int tracks() {return _tracks;}
+    void setTracks(int tracks){_tracks = tracks;}
+    QList<LatLng> pointList() {return _pointList;}
+    double startLat() {return _startLat;}
+    double startLon() {return _startLon;}
+    double endLat() {return _endLat;}
+    double endLon() {return _endLon;}
+    void setStartLat(double startLat) {this->_startLat = startLat;}
+    void setStartLon(double startLon) {this->_startLon = startLon;}
+    void setEndLat(double endLat) {this->_endLat = endLat;}
+    void setEndLon(double endLon) {this->_endLon = endLon;}
+    RouteType routeType() {return _routeType;}
+    QString whichEnd() {return _whichEnd;}
+    void setWhichEnd(QString whichEnd){_whichEnd = whichEnd;}
+    QString streetName() {return _streetName;}
+    void setstreetName(QString streetName){_streetName = streetName;}
+    QString description() {return _description;}
+    void setDescription(QString description){_description = description;}
+    QString oneWay() {return _oneWay;}
+    void setOneWay(QString oneWay){_oneWay = oneWay;}
+    QString direction() {return _oneWay;}
+    void setDirection(QString direction){_direction = direction;}
+    int next() const {return _next;}
+    void setNext(int next){_next = next;}
+    int prev() {return _prev;}
+    void setPrev(int prev){_prev = prev;}
+    Bearing bearing() {return _bearing;}
+    void setBearing(Bearing bearing){_bearing = bearing;}
+    Bearing bearingStart() {return _bearingStart;}
+    Bearing bearingEnd() {return _bearingEnd;}
+    QDate startDate() {return _startDate;}
+    QDate endDate() {return _endDate;}
+
  private:
-    qint32 segmentId;
-    qint32 tracks;
-    RouteType routeType;
-    double startLat, startLon, endLat, endLon;
+    qint32 _segmentId;
+    qint32 _tracks;
+    RouteType _routeType;
+    double _startLat, _startLon, _endLat, _endLon;
     double length;
     qint32	points;
-    QString streetName;
-    QString description;
-    QDate startDate = QDate::fromString("1880/01/01", "yyyy/MM/dd");
-    QDate endDate = QDate::fromString("2050/12/31", "yyyy/MM/dd");
-    QString direction;
-    Bearing bearing;     // bearing from start to end
-    Bearing bearingStart; // bearing of first portion from point(first +1) to point(first)
-    Bearing bearingEnd;   // bearing of last portion from point(last-1) to point(last)
-    QList<LatLng> pointList;
+    QString _streetName;
+    QString _description;
+    QDate _startDate = QDate::fromString("1880/01/01", "yyyy/MM/dd");
+    QDate _endDate = QDate::fromString("2050/12/31", "yyyy/MM/dd");
+    QString _direction;
+    Bearing _bearing;      // bearing from start to end
+    Bearing _bearingStart; // bearing of first portion from point(first +1) to point(first)
+    Bearing _bearingEnd;   // bearing of last portion from point(last-1) to point(last)
     Bounds bounds;
-    QT_DEPRECATED_VARIABLE QString oneWay;
-
+    QList<LatLng> _pointList;
+    QString _whichEnd;     //Not in db, used for sequencing
+    QString _oneWay;       //Not in db, used for sequencing
+    int _next, _prev;      //Not in db, used for sequencing
     bool bNeedsUpdate = false;
     friend class SQL;
 };
@@ -383,8 +421,8 @@ class routeIntersects
     public:
     explicit routeIntersects(QObject *parent = 0){Q_UNUSED(parent)}
         RouteData rd;
-        QList<SegmentInfo> startIntersectingSegments;
-        QList<SegmentInfo> endIntersectingSegments;
+        QList<SegmentData> startIntersectingSegments;
+        QList<SegmentData> endIntersectingSegments;
 };
 
 // Stations are some type of transit stop whether it be a Rapid Transit or railroad station or a streetcar or bus stop.

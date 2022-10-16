@@ -383,7 +383,9 @@ private:
     Configuration* config;
 
     qint32 m_SegmentId;
-    QList<SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
+    QT_DEPRECATED QList<SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
+    QList<SegmentData> cbSegmentDataList;  // list of segmentInfo items in cbSegments
+
     qint32 m_currPoint, m_nbrPoints;
     QList<LatLng> m_points;
     //segmentInfo si;

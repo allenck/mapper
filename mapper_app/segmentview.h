@@ -17,7 +17,7 @@ public:
     QMenu menu;
 
     void showSegmentsAtPoint(double lat, double lon, qint32 SegmentId);
-    segmentViewTableModel *sourceModel;
+    SegmentViewTableModel *sourceModel;
     segmentViewSortProxyModel *proxymodel;
     QModelIndex currentIndex;
 signals:
@@ -32,7 +32,7 @@ private:
     qint32 curRow, curCol;
     QStringList headers;
     QTableView* ui;
-    QList<SegmentInfo> myArray;
+    QList<SegmentData> myArray;
     Configuration *config;
     SQL* sql;
 

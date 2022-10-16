@@ -127,8 +127,8 @@ void EditSegmentDialog::On_cbSegments_currentIndexChanged(int i)
  ui->txtDirection->setText(si->direction);
  ui->txtBearing->setText(QString::number(si->bearing.getBearing(),'g',4));
 
- sql->getSegmentDates(si);
- if(si->bNeedsUpdate)
+// sql->getSegmentDates(si);
+// if(si->bNeedsUpdate)
 //  btnUpdate->setEnabled(true);
  ui->buttonBox->button(QDialogButtonBox::Save)->setEnabled(true);
  ui->txtRoutes->setText(QString::number(si->routeCount));

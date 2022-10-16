@@ -54,13 +54,13 @@ private:
     QList<tractionTypeInfo> _tractionList;
     QList<QString> _routeNamesList;
     SQL* sql;
-    qint32 _SegmentId;
+    qint32 _segmentId;
     bool bNewRouteNbr;
 //        string error = "";
     bool bRouteChanged;
     //public event routeChangedEventHandler routeChanged;
     //public EventHandler segmentChanged;
-    SegmentInfo si;
+    SegmentData sd;
     //bool bIgnoreDirection = false;
     //public event segmentChangedEventHandler SegmentChanged;
     bool formNotLoaded;

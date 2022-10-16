@@ -271,7 +271,10 @@ void editStation::btnOK_Click()
 
  if(ui->rbAddPoint->isChecked())
  {
-  sql->insertPoint((qint32)_pt, _segmentId, _latLng.lat(), _latLng.lon(), & _lineSegmentId);
+  //sql->insertPoint((qint32)_pt, _segmentId, _latLng.lat(), _latLng.lon(), & _lineSegmentId);
+  SegmentData sd = sql->getSegmentData(_segmentId);
+  sd.insertPoint(_pt, _latLng);
+  sql->updateSegment(&sd);
  }
  else if (ui->groupBox1->isEnabled())
  {
@@ -297,7 +300,7 @@ void editStation::btnOK_Click()
    sd = sql->getSegmentData(/*_pt,*/ _segmentId);
    //_latLng = new LatLng(sd.startLat, sd.startLon);
    //sd = sql->getSegmentData(_pt, _segmentId);
-   _lineSegmentId = sd.getSegmentId();
+   _lineSegmentId = sd.segmentId();
    if (sql->Distance(si.startLat, si.startLon, _latLng.lat(), _latLng.lon()) <
            sql->Distance(si.endLat, si.endLon, _latLng.lat(), _latLng.lon()))
        _latLng =  sd.getStartLatLng();
