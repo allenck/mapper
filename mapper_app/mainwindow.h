@@ -97,12 +97,12 @@ class MainWindow;
 }
 
 //class webviewer;
-class mainWindow : public QMainWindow
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    mainWindow(int argc, char * argv[],QWidget *parent = 0);
+    MainWindow(int argc, char * argv[],QWidget *parent = 0);
     Ui::MainWindow *ui;
     QSqlDatabase db;
     SQL* sql;
@@ -200,7 +200,7 @@ private slots:
     void btnLastClicked();
     void btnDeletePtClicked();
     //void onResize();
-    void cbSegmentsSelectedValueChanged(int row);
+    void cbSegmentsSelectedValueChanged(SegmentData sd);
     void cbSegmentsTextChanged(QString text);
     void cbRoutesTextChanged(QString text);
     void cbSegments_Leave();
@@ -279,8 +279,8 @@ private slots:
     void on_overlayHelp();
     void on_usingHelp();
     void processTileMapResource();
-    void cbStreets_editingFinished();
-    void cbStreets_currentIndexChanged(int);
+//    void cbStreets_editingFinished();
+//    void cbStreets_currentIndexChanged(int);
 
 private:
     //Webviewer *centralWidget;
@@ -374,7 +374,7 @@ private:
 
     void createActions();
     void createMenus();
-    void lookupStreetName(SegmentInfo sd);
+    void lookupStreetName(SegmentData sd);
     QString getColor(qint32 tractionType);
     void closeEvent(QCloseEvent *event);
     FileDownloader *m_dataCtrl;
@@ -384,20 +384,20 @@ private:
 
     qint32 m_SegmentId;
     QT_DEPRECATED QList<SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
-    QList<SegmentData> cbSegmentDataList;  // list of segmentInfo items in cbSegments
+    QMap<int, SegmentData> cbSegmentDataList;  // list of segmentInfo items in cbSegments
 
     qint32 m_currPoint, m_nbrPoints;
     QList<LatLng> m_points;
     //segmentInfo si;
     SystemConsoleAction* systemConsoleAction;
     WebViewAction* webViewAction;
-    void updateSegmentInfoDisplay(SegmentInfo si);
+    void updateSegmentInfoDisplay(SegmentData sd);
     void createBridge();
     bool openWebWindow();
     void loadOverlay(Overlay* ov);
     QString path, wikiRoot;
     void loadData(QString data, QString source);
-    void refreshStreetsCb();
+//    void refreshStreetsCb();
 
 private slots:
     void createCityMenu();
@@ -408,7 +408,7 @@ private slots:
     void on_runInBrowser(bool);
     void onWebSocketClosed();
     void loadOverlayData();
-    void refreshSegmentCB();
+//    void refreshSegmentCB();
 
 protected:
     //void resizeEvent(QResizeEvent *event);

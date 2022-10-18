@@ -12,7 +12,7 @@ namespace Ui {
     class RouteDlg;
 }
 
-class mainWindow;
+class MainWindow;
 class RouteDlg : public QDialog
 {
     Q_OBJECT
@@ -79,7 +79,7 @@ private:
     void setCompany(qint32 companyKey);
     void checkDirection(QString routeDirection);
     void displayDates(QString str);
-    mainWindow* myParent;
+    MainWindow* myParent;
     QDate minDate;
     QDate maxDate;
     void CalculateDates();

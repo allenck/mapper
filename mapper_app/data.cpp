@@ -146,7 +146,7 @@ SegmentData::SegmentData()
 {
  _segmentId = -1;
  _startLat = _startLon = _endLat = _endLon=0;
- length = 0;
+ _length = 0;
  _streetName = "";
  _bearing = _bearingStart = _bearingEnd =Bearing();
 }
@@ -160,7 +160,7 @@ SegmentData::SegmentData(const SegmentData& o)
  _startLon = o._startLon;
  _endLat = o._endLat;
  _endLon = o._endLon;
- length = o.length;;
+ _length = o._length;;
  points = o.points;
  _streetName = o._streetName;
  _description = o._description;
@@ -227,9 +227,9 @@ void SegmentData::deletePoint(int ptNum)
 
 void SegmentData::setPoints(QString sPoints)
 {
- if(length > 15.0)
+ if(_length > 15.0)
   bNeedsUpdate = true;
- length = 0;
+ _length = 0;
  QStringList sl = sPoints.split(",");
  if(sl.count()== 0 || ((sl.count()& 0x01) == 1)) return;
  //bool bOk;
@@ -245,7 +245,7 @@ void SegmentData::setPoints(QString sPoints)
  for(int i = 1; i < _pointList.count(); i++)
  {
   Bearing b = Bearing(_pointList.at(i-1), _pointList.at(i));
-  length += b.Distance();
+  _length += b.Distance();
   _endLat = _pointList.at(i).lat();
   _endLon = _pointList.at(i).lon();
  }
@@ -539,3 +539,49 @@ bool Bounds::contains(const QPointF &p) const
 }
 
 LatLng Bounds::center() {return LatLng(y(), x());}
+
+void SegmentData::displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst)
+{
+ QVariantList points, objArray;
+ QList<RouteData> myArray ;
+ QString routeNames = "no route";
+ if(date != "")
+ {
+  myArray = SQL::instance()->getRoutes(_segmentId, date);
+  if (myArray.count()== 0)
+  {
+   int i = 0;
+   routeNames = "";
+   //foreach (routeData rd in myArray)
+   for(i=0; i<myArray.count(); i++)
+   {
+    RouteData rd = (RouteData)myArray.at(i);
+    routeNames += rd.name;
+    //i++;
+    if (i+1 < myArray.count())
+     routeNames += ",";
+   }
+  }
+ }
+ if (bClearFirst)
+ {
+  objArray << _segmentId;
+  webViewBridge::instance()->processScript("clearPolyline",objArray);
+ }
+
+ for(int i=0; i < pointList().count(); i++)
+ {
+  points.append(((LatLng)pointList().at(i)).lat());
+  points.append(((LatLng)pointList().at(i)).lon());
+ }
+ int dash = 0;
+ if(routeType() == Incline)
+  dash = 1;
+ else if(routeType() == SurfacePRW)
+  dash = 2;
+ else if(routeType() == Subway)
+  dash = 3;
+ objArray.clear();
+ objArray << _segmentId << routeNames<<_description<<_oneWay<<color<< _tracks << dash << _routeType << trackUsage << _pointList.count()*2 << points;
+ webViewBridge::instance()->processScript("createSegment", objArray);
+}

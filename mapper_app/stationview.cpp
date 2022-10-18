@@ -13,7 +13,7 @@ StationView::StationView(Configuration *cfg, QObject *parent) :
 //    sql->setConfig(config);
     config = Configuration::instance();
     sql = SQL::instance();
-    mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     ui = myParent->ui->tblStationView;
     connect(ui->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int, int)));
 
@@ -71,7 +71,7 @@ void StationView::Resize (int oldcount,int newcount)
 void StationView::showStations()
 {
     //SQL sql;
-    mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     //sql->setConfig( myParent->getConfiguration());
     //QList<StationInfo> stationList =   sql->getStations();
     QList<StationInfo> stationList =   sql->getStations(myParent->m_routeNbr, myParent->m_routeName, myParent->m_currRouteEndDate);
@@ -441,7 +441,7 @@ void StationViewTableModel::setStationList(QList<StationInfo> stationList)
      //qint32 stationKey = index.data().toInt();
      QItemSelectionModel * model = ui->selectionModel();
      QModelIndexList indexes = model->selectedIndexes();
-     mainWindow * parent = qobject_cast<mainWindow*>(this->m_parent);
+     MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
      if(indexes.at(5).data().toDouble() == 0 && indexes.at(6).data().toDouble() == 0)
      {
          parent->ProcessScript("getCenter", "");

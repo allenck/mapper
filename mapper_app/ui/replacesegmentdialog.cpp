@@ -16,42 +16,20 @@ ReplaceSegmentDialog::ReplaceSegmentDialog(QWidget *parent) :
 
  connect(ui->buttonBox, SIGNAL(clicked(QAbstractButton *)), this, SLOT(Process(QAbstractButton *)));
  connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
- connect(SQL::instance(), SIGNAL(details(QString)), this, SLOT(updateDetails(QString)));
- // test paramaters
 // ui->oldSegments->setPlainText("196, 389,879,390");
 // ui->newSegments->setPlainText("135,1304,1059");
  ui->lblHelp->setText("");
  connect(ui->oldSegments, &QPlainTextEdit::textChanged, [=]{
  });
 
-// cbSegmentsGrp = new QButtonGroup(this);
-// cbSegmentsGrp->addButton(ui->rs->rbSingle);
-// cbSegmentsGrp->addButton(ui->rbDouble);
-// cbSegmentsGrp->addButton(ui->rbBoth);
-// ui->rbBoth->setChecked(true);
-
  enterGrp = new QButtonGroup(this);
  enterGrp->addButton(ui->rbAdd);
  enterGrp->addButton(ui->rbDelete);
  ui->rbDelete->setChecked(true);
  ui->ignoreDate->setDate(QDate::currentDate());
-// QSortFilterProxyModel* proxy = new QSortFilterProxyModel(ui->cbStreets);
-// proxy->setSourceModel(ui->cbStreets->model());
-// // combo's current model must be reparented,
-// // otherwise QComboBox::setModel() will delete it
-// ui->cbStreets->model()->setParent(proxy);
-// ui->cbStreets->setModel(proxy);
-// connect(ui->cbStreets, &QComboBox::currentTextChanged, [=]{
-//  if(!bRefreshingSegments)
-//   refreshSegmentCB();
-// });
-// refreshSegmentCB();
+ ui->rs->refresh();
 
-// connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSegmentsSelectedValueChanged(int)));
-// connect(ui->rbSingle, SIGNAL(toggled(bool)), this, SLOT(refreshSegmentCB()));
-// connect(ui->rbDouble, SIGNAL(toggled(bool)), this, SLOT(refreshSegmentCB()));
-// connect(ui->rbBoth, SIGNAL(toggled(bool)), this, SLOT(refreshSegmentCB()));
-
+ connect(ui->rs, SIGNAL(segmentSelected(SegmentData)), this, SLOT(cbSegmentsSelectedValueChanged(SegmentData)));
 }
 
 ReplaceSegmentDialog::~ReplaceSegmentDialog()
@@ -218,3 +196,20 @@ void ReplaceSegmentDialog::updateDetails(QString txt)
  ui->details->append(txt);
 }
 #endif
+void ReplaceSegmentDialog::segmentSelected(SegmentData sd)
+{
+ QString sSegment = QString("%1").arg(sd.segmentId());
+ if(ui->rbDelete->isChecked())
+ {
+  if(!ui->oldSegments->toPlainText().isEmpty())
+   ui->oldSegments->insertPlainText(",");
+  ui->oldSegments->insertPlainText(sSegment);
+ }
+ else
+ {
+  if(!ui->newSegments->toPlainText().isEmpty())
+   ui->newSegments->insertPlainText(",");
+  ui->newSegments->insertPlainText(sSegment);
+
+ }
+}

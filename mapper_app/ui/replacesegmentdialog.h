@@ -19,15 +19,13 @@ class ReplaceSegmentDialog : public QDialog
   ~ReplaceSegmentDialog();
  public slots:
   void Process(QAbstractButton *button);
-//  void cbSegmentsSelectedValueChanged(qint32 index);
-//  void refreshSegmentCB();
-//  void updateDetails(QString);
+  void segmentSelected(SegmentData sd);
 
  private:
   Ui::ReplaceSegmentDialog *ui;
   QButtonGroup* cbSegmentsGrp;
   QButtonGroup* enterGrp;
-  QList<SegmentInfo> cbSegmentInfoList;
+  //QList<SegmentInfo> cbSegmentInfoList;
   bool bRefreshingSegments;
   SQL* sql;
 };

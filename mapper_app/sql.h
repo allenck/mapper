@@ -41,7 +41,7 @@ public:
     QString getAlphaRoute(qint32 route, qint32 company);
     QList<tractionTypeInfo> getTractionTypes();
     QT_DEPRECATED QList<SegmentInfo> getSegmentInfo();
-    QList<SegmentData> getSegmentDataList();
+    QMap<int, SegmentData> getSegmentDataList();
     QT_DEPRECATED SegmentInfo getSegmentInfo(qint32 segmentId);
     SegmentData getSegmentData(qint32 SegmentId);
     QList<SegmentInfo> getRouteSegmentsInOrder2(qint32 route, QString name, QString date);
@@ -166,7 +166,7 @@ public:
     bool doesConstraintExist(QString tbName, QString name);
     bool addColumn(QString table, QString name, QString type);
     bool updateSegmentsTable();
-    bool updateSegment(SegmentData* sd);
+    bool updateSegment(SegmentData *sd);
     QT_DEPRECATED bool updateSegment(SegmentInfo* );
     bool updateTractionType(qint32 tractionType, QString description, QString displayColor, int routeType, QSqlDatabase db = QSqlDatabase());
     void checkTables(QSqlDatabase db);
@@ -182,15 +182,18 @@ public:
     bool updateSegmentDates(SegmentInfo* si);
     QList<SegmentData> getUnusedSegments();
     bool replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegments, QDate ignoreDate);
+    bool updateSegmentDates(); // Global
+    void updateSegmentDates(int segmentId);
+    QPair<QDate,QDate> getStartAndEndDates(int segmentId);
+
 signals:
     void details(QString);
+    void segmentsChanged(int segmentId);
 private:
     SQL();
     static SQL* _instance;
     void myExceptionHandler(Exception e);
-    bool updateSegmentDates();
-    void updateSegmentDates(qint32 segmentId);
-    Configuration *config;
+    Configuration *config =nullptr;
    // bool compareSegmentData(const segmentData & sd1, const segmentData &sd2);
     QString currentTransaction;
 //    QT_DEPRECATED void populatePointList(SegmentData sd);

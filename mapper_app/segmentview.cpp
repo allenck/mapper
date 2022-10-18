@@ -8,7 +8,7 @@ SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
     config = Configuration::instance();
     //sql->setConfig(config)
     sql = SQL::instance();
-    mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     ui = myParent->ui->tblSegmentView;
     connect(ui->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
 
@@ -117,7 +117,7 @@ void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
     SegmentData sdIn;
     SegmentData si;
     //SQL sql;
-    mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     double a1 = 0;
 
     sdIn = sql->getSegmentData(SegmentId);
@@ -186,7 +186,7 @@ void SegmentView::addToRoute()
  QItemSelectionModel * model = ui->selectionModel();
  QModelIndexList indexes = model->selectedIndexes();
  qint32 SegmentId = indexes.at(0).data().toInt();
- mainWindow * parent = qobject_cast<mainWindow*>(this->m_parent);
+ MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
  if(parent->routeDlg == 0)
  {
   parent->routeDlg = new RouteDlg(config, parent);
@@ -217,7 +217,8 @@ void SegmentView::editSegment()
  QItemSelectionModel * model = ui->selectionModel();
  QModelIndexList indexes = model->selectedIndexes();
  qint32 segmentId = indexes.at(0).data().toInt();
- EditSegmentDialog* dlg = new EditSegmentDialog(segmentId);
+ SegmentData sd = SQL::instance()->getSegmentData(segmentId);
+ EditSegmentDialog* dlg = new EditSegmentDialog(sd);
  dlg->exec();
 }
 
@@ -226,7 +227,7 @@ void SegmentView::itemSelectionChanged(QModelIndex index)
     QItemSelectionModel * model = ui->selectionModel();
     QModelIndexList indexes = model->selectedIndexes();
     qint32 segmentId =indexes.at(0).data().toInt();
-    mainWindow * parent = qobject_cast<mainWindow*>(this->m_parent);
+    MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
     parent->ProcessScript("isSegmentDisplayed", QString("%1").arg(segmentId));
     if(parent->m_segmentStatus == "Y")
         parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));

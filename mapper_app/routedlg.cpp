@@ -26,7 +26,6 @@ RouteDlg::RouteDlg(Configuration *cfg, QWidget *parent) :
     strNoRoute = tr("New Route Name");
     connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbr_Leave()) );
     connect(ui->cbRouteName, SIGNAL(signalFocusOut()), this, SLOT(txtRouteName_Leave()));
-//    connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSegments_SelectedIndexChanged(int)));
     connect(ui->gbNormalEnter, SIGNAL(toggled(bool)), this, SLOT(gbNormalEnter_Leave()));
     connect(ui->gbNormalLeave, SIGNAL(toggled(bool)), this, SLOT(gbNormalLeave_Leave()));
     connect(ui->gbReverseEnter, SIGNAL(toggled(bool)), this, SLOT(gbReverseEnter_Leave()));
@@ -66,7 +65,7 @@ RouteDlg::RouteDlg(Configuration *cfg, QWidget *parent) :
 //    connect(this, SIGNAL(setStartDate(QDate)), ui->dateStart, SLOT(setDate(QDate)));
 //    connect(this,SIGNAL(setEndDate(QDate)), ui->dateEnd, SLOT(setDate(QDate)));
     connect(ui->dateStart, SIGNAL(editingFinished()), this, SLOT(dateStart_Leave()));
-    myParent = (mainWindow*)parent;
+    myParent = (MainWindow*)parent;
     connect(myParent, SIGNAL(newCitySelected()), this, SLOT(OnNewCity()));
     fillCompanies();
     fillTractionTypes();
@@ -89,9 +88,9 @@ void RouteDlg::setSegmentId(qint32 segmentid)
  bSegmentChanging = true;
  sql->updateSegment(_segmentId);
  sd = sql->getSegmentData(_segmentId);
- if(qobject_cast<mainWindow*>(parent()))
+ if(qobject_cast<MainWindow*>(parent()))
  {
-    mainWindow* main = qobject_cast<mainWindow*>(parent());
+    MainWindow* main = qobject_cast<MainWindow*>(parent());
     _rd = sql->getSegmentInfoForRouteDates(main->m_routeNbr, main->m_routeName, _segmentId, main->m_currRouteStartDate,
                                            main->m_currRouteEndDate);
  }
@@ -1641,7 +1640,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
     QMessageBox::StandardButtons rslt;
     rslt = QMessageBox::warning(this, tr("Date conflict"), tr("This item conflicts with:\n" ) + rd.name + " " + rd.startDate.toString("yyyy/MM/dd") + " to " + rd.endDate.toString("yyyy/MM/dd") + tr(" Enter Yes to change it's start date to ") +                                            ui->dateEnd->dateTime().addDays(1).toString("yyyy/MM/dd"), QMessageBox::Yes | QMessageBox::No|QMessageBox::Cancel);
     QString trackUsage = " ";
-    if(ui->cbOneWay->isChecked() )
+    if(ui->cbOneWay->isChecked() && rd.sd->tracks() ==2)
     {
      if(ui->rbLeft)
       trackUsage = "L";
@@ -1688,7 +1687,8 @@ void RouteDlg::btnAdd_Click()         // SLOT
      //if (_routeNbr == -1 && _alphaRoute != "")
   _routeNbr = sql->addAltRoute(ui->txtRouteNbr->text(), cd->routePrefix);
   QString trackUsage = " ";
-  if(ui->cbOneWay->isChecked())
+  SegmentData sd = sql->getSegmentData(_segmentId);
+  if(ui->cbOneWay->isChecked() && sd.tracks() ==2)
   {
    if(ui->rbLeft->isChecked()) trackUsage = "L";
    if(ui->rbRight->isChecked()) trackUsage = "R";
@@ -1733,7 +1733,8 @@ void RouteDlg::btnAdd_Click()         // SLOT
       _routeNbr = sql->addAltRoute(_alphaRoute, cd->routePrefix);
   }
   QString trackUsage = " ";
-  if(ui->cbOneWay->isChecked())
+  SegmentData sd = sql->getSegmentData(_segmentId);
+  if(ui->cbOneWay->isChecked() && sd.tracks() == 2)
   {
    if(ui->rbLeft->isChecked()) trackUsage = "L";
    if(ui->rbRight->isChecked()) trackUsage = "R";

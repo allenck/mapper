@@ -12,7 +12,7 @@ RouteView::RouteView(QObject* parent )
     config = Configuration::instance();
 
     //sql.setConfig(config);
-    mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     ui = myParent->ui->tblRouteView;
     connect(ui->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
 
@@ -227,7 +227,7 @@ void RouteView::aPaste()
 void RouteView::updateRouteView()
 {
     //SQL sql;
-    mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     TerminalInfo ti = SQL::instance()->getTerminalInfo(myParent->m_routeNbr, myParent->m_routeName, myParent->m_currRouteEndDate);
     startSegment = ti.startSegment;
     endSegment = ti.endSegment;
@@ -389,7 +389,7 @@ bool ascending_si_segmentId( const SegmentInfo & s1 , const SegmentInfo & s2 )
 void RouteView::reSequenceRoute()
 {
  //SQL sql;
- mainWindow * myParent = qobject_cast<mainWindow*>(m_parent);
+ MainWindow * myParent = qobject_cast<MainWindow*>(m_parent);
  QItemSelectionModel * model = ui->selectionModel();
  QModelIndexList indexes = model->selectedIndexes();
  //qint32 row = model->currentIndex().row();
@@ -452,7 +452,7 @@ void RouteView::itemSelectionChanged(QModelIndex index )
 
   qint32 segmentId = value.toInt();
 
-  mainWindow * parent = qobject_cast<mainWindow*>(this->m_parent);
+  MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
   parent->setCursor(QCursor(Qt::WaitCursor));
   parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
   parent->setCursor(QCursor(Qt::ArrowCursor));
@@ -463,7 +463,7 @@ void RouteView::itemSelectionChanged(QModelIndex index )
 void RouteView::StartRoute_S()         //SLOT
 {
     //SQL sql;
-    mainWindow * myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow * myParent = qobject_cast<MainWindow*>(m_parent);
     QItemSelectionModel * model = ui->selectionModel();
     QModelIndexList indexes = model->selectedIndexes();
     //qint32 row = model->currentIndex().row();
@@ -486,7 +486,7 @@ void RouteView::StartRoute_S()         //SLOT
 void RouteView::EndRoute_S()           // SLOT
 {
     //SQL sql;
-    mainWindow * myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow * myParent = qobject_cast<MainWindow*>(m_parent);
     QItemSelectionModel * model = ui->selectionModel();
     QModelIndexList indexes = model->selectedIndexes();
     //qint32 row = model->currentIndex().row();
@@ -510,7 +510,7 @@ void RouteView::EndRoute_S()           // SLOT
 void RouteView::StartRoute_E()         // SLOT
 {
     //SQL sql;
-    mainWindow * myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow * myParent = qobject_cast<MainWindow*>(m_parent);
     QItemSelectionModel * model = ui->selectionModel();
     QModelIndexList indexes = model->selectedIndexes();
     //qint32 row = model->currentIndex().row();
@@ -534,7 +534,7 @@ void RouteView::StartRoute_E()         // SLOT
 void RouteView::EndRoute_E()       // SLOT
 {
     //SQL sql;
-    mainWindow * myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow * myParent = qobject_cast<MainWindow*>(m_parent);
     QItemSelectionModel * model = ui->selectionModel();
     QModelIndexList indexes = model->selectedIndexes();
     //qint32 row = model->currentIndex().row();
@@ -559,7 +559,7 @@ void RouteView::EndRoute_E()       // SLOT
 }
 void RouteView::updateTerminals()
 {
-    mainWindow * myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow * myParent = qobject_cast<MainWindow*>(m_parent);
     //QItemSelectionModel * model = ui->selectionModel();
     bIsSequenced = true;
     int startSeg = -1, endSeg = -1, startRow=-1, endRow=-1;
@@ -750,7 +750,8 @@ void RouteView::editSegment()
  QItemSelectionModel * model = ui->selectionModel();
  QModelIndexList indexes = model->selectedIndexes();
  qint32 segmentId = indexes.at(0).data().toInt();
- EditSegmentDialog* dlg = new EditSegmentDialog(segmentId);
+ SegmentData sd = SQL::instance()->getSegmentData(segmentId);
+ EditSegmentDialog* dlg = new EditSegmentDialog(sd);
  dlg->exec();
 }
 
@@ -770,7 +771,7 @@ void RouteView::checkChanges()
  if(sourceModel->changedRows.count() > 0)
  {
   QMessageBox::StandardButtons rslt;
-  mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
+  MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
   rslt = QMessageBox::warning(myParent,tr("Commit changes"), tr("There are uncommited changes to the current route. Do you wish to save them?") , QMessageBox::Save | QMessageBox::Discard|QMessageBox::Cancel);
   switch (rslt)
   {

@@ -1,4 +1,4 @@
-﻿#include <QtGui>
+#include <QtGui>
 #ifndef USE_WEBENGINE
 #include <QtWebKit>
 #include <QWebFrame>
@@ -13,7 +13,6 @@
 #include "mainwindow.h"
 #include "webviewbridge.h"
 #include "sql.h"
- #include <QResizeEvent>
 #include <qfile.h>
 #include <qtextstream.h>
 #include "dialogcopyroute.h"
@@ -21,7 +20,6 @@
 #include <QMessageBox>
 #include "segmentdlg.h"
 #include "modifyroutedatedlg.h"
-//#include "splitroute.h"
 #include "exportdlg.h"
 #include "editconnectionsdlg.h"
 #include "locatestreetdlg.h"
@@ -34,8 +32,6 @@
 #include "editcitydialog.h"
 #include "../console/systemconsoleaction.h"
 #include "../console/systemconsole.h"
-//#include "webviewaction.h"
-//#include "webviewer.h"
 #include <QStatusBar>
 #include <QWidgetAction>
 #include <QMenuBar>
@@ -48,11 +44,12 @@
 #include <QProcess>
 #include "sql.h"
 #include "replacesegmentdialog.h"
+#include "segmentselectionwidget.h"
 
-QString mainWindow::pwd = "";
-QString mainWindow::pgmDir = "";
+QString MainWindow::pwd = "";
+QString MainWindow::pgmDir = "";
 
-mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(parent),
+MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(parent),
   ui(new Ui::MainWindow)
 {
  ui->setupUi(this);
@@ -92,6 +89,8 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  statusBar()->addPermanentWidget( zoomIndicator);
  geocoderRslt= new QLabel();
  statusBar()->addPermanentWidget(geocoderRslt);
+
+ ui->ssw->initialize();
 
 #ifndef USE_WEBENGINE
  config->bRunInBrowser = false;
@@ -140,7 +139,7 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
  if(!config->bRunInBrowser)
   webView->page()->setWebChannel(channel);
- connect(m_clientWrapper, &WebSocketClientWrapper::clientClosed, this, &mainWindow::onWebSocketClosed);
+ connect(m_clientWrapper, &WebSocketClientWrapper::clientClosed, this, &MainWindow::onWebSocketClosed);
 
 #endif
 
@@ -254,8 +253,8 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   connect(ui->btnDeletePt, SIGNAL(clicked()), this, SLOT(btnDeletePtClicked()));
   connect(ui->cbRoute, SIGNAL(currentIndexChanged(int)), this, SLOT(onCbRouteIndexChanged(int)));
   connect(ui->cbRoute, SIGNAL(editTextChanged(QString)), this, SLOT(cbRoutesTextChanged(QString)));
-  connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSegmentsSelectedValueChanged(int)));
-  connect(ui->cbSegments, SIGNAL(editTextChanged(QString)), this, SLOT(cbSegmentsTextChanged(QString)));
+//  connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSegmentsSelectedValueChanged(int)));
+//  connect(ui->cbSegments, SIGNAL(editTextChanged(QString)), this, SLOT(cbSegmentsTextChanged(QString)));
   connect(ui->txtStreet, SIGNAL(textChanged(QString)), this, SLOT(txtStreetName_TextChanged(QString)));
   connect(ui->txtStreet, SIGNAL(editingFinished()), this, SLOT(txtStreetName_Leave()));
   ui->txtSegment->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -272,31 +271,31 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   connect(ui->sbRoute, SIGNAL(actionTriggered(int)), this,  SLOT(sbRouteTriggered(int)));
   connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbrLeave()) );
   connect(ui->sbTracks, SIGNAL(valueChanged(int)), this, SLOT(sbTracks_valueChanged(int)));
-  connect(ui->rbSingle, &QRadioButton::clicked, [=]{
-   saveStreet = ui->cbStreets->currentText();
-   refreshSegmentCB();
-  });
-  connect(ui->rbDouble, &QRadioButton::clicked, [=]{
-   saveStreet = ui->cbStreets->currentText();
-   refreshSegmentCB();
-  });
-  connect(ui->rbBoth, &QRadioButton::clicked, [=]{
-   saveStreet = ui->cbStreets->currentText();
-   refreshSegmentCB();
-  });
+//  connect(ui->rbSingle, &QRadioButton::clicked, [=]{
+//   saveStreet = ui->cbStreets->currentText();
+//   refreshSegmentCB();
+//  });
+//  connect(ui->rbDouble, &QRadioButton::clicked, [=]{
+//   saveStreet = ui->cbStreets->currentText();
+//   refreshSegmentCB();
+//  });
+//  connect(ui->rbBoth, &QRadioButton::clicked, [=]{
+//   saveStreet = ui->cbStreets->currentText();
+//   refreshSegmentCB();
+//  });
 
-  QSortFilterProxyModel* proxy = new QSortFilterProxyModel(ui->cbStreets);
-  proxy->setSourceModel(ui->cbStreets->model());
-  // combo's current model must be reparented,
-  // otherwise QComboBox::setModel() will delete it
-  ui->cbStreets->model()->setParent(proxy);
-  ui->cbStreets->setModel(proxy);
-  connect(ui->cbStreets, &QComboBox::editTextChanged, [=]{
-   bCbStreets_text_changed = true;
-  });
-  connect(ui->cbStreets, SIGNAL(editingFinished()), this, SLOT(cbStreets_editingFinished()));
-  connect(ui->cbStreets, SIGNAL(currentIndexChanged(int)), this, SLOT(cbStreets_currentIndexChanged(int)));
-
+//  QSortFilterProxyModel* proxy = new QSortFilterProxyModel(ui->cbStreets);
+//  proxy->setSourceModel(ui->cbStreets->model());
+//  // combo's current model must be reparented,
+//  // otherwise QComboBox::setModel() will delete it
+//  ui->cbStreets->model()->setParent(proxy);
+//  ui->cbStreets->setModel(proxy);
+//  connect(ui->cbStreets, &QComboBox::editTextChanged, [=]{
+//   bCbStreets_text_changed = true;
+//  });
+//  connect(ui->cbStreets, SIGNAL(editingFinished()), this, SLOT(cbStreets_editingFinished()));
+//  connect(ui->cbStreets, SIGNAL(currentIndexChanged(int)), this, SLOT(cbStreets_currentIndexChanged(int)));
+  connect(ui->ssw, SIGNAL(segmentSelected(SegmentData)), this, SLOT(cbSegmentsSelectedValueChanged(SegmentData)));
   // Context menus
   ui->cbRoute->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(ui->cbRoute, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(cbRoute_customContextMenu( const QPoint& )));
@@ -311,21 +310,25 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui->cbRoute->addAction(updateRouteAct);
   ui->cbRoute->addAction(updateTerminalsAct);
 
-  ui->cbSegments->setContextMenuPolicy(Qt::ActionsContextMenu);
-  ui->cbSegments->addAction(addSegmentToRouteAct);
-  ui->cbSegments->addAction(deleteSegmentAct);
-  ui->cbSegments->addAction(findDupSegmentsAct);
-  ui->cbSegments->addAction(findDormantSegmentsAct);
-  ui->cbSegments->addAction(selectSegmentAct);
-  ui->cbSegments->addAction(editSegmentAct);
-  ui->cbSegments->addAction(splitSegmentAct);
+  ui->ssw->cbSegments()->setContextMenuPolicy(Qt::ActionsContextMenu);
+  ui->ssw->cbSegments()->addAction(addSegmentToRouteAct);
+  ui->ssw->cbSegments()->addAction(deleteSegmentAct);
+  ui->ssw->cbSegments()->addAction(findDupSegmentsAct);
+  ui->ssw->cbSegments()->addAction(findDormantSegmentsAct);
+  ui->ssw->cbSegments()->addAction(selectSegmentAct);
+  ui->ssw->cbSegments()->addAction(editSegmentAct);
+  ui->ssw->cbSegments()->addAction(splitSegmentAct);
 
-  connect(ui->cbSegments, SIGNAL(signalFocusOut()), this, SLOT( cbSegments_Leave()));
+  connect(SQL::instance(), &SQL::segmentsChanged, [=]{
+   cbSegmentDataList = sql->getSegmentDataList();
+  });
+
+//  connect(ui->cbSegments, SIGNAL(signalFocusOut()), this, SLOT( cbSegments_Leave()));
   connect(ui->cbRoute, SIGNAL(signalFocusOut()), this, SLOT(cbRoutes_Leave()));
   connect(companyView, SIGNAL(dataChanged()), this, SLOT(refreshCompanies()));
 
   //routeView = new RouteView(this);
-  refreshSegmentCB();
+//  refreshSegmentCB();
   refreshCompanies();
   ui->cbCompany->setCurrentIndex(config->currCity->companyKey);
   refreshRoutes();
@@ -380,7 +383,7 @@ mainWindow::mainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
 
 }
-void mainWindow::createBridge()
+void MainWindow::createBridge()
 {
  //! The object we will expose to JavaScript engine:
  m_bridge = new webViewBridge(LatLng(m_latitude, m_longitude), m_zoom, "roadmap", this);
@@ -400,7 +403,7 @@ void mainWindow::createBridge()
  connect(m_bridge, SIGNAL(queryOverlaySignal()), this, SLOT(queryOverlay()));
 }
 
-void mainWindow::mapInit() // map initialization completed
+void MainWindow::mapInit() // map initialization completed
 {
  chkShowOverlayChanged(config->currCity->bShowOverlay);
 //ui->chkShowOverlay->setChecked(config->currCity->bShowOverlay);
@@ -412,12 +415,12 @@ void mainWindow::mapInit() // map initialization completed
 
 }
 
-Configuration* mainWindow::getConfiguration()
+Configuration* MainWindow::getConfiguration()
 {
  return config;
 }
 
-void mainWindow::reloadMap()
+void MainWindow::reloadMap()
 {
 #ifndef USE_WEBENGINE
  QUrl startURL = QUrl("qrc:/GoogleMaps.htm");
@@ -456,11 +459,11 @@ void mainWindow::reloadMap()
  objArray << m_maptype;
  m_bridge->processScript("setMapType", objArray);
 }
-void mainWindow::linkActivated()
+void MainWindow::linkActivated()
 {
  ui->btnBack->setVisible(true);
 }
-void mainWindow::pageBack()
+void MainWindow::pageBack()
 {
  webView->back();
 #ifndef USE_WEBENGINE
@@ -473,7 +476,7 @@ void mainWindow::pageBack()
 }
 
 //process list of overlays served by http://acksoft.dyndns.biz
-void mainWindow::loadAcksoftData()
+void MainWindow::loadAcksoftData()
 {
  QString data;
  data = m_dataCtrl->downloadedData();
@@ -482,7 +485,7 @@ void mainWindow::loadAcksoftData()
 }
 
 //process list of mbtiles overlays on localhost.
-void mainWindow::loadMbtilesData()
+void MainWindow::loadMbtilesData()
 {
  QString data;
  data = m_overlays->downloadedData();
@@ -492,7 +495,7 @@ void mainWindow::loadMbtilesData()
   loadData(data, "mbtiles");
 }
 
-void mainWindow::loadData(QString data, QString source)
+void MainWindow::loadData(QString data, QString source)
 {
  QStringList overlays = data.split('\n');
 
@@ -544,7 +547,7 @@ void mainWindow::loadData(QString data, QString source)
  }
 }
 
-void mainWindow::processTileMapResource()
+void MainWindow::processTileMapResource()
 {
  QString str = m_tilemapresource->downloadedData();
  if(str != "")
@@ -643,7 +646,7 @@ void mainWindow::loadOverlayData()
  }
 }
 #else
-void mainWindow::loadOverlayData()
+void MainWindow::loadOverlayData()
 {
  QString data;
  data = m_overlays->downloadedData();
@@ -677,7 +680,7 @@ void mainWindow::loadOverlayData()
 }
 #endif
 
-void mainWindow::loadOverlay(Overlay* ov)
+void MainWindow::loadOverlay(Overlay* ov)
 {
  currentOverlay = ov->name;
  QVariantList objArray;
@@ -685,7 +688,7 @@ void mainWindow::loadOverlay(Overlay* ov)
  m_bridge->processScript("loadOverlay", objArray);
 }
 
-void mainWindow::fillOverlayMenu()
+void MainWindow::fillOverlayMenu()
 {
  overlayMenu->clear();
  overlaySignalMapper = new QSignalMapper(this);
@@ -718,7 +721,7 @@ void mainWindow::fillOverlayMenu()
 //{
 //    delete ui;
 //}
-void mainWindow::addJSObject() {
+void MainWindow::addJSObject() {
     // Add m_bridge to JavaScript Frame as member "webViewBridge".
 #ifndef USE_WEBENGINE
     webView->page()->mainFrame()->addToJavaScriptWindowObject(QString("webViewBridge"), m_bridge);
@@ -726,13 +729,13 @@ void mainWindow::addJSObject() {
  //webView->page()->setWebChannel(channel);
 #endif
 }
-void mainWindow::NotYetInplemented()
+void MainWindow::NotYetInplemented()
 {
     //QMessageBox::StandardButton reply;
     QMessageBox::critical(this, tr("Not Yet Implemented"),tr("This feature has not been implemented yet."), QMessageBox::NoButton);
 }
 
-void mainWindow::createActions()
+void MainWindow::createActions()
 {
  aboutAct = new QAction(tr("&About"), this);
  aboutAct->setStatusTip(tr("Show the application's About box"));
@@ -805,7 +808,7 @@ void mainWindow::createActions()
  selectSegmentAct->setToolTip(tr("Select and display segment"));
  //connect(selectSegmentAct,SIGNAL(triggered()), this, SLOT(selectSegment()));
  connect(selectSegmentAct, &QAction::triggered, [=]{
-  cbSegmentsSelectedValueChanged(ui->cbSegments->currentData().toInt());
+  cbSegmentsSelectedValueChanged(/*ui->cbSegments->currentData().toInt()*/ui->ssw->segmentSelected());
 });
  editSegmentAct = new QAction("Edit Segment", this);
  connect(editSegmentAct, SIGNAL(triggered()), this, SLOT(On_editSegment_triggered()));
@@ -816,10 +819,8 @@ void mainWindow::createActions()
 
  addSegmentToRouteAct = new QAction(tr("Add segment to route"), this);
  connect(addSegmentToRouteAct, &QAction::triggered, [=]{
-     int ix = ui->cbSegments->currentIndex();
-     int segmentId = ui->cbSegments->itemData(ix).toInt();
-     //SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId, true);
-     SegmentData sd = SQL::instance()->getSegmentData(segmentId);
+//     int ix = ui->cbSegments->currentIndex();
+     SegmentData sd = ui->ssw->segmentSelected();
 
      int row =         ui->cbRoute->currentIndex();
      if(row < 0) return;
@@ -829,9 +830,9 @@ void mainWindow::createActions()
                                         rd.tractionType, "?", -1, -1, 0, 0, 0, 0, rd.oneWay, rd.trackUsage);
     if(b)
     {
-        m_bridge->processScript("clearPolyline", QString("%1").arg(segmentId));
-        SegmentInfo si = sql->getSegmentInfo(segmentId);
-        displaySegment(segmentId, si.description, si.oneWay, /*ttColors[e.tractionType]*/getColor(rd.tractionType), rd.trackUsage, true);
+        m_bridge->processScript("clearPolyline", QString("%1").arg(sd.segmentId()));
+        //SegmentInfo si = sql->getSegmentInfo(segmentId);
+        displaySegment(sd.segmentId(), sd.description(), sd.oneWay(), /*ttColors[e.tractionType]*/getColor(rd.tractionType), rd.trackUsage, true);
 
     }
  });
@@ -854,7 +855,8 @@ void mainWindow::createActions()
   SplitSegmentDlg* splitSegment = new SplitSegmentDlg(m_SegmentId);
   int ret = splitSegment->exec();
   if(ret == QDialog::Accepted)
-   refreshSegmentCB();
+   //refreshSegmentCB();
+   ui->ssw->refresh();
  });
 
  addPointModeAct = new QAction(tr("Add point mode"), this);
@@ -966,7 +968,7 @@ void mainWindow::createActions()
  connect(usingMapper, SIGNAL(triggered(bool)), this, SLOT(on_usingHelp()));
 }
 
-void mainWindow::createMenus()
+void MainWindow::createMenus()
 {
     fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(quitAct);
@@ -1025,7 +1027,7 @@ void mainWindow::createMenus()
     //helpMenu->addAction(aboutQtAct);
 
 }
-void mainWindow::createCityMenu()
+void MainWindow::createCityMenu()
 {
  int k = 0;
  signalMapper = new QSignalMapper(this);
@@ -1070,13 +1072,13 @@ void mainWindow::createCityMenu()
  }
 }
 
-void mainWindow::On_editCityInfo()
+void MainWindow::On_editCityInfo()
 {
  EditCityDialog* dlg = new EditCityDialog(this);
  dlg->exec();
 }
 
-void mainWindow::cbRoute_customContextMenu( const QPoint& )
+void MainWindow::cbRoute_customContextMenu( const QPoint& )
 {
     cbRouteMenu.clear();
     cbRouteMenu.addAction(addSegmentAct);
@@ -1097,7 +1099,7 @@ void mainWindow::cbRoute_customContextMenu( const QPoint& )
     cbRouteMenu.exec(QCursor::pos());
 }
 
-void mainWindow::txtSegment_customContextMenu(const QPoint &)
+void MainWindow::txtSegment_customContextMenu(const QPoint &)
 {
  if(ui->txtSegment->text().isEmpty()) return;
  QMenu* menu = new QMenu();
@@ -1110,7 +1112,7 @@ void mainWindow::txtSegment_customContextMenu(const QPoint &)
 
 }
 
-void mainWindow::tab1CustomContextMenu(const QPoint &)
+void MainWindow::tab1CustomContextMenu(const QPoint &)
 {
     tab1Menu.addAction(saveChangesAct);
     if(!routeView->bUncomittedChanges())
@@ -1121,7 +1123,7 @@ void mainWindow::tab1CustomContextMenu(const QPoint &)
 }
 
 // New City and/or connection selected.
-void mainWindow::newCity(int ix )
+void MainWindow::newCity(int ix )
 {
  qDebug() << "newCity " + QString("%1").arg(ix);
  int i=0, j=0, k = 0;
@@ -1223,7 +1225,8 @@ void mainWindow::newCity(int ix )
     this->setWindowTitle("Mapper - "+ config->currCity->name + " ("+config->currConnection->description()+")");
     config->saveSettings();
 
-    refreshSegmentCB();
+    //refreshSegmentCB();
+    ui->ssw->refresh();
     ui->cbCompany->setCurrentIndex(config->currCity->companyKey);
     refreshCompanies();
     cbSort->setCurrentIndex(config->currCity->routeSortType);
@@ -1274,7 +1277,7 @@ void mainWindow::newCity(int ix )
   }
  }
 }
-void mainWindow::newOverlay(int ix)
+void MainWindow::newOverlay(int ix)
 {
  Overlay* cOv = config->currCity->overlayList().at(ix);
  if(cOv->source == "")
@@ -1319,36 +1322,21 @@ void mainWindow::newOverlay(int ix)
 // ui->chkShowOverlay->setChecked(true);
 }
 
-void mainWindow::about()
+void MainWindow::about()
 {
  QMessageBox::about(this, tr("About Mapper"),
      tr("The <b>Mapper</b> Written by Allen C. Kempe. "
         "maintain database of streetcar and transit routes.\r\nCompiled with QT version %1").arg(QT_VERSION_STR));
 }
 
-void mainWindow::btnDeleteSegment_Click()   //SLOT
+void MainWindow::btnDeleteSegment_Click()   //SLOT
 {
     //SQL sql;
     SegmentData sd;
-    int ix = ui->cbSegments->currentIndex();
+//    int ix = ui->cbSegments->currentIndex();
     //            sI = (segmentInfo)segmentInfoList[ix];
     //sI = (SegmentInfo)cbSegmentInfoList.at(ix);
-    int segmentId =  ui->cbSegments->currentData().toInt();
-    int row = -1;
-    for(int i = 0; i < cbSegmentInfoList.count(); i++)
-    {
-     if(cbSegmentInfoList.at(i).segmentId == segmentId)
-     {
-      row = i;
-      break;
-     }
-    }
-    if(row < 0)
-        return;
-    if(row >= cbSegmentInfoList.count())
-        return;
-//    sI = (SegmentInfo)cbSegmentInfoList.at(row);
-    sd = cbSegmentDataList.at(row);
+    sd =  ui->ssw->segmentSelected();
     if (sd.segmentId() < 1)
     {
         //System.Media.SystemSounds.Beep.Play();
@@ -1444,7 +1432,8 @@ void mainWindow::btnDeleteSegment_Click()   //SLOT
 
         if (sql->deleteSegment(sd.segmentId()))
         {
-            refreshSegmentCB();
+            //refreshSegmentCB();
+         ui->ssw->refresh();
             // Display the new segment in Google Maps
 //            Object[] objArray = new Object[1];
 //            objArray[0] = sI.SegmentId;
@@ -1469,7 +1458,7 @@ void mainWindow::btnDeleteSegment_Click()   //SLOT
 
 
 
-void mainWindow::refreshRoutes()
+void MainWindow::refreshRoutes()
 {
     //SQL sql;
     bCbRouteRefreshing = true;
@@ -1503,7 +1492,7 @@ void mainWindow::refreshRoutes()
         ui->cbRoute->setCurrentIndex(ix);
     bCbRouteRefreshing = false;
 }
-void mainWindow::txtRouteNbrLeave()
+void MainWindow::txtRouteNbrLeave()
 {
     QString txt = ui->txtRouteNbr->text();
     QString txtAlpha = "";
@@ -1538,11 +1527,11 @@ void mainWindow::txtRouteNbrLeave()
     bCbRouteRefreshing = false;
 }
 
-void mainWindow::quit()
+void MainWindow::quit()
 {
     this->close();
 }
-QString mainWindow::getColor(qint32 tractionType)
+QString MainWindow::getColor(qint32 tractionType)
 {
  QString color = "#DF01D7";
  //foreach (tractionTypeInfo tti in tractionTypeList)
@@ -1554,12 +1543,12 @@ QString mainWindow::getColor(qint32 tractionType)
  }
  return color;
 }
-void mainWindow::btnClearClicked()
+void MainWindow::btnClearClicked()
 {
     m_bridge->processScript("clearAll", "");
 }
 
-void mainWindow::on_createKmlFile_triggered()
+void MainWindow::on_createKmlFile_triggered()
 {
  int row =         ui->cbRoute->currentIndex();
  RouteData rd = ((RouteData)routeList.at(row));
@@ -1570,7 +1559,7 @@ void mainWindow::on_createKmlFile_triggered()
  kml->createKml(fileName, "ff0000ff");
 }
 
-void mainWindow::btnDisplayRouteClicked()
+void MainWindow::btnDisplayRouteClicked()
 {
  int row =         ui->cbRoute->currentIndex();
  if(row < 0) return;
@@ -1579,7 +1568,7 @@ void mainWindow::btnDisplayRouteClicked()
  On_displayRoute(rd);
 }
 
-void mainWindow::On_displayRoute(RouteData rd)
+void MainWindow::On_displayRoute(RouteData rd)
 {
  if(!ui->chkNoClear->isChecked())
   btnClearClicked();
@@ -1754,6 +1743,11 @@ default:
     infoLat = rc.pos.lat();
     infoLon = rc.pos.lon();
    }
+   else {
+    m_bridge->processScript("getCenter");
+    infoLat = m_latitude;
+    infoLon = m_longitude;
+   }
    if(rc.route >= 0 && rc.ci.comments != "")
    {
 //       if(rc.ci.comments == "")
@@ -1774,7 +1768,7 @@ default:
   }
 }
 
-void mainWindow::getInfoWindowComments(double lat, double lon, int route, QString date, int func)
+void MainWindow::getInfoWindowComments(double lat, double lon, int route, QString date, int func)
 {
  QDate dt = QDate::fromString(date, "yyyy/MM/dd");
  routeComments rc;
@@ -1820,13 +1814,13 @@ void mainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
    latitude = rc.pos.lat();
    longitude = rc.pos.lon();
   }
-  objArray << latitude <<longitude<< rc.ci.comments<<rc.route<< rc.date.toString("yyyy/MM/dd");
+  objArray << latitude << longitude << rc.ci.comments<<rc.route<< rc.date.toString("yyyy/MM/dd");
   m_bridge->processScript("displayRouteComment", objArray);
   m_bridge->processScript("showRouteComment", bDisplayRouteComments?"true": "false");
  }
 }
 
-void mainWindow::onCbRouteIndexChanged(int row)
+void MainWindow::onCbRouteIndexChanged(int row)
 {
  routeView->checkChanges();
  if(routeView->bUncomittedChanges())
@@ -1847,6 +1841,8 @@ void mainWindow::onCbRouteIndexChanged(int row)
  ui->dateEdit->setDate( _rd.endDate);
  m_currRouteStartDate = _rd.startDate.toString("yyyy/MM/dd");
  m_currRouteEndDate = _rd.endDate.toString("yyyy/MM/dd");
+ ui->dateEdit->setMinimumDate(_rd.startDate);
+ ui->dateEdit->setMaximumDate(_rd.endDate);
  m_routeNbr = _rd.route;
  m_routeName = _rd.name;
  routeDlg->setRouteData(_rd);
@@ -1862,167 +1858,167 @@ void mainWindow::onCbRouteIndexChanged(int row)
 //{
 //   m_bridge->processScript("resizeMap", "");
 //}
-bool compareSegmentInfoByName(const SegmentInfo & s1, const SegmentInfo & s2)
-{
- return s1.description < s2.description;
-}
+//bool compareSegmentInfoByName(const SegmentInfo & s1, const SegmentInfo & s2)
+//{
+// return s1.description < s2.description;
+//}
 
-void mainWindow::refreshSegmentCB()
-{
- QStringList streets;
- QStringList tokens;
- QStringList tokens2;
- QString description;
- QString selectedStreet =ui->cbStreets->currentText();
+//void MainWindow::refreshSegmentCB()
+//{
+// QStringList streets;
+// QStringList tokens;
+// QStringList tokens2;
+// QString description;
+// QString selectedStreet =ui->cbStreets->currentText();
 
- bRefreshingSegments = true;
- if(!bCbStreetsRefreshing)
-  refreshStreetsCb();
- ui->cbSegments->clear();
- cbSegmentInfoList = sql->getSegmentInfo();
- cbSegmentDataList = sql->getSegmentDataList();
- qSort(cbSegmentInfoList.begin(), cbSegmentInfoList.end(),compareSegmentInfoByName);
- //foreach (segmentInfo sI in cbSegmentInfoList)
- for(int i=0; i < cbSegmentInfoList.count(); i++)
- {
-  SegmentInfo sI = cbSegmentInfoList.at(i);
-  description = sI.description;
-  tokens = description.split(",");
-  if(tokens.count() > 1)
-  {
-   QString street = tokens.at(0).trimmed();
-   if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
-   if(street == selectedStreet)
-   {
-    // populate streets
-    if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
-       (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
-       ui->rbBoth->isChecked())
-     ui->cbSegments->addItem(sI.toString(), sI.segmentId);
-    continue;
-   }
-   else
-   {
-    if(selectedStreet.trimmed().isEmpty())
-    {
-     // populate streets
-     if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
-        (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
-        ui->rbBoth->isChecked())
-      ui->cbSegments->addItem(sI.toString(), sI.segmentId);
-     continue;
-    }
-   }
-   tokens2 = tokens.at(1).split("to");
-   {
-    for(int i=0; i < tokens2.count(); i++)
-    {
-     QString street = tokens2.at(i);
-     street = tokens.at(0).trimmed();
-     if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
-     //if(street2.indexOf(" ")) street2= street2.mid(0, street2.indexOf(" "));
-     if(street == selectedStreet)
-     {
-      // populate streets
-      if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
-         (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
-         ui->rbBoth->isChecked())
-       ui->cbSegments->addItem(sI.toString(), sI.segmentId);
-      continue;
-     }
-     else
-     {
-      if(selectedStreet.trimmed().isEmpty())
-      {
-       // populate streets
-       if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
-          (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
-          ui->rbBoth->isChecked())
-        ui->cbSegments->addItem(sI.toString(), sI.segmentId);
-       continue;
-      }
-     }
-    }
-   }
-  }
- }
- if(m_SegmentId >0)
-  ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(m_SegmentId));
- m_bridge->processScript("addModeOff");
- addPointModeAct->setChecked(false);
- bRefreshingSegments = false;
-}
+// bRefreshingSegments = true;
+// if(!bCbStreetsRefreshing)
+//  refreshStreetsCb();
+// ui->cbSegments->clear();
+// cbSegmentInfoList = sql->getSegmentInfo();
+// cbSegmentDataList = sql->getSegmentDataList();
+// qSort(cbSegmentInfoList.begin(), cbSegmentInfoList.end(),compareSegmentInfoByName);
+// //foreach (segmentInfo sI in cbSegmentInfoList)
+// for(int i=0; i < cbSegmentInfoList.count(); i++)
+// {
+//  SegmentInfo sI = cbSegmentInfoList.at(i);
+//  description = sI.description;
+//  tokens = description.split(",");
+//  if(tokens.count() > 1)
+//  {
+//   QString street = tokens.at(0).trimmed();
+//   if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
+//   if(street == selectedStreet)
+//   {
+//    // populate streets
+//    if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
+//       (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
+//       ui->rbBoth->isChecked())
+//     ui->cbSegments->addItem(sI.toString(), sI.segmentId);
+//    continue;
+//   }
+//   else
+//   {
+//    if(selectedStreet.trimmed().isEmpty())
+//    {
+//     // populate streets
+//     if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
+//        (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
+//        ui->rbBoth->isChecked())
+//      ui->cbSegments->addItem(sI.toString(), sI.segmentId);
+//     continue;
+//    }
+//   }
+//   tokens2 = tokens.at(1).split("to");
+//   {
+//    for(int i=0; i < tokens2.count(); i++)
+//    {
+//     QString street = tokens2.at(i);
+//     street = tokens.at(0).trimmed();
+//     if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
+//     //if(street2.indexOf(" ")) street2= street2.mid(0, street2.indexOf(" "));
+//     if(street == selectedStreet)
+//     {
+//      // populate streets
+//      if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
+//         (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
+//         ui->rbBoth->isChecked())
+//       ui->cbSegments->addItem(sI.toString(), sI.segmentId);
+//      continue;
+//     }
+//     else
+//     {
+//      if(selectedStreet.trimmed().isEmpty())
+//      {
+//       // populate streets
+//       if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
+//          (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
+//          ui->rbBoth->isChecked())
+//        ui->cbSegments->addItem(sI.toString(), sI.segmentId);
+//       continue;
+//      }
+//     }
+//    }
+//   }
+//  }
+// }
+// if(m_SegmentId >0)
+//  ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(m_SegmentId));
+// m_bridge->processScript("addModeOff");
+// addPointModeAct->setChecked(false);
+// bRefreshingSegments = false;
+//}
 
-void mainWindow::refreshStreetsCb()
-{
- QStringList streets;
- QStringList tokens;
- QStringList tokens2;
- QString description;
- QString selectedStreet = ui->cbStreets->currentText();
- bCbStreetsRefreshing = true;
+//void MainWindow::refreshStreetsCb()
+//{
+// QStringList streets;
+// QStringList tokens;
+// QStringList tokens2;
+// QString description;
+// QString selectedStreet = ui->cbStreets->currentText();
+// bCbStreetsRefreshing = true;
 
- ui->cbStreets->clear();
- ui->cbStreets->addItem("");
- cbSegmentInfoList = sql->getSegmentInfo();
- for(int i=0; i < cbSegmentInfoList.count(); i++)
- {
-  SegmentInfo sI = cbSegmentInfoList.at(i);
-  description = sI.description;
-  tokens = description.split(",");
-  if(tokens.count() > 1)
-  {
-   QString street = tokens.at(0).trimmed();
-   if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
-   if(!streets.contains(street))
-   {
-    streets.append(street);
-   }
-   tokens2 = tokens.at(1).split("to");
-   {
-    for(int i=0; i < tokens2.count(); i++)
-    {
-     QString street2 = tokens2.at(i);
-     street2 = tokens.at(0).trimmed();
-     if(street2.indexOf("(")) street2= street.mid(0, street2.indexOf("("));
-     //if(street2.indexOf(" ")) street2= street2.mid(0, street2.indexOf(" "));
-     if(!streets.contains(street2))
-     {
-      streets.append(street2);
-     }
-    }
-   }
-  }
-  else
-  {
-   tokens = sI.description.split(" ");
-  }
- } // end for
- streets.sort();
- ui->cbStreets->addItems(streets);
- ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(selectedStreet));
- bCbStreetsRefreshing = false;
-}
+// ui->cbStreets->clear();
+// ui->cbStreets->addItem("");
+// cbSegmentInfoList = sql->getSegmentInfo();
+// for(int i=0; i < cbSegmentInfoList.count(); i++)
+// {
+//  SegmentInfo sI = cbSegmentInfoList.at(i);
+//  description = sI.description;
+//  tokens = description.split(",");
+//  if(tokens.count() > 1)
+//  {
+//   QString street = tokens.at(0).trimmed();
+//   if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
+//   if(!streets.contains(street))
+//   {
+//    streets.append(street);
+//   }
+//   tokens2 = tokens.at(1).split("to");
+//   {
+//    for(int i=0; i < tokens2.count(); i++)
+//    {
+//     QString street2 = tokens2.at(i);
+//     street2 = tokens.at(0).trimmed();
+//     if(street2.indexOf("(")) street2= street.mid(0, street2.indexOf("("));
+//     //if(street2.indexOf(" ")) street2= street2.mid(0, street2.indexOf(" "));
+//     if(!streets.contains(street2))
+//     {
+//      streets.append(street2);
+//     }
+//    }
+//   }
+//  }
+//  else
+//  {
+//   tokens = sI.description.split(" ");
+//  }
+// } // end for
+// streets.sort();
+// ui->cbStreets->addItems(streets);
+// ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(selectedStreet));
+// bCbStreetsRefreshing = false;
+//}
 
-void mainWindow::cbStreets_editingFinished()
-{
- QString txt = ui->cbStreets->currentText();
- //ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(txt));
- if(bCbStreets_text_changed)
- {
-  ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(txt));
- }
- bCbStreets_text_changed = false;
-}
+//void MainWindow::cbStreets_editingFinished()
+//{
+// QString txt = ui->cbStreets->currentText();
+// //ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(txt));
+// if(bCbStreets_text_changed)
+// {
+//  ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(txt));
+// }
+// bCbStreets_text_changed = false;
+//}
 
-void mainWindow::cbStreets_currentIndexChanged(int)
-{
- saveStreet = ui->cbStreets->currentText();
- if(!bRefreshingSegments)
- refreshSegmentCB();
-}
+//void MainWindow::cbStreets_currentIndexChanged(int)
+//{
+// saveStreet = ui->cbStreets->currentText();
+// if(!bRefreshingSegments)
+// refreshSegmentCB();
+//}
 
-void mainWindow::refreshCompanies()
+void MainWindow::refreshCompanies()
 {
     ui->cbCompany->clear();
     ui->cbCompany->addItem(tr("All companies"),-1);
@@ -2035,7 +2031,7 @@ void mainWindow::refreshCompanies()
     if(routeDlg != NULL)
      routeDlg->fillCompanies();
 }
-void mainWindow::cbCompanySelectionChanged(int sel)
+void MainWindow::cbCompanySelectionChanged(int sel)
 {
     Q_UNUSED (sel);
     //qint32 companyKey = ui->cbCompany->itemData(sel).Int;
@@ -2046,7 +2042,7 @@ void mainWindow::cbCompanySelectionChanged(int sel)
 /// Called by Google Maps when selecting a segment
 /// </summary>
 /// <param name="SegmentId"></param>
-void mainWindow::segmentSelected(qint32 pt, qint32 SegmentId)
+void MainWindow::segmentSelected(qint32 pt, qint32 SegmentId)
 {
  //SQL sql;
  //webBrowser1.Document.InvokeScript("addModeOff");
@@ -2054,8 +2050,8 @@ void mainWindow::segmentSelected(qint32 pt, qint32 SegmentId)
  m_bAddMode = false;
  addPointModeAct->setChecked(false);
  m_SegmentId = SegmentId;
- SegmentInfo si = sql->getSegmentInfo(m_SegmentId);
- if (si.segmentId == -1)
+ SegmentData sd = sql->getSegmentData(m_SegmentId);
+ if (sd.segmentId() == -1)
  {
   qDebug() <<"segment " + QString("%1").arg(SegmentId) + " not found";
   return;
@@ -2067,14 +2063,14 @@ void mainWindow::segmentSelected(qint32 pt, qint32 SegmentId)
    routeDlg->setRouteData ( (RouteData)routeList.at(        ui->cbRoute->currentIndex()));
  }
  //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
- lookupStreetName(si);
+ lookupStreetName(sd);
  //txtSegment.Text = si.description;
- ui->txtSegment->setText(si.description);
- ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(si.pointList.count()));
+ ui->txtSegment->setText(sd.description());
+ ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(sd.pointList().count()));
  //ui->cbSegments->findText(si.toString(), Qt::MatchExactly);
- int ix = ui->cbSegments->findData(SegmentId);
- ui->cbSegments->setCurrentIndex(ix);
- m_points = si.pointList;
+// int ix = ui->cbSegments->findData(SegmentId);
+// ui->cbSegments->setCurrentIndex(ix);
+ m_points = sd.pointList();
  m_nbrPoints = m_points.size();
 
  if (m_nbrPoints <= 0)
@@ -2128,7 +2124,7 @@ void mainWindow::segmentSelected(qint32 pt, qint32 SegmentId)
  }
 }
 
-void mainWindow::SetPoint(qint32 i, double lat, double lon)
+void MainWindow::SetPoint(qint32 i, double lat, double lon)
 {
     LatLng pt = LatLng(lat, lon);
     if(i >= m_points.count())
@@ -2146,7 +2142,7 @@ void mainWindow::SetPoint(qint32 i, double lat, double lon)
 // m_longitude = lon;
 //}
 
-void mainWindow::getArray()
+void MainWindow::getArray()
 {
     m_bridge->processScript("getPointArray");
     while(!m_bridge->isResultReceived())
@@ -2207,7 +2203,7 @@ void mainWindow::getArray()
 
 }
 
-void mainWindow::setDebug(QString str)
+void MainWindow::setDebug(QString str)
 {
  //infoPanel.Text = str;
  if(bDisplayWebDebug)
@@ -2216,11 +2212,11 @@ void mainWindow::setDebug(QString str)
   statusBar()->showMessage(str, 2000);
  }
 }
-void mainWindow::setLen(qint32 len)
+void MainWindow::setLen(qint32 len)
 {
     m_nbrPoints = len;
 }
-void mainWindow::btnFirstClicked()
+void MainWindow::btnFirstClicked()
 {
     //SQL sql;
     getArray();
@@ -2246,8 +2242,8 @@ void mainWindow::btnFirstClicked()
     ui->btnNext->setEnabled(true);
     ui->btnPrev->setEnabled(false);
     //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
-    SegmentInfo si = sql->getSegmentInfo(m_SegmentId);
-    lookupStreetName(si);
+    SegmentData sd = sql->getSegmentData(m_SegmentId);
+    lookupStreetName(sd);
     segmentView->showSegmentsAtPoint(((LatLng)m_points.at(0)).lat(), ((LatLng)m_points.at(0)).lon(),m_SegmentId);
     if(!ui->chkNoPan->isChecked())
     {
@@ -2257,7 +2253,7 @@ void mainWindow::btnFirstClicked()
     }
 }
 
-void mainWindow::btnNextClicked()
+void MainWindow::btnNextClicked()
 {
     //SQL sql;
     getArray();
@@ -2300,11 +2296,11 @@ void mainWindow::btnNextClicked()
     segmentView->showSegmentsAtPoint(((LatLng)m_points.at(m_currPoint)).lat(), ((LatLng)m_points.at(m_currPoint)).lon(),m_SegmentId);
 
     //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
-    SegmentInfo si = sql->getSegmentInfo(m_SegmentId);
-    lookupStreetName(si);
+    SegmentData sd = sql->getSegmentData(m_SegmentId);
+    lookupStreetName(sd);
 }
 
-void mainWindow::lookupStreetName(SegmentInfo sd)
+void MainWindow::lookupStreetName(SegmentData sd)
 {
  updateSegmentInfoDisplay(sd);
 
@@ -2344,7 +2340,7 @@ void mainWindow::lookupStreetName(SegmentInfo sd)
 #endif
 }
 
-void mainWindow::btnLastClicked()
+void MainWindow::btnLastClicked()
 {
     //SQL sql;
 
@@ -2392,7 +2388,7 @@ void mainWindow::btnLastClicked()
     ////}
 }
 
-void mainWindow::btnPrevClicked()
+void MainWindow::btnPrevClicked()
 {
     //SQL sql;
     getArray();
@@ -2434,8 +2430,8 @@ void mainWindow::btnPrevClicked()
     }
     segmentView->showSegmentsAtPoint(((LatLng)m_points.at(m_currPoint)).lat(), ((LatLng)m_points.at(m_currPoint)).lon(),m_SegmentId);
     //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
-    SegmentInfo si = sql->getSegmentInfo(m_SegmentId) ;
-    lookupStreetName(si);
+    SegmentData sd = sql->getSegmentData(m_SegmentId) ;
+    lookupStreetName(sd);
     //if (sd != null)
     //{
     //    txtStreetName.Text = sd.streetName;
@@ -2454,7 +2450,7 @@ void mainWindow::btnPrevClicked()
 
 }
 
-void mainWindow::closeEvent(QCloseEvent *event)
+void MainWindow::closeEvent(QCloseEvent *event)
 {
  m_bridge->processScript("getCenter");
  qApp->processEvents(QEventLoop::AllEvents,50);
@@ -2521,7 +2517,7 @@ void mainWindow::closeEvent(QCloseEvent *event)
  //QMainWindow::closeEvent(event);
  event->accept();
 }
-void mainWindow::btnSplit_Click()    // SLOT
+void MainWindow::btnSplit_Click()    // SLOT
 {
  //SQL sql;
  SegmentDlg segmentDlg(config, this);
@@ -2545,7 +2541,8 @@ void mainWindow::btnSplit_Click()    // SLOT
 
 
   // Refresh the Segments combobox
-  refreshSegmentCB();
+  //refreshSegmentCB();
+  ui->ssw->refresh();
   refreshRoutes();
 
   // Display the new segment in Google Maps
@@ -2592,7 +2589,7 @@ void mainWindow::btnSplit_Click()    // SLOT
 /// <param name="oneWay"></param>
 /// <param name="color"></param>
 /// <param name="bClearFirst">true to clear the line first</param>
-void mainWindow::displaySegment(qint32 segmentId, QString segmentName, QString oneWay, QString color, QString trackUsage, bool bClearFirst)
+void MainWindow::displaySegment(qint32 segmentId, QString segmentName, QString oneWay, QString color, QString trackUsage, bool bClearFirst)
 {
     SegmentInfo si = sql->getSegmentInfo(segmentId);
     si.displaySegment(ui->dateEdit->text(),color, trackUsage, bClearFirst);
@@ -2614,33 +2611,16 @@ void mainWindow::displaySegment(qint32 segmentId, QString segmentName, QString o
 // cbSegmentsSelectedValueChanged(ui->cbSegments->currentData().toInt());
 //}
 
-void mainWindow::cbSegmentsSelectedValueChanged(qint32 index)
+void MainWindow::cbSegmentsSelectedValueChanged(SegmentData sd)
 {
     if(bRefreshingSegments)
         return;
-    SegmentInfo sI;
-    int segmentId = ui->cbSegments->currentData().toInt();
-    int row = -1;
-    for(int i = 0; i < cbSegmentInfoList.count(); i++)
-    {
-     if(cbSegmentInfoList.at(i).segmentId == segmentId)
-     {
-      row = i;
-      break;
-     }
-    }
-    if(row < 0)
-        return;
-    if(row >= cbSegmentInfoList.count())
-        return;
-    sI = (SegmentInfo)cbSegmentInfoList.at(row);
-    //sI = (segmentInfo)(ui->cbSegments->itemData(row, Qt::UserRole));
-    m_SegmentId = sI.segmentId;
-    updateSegmentInfoDisplay(sI);
+    m_SegmentId = sd.segmentId();
+    updateSegmentInfoDisplay(sd);
 
     routeDlg->setSegmentId( m_SegmentId);
     //webBrowser1.Document.InvokeScript("addModeOn");
-    if(sI.startLat == 0)
+    if(sd.startLat() == 0)
     {
      m_bridge->processScript("addModeOn");
      m_bAddMode = true;
@@ -2655,12 +2635,12 @@ void mainWindow::cbSegmentsSelectedValueChanged(qint32 index)
     if(!ui->chkNoPan->isChecked())
     {
         QVariantList objArray;
-        objArray << sI.startLat << sI.startLon;
+        objArray << sd.startLat() << sd.startLon();
         m_bridge->processScript("setCenter", objArray);
     }
 
 
-    displaySegment(m_SegmentId, ui->txtSegment->text(), sI.oneWay, sI.oneWay=="Y" ? "#00FF00" : "#045fb4", " ", true);
+    displaySegment(m_SegmentId, ui->txtSegment->text(), sd.oneWay(), sd.oneWay()=="Y" ? "#00FF00" : "#045fb4", " ", true);
 #if 0
     // Display Start and end markers
     sI = sql->getSegmentInfo(m_SegmentId);
@@ -2675,7 +2655,7 @@ void mainWindow::cbSegmentsSelectedValueChanged(qint32 index)
 #endif
 }
 
-void mainWindow::txtSegment_TextChanged(QString text)
+void MainWindow::txtSegment_TextChanged(QString text)
 {
  bSegmentChanged = true;
  int ix = text.indexOf(",");
@@ -2686,7 +2666,7 @@ void mainWindow::txtSegment_TextChanged(QString text)
   ui->txtStreet->setText(street);
 }
 
-void mainWindow::txtSegment_Leave( )
+void MainWindow::txtSegment_Leave( )
 {
  //SQL sql;
  if (bSegmentChanged)
@@ -2695,7 +2675,7 @@ void mainWindow::txtSegment_Leave( )
   sql->updateSegmentDescription(m_SegmentId, ui->txtSegment->text(), si.oneWay, ui->sbTracks->value(), si.length);
   bSegmentChanged = false;
   int segmentId = m_SegmentId;
-  refreshSegmentCB();
+//  refreshSegmentCB();
 //  for(int i=0; i < cbSegmentInfoList.count(); i++)
 //  {
 //   if(cbSegmentInfoList.at(i).segmentId == segmentId)
@@ -2705,20 +2685,20 @@ void mainWindow::txtSegment_Leave( )
 //    break;
 //   }
 //  }
-  ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(m_SegmentId));
+//  ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(m_SegmentId));
  }
 }
-void mainWindow::cbSegmentsTextChanged(QString )
+void MainWindow::cbSegmentsTextChanged(QString )
 {
  b_cbSegments_TextChanged = true;
 }
 
-void mainWindow::cbSegments_Leave()
+void MainWindow::cbSegments_Leave()
 {
  if(b_cbSegments_TextChanged ==true)
  {
   qint32 segmentId = -1;
-  QString text = ui->cbSegments->currentText();
+  QString text = ui->ssw->cbSegments()->currentText();
 
   bool bOk=false;
   segmentId = text.toInt(&bOk, 10);
@@ -2738,19 +2718,19 @@ void mainWindow::cbSegments_Leave()
 //    }
 //   }
 //  }
-  ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(segmentId));
+  ui->ssw->cbSegments()->setCurrentIndex(ui->ssw->cbSegments()->findData(segmentId));
  }
  b_cbSegments_TextChanged =false;
 
 }
 
-void mainWindow::cbRoutesTextChanged(QString text)
+void MainWindow::cbRoutesTextChanged(QString text)
 {
     Q_UNUSED(text)
     b_cbRoutes_TextChanged = true;
 }
 
-void mainWindow::cbRoutes_Leave()
+void MainWindow::cbRoutes_Leave()
 {
  QString text =         ui->cbRoute->currentText();
  if(b_cbRoutes_TextChanged)
@@ -2773,7 +2753,7 @@ void mainWindow::cbRoutes_Leave()
  }
 }
 
-QString mainWindow::getRouteMarkerImagePath(QString route, bool isStart)
+QString MainWindow::getRouteMarkerImagePath(QString route, bool isStart)
 {
     QString work = m_resourcePath;
     QString str = "";
@@ -2846,7 +2826,7 @@ QString mainWindow::getRouteMarkerImagePath(QString route, bool isStart)
 
     return str;
 }
-QString mainWindow::ProcessScript(QString func, QString params)
+QString MainWindow::ProcessScript(QString func, QString params)
 {
     m_bridge->processScript(func, params);
     return "";
@@ -2861,7 +2841,7 @@ QString mainWindow::ProcessScript(QString func, QString params)
 //        m_bridge->processScript("selectSegment", QString("%1").arg(segmentId));
 
 //}
-void mainWindow::addPoint(int pt, double lat, double lon)
+void MainWindow::addPoint(int pt, double lat, double lon)
 {
     //SQL sql;
     //getArray(); // get points from display.
@@ -2894,7 +2874,7 @@ void mainWindow::addPoint(int pt, double lat, double lon)
 /// <param name="i"></param>
 /// <param name="newLat"></param>
 /// <param name="newLon"></param>
-void mainWindow::movePoint(qint32 segmentId, qint32 i, double newLat, double newLon)
+void MainWindow::movePoint(qint32 segmentId, qint32 i, double newLat, double newLon)
 {
  m_SegmentId = segmentId;
  SegmentData sd = sql->getSegmentData(m_SegmentId);
@@ -2914,7 +2894,7 @@ void mainWindow::movePoint(qint32 segmentId, qint32 i, double newLat, double new
 }
 
 // called by webBrowser map initialization to see if an overlay should be loaded
-void mainWindow::queryOverlay()
+void MainWindow::queryOverlay()
 {
 //    overlays ov = (overlays)cbOverlays.SelectedItem;
 //    if(ov.overlayName != "")
@@ -2929,7 +2909,7 @@ void mainWindow::queryOverlay()
     }
 }
 
-void mainWindow::getGeocoderResults(QString array)
+void MainWindow::getGeocoderResults(QString array)
 {
     QStringList sa;
     sa = array.split(';');
@@ -2945,7 +2925,7 @@ void mainWindow::getGeocoderResults(QString array)
 /// <param name="i"></param>
 /// <param name="newLat"></param>
 /// <param name="newLon"></param>
-void mainWindow::updateIntersection(qint32 i, double newLat, double newLon)
+void MainWindow::updateIntersection(qint32 i, double newLat, double newLon)
 {
  Q_UNUSED(i)
  //SQL sql;
@@ -2980,20 +2960,20 @@ void mainWindow::updateIntersection(qint32 i, double newLat, double newLon)
 /// <param name="i">point to insert after</param>
 /// <param name="newLat">New latitude</param>
 /// <param name="newLon">New longitude</param>
-void mainWindow::insertPoint(int SegmentId, qint32 i, double newLat, double newLon)
+void MainWindow::insertPoint(int SegmentId, qint32 i, double newLat, double newLon)
 {
  segmentSelected(i,SegmentId);
- SegmentInfo si = sql->getSegmentInfo((int)SegmentId);
- si.insertPoint(i, LatLng(newLat, newLon));
+ SegmentData sd = sql->getSegmentData((int)SegmentId);
+ sd.insertPoint(i, LatLng(newLat, newLon));
 #if 0
     //SQL sql;
     sql->insertPoint(i, SegmentId, newLat, newLon);
     m_currPoint++;
 #endif
     //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
-    si = sql->getSegmentInfo(m_SegmentId);
-    lookupStreetName(si);
-    ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(si.pointList.count()));
+    sd = sql->getSegmentData(m_SegmentId);
+    lookupStreetName(sd);
+    ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(sd.pointList().count()));
     ui->btnSplit->setEnabled(true);
 }
 //void MainWindow::btnDisplay_Click() // SLOT
@@ -3018,7 +2998,7 @@ void mainWindow::insertPoint(int SegmentId, qint32 i, double newLat, double newL
 /// </summary>
 /// <param name="sender"></param>
 /// <param name="e"></param>
-void mainWindow::btnDeletePtClicked()
+void MainWindow::btnDeletePtClicked()
 {
  SegmentData sd = sql->getSegmentData(m_SegmentId);
 
@@ -3065,19 +3045,19 @@ void mainWindow::btnDeletePtClicked()
  }
 }
 
-void mainWindow::txtStreetName_TextChanged(QString )
+void MainWindow::txtStreetName_TextChanged(QString )
 {
  bStreetChanged = true;
 }
 
-void mainWindow::sbTracks_valueChanged(int)
+void MainWindow::sbTracks_valueChanged(int)
 {
  bStreetChanged = true;
  bSegmentChanged = true;
  txtStreetName_Leave();
 }
 
-void mainWindow::txtStreetName_Leave()
+void MainWindow::txtStreetName_Leave()
 {
  if (bStreetChanged && (m_currPoint < m_nbrPoints) && m_SegmentId > -1)
  {
@@ -3103,20 +3083,21 @@ void mainWindow::txtStreetName_Leave()
   {
    //SQL mySql;
    sql->updateRecord(sd);
-   refreshSegmentCB();
+   //refreshSegmentCB();
+   ui->ssw->refresh();
   }
  }
  bStreetChanged = false;
 }
 
-void mainWindow::getZoom(int zoom)
+void MainWindow::getZoom(int zoom)
 {
     zoomIndicator->setText("Zoom: "+ QString("%1").arg(zoom));
     m_zoom = zoom;
     config->currCity->zoom = zoom;
 }
 
-void mainWindow::copyRouteInfo_Click()
+void MainWindow::copyRouteInfo_Click()
 {
  DialogCopyRoute form(config, this);
  //form.Configuration = config;
@@ -3138,7 +3119,7 @@ void mainWindow::copyRouteInfo_Click()
   }
  }
 }
-void mainWindow::splitRoute_Click()
+void MainWindow::splitRoute_Click()
 {
     //SplitRoute();
     SplitRoute splitRouteDlg(config, this);
@@ -3161,7 +3142,7 @@ void mainWindow::splitRoute_Click()
         }
     }
 }
-void mainWindow::rerouteRoute()
+void MainWindow::rerouteRoute()
 {
     ReroutingDlg rerouteDlg((RouteData)routeList.at(ui->cbRoute->currentIndex()), config, this);
     int rslt = rerouteDlg.exec();
@@ -3171,7 +3152,7 @@ void mainWindow::rerouteRoute()
     }
 }
 
-void mainWindow::renameRoute_Click()
+void MainWindow::renameRoute_Click()
 {
     DialogRenameRoute renameRouteDlg(config, this);
     //renameRouteDlg.setConfig(config);
@@ -3196,7 +3177,7 @@ void mainWindow::renameRoute_Click()
 #endif
     }
 }
-void mainWindow::modifyRouteDate()
+void MainWindow::modifyRouteDate()
 {
 #if 1 // TODO
 
@@ -3230,7 +3211,7 @@ void mainWindow::modifyRouteDate()
 #endif
 }
 
-void mainWindow::addSegment()
+void MainWindow::addSegment()
 {
 #if 1 // TODO
     //SQL sql;
@@ -3254,37 +3235,38 @@ void mainWindow::addSegment()
     segmentDlg.setRouteData (rd);
     if (segmentDlg.exec() == QDialog::Accepted)
     {
-        refreshSegmentCB();
-        m_SegmentId = segmentDlg.newSegmentId();
+        //refreshSegmentCB();
+       ui->ssw->refresh();
+       m_SegmentId = segmentDlg.newSegmentId();
         m_nbrPoints = 0;
         //??routeDlg.SegmentId = m_SegmentId;
         //        ui->txtSegment->setText(sql->getSegmentDescription(m_SegmentId));
 
         ui->lblSegment->setText(tr("Segment %1:").arg(m_SegmentId));
         //        ui->chkOneWay->setChecked("Y"== sql->getSegmentOneWay(m_SegmentId));
-        SegmentInfo si = sql->getSegmentInfo(m_SegmentId);
-        updateSegmentInfoDisplay(si);
+        SegmentData sd = sql->getSegmentData(m_SegmentId);
+        updateSegmentInfoDisplay(sd);
 
         int dash = 0;
-        if(si.routeType == Incline)
+        if(sd.routeType() == Incline)
          dash = 1;
-        else if(si.routeType == SurfacePRW)
+        else if(sd.routeType() == SurfacePRW)
          dash = 2;
-        else if(si.routeType == Subway)
+        else if(sd.routeType() == Subway)
          dash = 3;
 
         QVariantList objArray;
         objArray << m_SegmentId << segmentDlg.routeName()<<ui->txtSegment->text()
-                 <<rd.oneWay<<getColor(segmentDlg.tractionType())<<si.tracks << dash
-                << si.routeType << si.trackUsage << 0;
+                 <<rd.oneWay<<getColor(segmentDlg.tractionType())<<sd.tracks() << dash
+                << sd.routeType() << rd.trackUsage << 0;
         m_bridge->processScript("createSegment",objArray);
 
         //webBrowser1.Document.InvokeScript("addModeOn");
         m_bridge->processScript("addModeOn");
         m_bAddMode = true;
 
-        si = sql->getSegmentInfo(m_SegmentId);
-        lookupStreetName(si);
+        sd = sql->getSegmentData(m_SegmentId);
+        lookupStreetName(sd);
         //refreshRoutes();
         //refreshSegmentCB();
     }
@@ -3292,7 +3274,7 @@ void mainWindow::addSegment()
     NotYetInplemented();
 #endif
 }
-void mainWindow::deleteRoute()
+void MainWindow::deleteRoute()
 {
     //SQL sql;
 #if 1 // TODO
@@ -3309,7 +3291,7 @@ void mainWindow::deleteRoute()
     refreshRoutes();
 #endif
 }
-void mainWindow::updateRoute()
+void MainWindow::updateRoute()
 {
     //SQL sql;
         QList<SegmentInfo> segmentInfoList = sql->getSegmentInfo();
@@ -3333,7 +3315,7 @@ void mainWindow::updateRoute()
     routeDlg->activateWindow();
 
 }
-void mainWindow::updateTerminals()
+void MainWindow::updateTerminals()
 {
 #if 0 // TODO
     animationPath = buildAnimationPath();
@@ -3356,7 +3338,7 @@ void mainWindow::updateTerminals()
 #endif
 }
 
-void mainWindow::selectSegment(int seg)
+void MainWindow::selectSegment(int seg)
 {
  //segmentChanged(seg, seg);
 
@@ -3371,10 +3353,11 @@ void mainWindow::selectSegment(int seg)
 //      break;
 //  }
 // }
- ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(seg));
+ //ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(seg));
+ ui->ssw->setCurrentSegment(seg);
 }
 
-void mainWindow::segmentChanged(qint32 changedSegment, qint32 newSegment)
+void MainWindow::segmentChanged(qint32 changedSegment, qint32 newSegment)
 {
     //SQL sql;
     //Object[] objArray = new Object[1];
@@ -3396,14 +3379,14 @@ void mainWindow::segmentChanged(qint32 changedSegment, qint32 newSegment)
     }
 }
 
-void mainWindow::segmentStatus(QString str, QString color)
+void MainWindow::segmentStatus(QString str, QString color)
 {
     m_segmentStatus = str;
     m_segmentColor = color;
 }
 
 //void MainWindow::segmentDlg_routeChanged(qint32 typeOfChange, qint32 route, QString name, QString endDate)
-void mainWindow::segmentDlg_routeChanged(RouteChangedEventArgs args)
+void MainWindow::segmentDlg_routeChanged(RouteChangedEventArgs args)
 {
     refreshRoutes();
    if (args.typeOfChange == "Add")
@@ -3428,7 +3411,7 @@ void mainWindow::segmentDlg_routeChanged(RouteChangedEventArgs args)
 /// </summary>
 /// <param name="sender"></param>
 /// <param name="e"></param>
-void mainWindow::RouteChanged(RouteChangedEventArgs args)
+void MainWindow::RouteChanged(RouteChangedEventArgs args)
 {
  //SQL sql;
  refreshRoutes();
@@ -3471,7 +3454,7 @@ void mainWindow::RouteChanged(RouteChangedEventArgs args)
 //    //webBrowser1.Document.InvokeScript("showWindowControl", new object[] { chkShowWindow.Checked });
 //    m_bridge->processScript("showWindowControl", ui->chkShowWindow?"true":"false");
 //}
-void mainWindow::opacityChanged(QString name, qint32 opacity)
+void MainWindow::opacityChanged(QString name, qint32 opacity)
 {
  Overlay* ov = new Overlay(name, opacity);
     //ov->name = name;
@@ -3480,7 +3463,7 @@ void mainWindow::opacityChanged(QString name, qint32 opacity)
     statusBar()->showMessage(tr("%2 opacity=%1").arg(opacity).arg(name));
     //m_bridge->processScript("setOverlayOpacity", QString::number(opacity));
 }
-void mainWindow::moveRouteStartMarker(double lat, double lon, qint32 segmentId, qint32 i)
+void MainWindow::moveRouteStartMarker(double lat, double lon, qint32 segmentId, qint32 i)
 {
     Q_UNUSED(lat)
     Q_UNUSED(lon)
@@ -3488,7 +3471,7 @@ void mainWindow::moveRouteStartMarker(double lat, double lon, qint32 segmentId, 
     TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, m_currRouteEndDate);
     sql->updateTerminals(m_routeNbr, m_routeName, ti.startDate.toString("yyyy/MM/dd"), ti.endDate.toString("yyyy/MM/dd"), segmentId, i == 0 ? "S" : "E", ti.endSegment, ti.endWhichEnd);
 }
-void mainWindow::moveRouteEndMarker(double lat, double lon, qint32 segmentId, qint32 i)
+void MainWindow::moveRouteEndMarker(double lat, double lon, qint32 segmentId, qint32 i)
 {
     Q_UNUSED(lat)
     Q_UNUSED(lon)
@@ -3497,7 +3480,7 @@ void mainWindow::moveRouteEndMarker(double lat, double lon, qint32 segmentId, qi
     sql->updateTerminals(m_routeNbr, m_routeName, ti.startDate.toString("yyyy/MM/dd"), ti.endDate.toString("yyyy/MM/dd"), ti.startSegment, ti.startWhichEnd, segmentId, i == 0 ? "S" : "E");
 
 }
-void mainWindow::AddRoute()
+void MainWindow::AddRoute()
 {
     if(routeDlg == 0)
         routeDlg = new RouteDlg(config, this);
@@ -3506,37 +3489,37 @@ void mainWindow::AddRoute()
     routeDlg->raise();
     routeDlg->activateWindow();
 }
-void mainWindow::addModeToggled(bool isChecked)
+void MainWindow::addModeToggled(bool isChecked)
 {
     if(!isChecked)
         m_bridge->processScript("addModeOff");
     else
         m_bridge->processScript("addModeOn");
 }
-void mainWindow::displayStationMarkersToggeled(bool bChecked)
+void MainWindow::displayStationMarkersToggeled(bool bChecked)
 {
     bDisplayStationMarkers = bChecked;
     //displayStationMarkersAct->setChecked(bDisplayStationMarkers);
     m_bridge->processScript("displayStationMarkers", bChecked?"true":"false");
 }
-void mainWindow::displayTerminalMarkersToggeled(bool bChecked)
+void MainWindow::displayTerminalMarkersToggeled(bool bChecked)
 {
     bDisplayTerminalMarkers = bChecked;
     m_bridge->processScript("displayTerminalMarkers", bChecked?"true":"false");
 }
-void mainWindow::displayRouteCommentsToggled(bool bChecked)
+void MainWindow::displayRouteCommentsToggled(bool bChecked)
 {
     bDisplayRouteComments = bChecked;
     m_bridge->processScript("showRouteComment", bChecked?"true":"false");
 }
 
-void mainWindow::geocoderRequestToggled(bool bChecked)
+void MainWindow::geocoderRequestToggled(bool bChecked)
 {
     config->currCity->bGeocoderRequest = bChecked;
     m_bridge->processScript("setGeocoderRequest", bChecked?"true":"false");
 }
 
-void mainWindow::chkShowOverlayChanged(bool bChecked)
+void MainWindow::chkShowOverlayChanged(bool bChecked)
 {
  if(config->currCity->overlayList().size() == 0) return;
  if(bChecked && config->currCity->curOverlayId >= 0)
@@ -3555,7 +3538,7 @@ void mainWindow::chkShowOverlayChanged(bool bChecked)
 /// <param name="lat"></param>
 /// <param name="lon"></param>
 /// <param name="segmentId"></param>
-void mainWindow::setStation(double lat, double lon, qint32 segmentId, qint32 ptIndex)
+void MainWindow::setStation(double lat, double lon, qint32 segmentId, qint32 ptIndex)
 {
  //SQL sql;
  try
@@ -3602,7 +3585,7 @@ void mainWindow::setStation(double lat, double lon, qint32 segmentId, qint32 ptI
 //TODO       messsageBox.Show(e.Message, "error");
  }
 }
-void mainWindow::updateStation(qint32 stationKey, qint32 segmentId)
+void MainWindow::updateStation(qint32 stationKey, qint32 segmentId)
 {
     StationInfo sti = sql->getStationInfo(stationKey);
     //segmentInfo si = sql->getSegmentInfo(segmentId);
@@ -3614,7 +3597,7 @@ void mainWindow::updateStation(qint32 stationKey, qint32 segmentId)
     //form.setStationId(sti.stationKey);
  form.exec();
 }
-void mainWindow::moveStationMarker(qint32 stationKey, qint32 segmentId, double lat, double lon)
+void MainWindow::moveStationMarker(qint32 stationKey, qint32 segmentId, double lat, double lon)
 {
  SegmentInfo si = sql->getSegmentInfo(segmentId);
  if(si.segmentId < 0)
@@ -3662,14 +3645,14 @@ void mainWindow::moveStationMarker(qint32 stationKey, qint32 segmentId, double l
     m_bridge->processScript("addStationMarker",objArray);
 }
 
-void mainWindow::moveRouteComment(int route, QString date, double latitude, double longitude, int companyKey)
+void MainWindow::moveRouteComment(int route, QString date, double latitude, double longitude, int companyKey)
 {
  routeComments rc = sql->getRouteComment(route, QDate::fromString(date, "yyyy/MM/dd"), companyKey);
  rc.pos = LatLng(latitude, longitude);
  sql->updateRouteComment(rc);
 }
 
-void mainWindow::chkOneWay_toggled(bool bChecked)
+void MainWindow::chkOneWay_toggled(bool bChecked)
 {
  SegmentInfo si = sql->getSegmentInfo(m_SegmentId);
  if(bChecked)
@@ -3696,13 +3679,13 @@ void mainWindow::chkOneWay_toggled(bool bChecked)
 // refreshSegmentCB();
 //}
 
-void mainWindow::exportDb()
+void MainWindow::exportDb()
 {
  ExportDlg form(config, this);
  form.exec();
 }
 
-void mainWindow::editConnections()
+void MainWindow::editConnections()
 {
  //NotYetInplemented();
  editConnectionsDlg form( this);
@@ -3712,21 +3695,20 @@ void mainWindow::editConnections()
  this->setWindowTitle("Mapper - "+ config->currCity->name + " ("+config->currConnection->description()+")");
 }
 
-void mainWindow::locateStreet()
+void MainWindow::locateStreet()
 {
     LocateStreetDlg form(this);
     form.exec();
 }
 
-void mainWindow::findDupSegments()
+void MainWindow::findDupSegments()
 {
     QList<SegmentData> myArray;
     this->setCursor(QCursor(Qt::WaitCursor));
     //foreach(segmentInfo si in segmentInfoList)
-    for(int i=0; i < cbSegmentInfoList.count(); i++)
+    foreach(SegmentData sd, cbSegmentDataList)
     {
 //        SegmentInfo si = cbSegmentInfoList.at(i);
-     SegmentData sd = cbSegmentDataList.at(i);
         SegmentData sdDup = sql->getSegmentInSameDirection(sd);
 //        sdDup.next = si.segmentId;
 
@@ -3743,19 +3725,19 @@ void mainWindow::findDupSegments()
 
 }
 
-void mainWindow::on_webView_statusBarMessage(QString text)
+void MainWindow::on_webView_statusBarMessage(QString text)
 {
     setDebug(text);
 }
 
-void mainWindow::combineRoutes()
+void MainWindow::combineRoutes()
 {
     CombineRoutesDlg dlg(ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt(), this);
     dlg.exec();
     refreshRoutes();
 }
 
-void mainWindow::updateRouteComment()
+void MainWindow::updateRouteComment()
 {
  RouteCommentsDlg routeCommentsDlg(config, this);
 
@@ -3767,7 +3749,7 @@ void mainWindow::updateRouteComment()
  routeCommentsDlg.exec();
 }
 
-void mainWindow::sbRouteTriggered(int sliderAction)
+void MainWindow::sbRouteTriggered(int sliderAction)
 {
  Q_UNUSED (sliderAction);
  int pos = ui->sbRoute->sliderPosition();
@@ -3776,14 +3758,14 @@ void mainWindow::sbRouteTriggered(int sliderAction)
   btnDisplayRouteClicked();
 }
 
-void mainWindow::cbSortSelectionChanged(int sel)
+void MainWindow::cbSortSelectionChanged(int sel)
 {
  config->currCity->routeSortType = sel;
  refreshRoutes();
  toolsMenu->close();
 }
 
-void mainWindow::newSqliteDbAct_triggered()
+void MainWindow::newSqliteDbAct_triggered()
 {
  m_bridge->processScript("getCenter");
  LatLng* latLng = new LatLng(m_latitude, m_longitude);
@@ -3793,7 +3775,7 @@ void mainWindow::newSqliteDbAct_triggered()
 
  }
 }
-void mainWindow::QueryDialogAct_triggered()
+void MainWindow::QueryDialogAct_triggered()
 {
  if(!queryDlg)
  {
@@ -3802,7 +3784,7 @@ void mainWindow::QueryDialogAct_triggered()
  queryDlg->show();
 }
 
-void mainWindow::On_saveImage_clicked()
+void MainWindow::On_saveImage_clicked()
 {
  QString saveFilename = QFileDialog::getSaveFileName(this, "Save as", "Choose a filename", "PNG(*.png);; TIFF(*.tiff *.tif);; JPEG(*.jpg *.jpeg)");
 
@@ -3820,19 +3802,19 @@ void mainWindow::On_saveImage_clicked()
  }
 }
 
-void mainWindow::exportRoute()
+void MainWindow::exportRoute()
 {
  RouteData rd = routeList.at(ui->cbRoute->currentIndex());
  ExportRouteDialog dlg(rd, config, this);
  int rslt = dlg.exec();
 }
 
-void mainWindow::on_showDebugMessages(bool b)
+void MainWindow::on_showDebugMessages(bool b)
 {
  bDisplayWebDebug = b;
 }
 
-void mainWindow::on_runInBrowser(bool b)
+void MainWindow::on_runInBrowser(bool b)
 {
  config->bRunInBrowser = b;
  config->saveSettings();
@@ -3844,12 +3826,12 @@ void mainWindow::on_runInBrowser(bool b)
   QProcess::startDetached(qApp->arguments()[0], qApp->arguments());}
 }
 
-void mainWindow::updateSegmentInfoDisplay(SegmentInfo si)
+void MainWindow::updateSegmentInfoDisplay(SegmentData sd)
 {
- if (si.segmentId > 0)
+ if (sd.segmentId() > 0)
  {
-  ui->txtStreet->setText( si.streetName);
-  ui->txtSegment->setText( si.description);
+  ui->txtStreet->setText( sd.streetName());
+  ui->txtSegment->setText( sd.description());
   //  if(si.oneWay == "Y")
   //  {
   ////   ui->chkOneWay->setChecked(true);
@@ -3859,31 +3841,24 @@ void mainWindow::updateSegmentInfoDisplay(SegmentInfo si)
   //  else
   //  {
   //   ui->sbTracks->setEnabled(true);
-  ui->sbTracks->setValue(si.tracks);
+  ui->sbTracks->setValue(sd.tracks());
   //  }
   //txtOneWay.Text = sI.oneWay;
  }
- ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(si.pointList.count()));
+ ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(sd.pointList().count()));
 }
 
-void mainWindow::On_editSegment_triggered()
+void MainWindow::On_editSegment_triggered()
 {
-// SegmentInfo si;
-// for(int i=0; i < segmentInfoList.count(); i++)
-// {
-//  if(segmentInfoList.at(i).segmentId == m_SegmentId)
-//   si = segmentInfoList.at(i);
-// }
-// if(si.segmentId < 0)
-//  return;
- EditSegmentDialog dlg(m_SegmentId,this);
+ EditSegmentDialog dlg(ui->ssw->segmentSelected(),this);
  int ret = dlg.exec();
  if(ret == QDialog::Accepted)
-  refreshSegmentCB();
+  //refreshSegmentCB();
+  ui->ssw->refresh();
 }
 
 //#ifdef USE_WEBENGINE
-void mainWindow::on_linkClicked(QUrl url)
+void MainWindow::on_linkClicked(QUrl url)
 {
  if(QDesktopServices::openUrl(url))
  {
@@ -3896,7 +3871,7 @@ void mainWindow::on_linkClicked(QUrl url)
 }
 //#endif
 
-bool mainWindow::openWebWindow()
+bool MainWindow::openWebWindow()
 {
  // open map display in browser window
 #ifndef USE_WEBENGINE
@@ -3983,19 +3958,19 @@ bool mainWindow::openWebWindow()
  return false;
 }
 
-void mainWindow::onWebSocketClosed()
+void MainWindow::onWebSocketClosed()
 {
  QMessageBox::critical(this, tr("Browser closed"), tr("The browser window has closed"));
  quit();
 }
 
-void mainWindow::on_addGeoreferenced(bool)
+void MainWindow::on_addGeoreferenced(bool)
 {
  AddGeoreferencedDialog* dlg = new AddGeoreferencedDialog(this);
  dlg->exec();
 }
 
-void mainWindow::on_overlayHelp()
+void MainWindow::on_overlayHelp()
 {
  QDir dir(wikiRoot);
  if(dir.exists())
@@ -4003,7 +3978,7 @@ void mainWindow::on_overlayHelp()
   QDesktopServices::openUrl(wikiRoot+"/Overlays.html");
  }
 }
-void mainWindow::on_usingHelp()
+void MainWindow::on_usingHelp()
 {
  QDir dir(wikiRoot);
  if(dir.exists())
@@ -4012,7 +3987,7 @@ void mainWindow::on_usingHelp()
  }
 }
 
-void mainWindow::saveChanges()
+void MainWindow::saveChanges()
 {
  routeView->model()->commitChanges();
 }

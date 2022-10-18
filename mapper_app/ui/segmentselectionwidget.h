@@ -18,6 +18,11 @@ class SegmentSelectionWidget : public QWidget
   explicit SegmentSelectionWidget(QWidget *parent = nullptr);
   ~SegmentSelectionWidget();
   SQL* sql;
+  QComboBox* cbSegments();
+  SegmentData segmentSelected();
+  void refresh();
+  void setCurrentSegment(int segmentId);
+  void initialize();
 
  public slots:
   void refreshSegmentCB();
@@ -28,19 +33,21 @@ class SegmentSelectionWidget : public QWidget
   void cbSegments_currentIndexChanged(int);
 
  signals:
-  void segmentSelected(int);
+  void segmentSelected(SegmentData sd);
 
  private:
   Ui::SegmentSelectionWidget *ui;
   bool bRefreshingSegments = false;
   bool bCbStreetsRefreshing = false;
   //QList<SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
-  QList<SegmentData> cbSegmentDataList;
+  QMap<int, SegmentData> cbSegmentDataList;
   qint32 m_SegmentId;
   bool bCbStreets_text_changed=false;
   QString saveStreet;
   QButtonGroup* cbSegmentsGrp;
   QButtonGroup* enterGrp;
+  SegmentData currSd;
+  bool initialized = false;
 };
 
 #endif // SEGMENTSELECTIONWIDGET_H

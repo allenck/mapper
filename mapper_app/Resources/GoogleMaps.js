@@ -535,7 +535,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
                          }],
             segmentId: SegmentId
         });
-        webViewBridge.debug("segment= " + SegmentId + " trackUsage =" + trackUsage  + " routeType="+ routeType + " icon index=" +iconIx );
+        webViewBridge.debug("segment= " + SegmentId + " trackUsage = '" + trackUsage  + "' routeType="+ routeType + " icon index=" +iconIx );
     }
     if(trackUsage === "R")
     {
@@ -2383,18 +2383,17 @@ function showRouteComment(bDisplay)
  {
   if(bDisplay)
   {
-      infowindow.setMap(map);
-
+   infowindow.setMap(map);
   }
   else
   {
-     infowindow.setMap();
-     infowindow.marker.setMap();
+   infowindow.setMap();
+   infowindow.marker.setMap();
   }
  }
 }
 
-function displayRouteComment(lat, lon, HTMLText, route, date, companyKey)
+function displayRouteComment(latitude, longitude, HTMLText, route, date, companyKey)
 {
  this.marker = null;
  if(infowindow !== null)
@@ -2402,31 +2401,32 @@ function displayRouteComment(lat, lon, HTMLText, route, date, companyKey)
   infowindow.setMap();
   infowindow = null;
  }
- if(lat === 0 && lon === 0)
+ if(latitude === 0 && longitude === 0)
  {
-  lat = map.getCenter().lat;
-  lon = map.getCenter().lon;
+  latitude = map.getCenter().lat;
+  longitude = map.getCenter().lon;
  }
 
  // infowindow = new google.maps.InfoWindow({content:date+HTMLText, position:new google.maps.LatLng(lat, lon)}, 'return 0');
- infowindow = new google.maps.InfoWindow({content:date+HTMLText, maxwidth: 70}/*, 'return 0'*/);
- var icon = image[images.greenDownArrow];
+ infowindow = new google.maps.InfoWindow({content:date+HTMLText, maxwidth: 70});
+ //var icon = image[images.greenDownArrow];
  this.marker = new google.maps.Marker({
-       position: new google.maps.LatLng(lat, lon),
+       position: new google.maps.LatLng(latitude, longitude),
        map: map,
-       icon: icon,
+       icon: image[images.greenDownArrow],
        zIndex: 10,
        draggable: true,
        visible: true,
        title: "comment"
      });
-
+  if(this.marker === null)
+      alert("marker is null");
  //infowindow.setMap(map);
  infowindow.marker = this.marker;
  infowindow.route = route;
  infowindow.date = date;
- infowindow.lat = lat;
- infowindow.lon = lon;
+ infowindow.lat = latitude;
+ infowindow.lon = longitude;
  infowindow.companyKey = companyKey
 
  google.maps.event.addListener(this.marker, "dragend", function(pt) {

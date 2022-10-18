@@ -130,16 +130,6 @@
           </property>
          </widget>
         </item>
-        <item row="8" column="2">
-         <widget class="QCheckBox" name="chkAddPt">
-          <property name="toolTip">
-           <string>Check to automatically turn on add point mode when selecting a segment from the combo box.</string>
-          </property>
-          <property name="text">
-           <string>Add Pt</string>
-          </property>
-         </widget>
-        </item>
         <item row="13" column="0" colspan="5">
          <widget class="QTabWidget" name="tabWidget">
           <property name="sizePolicy">
@@ -349,41 +339,7 @@
          </widget>
         </item>
         <item row="7" column="1">
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
-          <item>
-           <widget class="QRadioButton" name="rbSingle">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to display only single track segments&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>Single</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="rbDouble">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to display only double track segments&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>Double</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="rbBoth">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to display both single and double track segments.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string>Both</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
+         <layout class="QHBoxLayout" name="horizontalLayout_4"/>
         </item>
         <item row="12" column="0" colspan="2">
          <widget class="CComboBox" name="cbRoute">
@@ -395,19 +351,6 @@
           </property>
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a route to be displayed or modified.  &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-          <property name="editable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="0" colspan="2">
-         <widget class="CComboBox" name="cbSegments">
-          <property name="contextMenuPolicy">
-           <enum>Qt::ActionsContextMenu</enum>
-          </property>
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a segment from the combobox to be displayed. Or type a segment number.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="editable">
            <bool>true</bool>
@@ -450,13 +393,6 @@
           </property>
           <property name="text">
            <string>Show overlay</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="0">
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>Select Segment:</string>
           </property>
          </widget>
         </item>
@@ -643,13 +579,6 @@
           </property>
          </widget>
         </item>
-        <item row="7" column="2" colspan="2">
-         <widget class="QComboBox" name="cbStreets">
-          <property name="editable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
         <item row="11" column="0">
          <widget class="QLabel" name="label_5">
           <property name="text">
@@ -678,6 +607,19 @@
          <widget class="QLabel" name="label_6">
           <property name="text">
            <string>Street Name:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="0">
+         <widget class="SegmentSelectionWidget" name="ssw" native="true"/>
+        </item>
+        <item row="7" column="3">
+         <widget class="QCheckBox" name="chkAddPt">
+          <property name="toolTip">
+           <string>Check to automatically turn on add point mode when selecting a segment from the combo box.</string>
+          </property>
+          <property name="text">
+           <string>Add Pt</string>
           </property>
          </widget>
         </item>
@@ -714,6 +656,12 @@
    <class>CComboBox</class>
    <extends>QComboBox</extends>
    <header>ccombobox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>SegmentSelectionWidget</class>
+   <extends>QWidget</extends>
+   <header>segmentselectionwidget.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

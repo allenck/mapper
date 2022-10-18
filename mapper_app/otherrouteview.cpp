@@ -10,7 +10,7 @@ OtherRouteView::OtherRouteView( QObject *parent) :
     config = Configuration::instance();
     //sql->setConfig(config);
     sql = SQL::instance();
-    mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     ui = myParent->ui->tblOtherRouteView;
     connect(ui->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
 
@@ -54,7 +54,7 @@ void OtherRouteView::Resize (int oldcount,int newcount)
 void OtherRouteView::showRoutesUsingSegment(qint32 segmentId)
 {
     //SQL sql;
-    mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     //sql->setConfig(myParent->getConfiguration());
     QList<RouteData> likeRoutes =   sql->getRoutes(segmentId);
     if(likeRoutes.isEmpty())

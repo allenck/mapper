@@ -7,7 +7,7 @@ CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     m_parent = parent;
     config = Configuration::instance();
     //sql->setConfig(config);
-    mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     tableView = myParent->ui->tblCompanyView;
 #if QT_VERSION < 0x050000
     tableView->horizontalHeader()->setMovable(true);

@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
  QApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
  MyApplication a(argc, argv);
 
- mainWindow w(argc, argv);
+ MainWindow w(argc, argv);
  w.show();
 
  return a.exec();

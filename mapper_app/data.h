@@ -196,7 +196,7 @@ public:
     QString whichEnd() {return _whichEnd;}
     void setWhichEnd(QString whichEnd){_whichEnd = whichEnd;}
     QString streetName() {return _streetName;}
-    void setstreetName(QString streetName){_streetName = streetName;}
+    void setStreetName(QString streetName){_streetName = streetName;}
     QString description() {return _description;}
     void setDescription(QString description){_description = description;}
     QString oneWay() {return _oneWay;}
@@ -213,13 +213,20 @@ public:
     Bearing bearingEnd() {return _bearingEnd;}
     QDate startDate() {return _startDate;}
     QDate endDate() {return _endDate;}
+    double length() {return _length;}
+    void setRouteType(RouteType rt) {_routeType = rt;}
+    void setStartDate(QDate dt) {_startDate = dt;}
+    void setEndDate(QDate dt) {_endDate = dt;}
+    bool needsUpdate() {return bNeedsUpdate;}
+    void setNeedsUpdate(bool b){bNeedsUpdate = b;}
+    void displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst);
 
  private:
     qint32 _segmentId;
     qint32 _tracks;
     RouteType _routeType;
     double _startLat, _startLon, _endLat, _endLon;
-    double length;
+    double _length;
     qint32	points;
     QString _streetName;
     QString _description;

@@ -730,7 +730,7 @@ void editConnectionsDlg::txtDsnTextChanged(QString text)
 
 void editConnectionsDlg::on_tbBrowse_clicked()
 {
- QString basePath = mainWindow::pwd + QDir::separator() + "Resources/databases" + QDir::separator();
+ QString basePath = MainWindow::pwd + QDir::separator() + "Resources/databases" + QDir::separator();
  QFileInfo info(ui->txtDbOrDSN->text());
  if(info.exists())
   basePath=info.canonicalPath();
@@ -742,9 +742,9 @@ void editConnectionsDlg::on_tbBrowse_clicked()
   if(pInfo.isAbsolute())
   {
    QString cwd = QDir::currentPath();
-   if(path.startsWith(mainWindow::pwd))
+   if(path.startsWith(MainWindow::pwd))
    {
-    ui->txtDbOrDSN->setText(path.mid(mainWindow::pwd.length()+1));
+    ui->txtDbOrDSN->setText(path.mid(MainWindow::pwd.length()+1));
    }
   }
   else

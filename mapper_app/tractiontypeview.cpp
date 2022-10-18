@@ -9,7 +9,7 @@ TractionTypeView::TractionTypeView(Configuration *cfg, QObject *parent) :
     config = Configuration::instance();
     //sql->setConfig(config);
     sql = SQL::instance();
-    mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     tableView = myParent->ui->tblTractionTypes;
     tableView->verticalHeader()->resize(2,20);
 

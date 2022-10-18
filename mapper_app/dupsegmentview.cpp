@@ -10,7 +10,7 @@ DupSegmentView::DupSegmentView(Configuration *cfg, QObject *parent) :
     config = cfg;
     //sql->setConfig(config);
     sql = SQL::instance();
-    mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     ui = myParent->ui->tblDupSegments;
     connect(ui->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
 
@@ -43,7 +43,7 @@ void DupSegmentView::Resize (int oldcount,int newcount)
 void DupSegmentView::showDupSegments(QList<SegmentData> dupSegmentList)
 {
     //SQL sql;
-    mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     sql->setConfig(myParent->getConfiguration());
     if(dupSegmentList.isEmpty())
         return;
