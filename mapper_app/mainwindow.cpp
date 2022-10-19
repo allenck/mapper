@@ -808,7 +808,8 @@ void MainWindow::createActions()
  selectSegmentAct->setToolTip(tr("Select and display segment"));
  //connect(selectSegmentAct,SIGNAL(triggered()), this, SLOT(selectSegment()));
  connect(selectSegmentAct, &QAction::triggered, [=]{
-  cbSegmentsSelectedValueChanged(/*ui->cbSegments->currentData().toInt()*/ui->ssw->segmentSelected());
+  int segmentId = ui->ssw->cbSegments()->currentData().toInt();
+  cbSegmentsSelectedValueChanged(sql->getSegmentData(segmentId));
 });
  editSegmentAct = new QAction("Edit Segment", this);
  connect(editSegmentAct, SIGNAL(triggered()), this, SLOT(On_editSegment_triggered()));
@@ -2613,7 +2614,7 @@ void MainWindow::displaySegment(qint32 segmentId, QString segmentName, QString o
 
 void MainWindow::cbSegmentsSelectedValueChanged(SegmentData sd)
 {
-    if(bRefreshingSegments)
+    if(sd.segmentId() < 0)
         return;
     m_SegmentId = sd.segmentId();
     updateSegmentInfoDisplay(sd);
@@ -2693,36 +2694,36 @@ void MainWindow::cbSegmentsTextChanged(QString )
  b_cbSegments_TextChanged = true;
 }
 
-void MainWindow::cbSegments_Leave()
-{
- if(b_cbSegments_TextChanged ==true)
- {
-  qint32 segmentId = -1;
-  QString text = ui->ssw->cbSegments()->currentText();
+//void MainWindow::cbSegments_Leave()
+//{
+// if(b_cbSegments_TextChanged ==true)
+// {
+//  qint32 segmentId = -1;
+//  QString text = ui->ssw->cbSegments()->currentText();
 
-  bool bOk=false;
-  segmentId = text.toInt(&bOk, 10);
+//  bool bOk=false;
+//  segmentId = text.toInt(&bOk, 10);
 
-//  if (bOk)
-//  {
-//   //foreach (segmentInfo sI in segmentInfoList)
-//   for(int i=0; i< cbSegmentInfoList.count(); i++)
-//   {
-//    SegmentInfo sI = (SegmentInfo)cbSegmentInfoList.at(i);
+////  if (bOk)
+////  {
+////   //foreach (segmentInfo sI in segmentInfoList)
+////   for(int i=0; i< cbSegmentInfoList.count(); i++)
+////   {
+////    SegmentInfo sI = (SegmentInfo)cbSegmentInfoList.at(i);
 
-//    if (sI.segmentId == segmentId)
-//    {
-//     //cbSegments.SelectedItem = sI;
-//     ui->cbSegments->setCurrentIndex(i);
-//     break;
-//    }
-//   }
-//  }
-  ui->ssw->cbSegments()->setCurrentIndex(ui->ssw->cbSegments()->findData(segmentId));
- }
- b_cbSegments_TextChanged =false;
+////    if (sI.segmentId == segmentId)
+////    {
+////     //cbSegments.SelectedItem = sI;
+////     ui->cbSegments->setCurrentIndex(i);
+////     break;
+////    }
+////   }
+////  }
+//  ui->ssw->cbSegments()->setCurrentIndex(ui->ssw->cbSegments()->findData(segmentId));
+// }
+// b_cbSegments_TextChanged =false;
 
-}
+//}
 
 void MainWindow::cbRoutesTextChanged(QString text)
 {
@@ -2826,21 +2827,13 @@ QString MainWindow::getRouteMarkerImagePath(QString route, bool isStart)
 
     return str;
 }
+
 QString MainWindow::ProcessScript(QString func, QString params)
 {
     m_bridge->processScript(func, params);
     return "";
 }
-//void MainWindow::tblRouteView_selectionChanged(QTableWidgetItem *item)
-//{
-//    qint32 row = item->row();
-//    QTableWidgetItem* segmentIdItem = ui->routeView->item(row, 1);
-//    bool bOk=false;
-//    qint32 segmentId = segmentIdItem->text().toInt(&bOk, 10);
-//    if(bOk)
-//        m_bridge->processScript("selectSegment", QString("%1").arg(segmentId));
 
-//}
 void MainWindow::addPoint(int pt, double lat, double lon)
 {
     //SQL sql;
@@ -2976,22 +2969,6 @@ void MainWindow::insertPoint(int SegmentId, qint32 i, double newLat, double newL
     ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(sd.pointList().count()));
     ui->btnSplit->setEnabled(true);
 }
-//void MainWindow::btnDisplay_Click() // SLOT
-//{
-//    SQL sql;
-//    int ix= ui->cbSegments->currentIndex();
-
-
-//    segmentInfo si = sql->getSegmentInfo(m_SegmentId);
-//    displaySegment(m_SegmentId, si.description, si.oneWay, "#FF00FF", true);
-
-//    ui->btnFirst->setEnabled(true);
-//    btnPlus.Enabled = true;
-//    btnMinus.Enabled = true;
-//    btnDelete.Enabled = true;
-//    btnSplit.Enabled = true;
-//    getArray();
-//}
 
 /// <summary>
 /// Delete the point at the current marker

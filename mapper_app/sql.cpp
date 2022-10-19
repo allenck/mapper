@@ -995,11 +995,10 @@ QMap<int, SegmentData> SQL::getSegmentDataList()
 {
  QMap<int, SegmentData> myArray;
 
-
  QSqlDatabase db = QSqlDatabase::database();
 
  QString commandText = "Select SegmentId, description, OneWay, startDate, endDate, length, points, "
-"startLat, startLon, endLat, EndLon, type, street, pointArray, tracks from Segments ";
+"startLat, startLon, endLat, EndLon, type, street, pointArray, tracks from Segments order by description";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -1332,7 +1331,7 @@ SegmentData SQL::getSegmentData(qint32 SegmentId)
    sd._streetName = query.value(12).toString();
    sd.setPoints(query.value(13).toString());  // array of points
   }
-  if(sd._startLat ==0 ||sd._startLat ==0 || sd._endLat == 0 || sd._endLon ==0)
+  if(sd._startLat ==0 ||sd._startLat ==0 || sd._endLat == 0 || sd._endLon ==0 && sd._pointList.count() > 1 )
   {
    sd._startLat = sd._pointList.at(0).lat();
    sd._startLon = sd._pointList.at(0).lon();
@@ -3430,6 +3429,8 @@ bool SQL::updateSegment(SegmentInfo* si)
 /// <returns></returns>
 bool SQL::updateSegment(qint32 SegmentId)
 {
+ if(SegmentId <= 0)
+  throw IllegalArgumentException(tr("invalid segmentId %1").arg(SegmentId));
  bool ret = false;
  double startLat=0, startLon=0, endLat=0, endLon=0, length=0;
  int rows=0, points=0;
@@ -6829,7 +6830,7 @@ RouteData SQL::getRouteData(qint32 route, qint32 SegmentId, QString startDate, Q
  {
   return rd;
  }
- qDebug() << commandText;
+ qDebug() << commandText << " line:" <<__LINE__;
 
  while (query.next())
  {

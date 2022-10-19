@@ -19,9 +19,11 @@ void SegmentSelectionWidget::initialize()
 {
  refreshSegmentCB();
 
- connect(SQL::instance(), &SQL::segmentsChanged, [=]{refreshSegmentCB();});
+ connect(SQL::instance(), &SQL::segmentsChanged, [=]{
+  refreshSegmentCB();
+ });
  connect(webViewBridge::instance(), SIGNAL(segmentSelected(int, int)), this, SLOT(segmentSelected(int, int)));
- connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSegmentsSelectedValueChanged(int)));
+ //connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSegmentsSelectedValueChanged(int)));
  connect(ui->cbSegments, SIGNAL(editTextChanged(QString)), this, SLOT(cbSegmentsTextChanged(QString)));
  connect(ui->rbSingle, &QRadioButton::clicked, [=]{
   saveStreet = ui->cbStreets->currentText();
@@ -42,6 +44,14 @@ void SegmentSelectionWidget::initialize()
  // otherwise QComboBox::setModel() will delete it
  ui->cbStreets->model()->setParent(proxy);
  ui->cbStreets->setModel(proxy);
+
+// QSortFilterProxyModel* proxy2 = new QSortFilterProxyModel(ui->cbSegments);
+// proxy2->setSourceModel(ui->cbSegments->model());
+// // combo's current model must be reparented,
+// // otherwise QComboBox::setModel() will delete it
+// ui->cbSegments->model()->setParent(proxy2);
+// ui->cbSegments->setModel(proxy2);
+
  connect(ui->cbStreets, &QComboBox::editTextChanged, [=]{
   bCbStreets_text_changed = true;
  });
@@ -71,14 +81,16 @@ void SegmentSelectionWidget::refreshSegmentCB()
  QString description;
  QString selectedStreet =ui->cbStreets->currentText();
 
+ QMutexLocker locker(&mutex);
  bRefreshingSegments = true;
  if(!bCbStreetsRefreshing)
   refreshStreetsCb();
  ui->cbSegments->clear();
- cbSegmentDataList = sql->getSegmentDataList();
-// qSort(cbSegmentDataList.begin(), cbSegmentDataList.end(),compareSegmentDataByName);
+ mapDescriptions.clear();
+ cbSegmentDataMap = sql->getSegmentDataList();
+ //qSort(cbSegmentDataList.begin(), cbSegmentDataList.end(),compareSegmentDataByName);
  //foreach (segmentInfo sI in cbSegmentInfoList)
- foreach(SegmentData sd, cbSegmentDataList.values())
+ foreach(SegmentData sd, cbSegmentDataMap.values())
  {
   description = sd.getDescription();
   tokens = description.split(",");
@@ -92,7 +104,11 @@ void SegmentSelectionWidget::refreshSegmentCB()
     if((sd.tracks() == 2 && ui->rbDouble->isChecked() ) ||
        (sd.tracks() == 1 && ui->rbSingle->isChecked() )  ||
        ui->rbBoth->isChecked())
-     ui->cbSegments->addItem(sd.toString(), sd.segmentId());
+//     if(ui->cbSegments->findText(sd.toString())<0)
+//      ui->cbSegments->addItem(sd.toString(), sd.segmentId());
+           if(!mapDescriptions.contains(sd.toString()))
+
+     mapDescriptions.insert(sd.toString(), sd.segmentId());
     continue;
    }
    else
@@ -103,7 +119,11 @@ void SegmentSelectionWidget::refreshSegmentCB()
      if((sd.tracks() == 2 && ui->rbDouble->isChecked() ) ||
         (sd.tracks() == 1 && ui->rbSingle->isChecked() )  ||
         ui->rbBoth->isChecked())
-      ui->cbSegments->addItem(sd.toString(), sd.segmentId());
+//     if(ui->cbSegments->findText(sd.toString())<0)
+//      ui->cbSegments->addItem(sd.toString(), sd.segmentId());
+             if(!mapDescriptions.contains(sd.toString()))
+
+       mapDescriptions.insert(sd.toString(), sd.segmentId());
      continue;
     }
    }
@@ -121,7 +141,10 @@ void SegmentSelectionWidget::refreshSegmentCB()
       if((sd.tracks() == 2 && ui->rbDouble->isChecked() ) ||
          (sd.tracks() == 1 && ui->rbSingle->isChecked() )  ||
          ui->rbBoth->isChecked())
-       ui->cbSegments->addItem(sd.toString(), sd.segmentId());
+//      if(ui->cbSegments->findText(sd.toString())<0)
+//       ui->cbSegments->addItem(sd.toString(), sd.segmentId());
+       if(!mapDescriptions.contains(sd.toString()))
+        mapDescriptions.insert(sd.toString(), sd.segmentId());
       continue;
      }
      else
@@ -132,7 +155,10 @@ void SegmentSelectionWidget::refreshSegmentCB()
        if((sd.tracks() == 2 && ui->rbDouble->isChecked() ) ||
           (sd.tracks() == 1 && ui->rbSingle->isChecked() )  ||
           ui->rbBoth->isChecked())
-        ui->cbSegments->addItem(sd.toString(), sd.segmentId());
+//       if(ui->cbSegments->findText(sd.toString())<0)
+//        ui->cbSegments->addItem(sd.toString(), sd.segmentId());
+        if(!mapDescriptions.contains(sd.toString()))
+         mapDescriptions.insert(sd.toString(), sd.segmentId());
        continue;
       }
      }
@@ -144,12 +170,20 @@ void SegmentSelectionWidget::refreshSegmentCB()
   ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(m_SegmentId));
 // m_bridge->processScript("addModeOff");
 // addPointModeAct->setChecked(false);
- ui->cbSegments->model()->sort(0);
+ //ui->cbSegments->model()->sort(0);
+ QMapIterator<QString, int> iter(mapDescriptions);
+ while(iter.hasNext())
+ {
+  iter.next();
+  ui->cbSegments->addItem(iter.key(), iter.value());
+ }
  bRefreshingSegments = false;
 }
 
 void SegmentSelectionWidget::refreshStreetsCb()
 {
+ QMutexLocker locker(&mutex2);
+
  QStringList streets;
  QStringList tokens;
  QStringList tokens2;
@@ -158,9 +192,10 @@ void SegmentSelectionWidget::refreshStreetsCb()
  bCbStreetsRefreshing = true;
 
  ui->cbStreets->clear();
+ streets.clear();
  ui->cbStreets->addItem("");
- cbSegmentDataList = sql->getSegmentDataList();
- foreach(SegmentData sd, cbSegmentDataList.values())
+ cbSegmentDataMap = sql->getSegmentDataList();
+ foreach(SegmentData sd, cbSegmentDataMap.values())
  {
   description = sd.getDescription();
   tokens = description.split(",");
@@ -223,11 +258,13 @@ void SegmentSelectionWidget::segmentSelected(int pt, int segmentId)
 
 void SegmentSelectionWidget::cbSegments_currentIndexChanged(int index)
 {
- if(index < 0)
+ if(bRefreshingSegments)
   return;
- int segmentId = ui->cbSegments->currentData().toInt();
+ if(index <= 0)
+  return;
+ int segmentId = ui->cbSegments->itemData(index).toInt();
  if(initialized)
-  emit segmentSelected(currSd = cbSegmentDataList.value(segmentId));
+  emit segmentSelected(currSd = cbSegmentDataMap.value(segmentId));
 }
 
 QComboBox* SegmentSelectionWidget::cbSegments()

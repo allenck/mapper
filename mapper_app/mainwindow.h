@@ -174,6 +174,8 @@ public:
     QWebSocketServer* m_OverlayServer;
     WebSocketClientWrapper* m_overlayWrapper;
 #endif
+    int selectedSegment() {return m_SegmentId;}
+
 
 public slots:
     void copyRouteInfo_Click();
@@ -203,7 +205,7 @@ private slots:
     void cbSegmentsSelectedValueChanged(SegmentData sd);
     void cbSegmentsTextChanged(QString text);
     void cbRoutesTextChanged(QString text);
-    void cbSegments_Leave();
+//    void cbSegments_Leave();
     void cbRoutes_Leave();
     //void tblRouteView_selectionChanged(QTableWidgetItem * item);
     //void cbRoutes_contextMenu_requested(const QPoint& );

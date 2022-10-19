@@ -142,6 +142,21 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentData> segmentDataList,
      return QVariant();
  }
 
+ int SegmentViewTableModel::getRow(int segmentId)
+ {
+  int row = -1;
+  if(listOfSegments.isEmpty())
+   return row;
+  for (row = 0; row < listOfSegments.count(); row++)
+  {
+   if(listOfSegments.at(row).segmentId() == segmentId)
+   {
+    break;
+   }
+  }
+  return row;
+ }
+
  bool SegmentViewTableModel::insertRows(int position, int rows, const QModelIndex &index)
  {
      Q_UNUSED(index);

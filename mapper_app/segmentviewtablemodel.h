@@ -23,6 +23,7 @@ public:
     QList<SegmentData> getList();
     void reset();
     enum COLUMNS {SEGMENTID, DESCRIPTION, ONEWAY, STREETNAME, DIRECTION, LAT, LON};
+    int getRow(int segmentId);
 
 signals:
 

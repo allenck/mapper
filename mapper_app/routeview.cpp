@@ -454,6 +454,8 @@ void RouteView::itemSelectionChanged(QModelIndex index )
 
   MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
   parent->setCursor(QCursor(Qt::WaitCursor));
+  if(parent->selectedSegment() == segmentId)
+   return; // already selected
   parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
   parent->setCursor(QCursor(Qt::ArrowCursor));
 

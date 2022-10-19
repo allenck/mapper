@@ -135,6 +135,7 @@ public:
      return "";
  }
 };
+
 class Bounds : public QRectF
 {
  public:

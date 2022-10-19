@@ -22,13 +22,18 @@ public:
     QModelIndex currentIndex;
 signals:
     void sendRows(int, int);
+    void selectSegment(int);
+
 public slots:
     void editSegment();
+    void on_segmentSelected(int, int segmentId);
+
 private:
     QAction *copyAction;
     QAction *pasteAction;
     QAction *addToRouteAct;
     QAction *editSegmentAct;
+    QAction *selectSegmentAct;
     qint32 curRow, curCol;
     QStringList headers;
     QTableView* ui;

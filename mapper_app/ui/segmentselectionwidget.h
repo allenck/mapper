@@ -40,7 +40,7 @@ class SegmentSelectionWidget : public QWidget
   bool bRefreshingSegments = false;
   bool bCbStreetsRefreshing = false;
   //QList<SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
-  QMap<int, SegmentData> cbSegmentDataList;
+  QMap<int, SegmentData> cbSegmentDataMap;
   qint32 m_SegmentId;
   bool bCbStreets_text_changed=false;
   QString saveStreet;
@@ -48,6 +48,9 @@ class SegmentSelectionWidget : public QWidget
   QButtonGroup* enterGrp;
   SegmentData currSd;
   bool initialized = false;
+  QMutex mutex;
+  QMutex mutex2;
+  QMap<QString, int> mapDescriptions;
 };
 
 #endif // SEGMENTSELECTIONWIDGET_H

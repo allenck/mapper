@@ -1,5 +1,6 @@
 #include "segmentview.h"
 #include "editsegmentdialog.h"
+#include "webviewbridge.h"
 
 SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
     QObject(parent)
@@ -36,6 +37,25 @@ SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
     editSegmentAct = new QAction(tr("Edit segment"), this);
     editSegmentAct->setStatusTip(tr("Edit this segment's properties"));
     connect(editSegmentAct, SIGNAL(triggered(bool)), this, SLOT(editSegment()));
+
+    connect(webViewBridge::instance(), SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(on_segmentSelected(int,int)));
+
+    selectSegmentAct = new QAction(tr("SelectSegment"),this);
+    selectSegmentAct->setStatusTip(tr("Select this segment for further use."));
+
+    connect(selectSegmentAct, &QAction::triggered, [=]{
+     QItemSelectionModel * model = ui->selectionModel();
+     QModelIndexList indexes = model->selectedIndexes();
+     QModelIndex Index = indexes.at(0);
+     qint32 segmentId = Index.data().toInt();
+
+     MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
+     parent->setCursor(QCursor(Qt::WaitCursor));
+     if(parent->selectedSegment() == segmentId)
+      return; // already selected
+     parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
+     parent->setCursor(QCursor(Qt::ArrowCursor));
+    });
 
     ui->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
@@ -80,6 +100,7 @@ void SegmentView::tablev_customContextMenu( const QPoint& pt)
             menu.addAction(addToRouteAct);
         }
         menu.addAction(editSegmentAct);
+        menu.addAction(selectSegmentAct);
         menu.exec(QCursor::pos());
     }
 }
@@ -185,7 +206,7 @@ void SegmentView::addToRoute()
 {
  QItemSelectionModel * model = ui->selectionModel();
  QModelIndexList indexes = model->selectedIndexes();
- qint32 SegmentId = indexes.at(0).data().toInt();
+ qint32 segmentId = indexes.at(0).data().toInt();
  MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
  if(parent->routeDlg == 0)
  {
@@ -194,14 +215,17 @@ void SegmentView::addToRoute()
   //routeDlg->SegmentChanged += new segmentChangedEventHandler(segmentChanged);
   connect(parent->routeDlg, SIGNAL(SegmentChangedEvent(qint32, qint32)),parent, SLOT(segmentChanged(qint32,qint32)));
  }
+ if(parent->selectedSegment() == segmentId)
+  return; // already selected
+
  if(parent->m_segmentStatus == "Y")
-   parent->ProcessScript("selectSegment", QString("%1").arg(SegmentId));
+   parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
  else
  {
-  SegmentInfo si = sql->getSegmentInfo(SegmentId);
-  parent->displaySegment(SegmentId, si.description, si.oneWay, si.oneWay == "N" ? "#00FF00" : "#045fb4", " ", true);
+  SegmentData sd = sql->getSegmentData(segmentId);
+  parent->displaySegment(segmentId, sd.description(), sd.oneWay(), sd.oneWay() == "N" ? "#00FF00" : "#045fb4", " ", true);
  }
- parent->routeDlg->setSegmentId(SegmentId); // do before setting route!
+ parent->routeDlg->setSegmentId(segmentId); // do before setting route!
  int ix = parent->ui->cbRoute->currentIndex();
  if(ix >= 0)
  {
@@ -228,13 +252,27 @@ void SegmentView::itemSelectionChanged(QModelIndex index)
     QModelIndexList indexes = model->selectedIndexes();
     qint32 segmentId =indexes.at(0).data().toInt();
     MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
+    if(parent->selectedSegment() == segmentId)
+     return; // already selected
+
     parent->ProcessScript("isSegmentDisplayed", QString("%1").arg(segmentId));
     if(parent->m_segmentStatus == "Y")
         parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
     else
     {
-        SegmentInfo si = sql->getSegmentInfo(segmentId);
+//        SegmentData si = sql->getSegmentData(segmentId);
         //parent->displaySegment(segmentId, si.description, si.oneWay, si.oneWay == "N" ? "#00FF00" : "#045fb4", true);
         parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
     }
+}
+
+void SegmentView::on_segmentSelected(int, int segmentId)
+{
+ int row = sourceModel->getRow(segmentId);
+ if(row >= 0)
+ {
+  QModelIndex modelIndex = proxymodel->mapFromSource(sourceModel->index(row,1));
+  //ui->setCurrentIndex(modelIndex);
+  ui->selectRow(modelIndex.row());
+ }
 }
