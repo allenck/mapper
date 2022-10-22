@@ -196,7 +196,7 @@ void StationView::on_editTriggered()
  if(currentIndex.isValid())
  {
   int stationKey = currentIndex.model()->index(currentIndex.row(), 0).data().toInt();
-  editStation dlg(stationKey, true);
+  EditStation dlg(stationKey, true);
   dlg.exec();
  }
 }

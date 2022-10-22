@@ -3430,7 +3430,8 @@ bool SQL::updateSegment(SegmentInfo* si)
 bool SQL::updateSegment(qint32 SegmentId)
 {
  if(SegmentId <= 0)
-  throw IllegalArgumentException(tr("invalid segmentId %1").arg(SegmentId));
+  //throw IllegalArgumentException(tr("invalid segmentId %1").arg(SegmentId));
+  return false;
  bool ret = false;
  double startLat=0, startLon=0, endLat=0, endLon=0, length=0;
  int rows=0, points=0;
@@ -7835,7 +7836,7 @@ QList<StationInfo> SQL::getStations()
  return myArray;
 }
 
-commentInfo SQL::getComments(qint32 infoKey)
+CommentInfo SQL::getComments(qint32 infoKey)
 {
 //#ifdef WIN32
 //    QString up = QString::fromUtf8("?");
@@ -7845,8 +7846,8 @@ commentInfo SQL::getComments(qint32 infoKey)
     QString down = QString::fromUtf8("▼");
 //#endif
 
-    commentInfo ci;
-    ci.infoKey = -1;
+    CommentInfo ci;
+    ci.commentKey = -1;
     ci.comments = "";
     ci.tags = "";
     try
@@ -7873,7 +7874,7 @@ commentInfo SQL::getComments(qint32 infoKey)
         }
         while (query.next())
         {
-            ci.infoKey = query.value(0).toInt();
+            ci.commentKey = query.value(0).toInt();
 //            if(config->currConnection->servertype() != "MsSql")
             ci.comments = query.value(1).toString();
 //            else
@@ -8061,8 +8062,8 @@ QDate SQL::getFirstCommentDate(qint32 route, QDate date, qint32 companyKey)
      throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
 
- QString commandText = "select min(date) from RouteComments where route = " + QString("%1").arg(route)
-   + " and companyKey = " + QString("%1").arg(companyKey)
+ QString commandText = "select min(date) from RouteComments where route in(0," + QString("%1").arg(route)
+   + ") and companyKey = " + QString("%1").arg(companyKey)
    + " and date >= '" + QString("%1").arg(date.toString("yyyy/MM/dd"))
    + "'";
  QSqlQuery query = QSqlQuery(db);
@@ -8086,7 +8087,7 @@ QDate SQL::getFirstCommentDate(qint32 route, QDate date, qint32 companyKey)
  return result;
 }
 
-routeComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
+RouteComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
 {
 //#ifdef WIN32
 //    QString up = QString::fromUtf8("?");
@@ -8096,10 +8097,10 @@ routeComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
     QString down = QString::fromUtf8("▼");
 //#endif
 
-    routeComments rc;
+    RouteComments rc;
     rc.route = -1;
     rc.infoKey=-1;
-    rc.ci.infoKey = -1;
+    rc.ci.commentKey = -1;
     rc.ci.comments = "";
     rc.ci.tags = "";
     rc.companyKey = companyKey;
@@ -8141,7 +8142,7 @@ routeComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
         while (query.next())
         {
             rc.infoKey = query.value(0).toInt();
-            rc.ci.infoKey = query.value(1).toInt();
+            rc.ci.commentKey = query.value(1).toInt();
             rc.companyKey = query.value(2).toInt();
             rc.ci.comments = query.value(3).toString();
             rc.ci.tags = query.value(4).toString();
@@ -8172,7 +8173,7 @@ routeComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
     return rc;
 }
 
-bool SQL::updateRouteComment(routeComments rc)
+bool SQL::updateRouteComment(RouteComments rc)
 {
     bool ret = false;
     bool bQuery;
@@ -8188,7 +8189,7 @@ bool SQL::updateRouteComment(routeComments rc)
             db.transaction();
             //qDebug()<< rc.ci.comments;
 
-            rc.ci.infoKey = addComment(rc.ci.comments, rc.ci.tags);
+            rc.ci.commentKey = addComment(rc.ci.comments, rc.ci.tags);
 
             commandText = "insert into RouteComments (route, date, commentKey, companyKey, latitude, longitude) "
             " values(:route, :date, :commentKey, :companyKey, :latitude, :longitude)";
@@ -8203,7 +8204,7 @@ bool SQL::updateRouteComment(routeComments rc)
             }
             query.bindValue(":route", rc.route);
             query.bindValue(":date", rc.date.toString("yyyy/MM/dd"));
-            query.bindValue(":commentKey",rc.ci.infoKey );
+            query.bindValue(":commentKey",rc.ci.commentKey );
             query.bindValue(":companyKey", rc.companyKey);
             query.bindValue(":latitude", rc.pos.lat());
             query.bindValue(":longitude", rc.pos.lon());
@@ -8251,7 +8252,7 @@ bool SQL::updateRouteComment(routeComments rc)
             }
 
 
-            ret = updateComment(rc.ci.infoKey, rc.ci.comments, rc.ci.tags);
+            ret = updateComment(rc.ci.commentKey, rc.ci.comments, rc.ci.tags);
         }
 
     }
@@ -8262,7 +8263,7 @@ bool SQL::updateRouteComment(routeComments rc)
     return ret;
 }
 
-bool SQL::deleteRouteComment(routeComments rc)
+bool SQL::deleteRouteComment(RouteComments rc)
 {
     bool ret = false;
     bool bQuery;
@@ -8274,7 +8275,7 @@ bool SQL::deleteRouteComment(routeComments rc)
         QSqlDatabase db = QSqlDatabase::database();
         QSqlQuery query = QSqlQuery(db);
 
-        if(deleteComment(rc.ci.infoKey))
+        if(deleteComment(rc.ci.commentKey))
         {
             commandText = "delete from RouteComments where route = :route and date = :date";
             bQuery = query.prepare(commandText);
@@ -8308,7 +8309,7 @@ bool SQL::deleteRouteComment(routeComments rc)
     }
     return ret;
 }
-routeComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyKey)
+RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyKey)
 {
 #ifdef WIN32
     QString up = QString::fromUtf8("?");
@@ -8318,10 +8319,10 @@ routeComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyK
     QString down = QString::fromUtf8("▼");
 #endif
 
-    routeComments rc;
+    RouteComments rc;
     rc.route = -1;
     rc.infoKey=-1;
-    rc.ci.infoKey = -1;
+    rc.ci.commentKey = -1;
     rc.ci.comments = "";
     rc.ci.tags = "";
     rc.companyKey = companyKey;
@@ -8355,7 +8356,7 @@ routeComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyK
         while (query.next())
         {
             rc.infoKey = query.value(0).toInt();
-            rc.ci.infoKey = query.value(1).toInt();
+            rc.ci.commentKey = query.value(1).toInt();
             rc.ci.comments = query.value(2).toString();
             rc.ci.tags = query.value(3).toString();
             rc.date = query.value(4).toDate();
@@ -8382,7 +8383,8 @@ routeComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyK
     rc.route = route;
     return rc;
 }
-routeComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 companyKey)
+
+RouteComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 companyKey)
 {
     Q_UNUSED(companyKey)
 #ifdef WIN32
@@ -8393,10 +8395,10 @@ routeComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 companyK
     QString down = QString::fromUtf8("▼");
 #endif
 
-    routeComments rc;
+    RouteComments rc;
     rc.route =-1;
     rc.infoKey=-1;
-    rc.ci.infoKey = -1;
+    rc.ci.commentKey = -1;
     rc.ci.comments = "";
     rc.ci.tags = "";
     try
@@ -8424,7 +8426,7 @@ routeComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 companyK
         while (query.next())
         {
             rc.infoKey = query.value(0).toInt();
-            rc.ci.infoKey = query.value(1).toInt();
+            rc.ci.commentKey = query.value(1).toInt();
             rc.ci.comments = query.value(2).toString();
             rc.ci.tags = query.value(3).toString();
             rc.date = query.value(4).toDate();
@@ -8451,6 +8453,112 @@ routeComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 companyK
     rc.route = route;
     return rc;
 }
+
+CommentInfo SQL::getComment(qint32 commentKey, int pos)
+{
+#ifdef WIN32
+    QString up = QString::fromUtf8("?");
+    QString down = QString::fromUtf8("?");
+#else
+    QString up = QString::fromUtf8("▲");
+    QString down = QString::fromUtf8("▼");
+#endif
+
+    CommentInfo ci;
+    try
+    {
+        if(!dbOpen())
+            throw Exception(tr("database not open: %1").arg(__LINE__));
+        QSqlDatabase db = QSqlDatabase::database();
+
+        QString commandText;
+        if(pos >0)
+         commandText = "select commentKey, comments, tags from Comments where commentKey > " + QString::number(commentKey)+ " limit 1";
+           else
+         commandText = "select commentKey, comments, tags from Comments where commentKey < " + QString::number(commentKey)+ " limit 1";
+
+
+        QSqlQuery query = QSqlQuery(db);
+        bool bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+            QSqlError err = query.lastError();
+            qDebug() << err.text() + "\n";
+            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+            db.close();
+            exit(EXIT_FAILURE);
+        }
+
+        if (!query.isActive())
+        {
+            return ci;
+        }
+        while (query.next())
+        {
+         ci.commentKey = query.value(0).toInt();
+         ci.comments = query.value(1).toString();
+         {
+             //qDebug()<<rc.ci.comments;
+             ci.comments = ci.comments.replace("&up", up);
+             ci.comments = ci.comments.replace("&down", down);
+             ci.comments.replace("&amp;up", up);
+             ci.comments.replace("&amp;down", down);
+
+             //qDebug()<<rc.ci.comments;
+         }
+         ci.tags = query.value(2).toString();
+        }
+
+        // get usage by Station
+        commandText = "select stationKey from Stations where infoKey >= 0";
+        bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+            QSqlError err = query.lastError();
+            qDebug() << err.text() + "\n";
+            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+            db.close();
+            exit(EXIT_FAILURE);
+        }
+
+        if (!query.isActive())
+        {
+            return ci;
+        }
+        while (query.next())
+        {
+         ci.usedByStations.append(query.value(0).toString());
+        }
+
+        // get usage by Routes
+        commandText = "select route from routeComments"
+                      " where commentkey = " + QString::number(ci.commentKey);
+        bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+            QSqlError err = query.lastError();
+            qDebug() << err.text() + "\n";
+            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+            db.close();
+            exit(EXIT_FAILURE);
+        }
+
+        if (!query.isActive())
+        {
+            return ci;
+        }
+        while (query.next())
+        {
+         ci.usedByRoutes.append(query.value(0).toString());
+        }
+    }
+    catch (Exception e)
+    {
+        myExceptionHandler(e);
+    }
+    return ci;
+}
+
 #if 0
 qint32 SQL::addStation(QString name, LatLng location, qint32 lineSegmentId, RouteType type)
 {

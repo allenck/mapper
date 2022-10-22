@@ -28,6 +28,7 @@ RouteCommentsDlg::RouteCommentsDlg(Configuration *cfg, QWidget *parent) :
     connect(ui->dateEdit, SIGNAL(dateChanged(QDate)), this, SLOT(OnDateChanged()));
     connect(ui->dateEdit, SIGNAL(editingFinished()), this, SLOT(OnDateLeave()));
     connect(ui->txtComments, SIGNAL(dirtySet(bool)), this, SLOT(OnDirtySet(bool)));
+    connect(ui->txtAdditionalRoutes, SIGNAL(editingFinished()), this, SLOT(OnAdditionalRoutesLeave()));
 
     setWindowTitle(tr("Route Comments"));
 
@@ -103,7 +104,7 @@ void RouteCommentsDlg::OnBtnNext()
 }
 bool RouteCommentsDlg::readComment(int pos)
 {
-    routeComments rc;
+    RouteComments rc;
     if(pos < 0)
         rc = sql->getPrevRouteComment(_route, _date, _companyKey);
     else
@@ -176,6 +177,20 @@ void RouteCommentsDlg::outputChanges()
   //qDebug()<< _rc.ci.comments;
   sql->updateRouteComment( _rc);
 
+  if(!ui->txtAdditionalRoutes->text().isEmpty())
+  {
+   QStringList routes = ui->txtAdditionalRoutes->text().split(",");
+   foreach(QString s, routes)
+   {
+    bool bOk;
+    int route = s.toInt(&bOk);
+    if(bOk)
+    {
+     _rc.route = route;
+     sql->updateRouteComment( _rc);
+    }
+   }
+  }
   bIsDirty = false;
   setWindowTitle(tr("Route Comments"));
   setDirty(false);
@@ -200,6 +215,11 @@ void RouteCommentsDlg::OnRouteLeave()
  bRouteChanged = false;
 }
 
+void RouteCommentsDlg::OnAdditionalRoutesLeave()
+{
+ setDirty(true);
+}
+
 void RouteCommentsDlg::OnAlphaRouteTextChanged(QString text)
 {
     if(text.length()>0)
@@ -220,6 +240,7 @@ void RouteCommentsDlg::OnAlphaRouteLeave()
         this->setRoute(route);
     }
 }
+
 void RouteCommentsDlg::OnTagsLeave()
 {
     bIsDirty = true;

@@ -493,11 +493,17 @@ public:
     QDateTime minDate, maxDate;
     bool bAlphaRoutes;
 };
-struct commentInfo
+
+class CommentInfo
 {
-    qint32 infoKey;
+ public:
+  CommentInfo(){commentKey = -1;}
+  CommentInfo(int commentKey) {this->commentKey = commentKey;}
+    qint32 commentKey = -1;
     QString tags;
     QString comments;
+    QStringList usedByRoutes;
+    QStringList usedByStations;
 };
 
 class RowChanged
@@ -522,12 +528,12 @@ public:
     }
 };
 
-struct routeComments
+struct RouteComments
 {
     qint32 route;
     QDate date;
     qint32 infoKey;
-    commentInfo ci;
+    CommentInfo ci;
     LatLng pos;
     qint32 companyKey;
 };

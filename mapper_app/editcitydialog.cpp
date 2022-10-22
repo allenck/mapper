@@ -39,9 +39,9 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
 
  for(int i=0; i < config->cityList.count(); i++)
  {
-  City* c = config->cityList.at(i);
-  ui->cbCity->addItem(c->name);
-  if(config->currCity->name == c->name)
+  City* city = config->cityList.at(i);
+  ui->cbCity->addItem(city->name);
+  if(config->currCity->name == city->name)
   {
    ui->cbCity->setCurrentIndex(i);
    cbCitysSelectionChanged(i);
@@ -56,16 +56,21 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  connect(ui->editLatitude, SIGNAL(editingFinished()), this, SLOT(onLatitudeChanged()));
  connect(ui->editLongitude, SIGNAL(editingFinished()), this, SLOT(onLongitudeChanged()));
  setControls(false); // will be set to true when table selected.
+
+ QSettings settings;
+ QSize sz = settings.value("EditCityDialog:size",QSize(800,600)).toSize();
+ resize(sz);
 }
 
 EditCityDialog::~EditCityDialog()
 {
  delete ui;
 }
+
 void EditCityDialog::newCity(int i)
 {
  cityOverlays->clear();
- foreach(Overlay*ov, config->currCity->overlayList())
+ foreach(Overlay*ov, config->currCity->overlayList)
  {
   if(ov->bounds.contains( config->currCity->center))
   {
@@ -82,19 +87,19 @@ void EditCityDialog::cbCitysSelectionChanged(int i)
 {
  if(dirty)
  {
-  if(QMessageBox::question(this, tr("Save City?"), tr("One or more overlays have been added or modified. Do you wish to save %1").arg(c->name), QMessageBox::Yes | QMessageBox::No)== QMessageBox::Yes)
+  if(QMessageBox::question(this, tr("Save City?"), tr("One or more overlays have been added or modified. Do you wish to save %1").arg(city->name), QMessageBox::Yes | QMessageBox::No)== QMessageBox::Yes)
   {
-   c->overlayList() = cityOverlays->values();
-   c->setDirty(true);
+   city->overlayList = cityOverlays->values();
+   city->setDirty(true);
   }
  }
- c = config->cityList.at(i);
+ city = config->cityList.at(i);
  cityId = i;
  newCity(i);
  model->setCity(i);
  dirty = false;
- ui->editLatitude->setText(QString::number(c->center.lat()));
- ui->editLongitude->setText(QString::number(c->center.lon()));
+ ui->editLatitude->setText(QString::number(city->center.lat()));
+ ui->editLongitude->setText(QString::number(city->center.lon()));
 }
 void EditCityDialog::onClicked(QModelIndex index)
 {
@@ -113,7 +118,7 @@ void EditCityDialog::onClicked(QModelIndex index)
  ui->sbMaxZoom->setMinimum(ov->minZoom);
  ui->sbMaxZoom->setMaximum(ov->maxZoom);
  ui->sbMaxZoom->setValue(ov->maxZoom);
- foreach (Overlay* ov1, c->overlayList()) {
+ foreach (Overlay* ov1, city->overlayList) {
   if(ov->name == ov1->name)
   {
    if(ov1->description != "")
@@ -159,7 +164,7 @@ void EditCityDialog::overlaySelectionChanged(QModelIndex mindex, bool bCheck)
  ui->sbMaxZoom->setMinimum(ov->minZoom);
  ui->sbMaxZoom->setMaximum(ov->maxZoom);
  ui->sbMaxZoom->setValue(ov->maxZoom);
- foreach (Overlay* ov1, c->overlayList())
+ foreach (Overlay* ov1, city->overlayList)
  {
   if(ov->name == ov1->name)
   {
@@ -229,29 +234,29 @@ void EditCityDialog::btnAddToCityClicked()
  if(dlg->exec() == QDialog::Accepted)
  {
   Overlay* newOv = dlg->overlay();
-  for(int i = 0; i < c->overlays.count(); i++)
+  for(int i = 0; i < city->overlays.count(); i++)
   {
-   if(c->overlays.at(i)->name == newOv->name)
+   if(city->overlays.at(i)->name == newOv->name)
    {
     QMessageBox::critical(this, tr("Error"), tr("Overlay %1 is already used").arg(newOv->name));
     return;
    }
   }
-  c->overlays.append(newOv);
-  if(c->curOverlayId < 0)
-   c->curOverlayId = 0;
+  city->overlays.append(newOv);
+  if(city->curOverlayId < 0)
+   city->curOverlayId = 0;
   refreshOverlayCb();
-  //cbOverlaySelectionChanged(c->overlays.count()-1);
+  //cbOverlaySelectionChanged(city->overlays.count()-1);
  }
 }
 
 void EditCityDialog::btnDeleteFromCityClicked()
 {
- for(int i = 0; i < c->overlays.count(); i++)
+ for(int i = 0; i < city->overlays.count(); i++)
  {
-//  if(c->overlays.at(i)->name == ui->cbOverlay->currentText())
+//  if(city->overlays.at(i)->name == ui->cbOverlay->currentText())
 //  {
-//   c->overlays.removeAt(i);
+//   city->overlays.removeAt(i);
 //   break;
 //  }
  }
@@ -263,16 +268,23 @@ void EditCityDialog::btnDeleteFromCityClicked()
 void EditCityDialog::OnDescriptionChanged(bool b)
 {
  if(bRefreshing) return;
- if(b && c->curOverlayId >=0)
-  c->overlayList().at(c->curOverlayId)->description = ui->edDescription->toHtml();
+ if(city->curOverlayId >= city->overlayList.count())
+ if(b && city->curOverlayId >= 0)
+  city->curOverlayId = 0;
+ city->overlayList.at(city->curOverlayId)->description = ui->edDescription->toHtml();
 }
 
 void EditCityDialog::ok_clicked()
 {
  if(dirty)
  {
-  c->overlayList() = cityOverlays->values();
+  city->overlayList = cityOverlays->values();
  }
+
+ QSettings settings;
+ settings.setValue("EditCityDialog:size", size());
+
+ close();
 }
 
 void EditCityDialog::setControls(bool enabled)
@@ -292,7 +304,7 @@ void EditCityDialog::onLatitudeChanged()
 {
  QString txt = ui->editLatitude->text();
  double val = txt.toDouble();
- c->center.setLat(val);
+ city->center.setLat(val);
  dirty = true;
 }
 
@@ -300,7 +312,7 @@ void EditCityDialog::onLongitudeChanged()
 {
  QString txt = ui->editLongitude->text();
  double val = txt.toDouble();
- c->center.setLon(val);
+ city->center.setLon(val);
  dirty = true;
 }
 
@@ -309,12 +321,18 @@ void EditCityDialog::closeEvent(QCloseEvent * event)
  QMessageBox msgBox;
  if(dirty)
  {
-  if(QMessageBox::question(this, tr("Save City?"), tr("One or more overlays have been added or modified. Do you wish to save %1").arg(c->name), QMessageBox::Yes | QMessageBox::No)== QMessageBox::Yes)
+  if(QMessageBox::question(this, tr("Save City?"), tr("One or more overlays have been added or modified. Do you wish to save %1").arg(city->name), QMessageBox::Yes | QMessageBox::No)== QMessageBox::Yes)
   {
-   c->overlayList() = cityOverlays->values();
-   c->setDirty(true);
+   city->overlayList = cityOverlays->values();
+   city->setDirty(true);
   }
  }
+
+ QSettings settings;
+ settings.setValue("EditCityDialog:size", size());
+
+ config->saveSettings();
+
 
  msgBox.setText("Are you sure you want to close?");
  msgBox.setStandardButtons(QMessageBox::Close | QMessageBox::Cancel);

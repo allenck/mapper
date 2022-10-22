@@ -45,6 +45,7 @@
 #include "sql.h"
 #include "replacesegmentdialog.h"
 #include "segmentselectionwidget.h"
+#include "browsecommentsdialog.h"
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -157,7 +158,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
  qDebug()<<QApplication::style();
 
- QUrl dataUrl("http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/overlay.lst");
+ QUrl dataUrl("http://ubuntu-2:1080/public/map_tiles/overlay.lst");
  m_dataCtrl = new FileDownloader(dataUrl, this);
  connect (m_dataCtrl, SIGNAL(downloaded()), this, SLOT(loadAcksoftData()));
 //#ifdef WIN32
@@ -165,7 +166,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 //#else
 // m_overlays = new FileDownloader(QUrl("http://localhost/tileserver.php?/tms"),this);
 //#endif
-// connect(m_overlays, SIGNAL(downloaded()), this, SLOT(loadOverlayData()));
+
  // get list of localhost's mbtiles overlays
  m_overlays = new FileDownloader(QUrl("http://localhost/map_tiles/mbtiles.php"),this);
  //m_overlays = new FileDownloader(QUrl("http://localhost/tileserver/"),this);connect(m_overlays, SIGNAL(downloaded()), this, SLOT(loadMbtilesData()));
@@ -372,7 +373,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   geocoderRequestAct->setChecked(config->currCity->bGeocoderRequest);
   m_bridge->processScript("setGeocoderRequest", config->currCity->bGeocoderRequest?"true":"false");
 
-  if(config->currCity->overlayList().count()> 0)
+  if(config->currCity->overlayList.count()> 0)
   {
    //QTimer::singleShot(10000, this, SLOT(mapInit()));
    //chkShowOverlayChanged(config->currCity->bShowOverlay);
@@ -533,7 +534,9 @@ void MainWindow::loadData(QString data, QString source)
   else
   if(source == "acksoft")
   {
-   overlay->urls.append("http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/");
+   //overlay->urls.append("http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/");
+   overlay->urls.append("http://ubuntu-2:1080/public/map_tiles/");
+
 //   if(!overlay->bounds.isValid())
 //   {
 //    QEventLoop loop;
@@ -675,6 +678,7 @@ void MainWindow::loadOverlayData()
      config->overlayList.insert(name, ov);
     }
    }
+   config->saveSettings();
   }
  }
 }
@@ -693,22 +697,24 @@ void MainWindow::fillOverlayMenu()
  overlayMenu->clear();
  overlaySignalMapper = new QSignalMapper(this);
  overlayActionGroup = new QActionGroup(this);
- for(int i = 0; i < config->currCity->overlayList().count(); i++)
+ for(int i = 0; i < config->currCity->overlayList.count(); i++)
  {
-  QString ov = config->currCity->overlayList().at(i)->name;
+  QString ov = config->currCity->overlayList.at(i)->name;
   if(ov == "")
       continue;
   QAction *act = new QAction(ov, this);
   act->setData(i);
   act->setCheckable(true);
-  act->setToolTip(config->currCity->overlayList().at(i)->description);
+  act->setToolTip(config->currCity->overlayList.at(i)->description);
   overlayActions.append(act);
   actionGroup->addAction(act);
   connect(act, SIGNAL(triggered()), overlaySignalMapper, SLOT(map()));
   overlaySignalMapper->setMapping(act, i);
   overlayMenu->addAction(act);
+  if(config->currCity->curOverlayId >= config->currCity->overlayList.count())
+   config->currCity->curOverlayId = 0;
   //if(config->currCity->curOverlayId == i)
-  if(config->currCity->curOverlayId >=0 && ov == config->currCity->overlayList().at(config->currCity->curOverlayId)->name)
+  if(config->currCity->curOverlayId >=0 && ov == config->currCity->overlayList.at(config->currCity->curOverlayId)->name)
    act->setChecked(true);
   //act->setToolTip(config->currCity->overlays.at(config->currCity->curOverlayId)->description);
   if(!ui->chkShowOverlay->isEnabled())
@@ -960,6 +966,12 @@ void MainWindow::createActions()
  addGeoreferencedOverlayAct->setToolTip(tr("Open a dialog to edit list of available overlays."));
  connect(addGeoreferencedOverlayAct, SIGNAL(triggered(bool)), this, SLOT(on_addGeoreferenced(bool)));
 
+ browseCommentsAct = new QAction(tr("Browse Comments"), this);
+ connect(browseCommentsAct, &QAction::triggered, [=]{
+  BrowseCommentsDialog* dlg = new BrowseCommentsDialog();
+  dlg->exec();
+ });
+
  overlayHelp = new QAction(tr("Overlays"),this);
  overlayHelp->setToolTip(tr("Help on setting up a new overlay."));
  connect(overlayHelp, SIGNAL(triggered(bool)), this, SLOT(on_overlayHelp()));
@@ -996,6 +1008,7 @@ void MainWindow::createMenus()
     toolsMenu->addAction(newSqliteDbAct);
     toolsMenu->addAction(queryDialogAct);
     toolsMenu->addAction(addGeoreferencedOverlayAct);
+    toolsMenu->addAction(browseCommentsAct);
 
     optionsMenu = new Menu(tr("Options"));
     overlayMenu = new Menu(tr("Overlays"));
@@ -1280,7 +1293,7 @@ void MainWindow::newCity(int ix )
 }
 void MainWindow::newOverlay(int ix)
 {
- Overlay* cOv = config->currCity->overlayList().at(ix);
+ Overlay* cOv = config->currCity->overlayList.at(ix);
  if(cOv->source == "")
  {
   if(config->localOverlayList.contains( cOv->name))
@@ -1300,9 +1313,9 @@ void MainWindow::newOverlay(int ix)
 // m_bridge->processScript("loadOverlay", objArray);
  loadOverlay(cOv);
  bool bFound=false;
- for(int i = 0; i < config->currCity->overlayList().count(); i++)
+ for(int i = 0; i < config->currCity->overlayList.count(); i++)
  {
-  Overlay* ov = config->currCity->overlayList().at(i);
+  Overlay* ov = config->currCity->overlayList.at(i);
   if(currentOverlay == ov->name)
   {
    bFound = true;
@@ -1696,7 +1709,7 @@ default:
    QString str = sti.stationName;
    if (sti.infoKey > 0)
    {
-    commentInfo ci = sql->getComments(sti.infoKey);
+    CommentInfo ci = sql->getComments(sti.infoKey);
     //str = ci.comments;
 
     objArray.clear();
@@ -1725,7 +1738,7 @@ default:
   {
    QDate dt = QDate::fromString(m_currRouteStartDate, "yyyy/MM/dd");
    dt = sql->getFirstCommentDate(m_routeNbr, dt, rd.companyKey);
-   routeComments rc = sql->getRouteComment(m_routeNbr, dt, -1);
+   RouteComments rc = sql->getRouteComment(m_routeNbr, dt, -1);
    if(rc.infoKey < 0)
    {
     rc = sql->getRouteComment(0, dt, -1);
@@ -1772,7 +1785,7 @@ default:
 void MainWindow::getInfoWindowComments(double lat, double lon, int route, QString date, int func)
 {
  QDate dt = QDate::fromString(date, "yyyy/MM/dd");
- routeComments rc;
+ RouteComments rc;
  double latitude = lat;
  double longitude = lon;
 
@@ -1797,11 +1810,11 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
   int i = rc.ci.comments.indexOf("</body>");
   if(i > 0)
   {
-   routeComments rcNext = sql->getNextRouteComment(route, rc.date, -1);
+   RouteComments rcNext = sql->getNextRouteComment(route, rc.date, -1);
    QString sNext;
    if(rcNext.infoKey>=0)
     sNext = "<input type='button' name='next' value='>' onClick='nextRouteComment()'/>";
-   routeComments rcPrev = sql->getPrevRouteComment(route, rc.date, -1);
+   RouteComments rcPrev = sql->getPrevRouteComment(route, rc.date, -1);
    QString sPrev;
    if(rcPrev.infoKey >= 0)
      sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
@@ -2461,10 +2474,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
      qApp->processEvents(QEventLoop::AllEvents,50);
      QVariant rslt = m_bridge->getRslt();
      //qDebug() << "overlay loaded " << rslt.toString();
-     if(config->currCity->overlayList().isEmpty())
+     if(config->currCity->overlayList.isEmpty())
          config->currCity->curOverlayId= -1;
      else
-         if(config->currCity->curOverlayId >= config->currCity->overlayList().count())
+         if(config->currCity->curOverlayId >= config->currCity->overlayList.count())
              config->currCity->curOverlayId = 0;
      if( config->currCity->curConnectionId >= 0 && config->currCity->curOverlayId >= 0 && rslt.toString() == "true")
      {
@@ -2473,7 +2486,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
          int opacity = m_bridge->myRslt.toInt();
 
          City* c = config->currCity;
-         Overlay* ov = c->overlayList().at(config->currCity->curOverlayId);
+         Overlay* ov = c->overlayList.at(config->currCity->curOverlayId);
          ov->opacity = opacity;
          config->setOverlay(ov);
      }
@@ -2507,6 +2520,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
  settings.setValue("stationView", ui->tblStationView->horizontalHeader()->saveState());
  settings.setValue("companyView", ui->tblCompanyView->horizontalHeader()->saveState());
  settings.setValue("tractionTypeView", ui->tblTractionTypes->horizontalHeader()->saveState());
+
  QSqlDatabase db = QSqlDatabase::database();
  db.close();
 #ifndef QT_DEBUG
@@ -2894,9 +2908,11 @@ void MainWindow::queryOverlay()
 //        webBrowser1.Document.InvokeScript("loadOverlay", new object[] { ov.overlayName, ov.opacity });
     if(!ui->chkShowOverlay->isChecked())
         return;
+    if(config->currCity->curOverlayId >= config->currCity->overlayList.count())
+     config->currCity->curOverlayId =0;
     if(config->currCity->curOverlayId >= 0)
     {
-        Overlay* ov = config->currCity->overlayList().at(config->currCity->curOverlayId );
+        Overlay* ov = config->currCity->overlayList.at(config->currCity->curOverlayId );
 //        m_bridge->processScript("loadOverlay", "'"+ov->name+"',"+QString("%1").arg(ov->opacity)+ ","+ QString::number(ov->minZoom)+ ","+ QString::number(ov->maxZoom)+ ",'"+ ov->source+ "'");
         loadOverlay(ov);
     }
@@ -3268,6 +3284,7 @@ void MainWindow::deleteRoute()
     refreshRoutes();
 #endif
 }
+
 void MainWindow::updateRoute()
 {
     //SQL sql;
@@ -3283,13 +3300,16 @@ void MainWindow::updateRoute()
         connect(routeDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs )), this, SLOT(RouteChanged(RouteChangedEventArgs )));
     }
 
-    routeDlg->setRouteNbr( m_routeNbr);
-    routeDlg->setSegmentId( m_SegmentId);
-    routeDlg->setRouteData(_rd);
-    //routeDlg.segmentInfoList = segmentInfoList;
-    routeDlg->show();
-    routeDlg->raise();
-    routeDlg->activateWindow();
+    if(m_SegmentId >= 0)
+    {
+     routeDlg->setRouteNbr( m_routeNbr);
+     routeDlg->setSegmentId( m_SegmentId);
+     routeDlg->setRouteData(_rd);
+     //routeDlg.segmentInfoList = segmentInfoList;
+     routeDlg->show();
+     routeDlg->raise();
+     routeDlg->activateWindow();
+    }
 
 }
 void MainWindow::updateTerminals()
@@ -3498,10 +3518,10 @@ void MainWindow::geocoderRequestToggled(bool bChecked)
 
 void MainWindow::chkShowOverlayChanged(bool bChecked)
 {
- if(config->currCity->overlayList().size() == 0) return;
+ if(config->currCity->overlayList.size() == 0) return;
  if(bChecked && config->currCity->curOverlayId >= 0)
  {
-  Overlay* ov = config->currCity->overlayList().at(config->currCity->curOverlayId);
+  Overlay* ov = config->currCity->overlayList.at(config->currCity->curOverlayId);
   //m_bridge->processScript("loadOverlay", "'" +ov->name+"',"+QString("%1").arg(ov->opacity));
 //  m_bridge->processScript("loadOverlay", QString("'%1',%2,%3,%4,'%5'").arg(ov->name).arg(ov->opacity).arg(ov->minZoom).arg(ov->maxZoom).arg(ov->source));
   loadOverlay(ov);
@@ -3522,7 +3542,7 @@ void MainWindow::setStation(double lat, double lon, qint32 segmentId, qint32 ptI
  {
   LatLng pt =  LatLng(lat, lon);
   SegmentInfo si = sql->getSegmentInfo(segmentId);
-  editStation form(-1, bDisplayStationMarkers, this);
+  EditStation form(-1, bDisplayStationMarkers, this);
   //form.setConfiguration(config);
   form.setPoint(pt);
   form.setSegmentId(segmentId);
@@ -3566,10 +3586,10 @@ void MainWindow::updateStation(qint32 stationKey, qint32 segmentId)
 {
     StationInfo sti = sql->getStationInfo(stationKey);
     //segmentInfo si = sql->getSegmentInfo(segmentId);
-    commentInfo ci =  commentInfo();
+    CommentInfo ci =  CommentInfo();
     QVariantList objArray;
 
-    editStation form(sti.stationKey, bDisplayStationMarkers, this);
+    EditStation form(sti.stationKey, bDisplayStationMarkers, this);
     //form.setConfiguration(config);
     //form.setStationId(sti.stationKey);
  form.exec();
@@ -3585,7 +3605,7 @@ void MainWindow::moveStationMarker(qint32 stationKey, qint32 segmentId, double l
  {
   // add another station with the same name but different segment.
   int stationKey = sql->addStation(sti.stationName,LatLng(sti.latitude, sti.longitude),segmentId,si.startDate,si.endDate,sti.geodb_loc_id, sti.infoKey,si.routeType,sti.markerType,sti.point);
-  commentInfo ci = sql->getComments(sti.infoKey);
+  CommentInfo ci = sql->getComments(sti.infoKey);
   QVariantList objArray;
   objArray << lat<< lon << (bDisplayStationMarkers?true:false)<<segmentId<<sti.stationName
            <<stationKey<<sti.infoKey<<ci.comments<<sti.markerType;
@@ -3613,7 +3633,7 @@ void MainWindow::moveStationMarker(qint32 stationKey, qint32 segmentId, double l
     QVariantList objArray;
 
     sti = sql->getStationInfo(stationKey); // get station's updated route info
-    commentInfo ci = sql->getComments(sti.infoKey);
+    CommentInfo ci = sql->getComments(sti.infoKey);
     //str = ci.comments;
     m_bridge->processScript("removeStationMarker", QString("%1").arg(stationKey));
     //m_bridge->processScript("addStationMarker",QString("%1").arg(lat,0,'f',8) +","+QString("%1").arg(lon,0,'f',8) +","+(bDisplayStationMarkers?"true":"false")+","+QString("%1").arg(sti.segmentId)+",'"+sti.stationName+"',"+QString("%1").arg(stationKey)+","+QString("%1").arg(sti.infoKey)+",comments,'"+markerType+"'", "comments", ci.comments);
@@ -3624,7 +3644,7 @@ void MainWindow::moveStationMarker(qint32 stationKey, qint32 segmentId, double l
 
 void MainWindow::moveRouteComment(int route, QString date, double latitude, double longitude, int companyKey)
 {
- routeComments rc = sql->getRouteComment(route, QDate::fromString(date, "yyyy/MM/dd"), companyKey);
+ RouteComments rc = sql->getRouteComment(route, QDate::fromString(date, "yyyy/MM/dd"), companyKey);
  rc.pos = LatLng(latitude, longitude);
  sql->updateRouteComment(rc);
 }

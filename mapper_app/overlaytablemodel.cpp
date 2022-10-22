@@ -106,7 +106,7 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
   Overlay* ov = overlayList.at(index.row());
   if(index.column() == SELECTED)
   {
-   if(config->cityList.at(currCityId)->overlayList().contains(ov))
+   if(ov->isSelected)
     return Qt::Checked;
    else
     return Qt::Unchecked;
@@ -132,12 +132,13 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
    QString name = overlayList.at(index.row())->name;
    if(value.toBool())
    {
-    if(!config->cityList.at(currCityId)->overlayList().contains(ov))
+    if(!config->cityList.at(currCityId)->overlayList.contains(ov))
      config->cityList.at(currCityId)->addOverlay(ov);
+    ov->isSelected = value.toBool();
    }
    else
    {
-    if(config->cityList.at(currCityId)->overlayList().contains(ov))
+    if(config->cityList.at(currCityId)->overlayList.contains(ov))
      config->cityList.at(currCityId)->removeOverlay(ov);
    }
    emit overlaySelectionChanged(index, value.toBool());

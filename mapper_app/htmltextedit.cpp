@@ -35,6 +35,7 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
  pasteHtmlAct = new QAction(tr("Paste HTML"),this);
  pasteSaved = new QAction(tr("Paste saved"), this);
  copySaved = new QAction(tr("Copy to saved"), this);
+ setPlaceholderText("Enter text");
 
  connect(boldAction, SIGNAL(triggered(bool)), this, SLOT(OnBoldAction(bool)));
  connect(italicAction, SIGNAL(triggered(bool)), this, SLOT(OnItalicAction(bool)));
@@ -253,9 +254,10 @@ void HtmlTextEdit::OnPasteHtmlAct()
 //     else {
 //         setText(tr("Cannot display data"));
 }
+
 void HtmlTextEdit::OnPasteSaved()
 {
-    this->setHtml(config->currCity->savedClipboard);
+ this->setHtml(config->currCity->savedClipboard);
 }
 void HtmlTextEdit::OnCopySaved()
 {

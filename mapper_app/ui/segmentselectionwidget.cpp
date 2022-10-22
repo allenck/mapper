@@ -24,7 +24,7 @@ void SegmentSelectionWidget::initialize()
  });
  connect(webViewBridge::instance(), SIGNAL(segmentSelected(int, int)), this, SLOT(segmentSelected(int, int)));
  //connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSegmentsSelectedValueChanged(int)));
- connect(ui->cbSegments, SIGNAL(editTextChanged(QString)), this, SLOT(cbSegmentsTextChanged(QString)));
+ //connect(ui->cbSegments, SIGNAL(editTextChanged(QString)), this, SLOT(cbSegmentsTextChanged(QString)));
  connect(ui->rbSingle, &QRadioButton::clicked, [=]{
   saveStreet = ui->cbStreets->currentText();
   refreshSegmentCB();
@@ -55,7 +55,7 @@ void SegmentSelectionWidget::initialize()
  connect(ui->cbStreets, &QComboBox::editTextChanged, [=]{
   bCbStreets_text_changed = true;
  });
- connect(ui->cbStreets, SIGNAL(editingFinished()), this, SLOT(cbStreets_editingFinished()));
+ //connect(ui->cbStreets, SIGNAL(editingFinished()), this, SLOT(cbStreets_editingFinished()));
  connect(ui->cbStreets, SIGNAL(currentIndexChanged(int)), this, SLOT(cbStreets_currentIndexChanged(int)));
  connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSegments_currentIndexChanged(int)));
 

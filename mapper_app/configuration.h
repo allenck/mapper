@@ -27,6 +27,7 @@ public:
  Bounds bounds; // west longitude, south Latitude, east longitude, north latitude
  QString sCenter; // longitude, latitude, zoom level
  QStringList urls;
+ bool isSelected = false;
  Overlay()
  {
   source="acksoft";

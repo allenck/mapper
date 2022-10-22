@@ -30,6 +30,7 @@ public:
   NUMCOLUMNS
  };
  void setCity(int);
+
 signals:
  void setDirty();
  void overlaySelectionChanged(QModelIndex index, bool checked);

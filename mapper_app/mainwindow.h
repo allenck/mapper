@@ -341,6 +341,7 @@ private:
     QAction* showDebugMessages;
     QAction* runInBrowserAct;
     QAction* addGeoreferencedOverlayAct;
+    QAction* browseCommentsAct;
     QAction* overlayHelp;
     QAction* usingMapper;
     QAction* splitSegmentAct;

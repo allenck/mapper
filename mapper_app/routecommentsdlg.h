@@ -28,7 +28,7 @@ private:
     qint32 _companyKey;
     QDate _date;
     SQL* sql;
-    routeComments _rc;
+    RouteComments _rc;
     Configuration *config;
 
     bool bIsDirty;
@@ -57,6 +57,7 @@ private slots:
     void OnAlphaRouteLeave();
     void OnBtnApply_clicked();
     void OnDirtySet(bool);
+    void OnAdditionalRoutesLeave();
 };
 
 #endif // ROUTECOMMENTSDLG_H

@@ -41,7 +41,7 @@ private slots:
 private:
  Ui::EditCityDialog *ui;
  Configuration* config;
- City* c;
+ City* city;
  int cityId;
  Overlay* ov;
  Overlay* cov;

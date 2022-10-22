@@ -5,7 +5,7 @@ GeodbSql::GeodbSql(QObject *parent) :
 {
     db = QSqlDatabase::addDatabase("QMYSQL", "geodb_berlin");
     db.setDatabaseName("geodb_berlin");
-    db.setHostName("10.0.1.101");
+    db.setHostName("ubuntu-2");
     db.setUserName("allen");
     db.setPassword("knobacres");
     if(! db.open())

@@ -11,13 +11,13 @@ namespace Ui {
     class editStation;
 }
 
-class editStation : public QDialog
+class EditStation : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit editStation(qint32 stationKey, bool bDisplayStationMarkers, QWidget *parent = 0);
-    ~editStation();
+    explicit EditStation(qint32 stationKey, bool bDisplayStationMarkers, QWidget *parent = 0);
+    ~EditStation();
     qint32 SegmentId();
     void setSegmentId(qint32 value);
     qint32 StationId();

@@ -125,12 +125,12 @@ public:
     QList<routeIntersects> updateLikeRoutes(qint32 segmentid, qint32 route, QString name, QString date, bool bAllRoutes = false);
     SegmentData getSegmentInOppositeDirection(SegmentData siIn);
     bool isRouteUsedOnDate(qint32 route, qint32 segmentId,  QString date);
-    commentInfo getComments(qint32 infoKey);
+    CommentInfo getComments(qint32 infoKey);
     QList<StationInfo> getStations(qint32 route, QString name, QString date);
     StationInfo getStationInfo(qint32 stationKey);
     StationInfo getStationInfo(QString name);
     int addComment(QString comments, QString tags);
-    bool updateComment(qint32 infoKey, QString comments, QString tags);
+    bool updateComment(qint32 infoKey, QString comments, QString tags = "");
     bool deleteComment(qint32 infoKey);
     //qint32 addStation(QString name, LatLng location, qint32 segmentId, RouteType type);
     //qint32 addStation(QString name, LatLng location, qint32 segmentId, QString startDate, QString endDate, qint32 geodb_loc_id, qint32 infoKey, RouteType routeType, qint32 route, int point);
@@ -150,11 +150,13 @@ public:
     int updateRouteDate(int segmentId, QString startDate, QString endDate);
     int updateRouteSegment(int segmentId, QString startDate, QString endDate, int newSegment);
     QDate getFirstCommentDate(qint32 route, QDate date, qint32 companyKey);
-    routeComments getRouteComment(qint32 route, QDate date, qint32 companyKey);
-    bool updateRouteComment(routeComments rc);
-    bool deleteRouteComment(routeComments rc);
-    routeComments getNextRouteComment(qint32 route, QDate date, qint32 companyKey);
-    routeComments getPrevRouteComment(qint32 route, QDate date, qint32 companyKey);
+    RouteComments getRouteComment(qint32 route, QDate date, qint32 companyKey);
+    bool updateRouteComment(RouteComments rc);
+    bool deleteRouteComment(RouteComments rc);
+    RouteComments getNextRouteComment(qint32 route, QDate date, qint32 companyKey);
+    RouteComments getPrevRouteComment(qint32 route, QDate date, qint32 companyKey);
+    CommentInfo getComment(qint32 commentKey, int pos);
+
     QStringList showDatabases(QString Connection, QString servertype);
     QStringList getAlphaRoutes(QString text);
     bool loadSqlite3Functions();

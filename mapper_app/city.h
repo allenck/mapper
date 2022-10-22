@@ -34,17 +34,18 @@ public:
  qint32 routeSortType = 0;
  QString savedClipboard;
  bool bUserMap = false;
- QList<Overlay*> overlayList();
+ QList<Overlay*> overlayList;
  void addOverlay(Overlay* ov);
  void removeOverlay(Overlay* ov);
  bool isDirty();
  void setDirty(bool = true);
+ //QList<Overlay*> selectedOverlays() {return overlays;}
 signals:
 
 public slots:
 
 private:
- QList<Overlay*> overlays;
+ QList<Overlay*> overlays; // selected overlays
  bool bDirty;
 };
 
