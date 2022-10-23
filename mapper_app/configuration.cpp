@@ -75,10 +75,12 @@ void Configuration::saveSettings()
   settings->remove("");
   settings->endGroup();
   settings->beginWriteArray("overlays");
-  int oCount = c->overlayList.count();
+//  int oCount = c->overlayList.count();
   for(int j=0; j < c->overlayList.count(); j++)
   {
    Overlay* ov = c->overlayList.at(j);
+   if(ov->cityName != currCity->name)
+    continue;
    settings->setArrayIndex(j);
    settings->setValue("id", j);
    settings->setValue("name", ov->name);
@@ -128,6 +130,7 @@ void Configuration::getSettings()
   qint32 zoom = settings.value("zoom").toInt();
   QString maptype = settings.value("maptype").toString();
   newCity->center = LatLng(latitude, longitude);
+  newCity->bounds = Bounds(LatLng(latitude-.1, longitude-.1), LatLng(latitude+.1, longitude+.1));
   newCity->zoom = zoom;
   newCity->mapType = maptype;
   newCity->curConnectionId = newCity->id ;
@@ -179,6 +182,7 @@ void Configuration::getSettings()
   pt.setLat(settings.value("lat",35).toDouble());
   pt.setLon(settings.value("lon",-90).toDouble());
   nc->center = pt;
+  nc->bounds = Bounds(LatLng(pt.lat()-.1, pt.lon()-.1), LatLng(pt.lat()+.1, pt.lon()+.1));
   nc->mapType = settings.value("maptype","roadmap").toString();
   nc->zoom = settings.value("zoom",12).toInt();
   nc->curConnectionId = settings.value("currConnection",0).toInt();
@@ -263,7 +267,8 @@ void Configuration::getSettings()
    no->opacity = settings.value("opacity").toInt();
    no->minZoom = settings.value("minZoom", 10).toInt();
    no->maxZoom = settings.value("maxZoom", 16).toInt();
-   no->bounds = Bounds(settings.value("bounds").toString());
+   no->bounds = settings.value("bounds").value<Bounds>();
+//   no->bounds = Bounds(settings.value("bounds").toString());
    no->sCenter = settings.value("center").toString();
    no->source = settings.value("source", "acksoft").toString();
    no->isSelected = settings.value("isSelected", false).toBool();
@@ -287,11 +292,13 @@ void Configuration::getSettings()
   if(nc->name == "St. Louis, MO")
   {
    Overlay* ov = new  Overlay("St Louis Worlds Fair 1904");
+   ov->cityName = "St. Louis, MO";
    ov->bounds =  Bounds(LatLng(38.623972, -90.330807), LatLng(38.658606, -90.273631));
    ov->source = "georeferencer";
    ov->maxZoom = 17;
    ov->minZoom = 0;
    ov->urls << "http://georeferencer-0.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-1.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-2.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-3.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png";
+   nc->overlayList.append(ov);
    bool bFound = false;
    foreach (Overlay* o, nc->overlayList)
    {
@@ -308,11 +315,13 @@ void Configuration::getSettings()
   if(nc->name == "Louisville, KY")
   {
    Overlay* ov = new  Overlay("Louisville, KY pilot2");
+   ov->cityName = "Louisville, KY";
    ov->bounds =  Bounds(LatLng(38.1412, -85.91273), LatLng(38.351303, -85.626234));
    ov->source = "georeferencer";
    ov->maxZoom = 17;
    ov->minZoom = 0;
    ov->urls << "http://georeferencer-0.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-1.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-2.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-3.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png";
+   nc->overlayList.append(ov);
    bool bFound = false;
    foreach (Overlay* o, nc->overlayList)
    {

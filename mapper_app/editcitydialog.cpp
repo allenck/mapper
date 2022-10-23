@@ -72,11 +72,18 @@ void EditCityDialog::newCity(int i)
  cityOverlays->clear();
  foreach(Overlay*ov, config->currCity->overlayList)
  {
-  if(ov->bounds.contains( config->currCity->center))
+  if(ov->bounds.contains( config->currCity->bounds) || config->currCity->bounds.contains(ov->bounds))
   {
    cityOverlays->insert(ov->name, ov);
-   qDebug() << config->currCity->name << " center: " << config->currCity->center.toString();
+   qDebug() << config->currCity->name << " bounds: " << config->currCity->bounds.toString();
    qDebug() << ov->name << " bounds: " << ov->bounds.toString();
+  }
+  else
+  {
+   qDebug() << "bypass:";
+   qDebug() << config->currCity->name << " bounds: " << config->currCity->bounds.toString();
+   qDebug() << ov->name << " bounds: " << ov->bounds.toString();
+
   }
  }
 
@@ -333,7 +340,7 @@ void EditCityDialog::closeEvent(QCloseEvent * event)
 
  config->saveSettings();
 
-
+#if 0
  msgBox.setText("Are you sure you want to close?");
  msgBox.setStandardButtons(QMessageBox::Close | QMessageBox::Cancel);
  msgBox.setDefaultButton(QMessageBox::Close);
@@ -349,4 +356,7 @@ void EditCityDialog::closeEvent(QCloseEvent * event)
        QDialog::closeEvent(event);
        break;
  }
+#else
+ event->accept();
+#endif
 }

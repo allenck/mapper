@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>527</width>
-    <height>436</height>
+    <height>456</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -32,7 +32,11 @@
     </widget>
    </item>
    <item row="8" column="0" colspan="4">
-    <widget class="QTextEdit" name="edUrl"/>
+    <widget class="QTextEdit" name="edUrl">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter either a Web Map Tile Service(&lt;span style=&quot; font-weight:600;&quot;&gt;WMTS&lt;/span&gt;) capabilities request URL request or an XYZ link Url.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
    </item>
    <item row="1" column="0">
     <widget class="QLabel" name="label_2">
@@ -58,7 +62,7 @@
    <item row="1" column="3">
     <widget class="QSpinBox" name="sbMaxZoom">
      <property name="maximum">
-      <number>18</number>
+      <number>21</number>
      </property>
      <property name="value">
       <number>17</number>

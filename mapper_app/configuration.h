@@ -17,6 +17,7 @@ class Overlay
 {
 public:
  //qint32 id;
+ QString cityName;
  QString name;
  QString description;
  qint32 opacity;

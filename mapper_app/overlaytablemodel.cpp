@@ -129,18 +129,18 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
  {
   if(index.column() == SELECTED)
   {
-   QString name = overlayList.at(index.row())->name;
-   if(value.toBool())
-   {
-    if(!config->cityList.at(currCityId)->overlayList.contains(ov))
-     config->cityList.at(currCityId)->addOverlay(ov);
+//   QString name = overlayList.at(index.row())->name;
+//   if(value.toBool())
+//   {
+//    if(!config->cityList.at(currCityId)->overlayList.contains(ov))
+//     config->cityList.at(currCityId)->addOverlay(ov);
     ov->isSelected = value.toBool();
-   }
-   else
-   {
-    if(config->cityList.at(currCityId)->overlayList.contains(ov))
-     config->cityList.at(currCityId)->removeOverlay(ov);
-   }
+//   }
+//   else
+//   {
+//    if(config->cityList.at(currCityId)->overlayList.contains(ov))
+//     config->cityList.at(currCityId)->removeOverlay(ov);
+//   }
    emit overlaySelectionChanged(index, value.toBool());
   }
   if(index.column() == LOCAL)

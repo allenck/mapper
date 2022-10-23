@@ -153,6 +153,8 @@ class Bounds : public QRectF
  LatLng nePt();
  QString toString();
  bool contains(const QPointF &p) const;
+ bool contains(const Bounds &b) const;
+
  LatLng center();
 
  private:
@@ -160,6 +162,7 @@ class Bounds : public QRectF
  LatLng _nePt;
  bool bBoundsValid;
 };
+Q_DECLARE_METATYPE(Bounds)
 
 class SegmentData
 {
@@ -320,7 +323,6 @@ class RouteInfo
 };
 
 
-Q_DECLARE_METATYPE(Bounds)
 
 class TerminalInfo
 {

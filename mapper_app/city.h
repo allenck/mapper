@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include "latlng.h"
+#include "data.h"
 
 class Overlay;
 class Connection;
@@ -40,6 +41,7 @@ public:
  bool isDirty();
  void setDirty(bool = true);
  //QList<Overlay*> selectedOverlays() {return overlays;}
+ Bounds bounds;
 signals:
 
 public slots:

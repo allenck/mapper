@@ -538,6 +538,13 @@ bool Bounds::contains(const QPointF &p) const
  return false;
 }
 
+bool Bounds::contains(const Bounds &b) const
+{
+ if(this->contains(b._swPt) || this->contains(b._nePt) || b.contains(this->_swPt) || b.contains(this->_nePt))
+  return true;
+ return false;
+}
+
 LatLng Bounds::center() {return LatLng(y(), x());}
 
 void SegmentData::displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst)

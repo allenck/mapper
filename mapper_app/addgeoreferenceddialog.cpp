@@ -4,6 +4,8 @@
 #include "data.h"
 #include <qcompleter.h>
 #include <QPushButton>
+#include <QUrl>
+#include <QDomDocument>
 
 AddGeoreferencedDialog::AddGeoreferencedDialog(QWidget *parent) :
   QDialog(parent),
@@ -56,7 +58,8 @@ void AddGeoreferencedDialog::on_buttonBoxAccepted()
   ov = new Overlay(name);
   config->overlayList.insert(name, ov);
  }
- ov->bounds = bounds->toString();
+ ov->cityName = config->currCity->name;
+ ov->bounds = Bounds(LatLng(ui->swLat->text().toDouble(), ui->swLon->text().toDouble()), LatLng(ui->neLat->text().toDouble(), ui->neLon->text().toDouble()));
  ov->minZoom = ui->sbMinZoom->value();
  ov->maxZoom = ui->sbMaxZoom->value();
  ov->source = ui->comboBox->currentText();
@@ -64,7 +67,7 @@ void AddGeoreferencedDialog::on_buttonBoxAccepted()
  QString s = ui->edUrl->toPlainText();
  QStringList l = s.split("\n");
  ov->urls = l;
- //config->overlayList.insert(name, ov);
+ config->currCity->overlayList.append(ov);
 }
 
 void AddGeoreferencedDialog::checkBounds()
@@ -154,6 +157,15 @@ void AddGeoreferencedDialog::on_nameTextEdited(QString txt)
 
 void AddGeoreferencedDialog::validateValues()
 {
+ QUrl url = QUrl(ui->edUrl->toPlainText());
+ if(url.isValid())
+ {
+  downloader = new FileDownloader(url);
+  connect(downloader, SIGNAL(downloaded()), SLOT(validateWMTS()));
+  setCursor(Qt::WaitCursor);
+  return;
+ }
+#if 0
  ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
  ui->lblErr->setText("");
  if(ui->edName->text() == "" )
@@ -198,8 +210,91 @@ void AddGeoreferencedDialog::validateValues()
  }
  else
   ui->edUrl->setEnabled(false);
-
+#endif
  ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
+}
+
+void AddGeoreferencedDialog::validateWMTS()
+{
+ QDomDocument doc;
+ QStringList points;
+ Overlay ov;
+
+ doc.setContent(downloader->downloadedData());
+ QDomElement root = doc.documentElement();
+ if(root.isNull())
+  return;
+ if(root.tagName() == "Capabilities")
+ {
+  QDomElement contents = root.firstChildElement("Contents");
+  if(!contents.isNull())
+  {
+   QDomElement layer = contents.firstChildElement("Layer");
+   if(!layer.isNull())
+   {
+    ov.name = layer.firstChildElement("ows:Title").text();
+    LatLng sw;
+    LatLng ne;
+    QDomElement bounds = layer.firstChildElement("ows:WGS84BoundingBox");
+    if(!bounds.isNull())
+    {
+     QDomElement swCorner = bounds.firstChildElement("ows:LowerCorner");
+     QString lon_lat = swCorner.text();
+     points = lon_lat.split(" ");
+     sw = LatLng(points.at(1).toDouble(), points.at(0).toDouble());
+     QDomElement neCorner = bounds.firstChildElement("ows:UpperCorner");
+     lon_lat = neCorner.text();
+     points = lon_lat.split(" ");
+     ne = LatLng(points.at(1).toDouble(), points.at(0).toDouble());
+     ov.bounds = Bounds(sw, ne);
+
+     // calculate min/max zoom
+     ov.maxZoom = -1;
+     ov.minZoom = 32767;
+     QDomElement tileMatrixSetLink = layer.firstChildElement("TileMatrixSetLink");
+     if(!tileMatrixSetLink.isNull())
+     {
+      QDomElement tileMatrixSetLimits = tileMatrixSetLink.firstChildElement("TileMatrixSetLimits");
+      if(!tileMatrixSetLimits.isNull())
+      {
+       QDomNodeList list = tileMatrixSetLimits.elementsByTagName("TileMatrixLimits");
+       if(list.count() > 0)
+       {
+         QDomElement tileMatrix_first = list.at(0).toElement();
+         QString min = tileMatrix_first.firstChildElement("TileMatrix").text();
+         ov.minZoom = min.mid(min.indexOf(":")+1).toInt();
+
+         QDomElement tileMatrix_last = list.at(list.count()-1).toElement();
+
+         QString max = tileMatrix_last.firstChildElement("TileMatrix").text();
+         ov.maxZoom = max.mid(max.indexOf(":")+1).toInt();
+        }
+      }
+     }
+     QDomElement resourceUrl = layer.firstChildElement("ResourceURL");
+     if(!resourceUrl.isNull())
+     {
+      //https://maps.georeferencer.com/georeferences/88523211-86cb-58d9-ae3a-ed9bf52a7cfe/2021-11-29T17:47:46.800140Z/map/{z}/{x}/{y}.png?key=caj1mpUbIDuRGkUmcxkG
+      QString url = resourceUrl.attribute("template");
+      url = url.replace("{TileMatrix}/{TileCol}/{TileRow}", "{z}/{x}/{y}");
+      ov.urls.append(url);
+     }
+    }
+   }
+  }
+ }
+ ov.cityName = config->currCity->name;
+ ov.isSelected = true;
+ ui->edName->setText(ov.name);
+ ui->neLat->setText(QString::number(ov.bounds.nePt().lat(),'g', 8));
+ ui->neLon->setText(QString::number(ov.bounds.nePt().lon(),'g', 8));
+ ui->swLat->setText(QString::number(ov.bounds.swPt().lat(),'g', 8));
+ ui->swLon->setText(QString::number(ov.bounds.swPt().lon(),'g', 8));
+ ui->edUrl->setText(ov.urls.at(0));
+ ui->sbMinZoom->setValue(ov.minZoom);
+ ui->sbMaxZoom->setValue(ov.maxZoom);
+ ui->comboBox->setCurrentText("georeferencer");
+ setCursor(Qt::ArrowCursor);
 }
 
 void AddGeoreferencedDialog::on_sourceChanged(QString)

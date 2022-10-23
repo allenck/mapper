@@ -8,6 +8,8 @@ TEMPLATE = subdirs
 
 CONFIG += ordered
 
+QT += xml
+
 SUBDIRS =  functions sqlfun \
     console \
     #mapper_app/WebView

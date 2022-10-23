@@ -2,6 +2,8 @@
 #define ADDGEOREFERENCEDDIALOG_H
 
 #include <QDialog>
+#include "filedownloader.h"
+#include <QtSql>
 
 namespace Ui {
 class AddGeoreferencedDialog;
@@ -22,11 +24,11 @@ public slots:
  void on_nameEditingFinished();
  void on_nameTextEdited(QString txt);
  void on_sourceChanged(QString);
+ void validateWMTS();
 
 private slots:
  void checkBounds();
  void validateValues();
-
 
 private:
  Ui::AddGeoreferencedDialog *ui;
@@ -34,6 +36,7 @@ private:
  Bounds* bounds;
  QStringList overlayNames;
  bool bUpdate;
+ FileDownloader* downloader = nullptr;
 };
 
 #endif // ADDGEOREFERENCEDDIALOG_H

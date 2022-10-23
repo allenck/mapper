@@ -57,7 +57,7 @@ public:
     {
         if (AddGeoreferencedDialog->objectName().isEmpty())
             AddGeoreferencedDialog->setObjectName(QString::fromUtf8("AddGeoreferencedDialog"));
-        AddGeoreferencedDialog->resize(527, 436);
+        AddGeoreferencedDialog->resize(527, 456);
         gridLayout = new QGridLayout(AddGeoreferencedDialog);
         gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
         buttonBox = new QDialogButtonBox(AddGeoreferencedDialog);
@@ -95,7 +95,7 @@ public:
 
         sbMaxZoom = new QSpinBox(AddGeoreferencedDialog);
         sbMaxZoom->setObjectName(QString::fromUtf8("sbMaxZoom"));
-        sbMaxZoom->setMaximum(18);
+        sbMaxZoom->setMaximum(21);
         sbMaxZoom->setValue(17);
 
         gridLayout->addWidget(sbMaxZoom, 1, 3, 1, 1);
@@ -206,6 +206,9 @@ public:
     {
         AddGeoreferencedDialog->setWindowTitle(QCoreApplication::translate("AddGeoreferencedDialog", "Update Overlay Information", nullptr));
         label_8->setText(QCoreApplication::translate("AddGeoreferencedDialog", "Url:", nullptr));
+#if QT_CONFIG(tooltip)
+        edUrl->setToolTip(QCoreApplication::translate("AddGeoreferencedDialog", "<html><head/><body><p>Enter either a Web Map Tile Service(<span style=\" font-weight:600;\">WMTS</span>) capabilities request URL request or an XYZ link Url.</p></body></html>", nullptr));
+#endif // QT_CONFIG(tooltip)
         label_2->setText(QCoreApplication::translate("AddGeoreferencedDialog", "Minimum Zoom:", nullptr));
         label_3->setText(QCoreApplication::translate("AddGeoreferencedDialog", "Maximum Zoom:", nullptr));
         groupBox->setTitle(QCoreApplication::translate("AddGeoreferencedDialog", "Bounds:", nullptr));

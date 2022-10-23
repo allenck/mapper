@@ -526,6 +526,8 @@ void MainWindow::loadData(QString data, QString source)
    overlay->opacity = 65;
   if(sl.count() > 5)
    overlay->bounds = Bounds(sl.at(5));
+  if(config->currCity->bounds.contains(overlay->bounds))
+   overlay->cityName = config->currCity->name;
   if(sl.count() > 6)
    overlay->sCenter = sl.at(6);
   overlay->source = source;
