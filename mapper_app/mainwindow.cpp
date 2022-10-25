@@ -373,7 +373,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   geocoderRequestAct->setChecked(config->currCity->bGeocoderRequest);
   m_bridge->processScript("setGeocoderRequest", config->currCity->bGeocoderRequest?"true":"false");
 
-  if(config->currCity->overlayList.count()> 0)
+  if(config->currCity->overlayMap.count()> 0)
   {
    //QTimer::singleShot(10000, this, SLOT(mapInit()));
    //chkShowOverlayChanged(config->currCity->bShowOverlay);
@@ -547,9 +547,12 @@ void MainWindow::loadData(QString data, QString source)
 //    connect(m_tilemapresource, SIGNAL(downloaded()), this, SLOT(processTileMapResource()));
 //    loop.exec();
 //   }
+   if(config->currCity->name == overlay->cityName)
+    config->currCity->overlayMap.insert(overlay->name, overlay);
   }
   continue;
  }
+ config->saveSettings();
 }
 
 void MainWindow::processTileMapResource()
@@ -678,6 +681,12 @@ void MainWindow::loadOverlayData()
 
      ov->bLocal = true;
      config->overlayList.insert(name, ov);
+
+     if(config->currCity->bounds.contains(ov->bounds))
+     {
+      if(!config->currCity->overlayMap.contains(ov->name))
+       config->currCity->overlayMap.insert(ov->name, ov);
+     }
     }
    }
    config->saveSettings();
@@ -699,24 +708,24 @@ void MainWindow::fillOverlayMenu()
  overlayMenu->clear();
  overlaySignalMapper = new QSignalMapper(this);
  overlayActionGroup = new QActionGroup(this);
- for(int i = 0; i < config->currCity->overlayList.count(); i++)
+ for(int i = 0; i < config->currCity->overlayMap.count(); i++)
  {
-  QString ov = config->currCity->overlayList.at(i)->name;
+  QString ov = config->currCity->overlayMap.values().at(i)->name;
   if(ov == "")
       continue;
   QAction *act = new QAction(ov, this);
   act->setData(i);
   act->setCheckable(true);
-  act->setToolTip(config->currCity->overlayList.at(i)->description);
+  act->setToolTip(config->currCity->overlayMap.values().at(i)->description);
   overlayActions.append(act);
   actionGroup->addAction(act);
   connect(act, SIGNAL(triggered()), overlaySignalMapper, SLOT(map()));
   overlaySignalMapper->setMapping(act, i);
   overlayMenu->addAction(act);
-  if(config->currCity->curOverlayId >= config->currCity->overlayList.count())
+  if(config->currCity->curOverlayId >= config->currCity->overlayMap.count())
    config->currCity->curOverlayId = 0;
   //if(config->currCity->curOverlayId == i)
-  if(config->currCity->curOverlayId >=0 && ov == config->currCity->overlayList.at(config->currCity->curOverlayId)->name)
+  if(config->currCity->curOverlayId >=0 && ov == config->currCity->overlayMap.values().at(config->currCity->curOverlayId)->name)
    act->setChecked(true);
   //act->setToolTip(config->currCity->overlays.at(config->currCity->curOverlayId)->description);
   if(!ui->chkShowOverlay->isEnabled())
@@ -1295,7 +1304,14 @@ void MainWindow::newCity(int ix )
 }
 void MainWindow::newOverlay(int ix)
 {
- Overlay* cOv = config->currCity->overlayList.at(ix);
+ Overlay* cOv = config->currCity->overlayMap.values().at(ix);
+ if(config->currCity->curOverlayId >=0 && config->currCity->curOverlayId < config->currCity->overlayMap.count())
+ {
+  Overlay* oldOv = config->currCity->overlayMap.values().at(config->currCity->curOverlayId);
+  oldOv->isSelected = false;
+ }
+ cOv->isSelected = true;
+
  if(cOv->source == "")
  {
   if(config->localOverlayList.contains( cOv->name))
@@ -1315,9 +1331,9 @@ void MainWindow::newOverlay(int ix)
 // m_bridge->processScript("loadOverlay", objArray);
  loadOverlay(cOv);
  bool bFound=false;
- for(int i = 0; i < config->currCity->overlayList.count(); i++)
+ for(int i = 0; i < config->currCity->overlayMap.count(); i++)
  {
-  Overlay* ov = config->currCity->overlayList.at(i);
+  Overlay* ov = config->currCity->overlayMap.values().at(i);
   if(currentOverlay == ov->name)
   {
    bFound = true;
@@ -1773,6 +1789,11 @@ default:
     {
      rc.ci.comments.insert(i,"<input type='button' name='prev' value='<' onClick='prevRouteComment()'/><input type='button' name='next' value='>' onClick='nextRouteComment()'/>");
     }
+    int ix = rc.ci.comments.indexOf("text-indent:0px;\">");
+    if(ix > 0)
+    {
+     rc.ci.comments.insert(ix+18, "<b>" + rc.date.toString("yyyy/MM/dd")+ "</b><p><h1>" + rc.routeAlpha + " " + rc.name + "</h1>");
+    }
     objArray.clear();
     objArray << infoLat << infoLon << rc.ci.comments << rc.route << rc.date.toString("yyyy/MM/dd") << rc.companyKey ;
     if(bDisplayRouteComments)
@@ -1830,7 +1851,12 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
    latitude = rc.pos.lat();
    longitude = rc.pos.lon();
   }
-  objArray << latitude << longitude << rc.ci.comments<<rc.route<< rc.date.toString("yyyy/MM/dd");
+  int ix = rc.ci.comments.indexOf("text-indent:0px;\">");
+  if(ix > 0)
+  {
+   rc.ci.comments.insert(ix+18, "<b>" + rc.date.toString("yyyy/MM/dd")+ "</b><p><h1>" + rc.routeAlpha + " " + rc.name + "</h1>");
+  }
+  objArray << latitude << longitude << rc.ci.comments<< rc.route << rc.date.toString("yyyy/MM/dd");
   m_bridge->processScript("displayRouteComment", objArray);
   m_bridge->processScript("showRouteComment", bDisplayRouteComments?"true": "false");
  }
@@ -2476,10 +2502,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
      qApp->processEvents(QEventLoop::AllEvents,50);
      QVariant rslt = m_bridge->getRslt();
      //qDebug() << "overlay loaded " << rslt.toString();
-     if(config->currCity->overlayList.isEmpty())
+     if(config->currCity->overlayMap.isEmpty())
          config->currCity->curOverlayId= -1;
      else
-         if(config->currCity->curOverlayId >= config->currCity->overlayList.count())
+         if(config->currCity->curOverlayId >= config->currCity->overlayMap.count())
              config->currCity->curOverlayId = 0;
      if( config->currCity->curConnectionId >= 0 && config->currCity->curOverlayId >= 0 && rslt.toString() == "true")
      {
@@ -2488,7 +2514,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
          int opacity = m_bridge->myRslt.toInt();
 
          City* c = config->currCity;
-         Overlay* ov = c->overlayList.at(config->currCity->curOverlayId);
+         Overlay* ov = c->overlayMap.values().at(config->currCity->curOverlayId);
          ov->opacity = opacity;
          config->setOverlay(ov);
      }
@@ -2910,11 +2936,11 @@ void MainWindow::queryOverlay()
 //        webBrowser1.Document.InvokeScript("loadOverlay", new object[] { ov.overlayName, ov.opacity });
     if(!ui->chkShowOverlay->isChecked())
         return;
-    if(config->currCity->curOverlayId >= config->currCity->overlayList.count())
+    if(config->currCity->curOverlayId >= config->currCity->overlayMap.count())
      config->currCity->curOverlayId =0;
     if(config->currCity->curOverlayId >= 0)
     {
-        Overlay* ov = config->currCity->overlayList.at(config->currCity->curOverlayId );
+        Overlay* ov = config->currCity->overlayMap.values().at(config->currCity->curOverlayId );
 //        m_bridge->processScript("loadOverlay", "'"+ov->name+"',"+QString("%1").arg(ov->opacity)+ ","+ QString::number(ov->minZoom)+ ","+ QString::number(ov->maxZoom)+ ",'"+ ov->source+ "'");
         loadOverlay(ov);
     }
@@ -3520,10 +3546,10 @@ void MainWindow::geocoderRequestToggled(bool bChecked)
 
 void MainWindow::chkShowOverlayChanged(bool bChecked)
 {
- if(config->currCity->overlayList.size() == 0) return;
+ if(config->currCity->overlayMap.size() == 0) return;
  if(bChecked && config->currCity->curOverlayId >= 0)
  {
-  Overlay* ov = config->currCity->overlayList.at(config->currCity->curOverlayId);
+  Overlay* ov = config->currCity->overlayMap.values().at(config->currCity->curOverlayId);
   //m_bridge->processScript("loadOverlay", "'" +ov->name+"',"+QString("%1").arg(ov->opacity));
 //  m_bridge->processScript("loadOverlay", QString("'%1',%2,%3,%4,'%5'").arg(ov->name).arg(ov->opacity).arg(ov->minZoom).arg(ov->maxZoom).arg(ov->source));
   loadOverlay(ov);
@@ -3880,19 +3906,21 @@ bool MainWindow::openWebWindow()
 #endif
  QString tempDir = QDir::tempPath();
  qDebug() << "tempPath =" << tempDir;
- QFile* gFile = new QFile(":///GoogleMaps2b.htm");
- if(gFile->open(QIODevice::ReadOnly))
- {
-  QTextStream* inStream = new QTextStream(gFile);
-  QString text = inStream->readAll();
-  text.replace("TEMPDIR", tempDir);
-  QFile* tgFile = new QFile(tempDir+QDir::separator()+"GoogleMaps2b.htm");
-  if(tgFile->open(QIODevice::WriteOnly))
-  {
-   QTextStream * outStream = new QTextStream(tgFile);
-   *outStream << text;
-   tgFile->close();
-   gFile->close();
+// QFile* gFile = new QFile(":///GoogleMaps2b.htm");
+// if(gFile->open(QIODevice::ReadOnly))
+// {
+//  QTextStream* inStream = new QTextStream(gFile);
+//  QString text = inStream->readAll();
+//  text.replace("TEMPDIR", tempDir);
+//  QFile* tgFile = new QFile(tempDir+QDir::separator()+"GoogleMaps2b.htm");
+//  if(tgFile->open(QIODevice::WriteOnly))
+//  {
+//   QTextStream * outStream = new QTextStream(tgFile);
+//   *outStream << text;
+//   tgFile->close();
+//   gFile->close();
+ updateTempDir(tempDir, ":///GoogleMaps2b.htm");
+ updateTempDir(tempDir, ":///scripts/opacityControl.js");
 
    if(!QFile(tempDir+ QDir::separator() + "qwebchannel.js").exists())
    {
@@ -3933,6 +3961,7 @@ bool MainWindow::openWebWindow()
      //return false;
     }
    }
+
    if(!QFile(tempDir+ QDir::separator() + "opacityControl.js").exists())
    {
     if(!QFile::copy(":///scripts/opacityControl.js", tempDir+ QDir::separator() + "opacityControl.js" ))
@@ -3941,19 +3970,88 @@ bool MainWindow::openWebWindow()
      //return false;
     }
    }
+
+   if(!QFile(tempDir+ QDir::separator() + "opacity-slider2.png").exists())
+   {
+    if(!QFile::copy(":///scripts/opacity-slider2.png", tempDir+ QDir::separator() + "opacity-slider2.png" ))
+    {
+     qDebug() << "copy failed:" << ":///scripts/opacity-slider2.png" << " to " << tempDir+ QDir::separator() + "opacity-slider2.png";
+     //return false;
+    }
+   }
+
+//   if(!QFile(tempDir+ QDir::separator() + "opacity-slider3d6.png").exists())
+//   {
+//    if(!QFile::copy(":///scripts/oopacity-slider3d6.png", tempDir+ QDir::separator() + "opacity-slider3d6.png" ))
+//    {
+//     qDebug() << "copy failed:" << ":///scripts/opacity-slider3d6.png" << " to " << tempDir+ QDir::separator() + "opacity-slider3d6.png";
+//     //return false;
+//    }
+//   }
+
+//   if(!QFile(tempDir+ QDir::separator() + "opacity-slider3d7.png").exists())
+//   {
+//    if(!QFile::copy(":///scripts/oopacity-slider3d7.png", tempDir+ QDir::separator() + "opacity-slider3d7.png" ))
+//    {
+//     qDebug() << "copy failed:" << ":///scripts/opacity-slider3d7.png" << " to " << tempDir+ QDir::separator() + "opacity-slider3d7.png";
+//     //return false;
+//    }
+//   }
+
+//   if(!QFile(tempDir+ QDir::separator() + "opacity-slider3d14.png").exists())
+//   {
+//    if(!QFile::copy(":///scripts/oopacity-slider3d14.png", tempDir+ QDir::separator() + "opacity-slider3d14.png" ))
+//    {
+//     qDebug() << "copy failed:" << ":///scripts/opacity-slider3d14.png" << " to " << tempDir+ QDir::separator() + "opacity-slider3d14.png";
+//     //return false;
+//    }
+//   }
+
    if(!QDesktopServices::openUrl(QUrl(tempDir+"/"+"GoogleMaps2b.htm")))
     qDebug() << "open webbrowser failed " << startURL;
    return true;
-  }
-  else
-  {
-   qDebug() << "cannot open " << tgFile->fileName();
-  }
- }
- else
+//  }
+//  else
+//  {
+//   qDebug() << "cannot open " << tgFile->fileName();
+//  }
+// }
+// else
+// {
+//  qDebug() << "cannot open " << gFile->fileName();
+// }
+// return false;
+}
+
+bool MainWindow::updateTempDir(QString tempDir, QString fileName)
+{
+ // note on Ubuntu, 'TEMPDIR' is replaced by 'tmp' Windows uses something else!
+ QFile* gFile = new QFile(/*":///GoogleMaps2b.htm"*/fileName);
+ QString baseName = fileName.mid(fileName.lastIndexOf("/")+1);
+ if(gFile->open(QIODevice::ReadOnly))
  {
-  qDebug() << "cannot open " << gFile->fileName();
+  QTextStream* inStream = new QTextStream(gFile);
+  QString text = inStream->readAll();
+  text.replace("TEMPDIR", tempDir);
+  QFile* tgFile = new QFile(tempDir+QDir::separator()+/*"GoogleMaps2b.htm"*/baseName);
+  if(tgFile->exists())
+  {
+   tgFile->setPermissions(QFile::ReadOwner | QFile::WriteOwner |
+                          QFileDevice::ReadGroup |QFileDevice::WriteGroup |
+                          QFileDevice::ReadOther);
+  }
+
+  if(tgFile->open(QIODevice::WriteOnly))
+  {
+   QTextStream * outStream = new QTextStream(tgFile);
+   *outStream << text;
+   tgFile->close();
+   gFile->close();
+   return true;
+  }
+  qDebug() << tgFile->fileName() << tgFile->errorString();
  }
+
  return false;
 }
 

@@ -2,16 +2,20 @@
 #include "configuration.h"
 #include "sql.h"
 
-OverlayTableModel::OverlayTableModel()
+OverlayTableModel::OverlayTableModel(QObject *parent) : QAbstractTableModel(parent)
 {
  config = Configuration::instance();
  currCityId = config->currentCityId;
- overlayList = QList<Overlay*>(config->overlayList.values());
+ overlayMap = QMap<QString, Overlay*>();
+ foreach(Overlay* ov, config->currCity->overlayMap)
+ {
+  overlayMap.insert(ov->name, ov);
+ }
 }
 
 int OverlayTableModel::rowCount(const QModelIndex &parent) const
 {
- return overlayList.count();
+ return overlayMap.count();
 }
 
 int OverlayTableModel::columnCount(const QModelIndex &parent) const
@@ -48,7 +52,7 @@ QVariant OverlayTableModel::headerData(int section, Qt::Orientation orientation,
 Qt::ItemFlags OverlayTableModel::flags(const QModelIndex &index) const
 {
  int row = index.row();
- Overlay* ov = overlayList.at(row);
+ Overlay* ov = overlayMap.values().at(row);
  City* c = config->cityList.at(currCityId);
  if(!ov->bounds.contains(c->center) && SQL::distance(ov->bounds.center(), c->center) > 10)
  {
@@ -57,7 +61,7 @@ Qt::ItemFlags OverlayTableModel::flags(const QModelIndex &index) const
   return  0;
  }
 
- if(index.column() == SELECTED )
+ if(index.column() == SELECTED  || index.column() == NAME || index.column() == DESCRIPTION)
  {
   return Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
  }
@@ -79,22 +83,22 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
   int row = index.row();
   switch(index.column()) {
   case NAME:
-   return overlayList.at(row)->name;
+   return overlayMap.values().at(row)->name;
    break;
   case DESCRIPTION:
-   return overlayList.at(row)->description;
+   return overlayMap.values().at(row)->description;
   case MINZOOM:
-   return overlayList.at(row)->minZoom;
+   return overlayMap.values().at(row)->minZoom;
   case MAXZOOM:
-   return overlayList.at(row)->maxZoom;
+   return overlayMap.values().at(row)->maxZoom;
   case OPACITY:
-   return overlayList.at(row)->opacity;
+   return overlayMap.values().at(row)->opacity;
 //  case LOCAL:
 //   return overlayList.at(row)->source == "mbtiles" || overlayList.at(row)->source == "tileserver";
   case SOURCE:
-      return overlayList.at(row)->source;
+      return overlayMap.values().at(row)->source;
   case URLS:
-      return overlayList.at(row)->urls.at(0);
+      return overlayMap.values().at(row)->urls.at(0);
 
   default:
    break;
@@ -102,8 +106,8 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
  }
  if(role == Qt::CheckStateRole)
  {
-  QString name = overlayList.at(index.row())->name;
-  Overlay* ov = overlayList.at(index.row());
+  QString name = overlayMap.values().at(index.row())->name;
+  Overlay* ov = overlayMap.values().at(index.row());
   if(index.column() == SELECTED)
   {
    if(ov->isSelected)
@@ -111,20 +115,13 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
    else
     return Qt::Unchecked;
   }
-  if(index.column() == LOCAL && overlayList.at(index.row()))
-  {
-   if(overlayList.at(index.row())->source == "acksoft" || overlayList.at(index.row())->source == "")
-    return Qt::Unchecked;
-   else
-    return Qt::Checked;
-  }
  }
  return QVariant();
 }
 
 bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
- Overlay* ov = overlayList.at(index.row());
+ Overlay* ov = overlayMap.values().at(index.row());
  if(role == Qt::CheckStateRole)
  {
   if(index.column() == SELECTED)
@@ -148,13 +145,25 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
    if(value.toBool())
    {
 #ifdef WIN32
-    overlayList.at(index.row())->source = "mbtiles";
+    overlayMap.values().at(index.row())->source = "mbtiles";
 #else
-    overlayList.at(index.row())->source = "tileserver";
+    overlayMap.values().at(index.row())->source = "tileserver";
 #endif
    }
    else
-    overlayList.at(index.row())->source = "acksoft";
+    overlayMap.values().at(index.row())->source = "acksoft";
+  }
+  return true;
+ }
+ if(role == Qt::EditRole)
+ {
+  if(index.column() == NAME)
+  {
+   ov->name = value.toString();
+  }
+  if(index.column() == DESCRIPTION)
+  {
+   ov->description = value.toString();
   }
   return true;
  }
@@ -166,3 +175,12 @@ void OverlayTableModel::setCity(int c)
  currCityId = c;
 }
 
+void OverlayTableModel::addOverlay(Overlay* ov)
+{
+ if(!overlayMap.contains(ov->name))
+ {
+  beginResetModel();
+  overlayMap.insert(ov->name, ov);
+  endResetModel();
+ }
+}

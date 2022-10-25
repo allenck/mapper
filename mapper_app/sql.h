@@ -152,6 +152,7 @@ public:
     QDate getFirstCommentDate(qint32 route, QDate date, qint32 companyKey);
     RouteComments getRouteComment(qint32 route, QDate date, qint32 companyKey);
     bool updateRouteComment(RouteComments rc);
+    int countCommentUsers(int commentKey);
     bool deleteRouteComment(RouteComments rc);
     RouteComments getNextRouteComment(qint32 route, QDate date, qint32 companyKey);
     RouteComments getPrevRouteComment(qint32 route, QDate date, qint32 companyKey);
@@ -187,6 +188,7 @@ public:
     bool updateSegmentDates(); // Global
     void updateSegmentDates(int segmentId);
     QPair<QDate,QDate> getStartAndEndDates(int segmentId);
+    QList<FKInfo> getForeignKeyInfo();
 
 signals:
     void details(QString);

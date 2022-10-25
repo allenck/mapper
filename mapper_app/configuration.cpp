@@ -76,11 +76,12 @@ void Configuration::saveSettings()
   settings->endGroup();
   settings->beginWriteArray("overlays");
 //  int oCount = c->overlayList.count();
-  for(int j=0; j < c->overlayList.count(); j++)
+  int j=-1;
+  foreach(Overlay* ov, c->overlayMap.values())
   {
-   Overlay* ov = c->overlayList.at(j);
    if(ov->cityName != currCity->name)
     continue;
+   j++;
    settings->setArrayIndex(j);
    settings->setValue("id", j);
    settings->setValue("name", ov->name);
@@ -93,7 +94,8 @@ void Configuration::saveSettings()
    settings->setValue("source", ov->source);
    settings->setValue("urls", ov->urls);
    settings->setValue("isSelected", ov->isSelected);
-
+   settings->setValue("WMTSUrl", ov->wmtsUrl);
+   settings->setValue("city", ov->cityName);
   }
   settings->endArray(); // overlays
   settings->setValue("currOverlay", c->curOverlayId);
@@ -149,7 +151,7 @@ void Configuration::getSettings()
   nc->setPort(0);
 
   Overlay* ov = new Overlay("St_Louis_historical_topo");
-  newCity->overlayList.append(ov);
+  newCity->overlayMap.insert(ov->name, ov);
 
   newCity->curOverlayId = 0;
   newCity->bShowOverlay =true;
@@ -267,25 +269,25 @@ void Configuration::getSettings()
    no->opacity = settings.value("opacity").toInt();
    no->minZoom = settings.value("minZoom", 10).toInt();
    no->maxZoom = settings.value("maxZoom", 16).toInt();
-   no->bounds = settings.value("bounds").value<Bounds>();
-//   no->bounds = Bounds(settings.value("bounds").toString());
+//   no->bounds = settings.value("bounds").value<Bounds>();
+   no->bounds = Bounds(settings.value("bounds").toString());
    no->sCenter = settings.value("center").toString();
    no->source = settings.value("source", "acksoft").toString();
    no->isSelected = settings.value("isSelected", false).toBool();
    no->urls = settings.value("urls","http://ubuntu-2:1080/public/map_tiles/").toStringList();
+   no->wmtsUrl = settings.value("WMTSUrl").toUrl();
    if(no->source == "acksoft" && no->urls.isEmpty())
     no->urls.append("http://ubuntu-2:1080/public/map_tiles/");
    if(no->source == "mbtiles"&& no->urls.isEmpty()) // Windows
     no->urls.append("http://localhost/map_tiles/mbtiles.php");
    if(no->source == "tileserver" && no->urls.isEmpty()) // Linux
     no->urls.append("http://localhost/tileserver.php");
-   bool bFound = false;
    if(no->source == "georeferencer") // add to global list
    {
     if(!overlayList.keys().contains(no->name))
      overlayList.insert(no->name, no);
    }
-   if(!bFound)
+   no->cityName = settings.value("city").toString();
     nc->addOverlay(no);
   }
   // TODO: create a dialog to add overlays like this
@@ -296,21 +298,11 @@ void Configuration::getSettings()
    ov->bounds =  Bounds(LatLng(38.623972, -90.330807), LatLng(38.658606, -90.273631));
    ov->source = "georeferencer";
    ov->maxZoom = 17;
-   ov->minZoom = 0;
+   ov->minZoom = 8;
    ov->urls << "http://georeferencer-0.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-1.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-2.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-3.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png";
-   nc->overlayList.append(ov);
-   bool bFound = false;
-   foreach (Overlay* o, nc->overlayList)
-   {
-    if(o->name == ov->name)
-    {
-     bFound = true;
-     o->urls = ov->urls;
-     break;
-    }
-   }
-   if(!bFound)
-    nc->overlayList.append(ov);
+   nc->overlayMap.insert(ov->name, ov);
+   if(!nc->overlayMap.contains(ov->name))
+    nc->overlayMap.insert(ov->name, ov);
   }
   if(nc->name == "Louisville, KY")
   {
@@ -321,9 +313,9 @@ void Configuration::getSettings()
    ov->maxZoom = 17;
    ov->minZoom = 0;
    ov->urls << "http://georeferencer-0.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-1.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-2.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-3.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png";
-   nc->overlayList.append(ov);
+   nc->overlayMap.insert(ov->name, ov);
    bool bFound = false;
-   foreach (Overlay* o, nc->overlayList)
+   foreach (Overlay* o, nc->overlayMap.values())
    {
     if(o->name == ov->name)
     {
@@ -333,16 +325,16 @@ void Configuration::getSettings()
     }
    }
    if(!bFound)
-    nc->overlayList.append(ov);
+    nc->overlayMap.insert(ov->name, ov);
   }
 //        if(nc->id == currentCityId)
 //            currConnection = nc->connections.at(nc->curConnectionId);
   settings.endArray();
 
-  if(nc->overlayList.isEmpty())
+  if(nc->overlayMap.isEmpty())
    nc->bShowOverlay = false;
   nc->curOverlayId = settings.value("currOverlay").toInt();
-  if(nc->overlayList.count()== 0)
+  if(nc->overlayMap.count()== 0)
    nc->curOverlayId = -1;
   cityList.append(nc);
  }
@@ -369,13 +361,14 @@ void Configuration::getSettings()
 
 void Configuration::setOverlay(Overlay* ov)
 {
- for(int i=0; i < currCity->overlayList.count(); i++)
+ for(int i=0; i < currCity->overlayMap.count(); i++)
  {
-  Overlay* o  =  currCity->overlayList.at(i);
+  Overlay* o  =  currCity->overlayMap.values().at(i);
   if(ov->name == o->name)
   {
    o->opacity = ov->opacity;
-   currCity->overlayList.replace(i, o);
+   //currCity->overlayMap.replace(i, o);
+   currCity->overlayMap.insert(ov->name, ov);
   }
  }
 }

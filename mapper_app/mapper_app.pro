@@ -115,6 +115,10 @@ DISTFILES += \
     Resources/recreateRouteComments.sql \
     Resources/restructure_routes.sql \
     Resources/scripts \
+    Resources/scripts/opacity-slider2.png \
+    Resources/scripts/opacity-slider3d14.png \
+    Resources/scripts/opacity-slider3d6.png \
+    Resources/scripts/opacity-slider3d7.png \
     Resources/scripts/qwebchannel.js \
     Resources/GoogleMaps2.htm \
     Resources/GoogleMaps2b.htm \

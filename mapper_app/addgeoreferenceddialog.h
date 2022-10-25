@@ -26,6 +26,9 @@ public slots:
  void on_sourceChanged(QString);
  void validateWMTS();
 
+ signals:
+ void overlayAdded(Overlay* ov);
+
 private slots:
  void checkBounds();
  void validateValues();
@@ -37,6 +40,8 @@ private:
  QStringList overlayNames;
  bool bUpdate;
  FileDownloader* downloader = nullptr;
+ QUrl wmtsUrl;
+ QString url;
 };
 
 #endif // ADDGEOREFERENCEDDIALOG_H

@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
+  <property name="toolTip">
+   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use this dialog to add connections to a database for aspecified city/location.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+  </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="11" column="1">
     <widget class="QPushButton" name="btnDelete">
@@ -23,6 +26,9 @@
    </item>
    <item row="11" column="0">
     <widget class="QPushButton" name="btnTest">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check the validity of a connection&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>Test</string>
      </property>
@@ -32,6 +38,9 @@
     <widget class="QLineEdit" name="txtPWD">
      <property name="echoMode">
       <enum>QLineEdit::PasswordEchoOnEdit</enum>
+     </property>
+     <property name="placeholderText">
+      <string>User Password</string>
      </property>
     </widget>
    </item>
@@ -43,7 +52,11 @@
     </widget>
    </item>
    <item row="6" column="1" colspan="3">
-    <widget class="QLineEdit" name="txtUID"/>
+    <widget class="QLineEdit" name="txtUID">
+     <property name="placeholderText">
+      <string>User Id</string>
+     </property>
+    </widget>
    </item>
    <item row="6" column="0">
     <widget class="QLabel" name="label_6">
@@ -70,7 +83,11 @@
     </widget>
    </item>
    <item row="5" column="1" colspan="2">
-    <widget class="QLineEdit" name="txtHost"/>
+    <widget class="QLineEdit" name="txtHost">
+     <property name="placeholderText">
+      <string>Host name or IP</string>
+     </property>
+    </widget>
    </item>
    <item row="5" column="0">
     <widget class="QLabel" name="label_4">
@@ -133,15 +150,27 @@
    </item>
    <item row="1" column="0" colspan="6">
     <widget class="CComboBox" name="cbCities">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter the City name: e.g. &lt;span style=&quot; font-weight:600;&quot;&gt;St Louis, MO&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="editable">
       <bool>true</bool>
+     </property>
+     <property name="placeholderText">
+      <string>enter city name</string>
      </property>
     </widget>
    </item>
    <item row="3" column="0" colspan="6">
     <widget class="CComboBox" name="cbConnections">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter a description of the connection providing details for example as the type of database and whether it was local or not. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="editable">
       <bool>true</bool>
+     </property>
+     <property name="placeholderText">
+      <string>enter connection description</string>
      </property>
     </widget>
    </item>
@@ -200,7 +229,11 @@
     </widget>
    </item>
    <item row="8" column="1" colspan="4">
-    <widget class="QLineEdit" name="txtDbOrDSN"/>
+    <widget class="QLineEdit" name="txtDbOrDSN">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Depending on which SQL database program you are using, this should be the filename of the file containing the data. For SQLITE databases this will be a .sqlit3 file. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
    </item>
    <item row="8" column="0">
     <widget class="QLabel" name="label_2">
@@ -217,7 +250,11 @@
     </widget>
    </item>
    <item row="9" column="1" colspan="4">
-    <widget class="QComboBox" name="cbUseDatabase"/>
+    <widget class="QComboBox" name="cbUseDatabase">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the database systen supports multiple databases, select the desired one here&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

@@ -9,6 +9,8 @@
 #include <QDebug>
 #include "htmldelegate.h"
 #include <QCloseEvent>
+#include <QPushButton>
+#include "addgeoreferenceddialog.h"
 
 EditCityDialog::EditCityDialog(QWidget *parent) :
   QDialog(parent),
@@ -16,7 +18,10 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
 {
  ui->setupUi(this);
  config = Configuration::instance();
- cityOverlays = new QHash<QString, Overlay*>();
+ cityOverlays = new QMap<QString, Overlay*>();
+ foreach(Overlay* ov, config->currCity->overlayMap)
+  cityOverlays->insert(ov->name, ov);
+
  dirty = false;
 
  sorter = new QSortFilterProxyModel();
@@ -31,6 +36,23 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  ui->tableView->setColumnWidth(OverlayTableModel::DESCRIPTION, 300);
  ui->tableView->setItemDelegateForColumn(OverlayTableModel::DESCRIPTION, new HtmlDelegate());
  bRefreshing = false;
+
+ QPushButton* btnAddOverlay = new QPushButton(tr("Add Overlay"));
+ ui->buttonBox->addButton(btnAddOverlay, QDialogButtonBox::ActionRole);
+ connect(btnAddOverlay, &QPushButton::clicked, [=]{
+  AddGeoreferencedDialog* dlg = new AddGeoreferencedDialog(this);
+  connect(dlg, &AddGeoreferencedDialog::overlayAdded, [=](Overlay* ov){
+   model->addOverlay(ov);
+  });
+  dlg->exec();
+ });
+ QPushButton* okButton = new QPushButton(tr("Ok"));
+ ui->buttonBox->addButton(okButton, QDialogButtonBox::ActionRole);
+ connect(okButton, SIGNAL(clicked()), this, SLOT(ok_clicked()));
+ QPushButton* applyButton =new QPushButton(tr("Apply"));
+ ui->buttonBox->addButton(applyButton, QDialogButtonBox::ActionRole);
+ connect(applyButton, SIGNAL(clicked()), this, SLOT(apply_clicked()));
+
 
  //connect(ui->tableView, SIGNAL(activated(QModelIndex)), this, SLOT(onClicked(QModelIndex)));
  connect(ui->tableView, SIGNAL(clicked(QModelIndex)), this, SLOT(onClicked(QModelIndex)));
@@ -52,7 +74,6 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  connect(ui->sbMaxZoom, SIGNAL(valueChanged(int)), this, SLOT(sbMaxZoomValueChanged(int)));
  connect(ui->sbMinZoom, SIGNAL(valueChanged(int)), this, SLOT(sbMinZoomValueChanged(int)));
  connect(ui->sbOpacity, SIGNAL(valueChanged(int)), this,SLOT(sbOpacityValueChanged(int)));
- connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(ok_clicked()));
  connect(ui->editLatitude, SIGNAL(editingFinished()), this, SLOT(onLatitudeChanged()));
  connect(ui->editLongitude, SIGNAL(editingFinished()), this, SLOT(onLongitudeChanged()));
  setControls(false); // will be set to true when table selected.
@@ -70,7 +91,7 @@ EditCityDialog::~EditCityDialog()
 void EditCityDialog::newCity(int i)
 {
  cityOverlays->clear();
- foreach(Overlay*ov, config->currCity->overlayList)
+ foreach(Overlay*ov, config->currCity->overlayMap)
  {
   if(ov->bounds.contains( config->currCity->bounds) || config->currCity->bounds.contains(ov->bounds))
   {
@@ -96,7 +117,7 @@ void EditCityDialog::cbCitysSelectionChanged(int i)
  {
   if(QMessageBox::question(this, tr("Save City?"), tr("One or more overlays have been added or modified. Do you wish to save %1").arg(city->name), QMessageBox::Yes | QMessageBox::No)== QMessageBox::Yes)
   {
-   city->overlayList = cityOverlays->values();
+   //city->overlayMap = cityOverlays->values();
    city->setDirty(true);
   }
  }
@@ -108,6 +129,7 @@ void EditCityDialog::cbCitysSelectionChanged(int i)
  ui->editLatitude->setText(QString::number(city->center.lat()));
  ui->editLongitude->setText(QString::number(city->center.lon()));
 }
+
 void EditCityDialog::onClicked(QModelIndex index)
 {
  int row = sorter->mapToSource(index).row();
@@ -125,7 +147,7 @@ void EditCityDialog::onClicked(QModelIndex index)
  ui->sbMaxZoom->setMinimum(ov->minZoom);
  ui->sbMaxZoom->setMaximum(ov->maxZoom);
  ui->sbMaxZoom->setValue(ov->maxZoom);
- foreach (Overlay* ov1, city->overlayList) {
+ foreach (Overlay* ov1, city->overlayMap) {
   if(ov->name == ov1->name)
   {
    if(ov1->description != "")
@@ -171,7 +193,7 @@ void EditCityDialog::overlaySelectionChanged(QModelIndex mindex, bool bCheck)
  ui->sbMaxZoom->setMinimum(ov->minZoom);
  ui->sbMaxZoom->setMaximum(ov->maxZoom);
  ui->sbMaxZoom->setValue(ov->maxZoom);
- foreach (Overlay* ov1, city->overlayList)
+ foreach (Overlay* ov1, city->overlayMap.values())
  {
   if(ov->name == ov1->name)
   {
@@ -275,23 +297,33 @@ void EditCityDialog::btnDeleteFromCityClicked()
 void EditCityDialog::OnDescriptionChanged(bool b)
 {
  if(bRefreshing) return;
- if(city->curOverlayId >= city->overlayList.count())
+ if(city->curOverlayId >= city->overlayMap.count())
  if(b && city->curOverlayId >= 0)
   city->curOverlayId = 0;
- city->overlayList.at(city->curOverlayId)->description = ui->edDescription->toHtml();
+ city->overlayMap.values().at(city->curOverlayId)->description = ui->edDescription->toHtml();
 }
 
 void EditCityDialog::ok_clicked()
 {
  if(dirty)
  {
-  city->overlayList = cityOverlays->values();
+  QSettings settings;
+  settings.setValue("EditCityDialog:size", size());
+  dirty = false;
  }
 
- QSettings settings;
- settings.setValue("EditCityDialog:size", size());
+ accept();
+}
 
- close();
+void EditCityDialog::apply_clicked()
+{
+ if(dirty)
+ {
+  QSettings settings;
+  settings.setValue("EditCityDialog:size", size());
+  dirty = false;
+ }
+
 }
 
 void EditCityDialog::setControls(bool enabled)
@@ -330,7 +362,7 @@ void EditCityDialog::closeEvent(QCloseEvent * event)
  {
   if(QMessageBox::question(this, tr("Save City?"), tr("One or more overlays have been added or modified. Do you wish to save %1").arg(city->name), QMessageBox::Yes | QMessageBox::No)== QMessageBox::Yes)
   {
-   city->overlayList = cityOverlays->values();
+   //city->overlayMap = cityOverlays->values();
    city->setDirty(true);
   }
  }

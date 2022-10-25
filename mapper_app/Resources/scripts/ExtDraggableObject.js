@@ -18,7 +18,7 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.
+ * limitations under the License. 
  */
 
 /**
@@ -122,7 +122,7 @@ function ExtDraggableObject(src, opt_drag) {
       src.style.top = top_ + "px";
     }
   }
-
+ 
   /**
    * Handles the mousemove event.
    * @param {event} ev The event data sent by the browser.
@@ -272,7 +272,7 @@ function ExtDraggableObject(src, opt_drag) {
 
   /**
    * Sets the left position of the draggable object based on
-   *     intervalX.
+   *     intervalX. 
    * @param {Number} value The location to move to.
    */
   me.setValueX = function(value) {
@@ -281,7 +281,7 @@ function ExtDraggableObject(src, opt_drag) {
 
   /**
    * Sets the top position of the draggable object based on
-   *     intervalY.
+   *     intervalY. 
    * @param {Number} value The location to move to.
    */
   me.setValueY = function(value) {
@@ -298,19 +298,18 @@ function ExtDraggableObject(src, opt_drag) {
 }
   /**
    * @name ExtDraggableObjectOptions
-   * @class This class represents the optional parameter passed into constructor of
-   * <code>ExtDraggableObject</code>.
+   * @class This class represents the optional parameter passed into constructor of 
+   * <code>ExtDraggableObject</code>. 
    * @property {Number} [top] Top pixel
    * @property {Number} [left] Left pixel
    * @property {HTMLElement} [container] HTMLElement as container.
    * @property {String} [draggingCursor] Dragging Cursor
    * @property {String} [draggableCursor] Draggable Cursor
-   * @property {Number} [intervalX] Interval in X direction
+   * @property {Number} [intervalX] Interval in X direction 
    * @property {Number} [intervalY] Interval in Y direction
    * @property {Number} [toleranceX] Tolerance X in pixel
    * @property {Number} [toleranceY] Tolerance Y in pixel
    * @property {Boolean} [restrictX] Whether to restrict move in X direction
    * @property {Boolean} [restrictY] Whether to restrict move in Y direction
    */
-
-
+ 

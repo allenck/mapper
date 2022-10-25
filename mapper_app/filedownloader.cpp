@@ -8,7 +8,7 @@ FileDownloader::FileDownloader(QUrl imageUrl, QObject *parent) :
 {
     connect(&m_WebCtrl, SIGNAL(finished(QNetworkReply*)),
                 SLOT(fileDownloaded(QNetworkReply*)));
-
+    this->imageUrl = imageUrl;
     QNetworkRequest request(imageUrl);
     m_WebCtrl.get(request);
 }
@@ -22,7 +22,7 @@ void FileDownloader::fileDownloaded(QNetworkReply* pReply)
 {
     m_DownloadedData = pReply->readAll();
     if(pReply->error() > 0)
-        qDebug() << pReply->errorString();
+        qDebug() << "download failed " << imageUrl.toString() << pReply->errorString();
     //emit a signal
     emit downloaded();
 }

@@ -18,6 +18,7 @@
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
+#include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QTextEdit>
 #include "htmltextedit.h"
@@ -52,12 +53,14 @@ public:
     HtmlTextEdit *description;
     QLabel *label_10;
     QComboBox *comboBox;
+    QRadioButton *rbWMTS;
+    QRadioButton *rbXYZ;
 
     void setupUi(QDialog *AddGeoreferencedDialog)
     {
         if (AddGeoreferencedDialog->objectName().isEmpty())
             AddGeoreferencedDialog->setObjectName(QString::fromUtf8("AddGeoreferencedDialog"));
-        AddGeoreferencedDialog->resize(527, 456);
+        AddGeoreferencedDialog->resize(527, 462);
         gridLayout = new QGridLayout(AddGeoreferencedDialog);
         gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
         buttonBox = new QDialogButtonBox(AddGeoreferencedDialog);
@@ -84,6 +87,7 @@ public:
 
         sbMinZoom = new QSpinBox(AddGeoreferencedDialog);
         sbMinZoom->setObjectName(QString::fromUtf8("sbMinZoom"));
+        sbMinZoom->setMinimum(8);
         sbMinZoom->setMaximum(18);
 
         gridLayout->addWidget(sbMinZoom, 1, 1, 1, 1);
@@ -194,6 +198,17 @@ public:
 
         gridLayout->addWidget(comboBox, 5, 1, 1, 1);
 
+        rbWMTS = new QRadioButton(AddGeoreferencedDialog);
+        rbWMTS->setObjectName(QString::fromUtf8("rbWMTS"));
+
+        gridLayout->addWidget(rbWMTS, 7, 1, 1, 1);
+
+        rbXYZ = new QRadioButton(AddGeoreferencedDialog);
+        rbXYZ->setObjectName(QString::fromUtf8("rbXYZ"));
+        rbXYZ->setChecked(true);
+
+        gridLayout->addWidget(rbXYZ, 7, 2, 1, 1);
+
 
         retranslateUi(AddGeoreferencedDialog);
         QObject::connect(buttonBox, SIGNAL(accepted()), AddGeoreferencedDialog, SLOT(accept()));
@@ -227,6 +242,8 @@ public:
         comboBox->setItemText(1, QCoreApplication::translate("AddGeoreferencedDialog", "georeferencer", nullptr));
         comboBox->setItemText(2, QCoreApplication::translate("AddGeoreferencedDialog", "mbtiles", nullptr));
 
+        rbWMTS->setText(QCoreApplication::translate("AddGeoreferencedDialog", "WMTS", nullptr));
+        rbXYZ->setText(QCoreApplication::translate("AddGeoreferencedDialog", "XYZ", nullptr));
     } // retranslateUi
 
 };

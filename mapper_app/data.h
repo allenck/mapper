@@ -538,6 +538,8 @@ struct RouteComments
     CommentInfo ci;
     LatLng pos;
     qint32 companyKey;
+    QString name;
+    QString routeAlpha;
 };
 
 class RouteChangedEventArgs
@@ -586,6 +588,19 @@ public:
     QDate dateEnd;
     QString typeOfChange;
     RouteData rd;
+};
+
+struct FKInfo
+{
+  QString name;
+  int id;
+  int seq;
+  QString table;
+  QString from;
+  QString to;
+  QString on_update;
+  QString on_delete;
+  QString match;
 };
 
 Q_DECLARE_METATYPE(RouteType)

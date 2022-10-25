@@ -35,7 +35,7 @@ public:
  qint32 routeSortType = 0;
  QString savedClipboard;
  bool bUserMap = false;
- QList<Overlay*> overlayList;
+ QMap<QString, Overlay*> overlayMap;
  void addOverlay(Overlay* ov);
  void removeOverlay(Overlay* ov);
  bool isDirty();
@@ -47,7 +47,6 @@ signals:
 public slots:
 
 private:
- QList<Overlay*> overlays; // selected overlays
  bool bDirty;
 };
 

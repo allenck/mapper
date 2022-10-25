@@ -1,4 +1,5 @@
 #include "city.h"
+#include "configuration.h"
 
 City::City(QObject *parent) : QObject(parent)
 {
@@ -7,18 +8,18 @@ City::City(QObject *parent) : QObject(parent)
 //QList<Overlay*> City::overlayList() {return overlays;}
 void City::addOverlay(Overlay* ov)
 {
- if(!overlays.contains(ov))
+ if(!ov->name.isEmpty())
  {
-  overlays.append(ov);
+  overlayMap.insert(ov->name, ov);
   bDirty = true;
  }
 }
 
 void City::removeOverlay(Overlay* ov)
 {
- while(overlays.contains(ov))
+ while(overlayMap.contains(ov->name))
  {
-  overlays.removeOne(ov);
+  overlayMap.remove(ov->name);
   bDirty = true;
  }
 }

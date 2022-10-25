@@ -2,6 +2,7 @@
  * Opacity GControl by Klokan Petr Pridal (based on XSlider of Mike Williams)
  */
 
+// replace opacity-slider2.png with file://TEMPDIR/opacity-slider2.png
 function OpacityControl( id, map, position, overlay ) {
   this.id = id;
   this.map = map;
@@ -47,17 +48,17 @@ OpacityControl.prototype.initialize = function(map) {
   // Handle transparent PNG files in MSIE
   if (this.ie) {
     var loader = "filter:progid:DXImageTransform.Microsoft.AlphaImageLoader("+
-      "src='http://www.maptiler.org/img/opacity-slider.png', sizingMethod='crop');";
+      "src='file://TEMPDIR/opacity-slider2.png', sizingMethod='crop');";
     container.innerHTML = '<div style="height:21px; width:70px; ' +loader+ '" ></div>';
   } else {
-    container.innerHTML = '<div style="height:21px; width:70px; background-image:url(http://www.maptiler.org/img/opacity-slider.png)" ></div>';
+    container.innerHTML = '<div style="height:21px; width:70px; background-image:url(file://TEMPDIR/opacity-slider2.png)" ></div>';
   }
 
   // create the knob as a GDraggableObject
   // Handle transparent PNG files in MSIE
   if (this.ie) {
     var loader = "progid:DXImageTransform.Microsoft.AlphaImageLoader("+
-      "src='http://www.maptiler.org/img/opacity-slider.png', sizingMethod='crop');";
+      "src='file://TEMPDIR/opacity-slider2.png', sizingMethod='crop');";
     this.knob = document.createElement("div");
     this.knob.style.height="21px";
     this.knob.style.width="13px";
@@ -73,7 +74,7 @@ OpacityControl.prototype.initialize = function(map) {
     this.knob = document.createElement("div");
     this.knob.style.height="21px";
     this.knob.style.width="13px";
-    this.knob.style.backgroundImage="url(http://www.maptiler.org/img/opacity-slider.png)";
+    this.knob.style.backgroundImage="url(file://TEMPDIR/opacity-slider2.png)";
     this.knob.style.backgroundPosition="-70px 0px";
   }
   this.knob.style.visible=true;

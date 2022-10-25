@@ -33,6 +33,7 @@ private:
 
     QByteArray m_DownloadedData;
     Overlay* ov = nullptr;
+    QUrl imageUrl;
 };
 
 #endif // FILEDOWNLOADER_H

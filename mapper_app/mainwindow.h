@@ -401,6 +401,7 @@ private:
     QString path, wikiRoot;
     void loadData(QString data, QString source);
 //    void refreshStreetsCb();
+    bool updateTempDir(QString tempDir, QString fileName);
 
 private slots:
     void createCityMenu();

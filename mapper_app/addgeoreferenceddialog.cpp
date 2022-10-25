@@ -15,7 +15,7 @@ AddGeoreferencedDialog::AddGeoreferencedDialog(QWidget *parent) :
  config = Configuration::instance();
  bounds = new Bounds();
 
- connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(on_buttonBoxAccepted()));
+ //connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(on_buttonBoxAccepted()));
  connect(ui->edName, SIGNAL(editingFinished()), this, SLOT(on_nameEditingFinished()));
  connect(ui->edName, SIGNAL(textEdited(QString)), this, SLOT(on_nameTextEdited(QString)));
  ui->swLat->setValidator(new QDoubleValidator(-90, 90, 11));
@@ -30,6 +30,20 @@ AddGeoreferencedDialog::AddGeoreferencedDialog(QWidget *parent) :
  connect(ui->sbMaxZoom, SIGNAL(editingFinished()), this, SLOT(validateValues()));
  connect(ui->edUrl, SIGNAL(textChanged()), this, SLOT(validateValues()));
  connect(ui->comboBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(on_sourceChanged(QString)));
+ connect(ui->rbWMTS, &QRadioButton::clicked, [=]{
+  if(wmtsUrl.isValid())
+  {
+   ui->edUrl->setPlainText(wmtsUrl.toString());
+   validateValues();
+  }
+ });
+ connect(ui->rbXYZ, &QRadioButton::clicked, [=]{
+  if(!url.isEmpty())
+  {
+   ui->edUrl->setPlainText(url);
+   validateValues();
+  }
+ });
  overlayNames = config->overlayList.keys();
  foreach(QString s, config->localOverlayList)
  {
@@ -67,7 +81,7 @@ void AddGeoreferencedDialog::on_buttonBoxAccepted()
  QString s = ui->edUrl->toPlainText();
  QStringList l = s.split("\n");
  ov->urls = l;
- config->currCity->overlayList.append(ov);
+ config->currCity->overlayMap.insert(ov->name, ov);
 }
 
 void AddGeoreferencedDialog::checkBounds()
@@ -129,23 +143,23 @@ void AddGeoreferencedDialog::on_nameEditingFinished()
    bUpdate = false;
   }
  }
- else
- {
-     ui->sbMinZoom->setValue(0);
-     ui->sbMaxZoom->setValue(15);
+// else
+// {
+//     ui->sbMinZoom->setValue(0);
+//     ui->sbMaxZoom->setValue(15);
 
-     ui->swLat->setText("");
-     ui->swLon->setText("");
-     ui->neLat->setText("");
-     ui->neLon->setText("");
-     checkBounds();
-     ui->comboBox->setCurrentText("georeferencer");
-     ui->edUrl->setEnabled(true);
-     QString txt = "";
-     ui->edUrl->setText(txt);
+//     ui->swLat->setText("");
+//     ui->swLon->setText("");
+//     ui->neLat->setText("");
+//     ui->neLon->setText("");
+//     checkBounds();
+//     ui->comboBox->setCurrentText("georeferencer");
+//     ui->edUrl->setEnabled(true);
+//     QString txt = "";
+//     ui->edUrl->setText(txt);
      ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Add"));
-     ui->description->setHtml("");
- }
+//     ui->description->setHtml("");
+// }
  validateValues();
 }
 
@@ -157,15 +171,16 @@ void AddGeoreferencedDialog::on_nameTextEdited(QString txt)
 
 void AddGeoreferencedDialog::validateValues()
 {
- QUrl url = QUrl(ui->edUrl->toPlainText());
- if(url.isValid())
+ ui->lblErr->setText("");
+ wmtsUrl = QUrl(ui->edUrl->toPlainText());
+ if(wmtsUrl.isValid())
  {
-  downloader = new FileDownloader(url);
+  downloader = new FileDownloader(wmtsUrl);
   connect(downloader, SIGNAL(downloaded()), SLOT(validateWMTS()));
   setCursor(Qt::WaitCursor);
   return;
  }
-#if 0
+
  ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
  ui->lblErr->setText("");
  if(ui->edName->text() == "" )
@@ -210,7 +225,7 @@ void AddGeoreferencedDialog::validateValues()
  }
  else
   ui->edUrl->setEnabled(false);
-#endif
+
  ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
 }
 
@@ -218,7 +233,7 @@ void AddGeoreferencedDialog::validateWMTS()
 {
  QDomDocument doc;
  QStringList points;
- Overlay ov;
+ Overlay* ov = new Overlay();
 
  doc.setContent(downloader->downloadedData());
  QDomElement root = doc.documentElement();
@@ -232,7 +247,7 @@ void AddGeoreferencedDialog::validateWMTS()
    QDomElement layer = contents.firstChildElement("Layer");
    if(!layer.isNull())
    {
-    ov.name = layer.firstChildElement("ows:Title").text();
+    ov->name = layer.firstChildElement("ows:Title").text();
     LatLng sw;
     LatLng ne;
     QDomElement bounds = layer.firstChildElement("ows:WGS84BoundingBox");
@@ -246,11 +261,11 @@ void AddGeoreferencedDialog::validateWMTS()
      lon_lat = neCorner.text();
      points = lon_lat.split(" ");
      ne = LatLng(points.at(1).toDouble(), points.at(0).toDouble());
-     ov.bounds = Bounds(sw, ne);
+     ov->bounds = Bounds(sw, ne);
 
      // calculate min/max zoom
-     ov.maxZoom = -1;
-     ov.minZoom = 32767;
+     ov->maxZoom = -1;
+     ov->minZoom = 32767;
      QDomElement tileMatrixSetLink = layer.firstChildElement("TileMatrixSetLink");
      if(!tileMatrixSetLink.isNull())
      {
@@ -262,12 +277,12 @@ void AddGeoreferencedDialog::validateWMTS()
        {
          QDomElement tileMatrix_first = list.at(0).toElement();
          QString min = tileMatrix_first.firstChildElement("TileMatrix").text();
-         ov.minZoom = min.mid(min.indexOf(":")+1).toInt();
+         ov->minZoom = min.mid(min.indexOf(":")+1).toInt();
 
          QDomElement tileMatrix_last = list.at(list.count()-1).toElement();
 
          QString max = tileMatrix_last.firstChildElement("TileMatrix").text();
-         ov.maxZoom = max.mid(max.indexOf(":")+1).toInt();
+         ov->maxZoom = max.mid(max.indexOf(":")+1).toInt();
         }
       }
      }
@@ -277,24 +292,30 @@ void AddGeoreferencedDialog::validateWMTS()
       //https://maps.georeferencer.com/georeferences/88523211-86cb-58d9-ae3a-ed9bf52a7cfe/2021-11-29T17:47:46.800140Z/map/{z}/{x}/{y}.png?key=caj1mpUbIDuRGkUmcxkG
       QString url = resourceUrl.attribute("template");
       url = url.replace("{TileMatrix}/{TileCol}/{TileRow}", "{z}/{x}/{y}");
-      ov.urls.append(url);
+      ov->urls.append(url);
      }
     }
    }
   }
  }
- ov.cityName = config->currCity->name;
- ov.isSelected = true;
- ui->edName->setText(ov.name);
- ui->neLat->setText(QString::number(ov.bounds.nePt().lat(),'g', 8));
- ui->neLon->setText(QString::number(ov.bounds.nePt().lon(),'g', 8));
- ui->swLat->setText(QString::number(ov.bounds.swPt().lat(),'g', 8));
- ui->swLon->setText(QString::number(ov.bounds.swPt().lon(),'g', 8));
- ui->edUrl->setText(ov.urls.at(0));
- ui->sbMinZoom->setValue(ov.minZoom);
- ui->sbMaxZoom->setValue(ov.maxZoom);
+ ov->cityName = config->currCity->name;
+ ov->wmtsUrl = wmtsUrl;
+ ov->isSelected = false;
+ ui->edName->setText(ov->name);
+ ui->rbXYZ->setChecked(true);
+ ui->neLat->setText(QString::number(ov->bounds.nePt().lat(),'g', 8));
+ ui->neLon->setText(QString::number(ov->bounds.nePt().lon(),'g', 8));
+ ui->swLat->setText(QString::number(ov->bounds.swPt().lat(),'g', 8));
+ ui->swLon->setText(QString::number(ov->bounds.swPt().lon(),'g', 8));
+ ui->edUrl->setText(ov->urls.at(0));
+ ui->sbMinZoom->setValue(ov->minZoom);
+ ui->sbMaxZoom->setValue(ov->maxZoom);
  ui->comboBox->setCurrentText("georeferencer");
  setCursor(Qt::ArrowCursor);
+ ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
+ config->currCity->addOverlay(ov);
+ emit overlayAdded(ov);
+ config->saveSettings();
 }
 
 void AddGeoreferencedDialog::on_sourceChanged(QString)

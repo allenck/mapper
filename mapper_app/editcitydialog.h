@@ -29,13 +29,12 @@ private slots:
  void sbMaxZoomValueChanged(int);
  void sbOpacityValueChanged(int);
  void onClicked(QModelIndex);
-// void btnAddToCityClicked();
-// void btnDeleteFromCityClicked();
  void OnDescriptionChanged(bool);
  void ok_clicked();
  void on_setDirty();
  void onLatitudeChanged();
  void onLongitudeChanged();
+ void apply_clicked();
 
 
 private:
@@ -49,7 +48,7 @@ private:
  OverlayTableModel* model;
  void setControls(bool);
  QSortFilterProxyModel* sorter;
- QHash<QString, Overlay*>* cityOverlays;
+ QMap<QString, Overlay*>* cityOverlays;
  void newCity(int i);
  bool dirty;
  void closeEvent(QCloseEvent *event);

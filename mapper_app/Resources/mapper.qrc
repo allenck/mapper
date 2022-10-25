@@ -52,5 +52,9 @@
         <file>addBiDirectionalToRoutes.sql</file>
         <file>recreateRouteComments.sql</file>
         <file>rollback.png</file>
+        <file>scripts/opacity-slider2.png</file>
+        <file>scripts/opacity-slider3d6.png</file>
+        <file>scripts/opacity-slider3d7.png</file>
+        <file>scripts/opacity-slider3d14.png</file>
     </qresource>
 </RCC>

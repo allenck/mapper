@@ -9,7 +9,7 @@ class OverlayTableModel : public QAbstractTableModel
 {
  Q_OBJECT
 public:
- OverlayTableModel();
+ OverlayTableModel(QObject* parent = nullptr);
  int rowCount(const QModelIndex &parent) const;
  int columnCount(const QModelIndex &parent) const;
  Qt::ItemFlags flags(const QModelIndex &index) const;
@@ -30,6 +30,7 @@ public:
   NUMCOLUMNS
  };
  void setCity(int);
+ void addOverlay(Overlay* ov);
 
 signals:
  void setDirty();
@@ -38,7 +39,7 @@ signals:
 private:
  Configuration* config;
  int currCityId;
- QList<Overlay*> overlayList; // list of available overlays.
+ QMap<QString, Overlay*> overlayMap; // list of available overlays.
 };
 
 #endif // OVERLAYTABLEMODEL_H
