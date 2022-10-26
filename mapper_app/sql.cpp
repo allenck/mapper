@@ -8290,7 +8290,7 @@ int SQL::countCommentUsers(int commentKey)
          throw Exception(tr("database not open: %1").arg(__LINE__));
      QSqlDatabase db = QSqlDatabase::database();
      QSqlQuery query = QSqlQuery(db);
-     commandText = "select count(*) from stations where commentKey = " + QString::number(commentKey);
+     commandText = "select count(*) from stations where infoKey = " + QString::number(commentKey);
      bQuery = query.prepare(commandText);
      if(!bQuery)
      {
@@ -9512,6 +9512,15 @@ void SQL::checkTables(QSqlDatabase db)
 
   if(!doesColumnExist("RouteComments", "latitude"))
    executeScript(":/recreateRouteComments.sql", db);
+
+  bool found = false;
+  foreach(FKInfo info, fkList)
+  {
+   if(info.name == "RouteComments" && info.table == "Comments")
+    found = true;
+  }
+  if(!found)
+   executeScript(":/recreateRouteComments.sql");
 
 #endif
  }

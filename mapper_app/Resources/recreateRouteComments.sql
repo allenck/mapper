@@ -11,7 +11,8 @@ CREATE TABLE if not exists `RouteComments` (
           `latitude` decimal(15,5) NOT NULL DEFAULT '0.00000',
           `longitude` decimal(15,5) NOT NULL DEFAULT '0.00000',
           `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          constraint pk PRIMARY KEY (`route`,`date`));
+          constraint pk PRIMARY KEY (`route`,`date`),
+          CONSTRAINT `RouteComments_ibfk_1` FOREIGN KEY (commentKey) REFERENCES Comments(commentKey) ON DELETE RESTRICT);
 
 INSERT INTO `RouteComments` (`route`, `date`, `commentKey`, `CompanyKey`, lastUpdate)
        select `route`, `date`, `commentKey`, `CompanyKey`, lastUpdate FROM `t_routeComments`;
