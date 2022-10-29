@@ -1331,7 +1331,7 @@ SegmentData SQL::getSegmentData(qint32 SegmentId)
    sd._streetName = query.value(12).toString();
    sd.setPoints(query.value(13).toString());  // array of points
   }
-  if(sd._startLat ==0 ||sd._startLat ==0 || sd._endLat == 0 || sd._endLon ==0 && sd._pointList.count() > 1 )
+  if((sd._startLat ==0 ||sd._startLat ==0 || sd._endLat == 0 || sd._endLon ==0) && sd._pointList.count() > 1 )
   {
    sd._startLat = sd._pointList.at(0).lat();
    sd._startLon = sd._pointList.at(0).lon();
@@ -1345,7 +1345,7 @@ SegmentData SQL::getSegmentData(qint32 SegmentId)
    sd._bearingEnd = Bearing(sd.pointList().at(sd.points-2).lat(), sd.pointList().at(sd.points-2).lon(), sd._endLat, sd._endLon);
   }
   sd.bounds = Bounds(query.value(13).toString());
-  if(sd._length == 0)
+  if(sd._length == 0 && sd.pointList().count() > 1)
   {
    //sd._length = distance(LatLng(sd._startLat, sd._startLon), LatLng(sd._endLat, sd._endLon));
    for(int i=0; i <  sd.points-2; i++)

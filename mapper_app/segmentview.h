@@ -20,6 +20,7 @@ public:
     SegmentViewTableModel *sourceModel;
     segmentViewSortProxyModel *proxymodel;
     QModelIndex currentIndex;
+
 signals:
     void sendRows(int, int);
     void selectSegment(int);

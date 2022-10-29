@@ -13,18 +13,26 @@ SegmentSelectionWidget::SegmentSelectionWidget(QWidget *parent) :
  cbSegmentsGrp->addButton(ui->rbDouble);
  cbSegmentsGrp->addButton(ui->rbBoth);
  ui->rbBoth->setChecked(true);
+ sql = SQL::instance();
 }
 
 void SegmentSelectionWidget::initialize()
 {
  refreshSegmentCB();
 
- connect(SQL::instance(), &SQL::segmentsChanged, [=]{
-  refreshSegmentCB();
+ connect(SQL::instance(), &SQL::segmentsChanged, [=](int segmentId){
+  if(ui->cbSegments->findData(segmentId) >= 0)
+  {
+   SegmentData sd = sql->getSegmentData(segmentId);
+   int  ix = ui->cbSegments->findData(segmentId);
+   if(ui->cbSegments->itemText(ix) != sd.toString())
+    ui->cbSegments->setItemText(ix, sd.toString());
+  }
  });
  connect(webViewBridge::instance(), SIGNAL(segmentSelected(int, int)), this, SLOT(segmentSelected(int, int)));
  //connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSegmentsSelectedValueChanged(int)));
- //connect(ui->cbSegments, SIGNAL(editTextChanged(QString)), this, SLOT(cbSegmentsTextChanged(QString)));
+ connect(ui->cbSegments, SIGNAL(editTextChanged(QString)), this, SLOT(cbSegmentsTextChanged(QString)));
+ connect(ui->cbSegments, SIGNAL(signalFocusOut()), this, SLOT(cbSegments_editingFinished()));
  connect(ui->rbSingle, &QRadioButton::clicked, [=]{
   saveStreet = ui->cbStreets->currentText();
   refreshSegmentCB();
@@ -104,12 +112,13 @@ void SegmentSelectionWidget::refreshSegmentCB()
     if((sd.tracks() == 2 && ui->rbDouble->isChecked() ) ||
        (sd.tracks() == 1 && ui->rbSingle->isChecked() )  ||
        ui->rbBoth->isChecked())
-//     if(ui->cbSegments->findText(sd.toString())<0)
-//      ui->cbSegments->addItem(sd.toString(), sd.segmentId());
-           if(!mapDescriptions.contains(sd.toString()))
-
-     mapDescriptions.insert(sd.toString(), sd.segmentId());
-    continue;
+    {
+     if(!mapDescriptions.contains(sd.toString()))
+     {
+      mapDescriptions.insert(sd.toString(), sd.segmentId());
+      continue;
+     }
+    }
    }
    else
    {
@@ -119,12 +128,13 @@ void SegmentSelectionWidget::refreshSegmentCB()
      if((sd.tracks() == 2 && ui->rbDouble->isChecked() ) ||
         (sd.tracks() == 1 && ui->rbSingle->isChecked() )  ||
         ui->rbBoth->isChecked())
-//     if(ui->cbSegments->findText(sd.toString())<0)
-//      ui->cbSegments->addItem(sd.toString(), sd.segmentId());
-             if(!mapDescriptions.contains(sd.toString()))
-
+     {
+      if(!mapDescriptions.contains(sd.toString()))
+      {
        mapDescriptions.insert(sd.toString(), sd.segmentId());
-     continue;
+       continue;
+      }
+     }
     }
    }
    tokens2 = tokens.at(1).split("to");
@@ -141,11 +151,13 @@ void SegmentSelectionWidget::refreshSegmentCB()
       if((sd.tracks() == 2 && ui->rbDouble->isChecked() ) ||
          (sd.tracks() == 1 && ui->rbSingle->isChecked() )  ||
          ui->rbBoth->isChecked())
-//      if(ui->cbSegments->findText(sd.toString())<0)
-//       ui->cbSegments->addItem(sd.toString(), sd.segmentId());
+      {
        if(!mapDescriptions.contains(sd.toString()))
+       {
         mapDescriptions.insert(sd.toString(), sd.segmentId());
-      continue;
+        continue;
+       }
+      }
      }
      else
      {
@@ -155,15 +167,39 @@ void SegmentSelectionWidget::refreshSegmentCB()
        if((sd.tracks() == 2 && ui->rbDouble->isChecked() ) ||
           (sd.tracks() == 1 && ui->rbSingle->isChecked() )  ||
           ui->rbBoth->isChecked())
-//       if(ui->cbSegments->findText(sd.toString())<0)
-//        ui->cbSegments->addItem(sd.toString(), sd.segmentId());
+       {
         if(!mapDescriptions.contains(sd.toString()))
+        {
          mapDescriptions.insert(sd.toString(), sd.segmentId());
-       continue;
+         continue;
+        }
+       }
       }
      }
     }
    }
+  }
+  else
+  {
+   tokens = description.split(" ");
+   if(tokens.count() > 1)
+   {
+    QString street = tokens.at(0).trimmed();
+    if(street == selectedStreet || selectedStreet.isEmpty())
+    {
+      if((sd.tracks() == 2 && ui->rbDouble->isChecked() ) ||
+      (sd.tracks() == 1 && ui->rbSingle->isChecked() )  ||
+      ui->rbBoth->isChecked())
+      {
+       if(!mapDescriptions.contains(sd.toString()))
+       {
+        mapDescriptions.insert(sd.toString(), sd.segmentId());
+        continue;
+       }
+      }
+    }
+   }
+   qDebug() << "bypass " << sd.toString();
   }
  }
  if(m_SegmentId >0)
@@ -254,17 +290,24 @@ void SegmentSelectionWidget::cbStreets_currentIndexChanged(int)
 void SegmentSelectionWidget::segmentSelected(int pt, int segmentId)
 {
  m_SegmentId = segmentId;
+ int ix = ui->cbSegments->findData(segmentId);
+ if(ix >=0)
+  ui->cbSegments->setCurrentIndex(ix);
 }
 
 void SegmentSelectionWidget::cbSegments_currentIndexChanged(int index)
 {
  if(bRefreshingSegments)
   return;
- if(index <= 0)
+ if(index < 0)
   return;
  int segmentId = ui->cbSegments->itemData(index).toInt();
  if(initialized)
-  emit segmentSelected(currSd = cbSegmentDataMap.value(segmentId));
+ {
+  if(segmentId != m_SegmentId)
+   emit segmentSelected(currSd = cbSegmentDataMap.value(segmentId));
+  m_SegmentId = segmentId;
+ }
 }
 
 QComboBox* SegmentSelectionWidget::cbSegments()
@@ -288,4 +331,34 @@ void SegmentSelectionWidget::setCurrentSegment(int segmentId)
 {
  ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(segmentId));
  currSd = sql->getSegmentData(segmentId);
+}
+
+void SegmentSelectionWidget::cbSegmentsTextChanged(QString txt)
+{
+ b_cbSegments_TextChanged = true;
+}
+
+void SegmentSelectionWidget::cbSegments_editingFinished()
+{
+ if(b_cbSegments_TextChanged ==true)
+ {
+  qint32 segmentId = -1;
+  QString text = ui->cbSegments->currentText();
+
+  bool bOk=false;
+  segmentId = text.toInt(&bOk, 10);
+
+  ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(segmentId));
+  if(ui->cbSegments->currentIndex() < 0)
+  {
+   // is it valid?
+   SegmentData sd = sql->getSegmentData(segmentId);
+   if(sd.segmentId() >= 0)
+   {
+    ui->cbSegments->addItem(sd.toString(), segmentId);
+   }
+  }
+ }
+ b_cbSegments_TextChanged =false;
+
 }

@@ -27,7 +27,7 @@ class Ui_ReplaceSegmentDialog
 {
 public:
     QGridLayout *gridLayout;
-    SegmentSelectionWidget *rs;
+    SegmentSelectionWidget *ssw;
     QLabel *label;
     QRadioButton *rbDelete;
     QPlainTextEdit *oldSegments;
@@ -48,10 +48,10 @@ public:
         ReplaceSegmentDialog->resize(452, 552);
         gridLayout = new QGridLayout(ReplaceSegmentDialog);
         gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
-        rs = new SegmentSelectionWidget(ReplaceSegmentDialog);
-        rs->setObjectName(QString::fromUtf8("rs"));
+        ssw = new SegmentSelectionWidget(ReplaceSegmentDialog);
+        ssw->setObjectName(QString::fromUtf8("ssw"));
 
-        gridLayout->addWidget(rs, 0, 0, 1, 3);
+        gridLayout->addWidget(ssw, 0, 0, 1, 3);
 
         label = new QLabel(ReplaceSegmentDialog);
         label->setObjectName(QString::fromUtf8("label"));

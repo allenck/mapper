@@ -31,6 +31,8 @@ class SegmentSelectionWidget : public QWidget
   void cbStreets_currentIndexChanged(int);
   void segmentSelected(int pt, int segmentId);
   void cbSegments_currentIndexChanged(int);
+  void cbSegmentsTextChanged(QString );
+  void cbSegments_editingFinished();
 
  signals:
   void segmentSelected(SegmentData sd);
@@ -51,6 +53,7 @@ class SegmentSelectionWidget : public QWidget
   QMutex mutex;
   QMutex mutex2;
   QMap<QString, int> mapDescriptions;
+  bool b_cbSegments_TextChanged = false;
 };
 
 #endif // SEGMENTSELECTIONWIDGET_H

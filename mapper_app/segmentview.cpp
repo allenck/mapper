@@ -40,21 +40,15 @@ SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
 
     connect(webViewBridge::instance(), SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(on_segmentSelected(int,int)));
 
-    selectSegmentAct = new QAction(tr("SelectSegment"),this);
+    selectSegmentAct = new QAction(tr("Select Segment"),this);
     selectSegmentAct->setStatusTip(tr("Select this segment for further use."));
-
     connect(selectSegmentAct, &QAction::triggered, [=]{
      QItemSelectionModel * model = ui->selectionModel();
      QModelIndexList indexes = model->selectedIndexes();
      QModelIndex Index = indexes.at(0);
      qint32 segmentId = Index.data().toInt();
 
-     MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
-     parent->setCursor(QCursor(Qt::WaitCursor));
-     if(parent->selectedSegment() == segmentId)
-      return; // already selected
-     parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
-     parent->setCursor(QCursor(Qt::ArrowCursor));
+     emit selectSegment(segmentId);
     });
 
     ui->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -255,15 +249,16 @@ void SegmentView::itemSelectionChanged(QModelIndex index)
     if(parent->selectedSegment() == segmentId)
      return; // already selected
 
-    parent->ProcessScript("isSegmentDisplayed", QString("%1").arg(segmentId));
-    if(parent->m_segmentStatus == "Y")
-        parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
-    else
-    {
-//        SegmentData si = sql->getSegmentData(segmentId);
-        //parent->displaySegment(segmentId, si.description, si.oneWay, si.oneWay == "N" ? "#00FF00" : "#045fb4", true);
-        parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
-    }
+//    parent->ProcessScript("isSegmentDisplayed", QString("%1").arg(segmentId));
+//    if(parent->m_segmentStatus == "Y")
+//        parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
+//    else
+//    {
+////        SegmentData si = sql->getSegmentData(segmentId);
+//        //parent->displaySegment(segmentId, si.description, si.oneWay, si.oneWay == "N" ? "#00FF00" : "#045fb4", true);
+//        parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
+//    }
+    emit selectSegment(segmentId);
 }
 
 void SegmentView::on_segmentSelected(int, int segmentId)

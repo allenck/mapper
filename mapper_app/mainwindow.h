@@ -265,6 +265,7 @@ private slots:
     void locateStreet();
     void findDupSegments();
     void on_webView_statusBarMessage(QString text);
+    void on_selectSegment(int segmentId);
     void updateRouteComment();
     void geocoderRequestToggled(bool bChecked);
     void cbSortSelectionChanged(int sel);

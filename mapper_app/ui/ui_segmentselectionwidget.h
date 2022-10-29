@@ -16,7 +16,6 @@
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QWidget>
-#include "ccombobox.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -30,7 +29,7 @@ public:
     QRadioButton *rbBoth;
     QLabel *label;
     QComboBox *cbStreets;
-    CComboBox *cbSegments;
+    QComboBox *cbSegments;
 
     void setupUi(QWidget *SegmentSelectionWidget)
     {
@@ -72,7 +71,7 @@ public:
 
         gridLayout->addWidget(cbStreets, 0, 5, 1, 1);
 
-        cbSegments = new CComboBox(SegmentSelectionWidget);
+        cbSegments = new QComboBox(SegmentSelectionWidget);
         cbSegments->setObjectName(QString::fromUtf8("cbSegments"));
         cbSegments->setContextMenuPolicy(Qt::ActionsContextMenu);
         cbSegments->setEditable(true);

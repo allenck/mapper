@@ -13,6 +13,7 @@ ReplaceSegmentDialog::ReplaceSegmentDialog(QWidget *parent) :
 {
  ui->setupUi(this);
  sql = SQL::instance();
+ ui->ssw->initialize();
 
  connect(ui->buttonBox, SIGNAL(clicked(QAbstractButton *)), this, SLOT(Process(QAbstractButton *)));
  connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
@@ -27,9 +28,13 @@ ReplaceSegmentDialog::ReplaceSegmentDialog(QWidget *parent) :
  enterGrp->addButton(ui->rbDelete);
  ui->rbDelete->setChecked(true);
  ui->ignoreDate->setDate(QDate::currentDate());
- ui->rs->refresh();
+ ui->ssw->refresh();
 
- connect(ui->rs, SIGNAL(segmentSelected(SegmentData)), this, SLOT(cbSegmentsSelectedValueChanged(SegmentData)));
+ connect(ui->ssw, SIGNAL(segmentSelected(SegmentData)), this, SLOT(segmentSelected(SegmentData)));
+
+ connect(sql, &SQL::details, [=](QString txt){
+  ui->details->append(txt);
+ });
 }
 
 ReplaceSegmentDialog::~ReplaceSegmentDialog()
@@ -43,10 +48,10 @@ void ReplaceSegmentDialog::Process(QAbstractButton *button)
  try{
  if(!SQL::instance()->replaceSegmentsInRoutes(ui->oldSegments->toPlainText().split(","), ui->newSegments->toPlainText().split(","),ui->ignoreDate->date()))
  {
-  rejected();
+  reject();
  }
  if(button->text() == tr("Save All"))
-  accepted();
+  accept();
  }
 
  catch(IllegalArgumentException e)

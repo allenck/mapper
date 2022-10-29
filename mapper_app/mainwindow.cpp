@@ -225,6 +225,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   connect(routeView, SIGNAL(refreshRoutes()), this, SLOT(refreshRoutes()));
   connect(routeView->model(), SIGNAL(refreshRoutes()), this, SLOT(refreshRoutes()));
   segmentView = new SegmentView(config, this);
+  connect(segmentView, SIGNAL(selectSegment(int)), this, SLOT(on_selectSegment(int)));
   otherRouteView =  OtherRouteView::instance(this);
   connect(otherRouteView, SIGNAL(displayRoute(RouteData)), this, SLOT(On_displayRoute(RouteData)));
   stationView = new StationView(config, this);
@@ -1803,6 +1804,7 @@ default:
     }
    }
   }
+  setCursor(Qt::ArrowCursor);
 }
 
 void MainWindow::getInfoWindowComments(double lat, double lon, int route, QString date, int func)
@@ -3755,6 +3757,19 @@ void MainWindow::on_webView_statusBarMessage(QString text)
     setDebug(text);
 }
 
+void MainWindow::on_selectSegment(int segmentId)
+{
+ ProcessScript("isSegmentDisplayed", QString("%1").arg(segmentId));
+ if(m_segmentStatus == "Y")
+  ProcessScript("selectSegment", QString("%1").arg(segmentId));
+ else
+ {
+  SegmentData sd = sql->getSegmentData(segmentId);
+  displaySegment(sd.segmentId(), sd.description(), sd.oneWay(), /*ttColors[e.tractionType]*/getColor(_rd.tractionType), _rd.trackUsage, true);
+  ProcessScript("selectSegment", QString("%1").arg(segmentId));
+ }
+}
+
 void MainWindow::combineRoutes()
 {
     CombineRoutesDlg dlg(ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt(), this);
@@ -3875,7 +3890,8 @@ void MainWindow::updateSegmentInfoDisplay(SegmentData sd)
 
 void MainWindow::On_editSegment_triggered()
 {
- EditSegmentDialog dlg(ui->ssw->segmentSelected(),this);
+ SegmentData sd = sql->getSegmentData(ui->ssw->cbSegments()->currentData().toInt());
+ EditSegmentDialog dlg(sd,this);
  int ret = dlg.exec();
  if(ret == QDialog::Accepted)
   //refreshSegmentCB();

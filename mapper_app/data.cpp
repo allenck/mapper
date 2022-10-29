@@ -171,6 +171,8 @@ SegmentData::SegmentData(const SegmentData& o)
  _bearingStart = o._bearingStart;
  _bearingEnd = o._bearingEnd;
  _pointList = o._pointList;
+ if(points == 0 && pointList().count() > 0 )
+  points = pointList().count();
 }
 
 QString SegmentData::toString()

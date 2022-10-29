@@ -113,7 +113,7 @@ win32:{
 DISTFILES += \
     Resources/addBiDirectionalToRoutes.sql \
     Resources/recreateRouteComments.sql \
-    Resources/restructure_routes.sql \
+    Resources/recreate_routes.sql \
     Resources/scripts \
     Resources/scripts/opacity-slider2.png \
     Resources/scripts/opacity-slider3d14.png \
