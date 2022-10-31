@@ -1,6 +1,10 @@
 SOURCES += main.cpp\
+    addgeoreferenceddialog.cpp \
+    $$PWD/browsecommentsdialog.cpp \
     $$PWD/exceptions.cpp \
     $$PWD/myapplication.cpp \
+    $$PWD/replacesegmentdialog.cpp \
+    $$PWD/splitsegmentdlg.cpp \
     mainwindow.cpp \
     webviewbridge.cpp \
     sql.cpp \
@@ -55,8 +59,12 @@ SOURCES += main.cpp\
 
 
 HEADERS  += mainwindow.h \
+    addgeoreferenceddialog.h \
+    $$PWD/browsecommentsdialog.h \
     $$PWD/exceptions.h \
     $$PWD/myapplication.h \
+    $$PWD/replacesegmentdialog.h \
+    $$PWD/splitsegmentdlg.h \
     webviewbridge.h \
     sql.h \
     data.h \
@@ -110,7 +118,7 @@ HEADERS  += mainwindow.h \
     $$PWD/globalmercator.h
 
 FORMS    += ui/mainwindow.ui \
-    $$PWD/ui/splitsegmentdlg.ui \
+    ui/addgeoreferenceddialog.ui \
     ui/dialogcopyroute.ui \
     ui/dialogrenameroute.ui \
     ui/routedlg.ui \
@@ -129,4 +137,7 @@ FORMS    += ui/mainwindow.ui \
     ui/exportroutedialog.ui \
     ui/editcitydialog.ui \
     ui/editsegmentdialog.ui \
-    ui/editsegmentdialog.ui
+    ui/editsegmentdialog.ui \
+    ui/browsecommentsdialog.ui \
+    ui/replacesegmentdialog.ui \
+    ui/segmentselectionwidget.ui

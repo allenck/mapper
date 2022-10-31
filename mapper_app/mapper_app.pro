@@ -158,23 +158,4 @@ else:unix: LIBS += -L$$PWD/'../../../../Program Files/Sqlite3_3_13/' -lsqlite3
 INCLUDEPATH += $$PWD/'../../../../Program Files/Sqlite3_3_13/src'
 DEPENDPATH += $$PWD/'../../../../Program Files/Sqlite3_3_13/src'
 
-FORMS += \
-    addgeoreferenceddialog.ui \
-    ui/browsecommentsdialog.ui \
-    ui/replacesegmentdialog.ui \
-    ui/segmentselectionwidget.ui
-
-HEADERS += \
-    addgeoreferenceddialog.h \
-    ui/browsecommentsdialog.h \
-    ui/replacesegmentdialog.h \
-    ui/segmentselectionwidget.h \
-    ui/splitsegmentdlg.h
-
-SOURCES += \
-    addgeoreferenceddialog.cpp \
-    ui/browsecommentsdialog.cpp \
-    ui/replacesegmentdialog.cpp \
-    ui/segmentselectionwidget.cpp \
-    ui/splitsegmentdlg.cpp
 
