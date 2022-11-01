@@ -32,7 +32,7 @@ void SegmentSelectionWidget::initialize()
  connect(webViewBridge::instance(), SIGNAL(segmentSelected(int, int)), this, SLOT(segmentSelected(int, int)));
  //connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSegmentsSelectedValueChanged(int)));
  connect(ui->cbSegments, SIGNAL(editTextChanged(QString)), this, SLOT(cbSegmentsTextChanged(QString)));
- connect(ui->cbSegments, SIGNAL(signalFocusOut()), this, SLOT(cbSegments_editingFinished()));
+ //connect(ui->cbSegments, SIGNAL(signalFocusOut()), this, SLOT(cbSegments_editingFinished()));
  connect(ui->rbSingle, &QRadioButton::clicked, [=]{
   saveStreet = ui->cbStreets->currentText();
   refreshSegmentCB();

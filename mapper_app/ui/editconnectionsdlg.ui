@@ -149,28 +149,22 @@
     </widget>
    </item>
    <item row="1" column="0" colspan="6">
-    <widget class="CComboBox" name="cbCities">
+    <widget class="QComboBox" name="cbCities">
      <property name="toolTip">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter the City name: e.g. &lt;span style=&quot; font-weight:600;&quot;&gt;St Louis, MO&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="editable">
       <bool>true</bool>
      </property>
-     <property name="placeholderText">
-      <string>enter city name</string>
-     </property>
     </widget>
    </item>
    <item row="3" column="0" colspan="6">
-    <widget class="CComboBox" name="cbConnections">
+    <widget class="QComboBox" name="cbConnections">
      <property name="toolTip">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter a description of the connection providing details for example as the type of database and whether it was local or not. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="editable">
       <bool>true</bool>
-     </property>
-     <property name="placeholderText">
-      <string>enter connection description</string>
      </property>
     </widget>
    </item>
@@ -258,13 +252,6 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>CComboBox</class>
-   <extends>QComboBox</extends>
-   <header>ccombobox.h</header>
-  </customwidget>
- </customwidgets>
  <tabstops>
   <tabstop>cbCities</tabstop>
   <tabstop>cbConnections</tabstop>

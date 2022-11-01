@@ -619,7 +619,7 @@ void MainWindow::processTileMapResource()
  }
 }
 #ifdef WIN32
-void mainWindow::loadOverlayData()
+void MainWindow::loadOverlayData()
 {
  QString data;
  data = m_overlays->downloadedData();
@@ -1716,35 +1716,37 @@ default:
  }
 
  m_bridge->executeScript("removeStationMarkers", "");
- QList<StationInfo> stationList = sql->getStations(m_routeNbr, m_routeName, m_currRouteEndDate);
- if (!stationList.isEmpty())
+ if(config->currCity->bDisplayStationMarkers)
  {
-  //foreach (stationInfo sti in stationList)
-  for(int i=0; i < stationList.count(); i ++)
+  QList<StationInfo> stationList = sql->getStations(m_routeNbr, m_routeName, m_currRouteEndDate);
+  if (!stationList.isEmpty())
   {
-   StationInfo sti= stationList.at(i);
-   if(sti.markerType == "")
-    sti.markerType= markerType;
-   QString str = sti.stationName;
-   if (sti.infoKey > 0)
+   //foreach (stationInfo sti in stationList)
+   for(int i=0; i < stationList.count(); i ++)
    {
-    CommentInfo ci = sql->getComments(sti.infoKey);
-    //str = ci.comments;
-
-    objArray.clear();
-    objArray << sti.latitude << sti.longitude << (bDisplayStationMarkers?true:false) << sti.segmentId << sti.stationName << sti.stationKey << sti.infoKey << ci.comments << sti.markerType;
-     m_bridge->processScript("addStationMarker", objArray);
-    }
-    else
+    StationInfo sti= stationList.at(i);
+    if(sti.markerType == "")
+     sti.markerType= markerType;
+    QString str = sti.stationName;
+    if (sti.infoKey > 0)
     {
-     objArray.clear();
-     objArray << sti.latitude << sti.longitude << (bDisplayStationMarkers?true:false) << sti.segmentId << sti.stationName << sti.stationKey << sti.infoKey << "" << sti.markerType;
-     m_bridge->processScript("addStationMarker", objArray);
-    }
-   }
-   stationView->showStations();
-  }
+     CommentInfo ci = sql->getComments(sti.infoKey);
+     //str = ci.comments;
 
+     objArray.clear();
+     objArray << sti.latitude << sti.longitude << (bDisplayStationMarkers?true:false) << sti.segmentId << sti.stationName << sti.stationKey << sti.infoKey << ci.comments << sti.markerType;
+      m_bridge->processScript("addStationMarker", objArray);
+     }
+     else
+     {
+      objArray.clear();
+      objArray << sti.latitude << sti.longitude << (bDisplayStationMarkers?true:false) << sti.segmentId << sti.stationName << sti.stationKey << sti.infoKey << "" << sti.markerType;
+      m_bridge->processScript("addStationMarker", objArray);
+     }
+    }
+    stationView->showStations();
+   }
+  }
   if(!ui->chkNoPan->checkState() && bBoundsValid)
   {
    objArray.clear();

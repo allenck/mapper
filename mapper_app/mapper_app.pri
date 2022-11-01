@@ -126,6 +126,7 @@ HEADERS  += mainwindow.h \
     $$PWD/globalmercator.h
 
 FORMS    += ui/mainwindow.ui \
+    $$PWD/ui/splitsegmentdlg.ui \
     ui/addgeoreferenceddialog.ui \
     ui/dialogcopyroute.ui \
     ui/dialogrenameroute.ui \

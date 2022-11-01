@@ -45,6 +45,8 @@ QString webViewBridge::curMaptype(){return maptype;}
 //int webViewBridge::curBrowseWindowHeight(){return browseWindowHeight;}
 void webViewBridge::processScript(QString func, QString parms)
 {
+ qDebug() << "processScript " << func;
+
  bResultReceived = false;
  emit executeScript( func,  parms);
  if(func == "loadOverlay")
@@ -52,6 +54,7 @@ void webViewBridge::processScript(QString func, QString parms)
 }
 void webViewBridge::processScript(QString func)
 {
+ qDebug() << "processScript " << func;
  bResultReceived = false;
  myRslt = QVariant();
  myList = QVariantList();
@@ -60,6 +63,7 @@ void webViewBridge::processScript(QString func)
 
 void webViewBridge::processScript(QString func, QString parms, QString name, QString value)
 {
+ qDebug() << "processScript " << func;
  bResultReceived = false;
  emit executeScript2( func,  parms, name, value);
  if(func == "loadOverlay")
@@ -68,6 +72,8 @@ void webViewBridge::processScript(QString func, QString parms, QString name, QSt
 
 void webViewBridge::processScript(QString func, QVariantList objArray)
 {
+ qDebug() << "processScript " << func;
+
  bResultReceived = false;
  emit executeScript3(func, objArray, objArray.count() );
  if(func == "loadOverlay")
@@ -92,15 +98,21 @@ void webViewBridge::getInfoWindowComments(double lat, double lon, int route, QSt
 // receive result of function
 void webViewBridge::scriptResult(QVariant value)
 {
- if(value == 0)
-  //value = QVariant();
-  return;
- qDebug() << "scriptResult" << value;
- if(value.isNull())
-  return;
- myRslt = value;
- bResultReceived = true;
- emit on_scriptResult(value);
+ try {
+  if(value == 0)
+   //value = QVariant();
+   return;
+  qDebug() << "scriptResult" << value;
+  if(value.isNull())
+   return;
+  myRslt = value;
+  bResultReceived = true;
+  emit on_scriptResult(value);
+ }
+ catch(std::exception)
+ {
+  qDebug() << "bad script result";
+ }
 }
 
 void webViewBridge::scriptArrayResult(QVariantList value)

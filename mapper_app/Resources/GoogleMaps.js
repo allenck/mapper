@@ -82,6 +82,7 @@ function connectSlots()
   //alert("connectSlots " + connected);
       alert(google.maps.version);
   }
+  return;
 }
 // deprecated
 function processScript(func, parms)
@@ -96,14 +97,16 @@ function processScript(func, parms)
   try
   {
    //eval(call);
-   var myFucn = new Function(call);
+   var myFucn =  Function(call);
    var fRslt = myFucn();
    if(fRslt === null) return;
    if( fRslt instanceof Array)
     webViewBridge.scriptArrayResult( fRslt);
    else
    {
-    if(webViewBridge.scriptResult !== null)
+//       console.trace( call + fRslt);
+//    if(webViewBridge.scriptResult !== null)
+       if("fRslt" in window)
         webViewBridge.scriptResult( fRslt);
    }
   }
@@ -129,10 +132,11 @@ function processScript2(func, parms, name, value)
   try
   {
       //eval(call);
-      var myFucn = new Function(call);
+      var myFucn =  Function(call);
       var fRslt = myFucn();
       if(fRslt === null) return;
-      if(webViewBridge.scriptResult !== null)
+//      console.trace( call + fRslt);
+//      if(webViewBridge.scriptResult !== null)
           webViewBridge.scriptResult( fRslt);
   }
   catch (err)
@@ -168,7 +172,7 @@ function processScript3(func, objArray, count)
   try
   {
       //eval(call);
-      var myFucn = new Function(call);
+      var myFucn =  Function(call);
       var fRslt = myFucn();
       if(fRslt === null) return;
       if( fRslt instanceof Array)
@@ -177,7 +181,8 @@ function processScript3(func, objArray, count)
       {
 //          if(fRslt === 0)
 //              alert(call);
-          if(webViewBridge.scriptResult !== null)
+//          if(webViewBridge.scriptResult !== null)
+//          console.trace( call + fRslt);
               webViewBridge.scriptResult( fRslt);
       }
   }
@@ -1135,6 +1140,7 @@ if(bAdding)
       path.push(new google.maps.LatLng(lat, lon));
       getPoints();
       placeArrow(path);
+      return;
   }
 
   function setCenter(Lat, Lon)
@@ -1148,6 +1154,7 @@ if(bAdding)
   {
    var latLng = map.getCenter();
       webViewBridge.setCenter(latLng.lat(), latLng.lng(), map.getZoom(), map.getMapTypeId());
+   return;
   }
 
   function setZoom(zoom)
@@ -1221,8 +1228,8 @@ function isSegmentDisplayed(segmentId)
 function clearPolyline(segmentId)
 {
 //alert("polyline " + segmentId + " called");
-siArray.forEach(function(si, ix)
-{
+ siArray.forEach(function(si, ix)
+ {
   var txt="";
   var path;
   try{
@@ -1289,8 +1296,9 @@ siArray.forEach(function(si, ix)
       }
     });
     //alert("polyline " + segmentId + " cleared");
-        return null;
+     return null;
     }
+
     function clearMarker()
     {
     if(marker)
@@ -1308,6 +1316,7 @@ siArray.forEach(function(si, ix)
       infowindow.setMap();
       infowindow = null;
     }
+    return;
 }
 
 // can be called by the c# program to set an arrow.
@@ -1329,6 +1338,7 @@ function setArrow(lLat, lLon, mLat, mLon, rLat, rLon, segmentId)
       }
 
   });
+ return;
 }
 
 // Clear all the lines from the map
@@ -1445,7 +1455,9 @@ function insertPoint(e, line, segmentId)
    return null;
   }
  }
+ return;
 }
+
   function fitMapBounds(swLat, swLon, neLat, neLon)
   {
       map.fitBounds(new google.maps.LatLngBounds(new google.maps.LatLng(swLat, swLon), new google.maps.LatLng(neLat, neLon)));
@@ -1485,6 +1497,7 @@ function deletePoint(pt)
  getPoints();
  // move the arrow as well
  placeArrow(path);
+ return;
 }
 
 function placeArrow(path, segment)
@@ -1508,13 +1521,15 @@ function placeArrow(path, segment)
   currSegment.setArrow(new myArrow(left.lat(), left.lng(), path.getAt(len-1).lat(), path.getAt(len-1).lng(), right.lat(), right.lng(), currSegment.getColor(), currSegment.segmentId));
   }
  }
+ return;
 }  // end placeArrow()
 
 function getPoints()
 {
-var path = line.getPath();
-var len = path.getLength();
-path.forEach(setArray);
+    var path = line.getPath();
+    var len = path.getLength();
+    path.forEach(setArray);
+    return;
 }
 
 var pointArray = [];
@@ -1522,6 +1537,7 @@ function setArray(element, number)
 {
  var pt = [element.lat(), element.lng()];
  pointArray[number]= pt;
+    return;
 }
 
 function getLen()
@@ -1626,22 +1642,22 @@ function addMarker(i, lat, lon, icon, text, SegmentId)
   }
 );
 
-google.maps.event.addListener(marker, "dblclick", function()
-{
-  var path = line.getPath();
-  var i;
-  for(i=0; i < path.getLength()-1; i++)
-  {
-      var begin = path.getAt(i);
-      var end = path.getAt(i+1);
-      var bounds = setBounds( begin, end);
-      if( bounds.contains(marker.getPosition())){
-          break;
+    google.maps.event.addListener(marker, "dblclick", function()
+    {
+      var path = line.getPath();
+      var i;
+      for(i=0; i < path.getLength()-1; i++)
+      {
+          var begin = path.getAt(i);
+          var end = path.getAt(i+1);
+          var bounds = setBounds( begin, end);
+          if( bounds.contains(marker.getPosition())){
+              break;
+          }
       }
-  }
-//                window.external.setStation(marker.getPosition().lat(), marker.getPosition().lng(), SegmentId, i);
-  webViewBridge.setStation(marker.getPosition().lat(), marker.getPosition().lng(), SegmentId, i);
- });
+    //                window.external.setStation(marker.getPosition().lat(), marker.getPosition().lng(), SegmentId, i);
+      webViewBridge.setStation(marker.getPosition().lat(), marker.getPosition().lng(), SegmentId, i);
+     });
  if(circle)
  {
   circle.setMap();
@@ -1650,6 +1666,7 @@ google.maps.event.addListener(marker, "dblclick", function()
  circle = new google.maps.Circle({center:new google.maps.LatLng(lat, lon), fillOpacity: 0, map: map, strokeColor:"#000000", strokeWeight:1, radius:20});
  if(bGeocoderRequest)
     geocoderRequest(lat, lon);
+ return;
 }
 
   function setBounds( pt1, pt2)
@@ -1854,6 +1871,7 @@ function addStationMarker(lat, lon, visible, segmentId, stationName, stationKey,
  });
    stationArray.push(stationMarker);
  //return null;
+ return;
 }
 
 function getIcon(typeIcon)
@@ -2017,6 +2035,7 @@ function displayStationMarker(stationKey, bDisplay)
    webViewBridge.setDebug("stationMarker " + stationKey + " is now visible " + element.getVisible());
   }
  });
+ return;
 }
 
 function updateStationMarker(stationKey, typeIcon)
@@ -2039,6 +2058,7 @@ function updateStationMarker(stationKey, typeIcon)
    element.typeIcon = typeIcon;
   }
  });
+ return;
 }
 
 function isStationMarkerDisplayed(stationKey)
@@ -2064,6 +2084,7 @@ function isStationMarkerDisplayed(stationKey)
  console.error("stationKey " + stationKey + " not found 2");
  return rVal;
 }
+
 window.addEventListener("beforeunload", function (e) {
   var confirmationMessage = "\o/";
   /* Do you small action code here */
@@ -2228,6 +2249,7 @@ console.log("GoogleMaps.js loaded!");
       } else {
           alert("Sorry, we were unable to geocode that address");
     }
+      return;
   }
 
   // showLocation() is called when you click on the Search button
@@ -2236,6 +2258,7 @@ console.log("GoogleMaps.js loaded!");
   function showLocation(address) {
     //var address = document.geocoderForm.address.value;
     geocoder.geocode({'address':address}, addAddressToMap);
+      return;
   }
 
 // class to create an overlay
@@ -2352,17 +2375,18 @@ function Overlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
   return "";
  imageMapType.setOpacity(opacity/100);
  map.overlayMapTypes.push(imageMapType);
+ return;
 
 }
 
 function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
 {
  console.log("load overlay: " + name + " opacity =" + opacity + " minZoom =" + minZoom + " maxZoom = " + maxZoom + " source = " + source + " bounds = " + bounds + " urls = " + urls);
-    console.log("urls type = " + typeof(urls));
-    if( Object.prototype.toString.call( urls ) === '[object Array]' )
-    {
-     console.log("size = " + urls.length +" url = " + urls[0] );
-    }
+ console.log("urls type = " + typeof(urls));
+ if( Object.prototype.toString.call( urls ) === '[object Array]' )
+ {
+  console.log("size = " + urls.length +" url = " + urls[0] );
+ }
 
  if(minZoom < 0 || maxZoom > 20)
      console.warn("invalid min/max zoom for overlay: " + name + " opacity =" + opacity + " minZoom =" + minZoom + " maxZoom = " + maxZoom);
@@ -2419,6 +2443,7 @@ function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
    }
   }
  });
+ return;
 }
 
 function setOverlayOpacity(Opacity) {
@@ -2426,6 +2451,7 @@ function setOverlayOpacity(Opacity) {
  {
   overlay.setOpacity(Opacity);
  }
+ return;
 }
 
 
@@ -2444,6 +2470,7 @@ function showRouteComment(bDisplay)
    infowindow.marker.setMap();
   }
  }
+ return;
 }
 
 function displayRouteComment(latitude, longitude, HTMLText, route, date, companyKey)
@@ -2514,12 +2541,14 @@ function setDefaultOptions()
 {
  //alert("setDefaultOptions");
  map.setOptions(defaultOptions);
+ return 0;
 }
 
 function setOptions()
 {
  //alert("setDefaultOptions");
  map.setOptions(options);
+    return;
 }
 
 function isOverlayLoaded()

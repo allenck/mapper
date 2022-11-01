@@ -22,9 +22,9 @@ public:
     LatLng curLatLng();
     int curZoom();
     QString curMaptype();
-    Q_PROPERTY(float lat READ curLat)
-    Q_PROPERTY(float lng READ curLon)
-    Q_PROPERTY(int zoom READ curZoom)
+    Q_PROPERTY(float lat READ curLat NOTIFY onLatChanged)
+    Q_PROPERTY(float lng READ curLon NOTIFY onLngChanged)
+    Q_PROPERTY(int zoom READ curZoom NOTIFY onZoomChanged)
     Q_PROPERTY(QString maptype READ curMaptype NOTIFY onMapTypeChanged)
     Q_PROPERTY(LatLng latlng MEMBER _latLng WRITE setLatLng NOTIFY latlngChanged)
     void processScript(QString func, QString parms);
@@ -52,6 +52,9 @@ signals:
     void insertPointSignal(int SegmentId, qint32 i, double newLat, double newLon);
     void segmentSelected(qint32, qint32);
     void outputSetDebug(QString);
+    void onLatChanged(QString);
+    void onLngChanged(QString);
+    void onZoomChanged(QString);
     void onMapTypeChanged(QString);
     void latlngChanged(LatLng latLng);
     void segmentStatusSignal(QString txt, QString color);

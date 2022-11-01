@@ -43,3 +43,10 @@ build_pass:CONFIG(debug, debug|release) {
 } else {
  DESTDIR = ../mapper_app/release
 }
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../sqlite3/ -lsqlite3
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../sqlite3/ -lsqlite3
+else:unix: LIBS += -L$$PWD/../../../sqlite3/ -lsqlite3
+
+INCLUDEPATH += $$PWD/../../../sqlite3
+DEPENDPATH += $$PWD/../../../sqlite3

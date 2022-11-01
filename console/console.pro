@@ -32,17 +32,17 @@ unix {
     target.path = /usr/lib
     INSTALLS += target
 }
-#win32: {
-# build_pass:CONFIG(debug, debug|release) {
-#  DESTDIR = ../mapper_app/debug
-# } else {
-# DESTDIR = ../mapper_app/release
-# }
-#}
-#unix: {
-# build_pass:CONFIG(debug, debug|release) {
-#  DESTDIR = ../mapper_app
-# } else {
-# DESTDIR = ../mapper_app
-# }
-#}
+win32: {
+ build_pass:CONFIG(debug, debug|release) {
+  DESTDIR = ../mapper_app/debug
+ } else {
+  DESTDIR = ../mapper_app/release
+ }
+}
+unix: {
+ build_pass:CONFIG(debug, debug|release) {
+  DESTDIR = ../mapper_app
+ } else {
+ DESTDIR = ../mapper_app
+ }
+}

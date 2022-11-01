@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>803</width>
+    <height>666</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -644,8 +644,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
-     <height>22</height>
+     <width>803</width>
+     <height>26</height>
     </rect>
    </property>
   </widget>
@@ -653,15 +653,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>CComboBox</class>
-   <extends>QComboBox</extends>
-   <header>ccombobox.h</header>
-  </customwidget>
-  <customwidget>
    <class>SegmentSelectionWidget</class>
    <extends>QWidget</extends>
    <header>segmentselectionwidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CComboBox</class>
+   <extends>QComboBox</extends>
+   <header>ccombobox.h</header>
   </customwidget>
  </customwidgets>
  <resources>

@@ -129,12 +129,6 @@ DISTFILES += \
     Resources/tram.png \
     Resources/tram.shadow.png
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/release/ -lConsole
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/debug/ -lConsole
-else:unix: LIBS += -L$$PWD/../console/ -lConsole
-
-INCLUDEPATH += $$PWD/../console
-DEPENDPATH += $$PWD/../console
 
 #win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lWebView
 #else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/debug/ -lWebView
@@ -143,19 +137,23 @@ DEPENDPATH += $$PWD/../console
 #INCLUDEPATH += $$PWD/WebView
 #DEPENDPATH += $$PWD/WebView
 
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../console/release/ -lConsole
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../console/debug/ -lConsole
+else:unix: LIBS += -L$$PWD/../console/ -lConsole
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/./release/ -lConsole
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/./debug/ -lConsole
-
-INCLUDEPATH += $$PWD/../console
-DEPENDPATH += $$PWD/../console
-
-
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../Program Files/Sqlite3_3_13/' -lsqlite3
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../Program Files/Sqlite3_3_13/' -lsqlite3
-else:unix: LIBS += -L$$PWD/'../../../../Program Files/Sqlite3_3_13/' -lsqlite3
-
-INCLUDEPATH += $$PWD/'../../../../Program Files/Sqlite3_3_13/src'
-DEPENDPATH += $$PWD/'../../../../Program Files/Sqlite3_3_13/src'
+INCLUDEPATH += $$PWD/../console/debug
+DEPENDPATH += $$PWD/../console/debug
 
 
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../sqlite3/ -lsqlite3
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../sqlite3/ -lsqlite3
+else:unix: LIBS += -L$$PWD/../../../sqlite3/ -lsqlite3
+
+INCLUDEPATH += $$PWD/../../../sqlite3
+DEPENDPATH += $$PWD/../../../sqlite3
+
+
+unix:!macx: LIBS += -L$$PWD/./ -lConsole
+
+INCLUDEPATH += $$PWD/.
+DEPENDPATH += $$PWD/.
