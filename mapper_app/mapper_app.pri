@@ -1,14 +1,11 @@
 SOURCES += main.cpp\
- $$PWD/browsecommentsdialog.cpp \
- $$PWD/replacesegmentdialog.cpp \
+    $$PWD/browsecommentsdialog.cpp \
+    $$PWD/replacesegmentdialog.cpp \
     $$PWD/segmentselectionwidget.cpp \
- $$PWD/splitsegmentdlg.cpp \
+    $$PWD/splitsegmentdlg.cpp \
     addgeoreferenceddialog.cpp \
-#    $$PWD/browsecommentsdialog.cpp \
     $$PWD/exceptions.cpp \
     $$PWD/myapplication.cpp \
-#    $$PWD/replacesegmentdialog.cpp \
-#    $$PWD/splitsegmentdlg.cpp \
     mainwindow.cpp \
     webviewbridge.cpp \
     sql.cpp \
@@ -63,16 +60,13 @@ SOURCES += main.cpp\
 
 
 HEADERS  += mainwindow.h \
- $$PWD/browsecommentsdialog.h \
- $$PWD/replacesegmentdialog.h \
+    $$PWD/browsecommentsdialog.h \
+    $$PWD/replacesegmentdialog.h \
     $$PWD/segmentselectionwidget.h \
- $$PWD/splitsegmentdlg.h \
+    $$PWD/splitsegmentdlg.h \
     addgeoreferenceddialog.h \
-#    $$PWD/browsecommentsdialog.h \
     $$PWD/exceptions.h \
     $$PWD/myapplication.h \
-#    $$PWD/replacesegmentdialog.h \
-#    $$PWD/splitsegmentdlg.h \
     webviewbridge.h \
     sql.h \
     data.h \
