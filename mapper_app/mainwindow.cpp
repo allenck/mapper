@@ -46,6 +46,7 @@
 #include "replacesegmentdialog.h"
 #include "segmentselectionwidget.h"
 #include "browsecommentsdialog.h"
+#include "exceptions.h"
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -97,6 +98,18 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  config->bRunInBrowser = false;
 #endif
 
+ tempDir = QDir::tempPath();
+
+ QFile* keys = new QFile("Resources/api_keys.txt");
+ if(!keys->open(QIODevice::ReadOnly))
+  throw FileNotFoundException("keys file not found!");
+ QTextStream stream(keys);
+ QString keysText = stream.readLine();
+ if(keysText.startsWith("//"))
+  keysText = stream.readLine();
+ keyTokens = keysText.split("|");
+ keys->close();
+
  if(!config->bRunInBrowser)
  {
 #ifndef USE_WEBENGINE
@@ -109,16 +122,19 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   webView->setObjectName(QStringLiteral("webEngineView"));
   webView->setContextMenuPolicy(Qt::NoContextMenu);
   webView->setPage(new MyWebEnginePage());
-  webView->setUrl(QUrl(QStringLiteral("qrc:/GoogleMaps2.htm")));
+  updateTempDir(tempDir, ":///GoogleMaps2.htm", keyTokens.at(0));
+  QUrl fileUrl = QUrl("file://"+tempDir+QDir::separator()+"GoogleMaps2.htm");
+  webView->setUrl(fileUrl);
 #endif
  }
- else
+ else // run in browser
  {
   webView = NULL;
   ui->groupBox_2->setHidden(true);
   openWebWindow();
   ui->saveImage->setEnabled(false);
  }
+
 #ifdef USE_WEBENGINE
  // setup the QWebSocketServer
  m_server = new QWebSocketServer(QStringLiteral("WebViewBridge"), QWebSocketServer::NonSecureMode);
@@ -3922,8 +3938,8 @@ bool MainWindow::openWebWindow()
 #else
  QUrl startURL = QUrl("qrc:/GoogleMaps2.htm");
 #endif
- QString tempDir = QDir::tempPath();
  qDebug() << "tempPath =" << tempDir;
+
 // QFile* gFile = new QFile(":///GoogleMaps2b.htm");
 // if(gFile->open(QIODevice::ReadOnly))
 // {
@@ -3937,7 +3953,8 @@ bool MainWindow::openWebWindow()
 //   *outStream << text;
 //   tgFile->close();
 //   gFile->close();
- updateTempDir(tempDir, ":///GoogleMaps2b.htm");
+
+ updateTempDir(tempDir, ":///GoogleMaps2b.htm", keyTokens.at(1));
  updateTempDir(tempDir, ":///scripts/opacityControl.js");
 
    if(!QFile(tempDir+ QDir::separator() + "qwebchannel.js").exists())
@@ -3998,32 +4015,6 @@ bool MainWindow::openWebWindow()
     }
    }
 
-//   if(!QFile(tempDir+ QDir::separator() + "opacity-slider3d6.png").exists())
-//   {
-//    if(!QFile::copy(":///scripts/oopacity-slider3d6.png", tempDir+ QDir::separator() + "opacity-slider3d6.png" ))
-//    {
-//     qDebug() << "copy failed:" << ":///scripts/opacity-slider3d6.png" << " to " << tempDir+ QDir::separator() + "opacity-slider3d6.png";
-//     //return false;
-//    }
-//   }
-
-//   if(!QFile(tempDir+ QDir::separator() + "opacity-slider3d7.png").exists())
-//   {
-//    if(!QFile::copy(":///scripts/oopacity-slider3d7.png", tempDir+ QDir::separator() + "opacity-slider3d7.png" ))
-//    {
-//     qDebug() << "copy failed:" << ":///scripts/opacity-slider3d7.png" << " to " << tempDir+ QDir::separator() + "opacity-slider3d7.png";
-//     //return false;
-//    }
-//   }
-
-//   if(!QFile(tempDir+ QDir::separator() + "opacity-slider3d14.png").exists())
-//   {
-//    if(!QFile::copy(":///scripts/oopacity-slider3d14.png", tempDir+ QDir::separator() + "opacity-slider3d14.png" ))
-//    {
-//     qDebug() << "copy failed:" << ":///scripts/opacity-slider3d14.png" << " to " << tempDir+ QDir::separator() + "opacity-slider3d14.png";
-//     //return false;
-//    }
-//   }
 
    if(!QDesktopServices::openUrl(QUrl(tempDir+"/"+"GoogleMaps2b.htm")))
     qDebug() << "open webbrowser failed " << startURL;
@@ -4041,7 +4032,7 @@ bool MainWindow::openWebWindow()
 // return false;
 }
 
-bool MainWindow::updateTempDir(QString tempDir, QString fileName)
+bool MainWindow::updateTempDir(QString tempDir, QString fileName, QString apiKey)
 {
  // note on Ubuntu, 'TEMPDIR' is replaced by 'tmp' Windows uses something else!
  QFile* gFile = new QFile(/*":///GoogleMaps2b.htm"*/fileName);
@@ -4051,6 +4042,8 @@ bool MainWindow::updateTempDir(QString tempDir, QString fileName)
   QTextStream* inStream = new QTextStream(gFile);
   QString text = inStream->readAll();
   text.replace("TEMPDIR", tempDir);
+  if(!apiKey.isEmpty())
+   text.replace("MYAPIKEY", apiKey);
   QFile* tgFile = new QFile(tempDir+QDir::separator()+/*"GoogleMaps2b.htm"*/baseName);
   if(tgFile->exists())
   {

@@ -108,6 +108,8 @@ function processScript(func, parms)
 //    if(webViewBridge.scriptResult !== null)
        if("fRslt" in window)
         webViewBridge.scriptResult( fRslt);
+       else
+           console.trace("bad return" + call + fRslt);
    }
   }
   catch (err)
@@ -1153,7 +1155,7 @@ if(bAdding)
   function getCenter()
   {
    var latLng = map.getCenter();
-      webViewBridge.setCenter(latLng.lat(), latLng.lng(), map.getZoom(), map.getMapTypeId());
+   webViewBridge.setCenter(latLng.lat(), latLng.lng(), map.getZoom(), map.getMapTypeId());
    return;
   }
 
@@ -2443,7 +2445,6 @@ function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
    }
   }
  });
- return;
 }
 
 function setOverlayOpacity(Opacity) {
@@ -2534,21 +2535,18 @@ function prevRouteComment()
 {
  infowindow.marker.setMap();
  webViewBridge.getInfoWindowComments(infowindow.lat, infowindow.lon, infowindow.route, infowindow.date, -1);
- return 0;
 }
 
 function setDefaultOptions()
 {
  //alert("setDefaultOptions");
  map.setOptions(defaultOptions);
- return 0;
 }
 
 function setOptions()
 {
  //alert("setDefaultOptions");
  map.setOptions(options);
-    return;
 }
 
 function isOverlayLoaded()

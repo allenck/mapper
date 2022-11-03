@@ -402,7 +402,9 @@ private:
     QString path, wikiRoot;
     void loadData(QString data, QString source);
 //    void refreshStreetsCb();
-    bool updateTempDir(QString tempDir, QString fileName);
+    bool updateTempDir(QString tempDir, QString fileName, QString apiKey ="");
+    QString tempDir;
+    QStringList keyTokens;
 
 private slots:
     void createCityMenu();

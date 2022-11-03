@@ -100,7 +100,12 @@ class IllegalArgumentException : public Exception
 class RecordNotFoundException : public Exception
 {
  public:
-  RecordNotFoundException(QString msg) : Exception(msg) {name = "IllegalArgument";}
+  RecordNotFoundException(QString msg) : Exception(msg) {name = "RecordNotFoundException";}
+};
+class FileNotFoundException : public Exception
+{
+ public:
+  FileNotFoundException(QString msg) : Exception(msg) {name = "FileNotFoundException";}
 };
 
 #endif // EXCEPTIONS_H
