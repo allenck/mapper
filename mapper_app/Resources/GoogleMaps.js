@@ -38,7 +38,7 @@ var image = ["http://maps.google.com/mapfiles/marker.png",
   "http://maps.google.com/mapfiles/kml/paddle/purple-blank.png",
   "http://maps.google.com/mapfiles/kml/pal5/icon63l.png", // "H"
   "http://maps.google.com/mapfiles/kml/shapes/bus.png",
-  "https://www.google.com/mapfiles/arrow.png"
+  "https://www.google.com/mapfiles/arrow.png" // big green down arrow
 ];
 var images = {"default":0, "start":1, "end":2, "shadow":3, "arrow":4, "arrowShadow":5,
   "smallGreen":6, "smallBlue":7,"smallRed":8,"smallShadow":9,"stop":10,"resume":11,"smallYellow":12,

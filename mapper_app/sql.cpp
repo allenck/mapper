@@ -1,12 +1,12 @@
 ﻿#include "sql.h"
 
 #include "data.h"
-//#include <sqlite3.h>
-#ifdef Q_OS_UNIX
-#include "/home/allen/Qt/5.15.2/Src/qtbase/src/3rdparty/sqlite/sqlite3.h"
-#else
-#include "c:/Qt/5.15.2/Src/qtbase/src/3rdparty/sqlite/sqlite3.h"
-#endif
+#include "../functions/sqlite3.h"
+//#ifdef Q_OS_UNIX
+//#include "/home/allen/Qt/5.15.2/Src/qtbase/src/3rdparty/sqlite/sqlite3.h"
+//#else
+//#include "c:/Qt/5.15.2/Src/qtbase/src/3rdparty/sqlite/sqlite3.h"
+//#endif
 #include <algorithm>
 #include <QDebug>
 #include <QTextEdit>

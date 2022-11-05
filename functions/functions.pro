@@ -31,22 +31,21 @@ unix:!symbian {
     }
     INSTALLS += target
 }
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../Program Files/Sqlite3_3_13/' -lsqlite3
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../Program Files/Sqlite3_3_13/' -lsqlite3
-else:unix: LIBS += -L$$PWD/'../../../../Program Files/Sqlite3_3_13/' -lsqlite3
-
-INCLUDEPATH += $$PWD/'../../../../Program Files/Sqlite3_3_13/src'
-DEPENDPATH += $$PWD/'../../../../Program Files/Sqlite3_3_13/src'
-
 build_pass:CONFIG(debug, debug|release) {
  DESTDIR = ../mapper_app/debug
 } else {
  DESTDIR = ../mapper_app/release
 }
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../sqlite3/ -lsqlite3
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../sqlite3/ -lsqlite3
-else:unix: LIBS += -L$$PWD/../../../sqlite3/ -lsqlite3
 
-INCLUDEPATH += $$PWD/../../../sqlite3
-DEPENDPATH += $$PWD/../../../sqlite3
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400/' -lsqlite3
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400/' -lsqlite3
+
+INCLUDEPATH += $$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400'
+DEPENDPATH += $$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400'
+
+
+unix:!macx: LIBS += -L$$PWD/../../../sqlite-amalgamation-3390400/ -lsqlite3
+
+INCLUDEPATH += $$PWD/../../../sqlite-amalgamation-3390400
+DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3390400
