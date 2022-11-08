@@ -139,6 +139,7 @@ function processScript2(func, parms, name, value)
       if(fRslt === null) return;
 //      console.trace( call + fRslt);
 //      if(webViewBridge.scriptResult !== null)
+      if("fRslt" in window)
           webViewBridge.scriptResult( fRslt);
   }
   catch (err)
@@ -185,6 +186,7 @@ function processScript3(func, objArray, count)
 //              alert(call);
 //          if(webViewBridge.scriptResult !== null)
 //          console.trace( call + fRslt);
+          if("fRslt" in window)
               webViewBridge.scriptResult( fRslt);
       }
   }

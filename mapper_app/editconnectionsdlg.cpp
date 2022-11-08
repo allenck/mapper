@@ -56,6 +56,7 @@ editConnectionsDlg::editConnectionsDlg( QWidget *parent) :
   connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(btnCancelClicked()));
   connect(ui->btnOK, SIGNAL(clicked()), this, SLOT(btnOKClicked()));
   connect(ui->btnDelete, SIGNAL(clicked()), this, SLOT(btnDeleteClicked()));
+  connect(ui->btnAbort, &QPushButton::clicked, [=]{exit(EXIT_FAILURE);});
     //connect(ui->cbConnections, SIGNAL(signalFocusOut()),this, SLOT(cbConnectionsLeave()));
   connect(ui->txtHost, SIGNAL(editingFinished()), this, SLOT(txtHostLeave()));
   connect(ui->txtPort, SIGNAL(editingFinished()), this, SLOT(txtPortLeave()));

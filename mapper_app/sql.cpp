@@ -9024,17 +9024,25 @@ bool SQL::loadSqlite3Functions()
     if(!query.exec("Select load_extension('', '')"))
     {
      QSqlError err = query.lastError();
-     SQLERROR(query);
-     if(err.text().startsWith( "The specified module could not be found.")
-             /*|| err.text().contains("undefined symbol:  Unable to fetch row")*/)
+     if(err.text().contains("not authorized"))
      {
-         bLoadExtensionEnabled = true;
+      // load_extension was found!; the "error" is expected because no valid parameters were supplied
+      bLoadExtensionEnabled = true;
      }
      else
-     if(/*err.text().contains("not authorized") ||*/err.text().contains("no such function" ))
      {
-      QMessageBox::critical(NULL, tr("SQlite Error"), tr("The version of SQLITE being used does not support loading extension functions so some queries will not work properly\nIf you are using the system SQLite library, it must be recompiled with the SQLITE_ENABLE_LOAD_EXTENSION define. Otherwise the QSQLITE plugin must be recompiled with that define"));
-      return false;
+      SQLERROR(query);
+      if(err.text().startsWith( "The specified module could not be found.")
+              /*|| err.text().contains("undefined symbol:  Unable to fetch row")*/)
+      {
+          bLoadExtensionEnabled = true;
+      }
+      else
+      if(/*err.text().contains("not authorized") ||*/err.text().contains("no such function" ))
+      {
+       QMessageBox::critical(NULL, tr("SQlite Error"), tr("The version of SQLITE being used does not support loading extension functions so some queries will not work properly\nIf you are using the system SQLite library, it must be recompiled with the SQLITE_ENABLE_LOAD_EXTENSION define. Otherwise the QSQLITE plugin must be recompiled with that define"));
+       return false;
+      }
      }
     }
     if(!bLoadExtensionEnabled)
@@ -9115,6 +9123,8 @@ bool SQL::loadSqlite3Functions()
    if(!bQuery)
    {
     QSqlError err = query.lastError();
+    if(err.text().contains("not authorized"))
+     return true; // error was expected and is ok!
     SQLERROR(query);
     QMessageBox::information(NULL, "open sqlite", QString("error loading functions = %1").arg(err.text()));
 
