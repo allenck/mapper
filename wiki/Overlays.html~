@@ -2,8 +2,7 @@
 <html><head>
   
   <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
-  <style>  <div class="column left" style="background-color:#EFDECD;">
-<title>Overlays</title>
+  <style>  <div class="column left" style="background-color:#EFDECD;"><title>Overlays</title>
 
   img {
     display: block;
@@ -169,6 +168,21 @@ Overlays.<br>
 <img style="width: 405px; height: 500px;" alt="" src="images/CincinnatiMap5.png"><br>
   </div>
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <h2>Installing a map server on your PC.</h2>
 Although these instructions are for installing a web server on your PC, they are generally applicable to any PC that will host a web sever.

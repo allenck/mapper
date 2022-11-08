@@ -461,7 +461,7 @@ void RouteViewTableModel::commitChanges()
   if(changedRows.at(i)->bDeleted)
   {
    //myParent->ProcessScript("clearPolyline", QString("%1").arg(si.segmentId));
-   webViewBridge::instance()->processScript("clearPolyline", QString("%1").arg(si.segmentId));
+   WebViewBridge::instance()->processScript("clearPolyline", QString("%1").arg(si.segmentId));
   }
   if(changedRows.at(i)->bChanged && !changedRows.at(i)->bDeleted)
   {

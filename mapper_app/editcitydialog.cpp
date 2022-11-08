@@ -25,7 +25,7 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  dirty = false;
 
  sorter = new QSortFilterProxyModel();
- sorter->setSourceModel(model = new OverlayTableModel());
+ sorter->setSourceModel(model = new OverlayTableModel(config->currentCityId));
  connect(model, SIGNAL(setDirty()), this, SLOT(on_setDirty()));
  connect(model, SIGNAL(overlaySelectionChanged(QModelIndex,bool)), this, SLOT(overlaySelectionChanged(QModelIndex,bool)));
  ui->tableView->setModel(sorter);
@@ -300,7 +300,8 @@ void EditCityDialog::OnDescriptionChanged(bool b)
  if(city->curOverlayId >= city->overlayMap.count())
  if(b && city->curOverlayId >= 0)
   city->curOverlayId = 0;
- city->overlayMap.values().at(city->curOverlayId)->description = ui->edDescription->toHtml();
+ if(city->curOverlayId >= 0)
+  city->overlayMap.values().at(city->curOverlayId)->description = ui->edDescription->toHtml();
 }
 
 void EditCityDialog::ok_clicked()

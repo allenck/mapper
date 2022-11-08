@@ -38,7 +38,7 @@ SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
     editSegmentAct->setStatusTip(tr("Edit this segment's properties"));
     connect(editSegmentAct, SIGNAL(triggered(bool)), this, SLOT(editSegment()));
 
-    connect(webViewBridge::instance(), SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(on_segmentSelected(int,int)));
+    connect(WebViewBridge::instance(), SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(on_segmentSelected(int,int)));
 
     selectSegmentAct = new QAction(tr("Select Segment"),this);
     selectSegmentAct->setStatusTip(tr("Select this segment for further use."));

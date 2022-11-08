@@ -31,6 +31,7 @@ SOURCES += \
 }
 
 DEFINES += "BUILD_DIR=\"\\\""$$OUT_PWD"\\\"\""
+DEFINES+= QT_MESSAGELOGCONTEXT
 
 TARGET = mapper
 TEMPLATE = app
@@ -161,3 +162,11 @@ unix:!macx: LIBS += -L$$PWD/../../../sqlite-amalgamation-3390400/ -lsqlite3
 
 INCLUDEPATH += $$PWD/../../../sqlite-amalgamation-3390400
 DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3390400
+
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lConsole
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/debug/ -lConsole
+else:unix: LIBS += -L$$OUT_PWD/../console/ -lConsole
+
+INCLUDEPATH += $$PWD/debug
+DEPENDPATH += $$PWD/debug

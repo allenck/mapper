@@ -20,7 +20,7 @@
 #include <QMessageBox>
 #include "segmentdlg.h"
 #include "modifyroutedatedlg.h"
-#include "exportdlg.h"
+//#include "exportdlg.h"
 #include "editconnectionsdlg.h"
 #include "locatestreetdlg.h"
 #include "combineroutesdlg.h"
@@ -47,6 +47,8 @@
 #include "segmentselectionwidget.h"
 #include "browsecommentsdialog.h"
 #include "exceptions.h"
+//#include "logger.h"
+#include "routeview.h"
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -54,30 +56,34 @@ QString MainWindow::pgmDir = "";
 MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(parent),
   ui(new Ui::MainWindow)
 {
+ //logger = new Logger(this);
  ui->setupUi(this);
  cityMenu = nullptr;
- path = argv[0];
- {
-  QFileInfo info(path);
-  wikiRoot = info.absolutePath();
-  info = QFileInfo(wikiRoot);
-  if(wikiRoot.endsWith("mapper_app"))
-   wikiRoot = wikiRoot.remove("/mapper_app");
-  wikiRoot = wikiRoot +  "/wiki";
- }
  QCoreApplication::setOrganizationName("ACK Software");
  QCoreApplication::setApplicationName("Mapper");
  config = Configuration::instance();
  config->getSettings();
- QFileInfo pathinfo(path);
- config->path = pathinfo.absolutePath();
+ QString cwd = QDir::currentPath();
+ wikiRoot = cwd+ QDir::separator()+ "wiki";
+ QFileInfo info = QFileInfo(wikiRoot);
+ if(!info.exists())
+ {
+  QFileInfo info2 = QFileInfo(cwd+ QDir::separator()+ "../wiki");
+  if(info2.exists())
+      wikiRoot = info2.absoluteFilePath();
+  else
+   qWarning() << "cannot find wiki pages!";
+ }
  while(!config->currConnection->isOpen())
  {
   this->setWindowTitle("Mapper - "+ config->currCity->name + " ("+config->currConnection->description()+")");
 
   db =config->currConnection->configure();
   if(config->currConnection->isOpen())
+  {
+   qInfo() << "database is open";
    break;
+  }
   editConnections();
  }
  m_latitude = config->currCity->center.lat();
@@ -108,7 +114,13 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  if(keysText.startsWith("//"))
   keysText = stream.readLine();
  keyTokens = keysText.split("|");
+ qDebug() << "api_keys copied";
  keys->close();
+
+ cwd = QDir::currentPath();
+ htmlDir = QDir(cwd + QDir::separator()+ "html");
+ if(!htmlDir.exists())
+     htmlDir.mkdir(cwd + QDir::separator()+ "html");
 
  if(!config->bRunInBrowser)
  {
@@ -122,13 +134,16 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   webView->setObjectName(QStringLiteral("webEngineView"));
   webView->setContextMenuPolicy(Qt::NoContextMenu);
   webView->setPage(new MyWebEnginePage());
-  updateTempDir(tempDir, ":///GoogleMaps2.htm", keyTokens.at(0));
-  QUrl fileUrl = QUrl("file://"+tempDir+QDir::separator()+"GoogleMaps2.htm");
+  webView->setMinimumWidth(400);
+  Q_ASSERT(keyTokens.size()>0);
+  updateTempDir(cwd + QDir::separator()+"html", ":///GoogleMaps2.htm", keyTokens.at(0));
+  QUrl fileUrl = QUrl::fromLocalFile(QString(cwd + QDir::separator()+"html") + QDir::separator()+"GoogleMaps2.htm");
   webView->setUrl(fileUrl);
 #endif
  }
  else // run in browser
  {
+  qDebug() << "preparing to run in browser";
   webView = NULL;
   ui->groupBox_2->setHidden(true);
   openWebWindow();
@@ -140,7 +155,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  m_server = new QWebSocketServer(QStringLiteral("WebViewBridge"), QWebSocketServer::NonSecureMode);
  if (!m_server->listen(QHostAddress::LocalHost, 12345))
  {
-  //qFatal("Failed to open web socket server.");
+  qFatal("Failed to open web socket server.");
   return;
  }
  qDebug() << "listening on localhost:12345";
@@ -164,8 +179,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui->verticalLayout_2->addWidget(webView);
 
  pwd = QDir::currentPath();
- QFileInfo info(argv[0]);
- pgmDir = info.absolutePath();
+ QFileInfo info3(argv[0]);
+ pgmDir = info3.absolutePath();
  //sql->setConfig(config);
  //ui->setupUi(this);
  webViewAction = NULL;
@@ -404,7 +419,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 void MainWindow::createBridge()
 {
  //! The object we will expose to JavaScript engine:
- m_bridge = new webViewBridge(LatLng(m_latitude, m_longitude), m_zoom, "roadmap", this);
+ m_bridge = new WebViewBridge(LatLng(m_latitude, m_longitude), m_zoom, "roadmap", this);
 // m_bridge->_lat = m_latitude;
 // m_bridge->_lon = m_longitude;
 // m_bridge->_zoom = m_zoom;
@@ -457,7 +472,8 @@ void MainWindow::reloadMap()
   webView->setObjectName(QStringLiteral("webEngineView"));
   webView->setContextMenuPolicy(Qt::NoContextMenu);
   webView->setPage(new MyWebEnginePage());
-  webView->setUrl(QUrl(QStringLiteral("qrc:/GoogleMaps2.htm")));
+  QUrl fileUrl = QUrl::fromLocalFile(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm");
+  webView->setUrl(fileUrl);
 #endif
 
  }
@@ -2274,6 +2290,7 @@ void MainWindow::setDebug(QString str)
   statusBar()->showMessage(str, 2000);
  }
 }
+
 void MainWindow::setLen(qint32 len)
 {
     m_nbrPoints = len;
@@ -3936,9 +3953,9 @@ bool MainWindow::openWebWindow()
 #ifndef USE_WEBENGINE
  QUrl startURL = QUrl("qrc:/GoogleMaps.htm");
 #else
- QUrl startURL = QUrl("qrc:/GoogleMaps2.htm");
+ QUrl startURL = QUrl("qrc:/GoogleMaps2b.htm");
 #endif
- qDebug() << "tempPath =" << tempDir;
+ qDebug() << "openWebWindow: tempPath =" << tempDir;
 
 // QFile* gFile = new QFile(":///GoogleMaps2b.htm");
 // if(gFile->open(QIODevice::ReadOnly))
@@ -4016,20 +4033,13 @@ bool MainWindow::openWebWindow()
    }
 
 
-   if(!QDesktopServices::openUrl(QUrl(tempDir+"/"+"GoogleMaps2b.htm")))
+   if(!QDesktopServices::openUrl(QUrl::fromLocalFile(tempDir+"/"+"GoogleMaps2b.htm")))
+   {
     qDebug() << "open webbrowser failed " << startURL;
+    QMessageBox::critical(nullptr, tr("Error"), "open webbrowser failed ");
+   }
    return true;
-//  }
-//  else
-//  {
-//   qDebug() << "cannot open " << tgFile->fileName();
-//  }
-// }
-// else
-// {
-//  qDebug() << "cannot open " << gFile->fileName();
-// }
-// return false;
+
 }
 
 bool MainWindow::updateTempDir(QString tempDir, QString fileName, QString apiKey)
@@ -4041,9 +4051,9 @@ bool MainWindow::updateTempDir(QString tempDir, QString fileName, QString apiKey
  {
   QTextStream* inStream = new QTextStream(gFile);
   QString text = inStream->readAll();
-  text.replace("TEMPDIR", tempDir);
+  text = text.replace("TEMPDIR", tempDir);
   if(!apiKey.isEmpty())
-   text.replace("MYAPIKEY", apiKey);
+   text = text.replace("MYAPIKEY", apiKey);
   QFile* tgFile = new QFile(tempDir+QDir::separator()+/*"GoogleMaps2b.htm"*/baseName);
   if(tgFile->exists())
   {
@@ -4056,13 +4066,15 @@ bool MainWindow::updateTempDir(QString tempDir, QString fileName, QString apiKey
   {
    QTextStream * outStream = new QTextStream(tgFile);
    *outStream << text;
+   Q_ASSERT(!text.contains("MYAPIKEY"));
    tgFile->close();
    gFile->close();
+   qInfo() << "file " << baseName << " updated successfully line " << __LINE__;
    return true;
   }
   qDebug() << tgFile->fileName() << tgFile->errorString();
  }
-
+ qCritical() << "updateTempDir failed copying " << gFile->fileName() << " to " << tempDir;
  return false;
 }
 

@@ -386,6 +386,7 @@ Configuration* Configuration::instance()
 
 QSqlDatabase Connection::configure(QString cName)
 {
+ qDebug() << "Connection: CWD = " << QDir::currentPath();
  config = Configuration::instance();
  sql = SQL::instance();
   db = QSqlDatabase::addDatabase(config->currConnection->driver(),cName);

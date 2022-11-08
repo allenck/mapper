@@ -16,7 +16,7 @@
 #include "data.h"
 #include "routeview.h"
 #include <QSettings>
-#include "ccombobox.h"
+//#include "ccombobox.h"
 #include <QMenu>
 #include "routeviewsortproxymodel.h"
 #include "routeviewtablemodel.h"
@@ -39,6 +39,8 @@
 #include <QToolTip>
 #include "splitsegmentdlg.h"
 
+class Logger;
+class RouteView;
 class SQL;
 class QWidgetAction;
 class RouteViewTableModel;
@@ -79,7 +81,7 @@ class SystemConsoleAction;
 class WebViewAction;
 class QAction;
 class QMenu;
-class webViewBridge;
+class WebViewBridge;
 class SQL;
 class QLabel;
 class QSortFilterProxyModel;
@@ -108,7 +110,7 @@ public:
     SQL* sql;
     void setModel(QAbstractItemModel *model);
     //MapView *centralWidget;
-    webViewBridge *m_bridge;
+    WebViewBridge *m_bridge;
     RouteView *routeView;
     SegmentView *segmentView;
     OtherRouteView *otherRouteView;
@@ -175,7 +177,7 @@ public:
     WebSocketClientWrapper* m_overlayWrapper;
 #endif
     int selectedSegment() {return m_SegmentId;}
-
+    QDir htmlDir;
 
 public slots:
     void copyRouteInfo_Click();
@@ -399,13 +401,14 @@ private:
     void createBridge();
     bool openWebWindow();
     void loadOverlay(Overlay* ov);
-    QString path, wikiRoot;
+    QString wikiRoot;
     void loadData(QString data, QString source);
 //    void refreshStreetsCb();
     bool updateTempDir(QString tempDir, QString fileName, QString apiKey ="");
     QString tempDir;
     QStringList keyTokens;
-
+    QUrl fileUrl;
+    Logger* logger;
 private slots:
     void createCityMenu();
     void sbTracks_valueChanged(int);

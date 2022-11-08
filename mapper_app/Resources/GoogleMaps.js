@@ -10,7 +10,7 @@ var color;
 var defaultOptions;
 var options;
 var txt;
-var newSegment, segmentId, arrow,lat,lon;
+var newSegment, segmentId, arrow,lat=0,lon=0;
 console.log("Loading GoogleMaps.js");
 var image = ["http://maps.google.com/mapfiles/marker.png",
   "http://maps.google.com/mapfiles/dd-start.png",
@@ -1152,6 +1152,7 @@ if(bAdding)
    return null;
 
   }
+
   function getCenter()
   {
    var latLng = map.getCenter();

@@ -1,5 +1,6 @@
 SOURCES += main.cpp\
     $$PWD/browsecommentsdialog.cpp \
+    $$PWD/logger.cpp \
     $$PWD/replacesegmentdialog.cpp \
     $$PWD/segmentselectionwidget.cpp \
     $$PWD/splitsegmentdlg.cpp \
@@ -61,6 +62,7 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     $$PWD/browsecommentsdialog.h \
+    $$PWD/logger.h \
     $$PWD/replacesegmentdialog.h \
     $$PWD/segmentselectionwidget.h \
     $$PWD/splitsegmentdlg.h \

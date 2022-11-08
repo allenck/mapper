@@ -4,12 +4,12 @@
 #include <QtGui>
 #include "data.h"
 
-class webViewBridge : public QObject
+class WebViewBridge : public QObject
 {
     Q_OBJECT
 public:
-    explicit webViewBridge(QObject *parent = 0);
-    webViewBridge(LatLng latLng, int zoom, QString maptype, QObject *parent = 0);
+    explicit WebViewBridge(QObject *parent = 0);
+    WebViewBridge(LatLng latLng, int zoom, QString maptype, QObject *parent = 0);
     QObject* m_parent = nullptr;
 //    int browseWindowWidth;
 //    int browseWindowHeight;
@@ -37,11 +37,11 @@ public:
     QVariantList myList;
     QVariant getRslt();
     //Q_PROPERTY(QVariant rslt READ getRslt)
-    static webViewBridge* instance();
+    static WebViewBridge* instance();
     void setLatLng(LatLng latlng);
     bool isResultReceived();
 
-    ~webViewBridge();
+    ~WebViewBridge();
 
 signals:
     void executeScript(QString func, QString parms);
@@ -97,7 +97,7 @@ private slots:
 
 private:
 
-    static webViewBridge* _instance;
+    static WebViewBridge* _instance;
     float _lat;
     float _lon;
     int _zoom;

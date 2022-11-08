@@ -15,7 +15,7 @@ AddGeoreferencedDialog::AddGeoreferencedDialog(QWidget *parent) :
  config = Configuration::instance();
  bounds = new Bounds();
 
- //connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(on_buttonBoxAccepted()));
+ connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(on_buttonBoxAccepted()));
  connect(ui->edName, SIGNAL(editingFinished()), this, SLOT(on_nameEditingFinished()));
  connect(ui->edName, SIGNAL(textEdited(QString)), this, SLOT(on_nameTextEdited(QString)));
  ui->swLat->setValidator(new QDoubleValidator(-90, 90, 11));
@@ -65,7 +65,7 @@ void AddGeoreferencedDialog::on_buttonBoxAccepted()
 {
  QString name = ui->edName->text();
  Overlay* ov;
- if(config->overlayList.keys().contains(name))
+ if(config->overlayList.contains(name))
   ov = config->overlayList.value(name);
  else
  {
@@ -81,7 +81,10 @@ void AddGeoreferencedDialog::on_buttonBoxAccepted()
  QString s = ui->edUrl->toPlainText();
  QStringList l = s.split("\n");
  ov->urls = l;
+ if(!wmtsUrl.isEmpty() && wmtsUrl.isValid())
+  ov->wmtsUrl = wmtsUrl;
  config->currCity->overlayMap.insert(ov->name, ov);
+ config->saveSettings();
 }
 
 void AddGeoreferencedDialog::checkBounds()
@@ -136,6 +139,7 @@ void AddGeoreferencedDialog::on_nameEditingFinished()
    ui->description->setHtml(ov->description);
    ui->comboBox->setCurrentIndex(ui->comboBox->findText(ov->source));
    bUpdate = true;
+   ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
   }
   else
   {
@@ -143,24 +147,25 @@ void AddGeoreferencedDialog::on_nameEditingFinished()
    bUpdate = false;
   }
  }
-// else
-// {
-//     ui->sbMinZoom->setValue(0);
-//     ui->sbMaxZoom->setValue(15);
+ else
+ {
+     ui->sbMinZoom->setValue(0);
+     ui->sbMaxZoom->setValue(15);
 
-//     ui->swLat->setText("");
-//     ui->swLon->setText("");
-//     ui->neLat->setText("");
-//     ui->neLon->setText("");
-//     checkBounds();
-//     ui->comboBox->setCurrentText("georeferencer");
-//     ui->edUrl->setEnabled(true);
-//     QString txt = "";
-//     ui->edUrl->setText(txt);
+     ui->swLat->setText("");
+     ui->swLon->setText("");
+     ui->neLat->setText("");
+     ui->neLon->setText("");
+     checkBounds();
+     ui->comboBox->setCurrentText("georeferencer");
+     ui->edUrl->setEnabled(true);
+     QString txt = "";
+     ui->edUrl->setText(txt);
      ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Add"));
-//     ui->description->setHtml("");
-// }
+     ui->description->setHtml("");
+ }
  validateValues();
+ setCursor(Qt::ArrowCursor);
 }
 
 void AddGeoreferencedDialog::on_nameTextEdited(QString txt)
@@ -316,6 +321,7 @@ void AddGeoreferencedDialog::validateWMTS()
  config->currCity->addOverlay(ov);
  emit overlayAdded(ov);
  config->saveSettings();
+ setCursor(Qt::ArrowCursor);
 }
 
 void AddGeoreferencedDialog::on_sourceChanged(QString)

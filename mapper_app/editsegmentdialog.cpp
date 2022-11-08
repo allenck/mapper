@@ -32,7 +32,7 @@ void EditSegmentDialog::common()
  b_cbSegments_TextChanged = false;
  bStartDateEdited = false;
  bEndDateEdited = false;
- m_bridge = webViewBridge::instance();
+ m_bridge = WebViewBridge::instance();
  connect(m_bridge, SIGNAL(segmentStatusSignal(QString,QString)), this, SLOT(On_segmentStatusSignal(QString,QString)));
 
  QStringList routeTypes = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";

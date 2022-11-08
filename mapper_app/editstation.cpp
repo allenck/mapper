@@ -327,7 +327,7 @@ void EditStation::btnOK_Click()
   sql->updateStation(_stationKey, _infoKey,_stationName, _segmentId, ui->dateStart->dateTime().toString("yyyy/MM/dd"),ui->dateEnd->dateTime().toString("yyyy/MM/dd"),markerType);
   QVariantList objArray;
   objArray << _stationKey << markerType;
-  webViewBridge::instance()->processScript("updateStationMarker", objArray);
+  WebViewBridge::instance()->processScript("updateStationMarker", objArray);
  }
  else
  {
@@ -353,7 +353,7 @@ void EditStation::btnOK_Click()
    //str = ci.comments;
    //m_bridge->processScript("addStationMarker", QString("%1").arg(form.Point().lat(),0,'f',8)+","+QString("%1").arg(form.Point().lon(),0,'f',8)+","+(bDisplayStationMarkers?"true":"false")+","+QString("%1").arg(form.SegmentId())+",'"+form.StationName()+"',"+QString("%1").arg(stationKey)+","+QString("%1").arg(sti.infoKey)+",comments,'"+QString("%1").arg(markerType)+"'", "comments", ci.comments);
    objArray << _latLng.lat() << _latLng.lon() << QString("%1").arg(_latLng.lat(),0,'f',8)+","+QString("%1").arg(_latLng.lon(),0,'f',8)+","+(bDisplayStationMarkers?true:false) << _segmentId << _stationName << _stationKey << sti.infoKey<<ci.comments << markerType;
-   webViewBridge::instance()->processScript("addStationMarker",objArray);
+   WebViewBridge::instance()->processScript("addStationMarker",objArray);
   }
  }
  bDirty = false;

@@ -171,10 +171,10 @@ void StationView::on_DisplayTriggered(bool)
   int stationKey = currentIndex.model()->index(currentIndex.row(), 0).data().toInt();
   QVariantList objArray;
   objArray << stationKey;
-  webViewBridge::instance()->processScript("isStationMarkerDisplayed", objArray);
-  while(webViewBridge::instance()->getRslt() == QVariant())
+  WebViewBridge::instance()->processScript("isStationMarkerDisplayed", objArray);
+  while(WebViewBridge::instance()->getRslt() == QVariant())
    qApp->processEvents();
-  QString rslt = webViewBridge::instance()->getRslt().toString();
+  QString rslt = WebViewBridge::instance()->getRslt().toString();
   qDebug() << tr("stationmarker %1 is displayed %2").arg(stationKey).arg(rslt);
 
   bool bDisplay = true;
@@ -183,11 +183,11 @@ void StationView::on_DisplayTriggered(bool)
    StationInfo sti = sql->getStationInfo(stationKey);
    objArray.clear();
    objArray << sti.latitude << sti.longitude << bDisplay << sti.segmentId << sti.stationName << sti.stationKey << sti.infoKey << "" << sti.markerType;
-    webViewBridge::instance()->processScript("addStationMarker", objArray);
+    WebViewBridge::instance()->processScript("addStationMarker", objArray);
   }
   objArray.clear();
   objArray << stationKey << true;
-  webViewBridge::instance()->processScript("displayStationMarker", objArray);
+  WebViewBridge::instance()->processScript("displayStationMarker", objArray);
  }
 }
 

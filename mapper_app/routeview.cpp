@@ -108,7 +108,7 @@ RouteView::RouteView(QObject* parent )
     ui->setColumnWidth(RouteViewTableModel::DISTANCE, 29);
     ui->setColumnWidth(RouteViewTableModel::TRACKS, 5);
 
-    connect(webViewBridge::instance(), SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(on_segmentSelected(int,int)));
+    connect(WebViewBridge::instance(), SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(on_segmentSelected(int,int)));
 
 
     myParent->ui->tabWidget->setTabText(0, "Route Segments");
@@ -482,7 +482,7 @@ void RouteView::StartRoute_S()         //SLOT
 //    webBrowser1.Document.InvokeScript("addRouteStartMarker", objArray);
     QVariantList objArray;
     objArray << ti.startLatLng.lat()<< ti.startLatLng.lon()<<myParent->getRouteMarkerImagePath(alphaRoute, false);
-    webViewBridge::instance()->processScript("addRouteStartMarker", objArray);
+    WebViewBridge::instance()->processScript("addRouteStartMarker", objArray);
 
 }
 void RouteView::EndRoute_S()           // SLOT
@@ -506,7 +506,7 @@ void RouteView::EndRoute_S()           // SLOT
 //    webBrowser1.Document.InvokeScript("addRouteEndMarker", objArray);
     QVariantList objArray;
     objArray << ti.endLatLng.lat()<< ti.endLatLng.lon()<<myParent->getRouteMarkerImagePath(alphaRoute, false);
-    webViewBridge::instance()->processScript("addRouteEndMarker", objArray);
+    WebViewBridge::instance()->processScript("addRouteEndMarker", objArray);
 
 }
 void RouteView::StartRoute_E()         // SLOT
@@ -530,7 +530,7 @@ void RouteView::StartRoute_E()         // SLOT
 //    webBrowser1.Document.InvokeScript("addRouteStartMarker", objArray);
     QVariantList objArray;
     objArray << ti.startLatLng.lat()<< ti.startLatLng.lon()<<myParent->getRouteMarkerImagePath(alphaRoute, false);
-    webViewBridge::instance()->processScript("addRouteStartMarker", objArray);
+    WebViewBridge::instance()->processScript("addRouteStartMarker", objArray);
 
 }
 void RouteView::EndRoute_E()       // SLOT
@@ -556,7 +556,7 @@ void RouteView::EndRoute_E()       // SLOT
 //    webBrowser1.Document.InvokeScript("addRouteEndMarker", objArray);
     QVariantList objArray;
     objArray << ti.endLatLng.lat()<< ti.endLatLng.lon()<<myParent->getRouteMarkerImagePath(alphaRoute, false);
-    webViewBridge::instance()->processScript("addRouteEndMarker", objArray);
+    WebViewBridge::instance()->processScript("addRouteEndMarker", objArray);
 
 }
 void RouteView::updateTerminals()

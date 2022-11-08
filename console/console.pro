@@ -9,6 +9,7 @@ TARGET = Console
 TEMPLATE = lib
 
 DEFINES += CONSOLE_LIBRARY
+DEFINES+= QT_MESSAGELOGCONTEXT
 
 SOURCES += \
     consoleinterface.cpp \

@@ -1,5 +1,5 @@
 #include <QtGui>
-#include "webviewbridge.h"
+//#include "webviewbridge.h"
 #include "mainwindow.h"
 #include <QMessageBox>
 #include "../console/systemconsole.h"
@@ -49,7 +49,7 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QS
     case QtWarningMsg:
         fprintf(stderr, "Warning: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
         ConsoleInterface::instance()->sendMessage("Warning: "+ msg);
-     break;
+        break;
     case QtCriticalMsg:
         fprintf(stderr, "Critical: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
         ConsoleInterface::instance()->sendMessage("Critical: "+ msg);
@@ -61,18 +61,23 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QS
     }
 }
 #endif
+
+
+
 int main(int argc, char *argv[])
 {
  //QApplication::setStyle("gtk+");
  //if(argv[1] == "debug")
-#ifndef QT_DEBUG
+//#ifndef QT_DEBUG
 # if QT_VERSION < 0x050000
  qInstallMsgHandler(myMessageOutput);
 # else
   qInstallMessageHandler(myMessageOutput);
 # endif
-#endif
+//#endif
  QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+
+
  //QApplication a(argc, argv);
  QApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
  MyApplication a(argc, argv);

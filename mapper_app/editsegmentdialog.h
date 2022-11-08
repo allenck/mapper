@@ -8,7 +8,7 @@ namespace Ui {
 class EditSegmentDialog;
 }
 
-class webViewBridge;
+class WebViewBridge;
 class MainWindow;
 class SQL;
 class Configuration;
@@ -35,7 +35,7 @@ private:
  void common();
  bool bStartDateEdited;
  bool bEndDateEdited;
- webViewBridge* m_bridge;
+ WebViewBridge* m_bridge;
  QString m_segmentStatus;
  QString m_segmentColor;
 

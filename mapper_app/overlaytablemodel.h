@@ -9,7 +9,7 @@ class OverlayTableModel : public QAbstractTableModel
 {
  Q_OBJECT
 public:
- OverlayTableModel(QObject* parent = nullptr);
+ OverlayTableModel(int cityId, QObject* parent = nullptr);
  int rowCount(const QModelIndex &parent) const;
  int columnCount(const QModelIndex &parent) const;
  Qt::ItemFlags flags(const QModelIndex &index) const;

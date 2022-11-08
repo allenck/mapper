@@ -417,7 +417,7 @@ void SegmentInfo::displaySegment(QString date, QString color, QString trackUsage
  if (bClearFirst)
  {
   objArray << segmentId;
-  webViewBridge::instance()->processScript("clearPolyline",objArray);
+  WebViewBridge::instance()->processScript("clearPolyline",objArray);
  }
 
  for(int i=0; i < pointList.count(); i++)
@@ -434,7 +434,7 @@ void SegmentInfo::displaySegment(QString date, QString color, QString trackUsage
   dash = 3;
  objArray.clear();
  objArray << segmentId << routeNames<<description<<oneWay<<color<< tracks << dash << routeType << trackUsage << pointList.count()*2 << points;
- webViewBridge::instance()->processScript("createSegment", objArray);
+ WebViewBridge::instance()->processScript("createSegment", objArray);
 }
 
 
@@ -575,7 +575,7 @@ void SegmentData::displaySegment(QString date, QString color, QString trackUsage
  if (bClearFirst)
  {
   objArray << _segmentId;
-  webViewBridge::instance()->processScript("clearPolyline",objArray);
+  WebViewBridge::instance()->processScript("clearPolyline",objArray);
  }
 
  for(int i=0; i < pointList().count(); i++)
@@ -592,5 +592,5 @@ void SegmentData::displaySegment(QString date, QString color, QString trackUsage
   dash = 3;
  objArray.clear();
  objArray << _segmentId << routeNames<<_description<<_oneWay<<color<< _tracks << dash << _routeType << trackUsage << _pointList.count()*2 << points;
- webViewBridge::instance()->processScript("createSegment", objArray);
+ WebViewBridge::instance()->processScript("createSegment", objArray);
 }
