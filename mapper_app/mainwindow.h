@@ -37,7 +37,7 @@
 #include "routecommentsdlg.h"
 #include "querydialog.h"
 #include <QToolTip>
-#include "splitsegmentdlg.h"
+#include <QPair>
 
 class Logger;
 class RouteView;
@@ -404,7 +404,7 @@ private:
     QString wikiRoot;
     void loadData(QString data, QString source);
 //    void refreshStreetsCb();
-    bool updateTempDir(QString tempDir, QString fileName, QString apiKey ="");
+    bool copyAndUpdate(QString inFile, QString outDir, QList<QPair<QString,QString>> updates);
     QString tempDir;
     QStringList keyTokens;
     QUrl fileUrl;
