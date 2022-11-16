@@ -25,7 +25,7 @@ public slots:
  void on_nameEditingFinished();
  void on_nameTextEdited(QString txt);
  void on_sourceChanged(QString);
- void validateWMTS();
+ void validateWMTS(QString);
 
  signals:
  void overlayAdded(Overlay* ov);

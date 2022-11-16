@@ -76,8 +76,8 @@ public:
  }
  QString year() {return _year;}
  void setYear(QString year){_year = year;}
- LatLng center() {return _center;}
- void setCenter(LatLng center){_center = center;}
+// LatLng center() {return _center;}
+// void setCenter(LatLng center){_center = center;}
  Bounds bounds(){return _bounds;}
  LatLng setBounds(Bounds bounds) {_bounds = bounds; return _bounds.center();}
  bool checkValid();

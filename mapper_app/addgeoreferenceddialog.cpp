@@ -193,7 +193,7 @@ void AddGeoreferencedDialog::validateValues()
  if(!wmtsUrl.isEmpty())
  {
   downloader = new FileDownloader(QUrl(wmtsUrl));
-  connect(downloader, SIGNAL(downloaded()), SLOT(validateWMTS()));
+  connect(downloader, SIGNAL(downloaded(QString)), SLOT(validateWMTS(QString)));
   //ui->edName->setEnabled(false);
   setCursor(Qt::WaitCursor);
   return;
@@ -225,6 +225,7 @@ void AddGeoreferencedDialog::validateValues()
   ui->lblErr->setText(tr("One or more valid urls must be specified"));
   return;
  }
+
  if(ui->comboBox->currentText()== "georeferencer")
  {
   ui->edUrl->setEnabled(true);
@@ -241,14 +242,25 @@ void AddGeoreferencedDialog::validateValues()
    return;
   }
  }
+ if(ui->comboBox->currentText()== "mbtiles" && ui->edUrl->toPlainText().isEmpty())
+ {
+  ui->lblErr->setText(tr("The url is invalid." ));
+  return;
+ }
 
  ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
 }
 
-void AddGeoreferencedDialog::validateWMTS()
+void AddGeoreferencedDialog::validateWMTS(QString err)
 {
  QDomDocument doc;
  QStringList points;
+ if(!err.isEmpty())
+ {
+  ui->lblErr->setText(err);
+  setCursor(Qt::ArrowCursor);
+  return;
+ }
  ov = new Overlay();
 
  doc.setContent(downloader->downloadedData());

@@ -34,7 +34,7 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  sorter = new QSortFilterProxyModel();
  sorter->setSourceModel(model = new OverlayTableModel(config->currentCityId));
  connect(model, SIGNAL(setDirty()), this, SLOT(on_setDirty()));
- connect(model, SIGNAL(overlaySelectionChanged(Overlay*,bool)), this, SLOT(overlaySelectionChanged(Overlay*,bool)));
+ //connect(model, SIGNAL(overlaySelectionChanged(Overlay*,bool)), this, SLOT(overlaySelectionChanged(Overlay*,bool)));
  ui->tableView->setModel(sorter);
  ui->tableView->setSortingEnabled(true);
  ui->tableView->setAlternatingRowColors(true);
@@ -45,6 +45,7 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
  ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
  ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
+ //connect(ui->tableView, SIGNAL(selectionChanged(QItemSelection,QItemSelection)),this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
  connect(ui->tableView,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(tablev_customContextMenu(QPoint)));
 
  bRefreshing = false;
@@ -114,14 +115,14 @@ void EditCityDialog::newCity(int i)
      || config->currCity->bounds().contains(ov->bounds()))
   {
    cityOverlays->insert(ov->name, ov);
-   qDebug() << config->currCity->name() << " bounds: " << config->currCity->bounds().toString();
-   qDebug() << ov->name << " bounds: " << ov->bounds().toString();
+//   qDebug() << config->currCity->name() << " bounds: " << config->currCity->bounds().toString();
+//   qDebug() << ov->name << " bounds: " << ov->bounds().toString();
   }
   else
   {
    qDebug() << "bypass:";
-   qDebug() << config->currCity->name() << " bounds: " << config->currCity->bounds().toString();
-   qDebug() << ov->name << " bounds: " << ov->bounds().toString();
+//   qDebug() << config->currCity->name() << " bounds: " << config->currCity->bounds().toString();
+//   qDebug() << ov->name << " bounds: " << ov->bounds().toString();
 
   }
  }
@@ -148,40 +149,6 @@ void EditCityDialog::cbCitysSelectionChanged(int i)
  ui->editLongitude->setText(QString::number(city->center.lon()));
 }
 
-void EditCityDialog::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
-{
- QModelIndexList 	indexes = selected.indexes();
- if(indexes.count()==0) return;
- int row = sorter->mapToSource(indexes.at(0)).row();
- //ui->tableView->selectRow(row);
- setControls(true);
- ov = config->overlayMap->values().at(row);
- ui->edDescription->clear();
- ui->edDescription->setHtml(ov->description);
- ui->sbOpacity->setValue(ov->opacity);
- ui->editLatitude->setText(QString::number(ov->center().lat()));
- ui->editLongitude->setText(QString::number(ov->center().lon()));
- ui->edDescription->setHtml(ov->description);
-
- ui->sbMinZoom->setMinimum(ov->minZoom);
- ui->sbMinZoom->setMaximum(ov->maxZoom);
- ui->sbMinZoom->setValue(ov->minZoom);
-
- ui->sbMaxZoom->setMinimum(ov->minZoom);
- ui->sbMaxZoom->setMaximum(ov->maxZoom);
- ui->sbMaxZoom->setValue(ov->maxZoom);
- if(ov->description != "")
- {
-  ui->edDescription->setHtml(ov->description);
-  if(ui->edDescription->toPlainText() == "")
-   ui->edDescription->setHtml(ov->description);
-
-  dirty = true;
- }
- ui->sbOpacity->setValue(ov->opacity);
- ui->sbMinZoom->setValue(ov->minZoom);
- ui->sbMaxZoom->setValue(ov->maxZoom);
-}
 
 void EditCityDialog::overlaySelectionChanged(Overlay* ov, bool bCheck)
 {
@@ -325,21 +292,22 @@ void EditCityDialog::ok_clicked()
 {
  QMap<QString, Overlay*>* ovMap = model->getOverlayMap();
 
- for(int i= config->overlayMap->values().count()-1; i >= 0; i--)
- {
-  Overlay* ov = config->overlayMap->values().at(i);
-  if(ovMap->contains(ov->cityName + "|" + ov->name))
-  {
-   config->overlayMap->remove(ov->cityName + "|" + ov->name);
-   dirty = true;
-  }
-  if(!config->overlayMap->contains(ov->cityName + "|" + ov->name))
-  {
-   config->overlayMap->insert(ov->cityName + "|" + ov->name, ov);
-   dirty = true;
-  }
- }
- if(dirty)
+// for(int i= config->overlayMap->values().count()-1; i >= 0; i--)
+// {
+//  Overlay* ov = config->overlayMap->values().at(i);
+//  if(ovMap->contains(ov->cityName + "|" + ov->name))
+//  {
+//   config->overlayMap->remove(ov->cityName + "|" + ov->name);
+//   dirty = true;
+//  }
+//  if(!config->overlayMap->contains(ov->cityName + "|" + ov->name))
+//  {
+//   config->overlayMap->insert(ov->cityName + "|" + ov->name, ov);
+//   dirty = true;
+//  }
+// }
+ config->overlayMap = ovMap;
+ //if(dirty)
  {
   QSettings settings;
   settings.setValue("EditCityDialog:size", size());
@@ -492,7 +460,9 @@ void ::EditCityDialog::tableViewPaste()
 
 void EditCityDialog::rowSelected(QModelIndex index)
 {
- int row = index.row();
+ int row = sorter->mapToSource(index).row();
+ Overlay* ov = model->getOverlayMap()->values().at(row);
+ overlaySelectionChanged(ov,ov->isSelected);
 }
 
 void EditCityDialog::onDeleteRow()

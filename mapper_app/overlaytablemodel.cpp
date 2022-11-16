@@ -41,8 +41,8 @@ QVariant OverlayTableModel::headerData(int section, Qt::Orientation orientation,
    return tr("City");
   case BOUNDS:
    return tr("Bounds");
-  case CENTER:
-   return tr("Center");
+  case SOURCE:
+   return tr("Source");
   case YEAR:
    return tr("Year");
   case MINZOOM:
@@ -75,7 +75,8 @@ Qt::ItemFlags OverlayTableModel::flags(const QModelIndex &index) const
  if(index.column() == SELECTED )
   return Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
  if( index.column() == NAME || index.column() == DESCRIPTION
-    || index.column() == CITYNAME || index.column() == YEAR)
+    || index.column() == CITYNAME || index.column() == YEAR
+    || index.column() == MINZOOM || index.column() == MAXZOOM)
  {
   return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
  }
@@ -94,6 +95,14 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
 {
  int row = index.row();
  Overlay* ov = overlayMap->values().at(row);
+ if(role == Qt::ToolTipRole)
+ {
+  if(index.column() == DESCRIPTION)
+   return ov->description;
+  if(index.column() == BOUNDS)
+   return ov->bounds().toString();
+ }
+
  if(role == Qt::BackgroundRole)
  {
   QVariant background = QVariant();
@@ -115,10 +124,10 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
    if(!ov->bounds().isValid())
     background = QVariant( QColor(Qt::red) );
    break;
-  case CENTER:
-   if(!ov->center().isValid())
-    background = QVariant( QColor(Qt::red) );
-   break;
+//  case CENTER:
+//   if(!ov->center().isValid())
+//    background = QVariant( QColor(Qt::red) );
+//   break;
   case MINZOOM:
    if(ov->minZoom < 1) background = QVariant( QColor(Qt::red) );
    break;
@@ -152,8 +161,8 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
   }
   case BOUNDS:
      return ov->bounds().isValid()?"valid":"invalid";
-  case CENTER:
-   return ov->center().isValid()?"valid":"invalid";
+//  case CENTER:
+//   return ov->center().isValid()?"valid":"invalid";
   case MINZOOM:
    return ov->minZoom;
   case MAXZOOM:
@@ -248,6 +257,11 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
   {
    ov->setYear(value.toString());
   }
+  if(index.column() == MINZOOM)
+   ov->minZoom = value.toInt();
+  if(index.column() == MAXZOOM)
+   ov->maxZoom = value.toInt();
+
   emit overlayChanged(oldName, newName, ov);
   if(oldName == newName)
   {
@@ -295,7 +309,9 @@ QMap<QString, Overlay*>* OverlayTableModel::getOverlayMap()
 void OverlayTableModel::deleteRow(int row)
 {
  Overlay* ov = overlayMap->values().at(row);
+ beginRemoveRows(QModelIndex(), row, row);
  overlayMap->remove(ov->cityName+"|"+ov->name);
+ endRemoveRows();
 }
 
 Overlay* OverlayTableModel::selectedOverlay(int row)

@@ -30,7 +30,6 @@ private slots:
  void sbMinZoomValueChanged(int);
  void sbMaxZoomValueChanged(int);
  void sbOpacityValueChanged(int);
- void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
  void OnDescriptionChanged(bool);
  void ok_clicked();
  void on_setDirty();

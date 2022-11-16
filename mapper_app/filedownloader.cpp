@@ -27,7 +27,7 @@ void FileDownloader::fileDownloaded(QNetworkReply* pReply)
         errorString =pReply->errorString();
     }
     //emit a signal
-    emit downloaded();
+    emit downloaded(pReply->error()==0?"":pReply->errorString());
 }
 
 QByteArray FileDownloader::downloadedData() const

@@ -205,7 +205,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
  QUrl dataUrl("http://ubuntu-2:1080/public/map_tiles/overlay.lst");
  m_dataCtrl = new FileDownloader(dataUrl, this);
- connect (m_dataCtrl, SIGNAL(downloaded()), this, SLOT(loadAcksoftData()));
+ connect (m_dataCtrl, SIGNAL(downloaded(Qtring)), this, SLOT(loadAcksoftData(QString)));
 //#ifdef WIN32
 // m_overlays = new FileDownloader(QUrl("http://localhost/map_tiles/"),this);
 //#else
@@ -215,7 +215,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  // get list of localhost's mbtiles overlays
  m_overlays = new FileDownloader(QUrl("http://localhost/map_tiles/mbtiles.php"),this);
  //m_overlays = new FileDownloader(QUrl("http://localhost/tileserver/"),this);connect(m_overlays, SIGNAL(downloaded()), this, SLOT(loadMbtilesData()));
- connect(m_overlays, SIGNAL(downloaded()), this, SLOT(loadMbtilesData()));
+ connect(m_overlays, SIGNAL(downloaded(QString)), this, SLOT(loadMbtilesData(QString)));
 
  createActions();
  createMenus();
@@ -524,11 +524,14 @@ void MainWindow::pageBack()
 }
 
 //process list of overlays served by http://acksoft.dyndns.biz
-void MainWindow::loadAcksoftData()
+void MainWindow::loadAcksoftData(QString err)
 {
  QString data;
  data = m_dataCtrl->downloadedData();
- if(data.startsWith("<!DOCTYPE HTML PUBLIC")) return;
+ if(data.startsWith("<!DOCTYPE HTML PUBLIC"))
+  return;
+ if(!err.isEmpty())
+  return;
  loadData(data, "acksoft");
 }
 
@@ -590,7 +593,7 @@ void MainWindow::loadData(QString data, QString source)
     QEventLoop loop;
     m_tilemapresource = new FileDownloader("http://ubuntu-2:1080/public/map_tiles/" + overlay->name + "/tilemapresource.xml");
     m_tilemapresource->setOverlay(overlay);
-    connect(m_tilemapresource, SIGNAL(downloaded()), this, SLOT(processTileMapResource()));
+    connect(m_tilemapresource, SIGNAL(downloaded(QString)), this, SLOT(processTileMapResource()));
     loop.exec();
    }
    if(config->currCity->name() == overlay->cityName)

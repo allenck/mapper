@@ -257,7 +257,7 @@ private slots:
 
     void addJSObject();
     void NotYetInplemented();
-    void loadAcksoftData();
+    void loadAcksoftData(QString err);
     void loadMbtilesData();
     void linkActivated();
     void pageBack();

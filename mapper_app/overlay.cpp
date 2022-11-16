@@ -54,6 +54,11 @@ bool Overlay::importXml(QString fileName)
    eastLongitude = elem.attribute("eastLongitude").toDouble();
    northLatitude = elem.attribute("northLatitude").toDouble();
    ov->_bounds = Bounds(LatLng(southLatitude, westLongitude), LatLng(northLatitude, eastLongitude));
+//   if(ov->bounds().isValid())
+//   {
+//     ov->setCenter(ov->bounds().center());
+//     qDebug() << "center: "<< ov->center().toString();
+//   }
    QDomElement wmtsUrl = elem.firstChildElement("wmtsUrl");
    ov->wmtsUrl = wmtsUrl.text();
    QDomElement urls = elem.firstChildElement("url");
@@ -155,7 +160,7 @@ void Overlay::getTileMapResource()
   return;
  }
  m_tilemapresource->setOverlay(this);
- connect(m_tilemapresource, SIGNAL(downloaded()), this, SLOT(processTileMapResource()));
+ connect(m_tilemapresource, SIGNAL(downloaded(QString)), this, SLOT(processTileMapResource()));
  loop.exec();
 
 }
@@ -232,7 +237,7 @@ bool Overlay::checkValid()
  if(opacity > 65) opacity = 65;
  bool b = bounds().isValid();
  if(!bounds().isValid()) return false;
- if(!center().isValid()) return false;
+ //if(!center().isValid()) return false;
  if(minZoom < 1) return false;
  if(maxZoom > 21) return false;
  if(urls.isEmpty()) return false;

@@ -2,7 +2,8 @@
 <html><head>
   
   <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
-  <style>  <div class="column left" style="background-color:#EFDECD;"><title>Overlays</title>
+  <style>  <div class="column left" style="background-color:#EFDECD;">
+<title>Overlays</title>
 
   img {
     display: block;
@@ -40,15 +41,25 @@
 <h1>Overlays</h1>
 
 When locating the route of a long-gone streetcar line, often the route
-travelled on private right of way which since has been obscured by
+traveled on private right of way which since has been obscured by
 subsequent construction. Also, street alignments may have been changed
 or eliminated due to highway construction, urban renewal or other
 activities. In such cases, having access to historical maps as an
-Overlay will allow you to locate exactly where a route ran. <br>
+overlay will allow you to locate exactly where a route ran. <br>
+<p>An overlay is a map that can be displayed with variable transparency on top of the main map (in Mapper either Google Maps or Open Street Map).</p>
 
 <br>
-
-There are three ways to access overlays in Mapper. <br>
+<h2>Overlay Management</h2>
+<p>Mappers overlays are managed with the <i>Edit City Info</i> accessed from the <i>City</i> menu. This selection will display: 
+<div style="text-align: center;"><img src="images/EditCityView.png" width="50%" height="50%" alt="Edit City Info"></div>
+<p>In this dialog, you can:</p><ol>
+<li>alter the coordinates of the center</li>
+<li>alter properties on defined overlays</li>
+<li>select which overlay can be used for a city,</li>
+<li>add a new overlay by pressing the <i>Add Overlay</i> button</li>
+</ol>
+<h2>Adding Overlays</h2>
+<p>There are three ways to access overlays in Mapper. <br></p>
 
 <ol>
 
@@ -168,21 +179,6 @@ Overlays.<br>
 <img style="width: 405px; height: 500px;" alt="" src="images/CincinnatiMap5.png"><br>
   </div>
 </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 <h2>Installing a map server on your PC.</h2>
 Although these instructions are for installing a web server on your PC, they are generally applicable to any PC that will host a web sever.

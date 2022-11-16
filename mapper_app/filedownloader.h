@@ -21,7 +21,7 @@ public:
     Overlay* overlay();
     QString error();
 signals:
-    void downloaded();
+    void downloaded(QString error);
 
 private slots:
 
