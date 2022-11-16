@@ -29,14 +29,14 @@ editConnectionsDlg::editConnectionsDlg( QWidget *parent) :
   ui->cbCities->clear();
   foreach(City* c, config->cityList)
   {
-   ui->cbCities->addItem(c->name);
+   ui->cbCities->addItem(c->name());
    if(c->id == config->currCity->id)
     index = i;
    i++;
   }
   connect(ui->cbCities, SIGNAL(currentIndexChanged(int)),this, SLOT(cbCitiesSelectionChanged(int)));
   connect(ui->cbCities, SIGNAL(editTextChanged(QString)), this, SLOT(cbCitiesTextChanged(QString)));
-  connect(ui->cbCities, SIGNAL(signalFocusOut()), this, SLOT(cbCitiesLeave()));
+  connect(ui->cbCities->lineEdit(), SIGNAL(editingFinished()), this, SLOT(cbCitiesLeave()));
   ui->cbCities->setCurrentIndex(index);
 
   index = 0;
@@ -80,7 +80,7 @@ void editConnectionsDlg::cbCitiesSelectionChanged(int sel)
  QString name = ui->cbCities->currentText();
  foreach(City* c, config->cityList)
  {
-  if(c->name == name)
+  if(c->name() == name)
   {
 //   ui->cbConnections->clear();
 //   ui->cbConnections->addItem(tr("Add new connection"));
@@ -108,7 +108,8 @@ void editConnectionsDlg::cbCitiesLeave()
 
   foreach(City* c, config->cityList)
   {
-   if(c->name == name)
+   // name already present
+   if(c->name() == name)
    {
     ui->cbConnections->clear();
     ui->cbConnections->addItem(tr("Add new connection"));
@@ -123,12 +124,12 @@ void editConnectionsDlg::cbCitiesLeave()
   }
   // new city
   City* c = new City();
-  c->name = name;
+  c->name() = name;
   c->curConnectionId = -1;
   c->curExportConnId = -1;
   c->id = 0;
   ui->cbCities->addItem(name);
-  config->cityList.append(c);
+  config->cityList.insert(c->name(),c);
   c->id = config->cityList.count()-1;
   ui->cbConnections->clear();
   ui->cbConnections->addItem(tr("Add new connection"));
@@ -156,10 +157,10 @@ void editConnectionsDlg::cbConnectionsSelectionChanged(int sel)
   City * currCity = NULL;
   for(int i = 0; i < config->cityList.count(); i++)
   {
-   currCity = config->cityList.at(i);
-   if(currCity->name == ui->cbCities->currentText())
+   currCity = config->cityList.values().at(i);
+   if(currCity->name() == ui->cbCities->currentText())
    {
-    currCity = config->cityList.at(i);
+    currCity = config->cityList.values().at(i);
     if((sel-1) > currCity->connections.count()-1)
      sel = currCity->connections.count();
     c = currCity->connections.at(sel-1);
@@ -385,8 +386,8 @@ void editConnectionsDlg::btnOKClicked()
  City * currCity = NULL;
  for(int i=0; i<config->cityList.count(); i++)
  {
-  currCity = config->cityList.at(i);
-  if(currCity->name == ui->cbCities->currentText())
+  currCity = config->cityList.values().at(i);
+  if(currCity->name() == ui->cbCities->currentText())
   {
    Connection* c = new Connection();
    if(ui->cbConnections->currentIndex() < 1)
@@ -423,7 +424,7 @@ void editConnectionsDlg::btnOKClicked()
    c->setServerType(ui->cbDbType->currentText());
    c->setDriver(ui->cbDriverType->currentText());
 
-   if(ui->cbCities->currentText() == config->currCity->name && c->id() == config->currConnection->id())
+   if(ui->cbCities->currentText() == config->currCity->name() && c->id() == config->currConnection->id())
     config->currConnection = c;
    config->currentCityId = config->currCity->id;
    if(ui->cbConnections->currentIndex() < 1)
@@ -450,17 +451,17 @@ void editConnectionsDlg::btnOKClicked()
  }
  for(int i= config->cityList.count()-1; i >=0; i--)
  {
-  City* currCity = config->cityList.at(i);
+  City* currCity = config->cityList.values().at(i);
   if(currCity->connections.count()==0)
   {
-   config->cityList.removeAt(i);
+   config->cityList.remove(currCity->name());
   }
  }
- if(ui->cbCities->currentText() == config->currCity->name && !config->currCity->connections.at(config->currentCityId)->isOpen())
+ if(ui->cbCities->currentText() == config->currCity->name() && !config->currCity->connections.at(config->currentCityId)->isOpen())
  {
   int cityIx = ui->cbCities->currentIndex();
   QString city = ui->cbCities->currentText();
-  config->currCity= config->cityList.at(cityIx);
+  config->currCity= config->cityList.value(city);
   int connIx = ui->cbConnections->currentIndex();
   QString connect = ui->cbConnections->currentText();
   //config->currCity->connections.at(connIx-1);
@@ -478,8 +479,8 @@ void editConnectionsDlg::btnDeleteClicked()
 {
  for(int j=0; j< config->cityList.count(); j++)
  {
-  City * currCity = (City*)&config->cityList.at(j);
-  if(ui->cbCities->currentText() == currCity->name)
+  City * currCity = config->cityList.values().at(j);
+  if(ui->cbCities->currentText() == currCity->name())
   {
    for(int i =0; i< currCity->connections.count(); i++)
    {
@@ -506,10 +507,10 @@ void editConnectionsDlg::btnDeleteClicked()
  }
  for(int i= config->cityList.count()-1; i >=0; i--)
  {
-  City* currCity = config->cityList.at(i);
+  City* currCity = config->cityList.value(currCity->name());
   if(currCity->connections.count()==0)
   {
-   config->cityList.removeAt(i);
+   config->cityList.remove(currCity->name());
   }
  }
 }

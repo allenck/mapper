@@ -18,6 +18,7 @@ class AddGeoreferencedDialog : public QDialog
 public:
  explicit AddGeoreferencedDialog(QWidget *parent = 0);
  ~AddGeoreferencedDialog();
+  Overlay* overlay() {return ov;}
 
 public slots:
  void on_buttonBoxAccepted();
@@ -28,10 +29,13 @@ public slots:
 
  signals:
  void overlayAdded(Overlay* ov);
+ void wmtsComplete();
 
 private slots:
  void checkBounds();
  void validateValues();
+ void onWmtsComplete();
+ void xmlFinished();
 
 private:
  Ui::AddGeoreferencedDialog *ui;
@@ -40,8 +44,10 @@ private:
  QStringList overlayNames;
  bool bUpdate;
  FileDownloader* downloader = nullptr;
- QUrl wmtsUrl;
+ QString wmtsUrl;
  QString url;
+ bool dupName = false;
+ Overlay* ov;
 };
 
 #endif // ADDGEOREFERENCEDDIALOG_H

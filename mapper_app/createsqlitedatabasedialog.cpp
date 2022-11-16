@@ -22,7 +22,7 @@ CreateSqliteDatabaseDialog::CreateSqliteDatabaseDialog(LatLng* latLng, QWidget *
  ui->cbCities->addItem(strNew);
  foreach(City* c, config->cityList)
  {
-  ui->cbCities->addItem(c->name);
+  ui->cbCities->addItem(c->name());
  }
  ui->dtCompanyStart->setDate(QDate(1856,1,1));
  ui->dtCompanyEnd->setDate(QDate(2050,12,31));
@@ -161,19 +161,19 @@ void CreateSqliteDatabaseDialog::on_btnOk_clicked()
    if(ui->cbCities->currentIndex()==0)
    {
     City* nc = new City();
-    nc->name = ui->cbCities->currentText();
+    nc->setName(ui->cbCities->currentText());
     nc->id = cId = config->cityList.count();
     nc->center = LatLng(latLng->lat(),latLng->lon());
     nc->mapType = "roadmap";
     nc->zoom = 10;
     nc->curConnectionId = 0;
-    config->cityList.append(nc);
+    config->cityList.insert(nc->name(), nc);
    }
    else
    {
     cId = ui->cbCities->currentIndex()-1;
    }
-   c = config->cityList.at(cId);
+   c = config->cityList.values().at(cId);
 
    Connection* cn = new Connection();
    cn->setServerType("Sqlite");

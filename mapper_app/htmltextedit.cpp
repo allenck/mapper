@@ -5,6 +5,7 @@
 #include <QClipboard>
 #include <QMenu>
 #include <QTextDocumentFragment>
+#include <QColorDialog>
 
 HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
   QTextBrowser(parent)
@@ -24,14 +25,16 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
  textUnzoomAct = new QAction(tr("Zoom -"), this);
  textUnzoomAct->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_Minus));
  textUnzoomAct->setShortcutContext(Qt::WidgetShortcut);
- setColorAct = new QAction(tr("Red"), this);
- setColorAct->setCheckable(true);
+ setColorRedAct = new QAction(tr("Red"), this);
+ setColorRedAct->setCheckable(true);
  setColorGreenAct = new QAction(tr("Green"),this);
  setColorGreenAct->setCheckable(true);
  setFontAct = new QAction(tr("Change Font..."),this);
  setColorBlackAct = new QAction(tr("Black"), this);
  setColorGrayAct = new QAction(tr("Gray"),this);
  setColorGrayAct->setCheckable(true);
+ setTextColorAct = new QAction(tr("set text color"),this);
+ setBackgroundColorAct = new QAction(tr("set background color"),this);
  pasteHtmlAct = new QAction(tr("Paste HTML"),this);
  pasteSaved = new QAction(tr("Paste saved"), this);
  copySaved = new QAction(tr("Copy to saved"), this);
@@ -42,7 +45,7 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
  connect(underlineAct, SIGNAL(triggered(bool)), this, SLOT(OnUnderlineAct(bool)));
  connect(textZoomAct, SIGNAL(triggered(bool)), this, SLOT(OnTextZoomAct()));
  connect(textUnzoomAct, SIGNAL(triggered(bool)), this, SLOT(OnTextUnzoomAct()));
- connect(setColorAct, SIGNAL(triggered(bool)), this , SLOT(OnSetColorAct(bool)));
+ connect(setColorRedAct, SIGNAL(triggered(bool)), this , SLOT(OnSetColorRedAct(bool)));
  connect(setColorGreenAct, SIGNAL(triggered(bool)), this, SLOT(OnSetColorGreenAct(bool)));
  connect(setColorBlackAct, SIGNAL(triggered(bool)), this, SLOT(OnSetColorBlackAct(bool)));
  connect(setColorGrayAct, SIGNAL(triggered(bool)),this, SLOT(OnSetColorGrayAct(bool)));
@@ -52,6 +55,8 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
  connect(pasteHtmlAct, SIGNAL(triggered()),this, SLOT(OnPasteHtmlAct()) );
  connect(pasteSaved, SIGNAL(triggered()), this, SLOT(OnPasteSaved()));
  connect(copySaved, SIGNAL(triggered()), this, SLOT(OnCopySaved()));
+ connect(setBackgroundColorAct, SIGNAL(triggered(bool)), this, SLOT(OnSetBackgroundColor(bool)));
+ connect(setTextColorAct, SIGNAL(triggered(bool)), this, SLOT(OnSetTextColor(bool)));
 
  setFontPointSize(9);
  setDirty(false);
@@ -71,7 +76,7 @@ void HtmlTextEdit::showContextMenu(QPoint pt)
   menu->addAction(italicAction);
   menu->addAction(underlineAct);
   QMenu *colorMenu = new QMenu(tr("Color"));
-  colorMenu->addAction(setColorAct);
+  colorMenu->addAction(setColorRedAct);
   colorMenu->addAction(setColorGreenAct);
   colorMenu->addAction(setColorBlackAct);
   colorMenu->addAction(setColorGrayAct);
@@ -79,6 +84,8 @@ void HtmlTextEdit::showContextMenu(QPoint pt)
   menu->addAction(setFontAct);
   menu->addAction(textZoomAct);
   menu->addAction(textUnzoomAct);
+  menu->addAction(setTextColorAct);
+  menu->addAction(setBackgroundColorAct);
   if(mimeData->hasHtml())
       menu->addAction((pasteHtmlAct));
 
@@ -136,13 +143,13 @@ void HtmlTextEdit::OnSelectionChanged()
 //        setColorAct->setChecked(false);
 //    else
 //        setColorAct->setChecked(true);
-    setColorAct->setChecked(false);
+    setColorRedAct->setChecked(false);
     setColorGreenAct->setChecked(false);
     setColorBlackAct->setChecked(false);
     setColorGrayAct->setChecked(false);
 
     if(this->textColor()== Qt::red)
-        setColorAct->setChecked(true);
+        setColorRedAct->setChecked(true);
     if(this->textColor() == Qt::darkGreen)
         setColorGreenAct->setChecked(true);
     if(this->textColor()== Qt::black)
@@ -168,7 +175,7 @@ void HtmlTextEdit::OnTextUnzoomAct()
     this->setFontPointSize(this->fontPointSize()-1.);
     setDirty(true);
 }
-void HtmlTextEdit::OnSetColorAct(bool checked)
+void HtmlTextEdit::OnSetColorRedAct(bool checked)
 {
     Q_UNUSED(checked)
     //QColor red = new QColor(1,0,0,255);
@@ -264,3 +271,17 @@ void HtmlTextEdit::OnCopySaved()
  config->currCity->savedClipboard = this->textCursor().selection().toHtml();
 }
 
+void HtmlTextEdit::OnSetTextColor(bool checked)
+{
+    Q_UNUSED(checked)
+    QColor c = QColorDialog::getColor(this->textColor());
+
+    this->setTextColor(c);
+    setDirty(true);
+}
+
+void HtmlTextEdit::OnSetBackgroundColor(bool)
+{
+ QColor c = QColorDialog::getColor(this->textBackgroundColor());
+ setTextBackgroundColor(c);
+}

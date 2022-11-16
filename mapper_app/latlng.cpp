@@ -7,11 +7,11 @@ LatLng::LatLng()
 }
 LatLng::~LatLng() {}
 LatLng::LatLng(const LatLng& other) { setY(other.y()); setX(other.x());}
-/// <summary>
-/// Create new LatLng
-/// </summary>
-/// <param name="Lat"></param>
-/// <param name="Lon"></param>
+// <summary>
+// Create new LatLng
+// </summary>
+// <param name="Lat"></param>
+// <param name="Lon"></param>
 LatLng::LatLng(double Lat, double Lon) : QPointF(Lon, Lat)
 {
 //    latitude = Lat;

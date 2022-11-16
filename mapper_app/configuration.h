@@ -9,51 +9,11 @@
 #include "settingsdb.h"
 #include "city.h"
 #include "connection.h"
+#include "overlay.h"
 
 class Configuration;
 class SQL;
 
-class Overlay
-{
-public:
- //qint32 id;
- QString cityName;
- QString name;
- QString description;
- qint32 opacity;
- int minZoom;
- int maxZoom;
- QString source;
- bool bLocal;
- Bounds bounds; // west longitude, south Latitude, east longitude, north latitude
- QString sCenter; // longitude, latitude, zoom level
- QStringList urls;
- QUrl wmtsUrl;
- bool isSelected = false;
- Overlay()
- {
-  source="acksoft";
-  bLocal = false;
-  bounds = Bounds();
- }
-
- Overlay(QString name, int opacity = 65)
- {
-  this->name = name;
-  this->opacity = opacity;
-  source="acksoft";
-  bLocal = false;
-  minZoom = 8;
-  maxZoom = 16;
-  bounds = Bounds();
- }
-
- bool operator==(const Overlay &ov)
- {
-  if(this->name == ov.name && this->source == ov.source) {return true;}
-  return false;
- }
-};
 
 
 struct query
@@ -73,8 +33,8 @@ public:
  void getSettings();
  void saveSettings();
  void setOverlay(Overlay* ov);
- QList<City*> cityList;
- QMap<QString, Overlay*> overlayList;
+ QMap<QString, City*> cityList;
+ QMap<QString, Overlay*>* overlayMap = new QMap<QString, Overlay*>();
  qint32 currentCityId;
  query q;
  static Configuration* instance();
@@ -83,7 +43,9 @@ public:
  QStringList localOverlayList;
  QStringList georeferencedList;
  QString path;
-
+ QStringList cityNames();
+ QString lookupCityName(Bounds b);
+ QMap<QString, Bounds*> cityBounds;
 private:
  static Configuration* _instance;
  explicit Configuration(QObject *parent = 0);

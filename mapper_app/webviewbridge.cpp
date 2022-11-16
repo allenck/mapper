@@ -9,6 +9,7 @@ WebViewBridge::WebViewBridge(QObject *parent)
 {
  m_parent = parent;
  _instance = this;
+ config = Configuration::instance();
 }
 
 WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString maptype, QObject *parent)
@@ -20,6 +21,7 @@ WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString maptype, QObject *
  this->_zoom = zoom;
  this->maptype = maptype;
  _instance = this;
+ config = Configuration::instance();
 }
 
 WebViewBridge::~WebViewBridge()
@@ -272,4 +274,13 @@ void WebViewBridge::mapInit()
 void WebViewBridge::debug(QString text)
 {
  qDebug() << text;
+}
+
+void WebViewBridge::cityBounds(double neLat, double neLng, double swLat, double swLng)
+{
+ Bounds bounds = Bounds(LatLng(swLat, swLng), LatLng(neLat, neLng));
+ qDebug() << "city bounds" << bounds.toString() << "valid=" << bounds.isValid();
+ config->currCity->setBounds(bounds);
+ config->saveSettings();
+ processScript("closeCityBoundsButton");
 }

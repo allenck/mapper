@@ -21,7 +21,7 @@
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QSpinBox>
 #include <QtWidgets/QTextEdit>
-#include "htmltextedit.h"
+#include "mytextedit.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -29,9 +29,12 @@ class Ui_AddGeoreferencedDialog
 {
 public:
     QGridLayout *gridLayout;
-    QDialogButtonBox *buttonBox;
-    QLabel *label_8;
-    QTextEdit *edUrl;
+    QLabel *label;
+    QLineEdit *edName;
+    QLabel *label_11;
+    QLineEdit *edCity;
+    QLabel *label_12;
+    QLineEdit *edYear;
     QLabel *label_2;
     QSpinBox *sbMinZoom;
     QLabel *label_3;
@@ -46,63 +49,77 @@ public:
     QLineEdit *swLon;
     QLineEdit *neLat;
     QLineEdit *neLon;
-    QLabel *label;
-    QLineEdit *edName;
     QLabel *label_9;
-    QLabel *lblErr;
-    HtmlTextEdit *description;
+    MyTextEdit *description;
     QLabel *label_10;
     QComboBox *comboBox;
+    QLabel *label_8;
     QRadioButton *rbWMTS;
     QRadioButton *rbXYZ;
+    QTextEdit *edUrl;
+    QLabel *lblErr;
+    QDialogButtonBox *buttonBox;
 
     void setupUi(QDialog *AddGeoreferencedDialog)
     {
         if (AddGeoreferencedDialog->objectName().isEmpty())
             AddGeoreferencedDialog->setObjectName(QStringLiteral("AddGeoreferencedDialog"));
-        AddGeoreferencedDialog->resize(527, 462);
+        AddGeoreferencedDialog->resize(467, 493);
         gridLayout = new QGridLayout(AddGeoreferencedDialog);
         gridLayout->setObjectName(QStringLiteral("gridLayout"));
-        buttonBox = new QDialogButtonBox(AddGeoreferencedDialog);
-        buttonBox->setObjectName(QStringLiteral("buttonBox"));
-        buttonBox->setOrientation(Qt::Horizontal);
-        buttonBox->setStandardButtons(QDialogButtonBox::Cancel|QDialogButtonBox::Ok);
+        label = new QLabel(AddGeoreferencedDialog);
+        label->setObjectName(QStringLiteral("label"));
 
-        gridLayout->addWidget(buttonBox, 10, 0, 1, 2);
+        gridLayout->addWidget(label, 0, 0, 1, 1);
 
-        label_8 = new QLabel(AddGeoreferencedDialog);
-        label_8->setObjectName(QStringLiteral("label_8"));
+        edName = new QLineEdit(AddGeoreferencedDialog);
+        edName->setObjectName(QStringLiteral("edName"));
 
-        gridLayout->addWidget(label_8, 7, 0, 1, 1);
+        gridLayout->addWidget(edName, 0, 1, 1, 7);
 
-        edUrl = new QTextEdit(AddGeoreferencedDialog);
-        edUrl->setObjectName(QStringLiteral("edUrl"));
+        label_11 = new QLabel(AddGeoreferencedDialog);
+        label_11->setObjectName(QStringLiteral("label_11"));
 
-        gridLayout->addWidget(edUrl, 8, 0, 1, 4);
+        gridLayout->addWidget(label_11, 1, 0, 1, 1);
+
+        edCity = new QLineEdit(AddGeoreferencedDialog);
+        edCity->setObjectName(QStringLiteral("edCity"));
+
+        gridLayout->addWidget(edCity, 1, 1, 1, 5);
+
+        label_12 = new QLabel(AddGeoreferencedDialog);
+        label_12->setObjectName(QStringLiteral("label_12"));
+
+        gridLayout->addWidget(label_12, 1, 6, 1, 1);
+
+        edYear = new QLineEdit(AddGeoreferencedDialog);
+        edYear->setObjectName(QStringLiteral("edYear"));
+
+        gridLayout->addWidget(edYear, 1, 7, 1, 1);
 
         label_2 = new QLabel(AddGeoreferencedDialog);
         label_2->setObjectName(QStringLiteral("label_2"));
 
-        gridLayout->addWidget(label_2, 1, 0, 1, 1);
+        gridLayout->addWidget(label_2, 2, 0, 1, 2);
 
         sbMinZoom = new QSpinBox(AddGeoreferencedDialog);
         sbMinZoom->setObjectName(QStringLiteral("sbMinZoom"));
         sbMinZoom->setMinimum(8);
         sbMinZoom->setMaximum(18);
 
-        gridLayout->addWidget(sbMinZoom, 1, 1, 1, 1);
+        gridLayout->addWidget(sbMinZoom, 2, 2, 1, 1);
 
         label_3 = new QLabel(AddGeoreferencedDialog);
         label_3->setObjectName(QStringLiteral("label_3"));
 
-        gridLayout->addWidget(label_3, 1, 2, 1, 1);
+        gridLayout->addWidget(label_3, 2, 3, 1, 2);
 
         sbMaxZoom = new QSpinBox(AddGeoreferencedDialog);
         sbMaxZoom->setObjectName(QStringLiteral("sbMaxZoom"));
         sbMaxZoom->setMaximum(21);
         sbMaxZoom->setValue(17);
 
-        gridLayout->addWidget(sbMaxZoom, 1, 3, 1, 1);
+        gridLayout->addWidget(sbMaxZoom, 2, 5, 1, 2);
 
         groupBox = new QGroupBox(AddGeoreferencedDialog);
         groupBox->setObjectName(QStringLiteral("groupBox"));
@@ -149,22 +166,51 @@ public:
         gridLayout_2->addWidget(neLon, 1, 3, 1, 1);
 
 
-        gridLayout->addWidget(groupBox, 2, 0, 1, 4);
-
-        label = new QLabel(AddGeoreferencedDialog);
-        label->setObjectName(QStringLiteral("label"));
-
-        gridLayout->addWidget(label, 0, 0, 1, 1);
-
-        edName = new QLineEdit(AddGeoreferencedDialog);
-        edName->setObjectName(QStringLiteral("edName"));
-
-        gridLayout->addWidget(edName, 0, 1, 1, 2);
+        gridLayout->addWidget(groupBox, 3, 0, 1, 8);
 
         label_9 = new QLabel(AddGeoreferencedDialog);
         label_9->setObjectName(QStringLiteral("label_9"));
 
-        gridLayout->addWidget(label_9, 3, 0, 1, 1);
+        gridLayout->addWidget(label_9, 4, 0, 1, 2);
+
+        description = new MyTextEdit(AddGeoreferencedDialog);
+        description->setObjectName(QStringLiteral("description"));
+
+        gridLayout->addWidget(description, 5, 0, 1, 8);
+
+        label_10 = new QLabel(AddGeoreferencedDialog);
+        label_10->setObjectName(QStringLiteral("label_10"));
+
+        gridLayout->addWidget(label_10, 6, 0, 1, 1);
+
+        comboBox = new QComboBox(AddGeoreferencedDialog);
+        comboBox->addItem(QString());
+        comboBox->addItem(QString());
+        comboBox->addItem(QString());
+        comboBox->setObjectName(QStringLiteral("comboBox"));
+
+        gridLayout->addWidget(comboBox, 6, 2, 1, 2);
+
+        label_8 = new QLabel(AddGeoreferencedDialog);
+        label_8->setObjectName(QStringLiteral("label_8"));
+
+        gridLayout->addWidget(label_8, 7, 0, 1, 1);
+
+        rbWMTS = new QRadioButton(AddGeoreferencedDialog);
+        rbWMTS->setObjectName(QStringLiteral("rbWMTS"));
+
+        gridLayout->addWidget(rbWMTS, 7, 2, 1, 2);
+
+        rbXYZ = new QRadioButton(AddGeoreferencedDialog);
+        rbXYZ->setObjectName(QStringLiteral("rbXYZ"));
+        rbXYZ->setChecked(true);
+
+        gridLayout->addWidget(rbXYZ, 7, 4, 1, 1);
+
+        edUrl = new QTextEdit(AddGeoreferencedDialog);
+        edUrl->setObjectName(QStringLiteral("edUrl"));
+
+        gridLayout->addWidget(edUrl, 8, 0, 1, 8);
 
         lblErr = new QLabel(AddGeoreferencedDialog);
         lblErr->setObjectName(QStringLiteral("lblErr"));
@@ -178,36 +224,14 @@ public:
         palette.setBrush(QPalette::Disabled, QPalette::WindowText, brush1);
         lblErr->setPalette(palette);
 
-        gridLayout->addWidget(lblErr, 9, 0, 1, 4);
+        gridLayout->addWidget(lblErr, 9, 0, 1, 1);
 
-        description = new HtmlTextEdit(AddGeoreferencedDialog);
-        description->setObjectName(QStringLiteral("description"));
+        buttonBox = new QDialogButtonBox(AddGeoreferencedDialog);
+        buttonBox->setObjectName(QStringLiteral("buttonBox"));
+        buttonBox->setOrientation(Qt::Horizontal);
+        buttonBox->setStandardButtons(QDialogButtonBox::Cancel|QDialogButtonBox::Ok);
 
-        gridLayout->addWidget(description, 4, 0, 1, 4);
-
-        label_10 = new QLabel(AddGeoreferencedDialog);
-        label_10->setObjectName(QStringLiteral("label_10"));
-
-        gridLayout->addWidget(label_10, 5, 0, 1, 1);
-
-        comboBox = new QComboBox(AddGeoreferencedDialog);
-        comboBox->addItem(QString());
-        comboBox->addItem(QString());
-        comboBox->addItem(QString());
-        comboBox->setObjectName(QStringLiteral("comboBox"));
-
-        gridLayout->addWidget(comboBox, 5, 1, 1, 1);
-
-        rbWMTS = new QRadioButton(AddGeoreferencedDialog);
-        rbWMTS->setObjectName(QStringLiteral("rbWMTS"));
-
-        gridLayout->addWidget(rbWMTS, 7, 1, 1, 1);
-
-        rbXYZ = new QRadioButton(AddGeoreferencedDialog);
-        rbXYZ->setObjectName(QStringLiteral("rbXYZ"));
-        rbXYZ->setChecked(true);
-
-        gridLayout->addWidget(rbXYZ, 7, 2, 1, 1);
+        gridLayout->addWidget(buttonBox, 10, 0, 1, 3);
 
 
         retranslateUi(AddGeoreferencedDialog);
@@ -220,10 +244,13 @@ public:
     void retranslateUi(QDialog *AddGeoreferencedDialog)
     {
         AddGeoreferencedDialog->setWindowTitle(QApplication::translate("AddGeoreferencedDialog", "Update Overlay Information", nullptr));
-        label_8->setText(QApplication::translate("AddGeoreferencedDialog", "Url:", nullptr));
+        label->setText(QApplication::translate("AddGeoreferencedDialog", "Name:", nullptr));
 #ifndef QT_NO_TOOLTIP
-        edUrl->setToolTip(QApplication::translate("AddGeoreferencedDialog", "<html><head/><body><p>Enter either a Web Map Tile Service(<span style=\" font-weight:600;\">WMTS</span>) capabilities request URL request or an XYZ link Url.</p></body></html>", nullptr));
+        edName->setToolTip(QApplication::translate("AddGeoreferencedDialog", "<html><head/><body><p>Enter a name by which this overlay will be known.</p></body></html>", nullptr));
 #endif // QT_NO_TOOLTIP
+        label_11->setText(QApplication::translate("AddGeoreferencedDialog", "City:", nullptr));
+        edCity->setPlaceholderText(QApplication::translate("AddGeoreferencedDialog", "enter city name", nullptr));
+        label_12->setText(QApplication::translate("AddGeoreferencedDialog", "Year:", nullptr));
         label_2->setText(QApplication::translate("AddGeoreferencedDialog", "Minimum Zoom:", nullptr));
         label_3->setText(QApplication::translate("AddGeoreferencedDialog", "Maximum Zoom:", nullptr));
         groupBox->setTitle(QApplication::translate("AddGeoreferencedDialog", "Bounds:", nullptr));
@@ -231,19 +258,19 @@ public:
         label_5->setText(QApplication::translate("AddGeoreferencedDialog", "SW Longitude:", nullptr));
         label_6->setText(QApplication::translate("AddGeoreferencedDialog", "NE Latitude", nullptr));
         label_7->setText(QApplication::translate("AddGeoreferencedDialog", "NE Longitude", nullptr));
-        label->setText(QApplication::translate("AddGeoreferencedDialog", "Name:", nullptr));
-#ifndef QT_NO_TOOLTIP
-        edName->setToolTip(QApplication::translate("AddGeoreferencedDialog", "<html><head/><body><p>Enter a name by which this overlay will be known.</p></body></html>", nullptr));
-#endif // QT_NO_TOOLTIP
         label_9->setText(QApplication::translate("AddGeoreferencedDialog", "Description:", nullptr));
-        lblErr->setText(QString());
         label_10->setText(QApplication::translate("AddGeoreferencedDialog", "Source:", nullptr));
         comboBox->setItemText(0, QApplication::translate("AddGeoreferencedDialog", "acksoft", nullptr));
         comboBox->setItemText(1, QApplication::translate("AddGeoreferencedDialog", "georeferencer", nullptr));
         comboBox->setItemText(2, QApplication::translate("AddGeoreferencedDialog", "mbtiles", nullptr));
 
+        label_8->setText(QApplication::translate("AddGeoreferencedDialog", "Url:", nullptr));
         rbWMTS->setText(QApplication::translate("AddGeoreferencedDialog", "WMTS", nullptr));
         rbXYZ->setText(QApplication::translate("AddGeoreferencedDialog", "XYZ", nullptr));
+#ifndef QT_NO_TOOLTIP
+        edUrl->setToolTip(QApplication::translate("AddGeoreferencedDialog", "<html><head/><body><p>Enter either a Web Map Tile Service(<span style=\" font-weight:600;\">WMTS</span>) capabilities request URL request or an XYZ link Url.</p></body></html>", nullptr));
+#endif // QT_NO_TOOLTIP
+        lblErr->setText(QString());
     } // retranslateUi
 
 };

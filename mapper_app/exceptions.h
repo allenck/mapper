@@ -107,5 +107,10 @@ class FileNotFoundException : public Exception
  public:
   FileNotFoundException(QString msg) : Exception(msg) {name = "FileNotFoundException";}
 };
+class NullPointerException : public Exception
+{
+ public:
+  NullPointerException(QString msg) : Exception(msg) {name = "NullPointerException";}
+};
 
 #endif // EXCEPTIONS_H

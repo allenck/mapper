@@ -1124,7 +1124,7 @@ if(bAdding)
    return;
   }
   var path = line.getPath();
-  if(path.getLength() == 0)
+  if(path.getLength() === 0)
   {
    addMarker(path.getLength(), e.latLng.lat(), e.latLng.lng(), 1, segment.getInfo(), segment.segmentId);
   }
@@ -2097,7 +2097,6 @@ window.addEventListener("beforeunload", function (e) {
   (e || window.event).returnValue = confirmationMessage; //Gecko + IE
   return confirmationMessage;                            //Webkit, Safari, Chrome
 });
-console.log("GoogleMaps.js loaded!");
 
   var animationPath =null;
   var animationPoly = null;
@@ -2559,8 +2558,60 @@ function isOverlayLoaded()
  return "true";
 }
 
+/**
+ * Creates a control that recenters the map on Chicago.
+ */
+function createCenterControl(map) {
+  const controlButton = document.createElement("button");
+
+  // Set CSS for the control.
+  controlButton.style.backgroundColor = "#fff";
+  controlButton.style.border = "2px solid #fff";
+  controlButton.style.borderRadius = "3px";
+  controlButton.style.boxShadow = "0 2px 6px rgba(0,0,0,.3)";
+  controlButton.style.color = "rgb(25,25,25)";
+  controlButton.style.cursor = "pointer";
+  controlButton.style.fontFamily = "Roboto,Arial,sans-serif";
+  controlButton.style.fontSize = "16px";
+  controlButton.style.lineHeight = "38px";
+  controlButton.style.margin = "8px 0 22px";
+  controlButton.style.padding = "0 5px";
+  controlButton.style.textAlign = "center";
+
+  controlButton.textContent = "Set City Bounds";
+  controlButton.title = "Click to save the bounds";
+  controlButton.type = "button";
+
+  // Setup the click event listeners: simply set the map to Chicago.
+  controlButton.addEventListener("click", () => {
+    //map.setCenter(chicago);
+    var bounds =  map.getBounds();
+    var ne = bounds.getNorthEast();
+    var sw = bounds.getSouthWest();
+    webViewBridge.cityBounds( ne.lat(), ne.lng(), sw.lat(), sw.lng());
+  });
+
+  return controlButton;
+}
+function addCityBoundsButton()
+{
+    // Create the DIV to hold the control.
+      const centerControlDiv = document.createElement("div");
+      // Create the control.
+      const centerControl = createCenterControl(map);
+      // Append the control to the DIV.
+      centerControlDiv.appendChild(centerControl);
+
+      map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
+}
+
+function closeCityBoundsButton()
+{
+ map.controls[google.maps.ControlPosition.TOP_CENTER].removeAt(0);
+}
 
 //alert("begin Loading GoogleMaps.js 2042");
 
 //google.maps.event.addDomListener(window, "load", initialize);
 
+console.log("GoogleMaps.js loaded!");

@@ -1,5 +1,8 @@
 #include "city.h"
 #include "configuration.h"
+#include <QMessageBox>
+#include "mainwindow.h"
+#include "webviewbridge.h"
 
 City::City(QObject *parent) : QObject(parent)
 {
@@ -10,19 +13,25 @@ void City::addOverlay(Overlay* ov)
 {
  if(!ov->name.isEmpty())
  {
-  overlayMap.insert(ov->name, ov);
+  city_overlayMap->insert(ov->name, ov);
   bDirty = true;
  }
 }
 
 void City::removeOverlay(Overlay* ov)
 {
- while(overlayMap.contains(ov->name))
+ while(city_overlayMap->contains(ov->name))
  {
-  overlayMap.remove(ov->name);
+  city_overlayMap->remove(ov->name);
   bDirty = true;
  }
 }
 
 void City::setDirty(bool b) {bDirty = b;}
 bool City::isDirty() {return bDirty;}
+
+void City::setCityBounds(WebViewBridge* m_bridge)
+{
+ QMessageBox::question(nullptr, "Set City Bounds", "Zoom in or out until the entire 'region in the display covers the region. Then click on the Set Bounds' button");
+ m_bridge->processScript("addCityBoundsButton");
+}

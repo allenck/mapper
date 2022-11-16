@@ -1,11 +1,16 @@
 #include "configuration.h"
 #include "sql.h"
+#include "overlay.h"
+#include "data.h"
 
 Configuration::Configuration(QObject *parent) :
     QObject(parent)
 {
  currentCityId = -1;
+ qRegisterMetaType<Bounds>("Bounds");
+ //qRegisterMetaTypeStreamOperators<Bounds>("Bounds");
 }
+
 void Configuration::saveSettings()
 {
  if(currConnection->id() != currCity->curConnectionId)
@@ -16,7 +21,8 @@ void Configuration::saveSettings()
  currCity->connections.replace(currConnection->id(), currConnection);
  // Save any changes to currentCity
  if(currentCityId >= 0)
-  cityList.replace(currentCityId, currCity);
+  cityList.values().replace(currentCityId, currCity);
+
 
  QSettings* settings = new QSettings();
  //settingsDb settings;
@@ -24,9 +30,10 @@ void Configuration::saveSettings()
  for(int i=0; i< cityList.count(); i++)
  {
   settings->setArrayIndex(i);
-  City* c = cityList.at(i);
+  City* c = cityList.values().at(i);
+  //currCity->setName(c->name());
   settings->setValue("id", c->id);
-  settings->setValue("name", c->name);
+  settings->setValue("name", c->name());
   settings->setValue("lat", c->center.lat());
   settings->setValue("lon", c->center.lon());
   settings->setValue("mapType", c->mapType);
@@ -47,7 +54,7 @@ void Configuration::saveSettings()
   settings->setValue("routeSortType", c->routeSortType);
   settings->setValue("savedClipboard", c->savedClipboard);
   settings->setValue("userMap", c->bUserMap);
-
+  settings->setValue("bounds", c->bounds().toString());
   //settings.setValue("connection",c->curConnectionId);
   settings->beginWriteArray("connections");
   for(int j=0; j < c->connections.count(); j++)
@@ -74,10 +81,11 @@ void Configuration::saveSettings()
   settings->beginGroup("overlays");
   settings->remove("");
   settings->endGroup();
+#if 0
   settings->beginWriteArray("overlays");
 //  int oCount = c->overlayList.count();
   int j=-1;
-  foreach(Overlay* ov, c->overlayMap.values())
+  foreach(Overlay* ov, c->city_overlayMap->values())
   {
    if(ov->cityName != currCity->name)
     continue;
@@ -89,15 +97,17 @@ void Configuration::saveSettings()
    settings->setValue("opacity", ov->opacity);
    settings->setValue("minZoom", ov->minZoom);
    settings->setValue("maxZoom", ov->maxZoom);
-   settings->setValue("bounds", ov->bounds.toString());
+   settings->setValue("bounds", ov->bounds().toString());
    settings->setValue("center", ov->sCenter);
    settings->setValue("source", ov->source);
    settings->setValue("urls", ov->urls);
    settings->setValue("isSelected", ov->isSelected);
    settings->setValue("WMTSUrl", ov->wmtsUrl);
-   settings->setValue("city", ov->cityName);
+   settings->setValue("city", c->name);
+   settings->setValue("year", ov->year());
   }
   settings->endArray(); // overlays
+#endif
   settings->setValue("currOverlay", c->curOverlayId);
  }
  settings->endArray(); // cities
@@ -116,28 +126,30 @@ void Configuration::saveSettings()
 
 void Configuration::getSettings()
 {
+  bool ok = Overlay::importXml("./overlays.xml");
  QSettings settings;
  qDebug() << settings.fileName();
  //settingsDb settings;
  int size = settings.beginReadArray("cities");
  if( size == 0)
  {
-  // temporarily create a default configuration
-  //TODO replace this with a dialog to ask for data to setup a city and a connection.
+  //  create a default configuration
   City* newCity = new City();
   newCity->id = 0;
-  newCity->name = "St. Louis, MO";
-  double latitude = settings.value("center/latitude").toDouble();
-  double longitude = settings.value("center/longitude").toDouble();
-  qint32 zoom = settings.value("zoom").toInt();
-  QString maptype = settings.value("maptype").toString();
+  newCity->setName("St. Louis, MO");
+  double latitude = 38.65858545118455;
+  double longitude = -90.34764714500002;
   newCity->center = LatLng(latitude, longitude);
-  newCity->bounds = Bounds(LatLng(latitude-.1, longitude-.1), LatLng(latitude+.1, longitude+.1));
+  qint32 zoom = 10;
+  QString maptype = "roadmap";
+  newCity->center = LatLng(latitude, longitude);
+  newCity->setBounds(Bounds(LatLng(38.558585451, -90.447647145), LatLng(38.758585451, -90.247647145)));
   newCity->zoom = zoom;
   newCity->mapType = maptype;
   newCity->curConnectionId = newCity->id ;
   newCity->companyKey=0;
-
+  if(!cityList.values().contains(newCity))
+   cityList.insert(newCity->name(), newCity);
   Connection* nc = new Connection();
   nc->setId(0);
   nc->setDatabase("Resources/databases/StLouis.sqlite3");
@@ -150,26 +162,119 @@ void Configuration::getSettings()
   nc->setHost("");
   nc->setPort(0);
 
-  Overlay* ov = new Overlay("St_Louis_historical_topo");
-  newCity->overlayMap.insert(ov->name, ov);
+  newCity = new City();
+  newCity->id = 1;
+  newCity->setName("Cincinnati, OH");
+  latitude = 39.10457;
+  longitude = -84.51382;
+  //qint32 zoom = settings.value("zoom").toInt();
+  newCity->center = LatLng(latitude, longitude);
+  newCity->setBounds(Bounds(LatLng(38.995919924, -84.788475037), LatLng(39.213049836, -84.23915863)));
+  newCity->zoom = zoom;
+  newCity->mapType = maptype;
+  newCity->curConnectionId = newCity->id ;
+  newCity->companyKey=0;
+  if(!cityList.values().contains(newCity))
+   cityList.insert(newCity->name(), newCity);
+  nc = new Connection();
+  nc->setId(0);
+  nc->setDatabase("Resources/databases/cincinnati.sqlite3");
+  nc->setDescription ("SQLITE3 connection");
+  nc->setDriver("QSQLITE");
+  nc->setDSN("");
+  nc->setUID("");
+  nc->setPWD("");
+  nc->setServerType("Sqlite");
+  nc->setHost("");
+  nc->setPort(0);
+
+  newCity = new City();
+  newCity->id = 2;
+  newCity->setName("Louisville, KY");
+  latitude = 38.25228;
+  longitude = -85.76115;
+  //qint32 zoom = settings.value("zoom").toInt();
+  newCity->center = LatLng(latitude, longitude);
+  newCity->setBounds(Bounds(LatLng(38.15228, -85.86115), LatLng(38.35228, -85.66115)));
+  newCity->zoom = zoom;
+  newCity->mapType = maptype;
+  newCity->curConnectionId = newCity->id ;
+  newCity->companyKey=0;
+  if(!cityList.values().contains(newCity))
+   cityList.insert(newCity->name(), newCity);
+  nc = new Connection();
+  nc->setId(0);
+  nc->setDatabase("Resources/databases/louisville.sqlite3");
+  nc->setDescription ("SQLITE3 connection");
+  nc->setDriver("QSQLITE");
+  nc->setDSN("");
+  nc->setUID("");
+  nc->setPWD("");
+  nc->setServerType("Sqlite");
+  nc->setHost("");
+  nc->setPort(0);
+
+  newCity = new City();
+  newCity->id = 3;
+  newCity->setName("Berlin. Germany");
+  latitude = 52.5315;
+  longitude = 13.00165;
+  newCity->center = LatLng(latitude, longitude);
+  newCity->setBounds(Bounds(LatLng(52.4315, 12.90165), LatLng(52.6315, 13.10165)));
+  newCity->zoom = zoom;
+  newCity->mapType = maptype;
+  newCity->curConnectionId = newCity->id ;
+  newCity->companyKey=0;
+  if(!cityList.values().contains(newCity))
+   cityList.insert(newCity->name(), newCity);
+  nc = new Connection();
+  nc->setId(0);
+  nc->setDatabase("Resources/databases/berlinerstrassenbahn.sqlite3");
+  nc->setDescription ("SQLITE3 connection");
+  nc->setDriver("QSQLITE");
+  nc->setDSN("");
+  nc->setUID("");
+  nc->setPWD("");
+  nc->setServerType("Sqlite");
+  nc->setHost("");
+  nc->setPort(0);
+
+  newCity = cityList.values().at(0);
+  Overlay* ov = new Overlay("St Louis, MO", "St_Louis_historical_topo");
+
+  newCity->city_overlayMap->insert(ov->name, ov);
 
   newCity->curOverlayId = 0;
   newCity->bShowOverlay =true;
-
-  settings.remove("center/latitude");
-  settings.remove("center/longitude");
-  settings.remove("zoom");
-  settings.remove("maptype");
-  newCity->connections.append(nc);
-  cityList.append(newCity);
-  currConnection = nc;
+  currConnection = 0;
   currCity = newCity;
   currentCityId = 0;
+
+  if(Overlay::importXml("./overlays.xml"))
+  {
+   for(Overlay* ov : Overlay::overlayList)
+   {
+    overlayMap->insert(ov->cityName+"|"+ov->name, ov);
+    City* city = cityList.value(ov->cityName);
+    if(city)
+    {
+     city->city_overlayMap->insert(ov->name, ov);
+    }
+   }
+  }
 
   saveSettings();
 
   return;
- }
+ } // end default configuration
+
+
+//  settings.remove("center/latitude");
+//  settings.remove("center/longitude");
+//  settings.remove("zoom");
+//  settings.remove("maptype");
+//  newCity->connections.append(nc);
+
 
  // load cities
  for(int i= 0; i < size; i++)
@@ -177,14 +282,21 @@ void Configuration::getSettings()
   settings.setArrayIndex(i);
   City* nc = new City();
   nc->id = settings.value("id").toInt();
-  nc->name = settings.value("name").toString();
+  nc->setName(settings.value("name").toString());
+  cityList.insert(nc->name(),nc);
   LatLng pt;
   qDebug() << "lat: " << settings.value("lat",35).toString();
   qDebug() << "lon: " << settings.value("lon",-90).toString();
   pt.setLat(settings.value("lat",35).toDouble());
   pt.setLon(settings.value("lon",-90).toDouble());
   nc->center = pt;
-  nc->bounds = Bounds(LatLng(pt.lat()-.1, pt.lon()-.1), LatLng(pt.lat()+.1, pt.lon()+.1));
+  nc->setBounds(Bounds(settings.value("bounds").toString()));
+  if(!nc->bounds().isValid())
+  {
+   nc->setBounds(Bounds(LatLng(pt.lat()-.1, pt.lon()-.1), LatLng(pt.lat()+.1, pt.lon()+.1)));
+  }
+  if(nc->bounds().isValid())
+   cityBounds.insert(nc->name(), new Bounds(nc->bounds()));
   nc->mapType = settings.value("maptype","roadmap").toString();
   nc->zoom = settings.value("zoom",12).toInt();
   nc->curConnectionId = settings.value("currConnection",0).toInt();
@@ -236,8 +348,8 @@ void Configuration::getSettings()
      ncn->setDatabase(ncn->database().replace(ext, ".sqlite3"));
     }
 #endif
-    QFile file;
-    file.setFileName(ncn->database());
+//    QFile file;
+//    file.setFileName(ncn->database());
 //    if(!file.exists())
 //    {
 //     if(!ncn->database().toLower().endsWith(".sqlite3"))
@@ -258,6 +370,8 @@ void Configuration::getSettings()
   }
   settings.endArray();
 
+  //qDebug() << "city bounds:" << cityBounds;
+#if 0
   int sizeo = settings.beginReadArray("overlays");
   for(int j =0; j < sizeo; j++)
   {
@@ -270,81 +384,117 @@ void Configuration::getSettings()
    no->minZoom = settings.value("minZoom", 10).toInt();
    no->maxZoom = settings.value("maxZoom", 16).toInt();
 //   no->bounds = settings.value("bounds").value<Bounds>();
-   no->bounds = Bounds(settings.value("bounds").toString());
+   no->setBounds(Bounds(settings.value("bounds").toString()));
    no->sCenter = settings.value("center").toString();
    no->source = settings.value("source", "acksoft").toString();
    no->isSelected = settings.value("isSelected", false).toBool();
    no->urls = settings.value("urls","http://ubuntu-2:1080/public/map_tiles/").toStringList();
-   no->wmtsUrl = settings.value("WMTSUrl").toUrl();
+   no->wmtsUrl = settings.value("WMTSUrl").toString();
+   no->setYear(settings.value("year").toString());
    if(no->source == "acksoft" && no->urls.isEmpty())
     no->urls.append("http://ubuntu-2:1080/public/map_tiles/");
    if(no->source == "mbtiles"&& no->urls.isEmpty()) // Windows
     no->urls.append("http://localhost/map_tiles/mbtiles.php");
    if(no->source == "tileserver" && no->urls.isEmpty()) // Linux
     no->urls.append("http://localhost/tileserver.php");
+   no->cityName = nc->name;
    if(no->source == "georeferencer") // add to global list
    {
-    if(!overlayList.keys().contains(no->name))
-     overlayList.insert(no->name, no);
+    if(!overlayMap->contains(nc->name +"|" + no->name))
+     overlayMap->insert(no->cityName +"|" + no->name, no);
    }
-   no->cityName = settings.value("city").toString();
-    nc->addOverlay(no);
-  }
+
+   nc->addOverlay(no);
+  } // overlays for city
+
   // TODO: create a dialog to add overlays like this
   if(nc->name == "St. Louis, MO")
   {
-   Overlay* ov = new  Overlay("St Louis Worlds Fair 1904");
+   Overlay* ov = new  Overlay("St Louis, MO", "St Louis Worlds Fair 1904");
    ov->cityName = "St. Louis, MO";
-   ov->bounds =  Bounds(LatLng(38.623972, -90.330807), LatLng(38.658606, -90.273631));
+   ov->setBounds(Bounds(LatLng(38.623972, -90.330807), LatLng(38.658606, -90.273631)));
    ov->source = "georeferencer";
    ov->maxZoom = 17;
    ov->minZoom = 8;
-   ov->urls << "http://georeferencer-0.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-1.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-2.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-3.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png";
-   nc->overlayMap.insert(ov->name, ov);
-   if(!nc->overlayMap.contains(ov->name))
-    nc->overlayMap.insert(ov->name, ov);
+   ov->urls << "http://maps.georeferencer.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-1.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-2.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-3.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png";
+   overlayMap->insert(nc->name+"|"+ov->name, ov);
+   nc->city_overlayMap->insert(ov->name, ov);
+   ov->setYear("1904");
   }
   if(nc->name == "Louisville, KY")
   {
-   Overlay* ov = new  Overlay("Louisville, KY pilot2");
+   Overlay* ov = new  Overlay("Louisville, KY","Louisville, KY pilot2");
    ov->cityName = "Louisville, KY";
-   ov->bounds =  Bounds(LatLng(38.1412, -85.91273), LatLng(38.351303, -85.626234));
+   ov->setBounds(Bounds(LatLng(38.1412, -85.91273), LatLng(38.351303, -85.626234)));
    ov->source = "georeferencer";
    ov->maxZoom = 17;
    ov->minZoom = 0;
    ov->urls << "http://georeferencer-0.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-1.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-2.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-3.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png";
-   nc->overlayMap.insert(ov->name, ov);
-   bool bFound = false;
-   foreach (Overlay* o, nc->overlayMap.values())
-   {
-    if(o->name == ov->name)
-    {
-     bFound = true;
-     o->urls = ov->urls;
-     break;
-    }
-   }
-   if(!bFound)
-    nc->overlayMap.insert(ov->name, ov);
+   overlayMap->insert(nc->name+"|"+ov->name, ov);
+   nc->city_overlayMap->insert(ov->name, ov);
+
+//   bool bFound = false;
+//   foreach (Overlay* o, overlayMap->values())
+//   {
+//    if(o->name == ov->name)
+//    {
+//     bFound = true;
+//     o->urls = ov->urls;
+//     break;
+//    }
+//   if(!bFound)
+//    nc->overlayMap->insert(ov->name, ov);
+//   }
   }
 //        if(nc->id == currentCityId)
 //            currConnection = nc->connections.at(nc->curConnectionId);
   settings.endArray();
-
-  if(nc->overlayMap.isEmpty())
+#endif
+  if(nc->city_overlayMap->isEmpty())
    nc->bShowOverlay = false;
   nc->curOverlayId = settings.value("currOverlay").toInt();
-  if(nc->overlayMap.count()== 0)
+  if(nc->city_overlayMap->count()== 0)
    nc->curOverlayId = -1;
-  cityList.append(nc);
- }
+ } // end cities
  settings.endArray();
 
+// for(Overlay* ov : overlayMap->values())
+// {
+//  QString  n = lookupCityName(ov->bounds());
+//  if(!n.isEmpty())
+//   ov->cityName = n;
+//  else
+//   qDebug() << "invalid city " << ov->cityName << ov->name;
+// }
+ if(Overlay::importXml("./overlays.xml"))
+ {
+  for(Overlay* ov : Overlay::overlayList)
+  {
+   City* city = cityList.value(ov->cityName);
+   if(!city)
+    throw IllegalArgumentException(tr("city %1 not found").arg(ov->cityName));
+   if(!ov->bounds().isValid())
+   {
+    ov->setBounds(Bounds(LatLng(city->center.lat()-.3, city->center.lon()-.3), LatLng(city->center.lat()+.3, city->center.lon()+.3)));
+   }
+   overlayMap->insert(ov->cityName+"|"+ov->name, ov);
+   if(city && city->name() == ov->cityName)
+   {
+    if(ov->isSelected)
+    {
+     city->city_overlayMap->insert(ov->name, ov);
+     qDebug() << "add overlay " << ov->name << " for city:" << city->name();
+    }
+   }
+  }
+ }
  //settings.beginGroup("General");
  currentCityId = settings.value("currCity",0).toInt();
- if(currentCityId < 0 || currentCityId > cityList.count())
+ if(currentCityId < 0 || currentCityId >= cityList.count())
   currentCityId = 0;
- currCity = cityList.at(currentCityId);
+ currCity = cityList.values().at(currentCityId);
+ if(currCity->curConnectionId < 0 && currCity->connections.size() == 1)
+  currCity->curConnectionId =0;
  currConnection =   currCity->connections.at(currCity->curConnectionId);
  bDisplayWebDebug = settings.value("showDebugMessages", false).toBool();
  bRunInBrowser = settings.value("runInBrowser", false).toBool();
@@ -357,18 +507,29 @@ void Configuration::getSettings()
  q.geometry = settings.value("geometry").toByteArray();
 
  settings.endGroup();
+
+ for(Overlay* ov : Overlay::overlayList)
+ {
+  overlayMap->insert(ov->cityName+"|"+ov->name, ov);
+  City* city = cityList.value(ov->cityName);
+  if(city)
+  {
+  city->city_overlayMap->insert(ov->name, ov);
+  }
+ }
+
 }
 
 void Configuration::setOverlay(Overlay* ov)
 {
- for(int i=0; i < currCity->overlayMap.count(); i++)
+ for(int i=0; i < currCity->city_overlayMap->count(); i++)
  {
-  Overlay* o  =  currCity->overlayMap.values().at(i);
+  Overlay* o  =  currCity->city_overlayMap->values().at(i);
   if(ov->name == o->name)
   {
    o->opacity = ov->opacity;
-   //currCity->overlayMap.replace(i, o);
-   currCity->overlayMap.insert(ov->name, ov);
+   //currCity->overlayMap->replace(i, o);
+   currCity->city_overlayMap->insert(ov->name, ov);
   }
  }
 }
@@ -475,3 +636,22 @@ QSqlDatabase Connection::configure(QString cName)
   return db;
 }
 
+QStringList Configuration::cityNames()
+{
+ QStringList result;
+ for(City* city : cityList)
+  result.append(city->name());
+ return result;
+}
+
+QString Configuration::lookupCityName(Bounds b)
+{
+ QMapIterator<QString, Bounds*> iter(cityBounds);
+ while(iter.hasNext())
+ {
+  iter.next();
+  if(iter.value()->contains(b))
+     return iter.key();
+ }
+ return "";
+}

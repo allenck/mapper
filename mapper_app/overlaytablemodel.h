@@ -20,7 +20,11 @@ public:
  {
   NAME,
   SELECTED,
+  CITYNAME,
+  YEAR,
   DESCRIPTION,
+  BOUNDS,
+  CENTER,
   MINZOOM,
   MAXZOOM,
   OPACITY,
@@ -31,15 +35,20 @@ public:
  };
  void setCity(int);
  void addOverlay(Overlay* ov);
-
+ QMap<QString, Overlay *> *getOverlayMap();
+ void deleteRow(int row);
+ Overlay* selectedOverlay(int row);
 signals:
  void setDirty();
- void overlaySelectionChanged(QModelIndex index, bool checked);
-
+ void overlaySelectionChanged(Overlay* ov, bool checked);
+ void overlayChanged(QString, QString, Overlay*);
 private:
  Configuration* config;
  int currCityId;
- QMap<QString, Overlay*> overlayMap; // list of available overlays.
+ QMap<QString, Overlay*>* overlayMap; // list of available overlays.
+
+ private slots:
+
 };
 
 #endif // OVERLAYTABLEMODEL_H

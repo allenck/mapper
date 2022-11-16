@@ -1000,8 +1000,9 @@ QMap<int, SegmentData> SQL::getSegmentDataList()
 
  QSqlDatabase db = QSqlDatabase::database();
 
- QString commandText = "Select SegmentId, description, OneWay, startDate, endDate, length, points, "
-"startLat, startLon, endLat, EndLon, type, street, pointArray, tracks from Segments order by description";
+ QString commandText = "Select SegmentId, description, OneWay, startDate, endDate,"
+                       " length, points, startLat, startLon, endLat, EndLon, type, street, "
+                       "pointArray, tracks from Segments order by description";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -9027,7 +9028,7 @@ bool SQL::loadSqlite3Functions()
      if(err.text().contains("not authorized"))
      {
       // load_extension was found!; the "error" is expected because no valid parameters were supplied
-      bLoadExtensionEnabled = true;
+      bLoadExtensionEnabled = false;
      }
      else
      {
@@ -9513,14 +9514,14 @@ void SQL::checkTables(QSqlDatabase db)
    if(config->currConnection->servertype() == "Sqlite" )
    {
     addColumn("Routes", "TrackUsage", " text check(`TrackUsage` in ('B', 'L', 'R', ' ')) default ' ' NOT NULL");
-    executeScript(":/restructure_routes.sql",db);
+    executeScript(":/recreate_routes.sql",db);
    }
    else if(config->currConnection->servertype() == "MySql")
    {
     addColumn("Routes", "TrackUsage", "ENUM('N', 'B', 'R')");
    }
    // TODO: add Sql Server syntax
-   executeScript(":/restructure_routes.sql");
+   executeScript(":/recreate_routes.sql");
   }
 
   if(!doesColumnExist("RouteComments", "latitude"))

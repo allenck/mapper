@@ -3,6 +3,7 @@
 #include <QFutureWatcher>
 #include <QtGui>
 #include "data.h"
+#include "configuration.h"
 
 class WebViewBridge : public QObject
 {
@@ -92,6 +93,7 @@ public slots:
     void getInfoWindowComments(double lat, double lon, int route, QString date, int func);
     void mapInit();
     void debug(QString text);
+    void cityBounds(double neLat, double neLng, double swLat, double swLng);
 
 private slots:
 
@@ -104,6 +106,7 @@ private:
     LatLng _latLng;
     QString maptype;
     bool bResultReceived;
+    Configuration* config;
 };
 
 #endif // WEBVIEWBRIDGE_H

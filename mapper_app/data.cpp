@@ -438,17 +438,21 @@ void SegmentInfo::displaySegment(QString date, QString color, QString trackUsage
 }
 
 
-Bounds::Bounds() : QRectF(QPointF(180,-90), QPointF(-180, 90))
+Bounds::Bounds()
 {
  _swPt = LatLng(90,180);
  _nePt = LatLng(-90,-180);
 bBoundsValid = false;
 }
 
-Bounds::Bounds(LatLng sw, LatLng ne) : QRectF(QPointF(sw.x(), ne.y()), QPointF(ne.x(), sw.y()))
+Bounds::Bounds(LatLng sw, LatLng ne) :  QObject()
 {
  _swPt = sw;
+ _swLat = sw.lat();
+ _swLon = sw.lon();
  _nePt = ne;
+ _neLat = ne.lat();
+ _neLon = ne.lon();
  if(sw.lon() < ne.lon() && sw.lat() < ne.lat())
  {
   bBoundsValid = true;
@@ -457,7 +461,7 @@ Bounds::Bounds(LatLng sw, LatLng ne) : QRectF(QPointF(sw.x(), ne.y()), QPointF(n
   bBoundsValid = false;
 }
 
-Bounds::Bounds(QString bnds) : QRectF()
+Bounds::Bounds(QString bnds): QObject()
 {
  _swPt = LatLng(90,180);
  _nePt = LatLng(-90,-180);
@@ -465,34 +469,34 @@ Bounds::Bounds(QString bnds) : QRectF()
  QStringList sl = bnds.split(",");
  if(sl.count()>=4)
  {
-  double neLat, neLon, swLat, swLon;
   bool ok;
-  swLon = sl.at(0).toDouble(&ok);
-  if(!(ok && swLon >= -180.0 && swLon <= 180.0))
+  _swLon = sl.at(0).toDouble(&ok);
+  if(!(ok && _swLon >= -180.0 && _swLon <= 180.0))
    return;
-  swLat = sl.at(1).toDouble(&ok);
-  if(!(ok && swLat >= -90.0 && swLat <= 90.0))
+  _swLat = sl.at(1).toDouble(&ok);
+  if(!(ok && _swLat >= -90.0 && _swLat <= 90.0))
    return;
-  neLon = sl.at(2).toDouble(&ok);
-  if(!(ok && neLon >= -180.0 && neLon <= 180.0))
+  _neLon = sl.at(2).toDouble(&ok);
+  if(!(ok && _neLon >= -180.0 && _neLon <= 180.0))
    return;
-  neLat = sl.at(3).toDouble(&ok);
-  if(!(ok && neLat >= -90.0 && neLat <= 90.0))
+  _neLat = sl.at(3).toDouble(&ok);
+  if(!(ok && _neLat >= -90.0 && _neLat <= 90.0))
    return;
-  _swPt = LatLng(swLat, swLon);
-  _nePt = LatLng(neLat, neLon);
+  _swPt = LatLng(_swLat, _swLon);
+  _nePt = LatLng(_neLat, _neLon);
   setBottomLeft(_swPt);
   setTopRight(_nePt);
-  bBoundsValid = true;
+  bBoundsValid = isValid();
  }
 }
 Bounds::~Bounds(){}
-Bounds::Bounds(const Bounds &other) : QRectF()
+Bounds::Bounds(const Bounds &other) : QObject()
 {
  _swPt = other._swPt;
  _nePt = other._nePt;
  setBottomLeft(_swPt);
  setTopRight(_nePt);
+ bBoundsValid = other.bBoundsValid;
 }
 
 bool Bounds::isValid() { return bBoundsValid;}
@@ -526,17 +530,23 @@ bool Bounds::updateBounds(Bounds bnds)
  return bBoundsValid;
 }
 
-LatLng Bounds::swPt() { return _swPt;}
-LatLng Bounds::nePt() { return _nePt;}
+LatLng Bounds::swPt() const { return _swPt;}
+LatLng Bounds::nePt() const { return _nePt;}
 
 QString Bounds::toString()
 {
  return QString("%1,%2, %3,%4").arg(_swPt.lon(),14,'g',11).arg(_swPt.lat(),14,'g',11).arg(_nePt.lon(),14,'g',11).arg(_nePt.lat(),14,'g',11);
 }
 
-bool Bounds::contains(const QPointF &p) const
+bool Bounds::contains(const LatLng &p) const
 {
- if(p.x() >= _swPt.lon() && p.x() <= _nePt.lon() && p.y() >= _swPt.lat() && p.y()< _nePt.lat()) return true;
+// if((p.lon() >= _swPt.lon()) && (p.lon() <= _nePt.lon())
+//    && (p.lat() >= _swPt.lat()) && (p.lat()<= _nePt.lat())) return true;
+ if(!(p.lon() >= _swPt.lon())) return false;
+ if(!(p.lon() <= _nePt.lon())) return false;
+ if(!(p.lat() >= _swPt.lat())) return false;
+ if( (p.lat() <= _nePt.lat())) return true;
+
  return false;
 }
 
@@ -547,7 +557,12 @@ bool Bounds::contains(const Bounds &b) const
  return false;
 }
 
-LatLng Bounds::center() {return LatLng(y(), x());}
+LatLng Bounds::center() {
+ //QRectF rect(_swPt.lon(),_nePt.lat(),(_nePt.lon() - _swPt.lon()),(_nePt.lat()-_swPt.lat()));
+ QRectF rect(QPointF(_swPt.lon(),_nePt.lat()), QPointF(_swPt.lon(), _nePt.lat())); // top left pt, bottom right pt
+ QPointF ctr(rect.center());
+ return LatLng(ctr.y(), ctr.x());
+}
 
 void SegmentData::displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst)
 {

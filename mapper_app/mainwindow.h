@@ -351,7 +351,8 @@ private:
     QList<QAction*> cityActions;
     QSignalMapper *signalMapper;
     QActionGroup  *actionGroup;
-
+    QAction* exportOverlaysAct;
+    QAction* setCityBoundsAct;
     QList<QAction*> overlayActions;
     QSignalMapper *overlaySignalMapper;
     QActionGroup  *overlayActionGroup;
@@ -426,6 +427,7 @@ signals:
     //void sendRows(int, int);
     void newCitySelected();
 };
+
 class Menu : public QMenu
 {
     Q_OBJECT

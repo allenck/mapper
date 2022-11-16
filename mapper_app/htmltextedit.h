@@ -23,7 +23,7 @@ private:
  QAction *underlineAct;
  QAction *textZoomAct;
  QAction *textUnzoomAct;
- QAction *setColorAct;
+ QAction *setColorRedAct;
  QAction *setColorGreenAct;
  QAction *setColorBlackAct;
  QAction *setColorGrayAct;
@@ -31,6 +31,8 @@ private:
  QAction *pasteHtmlAct;
  QAction *pasteSaved;
  QAction *copySaved;
+ QAction* setTextColorAct;
+ QAction *setBackgroundColorAct;
  bool bIsDirty;
  void setDirty(bool dirty);
  Configuration* config;
@@ -43,7 +45,7 @@ private slots:
  void OnSelectionChanged();
  void OnTextZoomAct();
  void OnTextUnzoomAct();
- void OnSetColorAct(bool checked);
+ void OnSetColorRedAct(bool checked);
  void OnSetColorGreenAct(bool checked);
  void OnSetColorBlackAct(bool checked);
  void OnSetColorGrayAct(bool checked);
@@ -52,6 +54,8 @@ private slots:
  void OnPasteSaved();
  void OnCopySaved();
  void OnTextChanged();
+ void OnSetTextColor(bool);
+ void OnSetBackgroundColor(bool);
 
 };
 

@@ -8,6 +8,8 @@ namespace Ui {
 class EditCityDialog;
 }
 
+class QTableView;
+class QItemSelection;
 class QSortFilterProxyModel;
 class OverlayTableModel;
 class Overlay;
@@ -23,26 +25,31 @@ public:
 
 private slots:
  void cbCitysSelectionChanged(int);
- void overlaySelectionChanged(QModelIndex, bool);
+ void overlaySelectionChanged(Overlay *ov, bool);
  void edDescriptionTextChanged();
  void sbMinZoomValueChanged(int);
  void sbMaxZoomValueChanged(int);
  void sbOpacityValueChanged(int);
- void onClicked(QModelIndex);
+ void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
  void OnDescriptionChanged(bool);
  void ok_clicked();
  void on_setDirty();
  void onLatitudeChanged();
  void onLongitudeChanged();
  void apply_clicked();
-
+ void tablev_customContextMenu( const QPoint& pt);
+ void tableViewPaste();
+ void on_copyCellText();
+ void rowSelected(QModelIndex);
+ void onDeleteRow();
+ void onUpdateProperties();
 
 private:
  Ui::EditCityDialog *ui;
  Configuration* config;
  City* city;
  int cityId;
- Overlay* ov;
+ Overlay* ov = nullptr;
  Overlay* cov;
  bool bRefreshing;
  OverlayTableModel* model;
@@ -52,6 +59,8 @@ private:
  void newCity(int i);
  bool dirty;
  void closeEvent(QCloseEvent *event);
+ QModelIndex currentIndexTableView;
+ bool boolGetItemTableView(QTableView *view);
 };
 
 #endif // EDITCITYDIALOG_H
