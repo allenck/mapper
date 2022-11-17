@@ -51,6 +51,7 @@ public:
    throw IllegalArgumentException("city name is protected");
  }
  QString name() {return _name;}
+ void setCenter(LatLng center);
  private:
  Bounds _bounds;
 signals:

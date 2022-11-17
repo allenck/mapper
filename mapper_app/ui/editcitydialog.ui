@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>699</width>
-    <height>409</height>
+    <height>433</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -92,7 +92,7 @@
     </widget>
    </item>
    <item>
-    <widget class="HtmlTextEdit" name="edDescription"/>
+    <widget class="MyTextEdit" name="edDescription"/>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -156,9 +156,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>HtmlTextEdit</class>
+   <class>MyTextEdit</class>
    <extends>QTextEdit</extends>
-   <header>htmltextedit.h</header>
+   <header>mytextedit.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

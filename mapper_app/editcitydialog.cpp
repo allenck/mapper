@@ -16,6 +16,8 @@
 #include <QItemSelection>
 #include <QMenu>
 #include <QClipboard>
+#include "webviewbridge.h"
+#include "mytextedit.h"
 
 EditCityDialog::EditCityDialog(QWidget *parent) :
   QDialog(parent),
@@ -98,7 +100,13 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  resize(sz);
 
  //Overlay::exportXml("./overlays.xml", config->overlayMap->values());
-
+ pasteLatLng = new QAction(tr("Paste LatLng from Google Maps"),this);
+ pasteLatLng->setToolTip(tr("paste latitude and longitude for city. Right clip on Google maps at point."));
+ connect(pasteLatLng, SIGNAL(triggered(bool)), this, SLOT(on_pasteLatLng()));
+ deleteConnection = new QAction(tr("delete city connection."),this);
+ connect(deleteConnection, SIGNAL(triggered(bool)), this, SLOT(on_deleteConnection()));
+ ui->cbCity->setContextMenuPolicy(Qt::CustomContextMenu);
+ connect(ui->cbCity, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(cbCity_customContextMenu(QPoint)));
 }
 
 EditCityDialog::~EditCityDialog()
@@ -477,4 +485,43 @@ void EditCityDialog::onUpdateProperties()
  setCursor(Qt::WaitCursor);
  connect(ov, &Overlay::xmlFinished, [=]{setCursor(Qt::ArrowCursor);});
  ov->getTileMapResource();
+}
+void EditCityDialog::cbCity_customContextMenu(QPoint pt)
+{
+    QMenu cityMenu;
+    cityMenu.addAction(pasteLatLng);
+    cityMenu.addAction(deleteConnection);
+    cityMenu.exec(QCursor::pos());
+}
+
+void EditCityDialog::on_deleteConnection()
+{
+
+}
+
+void EditCityDialog::on_pasteLatLng()
+{
+    const QClipboard *clipboard = QApplication::clipboard();
+    QString text = clipboard->text();
+    QStringList sl = text.split(",");
+    if(sl.count()== 2)
+    {
+        bool ok;
+      double  latitude, longitude;
+      latitude = sl.at(0).toDouble(&ok);
+      if(!ok)   return;
+      longitude = sl.at(1).toDouble(&ok);
+      if(!ok)   return ;
+      ui->editLatitude->setText(QString::number(latitude));
+      ui->editLongitude->setText(QString::number(longitude));
+      QVariantList objArray;
+      objArray << latitude << longitude;
+      WebViewBridge::instance()->processScript("setCenter", objArray);
+      City* city = config->cityList.value(ui->cbCity->currentText());
+      if(city)
+          city->setCenter(LatLng(latitude, longitude));
+       WebViewBridge::instance()->processScript("addCityBoundsButton");
+       objArray.clear();
+       objArray << 12;
+       WebViewBridge::instance()->processScript("setZoom", objArray); }
 }

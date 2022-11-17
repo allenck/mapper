@@ -35,3 +35,5 @@ void City::setCityBounds(WebViewBridge* m_bridge)
  QMessageBox::question(nullptr, "Set City Bounds", "Zoom in or out until the entire 'region in the display covers the region. Then click on the Set Bounds' button");
  m_bridge->processScript("addCityBoundsButton");
 }
+
+void City::setCenter(LatLng center){this->center = center;}

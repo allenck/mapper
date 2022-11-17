@@ -51,7 +51,7 @@ var selectedPoly = null;
 var geocoder;
 var currSegment = null;
 var bAdding = false;
-
+var myRslt = 0;
 var rtStartMarker= null;
 var rtEndMarker = null;
 var infowindow = null;
@@ -1159,7 +1159,7 @@ if(bAdding)
   {
    var latLng = map.getCenter();
    webViewBridge.setCenter(latLng.lat(), latLng.lng(), map.getZoom(), map.getMapTypeId());
-   return;
+   return latLng;
   }
 
   function setZoom(zoom)
@@ -2543,6 +2543,7 @@ function setDefaultOptions()
 {
  //alert("setDefaultOptions");
  map.setOptions(defaultOptions);
+ myRslt = 0;
 }
 
 function setOptions()
@@ -2602,7 +2603,7 @@ function addCityBoundsButton()
       // Append the control to the DIV.
       centerControlDiv.appendChild(centerControl);
 
-      map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
+      map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(centerControlDiv);
 }
 
 function closeCityBoundsButton()

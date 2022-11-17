@@ -1,81 +1,117 @@
 <!DOCTYPE Overlays>
 <Overlays>
-  <overlay name="Berlin_Bauentwicklung.1910.10000.300.3068" cityName="Berlin, Germany" minZoom="10" year="" opacity="19" source="acksoft" selected="yes" maxZoom="19">
+  <overlay cityName="Berlin, Germany" selected="yes" name="Berlin_Bauentwicklung.1910.10000.300.3068" minZoom="10" maxZoom="19" opacity="19" year="" source="acksoft">
     <description></description>
-    <bounds westLongitude="12.7016" northLatitude="52.8315" eastLongtude="13.3017" southLatitude="52.2315"/>
+    <bounds northLatitude="52.8315" westLongitude="12.7016" eastLongtude="13.3017" southLatitude="52.2315"/>
     <wmtsUrl></wmtsUrl>
     <url>http://ubuntu-2:1080/public/map_tiles/</url>
   </overlay>
-  <overlay name="Berlin_Bauentwicklung.1986.10000.300.3068" cityName="Berlin, Germany" minZoom="10" year="" opacity="19" source="acksoft" selected="yes" maxZoom="19">
+  <overlay cityName="Berlin, Germany" selected="yes" name="Berlin_Bauentwicklung.1986.10000.300.3068" minZoom="10" maxZoom="19" opacity="19" year="" source="acksoft">
     <description></description>
-    <bounds westLongitude="12.7016" northLatitude="52.8315" eastLongtude="13.3017" southLatitude="52.2315"/>
+    <bounds northLatitude="52.8315" westLongitude="12.7016" eastLongtude="13.3017" southLatitude="52.2315"/>
     <wmtsUrl></wmtsUrl>
     <url>http://ubuntu-2:1080/public/map_tiles/</url>
   </overlay>
-  <overlay name="Berlin_Straube" cityName="Berlin, Germany" minZoom="10" year="" opacity="19" source="acksoft" selected="yes" maxZoom="19">
+  <overlay cityName="Berlin, Germany" selected="yes" name="Berlin_Straube" minZoom="10" maxZoom="19" opacity="19" year="" source="acksoft">
     <description></description>
-    <bounds westLongitude="12.7016" northLatitude="52.8315" eastLongtude="13.3017" southLatitude="52.2315"/>
+    <bounds northLatitude="52.8315" westLongitude="12.7016" eastLongtude="13.3017" southLatitude="52.2315"/>
     <wmtsUrl></wmtsUrl>
     <url>http://ubuntu-2:1080/public/map_tiles/</url>
   </overlay>
-  <overlay name="Schoeneberg_Verwaltungsbezirk.1931.10000.300.6881" cityName="Berlin, Germany" minZoom="10" year="" opacity="19" source="acksoft" selected="yes" maxZoom="19">
+  <overlay cityName="Berlin, Germany" selected="yes" name="Schoeneberg_Verwaltungsbezirk.1931.10000.300.6881" minZoom="10" maxZoom="19" opacity="19" year="" source="acksoft">
     <description></description>
-    <bounds westLongitude="12.7016" northLatitude="52.8315" eastLongtude="13.3017" southLatitude="52.2315"/>
+    <bounds northLatitude="52.8315" westLongitude="12.7016" eastLongtude="13.3017" southLatitude="52.2315"/>
     <wmtsUrl></wmtsUrl>
     <url>http://ubuntu-2:1080/public/map_tiles/</url>
   </overlay>
-  <overlay name="CincinnatiStreetcar" cityName="Cincinnati, OH" minZoom="10" year="" opacity="16" source="acksoft" selected="yes" maxZoom="16">
+  <overlay cityName="Berlin. Germany" selected="yes" name="Berlin_Bauentwicklung.1940.10000.300.3068" minZoom="10" maxZoom="19" opacity="19" year="1940" source="acksoft">
+    <description></description>
+    <bounds northLatitude="38.5454" westLongitude="-86.0529" eastLongtude="-85.4529" southLatitude="37.9454"/>
+    <wmtsUrl></wmtsUrl>
+    <url>http://ubuntu-2:1080/public/map_tiles/</url>
+  </overlay>
+  <overlay cityName="Cincinnati, OH" selected="yes" name="CincinnatiStreetcar" minZoom="10" maxZoom="16" opacity="16" year="" source="acksoft">
     <description>Cincinnati Streetcar Map courtesy of Jeffrey Jakucyk jjakucyk.com</description>
-    <bounds westLongitude="-84.8178" northLatitude="39.4011" eastLongtude="-84.2178" southLatitude="38.8011"/>
+    <bounds northLatitude="39.4011" westLongitude="-84.8178" eastLongtude="-84.2178" southLatitude="38.8011"/>
     <wmtsUrl></wmtsUrl>
     <url>http://ubuntu-2:1080/public/map_tiles/</url>
   </overlay>
-  <overlay name="Berlin_Bauentwicklung.1940.10000.300.3068" cityName="Louisville, KY" minZoom="10" year="1940" opacity="19" source="acksoft" selected="yes" maxZoom="19">
+  <overlay cityName="Berlin. Germany" selected="yes" name="Berlin_Bauentwicklung.1940.10000.300.3068" minZoom="10" maxZoom="19" opacity="19" year="1940" source="acksoft">
     <description></description>
-    <bounds westLongitude="-86.0529" northLatitude="38.5454" eastLongtude="-85.4529" southLatitude="37.9454"/>
+    <bounds northLatitude="38.5454" westLongitude="-86.0529" eastLongtude="-85.4529" southLatitude="37.9454"/>
     <wmtsUrl></wmtsUrl>
     <url>http://ubuntu-2:1080/public/map_tiles/</url>
   </overlay>
-  <overlay name="Louisville" cityName="Louisville, KY" minZoom="10" year="" opacity="16" source="acksoft" selected="yes" maxZoom="16">
+  <overlay cityName="Louisville, KY" selected="yes" name="Louisville" minZoom="10" maxZoom="16" opacity="16" year="" source="acksoft">
     <description></description>
-    <bounds westLongitude="-86.0529" northLatitude="38.5454" eastLongtude="-85.4529" southLatitude="37.9454"/>
+    <bounds northLatitude="38.5454" westLongitude="-86.0529" eastLongtude="-85.4529" southLatitude="37.9454"/>
     <wmtsUrl></wmtsUrl>
     <url>http://ubuntu-2:1080/public/map_tiles/</url>
   </overlay>
-  <overlay name="Louisville_1903" cityName="Louisville, KY" minZoom="10" year="" opacity="16" source="acksoft" selected="yes" maxZoom="16">
+  <overlay cityName="Louisville, KY" selected="yes" name="Louisville_1903" minZoom="10" maxZoom="16" opacity="16" year="" source="acksoft">
     <description></description>
-    <bounds westLongitude="-86.0529" northLatitude="38.5454" eastLongtude="-85.4529" southLatitude="37.9454"/>
+    <bounds northLatitude="38.5454" westLongitude="-86.0529" eastLongtude="-85.4529" southLatitude="37.9454"/>
     <wmtsUrl></wmtsUrl>
     <url>http://ubuntu-2:1080/public/map_tiles/</url>
   </overlay>
-  <overlay name="1903_St_Louis_Mo.4326.map.geo" cityName="St. Louis, MO" minZoom="10" year="" opacity="16" source="acksoft" selected="no" maxZoom="16">
+  <overlay cityName="St. Louis, MO" selected="no" name="St. Louis, Missouri." minZoom="8" maxZoom="21" opacity="65" year="1891" source="georeferencer">
+    <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:7.8pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">St. Louis. (inset) St. Louis and Vicinity.&lt;/p>&lt;/body>&lt;/html></description>
+    <bounds northLatitude="0" westLongitude="0" eastLongtude="0" southLatitude="0"/>
+    <wmtsUrl>https://maps.georeferencer.com/georeferences/9c83ed2b-077a-5e13-867d-36962c91a9c6/2022-01-06T17:24:11.385327Z/wmts?key=caj1mpUbIDuRGkUmcxkG&amp;SERVICE=WMTS&amp;REQUEST=GetCapabilities</wmtsUrl>
+    <url>https://maps.georeferencer.com/georeferences/9c83ed2b-077a-5e13-867d-36962c91a9c6/2022-01-06T17:24:11.385327Z/map/{z}/{x}/{y}.png?key=caj1mpUbIDuRGkUmcxkG</url>
+  </overlay>
+  <overlay cityName="St. Louis, MO" selected="no" name="1903_St_Louis_Mo.4326.map.geo" minZoom="10" maxZoom="16" opacity="16" year="" source="acksoft">
     <description></description>
-    <bounds westLongitude="-90.5147" northLatitude="38.9363" eastLongtude="-89.9147" southLatitude="38.3363"/>
+    <bounds northLatitude="38.9586" westLongitude="-90.6476" eastLongtude="-90.0476" southLatitude="38.3586"/>
     <wmtsUrl></wmtsUrl>
     <url>http://ubuntu-2:1080/public/map_tiles/</url>
   </overlay>
-  <overlay name="St_Louis_1895" cityName="St. Louis, MO" minZoom="10" year="1895" opacity="16" source="acksoft" selected="no" maxZoom="16">
+  <overlay cityName="St. Louis, MO" selected="no" name="Map of St. Louis Mo." minZoom="8" maxZoom="21" opacity="-842150451" year="1895" source="georeferencer">
+    <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:7.8pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">The Matthews-Northrup Up-To-Date Map of St. Louis Mo. Copyright, 1895, by The Matthews-Northrup Co., Complete Engraving and Printing Works, Buffalo and New York.&lt;/p>&lt;/body>&lt;/html></description>
+    <bounds northLatitude="38.9586" westLongitude="-90.6476" eastLongtude="-90.0476" southLatitude="38.3586"/>
+    <wmtsUrl>https://maps.georeferencer.com/georeferences/3e41ed67-1c65-5e25-8b4c-99adfda9695e/2021-12-19T01:24:00.624982Z/wmts?key=caj1mpUbIDuRGkUmcxkG&amp;SERVICE=WMTS&amp;REQUEST=GetCapabilities</wmtsUrl>
+    <url>https://maps.georeferencer.com/georeferences/3e41ed67-1c65-5e25-8b4c-99adfda9695e/2021-12-19T01:24:00.624982Z/map/{z}/{x}/{y}.png?key=caj1mpUbIDuRGkUmcxkG</url>
+  </overlay>
+  <overlay cityName="St. Louis, MO" selected="no" name="St_Louis_1895" minZoom="10" maxZoom="16" opacity="16" year="1895" source="acksoft">
     <description></description>
-    <bounds westLongitude="-90.5147" northLatitude="38.9363" eastLongtude="-89.9147" southLatitude="38.3363"/>
+    <bounds northLatitude="38.9586" westLongitude="-90.6476" eastLongtude="-90.0476" southLatitude="38.3586"/>
     <wmtsUrl></wmtsUrl>
     <url>http://ubuntu-2:1080/public/map_tiles/</url>
   </overlay>
-  <overlay name="St_Louis_1903" cityName="St. Louis, MO" minZoom="10" year="1903" opacity="16" source="acksoft" selected="no" maxZoom="16">
+  <overlay cityName="St. Louis, MO" selected="no" name="St_Louis_1903" minZoom="10" maxZoom="16" opacity="16" year="1903" source="acksoft">
     <description></description>
-    <bounds westLongitude="-90.5147" northLatitude="38.9363" eastLongtude="-89.9147" southLatitude="38.3363"/>
+    <bounds northLatitude="38.9586" westLongitude="-90.6476" eastLongtude="-90.0476" southLatitude="38.3586"/>
     <wmtsUrl></wmtsUrl>
     <url>http://ubuntu-2:1080/public/map_tiles/</url>
   </overlay>
-  <overlay name="St_Louis_historical_topo" cityName="St. Louis, MO" minZoom="8" year="1927-1940" opacity="17" source="acksoft" selected="yes" maxZoom="17">
+  <overlay cityName="St. Louis, MO" selected="yes" name="St_Louis_historical_topo" minZoom="8" maxZoom="17" opacity="17" year="1927-1940" source="acksoft">
     <description>Mosaic topo map consisting of St Charles (1927), Columbia Bottoms(1935), CreveCoeur(1933), Florissant(1935), Granite City(1940), Clayton(1941), Kirkwood(1940), Jefferson Barracks(1933), Cahokia(1940)</description>
-    <bounds westLongitude="-90.5147" northLatitude="38.9363" eastLongtude="-89.9147" southLatitude="38.3363"/>
+    <bounds northLatitude="38.9586" westLongitude="-90.6476" eastLongtude="-90.0476" southLatitude="38.3586"/>
     <wmtsUrl></wmtsUrl>
     <url>http://ubuntu-2:1080/public/map_tiles/</url>
   </overlay>
-  <overlay name="St_Louis_topo" cityName="St. Louis, MO" minZoom="10" year="" opacity="16" source="acksoft" selected="yes" maxZoom="16">
+  <overlay cityName="St. Louis, MO" selected="yes" name="St_Louis_topo" minZoom="10" maxZoom="16" opacity="16" year="" source="acksoft">
     <description>St. Charles, Creve Coeur, Columbia Bottoms, Granite City, Clayton, Webster Groves, Kirkwood, Cahokia mosaic topo</description>
-    <bounds westLongitude="-90.5147" northLatitude="38.9363" eastLongtude="-89.9147" southLatitude="38.3363"/>
+    <bounds northLatitude="38.9586" westLongitude="-90.6476" eastLongtude="-90.0476" southLatitude="38.3586"/>
     <wmtsUrl></wmtsUrl>
     <url>http://ubuntu-2:1080/public/map_tiles/</url>
+  </overlay>
+  <overlay cityName="St. Louis, MO" selected="no" name="St. Louis, Missouri." minZoom="8" maxZoom="21" opacity="65" year="1891" source="georeferencer">
+    <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:7.8pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">St. Louis. (inset) St. Louis and Vicinity.&lt;/p>&lt;/body>&lt;/html></description>
+    <bounds northLatitude="0" westLongitude="0" eastLongtude="0" southLatitude="0"/>
+    <wmtsUrl>https://maps.georeferencer.com/georeferences/9c83ed2b-077a-5e13-867d-36962c91a9c6/2022-01-06T17:24:11.385327Z/wmts?key=caj1mpUbIDuRGkUmcxkG&amp;SERVICE=WMTS&amp;REQUEST=GetCapabilities</wmtsUrl>
+    <url>https://maps.georeferencer.com/georeferences/9c83ed2b-077a-5e13-867d-36962c91a9c6/2022-01-06T17:24:11.385327Z/map/{z}/{x}/{y}.png?key=caj1mpUbIDuRGkUmcxkG</url>
   </overlay>
 </Overlays>

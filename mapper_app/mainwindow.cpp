@@ -676,43 +676,45 @@ void MainWindow::processTileMapResource()
   }
  }
 }
-#ifdef WIN32
-void MainWindow::loadOverlayData()
-{
- QString data;
- data = m_overlays->downloadedData();
- int ix = 0;
- while(ix > -1)
- {
-  ix = data.indexOf("HREF=\"/map_tiles/", ix);
-  if(ix > 0)
-  {
-   int ix2 = data.indexOf("\"", ix + 17);
-   if(ix2 > 0)
-   {
-    QString name = data.mid(ix+17,ix2-ix-17);
-    if(name.endsWith(".mbtiles"))
-    {
-     name = data.mid(ix+17,ix2-ix-17 - 8);
-     config->localOverlayList.append(name);
-     if(!config->overlayList.contains(name))
-     {
-      Overlay* ov = new Overlay(name);
-      ov->source = "mbtiles";
-      config->overlayList.insert(name, ov);
-      ov->bLocal = true;
-     }
-     else
-     {
-      config->overlayList.value(name)->bLocal = true;
-     }
-    }
-    ix = ix2;
-   }
-  }
- }
-}
-#else
+
+//#ifdef WIN32
+//void MainWindow::loadOverlayData()
+//{
+// QString data;
+// data = m_overlays->downloadedData();
+// int ix = 0;
+// while(ix > -1)
+// {
+//  ix = data.indexOf("HREF=\"/map_tiles/", ix);
+//  if(ix > 0)
+//  {
+//   int ix2 = data.indexOf("\"", ix + 17);
+//   if(ix2 > 0)
+//   {
+//    QString name = data.mid(ix+17,ix2-ix-17);
+//    if(name.endsWith(".mbtiles"))
+//    {
+//     name = data.mid(ix+17,ix2-ix-17 - 8);
+//     config->localOverlayList.append(name);
+//     if(!config->overlayList.contains(name))
+//     {
+//      Overlay* ov = new Overlay(name);
+//      ov->source = "mbtiles";
+//      config->overlayList.insert(name, ov);
+//      ov->bLocal = true;
+//     }
+//     else
+//     {
+//      config->overlayList.value(name)->bLocal = true;
+//     }
+//    }
+//    ix = ix2;
+//   }
+//  }
+// }
+//}
+////#else
+//#endif
 void MainWindow::loadOverlayData()
 {
  QString data;
@@ -752,7 +754,7 @@ void MainWindow::loadOverlayData()
   }
  }
 }
-#endif
+//#endif
 
 void MainWindow::loadOverlay(Overlay* ov)
 {
@@ -3791,7 +3793,7 @@ void MainWindow::exportDb()
 void MainWindow::editConnections()
 {
  //NotYetInplemented();
- editConnectionsDlg form( this);
+ EditConnectionsDlg form( this);
  form.exec();
 
  createCityMenu();

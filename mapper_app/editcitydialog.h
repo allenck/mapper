@@ -42,6 +42,9 @@ private slots:
  void rowSelected(QModelIndex);
  void onDeleteRow();
  void onUpdateProperties();
+ void on_deleteConnection();
+ void on_pasteLatLng();
+ void cbCity_customContextMenu(QPoint pt);
 
 private:
  Ui::EditCityDialog *ui;
@@ -60,6 +63,8 @@ private:
  void closeEvent(QCloseEvent *event);
  QModelIndex currentIndexTableView;
  bool boolGetItemTableView(QTableView *view);
+ QAction* pasteLatLng;
+ QAction* deleteConnection;
 };
 
 #endif // EDITCITYDIALOG_H

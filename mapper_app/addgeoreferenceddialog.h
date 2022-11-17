@@ -48,6 +48,7 @@ private:
  QString url;
  bool dupName = false;
  Overlay* ov;
+ bool bLoading = false;
 };
 
 #endif // ADDGEOREFERENCEDDIALOG_H

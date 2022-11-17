@@ -470,10 +470,9 @@ void Configuration::getSettings()
  {
   for(Overlay* ov : Overlay::overlayList)
   {
+   QString cityName = ov->cityName;
    City* city = cityList.value(ov->cityName);
-   if(!city)
-    throw IllegalArgumentException(tr("city %1 not found").arg(ov->cityName));
-   if(!ov->bounds().isValid())
+   if(city && !ov->bounds().isValid())
    {
     ov->setBounds(Bounds(LatLng(city->center.lat()-.3, city->center.lon()-.3), LatLng(city->center.lat()+.3, city->center.lon()+.3)));
    }
@@ -514,7 +513,7 @@ void Configuration::getSettings()
   City* city = cityList.value(ov->cityName);
   if(city)
   {
-  city->city_overlayMap->insert(ov->name, ov);
+   city->city_overlayMap->insert(ov->name, ov);
   }
  }
 

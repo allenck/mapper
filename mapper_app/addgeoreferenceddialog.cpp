@@ -188,6 +188,8 @@ void AddGeoreferencedDialog::on_nameTextEdited(QString txt)
 
 void AddGeoreferencedDialog::validateValues()
 {
+ if(bLoading)
+     return;
  ui->lblErr->setText("");
  wmtsUrl = ui->edUrl->toPlainText();
  if(!wmtsUrl.isEmpty())
@@ -261,6 +263,7 @@ void AddGeoreferencedDialog::validateWMTS(QString err)
   setCursor(Qt::ArrowCursor);
   return;
  }
+ bLoading = true;
  ov = new Overlay();
 
  doc.setContent(downloader->downloadedData());
@@ -346,7 +349,7 @@ void AddGeoreferencedDialog::validateWMTS(QString err)
  if(config->overlayMap->contains( ov->cityName+"|"+ov->name))
  {
   dupName = true;
-  QMessageBox::warning(this, tr("Duplicate name"), tr("There already is a map with this name"));
+  QMessageBox::warning(nullptr, tr("Duplicate name"), tr("There already is a map with this name"));
  }
  emit wmtsComplete();
 
@@ -359,6 +362,7 @@ void AddGeoreferencedDialog::on_sourceChanged(QString)
 
 void AddGeoreferencedDialog::onWmtsComplete()
 {
+
  ui->edName->setText(ov->name);
  if(!ov->cityName.isEmpty() && ui->edCity->text().isEmpty())
   ui->edCity->setText(ov->cityName);
@@ -371,10 +375,9 @@ void AddGeoreferencedDialog::onWmtsComplete()
  ui->sbMinZoom->setValue(ov->minZoom);
  ui->sbMaxZoom->setValue(ov->maxZoom);
  ui->comboBox->setCurrentText("georeferencer");
- setCursor(Qt::ArrowCursor);
  ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
  config->currCity->addOverlay(ov);
  config->saveSettings();
  setCursor(Qt::ArrowCursor);
-
+ bLoading = false;
 }

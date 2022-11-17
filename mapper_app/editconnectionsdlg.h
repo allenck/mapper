@@ -11,13 +11,13 @@ namespace Ui {
     class editConnectionsDlg;
 }
 
-class editConnectionsDlg : public QDialog
+class EditConnectionsDlg : public QDialog
 {
     Q_OBJECT
 
 public:
- editConnectionsDlg(QWidget *parent = 0);
- ~editConnectionsDlg();
+ EditConnectionsDlg(QWidget *parent = 0);
+ ~EditConnectionsDlg();
 
 private:
  Ui::editConnectionsDlg *ui;
@@ -38,6 +38,7 @@ private:
 #ifndef Q_WS_WIN
 void findODBCDsn(QString iniFile, QStringList* dsnList);
 #endif
+
 private slots:
  void cbCitiesSelectionChanged(int sel);
  void cbConnectionsSelectionChanged(int sel);
@@ -57,7 +58,6 @@ private slots:
  void txtDsnTextChanged(QString text);
  void on_tbBrowse_clicked();
  void ontxtDbOrDsn_editingFinished();
-
 };
 
 #endif // EDITCONNECTIONSDLG_H

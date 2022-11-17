@@ -4,8 +4,10 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include "mainwindow.h"
+#include <QClipboard>
+#include <QApplication>
 
-editConnectionsDlg::editConnectionsDlg( QWidget *parent) :
+EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
   QDialog(parent),
   ui(new Ui::editConnectionsDlg)
 {
@@ -64,17 +66,19 @@ editConnectionsDlg::editConnectionsDlg( QWidget *parent) :
   connect(ui->txtDbOrDSN, SIGNAL(textChanged(QString)), this, SLOT(txtDsnTextChanged(QString)));
   connect(ui->txtDbOrDSN, SIGNAL(editingFinished()), this, SLOT(ontxtDbOrDsn_editingFinished()));
 
+
+
   timer = new QTimer(this);
   timer->setInterval(1000);
   connect(timer, SIGNAL(timeout()), this, SLOT(quickProcess()));
 }
 
-editConnectionsDlg::~editConnectionsDlg()
+EditConnectionsDlg::~EditConnectionsDlg()
 {
  delete ui;
 }
 
-void editConnectionsDlg::cbCitiesSelectionChanged(int sel)
+void EditConnectionsDlg::cbCitiesSelectionChanged(int sel)
 {
  Q_UNUSED(sel)
  QString name = ui->cbCities->currentText();
@@ -95,12 +99,12 @@ void editConnectionsDlg::cbCitiesSelectionChanged(int sel)
  }
 
 }
-void editConnectionsDlg::cbCitiesTextChanged(QString text)
+void EditConnectionsDlg::cbCitiesTextChanged(QString text)
 {
     bCbCitiesTextChanged = true;
 }
 
-void editConnectionsDlg::cbCitiesLeave()
+void EditConnectionsDlg::cbCitiesLeave()
 {
  if(bCbCitiesTextChanged)
  {
@@ -129,7 +133,7 @@ void editConnectionsDlg::cbCitiesLeave()
   c->curExportConnId = -1;
   c->id = 0;
   ui->cbCities->addItem(name);
-  config->cityList.insert(c->name(),c);
+  config->cityList.insert(name, c);
   c->id = config->cityList.count()-1;
   ui->cbConnections->clear();
   ui->cbConnections->addItem(tr("Add new connection"));
@@ -137,7 +141,7 @@ void editConnectionsDlg::cbCitiesLeave()
  }
 }
 
-void editConnectionsDlg::cbConnectionsSelectionChanged(int sel)
+void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
 {
  ui->lblHelp->setText("");
  if(sel < 0)
@@ -214,7 +218,7 @@ void editConnectionsDlg::cbConnectionsSelectionChanged(int sel)
  }
 }
 
-void editConnectionsDlg::cbDriverTypeSelectionChanged(int sel)
+void EditConnectionsDlg::cbDriverTypeSelectionChanged(int sel)
 {
  Q_UNUSED(sel)
  QString text = ui->cbDriverType->currentText();
@@ -275,7 +279,7 @@ void editConnectionsDlg::cbDriverTypeSelectionChanged(int sel)
  }
 }
 #ifndef Q_WS_WIN
-void editConnectionsDlg::findODBCDsn(QString iniFile, QStringList* dsnList)
+void EditConnectionsDlg::findODBCDsn(QString iniFile, QStringList* dsnList)
 {
  QFile ini(iniFile);
  if(ini.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -308,20 +312,20 @@ void editConnectionsDlg::findODBCDsn(QString iniFile, QStringList* dsnList)
  qDebug() << QString("%1").arg(databases.count());
 }
 #endif
-void editConnectionsDlg::btnTestClicked()
+void EditConnectionsDlg::btnTestClicked()
 {
  ui->lblHelp->setText("");
  qApp->processEvents();
  testConnection();
 }
 
-void editConnectionsDlg::btnCancelClicked()
+void EditConnectionsDlg::btnCancelClicked()
 {
  this->rejected();
  this->close();
 }
 
-void editConnectionsDlg::btnOKClicked()
+void EditConnectionsDlg::btnOKClicked()
 {
  ui->lblHelp->setText(tr(""));
  if(ui->cbConnections->currentText() == "Add new connection")
@@ -387,6 +391,7 @@ void editConnectionsDlg::btnOKClicked()
  for(int i=0; i<config->cityList.count(); i++)
  {
   currCity = config->cityList.values().at(i);
+  if(currCity->name().isEmpty()) currCity->setName(ui->cbCities->currentText());
   if(currCity->name() == ui->cbCities->currentText())
   {
    Connection* c = new Connection();
@@ -475,7 +480,7 @@ void editConnectionsDlg::btnOKClicked()
  this->close();
 }
 
-void editConnectionsDlg::btnDeleteClicked()
+void EditConnectionsDlg::btnDeleteClicked()
 {
  for(int j=0; j< config->cityList.count(); j++)
  {
@@ -515,12 +520,12 @@ void editConnectionsDlg::btnDeleteClicked()
  }
 }
 
-void editConnectionsDlg::cbConnectionsTextChanged(QString text)
+void EditConnectionsDlg::cbConnectionsTextChanged(QString text)
 {
  bCbConnectionsTextChanged=true;
 }
 
-void editConnectionsDlg::cbConnectionsLeave()
+void EditConnectionsDlg::cbConnectionsLeave()
 {
  if(bCbConnectionsTextChanged)
  {
@@ -535,7 +540,7 @@ void editConnectionsDlg::cbConnectionsLeave()
  bCbConnectionsTextChanged=false;
 }
 
-bool editConnectionsDlg::testConnection()
+bool EditConnectionsDlg::testConnection()
 {
  if(!openTestDb())
   return false;
@@ -595,7 +600,7 @@ bool editConnectionsDlg::testConnection()
  return true;
 }
 
-bool editConnectionsDlg::openTestDb()
+bool EditConnectionsDlg::openTestDb()
 {
 //    if(ui->txtDbOrDSN->text()=="")
 //        return false;
@@ -624,7 +629,7 @@ bool editConnectionsDlg::openTestDb()
 
 
 
-void editConnectionsDlg::populateDatabases()
+void EditConnectionsDlg::populateDatabases()
 {
  if(!openTestDb()) return;
   if(ui->cbDriverType->currentText() == "QODBC" || ui->cbDriverType->currentText() == "QODBC3")
@@ -651,7 +656,7 @@ void editConnectionsDlg::populateDatabases()
   db.close();
 }
 
-QString editConnectionsDlg::getDatabase()
+QString EditConnectionsDlg::getDatabase()
 {
  if(!openTestDb()) return QString();
 
@@ -673,12 +678,12 @@ QString editConnectionsDlg::getDatabase()
  return dbName;
 }
 
-void editConnectionsDlg::quickProcess()
+void EditConnectionsDlg::quickProcess()
 {
  qApp->processEvents();
 }
 
-void editConnectionsDlg::txtHostLeave()
+void EditConnectionsDlg::txtHostLeave()
 {
  ui->lblHelp->setText("");
  qint16 port;
@@ -695,7 +700,7 @@ void editConnectionsDlg::txtHostLeave()
  socket.close();
 }
 
-void editConnectionsDlg::txtPortLeave()
+void EditConnectionsDlg::txtPortLeave()
 {
  ui->lblHelp->setText("");
  qint16 port;
@@ -711,7 +716,7 @@ void editConnectionsDlg::txtPortLeave()
  }
  socket.close();
 }
-void editConnectionsDlg::txtPwdLeave()
+void EditConnectionsDlg::txtPwdLeave()
 {
  populateDatabases();
  if(!(ui->cbDriverType->currentText() == "ODBC" || ui->cbDriverType->currentText() == "ODBC3"))
@@ -721,7 +726,7 @@ void editConnectionsDlg::txtPwdLeave()
  }
 }
 
-void editConnectionsDlg::txtDsnTextChanged(QString text)
+void EditConnectionsDlg::txtDsnTextChanged(QString text)
 {
 //    if(ui->cbDriverType->currentText() == "QODBC" || ui->cbDriverType->currentText() == "QODBC3")
 //        return;
@@ -730,7 +735,7 @@ void editConnectionsDlg::txtDsnTextChanged(QString text)
  ui->txtDbOrDSN->setCompleter(completer);
 }
 
-void editConnectionsDlg::on_tbBrowse_clicked()
+void EditConnectionsDlg::on_tbBrowse_clicked()
 {
  QString basePath = MainWindow::pwd + QDir::separator() + "Resources/databases" + QDir::separator();
  QFileInfo info(ui->txtDbOrDSN->text());
@@ -754,7 +759,7 @@ void editConnectionsDlg::on_tbBrowse_clicked()
  }
 }
 
-bool editConnectionsDlg::createSqliteTables(QSqlDatabase db)
+bool EditConnectionsDlg::createSqliteTables(QSqlDatabase db)
 {
  if(!db.open())
   return false;
@@ -785,7 +790,7 @@ bool editConnectionsDlg::createSqliteTables(QSqlDatabase db)
  }
  return true;
 }
-void editConnectionsDlg::ontxtDbOrDsn_editingFinished()
+void EditConnectionsDlg::ontxtDbOrDsn_editingFinished()
 {
  if(ui->cbDriverType->currentText() == "QSQLITE")
  {
@@ -804,3 +809,4 @@ void editConnectionsDlg::ontxtDbOrDsn_editingFinished()
   getDatabase();
  }
 }
+

@@ -29,7 +29,9 @@ copy %1\..\..\..\mapper_QT\mapper_app\Resources\databases\*.sqlite3 %2\Resources
 REM copy html file
 IF NOT EXIST %2\html\nul (mkdir %2\html && echo %2\html created)
 copy copy %1\..\..\..\mapper_QT\mapper_app\html\GoogleMaps2.htm %2\html
+attrib +r %2\html\GoogleMaps2.htm
 copy copy %1\..\..\..\mapper_QT\mapper_app\html\GoogleMaps2b.htm %2\html
+attrib +r %2\html\GoogleMaps2b.htm
 
 REM copy wiki pages
 IF NOT EXIST %2\wiki\nul (mkdir %2\wiki && echo %2\wiki created)
