@@ -9,7 +9,7 @@ class SQL;
 class Connection : public QObject
 {
  Q_OBJECT
- qint32 _id;
+ qint32 _id =-1;
  QString _driver;
  QString _description;
  QString _DSN;
@@ -17,7 +17,7 @@ class Connection : public QObject
  QString _PWD;
  QString _database;
  QString _hostName;
- qint32  _port;
+ qint32  _port =0;
  QString _useDatabase;
  QSqlDatabase db;
  SQL* sql;

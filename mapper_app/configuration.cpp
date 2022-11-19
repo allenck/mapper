@@ -126,7 +126,6 @@ void Configuration::saveSettings()
 
 void Configuration::getSettings()
 {
-  bool ok = Overlay::importXml("./overlays.xml");
  QSettings settings;
  qDebug() << settings.fileName();
  //settingsDb settings;
@@ -146,7 +145,7 @@ void Configuration::getSettings()
   newCity->setBounds(Bounds(LatLng(38.558585451, -90.447647145), LatLng(38.758585451, -90.247647145)));
   newCity->zoom = zoom;
   newCity->mapType = maptype;
-  newCity->curConnectionId = newCity->id ;
+  newCity->curConnectionId = 0;
   newCity->companyKey=0;
   if(!cityList.values().contains(newCity))
    cityList.insert(newCity->name(), newCity);
@@ -161,6 +160,9 @@ void Configuration::getSettings()
   nc->setServerType("Sqlite");
   nc->setHost("");
   nc->setPort(0);
+  newCity->connections.append(nc);
+  currConnection = nc;
+
 
   newCity = new City();
   newCity->id = 1;
@@ -172,7 +174,7 @@ void Configuration::getSettings()
   newCity->setBounds(Bounds(LatLng(38.995919924, -84.788475037), LatLng(39.213049836, -84.23915863)));
   newCity->zoom = zoom;
   newCity->mapType = maptype;
-  newCity->curConnectionId = newCity->id ;
+  newCity->curConnectionId =0 ;
   newCity->companyKey=0;
   if(!cityList.values().contains(newCity))
    cityList.insert(newCity->name(), newCity);
@@ -187,6 +189,8 @@ void Configuration::getSettings()
   nc->setServerType("Sqlite");
   nc->setHost("");
   nc->setPort(0);
+  newCity->connections.append(nc);
+  currConnection = nc;
 
   newCity = new City();
   newCity->id = 2;
@@ -198,7 +202,7 @@ void Configuration::getSettings()
   newCity->setBounds(Bounds(LatLng(38.15228, -85.86115), LatLng(38.35228, -85.66115)));
   newCity->zoom = zoom;
   newCity->mapType = maptype;
-  newCity->curConnectionId = newCity->id ;
+  newCity->curConnectionId = 0 ;
   newCity->companyKey=0;
   if(!cityList.values().contains(newCity))
    cityList.insert(newCity->name(), newCity);
@@ -213,6 +217,8 @@ void Configuration::getSettings()
   nc->setServerType("Sqlite");
   nc->setHost("");
   nc->setPort(0);
+  newCity->connections.append(nc);
+  currConnection = nc;
 
   newCity = new City();
   newCity->id = 3;
@@ -223,7 +229,7 @@ void Configuration::getSettings()
   newCity->setBounds(Bounds(LatLng(52.4315, 12.90165), LatLng(52.6315, 13.10165)));
   newCity->zoom = zoom;
   newCity->mapType = maptype;
-  newCity->curConnectionId = newCity->id ;
+  newCity->curConnectionId = 0 ;
   newCity->companyKey=0;
   if(!cityList.values().contains(newCity))
    cityList.insert(newCity->name(), newCity);
@@ -238,6 +244,8 @@ void Configuration::getSettings()
   nc->setServerType("Sqlite");
   nc->setHost("");
   nc->setPort(0);
+  newCity->connections.append(nc);
+  currConnection = nc;
 
   newCity = cityList.values().at(0);
   Overlay* ov = new Overlay("St Louis, MO", "St_Louis_historical_topo");
@@ -246,10 +254,10 @@ void Configuration::getSettings()
 
   newCity->curOverlayId = 0;
   newCity->bShowOverlay =true;
-  currConnection = 0;
-  currCity = newCity;
+  currCity = cityList.values().at(0);
   currentCityId = 0;
-
+  currConnection = currCity->connections.at(0);
+  currConnection->setId(currCity->curConnectionId);
   if(Overlay::importXml("./overlays.xml"))
   {
    for(Overlay* ov : Overlay::overlayList)
@@ -268,6 +276,7 @@ void Configuration::getSettings()
   return;
  } // end default configuration
 
+ bool ok = Overlay::importXml("./overlays.xml");
 
 //  settings.remove("center/latitude");
 //  settings.remove("center/longitude");
@@ -295,8 +304,10 @@ void Configuration::getSettings()
   {
    nc->setBounds(Bounds(LatLng(pt.lat()-.1, pt.lon()-.1), LatLng(pt.lat()+.1, pt.lon()+.1)));
   }
-  if(nc->bounds().isValid())
-   cityBounds.insert(nc->name(), new Bounds(nc->bounds()));
+  if(nc->bounds().isValid()){
+   cityBounds.insert(nc->name(), nc->bounds());
+   nc->center = nc->bounds().center();
+  }
   nc->mapType = settings.value("maptype","roadmap").toString();
   nc->zoom = settings.value("zoom",12).toInt();
   nc->curConnectionId = settings.value("currConnection",0).toInt();
@@ -645,11 +656,11 @@ QStringList Configuration::cityNames()
 
 QString Configuration::lookupCityName(Bounds b)
 {
- QMapIterator<QString, Bounds*> iter(cityBounds);
+ QMapIterator<QString, Bounds> iter(cityBounds);
  while(iter.hasNext())
  {
   iter.next();
-  if(iter.value()->contains(b))
+  if(iter.value().contains(b))
      return iter.key();
  }
  return "";

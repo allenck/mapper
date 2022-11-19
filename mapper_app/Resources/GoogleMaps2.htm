@@ -5,24 +5,31 @@
   <style type="text/css">
     html { height: 100% }
     body { height: 100%; margin: 0; padding: 0 }
-    #map_canvas { height: 100% }
-  </style>
+    #map_canvas { height: 100%
+    }
+    .contextmenu{
+        visibility:hidden;
+        background:#ffffff;
+        border:1px solid #8888FF;
+        z-index: 10;
+        position: relative;
+        width: 140px;
+    }
+    .contextmenu div{
+        padding-left: 5px
+    }
+</style>
   <title>Mapper</title>
 
-  <!--script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script-->
-  <!--script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.3/jquery.min.js"></script-->
-  <script src="javascripts/jquery.js"></script>
-  <script type="text/javascript" src="qrc:/scripts/qwebchannel.js"> </script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.3/jquery.min.js"></script>
+  <script type="text/javascript" src="TEMPDIR/qwebchannel.js"> </script>
   <!-- API key 3 -->
-  <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?v=weekly&key=MYAPIKEY&callback=initMap"></script>
-  <!--<script type="text/javascript" src="http://ubuntu-2:1080/public/map_tiles/tileoverlay_uncompressed (copy).js"></script>-->
-  <!--<script type="text/javascript" src="http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/ExtDraggableObject.js"></script> -->
-  <!--script type="text/javascript" src="http://ubuntu-2:1080/public/map_tiles/opacityControl.js"></script-->
-  <script type="text/javascript" src="qrc:/scripts/ExtDraggableObject.js"></script>
-  <script type="text/javascript" src="qrc:/scripts/opacityControl.js"></script>
-  <script type="text/javascript" src="qrc:/scripts/WebChannel.js"> </script>
-  <script type="text/javascript" src="qrc:/GoogleMaps.js"> </script>
-  <script type="text/javascript" src="javascripts/jquery.googlemap.js"></script>
+  <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?v=weekly&key=MYAPIKEY"></script>
+  <script type="text/javascript" src="TEMPDIR/ExtDraggableObject.js"></script>
+  <script type="text/javascript" src="TEMPDIR/opacityControl.js"></script>
+  <script type="text/javascript" src="TEMPDIR/WebChannel.js"> </script>
+  <script type="text/javascript" src="TEMPDIR/GoogleMaps.js"> </script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.googlemap/1.5.1/jquery.googlemap.js"></script>
   <script>
   //alert("setup google maps event 'load'");
   google.maps.event.addDomListener(window, "load", window.onLoad);

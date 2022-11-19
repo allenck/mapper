@@ -100,8 +100,6 @@ win32:{
 #    C:/Program Files (x86)/SQLite3
 }
 
-
-
 #win32:CONFIG(release, debug|release): LIBS += -L'c:/Program Files (x86)/Sqlite3//' -lsqlite3
 #else:win32:CONFIG(debug, debug|release): LIBS += -L'c:/Program Files (x86)/Sqlite3//' -lsqlite3
 #else:unix:!macx: LIBS += -lsqlite3

@@ -499,7 +499,7 @@ Bounds::Bounds(const Bounds &other) : QObject()
  bBoundsValid = other.bBoundsValid;
 }
 
-bool Bounds::isValid() { return bBoundsValid;}
+bool Bounds::isValid() {bBoundsValid = checkValid(); return bBoundsValid;}
 bool Bounds::checkValid()
 {
  if(!_swPt.isValid())

@@ -51,6 +51,7 @@
 #include "routeview.h"
 #include "splitsegmentdlg.h"
 #include "overlay.h"
+#include <QClipboard>
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -125,11 +126,12 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  cwd = QDir::currentPath();
 #ifdef Q_OS_WINDOWS
  cwd.replace("/", QDir::separator());
-#endif
  htmlDir = QDir(cwd + QDir::separator()+ "html");
+#else
+ QDir htmlDir("/var/www/html");
  if(!htmlDir.exists())
-     htmlDir.mkdir(cwd + QDir::separator()+ "html");
-
+     QDir().mkpath ("/var/www/html/html");
+#endif
  if(!config->bRunInBrowser)
  {
 #ifndef USE_WEBENGINE
@@ -140,18 +142,32 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 #else
   webView = new QWebEngineView(ui->groupBox_2);
   webView->setObjectName(QStringLiteral("webEngineView"));
-  webView->setContextMenuPolicy(Qt::NoContextMenu);
+  webView->setContextMenuPolicy(Qt::CustomContextMenu);
   webView->setPage(new MyWebEnginePage());
   webView->setMinimumWidth(400);
   Q_ASSERT(keyTokens.size()>0);
+#ifdef Q_OS_WINDOWS
   QFileInfo info(QString(cwd + QDir::separator()+"html") + QDir::separator()+"GoogleMaps2.htm");
-  if(!info.exists())
-  {
-   QList<QPair<QString,QString>> updates = {QPair<QString,QString>("MYAPIKEY",keyTokens.at(0)),
-                                            QPair<QString,QString>("TEMPDIR",  cwd + QDir::separator()+"html")};
+#else
+  QFileInfo info(htmlDir.path()+"GoogleMaps2.htm");
+#endif
+   QList<QPair<QString,QString> > updates;
+#ifdef Q_OS_WINDOWS
+   updates = {QPair<QString,QString>("MYAPIKEY",keyTokens.at(0)),
+                                            QPair<QString,QString>("TEMPDIR",  tempDir)};
    copyAndUpdate(":///GoogleMaps2.htm", cwd + QDir::separator()+"html"+ QDir::separator(), updates);
-  }
-  QUrl fileUrl = QUrl::fromLocalFile(QString(cwd + QDir::separator()+"html") + QDir::separator()+"GoogleMaps2.htm");
+#else
+   updates = {QPair<QString,QString>("MYAPIKEY",keyTokens.at(0)),
+              QPair<QString,QString>("TEMPDIR",  "http://localhost")};
+   copyAndUpdate(":///GoogleMaps2.htm", htmlDir.path(), updates);
+
+#endif
+
+#ifdef Q_OS_WINDOWS
+  fileUrl = QUrl::fromLocalFile(QString(cwd + QDir::separator()+"html") + QDir::separator()+"GoogleMaps2.htm");
+#else
+  fileUrl = QUrl("http://localhost/GoogleMaps2.htm");
+#endif
   webView->setUrl(fileUrl);
 #endif
  }
@@ -169,7 +185,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  m_server = new QWebSocketServer(QStringLiteral("WebViewBridge"), QWebSocketServer::NonSecureMode);
  if (!m_server->listen(QHostAddress::LocalHost, 12345))
  {
-  qFatal("Failed to open web socket server.");
+  QString err = m_server->errorString();
+  qCritical() <<tr("Failed to open web socket server(%1).").arg(err);
   return;
  }
  qDebug() << "listening on localhost:12345";
@@ -205,7 +222,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
  QUrl dataUrl("http://ubuntu-2:1080/public/map_tiles/overlay.lst");
  m_dataCtrl = new FileDownloader(dataUrl, this);
- connect (m_dataCtrl, SIGNAL(downloaded(Qtring)), this, SLOT(loadAcksoftData(QString)));
+ connect (m_dataCtrl, SIGNAL(downloaded(QString)), this, SLOT(loadAcksoftData(QString)));
 //#ifdef WIN32
 // m_overlays = new FileDownloader(QUrl("http://localhost/map_tiles/"),this);
 //#else
@@ -215,7 +232,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  // get list of localhost's mbtiles overlays
  m_overlays = new FileDownloader(QUrl("http://localhost/map_tiles/mbtiles.php"),this);
  //m_overlays = new FileDownloader(QUrl("http://localhost/tileserver/"),this);connect(m_overlays, SIGNAL(downloaded()), this, SLOT(loadMbtilesData()));
- connect(m_overlays, SIGNAL(downloaded(QString)), this, SLOT(loadMbtilesData(QString)));
+ connect(m_overlays, SIGNAL(downloaded(QString)), this, SLOT(loadMbtilesData()));
 
  createActions();
  createMenus();
@@ -1118,9 +1135,9 @@ void MainWindow::createMenus()
 
     helpMenu = menuBar()->addMenu(tr("&Help"));
 //    helpMenu->addAction(webViewAction = new WebViewAction((QObject*)this));
-#ifndef QT_DEBUG
+//#ifndef QT_DEBUG
     helpMenu->addAction(systemConsoleAction = new SystemConsoleAction());
-#endif
+//#endif
     helpMenu->addAction(usingMapper);
     helpMenu->addAction(overlayHelp);
     helpMenu->addSeparator();
@@ -1221,6 +1238,21 @@ void MainWindow::tab1CustomContextMenu(const QPoint &)
     else
        saveChangesAct->setEnabled(true);
     tab1Menu.exec(QCursor::pos());
+}
+
+void MainWindow::webView_customContextMenu(const QPoint &)
+{
+    QMenu* menu = new QMenu();
+    LatLng pos;
+    WebViewBridge::instance()->processScript("getRightClick");
+    pos =WebViewBridge::instance()->rightClick();
+    QAction* currPoint = new QAction(tr("%1, %2").arg(pos.lat()).arg(pos.lon()), this);
+    connect(currPoint, &QAction::triggered, [=]{
+       QClipboard* clip = QApplication::clipboard();
+       clip->setText(tr("%1, %2").arg(pos.lat()).arg(pos.lon()));
+    });
+    menu->addAction(currPoint);
+    menu->exec(QCursor::pos());
 }
 
 // New City and/or connection selected.
@@ -4020,15 +4052,10 @@ bool MainWindow::openWebWindow()
   {
   qDebug() << "must create " << cwd + QDir::separator()+ "html";
   htmlDir.mkdir(cwd + QDir::separator()+ "html");
+  }
  }
-
   qDebug() << "openWebWindow: copyAndUpdate GoogleMaps2b.htm" << " to " << htmlPath;
   copyAndUpdate(":///GoogleMaps2b.htm", htmlPath, updates);
- }
- else
- {
-     qDebug() << "openWebWindow: GoogleMaps2b.htm already exists and was not copied" << " to " << htmlPath;
- }
 
  if(!QFile(tempDir+ QDir::separator() + "qwebchannel.js").exists())
  {
@@ -4090,8 +4117,12 @@ bool MainWindow::openWebWindow()
      //return false;
     }
    }
-
-   QUrl fileUrl = QUrl::fromLocalFile(QString(cwd + QDir::separator() + "html") + QDir::separator() + "GoogleMaps2b.htm");
+#ifdef Q_OS_LINUX
+  QFile::copy(htmlPath+QDir::separator() + "GoogleMaps2b.htm", "/var/www/html/GoogleMaps2b.htm");
+  fileUrl = QUrl("http://localhost:80/GoogleMaps2b.htm");
+#else
+    fileUrl = QUrl::fromLocalFile(QString(cwd + QDir::separator() + "html") + QDir::separator() + "GoogleMaps2b.htm");
+#endif
    if(!QDesktopServices::openUrl(fileUrl))
    {
     qDebug() << "open webbrowser failed " << fileUrl.toDisplayString();
@@ -4103,15 +4134,20 @@ bool MainWindow::openWebWindow()
 
 bool MainWindow::copyAndUpdate(QString inFile, QString outDir, QList<QPair<QString,QString>> updates)
 {
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
  outDir.replace("\\\\", "\\");
 #endif
 
-
  // note on Ubuntu, 'TEMPDIR' is replaced by 'tmp' Windows uses something else!
- qDebug() << "copyAndUpdate: infile = " << inFile << "outdir= " << outDir << updates;
- QFile* gFile = new QFile(/*"qrc:/GoogleMaps2b.htm"*/inFile);
+ QFileInfo in(inFile);
  QString baseName = inFile.mid(inFile.lastIndexOf("/")+1);
+ QFileInfo out(outDir+QDir::separator()+baseName);
+ if(out.exists() &&  (out.fileTime(QFileDevice::FileModificationTime)) > in.fileTime(QFileDevice::FileModificationTime))
+   return true;
+
+ qDebug() << "copyAndUpdate: infile = " << inFile << "outdir= " << outDir << updates;
+ QFile* gFile = new QFile(in.absoluteFilePath());
+ QFile* tgFile = new QFile(out.absoluteFilePath());
  if(gFile->open(QIODevice::ReadOnly))
  {
   QTextStream* inStream = new QTextStream(gFile);
@@ -4124,7 +4160,7 @@ bool MainWindow::copyAndUpdate(QString inFile, QString outDir, QList<QPair<QStri
     if(text.contains(pair.first))
         text = text.replace(pair.first, pair.second);
   }
-  QFile* tgFile = new QFile(outDir+QDir::separator()+/*"GoogleMaps2b.htm"*/baseName);
+
   if(tgFile->exists())
   {
    tgFile->setPermissions(QFile::ReadOwner | QFile::WriteOwner |

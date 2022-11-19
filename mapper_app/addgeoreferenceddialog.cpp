@@ -10,6 +10,8 @@
 #include <QIntValidator>
 #include <QMessageBox>
 #include "editcomments.h" // for formatting menu
+#include "webviewbridge.h"
+
 
 AddGeoreferencedDialog::AddGeoreferencedDialog(QWidget *parent) :
   QDialog(parent),
@@ -192,6 +194,17 @@ void AddGeoreferencedDialog::validateValues()
      return;
  ui->lblErr->setText("");
  wmtsUrl = ui->edUrl->toPlainText();
+// // temp code
+// QVariantList objArray;
+// objArray << wmtsUrl << "capabilities.xml";
+// WebViewBridge::instance()->processScript("downloadFile", objArray);
+// // end temp code
+ if(wmtsUrl.startsWith("<Capabilities"))
+ {
+    validateWMTS(wmtsUrl);
+    return;
+ }
+
  if(!wmtsUrl.isEmpty())
  {
   downloader = new FileDownloader(QUrl(wmtsUrl));
@@ -257,16 +270,23 @@ void AddGeoreferencedDialog::validateWMTS(QString err)
 {
  QDomDocument doc;
  QStringList points;
- if(!err.isEmpty())
- {
-  ui->lblErr->setText(err);
-  setCursor(Qt::ArrowCursor);
-  return;
- }
  bLoading = true;
  ov = new Overlay();
+ if(err.startsWith("<Capabilities"))
+ {
+  doc.setContent(err);
+ }
+ else
+ {
+  if(!err.isEmpty())
+  {
+   ui->lblErr->setText(err);
+   setCursor(Qt::ArrowCursor);
+   return;
+  }
 
- doc.setContent(downloader->downloadedData());
+  doc.setContent(downloader->downloadedData());
+ }
  QDomElement root = doc.documentElement();
  if(root.isNull())
   return;

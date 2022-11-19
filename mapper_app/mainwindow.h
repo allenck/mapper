@@ -194,6 +194,8 @@ private slots:
     void quit();
     void cbRoute_customContextMenu( const QPoint& );
     void txtSegment_customContextMenu(const QPoint&);
+    void webView_customContextMenu(const QPoint&);
+
     void tab1CustomContextMenu(const QPoint &);
     void btnDisplayRouteClicked();
     void btnClearClicked();
@@ -410,6 +412,7 @@ private:
     QStringList keyTokens;
     QUrl fileUrl;
     Logger* logger;
+
 private slots:
     void createCityMenu();
     void sbTracks_valueChanged(int);

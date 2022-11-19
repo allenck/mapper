@@ -10,6 +10,9 @@ class MyTextEdit : public QTextEdit
  public:
   MyTextEdit(QWidget *parent);
 
+ signals:
+  void dirtySet(bool);
+
  public slots:
   void OnBoldAction(bool checked);
   void OnItalicAction(bool checked);
@@ -33,7 +36,7 @@ class MyTextEdit : public QTextEdit
   QAction *setBackgroundColorAct;
   QAction *setTextColorAct;
   QAction* pasteHtmlAct;
-  void setDirty(bool dirty){_dirty = dirty;}
+  void setDirty(bool dirty){_dirty = dirty; emit dirtySet(dirty);}
   bool _dirty=false;
 };
 

@@ -281,6 +281,13 @@ void WebViewBridge::cityBounds(double neLat, double neLng, double swLat, double 
  Bounds bounds = Bounds(LatLng(swLat, swLng), LatLng(neLat, neLng));
  qDebug() << "city bounds" << bounds.toString() << "valid=" << bounds.isValid();
  config->currCity->setBounds(bounds);
+ LatLng center = bounds.center();
+ config->currCity->setCenter(center);
  config->saveSettings();
  processScript("closeCityBoundsButton");
+}
+
+void WebViewBridge::rightClicked(LatLng rightClickLoc)
+{
+    _rightClickLoc = rightClickLoc;
 }

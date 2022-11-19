@@ -296,7 +296,7 @@ void ExportDlg::newProgressMsg(QString msg)
 void ExportDlg::uncheckControl(QString control)
 {
  QCheckBox * ctrl =findChild<QCheckBox*>( control);
- if(ctrl > 0)
+ if(ctrl)
      ctrl->setChecked(false);
  else
      qDebug()<<tr("ExportDlg::uncheckControl: control '")+control+"' not found.";

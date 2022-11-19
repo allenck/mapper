@@ -45,7 +45,7 @@ public:
  QString path;
  QStringList cityNames();
  QString lookupCityName(Bounds b);
- QMap<QString, Bounds*> cityBounds;
+ QMap<QString, Bounds> cityBounds;
 private:
  static Configuration* _instance;
  explicit Configuration(QObject *parent = 0);

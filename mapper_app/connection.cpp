@@ -4,7 +4,7 @@
 Connection::Connection(QObject *parent) : QObject(parent)
 {
  _DSN = "";
- _servertype = "MsSql";
+ _servertype = "Sqlite";
  bOpen = false;
 
 }

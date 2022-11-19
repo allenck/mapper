@@ -41,6 +41,7 @@ public:
     static WebViewBridge* instance();
     void setLatLng(LatLng latlng);
     bool isResultReceived();
+    LatLng rightClick() {return _rightClickLoc;}
 
     ~WebViewBridge();
 
@@ -62,6 +63,7 @@ signals:
     void queryOverlaySignal();
     void on_scriptResult(QVariant);
     void on_scriptArrayResult(QVariantList);
+    void on_rightClicked(LatLng pos);
 
 public slots:
     void selectSegment(qint32 i, qint32 SegmentId); //19
@@ -94,6 +96,7 @@ public slots:
     void mapInit();
     void debug(QString text);
     void cityBounds(double neLat, double neLng, double swLat, double swLng);
+    void rightClicked(LatLng rightClickLoc);
 
 private slots:
 
@@ -107,6 +110,7 @@ private:
     QString maptype;
     bool bResultReceived;
     Configuration* config;
+    LatLng _rightClickLoc;
 };
 
 #endif // WEBVIEWBRIDGE_H

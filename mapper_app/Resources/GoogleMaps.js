@@ -854,6 +854,7 @@ function initMap()
             webViewBridge.mapInit();
         });
     });
+    google.maps.event.addListener(map, "rightclick",function(event){showContextMenu(event.latLng);});
 
  //google.maps.event.addDomListener(mapDiv, 'resize', function(){ deprecated
     google.maps.event.addListener(mapDiv, 'resize', function(){
@@ -2611,6 +2612,65 @@ function closeCityBoundsButton()
  map.controls[google.maps.ControlPosition.TOP_CENTER].removeAt(0);
 }
 
+function downloadFile(url, fileName) {
+  fetch(url, { method: 'get', mode: 'no-cors', referrerPolicy: 'no-referrer' })
+    .then(res => res.blob())
+    .then(res => {
+      const aElement = document.createElement('a');
+      aElement.setAttribute('download', fileName);
+      const href = URL.createObjectURL(res);
+      aElement.href = href;
+      aElement.setAttribute('target', '_blank');
+      aElement.click();
+      URL.revokeObjectURL(href);
+    });
+};
+
+function getCanvasXY(currentLatLng){
+      var scale = Math.pow(2, map.getZoom());
+     var nw = new google.maps.LatLng(
+         map.getBounds().getNorthEast().lat(),
+         map.getBounds().getSouthWest().lng()
+     );
+     var worldCoordinateNW = map.getProjection().fromLatLngToPoint(nw);
+     var worldCoordinate = map.getProjection().fromLatLngToPoint(currentLatLng);
+     var currentLatLngOffset = new google.maps.Point(
+         Math.floor((worldCoordinate.x - worldCoordinateNW.x) * scale),
+         Math.floor((worldCoordinate.y - worldCoordinateNW.y) * scale)
+     );
+     return currentLatLngOffset;
+  }
+  function setMenuXY(currentLatLng){
+    var mapWidth = $('#map_canvas').width();
+    var mapHeight = $('#map_canvas').height();
+    var menuWidth = $('.contextmenu').width();
+    var menuHeight = $('.contextmenu').height();
+    var clickedPosition = getCanvasXY(currentLatLng);
+    var x = clickedPosition.x ;
+    var y = clickedPosition.y ;
+
+     if((mapWidth - x ) < menuWidth)
+         x = x - menuWidth;
+    if((mapHeight - y ) < menuHeight)
+        y = y - menuHeight;
+
+    $('.contextmenu').css('left',x  );
+    $('.contextmenu').css('top',y );
+    };
+  function showContextMenu(currentLatLng  ) {
+        var projection;
+        var contextmenuDir;
+        projection = map.getProjection() ;
+        $('.contextmenu').remove();
+            contextmenuDir = document.createElement("div");
+          contextmenuDir.className  = 'contextmenu';
+          contextmenuDir.innerHTML = "<a id='menu1'><div class=context>menu item 1<\/div><\/a><a id='menu2'><div class=context>menu item 2<\/div><\/a>";
+        $(map.getDiv()).append(contextmenuDir);
+
+        setMenuXY(currentLatLng);
+
+        contextmenuDir.style.visibility = "visible";
+       }
 //alert("begin Loading GoogleMaps.js 2042");
 
 //google.maps.event.addDomListener(window, "load", initialize);
