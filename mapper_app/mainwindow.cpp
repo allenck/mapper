@@ -189,7 +189,21 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   qCritical() <<tr("Failed to open web socket server(%1).").arg(err);
   return;
  }
- qDebug() << "listening on localhost:12345";
+ connect(m_server, &QWebSocketServer::newConnection, [=]{
+  qDebug() << "new connection";
+ });
+ connect(m_server, &QWebSocketServer::serverError, [=](QWebSocketProtocol::CloseCode closeCode){
+  qDebug() << "server error" << m_server->errorString();
+ });
+ connect(m_server, &QWebSocketServer::acceptError, [=](QAbstractSocket::SocketError socketError){
+  qDebug() << "server socket error" << socketError;
+ });
+ connect(m_server, &QWebSocketServer::closed, [=] {
+  qDebug()  << "server closed";
+ });
+ if(m_server->isListening())
+  qDebug() << "listening on localhost:12345";
+
  // wrap WebSocket clients in QWebChannelAbstractTransport objects
  m_clientWrapper = new WebSocketClientWrapper (m_server);
 
@@ -4030,7 +4044,6 @@ bool MainWindow::openWebWindow()
 #else
  QUrl startURL = QUrl("qrc:/GoogleMaps2b.htm");
 #endif
- qDebug() << "openWebWindow: tempPath =" << tempDir;
 
  QString cwd = QDir::currentPath();
 #ifdef Q_OS_WINDOWS
@@ -4039,7 +4052,12 @@ bool MainWindow::openWebWindow()
  QString htmlPath =cwd + QDir::separator()+ "html";
 #ifdef Q_OS_WINDOWS
      htmlPath.replace("/", QDir::separator());
+#else
+ tempDir = "/var/www/html";
+
 #endif
+     qDebug() << "openWebWindow: tempPath =" << tempDir;
+
      QList<QPair<QString,QString>> updates = {QPair<QString,QString>("MYAPIKEY",keyTokens.at(1)),
                                               QPair<QString,QString>("TEMPDIR",  tempDir)};
 
@@ -4057,14 +4075,13 @@ bool MainWindow::openWebWindow()
   qDebug() << "openWebWindow: copyAndUpdate GoogleMaps2b.htm" << " to " << htmlPath;
   copyAndUpdate(":///GoogleMaps2b.htm", htmlPath, updates);
 
- if(!QFile(tempDir+ QDir::separator() + "qwebchannel.js").exists())
- {
-  if(!QFile::copy(":///scripts/qwebchannel.js", tempDir+ QDir::separator() + "qwebchannel.js"))
+  if(!copyAndUpdate(":///scripts/qwebchannel.js", tempDir, updates))
   {
-   qDebug() << "copy failed:" << "qrc:/scripts/qwebchannel.js" << " to " << tempDir+ QDir::separator() + "qwebchannel.js";
+   qDebug() << "copy failed:" << "qrc:/scripts/qwebchannel.js" << " to "
+<< tempDir+ QDir::separator() + "qwebchannel.js" << " error:";
    //return false;
   }
- }
+
 
  QFile file(tempDir+ QDir::separator() + "GoogleMaps.js");
  if(file.exists())
@@ -4073,29 +4090,25 @@ bool MainWindow::openWebWindow()
   if(!file.remove())
    qDebug() << "error deleting " << file.fileName() << file.errorString();
  }
- if(!QFile::copy(":///GoogleMaps.js", tempDir+ QDir::separator() + "GoogleMaps.js" ))
+ if(!copyAndUpdate("Resources/GoogleMaps.js", tempDir, updates ))
  {
 
-  qDebug() << "copy failed:" << "qrc:/GoogleMaps.js" << " to " << tempDir+ QDir::separator() + "GoogleMaps.js" << file.errorString();
+  qDebug() << "copy failed:" << ":///GoogleMaps.js" << " to " << tempDir+ QDir::separator() + "GoogleMaps.js" << file.errorString();
   //return false;
  }
 
- if(!QFile(tempDir+ QDir::separator() + "WebChannel.js").exists())
- {
-  if(!QFile::copy(":///scripts/WebChannel.js", tempDir+ QDir::separator() + "WebChannel.js" ))
+  if(!copyAndUpdate(":///scripts/WebChannel.js", tempDir, updates ))
   {
    qDebug() << "copy failed:" << "qrc:/scripts/WebChannel.js" << " to " << tempDir+ QDir::separator() + "WebChannel.js";
    //return false;
   }
- }
- if(!QFile(tempDir+ QDir::separator() + "ExtDraggableObject.js").exists())
- {
-  if(!QFile::copy(":///scripts/ExtDraggableObject.js", tempDir+ QDir::separator() + "ExtDraggableObject.js" ))
+
+  if(!copyAndUpdate(":///scripts/ExtDraggableObject.js", tempDir, updates))
   {
    qDebug() << "copy failed:" << "qrc:/scripts/ExtDraggableObject.js" << " to " << tempDir+ QDir::separator() + "ExtDraggableObject.js";
    //return false;
   }
- }
+
 
 //   if(!QFile(tempDir+ QDir::separator() + "opacityControl.js").exists())
 //   {
@@ -4109,14 +4122,13 @@ bool MainWindow::openWebWindow()
    copyAndUpdate(":///scripts/opacityControl.js", tempDir, updates);
 
 
-   if(!QFile(tempDir+ QDir::separator() + "opacity-slider2.png").exists())
-   {
     if(!QFile::copy(":///scripts/opacity-slider2.png", tempDir+ QDir::separator() + "opacity-slider2.png" ))
     {
+     // error probably means file already present!
      qDebug() << "copy failed:" << "qrc:/scripts/opacity-slider2.png" << " to " << tempDir+ QDir::separator() + "opacity-slider2.png";
      //return false;
     }
-   }
+
 #ifdef Q_OS_LINUX
   QFile::copy(htmlPath+QDir::separator() + "GoogleMaps2b.htm", "/var/www/html/GoogleMaps2b.htm");
   fileUrl = QUrl("http://localhost:80/GoogleMaps2b.htm");
@@ -4143,8 +4155,12 @@ bool MainWindow::copyAndUpdate(QString inFile, QString outDir, QList<QPair<QStri
  QString baseName = inFile.mid(inFile.lastIndexOf("/")+1);
  QFileInfo out(outDir+QDir::separator()+baseName);
  if(out.exists() &&  (out.fileTime(QFileDevice::FileModificationTime)) > in.fileTime(QFileDevice::FileModificationTime))
-   return true;
-
+ {
+  qDebug() << "out file newer; will not copy it:";
+  qDebug() << " infile path " << in.absoluteFilePath() << " time" << in.fileTime(QFileDevice::FileModificationTime).toString();
+  qDebug() << " outfile path" << out.absoluteFilePath() << " time" << out.fileTime(QFileDevice::FileModificationTime).toString();
+  return true;
+ }
  qDebug() << "copyAndUpdate: infile = " << inFile << "outdir= " << outDir << updates;
  QFile* gFile = new QFile(in.absoluteFilePath());
  QFile* tgFile = new QFile(out.absoluteFilePath());

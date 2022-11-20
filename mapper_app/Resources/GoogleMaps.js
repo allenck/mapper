@@ -854,7 +854,7 @@ function initMap()
             webViewBridge.mapInit();
         });
     });
-    google.maps.event.addListener(map, "rightclick",function(event){showContextMenu(event.latLng);});
+ google.maps.event.addListener(map, "rightclick",function(event){showContextMenu(event.latLng);});
 
  //google.maps.event.addDomListener(mapDiv, 'resize', function(){ deprecated
     google.maps.event.addListener(mapDiv, 'resize', function(){

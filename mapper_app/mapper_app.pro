@@ -93,6 +93,8 @@ OTHER_FILES += \
     Resources/recreateCompanies.sql
 
 RESOURCES += \
+    Resources/mapper.qrc \
+    Resources/mapper.qrc \
     Resources/mapper.qrc
 
 win32:{

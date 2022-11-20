@@ -65,7 +65,7 @@ void WebViewBridge::processScript(QString func)
 
 void WebViewBridge::processScript(QString func, QString parms, QString name, QString value)
 {
- qDebug() << "processScript " << func;
+ //qDebug() << "processScript " << func;
  bResultReceived = false;
  emit executeScript2( func,  parms, name, value);
  if(func == "loadOverlay")
@@ -74,7 +74,7 @@ void WebViewBridge::processScript(QString func, QString parms, QString name, QSt
 
 void WebViewBridge::processScript(QString func, QVariantList objArray)
 {
- qDebug() << "processScript " << func;
+ //qDebug() << "processScript " << func;
 
  bResultReceived = false;
  emit executeScript3(func, objArray, objArray.count() );
