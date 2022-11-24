@@ -96,7 +96,7 @@ public slots:
     void mapInit();
     void debug(QString text);
     void cityBounds(double neLat, double neLng, double swLat, double swLng);
-    void rightClicked(LatLng rightClickLoc);
+    void rightClicked(QString text);
 
 private slots:
 

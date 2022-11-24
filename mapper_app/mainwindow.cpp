@@ -77,6 +77,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   else
    qWarning() << "cannot find wiki pages!";
  }
+
  while(!config->currConnection->isOpen())
  {
   this->setWindowTitle("Mapper - "+ config->currCity->name() + " ("+config->currConnection->description()+")");
@@ -167,6 +168,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   fileUrl = QUrl::fromLocalFile(QString(cwd + QDir::separator()+"html") + QDir::separator()+"GoogleMaps2.htm");
 #else
   fileUrl = QUrl("http://localhost/GoogleMaps2.htm");
+//   fileUrl = QUrl::fromLocalFile("./html/GoogleMaps2.htm");
 #endif
   webView->setUrl(fileUrl);
 #endif
@@ -3364,6 +3366,10 @@ void MainWindow::addSegment()
     //SQL sql;
     SegmentDlg segmentDlg(config, this);
 //TODO    segmentDlg.routeChanged += new routeChangedEventHandler(segmentDlg_routeChanged);
+    connect(&segmentDlg, &SegmentDlg::companySelectionChanged, [=](int companyKey){
+     ui->cbCompany->setCurrentIndex( ui->cbCompany->findData(companyKey));
+     refreshRoutes();
+    } );
     connect(&segmentDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs)), this, SLOT(segmentDlg_routeChanged(RouteChangedEventArgs)));
     //segmentDlg.setConfiguration( config);
     segmentDlg.setSegmentId( -1);
@@ -4042,84 +4048,79 @@ bool MainWindow::openWebWindow()
 #ifndef USE_WEBENGINE
  QUrl startURL = QUrl("qrc:/GoogleMaps.htm");
 #else
- QUrl startURL = QUrl("qrc:/GoogleMaps2b.htm");
+ QString startHTML = ":///GoogleMaps2b.htm";
+ QString startFn = "GoogleMaps2b.htm";
 #endif
 
  QString cwd = QDir::currentPath();
 #ifdef Q_OS_WINDOWS
  cwd.replace("/", QDir::separator());
 #endif
- QString htmlPath =cwd + QDir::separator()+ "html";
+QString loadPath = tempDir;
 #ifdef Q_OS_WINDOWS
-     htmlPath.replace("/", QDir::separator());
+ QDir temp = QDir::tempPath();
+ temp.mkdir("Mapper");
+     tempDir = temp.absolutePath() + "/" + "Mapper";
 #else
  tempDir = "/var/www/html";
-
+ loadPath = "http://localhost/";
 #endif
      qDebug() << "openWebWindow: tempPath =" << tempDir;
 
      QList<QPair<QString,QString>> updates = {QPair<QString,QString>("MYAPIKEY",keyTokens.at(1)),
-                                              QPair<QString,QString>("TEMPDIR",  tempDir)};
+                                              QPair<QString,QString>("TEMPDIR",  loadPath)};
 
- QFileInfo info(cwd + QDir::separator()+"html" + QDir::separator() + "GoogleMaps2b.htm");
- if(!info.exists()) // does GoogleMaps2b.htm exist?
- {
-  htmlDir = QDir(cwd + QDir::separator()+ "html");
+ QFileInfo info(tempDir+ QDir::separator() + startFn);
 
-  if(!htmlDir.exists())
+ qDebug() << "openWebWindow: copyAndUpdate GoogleMaps2b.htm" << " to " << tempDir;
+#define FORCE_COPY
+  if(!copyAndUpdate(startHTML, tempDir, updates))
   {
-  qDebug() << "must create " << cwd + QDir::separator()+ "html";
-  htmlDir.mkdir(cwd + QDir::separator()+ "html");
+      qDebug() << "copy of " << startFn << "failed";
   }
- }
-  qDebug() << "openWebWindow: copyAndUpdate GoogleMaps2b.htm" << " to " << htmlPath;
-  copyAndUpdate(":///GoogleMaps2b.htm", htmlPath, updates);
 
   if(!copyAndUpdate(":///scripts/qwebchannel.js", tempDir, updates))
   {
    qDebug() << "copy failed:" << "qrc:/scripts/qwebchannel.js" << " to "
-<< tempDir+ QDir::separator() + "qwebchannel.js" << " error:";
+     << tempDir+ QDir::separator() + "qwebchannel.js" << " error:";
    //return false;
   }
 
 
- QFile file(tempDir+ QDir::separator() + "GoogleMaps.js");
- if(file.exists())
- {
-  file.setPermissions(QFile::ReadOther | QFile::WriteOther);
-  if(!file.remove())
-   qDebug() << "error deleting " << file.fileName() << file.errorString();
- }
- if(!copyAndUpdate("Resources/GoogleMaps.js", tempDir, updates ))
+// QFile file(tempDir+ QDir::separator() + startFn);
+// if(file.exists())
+// {
+//  file.setPermissions(QFile::ReadOther | QFile::WriteOther);
+////  if(!file.remove())
+////   qDebug() << "error deleting " << file.fileName() << file.errorString();
+// }
+
+ if(!copyAndUpdate(":///GoogleMaps.js", tempDir, updates ))
  {
 
-  qDebug() << "copy failed:" << ":///GoogleMaps.js" << " to " << tempDir+ QDir::separator() + "GoogleMaps.js" << file.errorString();
+  qDebug() << "copy failed:" << ":///GoogleMaps.js" << " to " << tempDir+ QDir::separator() + "GoogleMaps.js" ;
   //return false;
  }
 
+
   if(!copyAndUpdate(":///scripts/WebChannel.js", tempDir, updates ))
   {
-   qDebug() << "copy failed:" << "qrc:/scripts/WebChannel.js" << " to " << tempDir+ QDir::separator() + "WebChannel.js";
+   qDebug() << "copy failed:" << ":///scripts/WebChannel.js" << " to " << tempDir+ QDir::separator() + "WebChannel.js";
    //return false;
   }
 
   if(!copyAndUpdate(":///scripts/ExtDraggableObject.js", tempDir, updates))
   {
-   qDebug() << "copy failed:" << "qrc:/scripts/ExtDraggableObject.js" << " to " << tempDir+ QDir::separator() + "ExtDraggableObject.js";
+   qDebug() << "copy failed:" << ":///scripts/ExtDraggableObject.js" << " to " << tempDir+ QDir::separator() + "ExtDraggableObject.js";
    //return false;
   }
 
 
-//   if(!QFile(tempDir+ QDir::separator() + "opacityControl.js").exists())
-//   {
-//    if(!QFile::copy(":///scripts/opacityControl.js", tempDir+ QDir::separator() + "opacityControl.js" ))
-//    {
-//     qDebug() << "copy failed:" << "qrc:/scripts/opacityControl.js" << " to " << tempDir+ QDir::separator() + "opacityControl.js";
-//     //return false;
-//    }
-//   }
    // references slider image paths need to be updated
-   copyAndUpdate(":///scripts/opacityControl.js", tempDir, updates);
+   if(!copyAndUpdate(":///scripts/opacityControl.js", tempDir, updates))
+   {
+       qDebug() << "copy failed:" << ":///scripts/opacityControl.js" << " to " << tempDir+ QDir::separator() + "opacityControl.js";
+   }
 
 
     if(!QFile::copy(":///scripts/opacity-slider2.png", tempDir+ QDir::separator() + "opacity-slider2.png" ))
@@ -4130,11 +4131,12 @@ bool MainWindow::openWebWindow()
     }
 
 #ifdef Q_OS_LINUX
-  QFile::copy(htmlPath+QDir::separator() + "GoogleMaps2b.htm", "/var/www/html/GoogleMaps2b.htm");
+  QFile::copy(":///GoogleMaps2b.htm", "/var/www/html/GoogleMaps2b.htm");
   fileUrl = QUrl("http://localhost:80/GoogleMaps2b.htm");
 #else
-    fileUrl = QUrl::fromLocalFile(QString(cwd + QDir::separator() + "html") + QDir::separator() + "GoogleMaps2b.htm");
+    fileUrl = QUrl::fromLocalFile(tempDir  + QDir::separator() + startFn);
 #endif
+    qDebug() << "open " << fileUrl.toString();
    if(!QDesktopServices::openUrl(fileUrl))
    {
     qDebug() << "open webbrowser failed " << fileUrl.toDisplayString();
@@ -4154,13 +4156,15 @@ bool MainWindow::copyAndUpdate(QString inFile, QString outDir, QList<QPair<QStri
  QFileInfo in(inFile);
  QString baseName = inFile.mid(inFile.lastIndexOf("/")+1);
  QFileInfo out(outDir+QDir::separator()+baseName);
+#ifndef FORCE_COPY
  if(out.exists() &&  (out.fileTime(QFileDevice::FileModificationTime)) > in.fileTime(QFileDevice::FileModificationTime))
  {
-  qDebug() << "out file newer; will not copy it:";
+  qDebug() << "out file " << baseName << " newer; will not copy it:";
   qDebug() << " infile path " << in.absoluteFilePath() << " time" << in.fileTime(QFileDevice::FileModificationTime).toString();
   qDebug() << " outfile path" << out.absoluteFilePath() << " time" << out.fileTime(QFileDevice::FileModificationTime).toString();
   return true;
  }
+#endif
  qDebug() << "copyAndUpdate: infile = " << inFile << "outdir= " << outDir << updates;
  QFile* gFile = new QFile(in.absoluteFilePath());
  QFile* tgFile = new QFile(out.absoluteFilePath());
@@ -4177,11 +4181,11 @@ bool MainWindow::copyAndUpdate(QString inFile, QString outDir, QList<QPair<QStri
         text = text.replace(pair.first, pair.second);
   }
 
-  if(tgFile->exists())
+  if(!tgFile->setPermissions(QFile::ReadOwner | QFile::WriteOwner |
+                         QFileDevice::ReadGroup |QFileDevice::WriteGroup |
+                         QFileDevice::ReadOther))
   {
-   tgFile->setPermissions(QFile::ReadOwner | QFile::WriteOwner |
-                          QFileDevice::ReadGroup |QFileDevice::WriteGroup |
-                          QFileDevice::ReadOther);
+   qDebug() <<"error setting permissions on " << tgFile->fileName() << tgFile->errorString();
   }
 
   if(tgFile->open(QIODevice::WriteOnly))
@@ -4189,8 +4193,8 @@ bool MainWindow::copyAndUpdate(QString inFile, QString outDir, QList<QPair<QStri
    QTextStream * outStream = new QTextStream(tgFile);
    *outStream << text;
    Q_ASSERT(!text.contains("MYAPIKEY"));
-   tgFile->close();
    gFile->close();
+   tgFile->close();
    qInfo() << "file " << baseName << " updated successfully line " << __LINE__;
    return true;
   }

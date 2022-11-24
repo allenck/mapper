@@ -1,6 +1,8 @@
 #include "webviewbridge.h"
 #include "mainwindow.h"
 #include <QDebug>
+#include <QApplication>
+#include <QClipboard>
 
 WebViewBridge* WebViewBridge::_instance = NULL;
 
@@ -287,7 +289,10 @@ void WebViewBridge::cityBounds(double neLat, double neLng, double swLat, double 
  processScript("closeCityBoundsButton");
 }
 
-void WebViewBridge::rightClicked(LatLng rightClickLoc)
+void WebViewBridge::rightClicked(QString text)
 {
-    _rightClickLoc = rightClickLoc;
+    //_rightClickLoc = rightClickLoc;
+    qDebug() << "LatLng:"<< text;
+    QClipboard* clipBoard = QGuiApplication::clipboard();
+    clipBoard->setText(text);
 }

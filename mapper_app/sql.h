@@ -13,6 +13,7 @@
 #include "configuration.h"
 #include <QMessageBox>
 #include "exceptions.h"
+#include "routeselector.h"
 
 class QSqldatabase;
 class QSqlError;
@@ -78,6 +79,7 @@ public:
     QList<RouteData> getRouteSegmentsForDate(qint32 route, QString name, QString date);
     QList<RouteData> getRouteSegmentsForDate(qint32 segmentId, QString date);
     qint32 addAltRoute(QString routeAlpha, QString routePrefix);
+    bool updateAltRoute(int route, QString routeAlpha);
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate, QString routeStartDate, QString routeEndDate);
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate);
     bool addSegmentToRoute(RouteData rd);
@@ -189,6 +191,7 @@ public:
     void updateSegmentDates(int segmentId);
     QPair<QDate,QDate> getStartAndEndDates(int segmentId);
     QList<FKInfo> getForeignKeyInfo();
+    QMap<int, RouteName*> *routeNameList();
 
 signals:
     void details(QString);

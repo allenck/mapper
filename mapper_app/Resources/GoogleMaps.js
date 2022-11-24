@@ -10,6 +10,8 @@ var color;
 var defaultOptions;
 var options;
 var txt;
+var stationArray = new google.maps.MVCArray();
+
 var newSegment, segmentId, arrow,lat=0,lon=0;
 console.log("Loading GoogleMaps.js");
 var image = ["http://maps.google.com/mapfiles/marker.png",
@@ -815,6 +817,8 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
      //            window.external.setStation(e.latLng.lat(), e.latLng.lng(), SegmentId, i);
      webViewBridge.setStation(e.latLng.lat(), e.latLng.lng(), SegmentId, i);
     });
+
+
 } // end SegmentInfo
 
 
@@ -854,7 +858,6 @@ function initMap()
             webViewBridge.mapInit();
         });
     });
- google.maps.event.addListener(map, "rightclick",function(event){showContextMenu(event.latLng);});
 
  //google.maps.event.addDomListener(mapDiv, 'resize', function(){ deprecated
     google.maps.event.addListener(mapDiv, 'resize', function(){
@@ -867,6 +870,7 @@ function initMap()
  map.mapTypes.set('OSM', osm_MapType);
  map.mapTypes.set('UserMap',User_MapType);
  map.setMapTypeId(mapTypeId);
+
 
  defaultOptions = /** @type {google.maps.MapTypeControlOptions} */(
  {
@@ -910,7 +914,45 @@ function initMap()
  webViewBridge.displayZoom(map.getZoom());
 
  //alert("initialize end");
+    function latLng2Point(latLng, map) {
+      var topRight = map.getProjection().fromLatLngToPoint(map.getBounds().getNorthEast());
+      var bottomLeft = map.getProjection().fromLatLngToPoint(map.getBounds().getSouthWest());
+      var scale = Math.pow(2, map.getZoom());
+      var worldPoint = map.getProjection().fromLatLngToPoint(latLng);
+      return new google.maps.Point((worldPoint.x - bottomLeft.x) * scale, (worldPoint.y - topRight.y) * scale);
+    }
+    function point2LatLng(point, map) {
+      var topRight = map.getProjection().fromLatLngToPoint(map.getBounds().getNorthEast());
+      var bottomLeft = map.getProjection().fromLatLngToPoint(map.getBounds().getSouthWest());
+      var scale = Math.pow(2, map.getZoom());
+      var worldPoint = new google.maps.Point(point.x / scale + bottomLeft.x, point.y / scale + topRight.y);
+      return map.getProjection().fromPointToLatLng(worldPoint);
+    }
+    var menuDisplayed = false;
+    var menuBox = null;
+    var contextMenuLatLng;
+    window.addEventListener("contextmenu", function() {
+            var left = arguments[0].clientX;
+            var top = arguments[0].clientY;
 
+            menuBox = document.getElementById("menu");
+            menuBox.style.left = left + "px";
+            menuBox.style.top = top + "px";
+            menuBox.style.display = "block";
+
+        latLng = point2LatLng(arguments[0], map);
+        contextMenuLatLng= latLng.lat().toFixed(6) + "," + latLng.lng().toFixed(6);
+        menuBox.textContent =contextMenuLatLng
+            arguments[0].preventDefault();
+
+            menuDisplayed = true;
+        }, false);
+        window.addEventListener("click", function() {
+            if(menuDisplayed == true){
+                menuBox.style.display = "none";
+                webViewBridge.rightClicked(contextMenuLatLng);
+            }
+        }, true);
 } // end initialize()
 
 function initialize()
@@ -2492,7 +2534,7 @@ function displayRouteComment(latitude, longitude, HTMLText, route, date, company
  }
 
  // infowindow = new google.maps.InfoWindow({content:date+HTMLText, position:new google.maps.LatLng(lat, lon)}, 'return 0');
- infowindow = new google.maps.InfoWindow({content:HTMLText, maxWidth: 250});
+ infowindow = new google.maps.InfoWindow({content:HTMLText, maxWidth: 300});
  //var icon = image[images.greenDownArrow];
  this.marker = new google.maps.Marker({
        position: new google.maps.LatLng(latitude, longitude),
@@ -2626,53 +2668,5 @@ function downloadFile(url, fileName) {
     });
 };
 
-function getCanvasXY(currentLatLng){
-      var scale = Math.pow(2, map.getZoom());
-     var nw = new google.maps.LatLng(
-         map.getBounds().getNorthEast().lat(),
-         map.getBounds().getSouthWest().lng()
-     );
-     var worldCoordinateNW = map.getProjection().fromLatLngToPoint(nw);
-     var worldCoordinate = map.getProjection().fromLatLngToPoint(currentLatLng);
-     var currentLatLngOffset = new google.maps.Point(
-         Math.floor((worldCoordinate.x - worldCoordinateNW.x) * scale),
-         Math.floor((worldCoordinate.y - worldCoordinateNW.y) * scale)
-     );
-     return currentLatLngOffset;
-  }
-  function setMenuXY(currentLatLng){
-    var mapWidth = $('#map_canvas').width();
-    var mapHeight = $('#map_canvas').height();
-    var menuWidth = $('.contextmenu').width();
-    var menuHeight = $('.contextmenu').height();
-    var clickedPosition = getCanvasXY(currentLatLng);
-    var x = clickedPosition.x ;
-    var y = clickedPosition.y ;
-
-     if((mapWidth - x ) < menuWidth)
-         x = x - menuWidth;
-    if((mapHeight - y ) < menuHeight)
-        y = y - menuHeight;
-
-    $('.contextmenu').css('left',x  );
-    $('.contextmenu').css('top',y );
-    };
-  function showContextMenu(currentLatLng  ) {
-        var projection;
-        var contextmenuDir;
-        projection = map.getProjection() ;
-        $('.contextmenu').remove();
-            contextmenuDir = document.createElement("div");
-          contextmenuDir.className  = 'contextmenu';
-          contextmenuDir.innerHTML = "<a id='menu1'><div class=context>menu item 1<\/div><\/a><a id='menu2'><div class=context>menu item 2<\/div><\/a>";
-        $(map.getDiv()).append(contextmenuDir);
-
-        setMenuXY(currentLatLng);
-
-        contextmenuDir.style.visibility = "visible";
-       }
-//alert("begin Loading GoogleMaps.js 2042");
-
-//google.maps.event.addDomListener(window, "load", initialize);
 
 console.log("GoogleMaps.js loaded!");

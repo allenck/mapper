@@ -56,5 +56,7 @@
         <file>scripts/opacity-slider3d6.png</file>
         <file>scripts/opacity-slider3d7.png</file>
         <file>scripts/opacity-slider3d14.png</file>
+        <file>scripts/popmenu.css</file>
+        <file>scripts/popmenu.js</file>
     </qresource>
 </RCC>

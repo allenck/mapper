@@ -81,6 +81,7 @@ private slots:
 
 signals:
     void routeChangedEvent( RouteChangedEventArgs args);
+    void companySelectionChanged(int companyKey);
 };
 
 #endif // SEGMENTDLG_H

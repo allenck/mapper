@@ -28,17 +28,32 @@ RouteCommentsDlg::RouteCommentsDlg(Configuration *cfg, QWidget *parent) :
     connect(ui->dateEdit, SIGNAL(dateChanged(QDate)), this, SLOT(OnDateChanged()));
     connect(ui->dateEdit, SIGNAL(editingFinished()), this, SLOT(OnDateLeave()));
     connect(ui->txtComments, SIGNAL(dirtySet(bool)), this, SLOT(OnDirtySet(bool)));
-    connect(ui->txtAdditionalRoutes, SIGNAL(editingFinished()), this, SLOT(OnAdditionalRoutesLeave()));
+//    connect(ui->txtAdditionalRoutes, SIGNAL(editingFinished()), this, SLOT(OnAdditionalRoutesLeave()));
 
     setWindowTitle(tr("Route Comments"));
 
 
     connect(ui->btnNext, SIGNAL(clicked()), this, SLOT(OnBtnNext()));
     connect(ui->btnPrev, SIGNAL(clicked()), this, SLOT(OnBtnPrev()));
-    connect(ui->txtRoute, SIGNAL(textChanged(QString)), this, SLOT(OnRouteTextChanged(QString)));
-    connect(ui->txtRoute, SIGNAL(editingFinished()), this, SLOT(OnRouteLeave()));
-    connect(ui->txtRouteAlpha,SIGNAL(textChanged(QString)), this, SLOT(OnAlphaRouteTextChanged(QString)));
-    connect(ui->txtRouteAlpha, SIGNAL(editingFinished()), this, SLOT(OnAlphaRouteLeave()));
+//    connect(ui->txtRoute, SIGNAL(textChanged(QString)), this, SLOT(OnRouteTextChanged(QString)));
+//    connect(ui->txtRoute, SIGNAL(editingFinished()), this, SLOT(OnRouteLeave()));
+//    connect(ui->txtRouteAlpha,SIGNAL(textChanged(QString)), this, SLOT(OnAlphaRouteTextChanged(QString)));
+//    connect(ui->txtRouteAlpha, SIGNAL(editingFinished()), this, SLOT(OnAlphaRouteLeave()));
+    connect(ui->tableView, &RouteSelector::selections_changed, [=](QModelIndexList /*added*/, QModelIndexList deleted){
+     for(QModelIndex deletedIndex : deleted)
+     {
+      if(deletedIndex.isValid())
+      {
+       int deletedRow = deletedIndex.row();
+       RouteComments rc;
+       QList<RouteName*> routeNameList =  ui->tableView->getList();
+       rc.route = routeNameList.at(deletedRow)->route();
+       rc.date = ui->dateEdit->date();
+       sql->deleteRouteComment(rc);
+      }
+     }
+    });
+
 
  ui->btnApply->setEnabled(false);
  ui->btnOK->setEnabled(false);
@@ -51,9 +66,13 @@ RouteCommentsDlg::~RouteCommentsDlg()
 void RouteCommentsDlg::setRoute(qint32 r)
 {
     _route = r;
-    ui->txtRoute->setText(QString("%1").arg(r));
-    ui->txtRouteAlpha->setText(sql->getAlphaRoute(r, _companyKey));
+//    ui->txtRoute->setText(QString("%1").arg(r));
+//    ui->txtRouteAlpha->setText(sql->getAlphaRoute(r, _companyKey));
+    QList<int>* routes = new QList<int>();
+    routes->append(r);
+    ui->tableView->setSelections(routes);
 }
+
 void RouteCommentsDlg::setCompanyKey(qint32 cc)
 {
     _companyKey = cc;
@@ -162,11 +181,11 @@ void RouteCommentsDlg::OnDateLeave()
  readComment(0);
 }
 
-void RouteCommentsDlg::OnRouteTextChanged(QString text)
-{
- if(!text.isEmpty())
-  bRouteChanged = true;
-}
+//void RouteCommentsDlg::OnRouteTextChanged(QString text)
+//{
+// if(!text.isEmpty())
+//  bRouteChanged = true;
+//}
 
 void RouteCommentsDlg::outputChanges()
 {
@@ -177,69 +196,66 @@ void RouteCommentsDlg::outputChanges()
   //qDebug()<< _rc.ci.comments;
   sql->updateRouteComment( _rc);
 
-  if(!ui->txtAdditionalRoutes->text().isEmpty())
-  {
-   QStringList routes = ui->txtAdditionalRoutes->text().split(",");
-   foreach(QString s, routes)
+  QList<int>* selectedRoutes = ui->tableView->selectedRoutes();
+
+//  if(!ui->txtAdditionalRoutes->text().isEmpty())
+//  {
+//   QStringList routes = ui->txtAdditionalRoutes->text().split(",");
+   foreach(int route, *selectedRoutes)
    {
-    bool bOk;
-    int route = s.toInt(&bOk);
-    if(bOk)
-    {
      _rc.route = route;
      sql->updateRouteComment( _rc);
-    }
    }
-  }
+//  }
   bIsDirty = false;
   setWindowTitle(tr("Route Comments"));
   setDirty(false);
  }
 }
 
-void RouteCommentsDlg::OnRouteLeave()
-{
- if(bRouteChanged)
- {
-  outputChanges();
+//void RouteCommentsDlg::OnRouteLeave()
+//{
+// if(bRouteChanged)
+// {
+//  outputChanges();
 
-  _route = ui->txtRoute->text().toInt();
-  ui->txtRouteAlpha->setText(sql->getAlphaRoute(_route, _companyKey));
-  ui->txtComments->clear();
+////  _route = ui->txtRoute->text().toInt();
+////  ui->txtRouteAlpha->setText(sql->getAlphaRoute(_route, _companyKey));
+//  ui->txtComments->clear();
 
-  if(readComment(0))
-  {
-   setDirty(true);
-  }
- }
- bRouteChanged = false;
-}
+//  if(readComment(0))
+//  {
+//   setDirty(true);
+//  }
+// }
+// bRouteChanged = false;
+//}
 
 void RouteCommentsDlg::OnAdditionalRoutesLeave()
 {
  setDirty(true);
 }
 
-void RouteCommentsDlg::OnAlphaRouteTextChanged(QString text)
-{
-    if(text.length()>0)
-    {
-        QStringList list = sql->getAlphaRoutes(text);
-        QCompleter *completer = new QCompleter(list);
-        ui->txtRouteAlpha->setCompleter(completer);
-    }
-}
+//void RouteCommentsDlg::OnAlphaRouteTextChanged(QString text)
+//{
+//    if(text.length()>0)
+//    {
+//        QStringList list = sql->getAlphaRoutes(text);
+//        QCompleter *completer = new QCompleter(list);
+//        ui->txtRouteAlpha->setCompleter(completer);
+//    }
+//}
 
-void RouteCommentsDlg::OnAlphaRouteLeave()
-{
-    QString newRoute;
-    bool bAlphaRoute;
-    int route = sql->getNumericRoute(ui->txtRouteAlpha->text(),&newRoute, &bAlphaRoute,_companyKey);
-    if(route > 0)
-    {
-        this->setRoute(route);
-    }
-}
+//void RouteCommentsDlg::OnAlphaRouteLeave()
+//{
+//    QString newRoute;
+//    bool bAlphaRoute;
+//    int route = sql->getNumericRoute(ui->txtRouteAlpha->text(),&newRoute, &bAlphaRoute,_companyKey);
+//    if(route > 0)
+//    {
+//        this->setRoute(route);
+//    }
+//}
 
 void RouteCommentsDlg::OnTagsLeave()
 {

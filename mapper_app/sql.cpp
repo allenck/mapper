@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <QDebug>
 #include <QTextEdit>
+#include <routeselector.h>
 
 SQL* SQL::_instance = NULL;
 SQL::SQL()
@@ -4925,6 +4926,24 @@ qint32 SQL::addAltRoute(QString routeAlpha, QString routePrefix)
   newKey = query.value(0).toInt();
  }
  return route;
+}
+
+bool SQL::updateAltRoute(int route, QString routeAlpha)
+{
+ QSqlDatabase db = QSqlDatabase::database();
+ Q_ASSERT(!routeAlpha.isEmpty() && !routeAlpha.startsWith(" "));
+
+ QString commandText = "update altRoute set altRoute=" + routeAlpha.trimmed()+ " where route = " +QString::number(route);
+ QSqlQuery query = QSqlQuery(db);
+ bool bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+  SQLERROR(query);
+  db.close();
+  exit(EXIT_FAILURE);
+ }
+
+ return true;
 }
 
 bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate, QString routeStartDate, QString routeEndDate)
@@ -9889,6 +9908,30 @@ QList<FKInfo> SQL::getForeignKeyInfo()
   info.on_delete = query.value(7).toString();
   info.match = query.value(8).toString();
   list.append(info);
+ }
+ return list;
+}
+
+QMap<int,RouteName*>* SQL::routeNameList()
+{
+ QMap<int, RouteName*>* list = new QMap<int, RouteName*>();
+ QSqlDatabase db = QSqlDatabase();
+ QSqlQuery query = QSqlQuery(db);
+
+ QString commandText =  "SELECT route, routePrefix, routeAlpha, baseRoute FROM altRoute";
+ if(!query.exec(commandText))
+ {
+  SQLERROR(query);
+  return list;
+ }
+ while(query.next())
+ {
+  RouteName* rn  = new RouteName;
+  rn->setRoute(query.value(0).toInt());
+  rn->setBaseRoute(query.value(3).toInt());
+  rn->setRoutePrefix(query.value(1).toString());
+  rn->setRouteAlpha(query.value(2).toString());
+  list->insert(rn->route(), rn);
  }
  return list;
 }

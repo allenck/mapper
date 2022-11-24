@@ -4,6 +4,7 @@ SOURCES += main.cpp\
     $$PWD/mytextedit.cpp \
     $$PWD/overlay.cpp \
     $$PWD/replacesegmentdialog.cpp \
+    $$PWD/routeselector.cpp \
     $$PWD/segmentselectionwidget.cpp \
     $$PWD/splitsegmentdlg.cpp \
     addgeoreferenceddialog.cpp \
@@ -68,6 +69,7 @@ HEADERS  += mainwindow.h \
     $$PWD/mytextedit.h \
     $$PWD/overlay.h \
     $$PWD/replacesegmentdialog.h \
+    $$PWD/routeselector.h \
     $$PWD/segmentselectionwidget.h \
     $$PWD/splitsegmentdlg.h \
     addgeoreferenceddialog.h \

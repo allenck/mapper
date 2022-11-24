@@ -51,10 +51,10 @@ private slots:
     void OnTextChanged();
     void OnTagsLeave();
     void OnDateLeave();
-    void OnRouteTextChanged(QString text);
-    void OnAlphaRouteTextChanged(QString text);
-    void OnRouteLeave();
-    void OnAlphaRouteLeave();
+//    void OnRouteTextChanged(QString text);
+//    void OnAlphaRouteTextChanged(QString text);
+//    void OnRouteLeave();
+//    void OnAlphaRouteLeave();
     void OnBtnApply_clicked();
     void OnDirtySet(bool);
     void OnAdditionalRoutesLeave();

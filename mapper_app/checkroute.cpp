@@ -138,7 +138,7 @@ bool checkRoute::checkConnectingSegments()
         if(startConnects == 0 && endConnects == 0)
         {
             segmentsNotConnected++;
-            qDebug()<< "segment "+ QString("%1").arg(si->segmentId)+ " not connected to another!";
+//            qDebug()<< "segment "+ QString("%1").arg(si->segmentId)+ " not connected to another!";
             notConnectedList.append(*si);
         }
         if(startConnects > 1 || endConnects > 1)

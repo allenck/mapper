@@ -268,12 +268,15 @@ void SegmentDlg::cbCompany_currentIndexChanged(int companyKey)
  CompanyData* cd = _companyList.at(companyKey);
  if(ui->dateStart->date() < cd->startDate)
  {
+  ui->dateStart->setMinimumDate(cd->startDate);
   ui->dateStart->setDate(cd->startDate);
  }
  if(ui->dateEnd->date() > cd->endDate)
  {
+  ui->dateEnd->setMaximumDate(cd->endDate);
   ui->dateEnd->setDate(cd->endDate);
  }
+ emit companySelectionChanged(companyKey);
 }
 
 void SegmentDlg::fillTractionTypes()
