@@ -39,7 +39,7 @@
 #include <QToolTip>
 #include <QPair>
 
-class Logger;
+
 class RouteView;
 class SQL;
 class QWidgetAction;
@@ -64,8 +64,11 @@ class MyWebEnginePage : public QWebEnginePage
 {
  Q_OBJECT
 public:
- MyWebEnginePage(QObject* parent = 0) : QWebEnginePage(parent){}
- bool acceptNavigationRequest(const QUrl &url, NavigationType type, bool )
+ MyWebEnginePage(QObject* parent = 0) : QWebEnginePage(parent){
+  connect(this, SIGNAL(QWebEnginePage::loadProgress(int )), this,
+                       SLOT(loadProgress(int progress)));
+ }
+ bool acceptNavigationRequest(const QUrl &url, NavigationType type, bool ) override
  {
   if(type == NavigationTypeLinkClicked)
   {
@@ -73,6 +76,17 @@ public:
    return false;
   }
   return true;
+ }
+ public slots:
+ void javaScriptConsoleMessage(QWebEnginePage::JavaScriptConsoleMessageLevel level, const QString &message, int lineNumber,
+                          const QString &sourceID)override
+ {
+  qDebug() << "javaScriptConsoleMessage:" << message << " at"<<lineNumber<<" source:"<<sourceID;
+
+ }
+ void loadProgress(int progress)
+ {
+  qDebug() << "progress "<< progress;
  }
 };
 
@@ -411,7 +425,6 @@ private:
     QString tempDir;
     QStringList keyTokens;
     QUrl fileUrl;
-    Logger* logger;
 
 private slots:
     void createCityMenu();

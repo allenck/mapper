@@ -23,6 +23,8 @@ IF NOT EXIST %2\Resources\databases\nul (mkdir %2\Resources\databases && echo %2
 REM copy databases from %1\..\..\..\mapper_QT\mapper_app\Resources\databases\ to %2\Resources\databases
 copy %1\..\..\..\mapper_QT\mapper_app\Resources\databases\*.sqlite3 %2\Resources\databases
 
+copy %1\..\..\..\mapper_QT\mapper_app\overlays.xml %2
+
 :: clear html dir
 ::IF EXIST %2\html\nul RMDIR /s /q  %2\html
 

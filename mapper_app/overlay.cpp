@@ -82,6 +82,7 @@ bool Overlay::importXml(QString fileName)
 
    overlayList.append(ov);
   }
+  file->close();
  }
  else{
   qDebug() << tr("error importing %1 %2").arg(fileName).arg(file->errorString());

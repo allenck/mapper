@@ -6,35 +6,14 @@
 #include "../console/consoleinterface.h"
 #include <QString>
 #include "myapplication.h"
+//#include "logger.h"
 
-#if QT_VERSION < 0x050000
-void myMessageOutput(QtMsgType type, const char *msg)
-{
-    //QMessageBox::information(NULL, "info", msg);
-    switch (type) {
-    case QtDebugMsg:
-        fprintf(stderr, "Debug: %s\n", msg);
-     SystemConsole::getInstance()->On_appendText(QString("Debug: %1\n").arg(msg));
-        break;
-    case QtWarningMsg:
-        fprintf(stderr, "Warning: %s\n", msg);
-     SystemConsole::getInstance()->On_appendText(QString("Warning: %1\n").arg(msg));
-        break;
-    case QtCriticalMsg:
-        fprintf(stderr, "Critical: %s\n", msg);
-     SystemConsole::getInstance()->On_appendText(QString("Critical: %1\n").arg(msg));
-        break;
-    case QtFatalMsg:
-        fprintf(stderr, "Fatal: %s\n", msg);
-     SystemConsole::getInstance()->On_appendText(QString("Fatal: %1\n").arg(msg));
-        abort();
-    }
-    fflush(stderr);
-}
-#else
+#if 0
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
     QByteArray localMsg = msg.toLocal8Bit();
+    if(Logger::instance())
+        Logger::instance()->logMessage(type, context, msg);
     switch (type) {
     case QtDebugMsg:
         fprintf(stderr, "Debug: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
@@ -61,22 +40,55 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QS
     }
 }
 #endif
+const QString logFilePath = "mapper.log";
+bool logToFile = false;
+bool firstTime = true;
+QMutex mutex;
+void customMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
+    QMutexLocker locker(&mutex);
+    QHash<QtMsgType, QString> msgLevelHash({{QtDebugMsg, "Debug"}, {QtInfoMsg, "Info"}, {QtWarningMsg, "Warning"}, {QtCriticalMsg, "Critical"}, {QtFatalMsg, "Fatal"}});
+    QByteArray localMsg = msg.toLocal8Bit();
+    QTime time = QTime::currentTime();
+    QString formattedTime = time.toString("hh:mm:ss.zzz");
+    QByteArray formattedTimeMsg = formattedTime.toLocal8Bit();
+    QString logLevelName = msgLevelHash[type];
+    QByteArray logLevelMsg = logLevelName.toLocal8Bit();
 
+    ConsoleInterface::instance()->sendMessage(logLevelName + ": "+ msg);
+    if (logToFile) {
+        QString txt = QString("%1 %2: %3   (%4.%5)").arg(formattedTime, logLevelName, msg,  context.file).arg(context.line);
+        QFile outFile(logFilePath);
+        if(firstTime)
+        {
+            outFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
+            firstTime = false;
+        }
+        else
+            outFile.open(QIODevice::WriteOnly | QIODevice::Append);
+        QTextStream ts(&outFile);
+        ts << txt << endl;
+        outFile.close();
+    } else {
+        fprintf(stderr, "%s %s: %s (%s:%u, %s)\n", formattedTimeMsg.constData(), logLevelMsg.constData(), localMsg.constData(), context.file, context.line, context.function);
+        fflush(stderr);
+    }
 
+    if (type == QtFatalMsg)
+        abort();
+}
 
 int main(int argc, char *argv[])
 {
- //QApplication::setStyle("gtk+");
- //if(argv[1] == "debug")
-//#ifndef QT_DEBUG
-# if QT_VERSION < 0x050000
- qInstallMsgHandler(myMessageOutput);
-# else
-  qInstallMessageHandler(myMessageOutput);
-# endif
-//#endif
- QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
+    QByteArray envVar = qgetenv("QTDIR");       //  check if the app is ran in Qt Creator
+
+    if (envVar.isEmpty())
+        logToFile = true;
+
+    qInstallMessageHandler(customMessageOutput); // custom message handler for debugging
+
+ QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
  //QApplication a(argc, argv);
  QApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);

@@ -51,7 +51,7 @@
 }
 void SystemConsoleAction::common()
 {
- SystemConsole::getInstance()->setParent(parent());
+ //SystemConsole::getInstance()->setParent(parent());
  connect(this, SIGNAL(triggered()), this, SLOT(actionPerformed()));
 }
 

@@ -49,17 +49,24 @@ overlay will allow you to locate exactly where a route ran. <br>
 <p>An overlay is a map that can be displayed with variable transparency on top of the main map (in Mapper either Google Maps or Open Street Map).</p>
 
 <br>
+<div class="row">
+  <div class="column left" style="background-color:#EFDECD;">
 <h2>Overlay Management</h2>
 <p>Mappers overlays are managed with the <i>Edit City Info</i> accessed from the <i>City</i> menu. This selection will display: 
-<div style="text-align: center;"><img src="images/EditCityView.png" width="50%" height="50%" alt="Edit City Info"></div>
+
 <p>In this dialog, you can:</p><ol>
 <li>alter the coordinates of the center</li>
 <li>alter properties on defined overlays</li>
 <li>select which overlay can be used for a city,</li>
 <li>add a new overlay by pressing the <i>Add Overlay</i> button</li>
 </ol>
+</div>
+  <div class="column right" style="background-color:#FAF0E6;">
+  <div style="text-align: center;"><img src="images/EditCityView.png" width="75%" height="75%" alt="Edit City Info"></div>
+  </div>
+  </div>
 <h2>Adding Overlays</h2>
-<p>There are three ways to access overlays in Mapper. <br></p>
+<p>There are three ways to acquire overlays to use in Mapper. <br></p>
 
 <ol>
 
