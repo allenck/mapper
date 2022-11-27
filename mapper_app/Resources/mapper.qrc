@@ -33,10 +33,6 @@
         <file>recreateStationTable.sql</file>
         <file>recreateTractionTypes.sql</file>
         <file>recreateCompanies.sql</file>
-        <file>GoogleMaps2.htm</file>
-        <file>scripts/qwebchannel.js</file>
-        <file>GoogleMaps2b.htm</file>
-        <file>scripts/WebChannel.js</file>
         <file>white.png</file>
         <file>orange.png</file>
         <file>rail.png</file>
@@ -47,14 +43,8 @@
         <file>tram.png</file>
         <file>subway.png</file>
         <file>darkred-dot.png</file>
-        <file>scripts/ExtDraggableObject.js</file>
-        <file>scripts/opacityControl.js</file>
         <file>addBiDirectionalToRoutes.sql</file>
         <file>recreateRouteComments.sql</file>
         <file>rollback.png</file>
-        <file>scripts/opacity-slider2.png</file>
-        <file>scripts/opacity-slider3d6.png</file>
-        <file>scripts/opacity-slider3d7.png</file>
-        <file>scripts/opacity-slider3d14.png</file>
     </qresource>
 </RCC>

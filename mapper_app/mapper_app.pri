@@ -152,3 +152,6 @@ FORMS    += ui/mainwindow.ui \
     ui/browsecommentsdialog.ui \
     ui/replacesegmentdialog.ui \
     ui/segmentselectionwidget.ui
+
+DISTFILES += \
+ $$PWD/html/.gitignore

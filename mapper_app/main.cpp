@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 
     if (envVar.isEmpty())
         logToFile = true;
-
+    ConsoleInterface::instance(); // create singleton class.
     qInstallMessageHandler(customMessageOutput); // custom message handler for debugging
 
  QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);

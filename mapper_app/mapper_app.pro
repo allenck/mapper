@@ -128,7 +128,8 @@ DISTFILES += \
     Resources/white.png \
     Resources/orange.png \
     Resources/tram.png \
-    Resources/tram.shadow.png
+    Resources/tram.shadow.png \
+    html/.gitignore
 
 
 #win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lWebView

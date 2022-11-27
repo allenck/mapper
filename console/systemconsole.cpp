@@ -109,6 +109,7 @@
  // Then redirect to it
  redirectSystemStreams();
 
+ ConsoleInterface::instance();
  connect(ConsoleInterface::instance(), SIGNAL(message(QString)), this, SLOT(On_appendText(QString)));
 }
 

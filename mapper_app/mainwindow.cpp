@@ -1,4 +1,5 @@
 #include <QtGui>
+#include "mainwindow.h"
 #ifndef USE_WEBENGINE
 #include <QtWebKit>
 #include <QWebFrame>
@@ -51,6 +52,7 @@
 #include "splitsegmentdlg.h"
 #include "overlay.h"
 #include <QClipboard>
+#include "exceptions.h"
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -127,6 +129,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  QDir htmlDir("/var/www/html");
  if(!htmlDir.exists())
      QDir().mkpath ("/var/www/html/html");
+#else
+ QDir htmlDir(cwd + QDir::separator() + "html");
 #endif
  if(!config->bRunInBrowser)
  {
@@ -142,28 +146,30 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   webView->setPage(new MyWebEnginePage());
   webView->setMinimumWidth(400);
   Q_ASSERT(keyTokens.size()>0);
-  //connect(webView, &QWebEngineView::javaScriptConsoleMessage, [=](javaScriptConsoleMessageLevel level, string message, int lineNumber, string sourceID){
- //});
+#if 0
 #ifdef Q_OS_WIN
   QFileInfo info(tempDir + QDir::separator()+"GoogleMaps2.htm");
 #else
   QFileInfo info(htmlDir.path()+"GoogleMaps2.htm");
 #endif
-   QList<QPair<QString,QString> > updates;
+//   QList<QPair<QString,QString> > updates;
 #ifdef Q_OS_WIN
-   updates = {QPair<QString,QString>("MYAPIKEY",keyTokens.at(0)),
-              QPair<QString,QString>("TEMPDIR",  tempDir)};
-   copyAndUpdate(":///GoogleMaps2.htm", tempDir, updates);
+//   updates = {QPair<QString,QString>("MYAPIKEY",keyTokens.at(0)),
+//              QPair<QString,QString>("TEMPDIR",  tempDir)};
+  if(verifyAPIKey("./Resources/GoogleMaps2.htm", keyTokens.at(0)))
+    copyAndUpdate("./Resources/GoogleMaps2.htm", htmlDir.path(), "");
+   else
+    copyAndUpdate(":///GoogleMaps2.htm", htmlDir.path(), keyTokens.at(0));
 #else
-   updates = {QPair<QString,QString>("MYAPIKEY",keyTokens.at(0)),
-              QPair<QString,QString>("TEMPDIR",  "http://localhost")};
-   copyAndUpdate(":///GoogleMaps2.htm", htmlDir.path(), updates);
+//   updates = {QPair<QString,QString>("MYAPIKEY",keyTokens.at(0)),
+//              QPair<QString,QString>("TEMPDIR",  "http://localhost")};
+   copyAndUpdate(":///GoogleMaps2.htm", htmlDir.path(), keyTokens.at(0));
 #endif
-   copyAndUpdate(":///GoogleMaps.js", htmlDir.path(), updates );
-   copyAndUpdate(":///scripts/ExtDraggableObject.js", htmlDir.path(), updates );
-   copyAndUpdate(":///scripts/opacityControl.js", htmlDir.path(), updates );
-   copyAndUpdate(":///scripts/qwebchannel.js", htmlDir.path(), updates );
-   copyAndUpdate(":///scripts/WebChannel.js", htmlDir.path(), updates );
+   copyAndUpdate(":///GoogleMaps.js", htmlDir.path(), "");
+   copyAndUpdate(":///scripts/ExtDraggableObject.js", htmlDir.path(),"" );
+   copyAndUpdate(":///scripts/opacityControl.js", htmlDir.path(),"" );
+   copyAndUpdate(":///scripts/qwebchannel.js", htmlDir.path(),"" );
+   copyAndUpdate(":///scripts/WebChannel.js", htmlDir.path(),"" );
    //QFile::copy(":///scripts/opacity-slider2.png", htmlDir.path()+ QDir::separator()+"opacity-slider2.png");
    QFile slider(":///scripts/opacity-slider2.png");
    if(slider.exists())
@@ -174,13 +180,15 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
    }
    else
        qCritical() << "cannot  find opacity-slider2.png";
-
+#endif
 #ifdef Q_OS_WIN
-  fileUrl = QUrl::fromLocalFile(tempDir + QDir::separator()+"GoogleMaps2.htm");
+  fileUrl = QUrl::fromLocalFile(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm");
 #else
   fileUrl = QUrl("http://localhost/GoogleMaps2.htm");
 #endif
-  webView->setUrl(fileUrl);
+  if(verifyAPIKey(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm", keyTokens.at(0)))
+   webView->setUrl(fileUrl);
+  else throw Exception("API key invalid");
 #endif
  }
  else // run in browser
@@ -442,11 +450,6 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
   //http://developer.qt.nokia.com/forums/viewthread/1643/P15
 
-#ifndef USE_WEBENGINE
-  webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
-  webView->load(startURL);
-  connect(webView->page(), SIGNAL(linkClicked(QUrl)), this, SLOT(on_linkClicked(QUrl)));
-#endif
   ui->btnBack->setVisible(false);
 
   bDisplayStationMarkers = config->currCity->bDisplayStationMarkers;
@@ -509,29 +512,16 @@ Configuration* MainWindow::getConfiguration()
 
 void MainWindow::reloadMap()
 {
-#ifndef USE_WEBENGINE
- QUrl startURL = QUrl("qrc:/GoogleMaps.htm");
-#else
- QUrl startURL = QUrl("qrc:/GoogleMaps2.htm");
-#endif
  if(webView == NULL)
  {
-#ifndef USE_WEBENGINE
-  webView = new QWebView(ui->groupBox_2);
-  webView->setObjectName(QStringLiteral("webView"));
-  webView->setContextMenuPolicy(Qt::NoContextMenu);
-  webView->setUrl(QUrl(QStringLiteral("qrc:/GoogleMaps.htm")));
-#else
   webView = new QWebEngineView(ui->groupBox_2);
   webView->setObjectName(QStringLiteral("webEngineView"));
   webView->setContextMenuPolicy(Qt::NoContextMenu);
   webView->setPage(new MyWebEnginePage());
   QUrl fileUrl = QUrl::fromLocalFile(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm");
-  webView->setUrl(fileUrl);
-#endif
-
+  //webView->setUrl(fileUrl);
  }
- //webView->load(startURL);
+ webView->load(fileUrl);
  QVariantList objArray;
  objArray << m_latitude << m_longitude;
  m_bridge->processScript("setCenter", objArray);
@@ -547,6 +537,7 @@ void MainWindow::reloadMap()
  objArray << m_maptype;
  m_bridge->processScript("setMapType", objArray);
 }
+
 void MainWindow::linkActivated()
 {
  ui->btnBack->setVisible(true);
@@ -554,11 +545,7 @@ void MainWindow::linkActivated()
 void MainWindow::pageBack()
 {
  webView->back();
-#ifndef USE_WEBENGINE
- QWebHistory *hist = webView->history();
-#else
  QWebEngineHistory *hist = webView->history();
-#endif
  if(!hist->canGoBack())
   ui->btnBack->setVisible(false);
 }
@@ -1021,12 +1008,12 @@ void MainWindow::createActions()
  connect(exportDbAct, SIGNAL(triggered()), this, SLOT(exportDb()));
 
  editConnectionsAct = new QAction(tr("Edit Connections..."), this);
- editConnectionsAct->setToolTip(tr("Select/edit city and connection"));
+ editConnectionsAct->setToolTip(tr("Select/edit city and manage database connections."));
  connect(editConnectionsAct, SIGNAL(triggered()),this, SLOT(editConnections()));
 
- editCityAct = new QAction(tr("Edit City Info"), this);
- editCityAct->setToolTip(tr("Edit city info including selecting which available overlays can be displayed."));
- connect(editCityAct, SIGNAL(triggered()), this, SLOT(On_editCityInfo()));
+ manageOverlaysAct = new QAction(tr("Manage Overlays"), this);
+ manageOverlaysAct->setToolTip(tr("Edit city info including selecting which available overlays can be displayed as well as defining additional overlays.."));
+ connect(manageOverlaysAct, SIGNAL(triggered()), this, SLOT(On_editCityInfo()));
 
  locateStreetAct = new QAction(tr("Locate Geodb Object"), this);
  locateStreetAct->setToolTip(tr("Locate, a street, bridge, park or bahanhof. For Berlin only."));
@@ -1119,7 +1106,7 @@ void MainWindow::createMenus()
     connectionsMenu->addSeparator();
     createCityMenu();
     connectionsMenu->addAction(editConnectionsAct);
-    connectionsMenu->addAction(editCityAct);
+    connectionsMenu->addAction(manageOverlaysAct);
 
     toolsMenu = new Menu(tr("Tools"));
     toolsMenu->addAction(addRouteAct);
@@ -4052,12 +4039,8 @@ void MainWindow::on_linkClicked(QUrl url)
 bool MainWindow::openWebWindow()
 {
  // open map display in browser window
-#ifndef USE_WEBENGINE
- QUrl startURL = QUrl("qrc:/GoogleMaps.htm");
-#else
  QString startHTML = "./Resources/GoogleMaps2b.htm";
  QString startFn = "GoogleMaps2b.htm";
-#endif
 
  QString cwd = QDir::currentPath();
 #ifdef Q_OS_WIN
@@ -4065,42 +4048,50 @@ bool MainWindow::openWebWindow()
 #endif
 QString loadPath = tempDir;
 #ifdef  Q_OS_WIN
- QDir temp = QDir(QDir::tempPath());
- if(!QDir(temp.absolutePath() + "\\Mapper").exists())
-  temp.mkdir("Mapper");
- tempDir = temp.absolutePath() + "\\Mapper\\";
+ tempDir = cwd+ QDir::separator() + "html";
  tempDir = tempDir.replace("/", "\\");
 #else
  tempDir = "/var/www/html/";
  loadPath = "http://localhost/";
 #endif
- QDir td = QDir(tempDir);
- QString tempDir1 = td.absolutePath();
-     qDebug() << "openWebWindow: tempPath =" << tempDir;
+ qDebug() << "openWebWindow: tempPath =" << tempDir;
+// QFileInfo tempInfo(tempDir);
+// if(!tempInfo.isWritable())
+// {
+//     QMessageBox::critical(this, tr("Error"), tr(" cannot write to temp directory %1").arg(tempDir));
+//     abort();
+// }
 
-     QList<QPair<QString,QString>> updates = {QPair<QString,QString>("MYAPIKEY",keyTokens.at(1)),
-                                              QPair<QString,QString>("TEMPDIR-",  tempDir)};
+ qDebug() << "openWebWindow: copyAndUpdate GoogleMaps2b.htm" << " to " << tempDir;
+#if 0
+ QFileInfo info(tempDir+QDir::separator() + "GoogleMaps2b.htm");
+ if(info.exists())
+ {
 
- //QFileInfo info(tempDir+ QDir::separator() + startFn);
+    //#define FORCE_COPY
+     if(verifyAPIKey("./Resources/GoogleMaps2b.htm", keyTokens.at(1)))
+       copyAndUpdate("./Resources/GoogleMaps2b.htm", tempDir, "");
+      else
+       copyAndUpdate(startHTML, tempDir, keyTokens.at(1));
 
- qDebug() << "openWebWindow: copyAndUpdate GoogleMaps2b.htm" << " to " << tempDir1;
-#define FORCE_COPY
-  copyAndUpdate(startHTML, tempDir, updates);
-  copyAndUpdate(":///scripts/qwebchannel.js", tempDir, updates);
-  copyAndUpdate(":///GoogleMaps.js", tempDir, updates );
-  copyAndUpdate(":///scripts/WebChannel.js", tempDir, updates );
-  copyAndUpdate(":///scripts/ExtDraggableObject.js", tempDir, updates);
-  copyAndUpdate(":///scripts/opacityControl.js", tempDir, updates);
-  QFile slider(":///scripts/opacity-slider2.png");
-  if(slider.exists())
-  {
-   QFile::remove(tempDir+ QDir::separator() + "opacity-slider2.png" );
-  if(!slider.copy( tempDir+ QDir::separator() + "opacity-slider2.png" ))
-      qCritical() << "copy scripts/opacity-slider2.png failed" << slider.errorString();
-  }
-  else
-      qCritical() << "cannot  find opacity-slider2.png";
+     qDebug() << "file verified";
 
+      copyAndUpdate(":///scripts/qwebchannel.js", tempDir,"");
+      copyAndUpdate(":///GoogleMaps.js", tempDir,"" );
+      copyAndUpdate(":///scripts/WebChannel.js", tempDir,"" );
+      copyAndUpdate(":///scripts/ExtDraggableObject.js", tempDir, "");
+      copyAndUpdate(":///scripts/opacityControl.js", tempDir,"");
+      QFile slider(":///scripts/opacity-slider2.png");
+      if(slider.exists())
+      {
+       QFile::remove(tempDir+ QDir::separator() + "opacity-slider2.png" );
+      if(!slider.copy( tempDir+ QDir::separator() + "opacity-slider2.png" ))
+          qCritical() << "copy scripts/opacity-slider2.png failed" << slider.errorString();
+      }
+      else
+          qCritical() << "cannot  find opacity-slider2.png";
+ }
+#endif
 #ifdef Q_OS_LINUX
   QFile::copy(":///GoogleMaps2b.htm", "/var/www/html/GoogleMaps2b.htm");
   fileUrl = QUrl("http://localhost:80/GoogleMaps2b.htm");
@@ -4117,14 +4108,16 @@ QString loadPath = tempDir;
 
 }
 
-bool MainWindow::copyAndUpdate(QString inFile, QString outDir, QList<QPair<QString,QString>> updates)
+bool MainWindow::copyAndUpdate(QString inFile, QString outDir, QString apiKey)
 {
-    qInfo() << tr(" copy %1 to %2").arg(inFile).arg( outDir);
+    qInfo() << "copyAndUpdate: " << tr(" copy %1 to %2").arg(inFile).arg( outDir);
 //#ifdef Q_OS_WIN
 // outDir.replace("\\\\", "\\");
 //#endif
 
  QFileInfo in(inFile);
+ if(!in.exists())
+     qCritical() << "copyAndUpdate: input file not found!"<< inFile;
  QString baseName = inFile.mid(inFile.lastIndexOf("/")+1);
  QFileInfo out(outDir+QDir::separator()+baseName);
 //#ifndef FORCE_COPY
@@ -4136,7 +4129,7 @@ bool MainWindow::copyAndUpdate(QString inFile, QString outDir, QList<QPair<QStri
 //  return true;
 // }
 //#endif
- qDebug() << "copyAndUpdate: infile = " << inFile << "outdir= " << outDir << updates;
+ qDebug() << "copyAndUpdate: infile = " << inFile << "outdir= " << outDir << apiKey;
  QFile* gFile = new QFile(in.absoluteFilePath());
  QFile* tgFile = new QFile(out.absoluteFilePath());
  QString text;
@@ -4144,15 +4137,8 @@ bool MainWindow::copyAndUpdate(QString inFile, QString outDir, QList<QPair<QStri
  {
   QTextStream* inStream = new QTextStream(gFile);
   text = inStream->readAll();
-//  if(text.contains("TEMPDIR") && apiKey.isEmpty())
-//   text = text.replace("TEMPDIR", tempDir);
-//  if(!apiKey.isEmpty())
-//   text = text.replace("MYAPIKEY", apiKey);
-  for(QPair<QString,QString> pair : updates) {
-    if(text.contains(pair.first))
-       text = text.replace(pair.first, pair.second);
-  }
-
+  if(!apiKey.isEmpty())
+   text = text.replace("MYAPIKEY", apiKey);
 
   if(!tgFile->setPermissions(QFile::ReadOwner | QFile::WriteOwner |
                          QFileDevice::ReadGroup |QFileDevice::WriteGroup |
@@ -4164,20 +4150,53 @@ bool MainWindow::copyAndUpdate(QString inFile, QString outDir, QList<QPair<QStri
   if(tgFile->open(QIODevice::WriteOnly))
   {
    QTextStream * outStream = new QTextStream(tgFile);
+   if(!apiKey.isEmpty() && text.contains ("MYAPILEY")){
+       qCritical() << "apiKey replacement failed";
+   }
    *outStream << text;
-   Q_ASSERT(!text.contains("MYAPIKEY"));
-   gFile->close();
+   //Q_ASSERT(!text.contains("MYAPIKEY"));
+   tgFile->flush();
    tgFile->close();
-   qInfo() << "file " << baseName << " updated successfully line " << __LINE__;
+   gFile->close();
+   qInfo() << "copyAndUpdate"<< "file " << baseName << " updated successfully line " << __LINE__;
    return true;
   }
-  qDebug() << tgFile->fileName() << tgFile->errorString();
+  qDebug() << "copyAndUpdate failed writing " << tgFile->fileName() << tgFile->errorString();
  }
  else
  {
- qCritical() << "updateTempDir failed copying " << gFile->fileName() << " to " << outDir << " reason" << gFile->errorString();
+  qCritical() << "copyAndUpdate failed copying " << gFile->fileName() << " to " << outDir << " reason" << gFile->errorString();
  }
  return false;
+}
+
+bool MainWindow::verifyAPIKey(QString path, QString apiKey)
+{
+    QFile* gFile = new QFile(path);
+    if(gFile->open(QIODevice::ReadOnly))
+    {
+         QTextStream* inStream = new QTextStream(gFile);
+         QString text;
+        text = inStream->readAll();
+        if(text.contains("MYAPIKEY"))
+        {
+            qCritical() << "apikey not updated!";
+            gFile->close();
+            return false;
+        }
+        if(!text.contains(apiKey))
+        {
+            qCritical() << "apikey not found!";
+            gFile->close();
+            return false;
+        }
+        qInfo() << "apikey is correct!";
+    }
+    else
+    {
+        qCritical() << "verifyApi: " << path << " not found " << gFile->errorString();
+    }
+    return true;
 }
 
 void MainWindow::onWebSocketClosed()

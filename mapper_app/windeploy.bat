@@ -12,6 +12,8 @@ IF exist %2\nul ( echo %2 exists ) ELSE ( mkdir %2 && echo %2 created)
 IF NOT EXIST %2\Resources\nul (mkdir %2\Resources && echo %2\Resources created)
 windeployqt --dir %2 %1\mapper.exe
 
+erase %2\mapper.exe
+
 copy %1\mapper.exe %2
 copy %1\Console.dll %2
 copy %1\functions.dll %2
@@ -25,15 +27,9 @@ copy %1\..\..\..\mapper_QT\mapper_app\Resources\databases\*.sqlite3 %2\Resources
 
 copy %1\..\..\..\mapper_QT\mapper_app\overlays.xml %2
 
-:: clear html dir
-::IF EXIST %2\html\nul RMDIR /s /q  %2\html
-
 REM copy html file
 IF NOT EXIST %2\html\nul (mkdir %2\html && echo %2\html created)
-copy copy %1\..\..\..\mapper_QT\mapper_app\html\GoogleMaps2.htm %2\html
-attrib +r %2\html\GoogleMaps2.htm
-copy copy %1\..\..\..\mapper_QT\mapper_app\html\GoogleMaps2b.htm %2\html
-attrib +r %2\html\GoogleMaps2b.htm
+xcopy %1\..\..\..\mapper_QT\mapper_app\html\* %2\html
 
 REM copy wiki pages
 IF NOT EXIST %2\wiki\nul (mkdir %2\wiki && echo %2\wiki created)

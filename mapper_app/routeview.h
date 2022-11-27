@@ -8,7 +8,7 @@
 #include <QStandardItemModel>
 #include <QStandardItem>
 #include <QStringList>
-#include "mainwindow.h"
+//#include "mainwindow.h"
 #include <QMenu>
 #include <QClipboard>
 #include "routeviewtablemodel.h"

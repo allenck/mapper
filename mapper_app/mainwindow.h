@@ -345,7 +345,7 @@ private:
     QAction* createKmlAct;
     QAction *exportDbAct;
     QAction *editConnectionsAct;
-    QAction* editCityAct;
+    QAction* manageOverlaysAct;
     QAction *locateStreetAct;
     QAction *combineRoutesAct;
     QAction *refreshRoutesAct;
@@ -421,10 +421,11 @@ private:
     QString wikiRoot;
     void loadData(QString data, QString source);
 //    void refreshStreetsCb();
-    bool copyAndUpdate(QString inFile, QString outDir, QList<QPair<QString,QString>> updates);
+    bool copyAndUpdate(QString inFile, QString outDir, QString apiKey);
     QString tempDir;
     QStringList keyTokens;
     QUrl fileUrl;
+    bool verifyAPIKey(QString path, QString apiKey);
 
 private slots:
     void createCityMenu();
