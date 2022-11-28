@@ -26,7 +26,7 @@ REM copy databases from %1\..\..\..\mapper_QT\mapper_app\Resources\databases\ to
 copy %1\..\..\..\mapper_QT\mapper_app\Resources\databases\*.sqlite3 %2\Resources\databases
 
 copy %1\..\..\..\mapper_QT\mapper_app\overlays.xml %2
-
+copy %1\..\..\..\mapper_Qt\READMe.md %2
 REM copy html file
 IF NOT EXIST %2\html\nul (mkdir %2\html && echo %2\html created)
 xcopy %1\..\..\..\mapper_QT\mapper_app\html\* %2\html
