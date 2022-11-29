@@ -11,7 +11,7 @@
 #include <QWebEngineView>
 #include <QWebSocketServer>
 #include <QWebChannel>
-//#include <WebSocketClientWrapper>
+#include <QWebEnginePage>
 #endif
 #include "data.h"
 #include "routeview.h"
@@ -23,17 +23,11 @@
 #include "configuration.h"
 //#include "sql.h"
 #include "routedlg.h"
-#include "segmentview.h"
 #include "segmentviewsortproxymodel.h"
 #include "segmentviewtablemodel.h"
-#include "otherrouteview.h"
 #include "filedownloader.h"
 #include "splitroute.h"
 #include "editstation.h"
-#include "stationview.h"
-#include "companyview.h"
-#include "tractiontypeview.h"
-#include "dupsegmentview.h"
 #include "routecommentsdlg.h"
 #include "querydialog.h"
 #include <QToolTip>
@@ -64,10 +58,7 @@ class MyWebEnginePage : public QWebEnginePage
 {
  Q_OBJECT
 public:
- MyWebEnginePage(QObject* parent = 0) : QWebEnginePage(parent){
-  connect(this, SIGNAL(QWebEnginePage::loadProgress(int )), this,
-                       SLOT(loadProgress(int progress)));
- }
+ MyWebEnginePage(QObject* parent = 0);
  bool acceptNavigationRequest(const QUrl &url, NavigationType type, bool ) override
  {
   if(type == NavigationTypeLinkClicked)
@@ -364,6 +355,7 @@ private:
     QAction* overlayHelp;
     QAction* usingMapper;
     QAction* splitSegmentAct;
+    QAction* setInspectedPageAct = nullptr;
     QList<QAction*> cityActions;
     QSignalMapper *signalMapper;
     QActionGroup  *actionGroup;
@@ -404,7 +396,7 @@ private:
     FileDownloader *m_overlays;
     FileDownloader *m_tilemapresource;
     Configuration* config;
-
+    MyWebEnginePage* myWebEnginePage = nullptr;
     qint32 m_SegmentId;
     QT_DEPRECATED QList<SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
     QMap<int, SegmentData> cbSegmentDataList;  // list of segmentInfo items in cbSegments

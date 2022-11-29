@@ -3,10 +3,12 @@
 
 
 
-<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Compiling Mapper from source</title></head><body>
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Compiling Mapper from source</title></head>
+<body style="background-color:#faf0e6">
 <h3><big><big><big><span style="font-weight: bold;">Compiling Mapper from Source</span></big></big></big></h3>
 <br>
-Source is available if you want to modify the program or run it on a Linux system. <br>
+Source is available if you want to modify the program or run it on a Linux system. Mapper source can be downloaded 
+from GitHub: <a href="https://github.com/allenck/mapper">https://github.com/allenck/mapper</a><br><br>
 <br>
 <h4>Prerequisites</h4>
 Mapper uses QT as a programming framework. QT can be downloaded from <a href="http://www.qt.io/download-open-source/#section-2">QT download</a>. QT uses SQLite3 as a database engine. However, the version of SQLite3
@@ -45,32 +47,21 @@ depend on which version of QT you are using. For example, QT 5.6.1
 comes compiled with MSVC 2013 or MSVC 2015 or MinGw while QT version
 5.4 comes compiled with MSVC 2010 or MSVC 2013 or MinGw<br>
 <br>
-Another prerequisite is the Fossil program which can be downloaded from the <a href="https://www.fossil-scm.org/download.html">Fossil download page</a>.
-Fossil is needed to download the source from my server. Fossil will run
-on Windows or Linux. Once you have installed Fossil on your computer,
-and have inserted it's location in the PATH, follow these steps to
-download the source. <br>
-<ol>
-  <li>Select a root directory where the source will reside. In my case, I have a directory called 'Projects' although
-	it can be any name you choose. </li>
-  <li>In the 'Projects' directory, create a directory named 'mapper_QT'. 
-Again, the name you choose for this directory is not important.</li>
-  <li>Change to the 'mapper_QT' directory.</li>
-  <li>Clone the source repository with the command: '<strong>fossil clone http://acksoft.dyndns.biz:1080/cgi-bin/fossil/mapper_QT mapper_qt.fossil</strong>'. 
-	This will create a file named 'mapper_qt.fossil' which is your local repository copy.</li>
-  <li>Next, issue the command '<strong>fossil open mapper_qt.fossil</strong>'.
+
+<h4>Google Mapss</h4>
+Google requires that programs using the Google Maps API must have an API key which can be obtained at
+ <a href="https://developers.google.com/maps/documentation/javascript/get-api-key"> Use API keys</a>
+ No API keys for Google Maps can be stored in source files in GitHub. In fact, Google will 
+ invalidate them if they are included in files!Two HTML files, <i>GoogleMaps2.htm</i> and <i>GoogleMaps2b.htm</i> 
+ can be found in the mapper_<i>./app/Resources</i> folder of the source.
+ The actual API key obtained from Google should replace the literal <b>MYAPIKEY</b> 
+ and the resulting .htm files with that valid keys should be stored in the <i>./mapper_app/html</i> 
+ folder which also contains Javascript files 
+ needed and this is where installation scripts can find the files when building installation programs.
+  NOTE that git will ignore the two .htm files in the <i>./app/Resources</i>.
  
-	This will download the source and other files in the project. It will 
-create a directory 'mapper in the '../mapper_qt/' 
-	directory containing directories: 'Console', 'functions', 'mapper_app', 'Resources', 'sqlfun' and 'wiki'.</li>
-  <li>In QtCreator, open the 'mapper.pro' project file. <br>
-  </li>
-  <li>The latest source from the fossil repository can be updated at any time by running the command <span style="font-weight: bold;">fossil update</span> from the command line. <br>
-  </li>
-</ol>
 
 
-Mapper source can also be downloaded from GitHub: <a href="https://github.com/allenck/mapper">https://github.com/allenck/mapper</a><br>
 <h5>Macintosh</h5>
 QT is availablre on the Macintosh. Therefore it is possible to compile
 Mapper on a Macintosh but having no Macintosh available, I am not in a

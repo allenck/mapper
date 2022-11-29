@@ -8,7 +8,7 @@
 #include <QWebEngineHistory>
 #include "websocketclientwrapper.h"
 #include "websockettransport.h"
-#include <QWebEnginePage>
+//#include <QWebEnginePage>
 #include <QWebSocketServer>
 #endif
 #include "webviewbridge.h"
@@ -53,6 +53,12 @@
 #include "overlay.h"
 #include <QClipboard>
 #include "exceptions.h"
+#include "segmentview.h"
+#include "otherrouteview.h"
+#include "stationview.h"
+#include "companyview.h"
+#include "tractiontypeview.h"
+#include "dupsegmentview.h"
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -143,7 +149,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   webView = new QWebEngineView(ui->groupBox_2);
   webView->setObjectName(QStringLiteral("webEngineView"));
   webView->setContextMenuPolicy(Qt::CustomContextMenu);
-  webView->setPage(new MyWebEnginePage());
+  webView->setPage(myWebEnginePage = new MyWebEnginePage());
   webView->setMinimumWidth(400);
   Q_ASSERT(keyTokens.size()>0);
 #if 0
@@ -969,6 +975,7 @@ void MainWindow::createActions()
    ui->ssw->refresh();
  });
 
+
  addPointModeAct = new QAction(tr("Add point mode"), this);
  addPointModeAct->setToolTip(tr("Toggle 'add point' mode. If on, points can be added to the currenly selected segment."));
  addPointModeAct->setCheckable(true);
@@ -1012,7 +1019,7 @@ void MainWindow::createActions()
  connect(editConnectionsAct, SIGNAL(triggered()),this, SLOT(editConnections()));
 
  manageOverlaysAct = new QAction(tr("Manage Overlays"), this);
- manageOverlaysAct->setToolTip(tr("Edit city info including selecting which available overlays can be displayed as well as defining additional overlays.."));
+ manageOverlaysAct->setToolTip(tr("Edit overlay info including selecting which available overlays can be displayed as well as defining additional overlays.."));
  connect(manageOverlaysAct, SIGNAL(triggered()), this, SLOT(On_editCityInfo()));
 
  locateStreetAct = new QAction(tr("Locate Geodb Object"), this);
@@ -1091,15 +1098,24 @@ void MainWindow::createActions()
  setCityBoundsAct = new QAction(tr("Set City Bounds"),this);
  setCityBoundsAct->setToolTip(tr("Set the display bounds for thiis city/region"));
  connect(setCityBoundsAct, &QAction::triggered, [=]{config->currCity->setCityBounds(m_bridge);});
+
+ setInspectedPageAct = new QAction(tr("Inspect page"),this);
+ connect(setInspectedPageAct, &QAction::triggered, [=]{
+     myWebEnginePage->setInspectedPage(myWebEnginePage);
+ });
 }
 
 void MainWindow::createMenus()
 {
     fileMenu = menuBar()->addMenu(tr("&File"));
+    fileMenu->setToolTipsVisible(true);
+    fileMenu->setToolTip(tr(" select quit option tp exit program."));
     fileMenu->addAction(quitAct);
     QMenu* connectionsMenu = new Menu("City");
     menuBar()->addMenu(connectionsMenu);
     cityMenu = new Menu(tr("&Cities"));
+    cityMenu->setToolTipsVisible(true);
+    cityMenu->setToolTip(tr("Select city, connection or manage overlays"));
     cityMenu->setToolTip(tr("Select which city and database connection to use."));
     connectionsMenu->addMenu(cityMenu);
     connect(cityMenu, SIGNAL(aboutToShow()), this, SLOT(createCityMenu()));
@@ -1123,6 +1139,7 @@ void MainWindow::createMenus()
     toolsMenu->addAction(browseCommentsAct);
     toolsMenu->addAction(exportOverlaysAct);
     toolsMenu->addAction(setCityBoundsAct);
+    //toolsMenu->addAction(setInspectedPageAct);
 
     optionsMenu = new Menu(tr("Options"));
     overlayMenu = new Menu(tr("Overlays"));
@@ -1144,9 +1161,11 @@ void MainWindow::createMenus()
     menuBar()->addMenu(toolsMenu);
 
     helpMenu = menuBar()->addMenu(tr("&Help"));
+    helpMenu->setToolTipsVisible(true);
 //    helpMenu->addAction(webViewAction = new WebViewAction((QObject*)this));
 //#ifndef QT_DEBUG
     helpMenu->addAction(systemConsoleAction = new SystemConsoleAction());
+    systemConsoleAction->setToolTip(tr("Display, info, error and debug messages"));
 //#endif
     helpMenu->addAction(usingMapper);
     helpMenu->addAction(overlayHelp);
@@ -4232,3 +4251,13 @@ void MainWindow::saveChanges()
 {
  routeView->model()->commitChanges();
 }
+
+MyWebEnginePage::MyWebEnginePage(QObject* parent) : QWebEnginePage(parent){
+// connect(this, SIGNAL(QWebEnginePage::loadProgress(int)), this,
+//                      SLOT(loadProgress(int)));
+ connect(this, &QWebEnginePage::loadProgress, [=](int progress){
+  qDebug() << "progress "<< progress;
+  setVisible(true);
+ });
+}
+

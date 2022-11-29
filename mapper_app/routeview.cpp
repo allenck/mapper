@@ -4,6 +4,7 @@
 #include "mainwindow.h"
 #include "editsegmentdialog.h"
 #include "webviewbridge.h"
+#include "otherrouteview.h"
 
 RouteView::RouteView(QObject* parent )
 {

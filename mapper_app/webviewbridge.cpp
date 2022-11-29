@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QApplication>
 #include <QClipboard>
+#include "segmentview.h"
 
 WebViewBridge* WebViewBridge::_instance = NULL;
 
