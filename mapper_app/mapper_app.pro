@@ -6,7 +6,8 @@
 
 greaterThan(QT_MAJOR_VERSION, 4): {
  greaterThan(QT_MINOR_VERSION, 4): {
-  WEBENGINE = Y
+  WEBENGINE = Yiic723@knobacres
+
  }
 }
 message(WEBENGINE  " = "  $$WEBENGINE)
@@ -21,6 +22,9 @@ else {
  greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport printsupport webenginewidgets gui
  DEFINES += USE_WEBENGINE
  message("using WebEngine")
+
+RC_ICONS = Resources/tram-icon.ico
+
 HEADERS += \
     websocketclientwrapper.h \
     websockettransport.h
@@ -112,6 +116,7 @@ win32:{
 #}
 
 DISTFILES += \
+    README.txt \
     Resources/addBiDirectionalToRoutes.sql \
     Resources/recreateRouteComments.sql \
     Resources/recreate_routes.sql \

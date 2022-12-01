@@ -74,6 +74,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  config->getSettings();
  QString cwd = QDir::currentPath();
  wikiRoot = cwd+ QDir::separator()+ "wiki";
+ QIcon icon(":/tram-icon.ico");
+ setWindowIcon(icon);
  QFileInfo info = QFileInfo(wikiRoot);
  if(!info.exists())
  {

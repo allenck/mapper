@@ -46,5 +46,6 @@
         <file>addBiDirectionalToRoutes.sql</file>
         <file>recreateRouteComments.sql</file>
         <file>rollback.png</file>
+        <file>tram-icon.ico</file>
     </qresource>
 </RCC>
