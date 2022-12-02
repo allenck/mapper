@@ -120,7 +120,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 #ifdef  Q_OS_WIN
  tempDir.replace("/", QDir::separator());
 #endif
-
+#if 0
  QFile* keys = new QFile("Resources/api_keys.txt");
  if(!keys->open(QIODevice::ReadOnly))
   throw FileNotFoundException("keys file not found!");
@@ -131,6 +131,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  keyTokens = keysText.split("|");
  qDebug() << "api_keys copied";
  keys->close();
+#endif
 
  cwd = QDir::currentPath();
 #ifndef Q_OS_WIN
@@ -142,18 +143,18 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 #endif
  if(!config->bRunInBrowser)
  {
-#ifndef USE_WEBENGINE
-  webView = new QWebView(ui->groupBox_2);
-  webView->setObjectName(QStringLiteral("webView"));
-  webView->setContextMenuPolicy(Qt::NoContextMenu);
-  webView->setUrl(QUrl(QStringLiteral("qrc:/GoogleMaps.htm")));
-#else
+//#ifndef USE_WEBENGINE
+//  webView = new QWebView(ui->groupBox_2);
+//  webView->setObjectName(QStringLiteral("webView"));
+//  webView->setContextMenuPolicy(Qt::NoContextMenu);
+//  webView->setUrl(QUrl(QStringLiteral("qrc:/GoogleMaps.htm")));
+//#else
   webView = new QWebEngineView(ui->groupBox_2);
   webView->setObjectName(QStringLiteral("webEngineView"));
   webView->setContextMenuPolicy(Qt::CustomContextMenu);
   webView->setPage(myWebEnginePage = new MyWebEnginePage());
   webView->setMinimumWidth(400);
-  Q_ASSERT(keyTokens.size()>0);
+//  Q_ASSERT(keyTokens.size()>0);
 #if 0
 #ifdef Q_OS_WIN
   QFileInfo info(tempDir + QDir::separator()+"GoogleMaps2.htm");
@@ -194,10 +195,10 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 #else
   fileUrl = QUrl("http://localhost/GoogleMaps2.htm");
 #endif
-  if(verifyAPIKey(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm", keyTokens.at(0)))
+  //if(verifyAPIKey(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm", keyTokens.at(0)))
    webView->setUrl(fileUrl);
-  else throw Exception("API key invalid");
-#endif
+  //else throw Exception("API key invalid");
+
  }
  else // run in browser
  {
@@ -205,7 +206,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   webView = NULL;
   ui->groupBox_2->setHidden(true);
   openWebWindow();
-  ui->saveImage->setEnabled(false);
+  //ui->saveImage->setEnabled(false);
  }
 
 #ifdef USE_WEBENGINE
@@ -3971,19 +3972,25 @@ void MainWindow::QueryDialogAct_triggered()
 
 void MainWindow::On_saveImage_clicked()
 {
- QString saveFilename = QFileDialog::getSaveFileName(this, "Save as", "Choose a filename", "PNG(*.png);; TIFF(*.tiff *.tif);; JPEG(*.jpg *.jpeg)");
-
- QString saveExtension = "PNG";
- int pos = saveFilename.lastIndexOf('.');
- if (pos >= 0)
-     saveExtension = saveFilename.mid(pos + 1);
- QString ext = "." + saveExtension.toLower();
- if(!saveFilename.endsWith(ext))
-  saveFilename.append(ext);
-
- if(!QPixmap::grabWidget(webView).save(saveFilename, qPrintable(saveExtension)))
+ if(!config->bRunInBrowser)
  {
-  QMessageBox::warning(this, "File could not be saved", "ok", QMessageBox::Ok);
+  QString saveFilename = QFileDialog::getSaveFileName(this, "Save as", "Choose a filename", "PNG(*.png);; TIFF(*.tiff *.tif);; JPEG(*.jpg *.jpeg)");
+
+  QString saveExtension = "PNG";
+  int pos = saveFilename.lastIndexOf('.');
+  if (pos >= 0)
+      saveExtension = saveFilename.mid(pos + 1);
+  QString ext = "." + saveExtension.toLower();
+  if(!saveFilename.endsWith(ext))
+   saveFilename.append(ext);
+
+  if(!QPixmap::grabWidget(webView).save(saveFilename, qPrintable(saveExtension)))
+  {
+   QMessageBox::warning(this, "File could not be saved", "ok", QMessageBox::Ok);
+  }
+ }
+ else {
+    m_bridge->processScript("screenshot");
  }
 }
 
@@ -4259,7 +4266,7 @@ MyWebEnginePage::MyWebEnginePage(QObject* parent) : QWebEnginePage(parent){
 //                      SLOT(loadProgress(int)));
  connect(this, &QWebEnginePage::loadProgress, [=](int progress){
   qDebug() << "progress "<< progress;
-  setVisible(true);
+  //setVisible(true);
  });
 }
 

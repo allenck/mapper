@@ -6,8 +6,7 @@
 
 greaterThan(QT_MAJOR_VERSION, 4): {
  greaterThan(QT_MINOR_VERSION, 4): {
-  WEBENGINE = Yiic723@knobacres
-
+  WEBENGINE = Y
  }
 }
 message(WEBENGINE  " = "  $$WEBENGINE)

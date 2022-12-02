@@ -415,7 +415,7 @@ private:
 //    void refreshStreetsCb();
     bool copyAndUpdate(QString inFile, QString outDir, QString apiKey);
     QString tempDir;
-    QStringList keyTokens;
+//    QStringList keyTokens;
     QUrl fileUrl;
     bool verifyAPIKey(QString path, QString apiKey);
 

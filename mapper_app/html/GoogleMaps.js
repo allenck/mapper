@@ -2668,5 +2668,16 @@ function downloadFile(url, fileName) {
     });
 };
 
+function screenshot()
+{
+      html2canvas(document.body, {
+      allowTait: true,
+      useCORS: true
+      }).then(function(canvas) {
+
+            const base64image = canvas.toDataURL("image/png");
+            webViewBridge.screenshot(base64image);
+    });
+}
 
 console.log("GoogleMaps.js loaded!");

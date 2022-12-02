@@ -4,6 +4,7 @@
 #include <QApplication>
 #include <QClipboard>
 #include "segmentview.h"
+#include <QFileDialog>
 
 WebViewBridge* WebViewBridge::_instance = NULL;
 
@@ -296,4 +297,24 @@ void WebViewBridge::rightClicked(QString text)
     qDebug() << "LatLng:"<< text;
     QClipboard* clipBoard = QGuiApplication::clipboard();
     clipBoard->setText(text);
+}
+
+void WebViewBridge::screenshot(QString base64image)
+{
+ QString saveFilename = QFileDialog::getSaveFileName(nullptr, "Save as", "Choose a filename", "PNG(*.png);; TIFF(*.tiff *.tif);; JPEG(*.jpg *.jpeg)");
+
+ QString saveExtension = "PNG";
+ int pos = saveFilename.lastIndexOf('.');
+ if (pos >= 0)
+     saveExtension = saveFilename.mid(pos + 1);
+ QString ext = "." + saveExtension.toLower();
+ if(!saveFilename.endsWith(ext))
+  saveFilename.append(ext);
+
+ QByteArray base64Data = base64image.toLatin1().mid(base64image.indexOf(",")+1);
+ QImage image;
+ if(image.loadFromData(QByteArray::fromBase64(base64Data)))
+ {
+  image.save(saveFilename, "PNG");
+ }
 }
