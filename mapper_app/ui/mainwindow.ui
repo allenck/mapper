@@ -70,6 +70,9 @@
         </item>
         <item row="12" column="4">
          <widget class="QDateEdit" name="dateEdit">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Display route as of this date.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="time">
            <time>
             <hour>0</hour>

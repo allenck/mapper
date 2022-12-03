@@ -17,3 +17,6 @@
 9.  The program now defines a number of predefined overlays.
 10. Wiki pages have been updated.
 11. Console messages are now stored in a 'mapper.log' file.
+
+** Version 1.0.1 Changes December 2022**
+1.  Add screenshot capture for browser display.

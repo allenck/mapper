@@ -46,13 +46,13 @@
 #include "replacesegmentdialog.h"
 #include "segmentselectionwidget.h"
 #include "browsecommentsdialog.h"
-#include "exceptions.h"
+//#include "exceptions.h"
 //#include "logger.h"
 #include "routeview.h"
 #include "splitsegmentdlg.h"
 #include "overlay.h"
 #include <QClipboard>
-#include "exceptions.h"
+//#include "exceptions.h"
 #include "segmentview.h"
 #include "otherrouteview.h"
 #include "stationview.h"
@@ -4121,11 +4121,14 @@ QString loadPath = tempDir;
  }
 #endif
 #ifdef Q_OS_LINUX
-  QFile::copy(":///GoogleMaps2b.htm", "/var/www/html/GoogleMaps2b.htm");
+  //QFile::copy(":///GoogleMaps2b.htm", "/var/www/html/GoogleMaps2b.htm");
+  copyAndUpdate(cwd + QDir::separator() + "GoogleMaps2b.htm", tempDir, "");
+  copyAndUpdate(cwd + QDir::separator() + "GoogleMaps.js, tempDir, """);
   fileUrl = QUrl("http://localhost:80/GoogleMaps2b.htm");
 #else
     fileUrl = QUrl::fromLocalFile(tempDir  + QDir::separator() + startFn);
 #endif
+
     qDebug() << "open " << fileUrl.toString();
    if(!QDesktopServices::openUrl(fileUrl))
    {
@@ -4149,13 +4152,13 @@ bool MainWindow::copyAndUpdate(QString inFile, QString outDir, QString apiKey)
  QString baseName = inFile.mid(inFile.lastIndexOf("/")+1);
  QFileInfo out(outDir+QDir::separator()+baseName);
 //#ifndef FORCE_COPY
-// if(out.exists() &&  (out.fileTime(QFileDevice::FileModificationTime)) > in.fileTime(QFileDevice::FileModificationTime))
-// {
+ if(out.exists() &&  (out.fileTime(QFileDevice::FileModificationTime)) > in.fileTime(QFileDevice::FileModificationTime))
+ {
 //  qDebug() << "out file " << baseName << " newer; will not copy it:";
 //  qDebug() << " infile path " << in.absoluteFilePath() << " time" << in.fileTime(QFileDevice::FileModificationTime).toString();
 //  qDebug() << " outfile path" << out.absoluteFilePath() << " time" << out.fileTime(QFileDevice::FileModificationTime).toString();
-//  return true;
-// }
+  return true;
+ }
 //#endif
  qDebug() << "copyAndUpdate: infile = " << inFile << "outdir= " << outDir << apiKey;
  QFile* gFile = new QFile(in.absoluteFilePath());
