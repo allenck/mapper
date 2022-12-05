@@ -4123,7 +4123,7 @@ QString loadPath = tempDir;
 #ifdef Q_OS_LINUX
   //QFile::copy(":///GoogleMaps2b.htm", "/var/www/html/GoogleMaps2b.htm");
   copyAndUpdate(cwd + QDir::separator() + "GoogleMaps2b.htm", tempDir, "");
-  copyAndUpdate(cwd + QDir::separator() + "GoogleMaps.js, tempDir, """);
+  copyAndUpdate(cwd + QDir::separator() + "GoogleMaps.js", tempDir, "");
   fileUrl = QUrl("http://localhost:80/GoogleMaps2b.htm");
 #else
     fileUrl = QUrl::fromLocalFile(tempDir  + QDir::separator() + startFn);
