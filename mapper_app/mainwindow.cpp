@@ -1306,7 +1306,7 @@ void MainWindow::newCity(int ix )
     config->currCity->center = LatLng(m_latitude, m_longitude);
     config->currCity->zoom = m_zoom;
     config->currCity->mapType = m_maptype;
-    config->currCity->connections.insert(config->currCity->name()+"|"+config->currConnection->description(), config->currConnection);
+    config->currCity->connections.insert(config->currConnection->description(), config->currConnection);
     // Save any changes to currentCity
     config->cityList.values().replace(config->currentCityId, config->currCity);
     companyView->clear();

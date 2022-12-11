@@ -47,6 +47,11 @@
         <file>recreateRouteComments.sql</file>
         <file>rollback.png</file>
         <file>tram-icon.ico</file>
-        <file>databases/mySql_createDatabase.sql</file>
+        <file>hidden.png</file>
+        <file>show-password.png</file>
+        <file>databases/berlinerstrassenbahn.sqlite3</file>
+        <file>databases/cincinnati.sqlite3</file>
+        <file>databases/Louisville.sqlite3</file>
+        <file>mySql_createDatabase.sql</file>
     </qresource>
 </RCC>

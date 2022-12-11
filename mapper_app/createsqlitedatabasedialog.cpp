@@ -182,7 +182,7 @@ void CreateSqliteDatabaseDialog::on_btnOk_clicked()
    QFileInfo info(newFile);
    cn->setDescription ("Sqlite " + ui->cbCities->currentText());
    cn->setId(c->connections.count());
-   c->connections.insert(c->name()+"|"+cn->description(),cn);
+   c->connections.insert(cn->description(),cn);
    config->saveSettings();
   }
   this->accept();}
