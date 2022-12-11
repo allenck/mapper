@@ -30,8 +30,8 @@ bool ExportSql::openDb()
  }
  {
   srcDb = QSqlDatabase();
-  srcConn = config->currCity->connections.at(config->currCity->curConnectionId);
-  tgtConn = config->currCity->connections.at(config->currCity->curExportConnId);
+  srcConn = config->currCity->connections.values().at(config->currCity->curConnectionId);
+  tgtConn = config->currCity->connections.values().at(config->currCity->curExportConnId);
 
   qDebug()<< "Export from '" +srcConn->description() + "' --> '" + tgtConn->description() + "'";
   if(!targetDb.connectionName().contains("export"))

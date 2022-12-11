@@ -137,7 +137,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 #ifndef Q_OS_WIN
  QDir htmlDir("/var/www/html");
  if(!htmlDir.exists())
-     QDir().mkpath ("/var/www/html/html");
+     QDir().mkpath ("/var/www/html");
 #else
  QDir htmlDir(cwd + QDir::separator() + "html");
 #endif
@@ -260,7 +260,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  webViewAction = NULL;
  systemConsoleAction = NULL;
 
- QUrl dataUrl("http://ubuntu-2:1080/public/map_tiles/overlay.lst");
+ QUrl dataUrl("http://ubuntu-2:80/public/map_tiles/overlay.lst");
  m_dataCtrl = new FileDownloader(dataUrl, this);
  connect (m_dataCtrl, SIGNAL(downloaded(QString)), this, SLOT(loadAcksoftData(QString)));
 //#ifdef WIN32
@@ -594,7 +594,7 @@ void MainWindow::loadData(QString data, QString source)
   if(ov.startsWith("#"))
    continue;
   QStringList sl = ov.split("|");
-  if(sl.count() < 1 || sl.at(0) == "")
+  if(sl.count() < 2 || sl.at(0) == "")
    continue;
 
   Overlay* overlay = new Overlay(sl.at(0), sl.at(1));
@@ -622,12 +622,12 @@ void MainWindow::loadData(QString data, QString source)
   if(source == "acksoft")
   {
    //overlay->urls.append("http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/");
-   overlay->urls.append("http://ubuntu-2:1080/public/map_tiles/");
+   overlay->urls.append("http://ubuntu-2:80/public/map_tiles/");
 
    if(!overlay->bounds().isValid())
    {
     QEventLoop loop;
-    m_tilemapresource = new FileDownloader("http://ubuntu-2:1080/public/map_tiles/" + overlay->name + "/tilemapresource.xml");
+    m_tilemapresource = new FileDownloader("http://ubuntu-2:80/public/map_tiles/" + overlay->name + "/tilemapresource.xml");
     m_tilemapresource->setOverlay(overlay);
     connect(m_tilemapresource, SIGNAL(downloaded(QString)), this, SLOT(processTileMapResource()));
     loop.exec();
@@ -1189,7 +1189,7 @@ void MainWindow::createCityMenu()
      City* c = config->cityList.values().at(i);
      for(int j =0; j<c->connections.count(); j++)
      {
-         Connection* cn = c->connections.at(j);
+         Connection* cn = c->connections.values().at(j);
          QAction* act = new QAction(cn->description() + "...", this);
          act->setCheckable(true);
          if(c->id == config->currentCityId && cn->id() == config->currCity->curConnectionId)
@@ -1298,7 +1298,7 @@ void MainWindow::newCity(int ix )
   //connectMenu = cityMenu->addMenu(c.name);
   for( j =0; j<c->connections.count(); j++)
   {
-   Connection* cn = c->connections.at(j);
+   Connection* cn = c->connections.values().at(j);
    if(k==ix)
    {
     this->setCursor(QCursor(Qt::WaitCursor));
@@ -1306,7 +1306,7 @@ void MainWindow::newCity(int ix )
     config->currCity->center = LatLng(m_latitude, m_longitude);
     config->currCity->zoom = m_zoom;
     config->currCity->mapType = m_maptype;
-    config->currCity->connections.replace(config->currCity->curConnectionId, config->currConnection);
+    config->currCity->connections.insert(config->currCity->name()+"|"+config->currConnection->description(), config->currConnection);
     // Save any changes to currentCity
     config->cityList.values().replace(config->currentCityId, config->currCity);
     companyView->clear();
@@ -4122,8 +4122,10 @@ QString loadPath = tempDir;
 #endif
 #ifdef Q_OS_LINUX
   //QFile::copy(":///GoogleMaps2b.htm", "/var/www/html/GoogleMaps2b.htm");
-  copyAndUpdate(cwd + QDir::separator() + "GoogleMaps2b.htm", tempDir, "");
-  copyAndUpdate(cwd + QDir::separator() + "GoogleMaps.js", tempDir, "");
+//  copyAndUpdate(cwd + QDir::separator() + "GoogleMaps2b.htm", tempDir, "");
+//  copyAndUpdate(cwd + QDir::separator() + "GoogleMaps.js", tempDir, "");
+ updateTarget("./html", tempDir);
+
   fileUrl = QUrl("http://localhost:80/GoogleMaps2b.htm");
 #else
     fileUrl = QUrl::fromLocalFile(tempDir  + QDir::separator() + startFn);
@@ -4198,6 +4200,61 @@ bool MainWindow::copyAndUpdate(QString inFile, QString outDir, QString apiKey)
  {
   qCritical() << "copyAndUpdate failed copying " << gFile->fileName() << " to " << outDir << " reason" << gFile->errorString();
  }
+ return false;
+}
+
+bool MainWindow::updateTarget(QString inDir, QString outDir)
+{
+ QDir in(inDir);
+ QStringList names = in.entryList(QDir::Files | QDir::NoDotAndDotDot);
+ QFile* gFile;
+ QFile* tgFile;
+
+ for(QString inFile : names)
+ {
+  QFileInfo in(inFile);
+  QString baseName = inFile.mid(inFile.lastIndexOf("/")+1);
+  QFileInfo out(outDir+QDir::separator()+baseName);
+  //#ifndef FORCE_COPY
+  if(out.exists() &&  (out.fileTime(QFileDevice::FileModificationTime)) > in.fileTime(QFileDevice::FileModificationTime))
+  {
+ //  qDebug() << "out file " << baseName << " newer; will not copy it:";
+ //  qDebug() << " infile path " << in.absoluteFilePath() << " time" << in.fileTime(QFileDevice::FileModificationTime).toString();
+ //  qDebug() << " outfile path" << out.absoluteFilePath() << " time" << out.fileTime(QFileDevice::FileModificationTime).toString();
+   return true;
+  }
+ //#endif
+  qDebug() << "copyAndUpdate: infile = " << inFile << "outdir= " << outDir;
+  gFile = new QFile(in.absoluteFilePath());
+  tgFile = new QFile(out.absoluteFilePath());
+  QString text;
+  if(gFile->open(QIODevice::ReadOnly))
+  {
+   QTextStream* inStream = new QTextStream(gFile);
+   text = inStream->readAll();
+
+   if(!tgFile->setPermissions(QFile::ReadOwner | QFile::WriteOwner |
+                          QFileDevice::ReadGroup |QFileDevice::WriteGroup |
+                          QFileDevice::ReadOther))
+   {
+    qDebug() <<"error setting permissions on " << tgFile->fileName() << tgFile->errorString();
+   }
+
+   if(tgFile->open(QIODevice::WriteOnly))
+   {
+    QTextStream * outStream = new QTextStream(tgFile);
+    *outStream << text;
+    //Q_ASSERT(!text.contains("MYAPIKEY"));
+    tgFile->flush();
+    tgFile->close();
+    gFile->close();
+    qInfo() << "copyAndUpdate"<< "file " << baseName << " updated successfully line " << __LINE__;
+    return true;
+   }
+   qDebug() << "copyAndUpdate failed writing " << tgFile->fileName() << tgFile->errorString();
+  }
+ }
+  qCritical() << "copyAndUpdate failed copying " << gFile->fileName() << " to " << outDir << " reason" << gFile->errorString();
  return false;
 }
 

@@ -18,7 +18,7 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   config = cfg;
   currQueryFilename = "";
   bChanging = false;
-  tgtConn = config->currCity->connections.at(config->currCity->curConnectionId);
+  tgtConn = config->currCity->connections.values().at(config->currCity->curConnectionId);
   db = QSqlDatabase::database();
   if(tgtConn->driver() == "QODBC" || tgtConn->driver() == "QODBC3")
   {
@@ -40,7 +40,7 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   ui->cbConnections->clear();
   for(int i=0; i<config->currCity->connections.count(); i++)
   {
-   Connection* c = config->currCity->connections.at(i);
+   Connection* c = config->currCity->connections.values().at(i);
    ui->cbConnections->addItem(c->description());
    if(c->id() == config->currConnection->id())
     ui->cbConnections->setCurrentIndex(i);
@@ -50,7 +50,7 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
 
   for(int i=0; i<config->currCity->connections.count(); i++)
   {
-   Connection* c = config->currCity->connections.at(i);
+   Connection* c = config->currCity->connections.values().at(i);
    if(c->id() == config->currCity->curConnectionId)
    {
     ui->cbConnections->setCurrentIndex(i);
@@ -585,7 +585,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
  void QueryDialog::On_cbConnections_CurrentIndexChanged(int )
  {
   if(bChanging) return;
-  if(ui->cbConnections->currentText() == config->currCity->connections.at(config->currCity->curConnectionId)->description())
+  if(ui->cbConnections->currentText() == config->currCity->connections.values().at(config->currCity->curConnectionId)->description())
   {
    // reverting to default (currrent) database!
    if(db.isOpen() && db.connectionName() == "testConnection")
@@ -596,7 +596,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 
   for(int i=0; i<config->currCity->connections.count(); i++)
   {
-   Connection* c = config->currCity->connections.at(i);
+   Connection* c = config->currCity->connections.values().at(i);
    if( c->description() == ui->cbConnections->currentText())
    {
     config->currCity->curExportConnId = c->id();
@@ -608,7 +608,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    db.close();
 
 
-  tgtConn = config->currCity->connections.at(config->currCity->curExportConnId);
+  tgtConn = config->currCity->connections.values().at(config->currCity->curExportConnId);
 #if 1
   db = QSqlDatabase::addDatabase(tgtConn->driver(),"testConnection");
   if(tgtConn->driver() == "QODBC" || tgtConn->driver() == "QODBC3")

@@ -1,5 +1,6 @@
 SOURCES += main.cpp\
     $$PWD/browsecommentsdialog.cpp \
+    $$PWD/lineeditdelegate.cpp \
     $$PWD/logger.cpp \
     $$PWD/mytextedit.cpp \
     $$PWD/overlay.cpp \
@@ -65,6 +66,7 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     $$PWD/browsecommentsdialog.h \
+    $$PWD/lineeditdelegate.h \
     $$PWD/logger.h \
     $$PWD/mytextedit.h \
     $$PWD/overlay.h \

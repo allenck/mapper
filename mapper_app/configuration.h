@@ -28,8 +28,8 @@ class Configuration : public QObject
 {
  Q_OBJECT
 public:
- City* currCity;
- Connection* currConnection;
+ City* currCity = nullptr;
+ Connection* currConnection = nullptr;
  void getSettings();
  void saveSettings();
  void setOverlay(Overlay* ov);

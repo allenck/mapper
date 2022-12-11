@@ -18,6 +18,7 @@
 #include <QClipboard>
 #include "webviewbridge.h"
 #include "mytextedit.h"
+#include "lineeditdelegate.h"
 
 EditCityDialog::EditCityDialog(QWidget *parent) :
   QDialog(parent),
@@ -47,6 +48,7 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
  ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
  ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
+ ui->tableView->setItemDelegateForColumn(OverlayTableModel::URLS, new LineEditDelegate());
  //connect(ui->tableView, SIGNAL(selectionChanged(QItemSelection,QItemSelection)),this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
  connect(ui->tableView,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(tablev_customContextMenu(QPoint)));
 

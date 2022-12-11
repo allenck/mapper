@@ -192,6 +192,8 @@ public:
     QPair<QDate,QDate> getStartAndEndDates(int segmentId);
     QList<FKInfo> getForeignKeyInfo();
     QMap<int, RouteName*> *routeNameList();
+    bool createMySqlDatabase(QString dbName, QSqlDatabase db);
+    QStringList listMySqlTables(QString dbName, QSqlDatabase db);
 
 signals:
     void details(QString);

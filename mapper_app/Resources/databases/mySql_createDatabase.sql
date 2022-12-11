@@ -158,6 +158,3 @@ CREATE TABLE if not exists `Terminals` (
   `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   constraint pk PRIMARY KEY (`Route`,`Name`,`StartDate`,`EndDate`)
 );
-
-
-analyze;

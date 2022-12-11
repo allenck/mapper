@@ -5,13 +5,14 @@
 #include "data.h"
 #include "configuration.h"
 
+class MainWindow;
 class WebViewBridge : public QObject
 {
     Q_OBJECT
 public:
-    explicit WebViewBridge(QObject *parent = 0);
-    WebViewBridge(LatLng latLng, int zoom, QString maptype, QObject *parent = 0);
-    QObject* m_parent = nullptr;
+    WebViewBridge(MainWindow *parent = 0);
+    WebViewBridge(LatLng latLng, int zoom, QString maptype, MainWindow *parent = 0);
+    MainWindow* m_parent = nullptr;
 //    int browseWindowWidth;
 //    int browseWindowHeight;
 //    int curBrowseWindowWidth();

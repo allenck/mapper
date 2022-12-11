@@ -9935,3 +9935,41 @@ QMap<int,RouteName*>* SQL::routeNameList()
  }
  return list;
 }
+
+bool SQL::createMySqlDatabase(QString dbName, QSqlDatabase db)
+{
+ if(!db.isOpen())
+  return false;
+ QSqlQuery query = QSqlQuery(db);
+
+ QString commandText = "CREATE DATABASE IF NOT EXISTS " + dbName;
+ if(!query.exec(commandText))
+ {
+  SQLERROR(query);
+  return false;
+ }
+ return executeScript(":/databases/mySql_createDatabase.sql",db);
+}
+
+QStringList SQL::listMySqlTables(QString dbName, QSqlDatabase db)
+{
+ QStringList list;
+ if(!db.isOpen())
+  return QStringList();
+ QSqlQuery query = QSqlQuery(db);
+ QString commandText = "select table_schema as database_name, "
+    "table_name from information_schema.tables "
+    "where table_type = 'BASE TABLE' "
+        "and table_schema = '" + dbName +"' "
+    "order by database_name, table_name";
+ if(!query.exec(commandText))
+ {
+  SQLERROR(query);
+  return list;
+ }
+ while(query.next())
+ {
+  list.append(query.value(1).toString());
+ }
+ return list;
+}

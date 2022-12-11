@@ -76,7 +76,7 @@ Qt::ItemFlags OverlayTableModel::flags(const QModelIndex &index) const
   return Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
  if( index.column() == NAME || index.column() == DESCRIPTION
     || index.column() == CITYNAME || index.column() == YEAR
-    || index.column() == MINZOOM || index.column() == MAXZOOM)
+    || index.column() == MINZOOM || index.column() == MAXZOOM || index.column() == URLS)
  {
   return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
  }
@@ -256,6 +256,29 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
   if(index.column()== YEAR)
   {
    ov->setYear(value.toString());
+  }
+  if(index.column() == URLS)
+  {
+   QString text = value.toString();
+   if(text.contains(","))
+   {
+    QStringList sl = text.split(",");
+    for(QString _url : sl){
+     QUrl url(_url);
+     if(!url.isValid())
+      return false;
+    }
+    ov->urls = sl;
+   }
+   else
+   {
+    QStringList sl;
+    sl.append(text);
+    QUrl url(text);
+    if(!url.isValid())
+     return false;
+    ov->urls = sl;
+   }
   }
   if(index.column() == MINZOOM)
    ov->minZoom = value.toInt();

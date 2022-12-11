@@ -18,7 +18,7 @@ void Configuration::saveSettings()
   qDebug() << "connection id mismatch: currConnection->id = " +QString("%1").arg(currConnection->id()) + " vs. currCity->curConnectionId = " + QString("%1").arg(currCity->curConnectionId)+"\n";
   exit(EXIT_FAILURE);
  }
- currCity->connections.replace(currConnection->id(), currConnection);
+ currCity->connections.insert(currConnection->description(), currConnection);
  // Save any changes to currentCity
  if(currentCityId >= 0)
   cityList.values().replace(currentCityId, currCity);
@@ -59,7 +59,7 @@ void Configuration::saveSettings()
   settings->beginWriteArray("connections");
   for(int j=0; j < c->connections.count(); j++)
   {
-   Connection* cn = c->connections.at(j);
+   Connection* cn = c->connections.values().at(j);
    settings->setArrayIndex(j);
    settings->setValue("id", cn->id());
    settings->setValue("database", cn->database());
@@ -160,8 +160,9 @@ void Configuration::getSettings()
   nc->setServerType("Sqlite");
   nc->setHost("");
   nc->setPort(0);
-  newCity->connections.append(nc);
+  newCity->connections.insert(newCity->name()+"|"+nc->description(), nc);
   currConnection = nc;
+
 
 
   newCity = new City();
@@ -189,7 +190,7 @@ void Configuration::getSettings()
   nc->setServerType("Sqlite");
   nc->setHost("");
   nc->setPort(0);
-  newCity->connections.append(nc);
+  newCity->connections.insert(newCity->name()+"|"+nc->description(),nc);
   currConnection = nc;
 
   newCity = new City();
@@ -217,7 +218,7 @@ void Configuration::getSettings()
   nc->setServerType("Sqlite");
   nc->setHost("");
   nc->setPort(0);
-  newCity->connections.append(nc);
+  newCity->connections.insert(newCity->name()+"|"+nc->description(),nc);
   currConnection = nc;
 
   newCity = new City();
@@ -244,7 +245,7 @@ void Configuration::getSettings()
   nc->setServerType("Sqlite");
   nc->setHost("");
   nc->setPort(0);
-  newCity->connections.append(nc);
+  newCity->connections.insert(newCity->name()+"|"+nc->description(),nc);
   currConnection = nc;
 
   newCity = cityList.values().at(0);
@@ -256,7 +257,7 @@ void Configuration::getSettings()
   newCity->bShowOverlay =true;
   currCity = cityList.values().at(0);
   currentCityId = 0;
-  currConnection = currCity->connections.at(0);
+  currConnection = currCity->connections.values().at(0);
   currConnection->setId(currCity->curConnectionId);
   if(Overlay::importXml("./overlays.xml"))
   {
@@ -377,9 +378,14 @@ void Configuration::getSettings()
 //     }
 //    }
    }
-   nc->connections.append(ncn);
+   nc->connections.insert(nc->name() + "|" + ncn->description(), ncn);
   }
   settings.endArray();
+
+  if(currentCityId < 0)
+  {
+   currCity = cityList.values().at(0);
+  }
 
   //qDebug() << "city bounds:" << cityBounds;
 #if 0
@@ -467,6 +473,25 @@ void Configuration::getSettings()
   if(nc->city_overlayMap->count()== 0)
    nc->curOverlayId = -1;
  } // end cities
+
+#if 1 // for testing purposes, create a MySql connection
+  City* currCity = cityList.values().at(3);
+
+  Connection* nc = new Connection();
+  nc->setId(1);
+  nc->setDatabase("StLouisMySql");
+  nc->setDescription ("Test MySql connection");
+  nc->setDriver("QMYSQL");
+  nc->setDSN("");
+  nc->setUID("allen");
+  nc->setPWD("iic723");
+  nc->setServerType("MySql");
+  nc->setHost("192.168.1.101");
+  nc->setPort(3306);
+  currCity->connections.insert(currCity->name()+"|"+nc->description(),nc);
+  currConnection = nc;
+#endif
+
  settings.endArray();
 
 // for(Overlay* ov : overlayMap->values())
@@ -505,7 +530,7 @@ void Configuration::getSettings()
  currCity = cityList.values().at(currentCityId);
  if(currCity->curConnectionId < 0 && currCity->connections.size() == 1)
   currCity->curConnectionId =0;
- currConnection =   currCity->connections.at(currCity->curConnectionId);
+ currConnection =   currCity->connections.values().at(currCity->curConnectionId);
  bDisplayWebDebug = settings.value("showDebugMessages", false).toBool();
  bRunInBrowser = settings.value("runInBrowser", false).toBool();
  //settings.endGroup();

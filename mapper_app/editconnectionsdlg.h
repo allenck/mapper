@@ -38,6 +38,7 @@ private:
 #ifndef Q_WS_WIN
 void findODBCDsn(QString iniFile, QStringList* dsnList);
 #endif
+bool verifyDatabase(QString name);
 
 private slots:
  void cbCitiesSelectionChanged(int sel);

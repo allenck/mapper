@@ -27,14 +27,14 @@ ExportDlg::ExportDlg(Configuration *cfg, QWidget *parent) :
  ui->cbConnections->clear();
  for(int i=0; i<config->currCity->connections.count(); i++)
  {
-     Connection* c = config->currCity->connections.at(i);
+     Connection* c = config->currCity->connections.values().at(i);
      if(c->id() == config->currConnection->id())
          continue;
      ui->cbConnections->addItem(c->description());
  }
  for(int i=0; i<config->currCity->connections.count(); i++)
  {
-     Connection* c = config->currCity->connections.at(i);
+     Connection* c = config->currCity->connections.values().at(i);
      if(c->id() == config->currCity->curConnectionId)
      {
          ui->cbConnections->setCurrentIndex(i);
@@ -90,7 +90,7 @@ void ExportDlg::btnOK_clicked()
  timer->start();
  for(int i=0; i<config->currCity->connections.count(); i++)
  {
-  Connection* c = config->currCity->connections.at(i);
+  Connection* c = config->currCity->connections.values().at(i);
   if( c->description() == ui->cbConnections->currentText())
   {
    config->currCity->curExportConnId = c->id();

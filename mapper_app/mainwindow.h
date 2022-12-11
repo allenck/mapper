@@ -414,6 +414,8 @@ private:
     void loadData(QString data, QString source);
 //    void refreshStreetsCb();
     bool copyAndUpdate(QString inFile, QString outDir, QString apiKey);
+    bool updateTarget(QString inDir, QString outDir);
+
     QString tempDir;
 //    QStringList keyTokens;
     QUrl fileUrl;

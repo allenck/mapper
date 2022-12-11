@@ -47,5 +47,6 @@
         <file>recreateRouteComments.sql</file>
         <file>rollback.png</file>
         <file>tram-icon.ico</file>
+        <file>databases/mySql_createDatabase.sql</file>
     </qresource>
 </RCC>
