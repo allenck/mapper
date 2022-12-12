@@ -85,8 +85,7 @@ CREATE TABLE if not exists `LineSegment` (
   `Sequence` int(11) NOT NULL,
   `Length` decimal(15,5) NOT NULL DEFAULT '0.00000',
   `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  constraint  `segment_sequence` UNIQUE (`SegmentId`,`Sequence`),
-  CONSTRAINT `LineSegment_ibfk_1` FOREIGN KEY (`SegmentId`) REFERENCES `Segments` (`SegmentId`)
+  constraint  `segment_sequence` UNIQUE (`SegmentId`,`Sequence`)
 );
 
 CREATE TABLE if not exists `Routes` (
@@ -96,6 +95,7 @@ CREATE TABLE if not exists `Routes` (
   `EndDate` date NOT NULL,
   `LineKey` int(11) NOT NULL,
   `OneWay` char(1) DEFAULT 'Y',
+  `TrackUsage` char(1) DEFAULT ' ',
   `CompanyKey` int(11) NOT NULL DEFAULT 0,
   `tractionType` int(11) NOT NULL DEFAULT 0,
   `Direction` varchar(6) NOT NULL DEFAULT ' ',

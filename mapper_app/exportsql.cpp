@@ -38,19 +38,17 @@ bool ExportSql::openDb()
   {
 #if 1
    targetDb = QSqlDatabase::addDatabase(tgtConn->driver(), "export");
-   if(tgtConn->driver() == "QODBC" || tgtConn->driver() == "QODBC3")
+   if(tgtConn->servertype() == "Sqlite")
    {
     targetDb.setDatabaseName(tgtConn->dsn());
-    tgtDbType = "MsSql";
+    tgtDbType = tgtConn->servertype();
    }
    else
    {
     targetDb.setHostName(tgtConn->host());
+    targetDb.setPort(tgtConn->port());
     targetDb.setDatabaseName(tgtConn->database());
-    if(tgtConn->driver() == "QSQLITE")
-     tgtDbType= "Sqlite";
-    else
-     tgtDbType = "MySql";
+    tgtDbType = tgtConn->servertype();
    }
 
    targetDb.setUserName(tgtConn->uid());
@@ -59,6 +57,8 @@ bool ExportSql::openDb()
    if(! targetDb.open())
    {
     qDebug()<< targetDb.lastError();
+    QMessageBox::critical(nullptr, tr("Error"), tr("An error occured opening connection '%1'. "
+                          "The server returned  %2 %3").arg(tgtConn->description()).arg(targetDb.lastError().driverText()).arg(targetDb.lastError().databaseText()));
     return false;
    }
    else
@@ -1402,6 +1402,8 @@ bool ExportSql::exportSegments()
   if(bDropTables)
   {
    dropTable("Routes",targetDb, tgtDbType); // delete because of foriegnKey constraints.
+   dropTable("Stations",targetDb, tgtDbType); // delete because of foriegnKey constraints.
+
    if(!createSegmentsTable(targetDb, tgtDbType))
       return false;
   }
@@ -1410,11 +1412,15 @@ bool ExportSql::exportSegments()
 //        setIdentityInsert("Segments", true);
   if(!bDropTables)
   {
-   CommandText = "select segmentId, description, oneWay, type, startLat, startLon, endLat, endLon, length, points, startDate, endDate, direction, lastUpdate, street, pointArray, tracks from Segments where lastUpdate > :lastUpdated  order by lastUpdate";
+   CommandText = "select segmentId, description, oneWay, type, startLat, startLon, endLat, endLon, length, points, "
+                 "startDate, endDate, direction, lastUpdate, street, pointArray, tracks "
+                 "from Segments where lastUpdate > :lastUpdated  order by lastUpdate";
   }
   else
   {
-   CommandText = "select segmentId, description, oneWay, type, startLat, startLon, endLat, endLon, length, points, startDate, endDate, direction, lastUpdate, street, pointArray, tracks from Segments";
+   CommandText = "select segmentId, description, oneWay, type, startLat, startLon, endLat, endLon, length, points, "
+                 "startDate, endDate, direction, lastUpdate, street, pointArray, tracks "
+                 "from Segments";
   }
 
   QSqlQuery query = QSqlQuery(srcDb);
@@ -1498,7 +1504,7 @@ bool ExportSql::exportSegments()
      continue;
     }
    }
-   if(bDropTables)
+   if(bDropTables) // not sure why this was here! Maybe tablwas supposed to be dropped ACK!
     bFound = false;
    if(bFound)
    {
@@ -1543,7 +1549,15 @@ bool ExportSql::exportSegments()
    {
     // Insert the new segment
     if(tgtConn->servertype() != "MsSql")
-     CommandText = "insert into Segments (segmentId, description, oneWay, type, startLat, startLon, endLat, endLon, length, points, startDate, endDate, direction, street, pointArray, tracks, lastUpdate) values("+QString("%1").arg(segmentId) + ",'"+description+"', '"+oneWay+ "', "+QString("%1").arg(type)+", "+QString("%1").arg(startLat, 0,'f',8)+","+QString("%1").arg(startLon, 0, 'f', 8)+","+QString("%1").arg(endLat, 0, 'f',8)+","+QString("%1").arg(endLon, 0,'f',8)+","+QString("%1").arg(length,0,'f',8)+","+QString("%1").arg(points)+",'"+startDate.toString("yyyy/MM/dd")+"','"+endDate.toString("yyyy/MM/dd")+"','"+direction + "','" + street + "', '" + pointArray +"', "+QString::number(tracks) + ", :lastUpdate)";
+     CommandText = "insert into Segments (segmentId, description, oneWay, type, startLat, startLon, endLat, endLon, "
+                   "length, points, startDate, endDate, direction, street, pointArray, tracks, lastUpdate) "
+                   "values("+QString("%1").arg(segmentId) + ",'"+description+"', '"+oneWay+ "', "
+                   + QString("%1").arg(type)+", "+QString("%1").arg(startLat, 0,'f',8)+","
+                   + QString("%1").arg(startLon, 0, 'f', 8)+","+QString("%1").arg(endLat, 0, 'f',8)
+                   + ","+QString("%1").arg(endLon, 0,'f',8)+","+QString("%1").arg(length,0,'f',8)+","
+                   + QString("%1").arg(points)+",'"+startDate.toString("yyyy/MM/dd")
+                   + "','"+endDate.toString("yyyy/MM/dd")+"','"+direction + "','" + street + "', '"
+                   + pointArray +"', "+QString::number(tracks) + ", :lastUpdate)";
     else
     {
      //setIdentityInsert("Segments", true);
@@ -1564,6 +1578,8 @@ bool ExportSql::exportSegments()
      qDebug() << err.driverText() + "\n";
      //db.close();
      //exit(EXIT_FAILURE);
+     QMessageBox::critical(nullptr, tr("SQL Error"), tr("An sql error has occurred processing Segments. "
+                          "The server returned %1 %2\n%3").arg(err.driverText()).arg(err.databaseText()).arg(query.lastQuery()));
      if(!Retry(&targetDb, &query2, ""))
          exit(EXIT_FAILURE);
 
@@ -1708,16 +1724,26 @@ bool ExportSql::exportSegments()
   if(bDropTables)
   {
    if(srcConn->servertype() == "MsSql")
-    CommandText = "select route, LTRIM(RTRIM(name)), startDate, endDate, lineKey, companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, reverseEnter, ReverseLeave, lastUpdate from Routes  order by lastUpdate";
+    CommandText = "select route, LTRIM(RTRIM(name)), startDate, endDate, lineKey, OneWay, TrackUsage "
+                  "companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, "
+                  "reverseEnter, ReverseLeave, lastUpdate from Routes  order by lastUpdate";
    else
-    CommandText = "select route, TRIM(name), startDate, endDate, lineKey, companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, reverseEnter, ReverseLeave, lastUpdate from Routes order by lastUpdate";
+    CommandText = "select route, TRIM(name), startDate, endDate, lineKey, OneWay, TrackUsage "
+                  "companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, "
+                  "reverseEnter, ReverseLeave, lastUpdate from Routes order by lastUpdate";
   }
   else
   {
    if(srcConn->servertype() == "MsSql")
-    CommandText = "select route, LTRIM(RTRIM(name)), startDate, endDate, lineKey, companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, reverseEnter, ReverseLeave, lastUpdate from Routes where lastUpdate > :lastUpdated  order by lastUpdate";
+    CommandText = "select route, LTRIM(RTRIM(name)), startDate, endDate, lineKey, OneWay, TrackUsage "
+                  "companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, "
+                  "reverseEnter, ReverseLeave, lastUpdate from Routes "
+                  "where lastUpdate > :lastUpdated  order by lastUpdate";
    else
-    CommandText = "select route, TRIM(name), startDate, endDate, lineKey, companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, reverseEnter, ReverseLeave, lastUpdate from Routes where lastUpdate > :lastUpdated  order by lastUpdate";
+    CommandText = "select route, TRIM(name), startDate, endDate, lineKey, OneWay, TrackUsage "
+                  "companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, "
+                  "reverseEnter, ReverseLeave, lastUpdate from Routes "
+                  "where lastUpdate > :lastUpdated  order by lastUpdate";
 
   }
 
@@ -1738,7 +1764,7 @@ bool ExportSql::exportSegments()
           exit(EXIT_FAILURE);
   }
   qint32 route=0, route2=0, lineKey=0, lineKey2=0, companyKey, companyKey2, tractionType, tractionType2, next=0, next2=0, prev=0, prev2=0, normalEnter=0, normalEnter2=0, normalLeave=0, normalLeave2=0, reverseEnter=0, reverseEnter2=0, reverseLeave=0, reverseLeave2 =0;
-  QString name="", name2="", direction="", direction2="";
+  QString name="", name2="", direction="", direction2="", oneWay="", oneWay2="", trackUsage="", trackUsage2="";
   QDateTime lastUpdate, lastUpdate2;
   QDateTime startDate, startDate2, endDate, endDate2;
   while(query.next())
@@ -1748,16 +1774,18 @@ bool ExportSql::exportSegments()
    startDate = query.value(2).toDateTime();
    endDate = query.value(3).toDateTime();
    lineKey = query.value(4).toInt();
-   companyKey = query.value(5).toInt();
-   tractionType= query.value(6).toInt();
-   direction = query.value(7).toString();
-   next = query.value(8).toInt();
-   prev = query.value(9).toInt();
-   normalEnter = query.value(10).toInt();
-   normalLeave = query.value(11).toInt();
-   reverseEnter = query.value(12).toInt();
-   reverseLeave = query.value(13).toInt();
-   lastUpdate = query.value(14).toDateTime();
+   oneWay = query.value(5).toString();
+   trackUsage = query.value(6).toString();
+   companyKey = query.value(7).toInt();
+   tractionType= query.value(8).toInt();
+   direction = query.value(9).toString();
+   next = query.value(10).toInt();
+   prev = query.value(11).toInt();
+   normalEnter = query.value(12).toInt();
+   normalLeave = query.value(13).toInt();
+   reverseEnter = query.value(14).toInt();
+   reverseLeave = query.value(15).toInt();
+   lastUpdate = query.value(16).toDateTime();
 
 
    route2 = -1;
@@ -1789,16 +1817,18 @@ bool ExportSql::exportSegments()
         startDate2 = query2.value(2).toDateTime();
         endDate2 = query2.value(3).toDateTime();
         lineKey2 = query2.value(4).toInt();
-        companyKey2 = query2.value(5).toInt();
-        tractionType2= query2.value(6).toInt();
-        direction2 = query2.value(7).toString();
-        next2 = query2.value(8).toInt();
-        prev2 = query2.value(9).toInt();
-        normalEnter2 = query2.value(10).toInt();
-        normalLeave2 = query2.value(11).toInt();
-        reverseEnter2 = query2.value(12).toInt();
-        reverseLeave2 = query2.value(13).toInt();
-        lastUpdate2 = query.value(14).toDateTime();
+        oneWay2 = query.value(5).toString();
+        trackUsage2 = query.value(6).toString();
+        companyKey2 = query2.value(7).toInt();
+        tractionType2= query2.value(8).toInt();
+        direction2 = query2.value(9).toString();
+        next2 = query2.value(10).toInt();
+        prev2 = query2.value(11).toInt();
+        normalEnter2 = query2.value(12).toInt();
+        normalLeave2 = query2.value(13).toInt();
+        reverseEnter2 = query2.value(14).toInt();
+        reverseLeave2 = query2.value(15).toInt();
+        lastUpdate2 = query.value(16).toDateTime();
     }
    }
    if( bFound && route== route2 && name == name2 && startDate.date() == startDate2.date() && endDate.date() == endDate2.date() && lineKey == lineKey2 && companyKey == companyKey2 && tractionType == tractionType2 && direction == direction2 && next == next2 && prev==prev2 && normalEnter == normalEnter2 && normalLeave == normalLeave2 && reverseEnter == reverseEnter2 && reverseLeave == reverseLeave2 && lastUpdate == lastUpdate2)
@@ -1811,7 +1841,17 @@ bool ExportSql::exportSegments()
    if(bFound)
    {
     if(tgtConn->servertype() != "MsSql")
-        CommandText = "update Routes set companyKey=" + QString("%1").arg(companyKey) + ",tractionType=" + QString("%1").arg(tractionType) + ", direction='"+direction + "',next=" + QString("%1").arg(next) + ",prev=" + QString("%1").arg(prev) + ",normalEnter=" + QString("%1").arg(normalEnter) +",normalLeave=" + QString("%1").arg(normalLeave) +",reverseEnter="+ QString("%1").arg(reverseEnter ) + ",reverseLeave=" + QString("%1").arg(reverseLeave) + ",lastUpdate =:lastUpdate where route=" + QString("%1").arg(route) +" and name='"+ name + "' and startDate='" + startDate.toString("yyyy/MM/dd") + "' and endDate='" + endDate.toString("yyyy/MM/dd") + "' and lineKey=" + QString("%1").arg(lineKey);
+        CommandText = "update Routes set companyKey=" + QString("%1").arg(companyKey)
+          + ",tractionType=" + QString("%1").arg(tractionType) + ", direction='"+direction
+          + "',next=" + QString("%1").arg(next) + ",prev=" + QString("%1").arg(prev)
+          + "',oneWay= + '" + oneWay + "',trackUsage='" + trackUsage
+          + "',normalEnter=" + QString("%1").arg(normalEnter) +",normalLeave="
+          + QString("%1").arg(normalLeave) +",reverseEnter="+ QString("%1").arg(reverseEnter )
+          + ",reverseLeave=" + QString("%1").arg(reverseLeave)
+          + ",lastUpdate =:lastUpdate "
+          "where route=" + QString("%1").arg(route) +" and name='"+ name
+          + "' and startDate='" + startDate.toString("yyyy/MM/dd") + "' and endDate='"
+          + endDate.toString("yyyy/MM/dd") + "' and lineKey=" + QString("%1").arg(lineKey);
     else
         CommandText = "update Routes set companyKey=" + QString("%1").arg(companyKey) + ",tractionType=" + QString("%1").arg(tractionType) + ", direction='"+direction + "',next=" + QString("%1").arg(next) + ",prev=" + QString("%1").arg(prev) + ",normalEnter=" + QString("%1").arg(normalEnter) +",normalLeave=" + QString("%1").arg(normalLeave) +",reverseEnter="+ QString("%1").arg(reverseEnter ) + ",reverseLeave=" + QString("%1").arg(reverseLeave) + ",lastUpdate=:lastUpdate where route=" + QString("%1").arg(route) +" and name='"+ name + "' and startDate='" + startDate.toString("yyyy/MM/dd") + "' and endDate='" + endDate.toString("yyyy/MM/dd") + "' and lineKey=" + QString("%1").arg(lineKey);
     query2.prepare(CommandText);
@@ -1835,7 +1875,14 @@ bool ExportSql::exportSegments()
    else
    {
     if(tgtConn->servertype() != "MsSql")
-        CommandText = "insert into Routes (route, name, startDate, endDate, lineKey, companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, reverseEnter, ReverseLeave, lastUpdate) values("+QString("%1").arg(route) + ",'"+name+ "','"+startDate.toString("yyyy/MM/dd")+ "','"+endDate.toString("yyyy/MM/dd")+"',"+QString("%1").arg(lineKey)+","+QString("%1").arg(companyKey)+","+QString("%1").arg(tractionType)+",'"+direction+"',"+QString("%1").arg(next)+","+QString("%1").arg(prev)+","+QString("%1").arg(normalEnter)+","+QString("%1").arg(normalLeave)+","+QString("%1").arg(reverseEnter)+","+QString("%1").arg(reverseLeave)+ ",:lastUpdate)";
+        CommandText = "insert into Routes (route, name, startDate, endDate, lineKey, oneWay, trackUsage, "
+                      "companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, "
+                      "reverseEnter, ReverseLeave, lastUpdate) values("+QString("%1").arg(route)
+                      + ",'"+name+ "','"+startDate.toString("yyyy/MM/dd")
+                      + "','" +endDate.toString("yyyy/MM/dd")+"',"+QString("%1").arg(lineKey)
+                      + "'," + oneWay + ",trackUsage "
+                      +"',"+QString("%1").arg(companyKey)+","+QString("%1").arg(tractionType)
+                      +",'"+direction+"',"+QString("%1").arg(next)+","+QString("%1").arg(prev)+","+QString("%1").arg(normalEnter)+","+QString("%1").arg(normalLeave)+","+QString("%1").arg(reverseEnter)+","+QString("%1").arg(reverseLeave)+ ",:lastUpdate)";
     else
         CommandText = "insert into Routes (route, name, startDate, endDate, lineKey, companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, reverseEnter, ReverseLeave, lastUpdate) values("+QString("%1").arg(route) + ",'"+name+ "','"+startDate.toString("yyyy/MM/dd")+ "','"+endDate.toString("yyyy/MM/dd")+"',"+QString("%1").arg(lineKey)+","+QString("%1").arg(companyKey)+","+QString("%1").arg(tractionType)+",'"+direction+"',"+QString("%1").arg(next)+","+QString("%1").arg(prev)+","+QString("%1").arg(normalEnter)+","+QString("%1").arg(normalLeave)+","+QString("%1").arg(reverseEnter)+","+QString("%1").arg(reverseLeave)+ ",:lastUpdate)";
     query2.prepare(CommandText);
@@ -2882,7 +2929,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
   CommandText = "CREATE TABLE `Segments` (  `SegmentId` integer NOT NULL primary key AUTOINCREMENT,  `Description` varchar(100) NOT NULL,  `OneWay` char(1) NOT NULL DEFAULT 'N', `Tracks` int(2) NOT NULL DEFAULT 2, street 'text', `Type` int(11) NOT NULL DEFAULT 0,  `StartLat` decimal(15,13) NOT NULL DEFAULT 0.0,  `StartLon` decimal(15,13) NOT NULL DEFAULT 0.0,  `EndLat` decimal(15,13) NOT NULL DEFAULT 0.0,  `EndLon` decimal(15,13) NOT NULL DEFAULT 0.0,  `Length` decimal(15,5) NOT NULL DEFAULT 0,  `points` int(11) NOT NULL default 0,  `StartDate` date NOT NULL DEFAULT '0000-00-00',  `endDate` date NOT NULL DEFAULT '0000-00-00',  `Direction` varchar(6) NOT NULL DEFAULT ' ', pointArray 'text',  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP)";
  }
  else if(dbType == "MySql")
-  CommandText = "CREATE TABLE `Segments` (`SegmentId` int(11) NOT NULL AUTO_INCREMENT,  `Description` varchar(100) NOT NULL,    `OneWay` char(1) NOT NULL,`Tracks` int(2) NOT NULL DEFAULT 2,`street` text, `Type` int NOT NULL Default 0, `StartLat` decimal(15,13) NOT NULL, `StartLon` decimal(15,13) NOT NULL, `EndLat` decimal(15,13) NOT NULL, `EndLon` decimal(15,13) NOT NULL,`Length` decimal(15,5) NOT NULL,  `points` int(11) NOT NULL default 0,  `StartDate` date NOT NULL,`endDate` date NOT NULL, `Direction` varchar(6) NOT NULL, `pointArray` text NOT NULL,`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,PRIMARY KEY (`SegmentId`)) ENGINE=InnoDB AUTO_INCREMENT=1116 DEFAULT CHARSET=latin1";
+  CommandText = "CREATE TABLE IF NOT EXISTS `Segments` (`SegmentId` int(11) NOT NULL AUTO_INCREMENT,  `Description` varchar(100) NOT NULL,    `OneWay` char(1) NOT NULL,`Tracks` int(2) NOT NULL DEFAULT 2,`street` text, `Type` int NOT NULL Default 0, `StartLat` decimal(15,13) NOT NULL, `StartLon` decimal(15,13) NOT NULL, `EndLat` decimal(15,13) NOT NULL, `EndLon` decimal(15,13) NOT NULL,`Length` decimal(15,5) NOT NULL,  `points` int(11) NOT NULL default 0,  `StartDate` date NOT NULL,`endDate` date NOT NULL, `Direction` varchar(6) NOT NULL, `pointArray` text NOT NULL,`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,PRIMARY KEY (`SegmentId`)) ENGINE=InnoDB AUTO_INCREMENT=1116 DEFAULT CHARSET=latin1";
  else if(dbType == "MsSql")
  {
   CommandText = "SET ANSI_PADDING ON;";

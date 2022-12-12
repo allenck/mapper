@@ -18,6 +18,7 @@ class EditConnectionsDlg : public QDialog
 public:
  EditConnectionsDlg(QWidget *parent = 0);
  ~EditConnectionsDlg();
+ enum DBTYPE {MySql, MsSql,Sqlite};
 
 private:
  Ui::editConnectionsDlg *ui;
@@ -39,6 +40,8 @@ private:
 void findODBCDsn(QString iniFile, QStringList* dsnList);
 #endif
 bool verifyDatabase(QString name);
+void setControls(DBTYPE dbType);
+
 
 private slots:
  void cbCitiesSelectionChanged(int sel);

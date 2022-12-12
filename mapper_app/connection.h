@@ -24,6 +24,8 @@ class Connection : public QObject
  QString _servertype; // "MsSql (default), "MySql"
  Configuration* config;
  bool bOpen;
+ QString _cityName;
+
 public:
  Connection(QObject* parent = nullptr);
  bool isOpen() {return bOpen;}
@@ -51,7 +53,8 @@ public:
  void setPort(qint32 p) {_port = p;}
  QString useDatabase() {return _useDatabase;}
  void setUseDatabase(QString u) {_useDatabase = u;}
-
+ QString cityName() {return _cityName;}
+ void setCityName(QString name) {_cityName = name;}
 };
 
 #endif // CONNECTION_H

@@ -9951,17 +9951,57 @@ bool SQL::createMySqlDatabase(QString dbName, QSqlDatabase db)
  return executeScript(":/databases/mySql_createDatabase.sql",db);
 }
 
-QStringList SQL::listMySqlTables(QString dbName, QSqlDatabase db)
+//QStringList SQL::listMySqlTables(QString dbName, QSqlDatabase db)
+//{
+// QStringList list;
+// if(!db.isOpen())
+//  return QStringList();
+// QSqlQuery query = QSqlQuery(db);
+// QString commandText = "select table_schema as database_name, "
+//    "table_name from information_schema.tables "
+//    "where table_type = 'BASE TABLE' "
+//        "and table_schema = '" + dbName +"' "
+//    "order by database_name, table_name";
+// if(!query.exec(commandText))
+// {
+//  SQLERROR(query);
+//  return list;
+// }
+// while(query.next())
+// {
+//  list.append(query.value(1).toString());
+// }
+// return list;
+//}
+
+QStringList SQL:: showMySqlDatabases(QSqlDatabase db)
 {
  QStringList list;
  if(!db.isOpen())
   return QStringList();
  QSqlQuery query = QSqlQuery(db);
- QString commandText = "select table_schema as database_name, "
-    "table_name from information_schema.tables "
-    "where table_type = 'BASE TABLE' "
-        "and table_schema = '" + dbName +"' "
-    "order by database_name, table_name";
+ QString commandText = "show databases";
+ if(!query.exec(commandText))
+ {
+  SQLERROR(query);
+  return list;
+ }
+ QStringList excludes = {"mysql", "information_schema", "performance_schema", "phpmyadmin", "sys"};
+ while(query.next())
+ {
+  if(!excludes.contains(query.value(0).toString()))
+   list.append(query.value(0).toString());
+ }
+ return list;
+}
+
+QStringList SQL:: showMsSqlDatabases(QSqlDatabase db)
+{
+ QStringList list;
+ if(!db.isOpen())
+  return QStringList();
+ QSqlQuery query = QSqlQuery(db);
+ QString commandText = "select name from sys.Databases WHERE name NOT IN ('master', 'tempdb', 'model', 'msdb')";
  if(!query.exec(commandText))
  {
   SQLERROR(query);
@@ -9969,7 +10009,7 @@ QStringList SQL::listMySqlTables(QString dbName, QSqlDatabase db)
  }
  while(query.next())
  {
-  list.append(query.value(1).toString());
+   list.append(query.value(0).toString());
  }
  return list;
 }

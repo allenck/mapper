@@ -75,6 +75,7 @@ void Configuration::saveSettings()
    if(cn->port() > 0)
     settings->setValue("port", cn->port());
    settings->setValue("useDatabase",cn->useDatabase());
+   settings->setValue("cityName", cn->cityName());
   }
   settings->endArray(); // connections
 
@@ -160,10 +161,9 @@ void Configuration::getSettings()
   nc->setServerType("Sqlite");
   nc->setHost("");
   nc->setPort(0);
+  nc->setCityName(newCity->name());
   newCity->connections.insert(nc->description(), nc);
   currConnection = nc;
-
-
 
   newCity = new City();
   newCity->id = 1;
@@ -218,6 +218,7 @@ void Configuration::getSettings()
   nc->setServerType("Sqlite");
   nc->setHost("");
   nc->setPort(0);
+  nc->setCityName(newCity->name());
   newCity->connections.insert(nc->description(),nc);
   currConnection = nc;
 
@@ -245,6 +246,7 @@ void Configuration::getSettings()
   nc->setServerType("Sqlite");
   nc->setHost("");
   nc->setPort(0);
+  nc->setCityName(newCity->name());
   newCity->connections.insert(nc->description(),nc);
   currConnection = nc;
 
@@ -353,6 +355,7 @@ void Configuration::getSettings()
     ncn->setPort(0);
     ncn->setHost("");
     ncn->setUseDatabase("");
+    ncn->setCityName(settings.value("cityName", nc->name()).toString());
 #ifdef WIN32
     QString ext = ncn->database().mid(ncn->database().lastIndexOf("."));
     if(ncn->database().toLower().endsWith(".sqlite3") && ext != ".sqlite3")
@@ -360,23 +363,6 @@ void Configuration::getSettings()
      ncn->setDatabase(ncn->database().replace(ext, ".sqlite3"));
     }
 #endif
-//    QFile file;
-//    file.setFileName(ncn->database());
-//    if(!file.exists())
-//    {
-//     if(!ncn->database().toLower().endsWith(".sqlite3"))
-//     {
-//      ncn->setDatabase(ncn->database().append(".sqlite3"));
-//     }
-//    }
-//    else
-//    {
-//     if(!ncn->database().toLower().endsWith(".sqlite3"))
-//     {
-//      if(file.rename(ncn->database(), ncn->database().append(".sqlite3")))
-//       ncn->setDatabase(ncn->database().append(".sqlite3"));
-//     }
-//    }
    }
    nc->connections.insert(ncn->description(), ncn);
   }
@@ -388,85 +374,6 @@ void Configuration::getSettings()
   }
 
   //qDebug() << "city bounds:" << cityBounds;
-#if 0
-  int sizeo = settings.beginReadArray("overlays");
-  for(int j =0; j < sizeo; j++)
-  {
-   settings.setArrayIndex(j);
-   Overlay* no = new Overlay();
-   //no->id = settings.value("id").toInt();
-   no->name = settings.value("name").toString();
-   no->description = settings.value("description").toString();
-   no->opacity = settings.value("opacity").toInt();
-   no->minZoom = settings.value("minZoom", 10).toInt();
-   no->maxZoom = settings.value("maxZoom", 16).toInt();
-//   no->bounds = settings.value("bounds").value<Bounds>();
-   no->setBounds(Bounds(settings.value("bounds").toString()));
-   no->sCenter = settings.value("center").toString();
-   no->source = settings.value("source", "acksoft").toString();
-   no->isSelected = settings.value("isSelected", false).toBool();
-   no->urls = settings.value("urls","http://ubuntu-2:1080/public/map_tiles/").toStringList();
-   no->wmtsUrl = settings.value("WMTSUrl").toString();
-   no->setYear(settings.value("year").toString());
-   if(no->source == "acksoft" && no->urls.isEmpty())
-    no->urls.append("http://ubuntu-2:1080/public/map_tiles/");
-   if(no->source == "mbtiles"&& no->urls.isEmpty()) // Windows
-    no->urls.append("http://localhost/map_tiles/mbtiles.php");
-   if(no->source == "tileserver" && no->urls.isEmpty()) // Linux
-    no->urls.append("http://localhost/tileserver.php");
-   no->cityName = nc->name;
-   if(no->source == "georeferencer") // add to global list
-   {
-    if(!overlayMap->contains(nc->name +"|" + no->name))
-     overlayMap->insert(no->cityName +"|" + no->name, no);
-   }
-
-   nc->addOverlay(no);
-  } // overlays for city
-
-  // TODO: create a dialog to add overlays like this
-  if(nc->name == "St. Louis, MO")
-  {
-   Overlay* ov = new  Overlay("St Louis, MO", "St Louis Worlds Fair 1904");
-   ov->cityName = "St. Louis, MO";
-   ov->setBounds(Bounds(LatLng(38.623972, -90.330807), LatLng(38.658606, -90.273631)));
-   ov->source = "georeferencer";
-   ov->maxZoom = 17;
-   ov->minZoom = 8;
-   ov->urls << "http://maps.georeferencer.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-1.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-2.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-3.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png";
-   overlayMap->insert(nc->name+"|"+ov->name, ov);
-   nc->city_overlayMap->insert(ov->name, ov);
-   ov->setYear("1904");
-  }
-  if(nc->name == "Louisville, KY")
-  {
-   Overlay* ov = new  Overlay("Louisville, KY","Louisville, KY pilot2");
-   ov->cityName = "Louisville, KY";
-   ov->setBounds(Bounds(LatLng(38.1412, -85.91273), LatLng(38.351303, -85.626234)));
-   ov->source = "georeferencer";
-   ov->maxZoom = 17;
-   ov->minZoom = 0;
-   ov->urls << "http://georeferencer-0.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-1.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-2.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png" << "http://georeferencer-3.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/SQOqJ3TkkQzNnQyf8X5k4n/201502111947-kh1nwh/polynomial/{z}/{x}/{y}.png";
-   overlayMap->insert(nc->name+"|"+ov->name, ov);
-   nc->city_overlayMap->insert(ov->name, ov);
-
-//   bool bFound = false;
-//   foreach (Overlay* o, overlayMap->values())
-//   {
-//    if(o->name == ov->name)
-//    {
-//     bFound = true;
-//     o->urls = ov->urls;
-//     break;
-//    }
-//   if(!bFound)
-//    nc->overlayMap->insert(ov->name, ov);
-//   }
-  }
-//        if(nc->id == currentCityId)
-//            currConnection = nc->connections.at(nc->curConnectionId);
-  settings.endArray();
-#endif
   if(nc->city_overlayMap->isEmpty())
    nc->bShowOverlay = false;
   nc->curOverlayId = settings.value("currOverlay").toInt();

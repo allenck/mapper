@@ -81,6 +81,7 @@ void ExportDlg::btnCancel_clicked()
 
 void ExportDlg::btnOK_clicked()
 {
+ ui->btnGo->setEnabled(false);
  ExportSql exprt(config, ui->chkDrop->isChecked(), this);
  if(ui->chkOverride->isChecked())
  {
@@ -94,8 +95,8 @@ void ExportDlg::btnOK_clicked()
   if( c->description() == ui->cbConnections->currentText())
   {
    config->currCity->curExportConnId = c->id();
-      config->saveSettings();
-      break;
+   config->saveSettings();
+   break;
   }
  }
 
@@ -114,6 +115,7 @@ void ExportDlg::btnOK_clicked()
       if(!exprt.exportParameters())
       {
        ui->lblHelp->setText("Export of Parameters has errors");
+       ui->btnGo->setEnabled(true);
        return;
       }
       ui->chkParameters->setChecked(false);
@@ -129,6 +131,7 @@ void ExportDlg::btnOK_clicked()
       if(!exprt.exportCompanies())
       {
        ui->lblHelp->setText("Export of Companies has errors");
+       ui->btnGo->setEnabled(true);
        return;
       }
       ui->chkCompanies->setChecked(false);
@@ -144,6 +147,7 @@ void ExportDlg::btnOK_clicked()
       if(!exprt.exportTractionTypes())
       {
        ui->lblHelp->setText("Export of TractionTypes has errors");
+       ui->btnGo->setEnabled(true);
        return;
       }
       ui->chkTractionTypes->setChecked(false);
@@ -159,6 +163,7 @@ void ExportDlg::btnOK_clicked()
       if(!exprt.exportAltRoute())
       {
        ui->lblHelp->setText("Export of altRoute has errors");
+       ui->btnGo->setEnabled(true);
        return;
       }
       ui->chkAltRoute->setChecked(false);
@@ -172,6 +177,7 @@ void ExportDlg::btnOK_clicked()
       if(!exprt.exportComments())
       {
        ui->lblHelp->setText("Export of Comments has errors");
+       ui->btnGo->setEnabled(true);
        return;
       }
       ui->chkComments->setChecked(false);
@@ -185,6 +191,7 @@ void ExportDlg::btnOK_clicked()
       if(!exprt.exportIntersections())
       {
        ui->lblHelp->setText("Export of Intersections has errors");
+       ui->btnGo->setEnabled(true);
        return;
       }
       ui->chkIntersections->setChecked(false);
@@ -209,6 +216,7 @@ void ExportDlg::btnOK_clicked()
       if(!exprt.exportSegments())
       {
        ui->lblHelp->setText("Export of Segments has errors");
+       ui->btnGo->setEnabled(true);
        return;
       }
       ui->chkSegments->setChecked(false);
@@ -222,6 +230,7 @@ void ExportDlg::btnOK_clicked()
       if(!exprt.exportRoute())
       {
        ui->lblHelp->setText("Export of Routes has errors");
+       ui->btnGo->setEnabled(true);
        return;
       }
       ui->chkRoutes->setChecked(false);
@@ -235,6 +244,7 @@ void ExportDlg::btnOK_clicked()
       if(!exprt.exportStations())
       {
        ui->lblHelp->setText("Export of Stations has errors");
+       ui->btnGo->setEnabled(true);
        return;
       }
       ui->chkStations->setChecked(false);
@@ -248,6 +258,7 @@ void ExportDlg::btnOK_clicked()
       if(!exprt.exportTerminals())
       {
        ui->lblHelp->setText("Export of Terminals has errors");
+       ui->btnGo->setEnabled(true);
        return;
       }
       ui->chkTerminals->setChecked(false);
@@ -261,6 +272,7 @@ void ExportDlg::btnOK_clicked()
    if(!exprt.exportRouteComments())
    {
     ui->lblHelp->setText("Export of RouteComments has errors");
+    ui->btnGo->setEnabled(true);
     return;
    }
    ui->chkRouteComments->setChecked(false);
@@ -272,7 +284,9 @@ void ExportDlg::btnOK_clicked()
  }
  timer->stop();
  this->close();
+ ui->btnGo->setEnabled(true);
 }
+
 void ExportDlg::quickProcess()
 {
     QApplication::processEvents();
@@ -289,10 +303,12 @@ void ExportDlg::chkOverrideToggled(bool checked)
         ui->exportDate->setVisible(false);
     }
 }
+
 void ExportDlg::newProgressMsg(QString msg)
 {
     ui->lblHelp->setText(msg);
 }
+
 void ExportDlg::uncheckControl(QString control)
 {
  QCheckBox * ctrl =findChild<QCheckBox*>( control);

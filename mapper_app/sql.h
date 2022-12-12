@@ -193,7 +193,9 @@ public:
     QList<FKInfo> getForeignKeyInfo();
     QMap<int, RouteName*> *routeNameList();
     bool createMySqlDatabase(QString dbName, QSqlDatabase db);
-    QStringList listMySqlTables(QString dbName, QSqlDatabase db);
+//    QStringList listMySqlTables(QString dbName, QSqlDatabase db);
+    QStringList  showMySqlDatabases(QSqlDatabase db);
+    QStringList showMsSqlDatabases(QSqlDatabase db);
 
 signals:
     void details(QString);
