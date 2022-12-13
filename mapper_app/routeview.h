@@ -51,8 +51,8 @@ private:
     qint32 route;
     qint32 startSegment, endSegment;
     QString name;
-    QString startDate;
-    QString endDate;
+    QString startDate = "1800/01/01";
+    QString endDate = "2050/12/31";
     QString alphaRoute;
     QStringList headers;
     QTableView* ui;

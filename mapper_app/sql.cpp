@@ -302,17 +302,23 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
      throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
  if(companyKey < 1)
-  //commandText = "Select distinct a.route, name, a.endDate, a.companyKey, tractionType/*, routeAlpha, c.baseRoute*/ from Routes a join altRoute c on a.route =  c.route group by a.route, name, a.endDate, a.companykey,tractionType, c.routeAlpha/*, c.baseRoute*/ order by c.routeAlpha, name, a.endDate";
+ {
+  if(config->currConnection->servertype() == "MySql")
+   commandText = "Select distinct a.route, name, a.endDate, a.companyKey, tractionType, routeAlpha "
+                 "from Routes a join altRoute c on a.route =  c.route "
+                 "group by a.route, name, a.endDate, a.companykey,tractionType, c.routeAlpha "
+                 "order by c.routeAlpha, name, a.endDate;";
+ else
   commandText = "Select distinct a.route, name, a.endDate, a.companyKey, tractionType, routeAlpha"
                 " from Routes a join altRoute c on a.route =  c.route"
                 " group by a.route, name, a.endDate/*, a.companykey,tractionType, c.routeAlpha*/"
                 " order by c.routeAlpha, name, a.endDate";
+ }
  else
-  //commandText = "Select distinct a.route, name, a.endDate, a.companyKey, tractionType, routeAlpha/*, c.baseRoute*/ from Routes a join altRoute c on a.route = c.route  where a.companyKey = " + QString("%1").arg(companyKey)+ " group by a.route, name, a.endDate, a.companykey, tractionType, c.routeAlpha/*, c.baseRoute*/ order by c.routeAlpha, name, a.endDate";
   commandText = "Select distinct a.route, name, a.endDate, a.companyKey, tractionType, routeAlpha"
                 " from Routes a join altRoute c on a.route = c.route"
                 "  where a.companyKey = " + QString("%1").arg(companyKey)+ ""
-                " group by a.route, name, a.endDate/*, a.companykey, tractionType, c.routeAlpha*/"
+                " group by a.route, name, a.endDate, a.companykey/*, tractionType, c.routeAlpha*/" // ACK company key added to group by
                 " order by c.routeAlpha, name, a.endDate";
  query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
@@ -616,7 +622,7 @@ RouteInfo SQL::getRoutePoints(qint32 route, QString name, QString date)
                 " where r.Route = " + strRoute + " and '" + date + "' between r.startDate and r.endDate"
                 " and TRIM(name) = '" + name + "' order by r.route, s.segmentId";
 
- //qDebug() << commandText;
+ qDebug() << commandText;
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
@@ -6513,7 +6519,7 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
  if(config->currConnection->servertype() != "MsSql")
     commandText = "SELECT LAST_INSERT_ID()";
   else
-    commandText = "SELECT IDENT_CURRENT('segments')";
+    commandText = "SELECT IDENT_CURRENT('Segments')";
   bQuery = query.exec(commandText);
  if(!bQuery)
   {
@@ -6657,7 +6663,7 @@ try
  if(config->currConnection->servertype() != "MsSql")
     commandText = "SELECT LAST_INSERT_ID()";
  else
-    commandText = "SELECT IDENT_CURRENT('segments')";
+    commandText = "SELECT IDENT_CURRENT('Segments')";
 
  bQuery = query.exec(commandText);
  if(!bQuery)
@@ -8127,6 +8133,8 @@ RouteComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
     QString up = QString::fromUtf8("▲");
     QString down = QString::fromUtf8("▼");
 //#endif
+    if(!date.isValid())
+     date = QDate::fromString("1800/01/01", "yyyy/MM/dd");
 
     RouteComments rc;
     rc.route = -1;
@@ -8145,7 +8153,7 @@ RouteComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
             "rc.longitude, r.name, a.routeAlpha "
             "from Comments c "
             "join RouteComments rc on rc.commentKey = c.commentKey "
-            "join routes r on r.route = rc.route and :date between r.startDate and r.endDate "
+            "join Routes r on r.route = rc.route and :date between r.startDate and r.endDate "
             "JOIN altRoute a ON a.route = rc.route "
             "where rc.route = :route and rc.date = :date ";
 
@@ -8435,6 +8443,8 @@ RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyK
     QString up = QString::fromUtf8("▲");
     QString down = QString::fromUtf8("▼");
 #endif
+    if(!date.isValid())
+     date = QDate::fromString("1800/01/01", "yyyy/MM/dd");
 
     RouteComments rc;
     rc.route = -1;
@@ -8454,7 +8464,7 @@ RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyK
                 "from RouteComments rc "
                 "join Comments c on rc.commentKey = c.commentKey "
                 "JOIN altRoute a ON a.route = rc.route "
-                "join routes r on r.route = rc.route and '"+date.toString("yyyy/MM/dd")+"' between r.startDate and r.endDate "
+                "join Routes r on r.route = rc.route and '"+date.toString("yyyy/MM/dd")+"' between r.startDate and r.endDate "
                 "where rc.route = "+ QString("%1").arg(route) +" "
                 "and rc.date  > '" + date.toString("yyyy/MM/dd")+"'";
         QSqlQuery query = QSqlQuery(db);
@@ -8534,7 +8544,7 @@ RouteComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 companyK
                 "from RouteComments rc "
                 "join Comments c on rc.commentKey = c.commentKey "
                 "JOIN altRoute a ON a.route = rc.route "
-                "join routes r on r.route = rc.route and '"+date.toString("yyyy/MM/dd")+"' between r.startDate and r.endDate "
+                "join Routes r on r.route = rc.route and '"+date.toString("yyyy/MM/dd")+"' between r.startDate and r.endDate "
                 "where rc.route = "+ QString("%1").arg(route) +" "
                 "and rc.date  < '" + date.toString("yyyy/MM/dd")+"'";
         QSqlQuery query = QSqlQuery(db);
@@ -9155,10 +9165,10 @@ bool SQL::loadSqlite3Functions()
 #endif
  return ret;
 }
-QStringList SQL::getTableList(QSqlDatabase db, QString dbType)
-{
- return db.tables();
-}
+//QStringList SQL::getTableList(QSqlDatabase db, QString dbType)
+//{
+// return db.tables();
+//}
 
 bool SQL::checkSegments()
 {
@@ -9465,7 +9475,7 @@ bool SQL::updateTractionType(qint32 tractionType, QString description, QString d
     return ret;
 }
 
-// check tables to see if alteratios need to be made
+// check tables to see if alterations need to be made
 void SQL::checkTables(QSqlDatabase db)
 {
  // check for presence of Parameters table.
@@ -9478,9 +9488,12 @@ void SQL::checkTables(QSqlDatabase db)
   qDebug() << "Connection name: " + db.connectionName() + "\n";
   qDebug() << "DSN:" + db.databaseName() + "\n";
 
-  QList<FKInfo> fkList = getForeignKeyInfo();
+  QList<FKInfo> fkList;
+  if(config->currConnection->servertype() == "Sqlite")
+   fkList = getForeignKeyInfo();
 
-  tableList = getTableList(db, config->currConnection->servertype());
+  //tableList = getTableList(db, config->currConnection->servertype());
+  tableList = db.tables();
   if(!doesColumnExist("Segments", "pointArray"))
   {
    addColumn("Segments", "pointArray", "text");
@@ -9746,7 +9759,7 @@ QList<SegmentData> SQL::getUnusedSegments()
  QSqlDatabase db = QSqlDatabase();
  QSqlQuery query = QSqlQuery(db);
  QList<SegmentData> list;
- QString commandText = "select  distinct s.segmentid, s.description, s.tracks, s.type from segments s where s.segmentid not in (select linekey from routes r) ";
+ QString commandText = "select  distinct s.segmentid, s.description, s.tracks, s.type from Segments s where s.segmentid not in (select linekey from routes r) ";
  if(!query.exec(commandText))
  {
   SQLERROR(query);

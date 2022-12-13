@@ -165,7 +165,7 @@ public:
     bool loadSqlite3Functions();
     bool checkConnectingSegments(QList<SegmentInfo> segmentInfoList);
 
-    QStringList getTableList(QSqlDatabase db, QString dbType);
+//    QStringList getTableList(QSqlDatabase db, QString dbType);
     Q_DECL_DEPRECATED bool checkSegments();
     bool doesColumnExist(QString table, QString column);
     bool doesConstraintExist(QString tbName, QString name);

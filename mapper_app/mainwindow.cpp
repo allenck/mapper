@@ -1804,6 +1804,8 @@ void MainWindow::On_displayRoute(RouteData rd)
    dash = 2;
   else if(si.routeType == Subway)
    dash = 3;
+  if(si.trackUsage.isEmpty()) // fix for MySql not storing field correctly
+   si.trackUsage = " ";
   objArray.clear();
   objArray <<   si.segmentId << ri.routeName <<  si.description << si.oneWay << color << si.tracks
              << dash << si.routeType << si.trackUsage << points.count();

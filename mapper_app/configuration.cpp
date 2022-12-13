@@ -523,10 +523,13 @@ QSqlDatabase Connection::configure(QString cName)
 // {
  if(bOpen)
  {
+  if(config->currConnection->servertype() != "Sqlite")
+   return db;
   if(config->currConnection->useDatabase() != "default" && config->currConnection->useDatabase() != "")
   {
    QSqlQuery query = QSqlQuery(db);
-   QString cmd = QString("use [%1]").arg(config->currConnection->useDatabase());
+   //QString cmd = QString("use [%1]").arg(config->currConnection->useDatabase());
+   QString cmd = QString("use %1").arg(config->currConnection->useDatabase());
    if(!query.exec(cmd))
    {
     SQLERROR(query);
@@ -534,8 +537,9 @@ QSqlDatabase Connection::configure(QString cName)
     bOpen = false;
     return db;
    }
-   sql->checkTables(db);
-   tableList = sql->getTableList(db, config->currConnection->servertype());
+   if(config->currConnection->servertype() == "Sqlite")
+    sql->checkTables(db);
+   tableList = db.tables();
 
    if(!tableList.contains("Parameters",Qt::CaseInsensitive))
    {
@@ -560,8 +564,8 @@ QSqlDatabase Connection::configure(QString cName)
     }
     QMessageBox::warning(NULL, "Warning", msg);
    }
-   }
-  if(sql->loadSqlite3Functions())
+  }
+  if(sql->loadSqlite3Functions() && config->currConnection->servertype() == "Sqlite")
   {
    sql->checkTables(db);
   }

@@ -96,7 +96,7 @@ bool ExportSql::openDb()
     SQL* sql = SQL::instance();
     sql->setConfig(config);
 
-    tableList = sql->getTableList(targetDb, config->currConnection->servertype());
+    tableList = targetDb.tables();
     if(!sql->doesColumnExist("Segments", "pointArray"))
     {
      sql->addColumn("Segments", "pointArray", "text");
@@ -1724,27 +1724,26 @@ bool ExportSql::exportSegments()
   if(bDropTables)
   {
    if(srcConn->servertype() == "MsSql")
-    CommandText = "select route, LTRIM(RTRIM(name)), startDate, endDate, lineKey, OneWay, TrackUsage "
+    CommandText = "select route, LTRIM(RTRIM(name)), startDate, endDate, lineKey, OneWay, TrackUsage, "
                   "companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, "
                   "reverseEnter, ReverseLeave, lastUpdate from Routes  order by lastUpdate";
    else
-    CommandText = "select route, TRIM(name), startDate, endDate, lineKey, OneWay, TrackUsage "
+    CommandText = "select route, TRIM(name), startDate, endDate, lineKey, OneWay, TrackUsage, "
                   "companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, "
                   "reverseEnter, ReverseLeave, lastUpdate from Routes order by lastUpdate";
   }
   else
   {
    if(srcConn->servertype() == "MsSql")
-    CommandText = "select route, LTRIM(RTRIM(name)), startDate, endDate, lineKey, OneWay, TrackUsage "
-                  "companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, "
+    CommandText = "select route, LTRIM(RTRIM(name)), startDate, endDate, lineKey, OneWay, TrackUsage, "
+                  "companyKey, tractionType, Direction, next, prev, normalEnter, normalLeave, "
                   "reverseEnter, ReverseLeave, lastUpdate from Routes "
                   "where lastUpdate > :lastUpdated  order by lastUpdate";
    else
-    CommandText = "select route, TRIM(name), startDate, endDate, lineKey, OneWay, TrackUsage "
-                  "companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, "
+    CommandText = "select route, TRIM(name), startDate, endDate, lineKey, OneWay, TrackUsage, "
+                  "companyKey, tractionType, Direction, next, prev, normalEnter, normalLeave, "
                   "reverseEnter, ReverseLeave, lastUpdate from Routes "
                   "where lastUpdate > :lastUpdated  order by lastUpdate";
-
   }
 
   QSqlQuery query = QSqlQuery(srcDb);
@@ -1796,7 +1795,9 @@ bool ExportSql::exportSegments()
 
    if(!bDropTables)
    {
-    CommandText = "select route, name, startDate, endDate, lineKey, companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, reverseEnter, ReverseLeave, lastUpdate from Routes where route = "+QString("%1").arg(route)+" and name='"+name+ "' and startDate='"+startDate.toString("yyyy/MM/dd")+ "' and endDate='"+endDate.toString("yyyy/MM/dd")+"' and lineKey="+ QString("%1").arg(lineKey);
+    CommandText = "select route, name, startDate, endDate, lineKey, companyKey, oneWay, trackUsage, "
+                  "tractionType, Direction, next, prev, normalEnter, normalLeave, reverseEnter, "
+                  "ReverseLeave, lastUpdate from Routes where route = "+QString("%1").arg(route)+" and name='"+name+ "' and startDate='"+startDate.toString("yyyy/MM/dd")+ "' and endDate='"+endDate.toString("yyyy/MM/dd")+"' and lineKey="+ QString("%1").arg(lineKey);
     bQuery = query2.exec(CommandText);
     if(!bQuery)
     {
@@ -1838,6 +1839,11 @@ bool ExportSql::exportSegments()
        continue;
    }
    //if(route == route2 && name == name2 && startDate.date().toString("yyyy/MM/dd") == startDate2.date() .toString("yyyy/MM/dd")&& endDate.date().toString("yyyy/MM/dd") == endDate2.date().toString("yyyy/MM/dd") && lineKey == lineKey2)
+   if(!lastUpdate.isValid())
+    lastUpdate = QDateTime::currentDateTime();
+   if(!lastUpdate2.isValid())
+    lastUpdate2 = QDateTime::currentDateTime();
+
    if(bFound)
    {
     if(tgtConn->servertype() != "MsSql")
@@ -1875,16 +1881,24 @@ bool ExportSql::exportSegments()
    else
    {
     if(tgtConn->servertype() != "MsSql")
-        CommandText = "insert into Routes (route, name, startDate, endDate, lineKey, oneWay, trackUsage, "
+        CommandText = "insert into Routes (route, name, startDate, endDate, lineKey, OneWay, trackUsage, "
                       "companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, "
                       "reverseEnter, ReverseLeave, lastUpdate) values("+QString("%1").arg(route)
                       + ",'"+name+ "','"+startDate.toString("yyyy/MM/dd")
                       + "','" +endDate.toString("yyyy/MM/dd")+"',"+QString("%1").arg(lineKey)
-                      + "'," + oneWay + ",trackUsage "
+                      + ",'" + oneWay + "','" +trackUsage
                       +"',"+QString("%1").arg(companyKey)+","+QString("%1").arg(tractionType)
                       +",'"+direction+"',"+QString("%1").arg(next)+","+QString("%1").arg(prev)+","+QString("%1").arg(normalEnter)+","+QString("%1").arg(normalLeave)+","+QString("%1").arg(reverseEnter)+","+QString("%1").arg(reverseLeave)+ ",:lastUpdate)";
     else
-        CommandText = "insert into Routes (route, name, startDate, endDate, lineKey, companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, reverseEnter, ReverseLeave, lastUpdate) values("+QString("%1").arg(route) + ",'"+name+ "','"+startDate.toString("yyyy/MM/dd")+ "','"+endDate.toString("yyyy/MM/dd")+"',"+QString("%1").arg(lineKey)+","+QString("%1").arg(companyKey)+","+QString("%1").arg(tractionType)+",'"+direction+"',"+QString("%1").arg(next)+","+QString("%1").arg(prev)+","+QString("%1").arg(normalEnter)+","+QString("%1").arg(normalLeave)+","+QString("%1").arg(reverseEnter)+","+QString("%1").arg(reverseLeave)+ ",:lastUpdate)";
+        CommandText = "insert into Routes (route, name, startDate, endDate, lineKey, OneWay, trackUsage, "
+                      "companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, "
+                      "reverseEnter, ReverseLeave, lastUpdate) "
+"                     values("+QString("%1").arg(route) + ",'"+name+ "','"+startDate.toString("yyyy/MM/dd")
+                      + "','"+endDate.toString("yyyy/MM/dd")+"',"+QString("%1").arg(lineKey)
+                      +",'" +oneWay + "','" + trackUsage + "'," + QString("%1").arg(companyKey)+","
+                      +QString("%1").arg(tractionType)+",'"+direction+"',"+QString("%1").arg(next)+","
+                      +QString("%1").arg(prev)+","+QString("%1").arg(normalEnter)+","+QString("%1").arg(normalLeave)
+                      +","+QString("%1").arg(reverseEnter)+","+QString("%1").arg(reverseLeave)+ ",:lastUpdate)";
     query2.prepare(CommandText);
     query2.bindValue(":lastUpdate", lastUpdate);
     bQuery = query2.exec();
@@ -2384,7 +2398,7 @@ bool ExportSql::exportStations()
             if(tgtConn->servertype() != "MsSql")
              CommandText = "insert into Stations (stationKey, name, latitude, longitude, startDate, endDate, infoKey, geodb_loc_id, routeType, suffix, segmentId, point, lastUpdate) values("+QString("%1").arg(stationKey) + ",'"+name+"',"+QString("%1").arg(latitude, 0,'f',8)+","+QString("%1").arg(longitude,0,'f',8)+",'"+startDate.toString("yyyy/MM/dd")+"','"+endDate.toString("yyyy/MM/dd")+"',"+QString("%1").arg(infoKey)+","+QString("%1").arg(geodb_loc_id) +","+QString("%1").arg(routeType)+ ",'" + suffix + "'," +QString::number(segmentId) + "," +QString::number(point) + ",:lastUpdate)";
             else
-                CommandText = "SET IDENTITY_INSERT [dbo].[Stations] ON; insert into [dbo].[Stations] (stationKey, name, latitude, longitude, startDate, endDate, infoKey, geodb_loc_id, routeType, suffix, segmentId, point, lastUpdate) values("+QString("%1").arg(stationKey) + ",'"+name+"',"+QString("%1").arg(latitude, 0,'f',8)+","+QString("%1").arg(longitude,0,'f',8)+",'"+startDate.toString("yyyy/MM/dd")+"','"+endDate.toString("yyyy/MM/dd")+"',"+QString("%1").arg(infoKey)+","+QString("%1").arg(geodb_loc_id) +","+ QString("%1").arg(routeType)+ ",'" + suffix + "'," +QString::number(segmentId) + "," +QString::number(point) + ",:lastUpdate); SET IDENTITY_INSERT [dbo].[Stations] OFF";
+             CommandText = "SET IDENTITY_INSERT [dbo].[Stations] ON; insert into [dbo].[Stations] (stationKey, name, latitude, longitude, startDate, endDate, infoKey, geodb_loc_id, routeType, suffix, segmentId, point, lastUpdate) values("+QString("%1").arg(stationKey) + ",'"+name+"',"+QString("%1").arg(latitude, 0,'f',8)+","+QString("%1").arg(longitude,0,'f',8)+",'"+startDate.toString("yyyy/MM/dd")+"','"+endDate.toString("yyyy/MM/dd")+"',"+QString("%1").arg(infoKey)+","+QString("%1").arg(geodb_loc_id) +","+ QString("%1").arg(routeType)+ ",'" + suffix + "'," +QString::number(segmentId) + "," +QString::number(point) + ",:lastUpdate); SET IDENTITY_INSERT [dbo].[Stations] OFF";
             query2.prepare(CommandText);
             query2.bindValue(":lastUpdate", lastUpdate);
             bQuery = query2.exec();
@@ -2666,9 +2680,9 @@ bool ExportSql::exportRouteComments()
     }
 
     if(bDropTables)
-     CommandText = "select route, date, commentKey, companyKey, lastUpdate from RouteComments order by lastUpdate";
+     CommandText = "select route, date, commentKey, companyKey, latitude, longitude, lastUpdate from RouteComments order by lastUpdate";
     else
-     CommandText = "select route, date, commentKey, companyKey, lastUpdate from RouteComments where lastUpdate > :lastUpdated  order by lastUpdate";
+     CommandText = "select route, date, commentKey, companyKey, latitude, longitude, lastUpdate from RouteComments where lastUpdate > :lastUpdated  order by lastUpdate";
 
     QSqlQuery query = QSqlQuery(srcDb);
     query.prepare(CommandText);
@@ -2686,6 +2700,7 @@ bool ExportSql::exportRouteComments()
     }
     qint32 route=0, route2=0, commentKey=0, commentKey2=0, companyKey=0, companyKey2=0;
     QDateTime lastUpdate, lastUpdate2;
+    double latitude, longitude, latitude2, longitude2;
     QDate date, date2;
     while(query.next())
     {
@@ -2693,11 +2708,13 @@ bool ExportSql::exportRouteComments()
         date=query.value(1).toDate();
         commentKey = query.value(2).toInt();
         companyKey = query.value(3).toInt();
-        lastUpdate =query.value(4).toDateTime();
+        latitude = query.value(4).toDouble();
+        longitude = query.value(5).toDouble();
+        lastUpdate =query.value(6).toDateTime();
 
         if(!bDropTables)
         {
-         CommandText = "select route, date, commentKey, companyKey, lastUpdate from RouteComments where route="+QString("%1").arg(route) + " and date ='"+date.toString("yyyy/MM/dd")+"'";
+         CommandText = "select route, date, commentKey, companyKey, latitude, longitude, lastUpdate from RouteComments where route="+QString("%1").arg(route) + " and date ='"+date.toString("yyyy/MM/dd")+"'";
          bQuery = query2.exec(CommandText);
          if(!bQuery)
          {
@@ -2714,7 +2731,9 @@ bool ExportSql::exportRouteComments()
              date2=query2.value(1).toDate();
              commentKey2 = query2.value(2).toInt();
              companyKey2 = query2.value(3).toInt();
-             lastUpdate2 = query.value(4).toDateTime();
+             latitude2 = query.value(4).toDouble();
+             longitude2 = query.value(5).toDouble();
+             lastUpdate2 = query.value(6).toDateTime();
              bFound = true;
          }
         }
@@ -2728,12 +2747,14 @@ bool ExportSql::exportRouteComments()
         if(bFound)
         {
             if(tgtConn->servertype() != "MsSql")
-                CommandText = "update  RouteComments set commentKey=:commentKey, companyKey=:companyKey,lastUpdate=:lastUpdate where route="+QString("%1").arg(route) + " and date ='"+date.toString("yyyy/MM/dd")+"'";
+                CommandText = "update  RouteComments set commentKey=:commentKey, companyKey=:companyKey,latitude = :latitude, longitude = :longitude, lastUpdate=:lastUpdate where route="+QString("%1").arg(route) + " and date ='"+date.toString("yyyy/MM/dd")+"'";
             else
-                CommandText = "update  RouteComments set commentKey=:comments, companyKey=:companyKey,lastUpdate=:lastUpdate where route="+QString("%1").arg(route) + " and date ='"+date.toString("yyyy/MM/dd")+"'";
+                CommandText = "update  RouteComments set commentKey=:comments, companyKey=:companyKey,latitude = :latitude, longitude = :longitude,lastUpdate=:lastUpdate where route="+QString("%1").arg(route) + " and date ='"+date.toString("yyyy/MM/dd")+"'";
             query2.prepare(CommandText);
             query2.bindValue(":commentKey", commentKey);
             query2.bindValue(":companyKey", companyKey);
+            query2.bindValue(":latitude", latitude);
+            query2.bindValue(":longitude", longitude);
             query2.bindValue(":lastUpdate", lastUpdate);
             bQuery = query2.exec();
             if(!bQuery)
@@ -2752,15 +2773,17 @@ bool ExportSql::exportRouteComments()
         else
         {
             if(tgtConn->servertype() != "MsSql")
-                CommandText = "insert into RouteComments (route, date, commentKey, companyKey,lastUpdate ) values (:route, :date, :commentKey, :companyKey, :lastUpdate)";
+                CommandText = "insert into RouteComments (route, date, commentKey, companyKey,latitude = :latitude, longitude = :longitude,lastUpdate ) values (:route, :date, :commentKey, :companyKey, :lastUpdate)";
             else
-                CommandText = "insert into RouteComments (route, date, commentKey, companyKey, lastUpdate ) values (:route, :date, :commentKey, :companyKey, :lastUpdate)";
+                CommandText = "insert into RouteComments (route, date, commentKey, companyKey, latitude = :latitude, longitude = :longitude,lastUpdate ) values (:route, :date, :commentKey, :companyKey, :lastUpdate)";
 
             query2.prepare(CommandText);
             query2.bindValue(":route", route);
             query2.bindValue(":date", date.toString("yyyy/MM/dd"));
             query2.bindValue(":commentKey", commentKey);
             query2.bindValue(":companyKey", companyKey);
+            query2.bindValue(":latitude", latitude);
+            query2.bindValue(":longitude", longitude);
             //if(tgtConn->servertype() == "MsSql")
                 query2.bindValue(":lastUpdate", lastUpdate);
             bQuery = query2.exec();
@@ -3031,6 +3054,8 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
     "`StartDate` date NOT NULL,"\
     "`EndDate` date NOT NULL,"\
     "`LineKey` int(11) NOT NULL,"\
+    "`OneWay` char(1) DEFAULT 'Y'," \
+    "`TrackUsage` char(1) DEFAULT ' ',"\
     "`CompanyKey` int(11) NOT NULL,"\
     "`tractionType` int(11) NOT NULL,"\
     "`Direction` varchar(6) NOT NULL,"\
@@ -3047,7 +3072,7 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
     "KEY `tractionType` (`tractionType`),"\
     "CONSTRAINT `Routes_ibfk_1` FOREIGN KEY (`LineKey`) REFERENCES `Segments` (`SegmentId`),"\
     "CONSTRAINT `Routes_ibfk_3` FOREIGN KEY (`CompanyKey`) REFERENCES `Companies` (`key`),"\
-    "CONSTRAINT `Routes_ibfk_4` FOREIGN KEY (`tractionType`) REFERENCES `TractionTypes` (`tractionType`),"\
+    "CONSTRAINT `Routes_ibfk_4` FOREIGN KEY (`tractionType`) REFERENCES `TractionTypes` (`tractionType`),"
     "CONSTRAINT `Routes_ibfk_5` FOREIGN KEY (`Route`) REFERENCES `altRoute` (`route`)"\
     ") ENGINE=InnoDB DEFAULT CHARSET=latin1";
  else if(dbType == "MsSql")
@@ -3132,6 +3157,8 @@ bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
     "`date` date NOT NULL,"\
     "`commentKey` int(11) NOT NULL,"\
     "`companyKey` int(11) NOT NULL,"\
+    "`latitude` decimal(15,5) NOT NULL DEFAULT '0.00000',"
+    "`longitude` decimal(15,5) NOT NULL DEFAULT '0.00000',"
     "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"\
     "PRIMARY KEY (`route`,`date`)"\
   ") ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_german1_ci";
@@ -3144,6 +3171,8 @@ bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
         "[date] [date] NOT NULL,"\
         "[commentKey] [int] NOT NULL,"\
         "[companyKey] [int] NOT NULL,"\
+        "`latitude` decimal(15,5) NOT NULL DEFAULT '0.00000',"
+        "`longitude` decimal(15,5) NOT NULL DEFAULT '0.00000',"
         "[lastUpdate] [datetime] NOT NULL,"\
      "CONSTRAINT [PK_RouteComments] PRIMARY KEY CLUSTERED"\
     "("\
@@ -3188,13 +3217,14 @@ bool ExportSql::createStationsTable(QSqlDatabase db, QString dbType)
     "`infoKey` int(11) DEFAULT NULL,"\
     "`geodb_loc_id` int(11) DEFAULT NULL,"\
     "`routeType` int(11) NOT NULL DEFAULT -1,"\
+    "`markerType` varchar(15) default '',"\
     "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,"\
     "constraint main unique (`route`,`name`,`startDate`,`endDate`),"\
     "constraint `stationKey` UNIQUE (`stationKey`));";
  else if(dbType == "MySql")
   CommandText = "CREATE TABLE `Stations` ("\
     "`stationKey` int(11) NOT NULL AUTO_INCREMENT,"\
-    "`route` int(11) NOT NULL,"\
+    "`route` int(11) NOT NULL DEFAULT 0,"\
     "`name` varchar(75) NOT NULL,"\
     "`suffix` varchar(4) NOT NULL DEFAULT '',"\
     "`latitude` decimal(15,13) NOT NULL,"\
@@ -3206,6 +3236,7 @@ bool ExportSql::createStationsTable(QSqlDatabase db, QString dbType)
     "`infoKey` int(11) DEFAULT NULL,"\
     "`geodb_loc_id` int(11) DEFAULT NULL,"\
     "`routeType` int(11) NOT NULL,"\
+    "`markerType` varchar(15) default '',"\
     "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"\
     "PRIMARY KEY (`route`,`name`,`startDate`,`endDate`),"\
     "UNIQUE KEY `stationKey` (`stationKey`)"\
@@ -3217,7 +3248,7 @@ bool ExportSql::createStationsTable(QSqlDatabase db, QString dbType)
   CommandText.append("SET ANSI_PADDING ON;");
   CommandText.append("CREATE TABLE [dbo].[stations]("\
         "[stationKey] [int] IDENTITY(1,1) NOT NULL,"\
-        "[route] [int] NOT NULL,"\
+        "[route] [int] NOT NULL DEFAULT 0,"\
         "[name] [varchar](75) NOT NULL,"\
         "[suffix] varchar(4) NOT NULL DEFAULT '',"\
         "[latitude] [decimal](15, 13) NOT NULL,"\
@@ -3229,6 +3260,7 @@ bool ExportSql::createStationsTable(QSqlDatabase db, QString dbType)
         "[infoKey] [int] NULL,"\
         "[geodb_loc_id] [int] NULL,"\
         "[routeType] [int] NOT NULL,"\
+        "`markerType` varchar(15) default '',"\
         "[lastUpdate] [datetime] NOT NULL,"\
      "CONSTRAINT [PK_station] PRIMARY KEY CLUSTERED"\
     "("\
