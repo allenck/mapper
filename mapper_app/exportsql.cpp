@@ -2680,9 +2680,11 @@ bool ExportSql::exportRouteComments()
     }
 
     if(bDropTables)
-     CommandText = "select route, date, commentKey, companyKey, latitude, longitude, lastUpdate from RouteComments order by lastUpdate";
+     CommandText = "select route, date, commentKey, companyKey, latitude, longitude, lastUpdate "
+                   "from RouteComments order by lastUpdate";
     else
-     CommandText = "select route, date, commentKey, companyKey, latitude, longitude, lastUpdate from RouteComments where lastUpdate > :lastUpdated  order by lastUpdate";
+     CommandText = "select route, date, commentKey, companyKey, latitude, longitude, lastUpdate "
+                   "from RouteComments where lastUpdate > :lastUpdated  order by lastUpdate";
 
     QSqlQuery query = QSqlQuery(srcDb);
     query.prepare(CommandText);
@@ -2714,7 +2716,9 @@ bool ExportSql::exportRouteComments()
 
         if(!bDropTables)
         {
-         CommandText = "select route, date, commentKey, companyKey, latitude, longitude, lastUpdate from RouteComments where route="+QString("%1").arg(route) + " and date ='"+date.toString("yyyy/MM/dd")+"'";
+         CommandText = "select route, date, commentKey, companyKey, latitude, longitude, lastUpdate "
+                       "from RouteComments where route="+QString("%1").arg(route) + " and date ='"
+                       + date.toString("yyyy/MM/dd")+"'";
          bQuery = query2.exec(CommandText);
          if(!bQuery)
          {
@@ -2737,7 +2741,9 @@ bool ExportSql::exportRouteComments()
              bFound = true;
          }
         }
-        if(bFound && route== route2 && date == date2 && commentKey == commentKey2 && companyKey == companyKey2 && lastUpdate == lastUpdate2)
+        if(bFound && route== route2 && date == date2 && commentKey == commentKey2
+           && companyKey == companyKey2 && latitude == latitude2 && longitude == longitude2
+           && lastUpdate == lastUpdate2)
         {
             notUpdated++;
             sendProgress();
@@ -2747,7 +2753,10 @@ bool ExportSql::exportRouteComments()
         if(bFound)
         {
             if(tgtConn->servertype() != "MsSql")
-                CommandText = "update  RouteComments set commentKey=:commentKey, companyKey=:companyKey,latitude = :latitude, longitude = :longitude, lastUpdate=:lastUpdate where route="+QString("%1").arg(route) + " and date ='"+date.toString("yyyy/MM/dd")+"'";
+                CommandText = "update  RouteComments set commentKey=:commentKey, companyKey=:companyKey,"
+                              "latitude = :latitude, longitude = :longitude, lastUpdate=:lastUpdate "
+                              "where route="+QString("%1").arg(route) + " and date ='"
+                              + date.toString("yyyy/MM/dd")+"'";
             else
                 CommandText = "update  RouteComments set commentKey=:comments, companyKey=:companyKey,latitude = :latitude, longitude = :longitude,lastUpdate=:lastUpdate where route="+QString("%1").arg(route) + " and date ='"+date.toString("yyyy/MM/dd")+"'";
             query2.prepare(CommandText);
@@ -2773,9 +2782,14 @@ bool ExportSql::exportRouteComments()
         else
         {
             if(tgtConn->servertype() != "MsSql")
-                CommandText = "insert into RouteComments (route, date, commentKey, companyKey,latitude = :latitude, longitude = :longitude,lastUpdate ) values (:route, :date, :commentKey, :companyKey, :lastUpdate)";
+                CommandText = "insert into RouteComments (route, date, commentKey, companyKey,"
+                              "latitude, longitude,"
+                              "lastUpdate ) values (:route, :date, :commentKey, :companyKey, "
+                              ":latitude, :longitude,:lastUpdate)";
             else
-                CommandText = "insert into RouteComments (route, date, commentKey, companyKey, latitude = :latitude, longitude = :longitude,lastUpdate ) values (:route, :date, :commentKey, :companyKey, :lastUpdate)";
+                CommandText = "insert into RouteComments (route, date, commentKey, companyKey, "
+                              "latitude, longitude,lastUpdate ) values (:route, :date, :commentKey, "
+                              ":companyKey, :latitude, :longitude, :lastUpdate)";
 
             query2.prepare(CommandText);
             query2.bindValue(":route", route);
