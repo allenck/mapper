@@ -55,6 +55,7 @@ public:
  void setUseDatabase(QString u) {_useDatabase = u;}
  QString cityName() {return _cityName;}
  void setCityName(QString name) {_cityName = name;}
+ QString dbType();
 };
 
 #endif // CONNECTION_H

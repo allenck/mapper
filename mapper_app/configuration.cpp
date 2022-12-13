@@ -504,7 +504,7 @@ QSqlDatabase Connection::configure(QString cName)
  {
   QString dbName = config->currConnection->database();
   QFileInfo info(dbName);
-  if(!info.isAbsolute() && config->currConnection->driver() == "QSQLITE")
+  if(!info.isAbsolute() && config->currConnection->servertype() == "Sqlite")
   {
    if(!dbName.startsWith("Resources/databases/"))
     dbName = "Resources/databases/" + dbName;

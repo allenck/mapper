@@ -959,6 +959,9 @@ bool EditConnectionsDlg::verifyDatabase(QString name)
   return true;
  }
  if(list.isEmpty())
+ {
   SQL::instance()->executeScript(":/databases/mySql_createDatabase.sql",db);
+  SQL::instance()->executeScript(":/databases/CreateMySqlFunction.sql", db);
+ }
  return true;
 }

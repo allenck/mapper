@@ -1832,7 +1832,11 @@ bool ExportSql::exportSegments()
         lastUpdate2 = query.value(16).toDateTime();
     }
    }
-   if( bFound && route== route2 && name == name2 && startDate.date() == startDate2.date() && endDate.date() == endDate2.date() && lineKey == lineKey2 && companyKey == companyKey2 && tractionType == tractionType2 && direction == direction2 && next == next2 && prev==prev2 && normalEnter == normalEnter2 && normalLeave == normalLeave2 && reverseEnter == reverseEnter2 && reverseLeave == reverseLeave2 && lastUpdate == lastUpdate2)
+   if( bFound && route== route2 && name == name2 && startDate.date() == startDate2.date()
+       && endDate.date() == endDate2.date() && lineKey == lineKey2 && companyKey == companyKey2
+       && tractionType == tractionType2 && direction == direction2 && next == next2 && prev==prev2
+       && normalEnter == normalEnter2 && normalLeave == normalLeave2 && reverseEnter == reverseEnter2
+       && reverseLeave == reverseLeave2 && oneWay == oneWay2 && trackUsage == trackUsage2 && lastUpdate == lastUpdate2)
    {
        notUpdated++;
        sendProgress();
