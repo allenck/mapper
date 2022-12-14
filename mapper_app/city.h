@@ -16,7 +16,7 @@ public:
  qint32 id;
  QMap<QString, Connection*> connections;
  qint32 curConnectionId = 0;
- qint32 curExportConnId;
+ qint32 curExportConnId =-1;
  qint32 curOverlayId;
  LatLng center;
  QString mapType;

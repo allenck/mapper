@@ -11,10 +11,8 @@ Connection::Connection(QObject *parent) : QObject(parent)
 
 QSqlDatabase Connection::getDb() { return db;}
 
-QString Connection::dbType()
+QString Connection::dbType(QString name)
 {
- QString name = driver();
-
  if(name == "QSQLITE") return "Sqlite";
  if(name == "QMARIADB") return "MySql";
  if(name == "QMYSQL") return "MySql";

@@ -6,6 +6,7 @@
 #include "mainwindow.h"
 #include <QClipboard>
 #include <QApplication>
+#include "vptr.h"
 
 EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
   QDialog(parent),
@@ -14,6 +15,7 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
   ui->setupUi(this);
   ui->lblHelp->setText("");
   config = Configuration::instance();
+  currCity = config->currCity;
   this->setWindowTitle(tr("Edit Connections"));
   drivers = QSqlDatabase::drivers();
   dbType <<"MySql"<<"MsSql"<<"Sqlite";  // currently supported database types.
@@ -26,12 +28,12 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
    ui->cbDriverType->addItem(drivers.at(i));
   }
   connect(ui->cbDriverType, SIGNAL(currentIndexChanged(int)), this, SLOT(cbDriverTypeSelectionChanged(int)));
-  ui->cbDriverType->setCurrentText("QSQLITE");
+  //ui->cbDriverType->setCurrentText("QSQLITE");
 
   connect(ui->cbDbType, &QComboBox::currentTextChanged, [=]{
    setControls((DBTYPE)ui->cbDbType->currentIndex());
   });
-  ui->cbDbType->setCurrentIndex(Sqlite);
+  //ui->cbDbType->setCurrentIndex(Sqlite);
 
   int index=0, i=0;
   ui->cbCities->clear();
@@ -48,19 +50,19 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
   ui->cbCities->setCurrentIndex(index);
 
   index = 0;
-  ui->cbConnections->addItem(tr("Add new connection"));
   for(int i=0; i < config->currCity->connections.count(); i++)
   {
    City* selectedCity = config->cityList.value(ui->cbCities->currentText());
    Connection* c = selectedCity->connections.values().at(i);
-   ui->cbConnections->addItem(c->description());
+   ui->cbConnections->addItem(c->description(),VPtr<Connection>::asQVariant(c));
    if(c->id() == config->currCity->curConnectionId)
-    index = i+1;
+    index = i;
   }
+  ui->cbConnections->setCurrentIndex(index);
+  cbConnectionsSelectionChanged(index);
+
   connect(ui->cbConnections, SIGNAL(currentIndexChanged(int)), this, SLOT(cbConnectionsSelectionChanged(int)));
   connect(ui->cbConnections, SIGNAL(editTextChanged(QString)), this, SLOT(cbConnectionsTextChanged(QString)));
-  ui->cbConnections->setCurrentIndex(index);
-
   connect(ui->btnTest,SIGNAL(clicked(bool)), this, SLOT(btnTestClicked()));
   connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(btnCancelClicked()));
   connect(ui->btnOK, SIGNAL(clicked()), this, SLOT(btnOKClicked()));
@@ -86,7 +88,21 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
           ui->txtPWD->setEchoMode(QLineEdit::Normal);
       }
   });
-
+  connect(ui->tbReload, &QToolButton::clicked, [=]{
+      if(db.isOpen())
+          populateDatabases();
+      else
+          ui->lblHelp->setText(tr("not open!"));
+  });
+  connect(ui->btnNew, &QPushButton::clicked, [=]{
+   ui->cbDriverType->setCurrentIndex(2);
+   ui->txtDbOrDSN->setText("");
+   ui->txtHost->setText("");
+   ui->txtPort->setText("");
+   ui->txtPWD->setText("");
+   ui->txtUID->setText("");
+   ui->lblHelp->setText("");
+  });
 
   timer = new QTimer(this);
   timer->setInterval(1000);
@@ -166,28 +182,13 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
  ui->lblHelp->setText("");
  if(sel < 0)
   return;
+ Connection* c = VPtr<Connection>::asPtr(ui->cbConnections->itemData(sel));
 
- Connection* c;
- if(sel== 0)
+ if(currCity->name() == ui->cbCities->currentText())
  {
-  ui->btnOK->setText(tr("Add"));
-  ui->btnDelete->setEnabled(false);
-  ui->cbDriverType->setCurrentIndex(-1);
-  return;
- }
- else
- {
-  ui->btnDelete->setEnabled(false);
-  City * currCity = NULL;
-  for(int i = 0; i < config->cityList.count(); i++)
-  {
-   currCity = config->cityList.values().at(i);
-   if(currCity->name() == ui->cbCities->currentText())
-   {
-    currCity = config->cityList.values().at(i);
-    if((sel-1) > currCity->connections.count()-1)
+    if((sel) > currCity->connections.count())
      sel = currCity->connections.count();
-    c = currCity->connections.values().at(sel-1);
+    c = currCity->connections.values().at(sel);
     ui->btnOK->setText(tr("Update"));
     //if(c->id != config->currConnection.id) //??
     ui->btnDelete->setEnabled(true);
@@ -231,8 +232,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
      }
      ui->cbUseDatabase->setCurrentText(c->useDatabase());
      ui->txtDbOrDSN->setText(c->database());
-    }
-   }
+
   }
  }
 }
@@ -241,11 +241,12 @@ void EditConnectionsDlg::cbDriverTypeSelectionChanged(int sel)
 {
  Q_UNUSED(sel)
  QString text = ui->cbDriverType->currentText();
- if(text == "QSQLITE")
+ QString dbType = Connection::dbType(text);
+ if(dbType == "Sqlite")
  {
   ui->cbDbType->setCurrentIndex(Sqlite);
  }
- else if(text == "QODBC" || text == "QODBC3")
+ else if(dbType == "MsSql")
  {
   ui->cbDbType->setCurrentIndex(MsSql);
  }
@@ -274,6 +275,7 @@ void EditConnectionsDlg::setControls(DBTYPE dbType)
   // use database (required for ODBC)
   ui->label_10->setVisible(true);
   ui->cbUseDatabase->setVisible(true);
+  ui->tbReload->setVisible(false);
   // host (required for ODBC, MYSQL)
   ui->label_4->setVisible(true);
   ui->label_5->setVisible(true);
@@ -289,9 +291,11 @@ void EditConnectionsDlg::setControls(DBTYPE dbType)
   ui->label_2->setVisible(false);
   ui->label_2->setText(tr("DSN")+":");
   ui->txtDbOrDSN->setVisible(false);
+  ui->txtDbOrDSN->setCompleter(nullptr);
   break;
 
  case MsSql:
+ {
   ui->label_2->setText("DSN:");
   ui->cbDbType->setCurrentIndex(1);
   ui->txtHost->setEnabled(false);
@@ -299,7 +303,7 @@ void EditConnectionsDlg::setControls(DBTYPE dbType)
   ui->txtPWD->setEnabled(true);
   ui->tbView->setEnabled(true);
   ui->txtUID->setEnabled(true);
-#ifdef Q_WS_WIN
+#ifdef Q_OS_WIN
   QSettings winReg("HKEY_CURRENT_USER\\Software\\ODBC\\ODBC.INI\\ODBC Data Sources", QSettings::NativeFormat);
   databases = winReg.childKeys();
   qDebug() << QString("%1").arg(databases.count());
@@ -308,23 +312,26 @@ void EditConnectionsDlg::setControls(DBTYPE dbType)
   findODBCDsn("/etc/odbc.ini", &databases);
 #endif
   // use database (required for ODBC)
-  ui->label_10->setVisible(false);
-  ui->cbUseDatabase->setVisible(false);
-  // host (required for ODBC, MYSQL)
-  ui->label_4->setVisible(true);
-  ui->label_5->setVisible(true);
-  ui->txtHost->setVisible(true);
-  ui->txtPort->setVisible(true);
-  // userId/Password (required for ODBC, MYSQL)
-  ui->label_6->setVisible(true);
-  ui->txtUID->setVisible(true);
-  ui->label_7->setVisible(true);
-  ui->txtPWD->setVisible(true);
-  ui->tbView->setVisible(true);
+  ui->label_10->setVisible(true);
+  ui->cbUseDatabase->setVisible(true);
+  ui->tbReload->setVisible(true);
+  // host (required for MYSQL)
+  ui->label_4->setVisible(false);
+  ui->label_5->setVisible(false);
+  ui->txtHost->setVisible(false);
+  ui->txtPort->setVisible(false);
+  // userId/Password (required for MYSQL)
+  ui->label_6->setVisible(false);
+  ui->txtUID->setVisible(false);
+  ui->label_7->setVisible(false);
+  ui->txtPWD->setVisible(false);
+  ui->tbView->setVisible(false);
   ui->tbBrowse->setVisible(false); // browse, only for Sqlite.
   ui->label_2->setVisible(true);
-  ui->label_2->setText(tr("Schema")+":");
+  ui->label_2->setText(tr("ODBC DSN")+":");
   ui->txtDbOrDSN->setVisible(true);
+  ui->txtDbOrDSN->setCompleter(new QCompleter(databases));
+ }
  break;
  case Sqlite:
   ui->label_2->setText("Database:");
@@ -344,6 +351,7 @@ void EditConnectionsDlg::setControls(DBTYPE dbType)
   // use database (required for ODBC)
   ui->label_10->setVisible(false);
   ui->cbUseDatabase->setVisible(false);
+  ui->tbReload->setVisible(false);
   // host (required for ODBC, MYSQL)
   ui->label_4->setVisible(false);
   ui->label_5->setVisible(false);
@@ -359,6 +367,7 @@ void EditConnectionsDlg::setControls(DBTYPE dbType)
   ui->label_2->setVisible(true);
   ui->label_2->setText(tr("DSN")+":");
   ui->txtDbOrDSN->setVisible(true);break;
+  ui->txtDbOrDSN->setCompleter(nullptr);
  }
 }
 
@@ -427,31 +436,31 @@ void EditConnectionsDlg::btnOKClicked()
   ui->lblHelp->setText(tr("Select driver Type"));
   return;
  }
- if(ui->cbDriverType->currentText() == "QSQLITE")
- {
-  if(ui->cbDbType->currentText() != "Sqlite")
-  {
-   ui->lblHelp->setText(tr("Invalid db type!"));
-   return;
-  }
- }
- if(ui->cbDriverType->currentText() == "QMYSQL" ||  ui->cbDriverType->currentText() == "QMYSQL3")
- {
-  if(ui->cbDbType->currentText() != "MySql")
-  {
-   ui->lblHelp->setText(tr("Invalid db type!"));
-   return;
-  }
- }
- if(ui->cbDriverType->currentText() != "QODBC" && ui->cbDriverType->currentText() != "QODBC3" && ui->cbDriverType->currentText() != "QSQLITE")
- {
-  if(ui->txtHost->text() == "")
-  {
-   ui->lblHelp->setText(tr("Host name or IP required"));
-   return;
-  }
-  //ui->cbDbType->setCurrentIndex(0); // MySql
- }
+// if(ui->cbDriverType->currentText() == "QSQLITE")
+// {
+//  if(ui->cbDbType->currentText() != "Sqlite")
+//  {
+//   ui->lblHelp->setText(tr("Invalid db type!"));
+//   return;
+//  }
+// }
+// if(ui->cbDriverType->currentText() == "QMYSQL" ||  ui->cbDriverType->currentText() == "QMYSQL3")
+// {
+//  if(ui->cbDbType->currentText() != "MySql")
+//  {
+//   ui->lblHelp->setText(tr("Invalid db type!"));
+//   return;
+//  }
+// }
+// if(ui->cbDriverType->currentText() != "QODBC" && ui->cbDriverType->currentText() != "QODBC3" && ui->cbDriverType->currentText() != "QSQLITE")
+// {
+//  if(ui->txtHost->text() == "")
+//  {
+//   ui->lblHelp->setText(tr("Host name or IP required"));
+//   return;
+//  }
+//  //ui->cbDbType->setCurrentIndex(0); // MySql
+// }
 // else
 // {
 //  if(ui->txtUID->text() == "")
@@ -459,7 +468,7 @@ void EditConnectionsDlg::btnOKClicked()
 //   ui->lblHelp->setText(tr("User Id required"));
 //   return;
 //  }
- if(ui->cbDbType->currentText() != "Sqlite")
+ if(ui->cbDbType->currentText() == "MySql")
  {
   if(ui->txtUID->text() == "")
   {
@@ -699,6 +708,10 @@ bool EditConnectionsDlg::openTestDb()
   ui->txtHost->setText("");
   db.setHostName(ui->txtHost->text());
  }
+ else if(ui->cbDbType->currentText() == "MsSql")
+ {
+  db.setDatabaseName(ui->txtDbOrDSN->text());
+ }
  else
  {
   db.setDatabaseName(ui->cbUseDatabase->currentText());
@@ -706,9 +719,10 @@ bool EditConnectionsDlg::openTestDb()
   int port = ui->txtPort->text().toInt();
   if(port > 0)
    db.setPort(port);
+  db.setUserName(ui->txtUID->text());
+  db.setPassword(ui->txtPWD->text());
+
  }
- db.setUserName(ui->txtUID->text());
- db.setPassword(ui->txtPWD->text());
  bool bOpen = db.open();
  if(bOpen)
   return true;
@@ -722,7 +736,7 @@ void EditConnectionsDlg::populateDatabases()
  if(!openTestDb())
   return;
  QString currDatabase = ui->cbUseDatabase->currentText();
-  if(ui->cbDriverType->currentText() == "QODBC" || ui->cbDriverType->currentText() == "QODBC3")
+  if(ui->cbDbType->currentText() == "MsSql")
   {
    // Select * from Sys.Databases
    QStringList databases;
@@ -909,7 +923,7 @@ void EditConnectionsDlg::ontxtDbOrDsn_editingFinished()
   else
    ui->txtDbOrDSN->setText(info.completeBaseName());
  }
- else if (ui->cbDriverType->currentText() == "QODBC" || ui->cbDriverType->currentText() == "QODBC3")
+ else if (ui->cbDbType->currentText() == "Msql")
  {
   populateDatabases();
   getDatabase();

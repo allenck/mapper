@@ -9,6 +9,7 @@
 #include <QResizeEvent>
 #include <QCloseEvent>
 #include "sql.h"
+#include "vptr.h"
 
 QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
     QDialog(parent),
@@ -20,18 +21,9 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   bChanging = false;
   tgtConn = config->currCity->connections.values().at(config->currCity->curConnectionId);
   db = QSqlDatabase::database();
-  if(tgtConn->driver() == "QODBC" || tgtConn->driver() == "QODBC3")
-  {
-   tgtDbType = "MsSql";
-  }
-  else
-  {
-   if(tgtConn->driver() == "QSQLITE")
-    tgtDbType= "Sqlite";
-   else
-    tgtDbType = "MySql";
-  }
+  tgtConn->setConnectionName(db.connectionName());
 
+  tgtDbType = tgtConn->servertype();
   i_Max_Tab_Results = 10;
   ui->cb_stop_query_on_error->setChecked(config->q.b_stop_query_on_error);
   ui->cb_sql_execute_after_loading->setChecked(config->q.b_sql_execute_after_loading);
@@ -41,22 +33,22 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   for(int i=0; i<config->currCity->connections.count(); i++)
   {
    Connection* c = config->currCity->connections.values().at(i);
-   ui->cbConnections->addItem(c->description());
+   ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
    if(c->id() == config->currConnection->id())
     ui->cbConnections->setCurrentIndex(i);
 
   }
   setWindowTitle(tr("Manual Sql Query (%1)").arg(ui->cbConnections->currentText()));
 
-  for(int i=0; i<config->currCity->connections.count(); i++)
-  {
-   Connection* c = config->currCity->connections.values().at(i);
-   if(c->id() == config->currCity->curConnectionId)
-   {
-    ui->cbConnections->setCurrentIndex(i);
-    break;
-   }
-  }
+//  for(int i=0; i<config->currCity->connections.count(); i++)
+//  {
+//   Connection* c = config->currCity->connections.values().at(i);
+//   if(c->id() == config->currCity->curConnectionId)
+//   {
+//    ui->cbConnections->setCurrentIndex(i);
+//    break;
+//   }
+//  }
   connect(ui->cbConnections, SIGNAL(currentIndexChanged(int)), this, SLOT(On_cbConnections_CurrentIndexChanged(int)));
   connect(ui->rollback_toolButton, &QToolButton::clicked, [=]{
    try{
@@ -582,16 +574,17 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 //  }
 // }
 
- void QueryDialog::On_cbConnections_CurrentIndexChanged(int )
+ void QueryDialog::On_cbConnections_CurrentIndexChanged(int ix)
  {
   if(bChanging) return;
+  Connection* tgtConn = VPtr<Connection>::asPtr(ui->cbConnections->itemData(ix));
   if(ui->cbConnections->currentText() == config->currCity->connections.values().at(config->currCity->curConnectionId)->description())
   {
    // reverting to default (currrent) database!
-   if(db.isOpen() && db.connectionName() == "testConnection")
-    db.close();
-   db = QSqlDatabase();
-   return;
+   //
+   // the docs recommed not setting QSqlDatabase as a member of a class but since
+   // this class is always present once created there should be no problem.
+   db = QSqlDatabase::database(tgtConn->connectionName()); // restore default connection
   }
 
   for(int i=0; i<config->currCity->connections.count(); i++)
@@ -604,36 +597,44 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
     break;
    }
   }
-  if(db.isOpen() && db.connectionName() == "testConnection")
-   db.close();
 
 
-  tgtConn = config->currCity->connections.values().at(config->currCity->curExportConnId);
+//  if(db.isOpen() && db.connectionName() == "testConnection")
+//   db.close();
+
+//   db=QSqlDatabase::addDatabase(tgtConn->driver(), "query");
+
+   //tgtConn = config->currCity->connections.values().at(config->currCity->curExportConnId);
+  //tgtConn = config->currCity->connections.values().at(ui->cbConnections->itemData(ix).toInt());
 #if 1
-  db = QSqlDatabase::addDatabase(tgtConn->driver(),"testConnection");
-  if(tgtConn->driver() == "QODBC" || tgtConn->driver() == "QODBC3")
+  if(tgtConn->connectionName().isEmpty())
   {
-   db.setHostName(tgtConn->host());
-   db.setDatabaseName(tgtConn->dsn());
-   tgtDbType = "MsSql";
-
-  }
-  else
-  {
-   db.setHostName(tgtConn->host());
-   db.setDatabaseName(tgtConn->database());
-   if(tgtConn->driver() == "QSQLITE")
+   db = QSqlDatabase::addDatabase(tgtConn->driver(), QString("query%1").arg(ix));
+   tgtConn->setConnectionName(db.connectionName());
+   tgtDbType = tgtConn->servertype();
+   if(tgtDbType == "MsSql")
    {
-    tgtDbType= "Sqlite";
+    db.setDatabaseName(tgtConn->dsn());
+   }
+   else if(tgtDbType == "MySql")
+   {
+       db.setHostName(tgtConn->host());
+       db.setPort(tgtConn->port());
+       db.setDatabaseName(tgtConn->database());
+       db.setUserName(tgtConn->uid());
+       db.setPassword(tgtConn->pwd());
    }
    else
    {
-    tgtDbType = "MySql";
+    db.setDatabaseName(tgtConn->database());
    }
   }
+//  else
+//  {
+//   db= QSqlDatabase::database(QString("query%1").arg(ix));
+//   tgtConn->setConnectionName(db.connectionName());
+//  }
 
-  db.setUserName(tgtConn->uid());
-  db.setPassword(tgtConn->pwd());
   if(!db.open())
   {
    ui->go_QueryButton->setEnabled(false);
@@ -643,7 +644,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   else
   {
    ui->go_QueryButton->setEnabled(true);
-   if(tgtConn->driver() == "QODBC" || tgtConn->driver() == "QODBC3" )
+   if(tgtDbType == "MsSql")
    {
     if(tgtConn->useDatabase() != "default" || tgtConn->useDatabase() != "")
     {
@@ -658,10 +659,5 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    }
   }
 #endif
-   setWindowTitle(tr("Manual Sql Query (%1)").arg(ui->cbConnections->currentText()));
-//   bChanging = true;
-//   if(!tgtConn->isOpen())
-//    db = tgtConn->configure("testConnection");
-//   db = QSqlDatabase::database("testConnection");
-//   bChanging = false;
+  setWindowTitle(tr("Manual Sql Query (%1)").arg(ui->cbConnections->currentText()));
  }

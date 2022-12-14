@@ -53,5 +53,6 @@
         <file>databases/cincinnati.sqlite3</file>
         <file>databases/Louisville.sqlite3</file>
         <file>mySql_createDatabase.sql</file>
+        <file>reload.png</file>
     </qresource>
 </RCC>

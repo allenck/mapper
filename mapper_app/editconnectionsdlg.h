@@ -37,11 +37,11 @@ private:
  void populateDatabases();
  QString getDatabase();
 #ifndef Q_WS_WIN
-void findODBCDsn(QString iniFile, QStringList* dsnList);
+ void findODBCDsn(QString iniFile, QStringList* dsnList);
 #endif
-bool verifyDatabase(QString name);
-void setControls(DBTYPE dbType);
-
+  bool verifyDatabase(QString name);
+  void setControls(DBTYPE dbType);
+  City* currCity = nullptr;
 
 private slots:
  void cbCitiesSelectionChanged(int sel);

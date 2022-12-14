@@ -399,6 +399,24 @@ void Configuration::getSettings()
   currConnection = nc;
 #endif
 
+#if 0 // for testing purposes, create a MsSql connection
+  City* currCity = cityList.values().at(3);
+
+  Connection* nc = new Connection();
+  nc->setId(1);
+  nc->setDatabase("StLouisMsSql");
+  nc->setDescription ("Test MsSql connection");
+  nc->setDriver("QODBC");
+  nc->setDSN("");
+  nc->setUID("laptop4-win\allen");
+  nc->setPWD("");
+  nc->setServerType("MsSql");
+  nc->setHost("");
+  nc->setPort(0);
+  currCity->connections.insert(nc->description(),nc);
+  //currConnection = nc;
+#endif
+
  settings.endArray();
 
 // for(Overlay* ov : overlayMap->values())
@@ -487,7 +505,7 @@ Configuration* Configuration::instance()
 
 
 
-QSqlDatabase Connection::configure(QString cName)
+QSqlDatabase Connection::configure(const QString cName)
 {
  qDebug() << "Connection: CWD = " << QDir::currentPath();
  config = Configuration::instance();

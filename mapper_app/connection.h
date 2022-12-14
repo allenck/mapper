@@ -25,6 +25,8 @@ class Connection : public QObject
  Configuration* config;
  bool bOpen;
  QString _cityName;
+ const QString cName;
+ QString _connectionName;
 
 public:
  Connection(QObject* parent = nullptr);
@@ -55,7 +57,9 @@ public:
  void setUseDatabase(QString u) {_useDatabase = u;}
  QString cityName() {return _cityName;}
  void setCityName(QString name) {_cityName = name;}
- QString dbType();
+ static QString dbType(QString name);
+ QString connectionName(){return _connectionName;}
+ void setConnectionName(QString name) {_connectionName =name; }
 };
 
 #endif // CONNECTION_H

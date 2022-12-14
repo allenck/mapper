@@ -74,6 +74,7 @@ HEADERS  += mainwindow.h \
     $$PWD/routeselector.h \
     $$PWD/segmentselectionwidget.h \
     $$PWD/splitsegmentdlg.h \
+    $$PWD/vptr.h \
     addgeoreferenceddialog.h \
     $$PWD/exceptions.h \
     $$PWD/myapplication.h \
