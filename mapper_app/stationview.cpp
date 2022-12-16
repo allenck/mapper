@@ -2,6 +2,7 @@
 #include "sql.h"
 #include "webviewbridge.h"
 #include <QApplication>
+#include "editstation.h"
 
 StationView* StationView::_instance = NULL;
 

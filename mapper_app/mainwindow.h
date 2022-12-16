@@ -3,7 +3,7 @@
 #include <QObject>
 #include <QtGui>
 #include <QMainWindow>
-#include "mapview.h"
+//#include "mapview.h"
 #include "ui_mainwindow.h"
 #ifndef USE_WEBENGINE
 #include <QWebView>
@@ -20,14 +20,14 @@
 #include <QMenu>
 #include "routeviewsortproxymodel.h"
 #include "routeviewtablemodel.h"
-#include "configuration.h"
+//#include "configuration.h"
 //#include "sql.h"
 #include "routedlg.h"
-#include "segmentviewsortproxymodel.h"
-#include "segmentviewtablemodel.h"
+//#include "segmentviewsortproxymodel.h"
+//#include "segmentviewtablemodel.h"
 #include "filedownloader.h"
-#include "splitroute.h"
-#include "editstation.h"
+//#include "splitroute.h"
+//#include "editstation.h"
 #include "routecommentsdlg.h"
 #include "querydialog.h"
 #include <QToolTip>
@@ -104,6 +104,7 @@ class MainWindow;
 }
 
 //class webviewer;
+class ExportDlg;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -223,7 +224,7 @@ private slots:
     void txtStreetName_TextChanged(QString text);
     void txtStreetName_Leave();
     void txtSegment_Leave();
-    void newCity(int ix);
+    void newCity(QAction* act );
     void newOverlay(int ix);
     void splitRoute_Click();
     void combineRoutes();
@@ -252,7 +253,7 @@ private slots:
     void sbRouteTriggered(int sliderAction);
     void txtRouteNbrLeave();
     void On_saveImage_clicked();
-    void on_createKmlFile_triggered();
+    void on_createKmlFile();
     void fillOverlayMenu();
     void queryOverlay();
 
@@ -357,7 +358,6 @@ private:
     QAction* splitSegmentAct;
     QAction* setInspectedPageAct = nullptr;
     QList<QAction*> cityActions;
-    QSignalMapper *signalMapper;
     QActionGroup  *actionGroup;
     QAction* exportOverlaysAct;
     QAction* setCityBoundsAct;
@@ -420,7 +420,7 @@ private:
 //    QStringList keyTokens;
     QUrl fileUrl;
     bool verifyAPIKey(QString path, QString apiKey);
-
+    ExportDlg* form = nullptr;
 private slots:
     void createCityMenu();
     void sbTracks_valueChanged(int);

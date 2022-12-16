@@ -14,7 +14,8 @@ class City : public QObject
 public:
  explicit City(QObject *parent = nullptr);
  qint32 id;
- QMap<QString, Connection*> connections;
+ QList<Connection*> connections;
+ QStringList connectionNames;
  qint32 curConnectionId = 0;
  qint32 curExportConnId =-1;
  qint32 curOverlayId;

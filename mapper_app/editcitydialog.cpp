@@ -80,7 +80,7 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
 
  for(int i=0; i < config->cityList.count(); i++)
  {
-  City* city = config->cityList.values().at(i);
+  City* city = config->cityList.at(i);
   ui->cbCity->addItem(city->name());
   if(config->currCity->name() == city->name())
   {
@@ -150,7 +150,7 @@ void EditCityDialog::cbCitysSelectionChanged(int i)
    city->setDirty(true);
   }
  }
- city = config->cityList.values().at(i);
+ city = config->cityList.at(i);
  cityId = i;
  newCity(i);
  model->setCity(i);
@@ -519,7 +519,7 @@ void EditCityDialog::on_pasteLatLng()
       QVariantList objArray;
       objArray << latitude << longitude;
       WebViewBridge::instance()->processScript("setCenter", objArray);
-      City* city = config->cityList.value(ui->cbCity->currentText());
+      City* city = config->cityList.at(config->cityNames().indexOf(ui->cbCity->currentText()));
       if(city)
           city->setCenter(LatLng(latitude, longitude));
        WebViewBridge::instance()->processScript("addCityBoundsButton");

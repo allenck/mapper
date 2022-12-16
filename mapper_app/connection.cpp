@@ -3,8 +3,8 @@
 
 Connection::Connection(QObject *parent) : QObject(parent)
 {
- _DSN = "";
- _servertype = "Sqlite";
+ //_DSN = "";
+ //_servertype = "Sqlite";
  bOpen = false;
 
 }

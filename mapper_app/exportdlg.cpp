@@ -1,5 +1,6 @@
 #include "exportdlg.h"
 #include "ui_exportdlg.h"
+#include <QCloseEvent>
 
 ExportDlg::ExportDlg(Configuration *cfg, QWidget *parent) :
     QDialog(parent),
@@ -12,6 +13,7 @@ ExportDlg::ExportDlg(Configuration *cfg, QWidget *parent) :
  timer = new QTimer(this);
  timer->setInterval(1000);
  connect(timer, SIGNAL(timeout()), this, SLOT(quickProcess()));
+ timer->start();
 
  connect(ui->chkAll, SIGNAL(clicked(bool)), this, SLOT(chkAll_changed(bool)));
  connect(ui->btnGo, SIGNAL(clicked()), this, SLOT(btnOK_clicked()));
@@ -24,17 +26,18 @@ ExportDlg::ExportDlg(Configuration *cfg, QWidget *parent) :
  connect(ui->chkOverride, SIGNAL(clicked(bool)),this, SLOT(chkOverrideToggled(bool)));
  //connect(ui->chkAltRoute, SIGNAL(toggled(bool)), this, SLOT(on_chkAltRoute_toggled(bool)));
 
+
  ui->cbConnections->clear();
  for(int i=0; i<config->currCity->connections.count(); i++)
  {
-     Connection* c = config->currCity->connections.values().at(i);
+     Connection* c = config->currCity->connections.at(i);
      if(c->id() == config->currConnection->id())
          continue;
      ui->cbConnections->addItem(c->description());
  }
  for(int i=0; i<config->currCity->connections.count(); i++)
  {
-     Connection* c = config->currCity->connections.values().at(i);
+     Connection* c = config->currCity->connections.at(i);
      if(c->id() == config->currCity->curConnectionId)
      {
          ui->cbConnections->setCurrentIndex(i);
@@ -91,7 +94,7 @@ void ExportDlg::btnOK_clicked()
  timer->start();
  for(int i=0; i<config->currCity->connections.count(); i++)
  {
-  Connection* c = config->currCity->connections.values().at(i);
+  Connection* c = config->currCity->connections.at(i);
   if( c->description() == ui->cbConnections->currentText())
   {
    config->currCity->curExportConnId = c->id();
@@ -103,9 +106,16 @@ void ExportDlg::btnOK_clicked()
  connect(&exprt, SIGNAL(progress(int)), ui->progressBar, SLOT(setValue(int)));
  connect(&exprt,SIGNAL(progressMsg(QString)), this, SLOT(newProgressMsg(QString)));
  connect(&exprt, SIGNAL(uncheck(QString)),  this, SLOT(uncheckControl(QString)));
+ connect(&exprt, &ExportSql::requestStop, [=] {
+     stopEnabled = true;
+     close();
+ });
+
 // if(ui->chkAll->isChecked())
 //     exprt.exportAll();
 // else
+ stopEnabled = true;
+ while(stopEnabled)
  {
   if(ui->chkParameters->isChecked())
   {
@@ -281,6 +291,8 @@ void ExportDlg::btnOK_clicked()
   ui->lblHelp->setText(tr("Done"));
 
   exprt.export_geodb_geometry();
+  if(stopEnabled)
+      break;
  }
  timer->stop();
  this->close();
@@ -290,6 +302,7 @@ void ExportDlg::btnOK_clicked()
 void ExportDlg::quickProcess()
 {
     QApplication::processEvents();
+    show();
 }
 
 void ExportDlg::chkOverrideToggled(bool checked)
@@ -371,3 +384,9 @@ void ExportDlg::on_chkAltRoute_toggled(bool bChecked)
   }
  }
 }
+
+//void ExportDlg::closeEvent(QCloseEvent* e)
+//{
+//    e->ignore();
+//}
+

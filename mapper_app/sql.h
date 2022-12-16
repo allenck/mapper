@@ -14,9 +14,9 @@
 #include <QMessageBox>
 #include "exceptions.h"
 #include "routeselector.h"
+#include <QSqlQuery>
 
 class QSqldatabase;
-class QSqlError;
 #define SQLERROR(query) \
 do \
 { \
@@ -24,6 +24,7 @@ do \
  qCritical() << "Sql error:" << err.text(); \
  qCritical() << query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n"; \
  } while (0)
+
 
 class SQL : public QObject
 {
@@ -210,6 +211,10 @@ private:
 //    QT_DEPRECATED void populatePointList(SegmentData sd);
     bool insertRouteSegment(RouteData rd);
     bool deleteRoute(RouteData rd);
+    void errSqlMessage(QSqlQuery err)
+    {
+
+    }
 };
 
 #endif // SQL_H

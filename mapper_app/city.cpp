@@ -6,7 +6,7 @@
 
 City::City(QObject *parent) : QObject(parent)
 {
-
+ setObjectName(name());
 }
 //QList<Overlay*> City::overlayList() {return overlays;}
 void City::addOverlay(Overlay* ov)

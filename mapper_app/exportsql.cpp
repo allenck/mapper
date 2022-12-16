@@ -30,8 +30,8 @@ bool ExportSql::openDb()
  }
  {
   srcDb = QSqlDatabase();
-  srcConn = config->currCity->connections.values().at(config->currCity->curConnectionId);
-  tgtConn = config->currCity->connections.values().at(config->currCity->curExportConnId);
+  srcConn = config->currCity->connections.at(config->currCity->curConnectionId);
+  tgtConn = config->currCity->connections.at(config->currCity->curExportConnId);
 
   qDebug()<< "Export from '" +srcConn->description() + "' --> '" + tgtConn->description() + "'";
   if(!targetDb.connectionName().contains("export"))
@@ -1797,7 +1797,11 @@ bool ExportSql::exportSegments()
    {
     CommandText = "select route, name, startDate, endDate, lineKey, companyKey, oneWay, trackUsage, "
                   "tractionType, Direction, next, prev, normalEnter, normalLeave, reverseEnter, "
-                  "ReverseLeave, lastUpdate from Routes where route = "+QString("%1").arg(route)+" and name='"+name+ "' and startDate='"+startDate.toString("yyyy/MM/dd")+ "' and endDate='"+endDate.toString("yyyy/MM/dd")+"' and lineKey="+ QString("%1").arg(lineKey);
+                  "ReverseLeave, lastUpdate from Routes "
+                  "where route = "+QString("%1").arg(route)
+                  + " and name='" + name+ "' and startDate='" + startDate.toString("yyyy/MM/dd")
+                  + "' and endDate='" + endDate.toString("yyyy/MM/dd") + "' and lineKey="
+                  + QString("%1").arg(lineKey);
     bQuery = query2.exec(CommandText);
     if(!bQuery)
     {
@@ -1807,7 +1811,8 @@ bool ExportSql::exportSegments()
         qDebug() << CommandText + " line:" + QString("%1").arg(__LINE__) +"\n";
         //db.close();
         if(!Retry(&targetDb, &query2, CommandText))
-            exit(EXIT_FAILURE);
+            //exit(EXIT_FAILURE);
+            return false;
 
     }
     while(query2.next())
@@ -2564,7 +2569,7 @@ bool ExportSql::exportTerminals()
     return true;
 }
 
-void ExportSql::getCount(QString table, bool bDropTable)
+bool ExportSql::getCount(QString table, bool bDropTable)
 {
  emit(progressMsg("Processing "+ table + " inserts/updates"));
  lastUpdated = QDateTime::fromString("1800/01/01 00:00:01","yyyy/MM/dd hh:mm:ss");
@@ -3101,6 +3106,8 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
       "[StartDate] [date] NOT NULL,"\
       "[EndDate] [date] NOT NULL,"\
       "[LineKey] [int] NOT NULL,"\
+      "[OneWay] char(1) DEFAULT 'Y'," \
+      "[TrackUsage] char(1) DEFAULT ' ',"\
       "[CompanyKey] [int] NOT NULL,"\
       "[tractionType] [int] NOT NULL,"\
       "[Direction] [varchar](6) NOT NULL,"\
@@ -3189,8 +3196,8 @@ bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
         "[date] [date] NOT NULL,"\
         "[commentKey] [int] NOT NULL,"\
         "[companyKey] [int] NOT NULL,"\
-        "`latitude` decimal(15,5) NOT NULL DEFAULT '0.00000',"
-        "`longitude` decimal(15,5) NOT NULL DEFAULT '0.00000',"
+        "[latitude] decimal(15,5) NOT NULL DEFAULT '0.00000',"\
+        "[longitude] decimal(15,5) NOT NULL DEFAULT '0.00000',"\
         "[lastUpdate] [datetime] NOT NULL,"\
      "CONSTRAINT [PK_RouteComments] PRIMARY KEY CLUSTERED"\
     "("\
@@ -3264,9 +3271,9 @@ bool ExportSql::createStationsTable(QSqlDatabase db, QString dbType)
   CommandText = "SET ANSI_NULLS ON;";
   CommandText.append("SET QUOTED_IDENTIFIER ON;");
   CommandText.append("SET ANSI_PADDING ON;");
-  CommandText.append("CREATE TABLE [dbo].[stations]("\
+  CommandText.append("CREATE TABLE  [dbo].[stations]("\
         "[stationKey] [int] IDENTITY(1,1) NOT NULL,"\
-        "[route] [int] NOT NULL DEFAULT 0,"\
+        "[route] [int] NOT NULL,"\
         "[name] [varchar](75) NOT NULL,"\
         "[suffix] varchar(4) NOT NULL DEFAULT '',"\
         "[latitude] [decimal](15, 13) NOT NULL,"\
@@ -3278,7 +3285,7 @@ bool ExportSql::createStationsTable(QSqlDatabase db, QString dbType)
         "[infoKey] [int] NULL,"\
         "[geodb_loc_id] [int] NULL,"\
         "[routeType] [int] NOT NULL,"\
-        "`markerType` varchar(15) default '',"\
+        "[markerType] varchar(15) default '',"\
         "[lastUpdate] [datetime] NOT NULL,"\
      "CONSTRAINT [PK_station] PRIMARY KEY CLUSTERED"\
     "("\
@@ -3286,7 +3293,7 @@ bool ExportSql::createStationsTable(QSqlDatabase db, QString dbType)
         "[name] ASC,"\
         "[startDate] ASC,"\
         "[endDate] ASC"\
-    ")WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]"\
+    ") WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]"\
     ") ON [PRIMARY];");
   CommandText.append("SET ANSI_PADDING OFF;");
 //  CommandText.append("ALTER TABLE [dbo].[stations]  WITH CHECK ADD  CONSTRAINT [FK__stations__segmen__4AB81AF0] FOREIGN KEY([lineSegmentId])"\
@@ -3733,11 +3740,18 @@ bool ExportSql::createCommentsTable(QSqlDatabase db, QString dbType)
  if(!bQuery)
  {
   SQLERROR(query);
-  return false;
+
  }
  return true;
 }
 bool ExportSql::createMySqlFunctions(QSqlDatabase db)
 {
  return false;
+}
+
+int ExportSql::errSqlMessage(QSqlQuery query)
+{
+ return QMessageBox::critical(nullptr, tr("Sql Error"), tr("An SqL error has occurred.\n"
+                                 "Sql error:%1\n<B>query:</B> %2").arg(query.lastError().text()).arg(query.lastQuery()),
+                                 QMessageBox::Retry|QMessageBox::Ignore|QMessageBox::Abort);
 }

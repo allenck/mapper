@@ -21,7 +21,7 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
   dbType <<"MySql"<<"MsSql"<<"Sqlite";  // currently supported database types.
   for(int i=0; i < dbType.count(); i++)
   {
-   ui->cbDbType->addItem(dbType.at(i));
+   ui->cbDbType->addItem(dbType.at(i), (DBTYPE)i);
   }
   for(int i=0; i < drivers.count(); i++)
   {
@@ -39,21 +39,22 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
   ui->cbCities->clear();
   foreach(City* c, config->cityList)
   {
-   ui->cbCities->addItem(c->name());
+   ui->cbCities->addItem(c->name(), VPtr<City>::asQVariant(c));
    if(c->id == config->currCity->id)
     index = i;
    i++;
   }
+  ui->cbCities->setCurrentIndex(index);
+
   connect(ui->cbCities, SIGNAL(currentIndexChanged(int)),this, SLOT(cbCitiesSelectionChanged(int)));
   connect(ui->cbCities, SIGNAL(editTextChanged(QString)), this, SLOT(cbCitiesTextChanged(QString)));
   connect(ui->cbCities->lineEdit(), SIGNAL(editingFinished()), this, SLOT(cbCitiesLeave()));
-  ui->cbCities->setCurrentIndex(index);
 
   index = 0;
   for(int i=0; i < config->currCity->connections.count(); i++)
   {
-   City* selectedCity = config->cityList.value(ui->cbCities->currentText());
-   Connection* c = selectedCity->connections.values().at(i);
+   City* selectedCity = config->cityMap.value(ui->cbCities->currentText());
+   Connection* c = selectedCity->connections.at(i);
    ui->cbConnections->addItem(c->description(),VPtr<Connection>::asQVariant(c));
    if(c->id() == config->currCity->curConnectionId)
     index = i;
@@ -128,8 +129,8 @@ void EditConnectionsDlg::cbCitiesSelectionChanged(int sel)
 //   {
 //    ui->cbConnections->addItem(cn.description);
 //   }
-   ui->cbConnections->setCurrentIndex(c->curConnectionId+1);
-   cbConnectionsSelectionChanged(c->curConnectionId+1);
+   ui->cbConnections->setCurrentIndex(c->curConnectionId);
+   cbConnectionsSelectionChanged(c->curConnectionId);
    return;
   }
  }
@@ -152,12 +153,12 @@ void EditConnectionsDlg::cbCitiesLeave()
    if(c->name() == name)
    {
     ui->cbConnections->clear();
-    ui->cbConnections->addItem(tr("Add new connection"));
+    //ui->cbConnections->addItem(tr("Add new connection"));
     ui->txtDbOrDSN->setText("");
 
     foreach(Connection* cn, c->connections)
     {
-     ui->cbConnections->addItem(cn->description());
+     ui->cbConnections->addItem(cn->description(), VPtr<Connection>::asQVariant(cn));
     }
     return;
    }
@@ -169,10 +170,10 @@ void EditConnectionsDlg::cbCitiesLeave()
   c->curExportConnId = -1;
   c->id = 0;
   ui->cbCities->addItem(name);
-  config->cityList.insert(name, c);
+  config->cityList.append(c);
   c->id = config->cityList.count()-1;
   ui->cbConnections->clear();
-  ui->cbConnections->addItem(tr("Add new connection"));
+  //ui->cbConnections->addItem(tr("Add new connection"));
   ui->txtDbOrDSN->setText("");
  }
 }
@@ -183,12 +184,12 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
  if(sel < 0)
   return;
  Connection* c = VPtr<Connection>::asPtr(ui->cbConnections->itemData(sel));
-
+ setControls((DBTYPE)ui->cbDriverType->itemData(sel).toInt() );
  if(currCity->name() == ui->cbCities->currentText())
  {
     if((sel) > currCity->connections.count())
-     sel = currCity->connections.count();
-    c = currCity->connections.values().at(sel);
+     sel = currCity->connections.count()-1;
+    c = currCity->connections.at(sel);
     ui->btnOK->setText(tr("Update"));
     //if(c->id != config->currConnection.id) //??
     ui->btnDelete->setEnabled(true);
@@ -266,7 +267,7 @@ void EditConnectionsDlg::setControls(DBTYPE dbType)
   ui->txtPort->setEnabled(true);
   ui->txtDbOrDSN->setText("");
   ui->txtDbOrDSN->setPlaceholderText("select MySqlDatabase");
-  ui->cbConnections->setCurrentText(tr("MySql Connection"));
+  //ui->cbConnections->setCurrentText(tr("MySql Connection"));
   ui->txtPWD->setEnabled(true);
   ui->tbView->setEnabled(true);
   ui->txtUID->setEnabled(true);
@@ -292,6 +293,7 @@ void EditConnectionsDlg::setControls(DBTYPE dbType)
   ui->label_2->setText(tr("DSN")+":");
   ui->txtDbOrDSN->setVisible(false);
   ui->txtDbOrDSN->setCompleter(nullptr);
+  ui->tbReload->setVisible(true);
   break;
 
  case MsSql:
@@ -483,7 +485,7 @@ void EditConnectionsDlg::btnOKClicked()
  City * currCity = NULL;
  for(int i=0; i<config->cityList.count(); i++)
  {
-  currCity = config->cityList.values().at(i);
+  currCity = config->cityList.at(i);
   if(currCity->name().isEmpty()) currCity->setName(ui->cbCities->currentText());
   if(currCity->name() == ui->cbCities->currentText())
   {
@@ -496,12 +498,14 @@ void EditConnectionsDlg::btnOKClicked()
    }
    else
    {
-    c = currCity->connections.values().at(ui->cbConnections->currentIndex()-1);
+    c = currCity->connections.at(ui->cbConnections->currentIndex());
     c->setDescription(ui->cbConnections->currentText());
    }
    if(ui->cbDbType->currentText() == "MsSql")
    {
-    c->setDSN(ui->txtDbOrDSN->text());
+    //c->setDSN(ui->txtDbOrDSN->text());
+    c->setDatabase(ui->txtDbOrDSN->text());
+    c->setUseDatabase(ui->cbUseDatabase->currentText());
     //QString useDatabase = ui->cbUseDatabase->currentText();
     c->setUseDatabase(savedb);
    }
@@ -529,11 +533,20 @@ void EditConnectionsDlg::btnOKClicked()
    if(ui->cbConnections->currentIndex() < 1)
    {
     c->setId(currCity->connections.count());
-    currCity->connections.insert(c->description(),c);
+    if(!currCity->connections.contains(c))
+    {
+     currCity->connections.append(c);
+     currCity->connectionNames.append(c->description());
+    }
    }
    else
-    currCity->connections.insert(ui->cbConnections->currentText(),c);
-
+   {
+    if(!currCity->connections.contains(c))
+    {
+     currCity->connections.append(c);
+     currCity->connectionNames.append(ui->cbConnections->currentText());
+    }
+   }
    if(config->currCity->id == currCity->id)
     config->currCity->connections = currCity->connections;
 
@@ -550,25 +563,25 @@ void EditConnectionsDlg::btnOKClicked()
  }
  for(int i= config->cityList.count()-1; i >=0; i--)
  {
-  City* currCity = config->cityList.values().at(i);
+  City* currCity = config->cityList.at(i);
   if(currCity->connections.count()==0)
   {
-   config->cityList.remove(currCity->name());
+   config->cityList.removeAt(i);
   }
  }
  if(ui->cbCities->currentText() == config->currCity->name()
-    && !config->currCity->connections.values().at(config->currentCityId)->isOpen())
+    && !config->currCity->connections.at(config->currentCityId)->isOpen())
  {
   int cityIx = ui->cbCities->currentIndex();
   QString city = ui->cbCities->currentText();
-  config->currCity= config->cityList.value(city);
+  config->currCity= config->cityList.at(config->cityNames().indexOf(city));
   int connIx = ui->cbConnections->currentIndex();
   QString connect = ui->cbConnections->currentText();
   //config->currCity->connections.at(connIx-1);
   config->currentCityId = config->currCity->id;
 
-  config->currCity->curConnectionId = config->currCity->connections.values().at(connIx-1)->id();
-  config->currConnection = config->currCity->connections.values().at(connIx-1);
+  config->currCity->curConnectionId = config->currCity->connections.at(connIx)->id();
+  config->currConnection = config->currCity->connections.at(connIx);
   qDebug() << "new connection selected: " << config->currConnection->description();
  }
  this->accept();
@@ -579,21 +592,23 @@ void EditConnectionsDlg::btnDeleteClicked()
 {
  for(int j=0; j< config->cityList.count(); j++)
  {
-  City * currCity = config->cityList.values().at(j);
+  City * currCity = config->cityList.at(j);
   if(ui->cbCities->currentText() == currCity->name())
   {
    for(int i =0; i< currCity->connections.count(); i++)
    {
-    Connection* c = config->currCity->connections.values().at(i);
+    Connection* c = config->currCity->connections.at(i);
     if(ui->cbConnections->currentText() == c->description())
     {
-     currCity->connections.remove(c->description());
+     //currCity->connections.remove(c->description());
+        currCity->connections.removeOne(c);
+        currCity->connectionNames.removeOne(c->description());
      ui->cbConnections->clear();
-     ui->cbConnections->addItem(tr("Add new connection"));
+     //ui->cbConnections->addItem(tr("Add new connection"));
      for(i=0; i < currCity->connections.count(); i++)
      {
-      Connection* c = (Connection*)&(currCity->connections.values().at(i));
-      ui->cbConnections->addItem(c->description());
+      Connection* c = (Connection*)&(currCity->connections.at(i));
+      ui->cbConnections->addItem(c->description(),VPtr<Connection>::asQVariant(c));
       c->setId(i);
       //currCity->connections.replace(i,c);
      }
@@ -607,10 +622,10 @@ void EditConnectionsDlg::btnDeleteClicked()
  }
  for(int i= config->cityList.count()-1; i >=0; i--)
  {
-  City* currCity = config->cityList.value(currCity->name());
+  City* currCity = config->cityList.at(i);
   if(currCity->connections.count()==0)
   {
-   config->cityList.remove(currCity->name());
+   config->cityList.removeAt(i);
   }
  }
 }
@@ -627,10 +642,14 @@ void EditConnectionsDlg::cbConnectionsLeave()
   int ix = ui->cbConnections->currentIndex();
   if(ix > 0)
   {
-   Connection* c = config->currCity->connections.values().at(ix-1);
+   Connection* c = config->currCity->connections.at(ix-1);
    c->setDescription(ui->cbConnections->currentText());
    //config->currCity->connections.replace(ix-1, c);
-   config->currCity->connections.insert(c->description(), c);
+   if(!config->currCity->connections.contains(c))
+   {
+    config->currCity->connections.append(c);
+    config->currCity->connectionNames.append(c->description());
+   }
   }
  }
  bCbConnectionsTextChanged=false;
@@ -725,7 +744,11 @@ bool EditConnectionsDlg::openTestDb()
  }
  bool bOpen = db.open();
  if(bOpen)
+ {
+  if(ui->cbDbType->currentText() != "Sqlite" )
+   populateDatabases();
   return true;
+ }
  ui->lblHelp->setText(tr("error: %1 %2").arg(db.driverName()).arg(db.lastError().driverText()));
  return false;
 }
@@ -733,8 +756,8 @@ bool EditConnectionsDlg::openTestDb()
 
 void EditConnectionsDlg::populateDatabases()
 {
- if(!openTestDb())
-  return;
+// if(!openTestDb())
+//  return;
  QString currDatabase = ui->cbUseDatabase->currentText();
   if(ui->cbDbType->currentText() == "MsSql")
   {
@@ -742,7 +765,9 @@ void EditConnectionsDlg::populateDatabases()
    QStringList databases;
    QSqlQuery query = QSqlQuery(db);
    if(!query.exec("Select * from Sys.Databases"))
+   {
     SQLERROR(query);
+   }
    else
    {
     while(query.next())
@@ -755,6 +780,8 @@ void EditConnectionsDlg::populateDatabases()
     }
     ui->cbUseDatabase->clear();
     ui->cbUseDatabase->addItems(databases);
+    if(databases.size() > 0)
+        ui->cbUseDatabase->setCurrentIndex(0);
    }
   }
   else

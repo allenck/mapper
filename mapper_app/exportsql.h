@@ -4,7 +4,28 @@
 #include <QObject>
 #include "sql.h"
 #include "configuration.h"
-#include "exportdlg.h"
+//#include "exportdlg.h"
+#include <QSqlQuery>
+
+class QSqldatabase;
+#define SQLERROR(query) \
+do \
+{ \
+ QSqlError err = query.lastError(); \
+ qCritical() << "Sql error:" << err.text(); \
+ qCritical() << query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n"; \
+    switch (errSqlMessage(query)) {\
+    case QMessageBox::Abort:\
+    emit ExportSql::requestStop();\
+     return false;\
+    case QMessageBox::Retry:\
+     break;\
+    case QMessageBox::Ignore:\
+     continue;\
+    default:\
+     break;\
+   }\
+ } while (0)
 
 class ExportSql : public QObject
 {
@@ -50,6 +71,7 @@ signals:
     void progress(int value);
     void progressMsg(QString value);
     void uncheck(QString control);
+    void requestStop();
 
 public slots:
 
@@ -70,7 +92,7 @@ private:
     QString strOverrideTs;
     QDateTime overrideTs;
     bool openDb();
-    void getCount(QString table, bool bDropTables = false);
+    bool getCount(QString table, bool bDropTables = false);
     void sendProgress();
     //void setIdentityInsert(QString table, bool bOn);
     void updateTimestamp(QString table);
@@ -78,6 +100,9 @@ private:
     bool Retry(QSqlDatabase *db, QSqlQuery *query, QString CommandText);
     bool bDropTables;
     QString tgtDbType;
+    int errSqlMessage(QSqlQuery query);
+    int errReturn;
+
 };
 
 class SleeperThread : public QThread

@@ -64,7 +64,7 @@ Qt::ItemFlags OverlayTableModel::flags(const QModelIndex &index) const
 {
  int row = index.row();
  Overlay* ov = overlayMap->values().at(row);
- City* c = config->cityList.values().at(currCityId);
+ City* c = config->cityList.at(currCityId);
 // if(!ov->bounds().contains(c->center) && SQL::distance(ov->bounds().center(), c->center) > 10)
 // {
 //  qDebug() << c->name << " center: " << c->center.toString();

@@ -19,7 +19,7 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   config = cfg;
   currQueryFilename = "";
   bChanging = false;
-  tgtConn = config->currCity->connections.values().at(config->currCity->curConnectionId);
+  tgtConn = config->currCity->connections.at(config->currCity->curConnectionId);
   db = QSqlDatabase::database();
   tgtConn->setConnectionName(db.connectionName());
 
@@ -32,7 +32,7 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   ui->cbConnections->clear();
   for(int i=0; i<config->currCity->connections.count(); i++)
   {
-   Connection* c = config->currCity->connections.values().at(i);
+   Connection* c = config->currCity->connections.at(i);
    ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
    if(c->id() == config->currConnection->id())
     ui->cbConnections->setCurrentIndex(i);
@@ -42,7 +42,7 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
 
 //  for(int i=0; i<config->currCity->connections.count(); i++)
 //  {
-//   Connection* c = config->currCity->connections.values().at(i);
+//   Connection* c = config->currCity->connections.at(i);
 //   if(c->id() == config->currCity->curConnectionId)
 //   {
 //    ui->cbConnections->setCurrentIndex(i);
@@ -578,7 +578,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
  {
   if(bChanging) return;
   Connection* tgtConn = VPtr<Connection>::asPtr(ui->cbConnections->itemData(ix));
-  if(ui->cbConnections->currentText() == config->currCity->connections.values().at(config->currCity->curConnectionId)->description())
+  if(ui->cbConnections->currentText() == config->currCity->connections.at(config->currCity->curConnectionId)->description())
   {
    // reverting to default (currrent) database!
    //
@@ -589,7 +589,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 
   for(int i=0; i<config->currCity->connections.count(); i++)
   {
-   Connection* c = config->currCity->connections.values().at(i);
+   Connection* c = config->currCity->connections.at(i);
    if( c->description() == ui->cbConnections->currentText())
    {
     config->currCity->curExportConnId = c->id();
@@ -604,8 +604,8 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 
 //   db=QSqlDatabase::addDatabase(tgtConn->driver(), "query");
 
-   //tgtConn = config->currCity->connections.values().at(config->currCity->curExportConnId);
-  //tgtConn = config->currCity->connections.values().at(ui->cbConnections->itemData(ix).toInt());
+   //tgtConn = config->currCity->connections.at(config->currCity->curExportConnId);
+  //tgtConn = config->currCity->connections.at(ui->cbConnections->itemData(ix).toInt());
 #if 1
   if(tgtConn->connectionName().isEmpty())
   {
@@ -659,5 +659,5 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    }
   }
 #endif
-  setWindowTitle(tr("Manual Sql Query (%1)").arg(ui->cbConnections->currentText()));
+  QWidget::setWindowTitle(tr("Manual Sql Query (%1)").arg(ui->cbConnections->currentText()));
  }

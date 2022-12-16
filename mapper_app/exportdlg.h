@@ -22,7 +22,7 @@ private:
     Ui::ExportDlg *ui;
     Configuration * config;
     QTimer *timer;
-
+    bool stopEnabled = false;
 
 private slots:
     void chkAll_changed(bool isChecked);

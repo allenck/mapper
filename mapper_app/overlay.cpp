@@ -26,6 +26,7 @@ Overlay::Overlay(QString cityName, QString name, int opacity)
 
 bool Overlay::importXml(QString fileName)
 {
+ QDir cwd = QDir::currentPath();
  QFile* file = new QFile(fileName);
  if(file->open(QIODevice::ReadOnly))
  {

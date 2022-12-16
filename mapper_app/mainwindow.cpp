@@ -59,6 +59,11 @@
 #include "companyview.h"
 #include "tractiontypeview.h"
 #include "dupsegmentview.h"
+#include "exportdlg.h"
+#include "vptr.h"
+#include "splitroute.h"
+#include "editstation.h"
+#include <QPair>
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -586,8 +591,6 @@ void MainWindow::loadData(QString data, QString source)
 {
  QStringList overlays = data.split('\n');
 
-// overlaySignalMapper = new QSignalMapper(this);
-// overlayActionGroup = new QActionGroup(this);
  for(int i=0; i < overlays.count(); i++)
  {
   QString ov = overlays.at(i);
@@ -1123,7 +1126,7 @@ void MainWindow::createMenus()
     connectionsMenu->addMenu(cityMenu);
     connect(cityMenu, SIGNAL(aboutToShow()), this, SLOT(createCityMenu()));
     connectionsMenu->addSeparator();
-    createCityMenu();
+    //createCityMenu();
     connectionsMenu->addAction(editConnectionsAct);
     connectionsMenu->addAction(manageOverlaysAct);
 
@@ -1179,47 +1182,35 @@ void MainWindow::createMenus()
 }
 void MainWindow::createCityMenu()
 {
- int k = 0;
- signalMapper = new QSignalMapper(this);
- actionGroup = new QActionGroup(this);
- cityActions.clear();
+ cityMenu->clear();
 
  for(int i=0; i < config->cityList.count(); i++)
  {
-     City* c = config->cityList.values().at(i);
+     City* c = config->cityList.at(i);
+     actionGroup = new QActionGroup(this);
+     connectMenu = cityMenu->addMenu(c->name());
+
      for(int j =0; j<c->connections.count(); j++)
      {
-         Connection* cn = c->connections.values().at(j);
+         Connection* cn = c->connections.at(j);
+         c->curConnectionId = j;
+
          QAction* act = new QAction(cn->description() + "...", this);
+         act->setCheckable(true);
+         QPair<City*, Connection*>* pair = new QPair<City*, Connection*>(c, cn);
+         act->setData(VPtr<QPair<City*, Connection*>>::asQVariant(pair));
          act->setCheckable(true);
          if(c->id == config->currentCityId && cn->id() == config->currCity->curConnectionId)
              act->setChecked(true);
-         cityActions.append(act);
          actionGroup->addAction(act);
-         connect(act, SIGNAL(triggered()), signalMapper, SLOT(map()));
-         signalMapper->setMapping(act, k);
-         k++;
+         connectMenu->addAction(act);
+         connect(actionGroup, SIGNAL(triggered(QAction*)), this, SLOT(newCity(QAction*)));
      }
+     cityMenu->addMenu(connectMenu);
+
 
  }
- connect(signalMapper, SIGNAL(mapped(int)), this, SLOT(newCity(int)));
 
-
- //cityMenu = menuBar()->addMenu(tr("&City"));
- if(cityMenu == NULL)
-  return;
- cityMenu->clear();
- k = 0;
- for(int i= 0; i< config->cityList.count(); i++)
- {
-     City* c = config->cityList.values().at(i);
-     connectMenu = cityMenu->addMenu(c->name());
-     for(int j =0; j<c->connections.count(); j++)
-     {
-         connectMenu->addAction((QAction*)cityActions.at(k));
-         k++;
-     }
- }
 }
 
 void MainWindow::On_editCityInfo()
@@ -1288,34 +1279,39 @@ void MainWindow::webView_customContextMenu(const QPoint &)
 }
 
 // New City and/or connection selected.
-void MainWindow::newCity(int ix )
+void MainWindow::newCity(QAction* act )
 {
- qDebug() << "newCity " + QString("%1").arg(ix);
- int i=0, j=0, k = 0;
- for( i= 0; i< config->cityList.count(); i++)
- {
-  City* c = config->cityList.values().at(i);
+// qDebug() << "newCity " + QString("%1").arg(ix);
+// int i=0, j=0, k = 0;
+// for( i= 0; i< config->cityList.count(); i++)
+// {
+    QPair<City*, Connection*>* pair = VPtr<QPair<City*, Connection*>>::asPtr(act->data());
+  City* c = pair->first;
   //connectMenu = cityMenu->addMenu(c.name);
-  for( j =0; j<c->connections.count(); j++)
-  {
-   Connection* cn = c->connections.values().at(j);
-   if(k==ix)
-   {
+//  for( j =0; j<c->connections.count(); j++)
+//  {
+   Connection* cn = pair->second;
+//   if(k==ix)
+//   {
     this->setCursor(QCursor(Qt::WaitCursor));
     // first, save some settings for the current city
     config->currCity->center = LatLng(m_latitude, m_longitude);
     config->currCity->zoom = m_zoom;
     config->currCity->mapType = m_maptype;
-    config->currCity->connections.insert(config->currConnection->description(), config->currConnection);
+    if(!config->currCity->connections.contains(config->currConnection))
+    {
+     config->currCity->connections.append(config->currConnection);
+     config->currCity->connectionNames.append(config->currConnection->description());
+    }
     // Save any changes to currentCity
-    config->cityList.values().replace(config->currentCityId, config->currCity);
+    config->cityList.replace(config->currentCityId, config->currCity);
     companyView->clear();
     tractionTypeView->clear();;
 
     // load the new city and configuration
     config->currCity = c;
-    config->currentCityId = i;
-    config->currCity->curConnectionId = j;
+//    config->currentCityId = pair.first;
+//    config->currCity->curConnectionId =pair.second;
     config->currConnection = cn;
     config->currCity->lastRoute = m_routeNbr;
     config->currCity->lastRouteName = m_routeName;
@@ -1437,10 +1433,10 @@ void MainWindow::newCity(int ix )
     companyView = new CompanyView(config, this);
     tractionTypeView = new TractionTypeView(config, this);
     return;
-   }
-   k++;
-  }
- }
+//   }
+//   k++;
+//  }
+// }
 }
 void MainWindow::newOverlay(int ix)
 {
@@ -1720,7 +1716,7 @@ void MainWindow::btnClearClicked()
     m_bridge->processScript("clearAll", "");
 }
 
-void MainWindow::on_createKmlFile_triggered()
+void MainWindow::on_createKmlFile()
 {
  int row =         ui->cbRoute->currentIndex();
  RouteData rd = ((RouteData)routeList.at(row));
@@ -3856,8 +3852,11 @@ void MainWindow::chkOneWay_toggled(bool bChecked)
 
 void MainWindow::exportDb()
 {
- ExportDlg form(config, this);
- form.exec();
+ if(form == nullptr)
+ {
+  form = new ExportDlg(config, this);
+ }
+ form->show();
 }
 
 void MainWindow::editConnections()

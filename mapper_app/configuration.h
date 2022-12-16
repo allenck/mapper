@@ -33,7 +33,8 @@ public:
  void getSettings();
  void saveSettings();
  void setOverlay(Overlay* ov);
- QMap<QString, City*> cityList;
+ QList<City*> cityList;
+ QMap<QString, City*> cityMap;
  QMap<QString, Overlay*>* overlayMap = new QMap<QString, Overlay*>();
  qint32 currentCityId;
  query q;

@@ -23,7 +23,7 @@ class Connection : public QObject
  SQL* sql;
  QString _servertype; // "MsSql (default), "MySql"
  Configuration* config;
- bool bOpen;
+ bool bOpen = false;
  QString _cityName;
  const QString cName;
  QString _connectionName;

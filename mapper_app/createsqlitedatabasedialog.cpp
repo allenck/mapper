@@ -167,13 +167,13 @@ void CreateSqliteDatabaseDialog::on_btnOk_clicked()
     nc->mapType = "roadmap";
     nc->zoom = 10;
     nc->curConnectionId = 0;
-    config->cityList.insert(nc->name(), nc);
+    config->cityList.append(nc);
    }
    else
    {
     cId = ui->cbCities->currentIndex()-1;
    }
-   c = config->cityList.values().at(cId);
+   c = config->cityList.at(cId);
 
    Connection* cn = new Connection();
    cn->setServerType("Sqlite");
@@ -182,7 +182,11 @@ void CreateSqliteDatabaseDialog::on_btnOk_clicked()
    QFileInfo info(newFile);
    cn->setDescription ("Sqlite " + ui->cbCities->currentText());
    cn->setId(c->connections.count());
-   c->connections.insert(cn->description(),cn);
+   if(!c->connections.contains(cn))
+   {
+    c->connections.append(cn);
+    c->connectionNames.append(cn->description());
+   }
    config->saveSettings();
   }
   this->accept();}

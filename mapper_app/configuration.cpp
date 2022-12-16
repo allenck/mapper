@@ -18,11 +18,17 @@ void Configuration::saveSettings()
 //  qDebug() << "connection id mismatch: currConnection->id = " +QString("%1").arg(currConnection->id()) + " vs. currCity->curConnectionId = " + QString("%1").arg(currCity->curConnectionId)+"\n";
 //  exit(EXIT_FAILURE);
 // }
- currCity->connections.insert(currConnection->description(), currConnection);
+ if(!currCity->connections.contains(currConnection))
+ {
+  currCity->connections.append(currConnection);
+  currCity->connectionNames.append(currConnection->description());
+ }
  // Save any changes to currentCity
  if(currentCityId >= 0)
-  cityList.values().replace(currentCityId, currCity);
+ {
+  cityList.replace(currentCityId, currCity);
 
+ }
 
  QSettings* settings = new QSettings();
  //settingsDb settings;
@@ -30,7 +36,7 @@ void Configuration::saveSettings()
  for(int i=0; i< cityList.count(); i++)
  {
   settings->setArrayIndex(i);
-  City* c = cityList.values().at(i);
+  City* c = cityList.at(i);
   //currCity->setName(c->name());
   settings->setValue("id", c->id);
   settings->setValue("name", c->name());
@@ -59,7 +65,7 @@ void Configuration::saveSettings()
   settings->beginWriteArray("connections");
   for(int j=0; j < c->connections.count(); j++)
   {
-   Connection* cn = c->connections.values().at(j);
+   Connection* cn = c->connections.at(j);
    settings->setArrayIndex(j);
    settings->setValue("id", cn->id());
    settings->setValue("database", cn->database());
@@ -148,8 +154,12 @@ void Configuration::getSettings()
   newCity->mapType = maptype;
   newCity->curConnectionId = 0;
   newCity->companyKey=0;
-  if(!cityList.values().contains(newCity))
-   cityList.insert(newCity->name(), newCity);
+  if(!cityList.contains(newCity))
+  {
+   cityList.append( newCity);
+   cityMap.insert(newCity->name(), newCity);
+  }
+  newCity->connectionNames.append(newCity->name());
   Connection* nc = new Connection();
   nc->setId(0);
   nc->setDatabase("Resources/databases/StLouis.sqlite3");
@@ -162,7 +172,11 @@ void Configuration::getSettings()
   nc->setHost("");
   nc->setPort(0);
   nc->setCityName(newCity->name());
-  newCity->connections.insert(nc->description(), nc);
+  if(!newCity->connections.contains(nc))
+  {
+   newCity->connections.append( nc);
+   newCity->connectionNames.append(nc->description());
+  }
   currConnection = nc;
 
   newCity = new City();
@@ -177,8 +191,11 @@ void Configuration::getSettings()
   newCity->mapType = maptype;
   newCity->curConnectionId =0 ;
   newCity->companyKey=0;
-  if(!cityList.values().contains(newCity))
-   cityList.insert(newCity->name(), newCity);
+  if(!cityList.contains(newCity))
+  {
+   cityList.append(newCity);
+   cityMap.insert(newCity->name(),newCity);
+  }
   nc = new Connection();
   nc->setId(0);
   nc->setDatabase("Resources/databases/cincinnati.sqlite3");
@@ -190,7 +207,12 @@ void Configuration::getSettings()
   nc->setServerType("Sqlite");
   nc->setHost("");
   nc->setPort(0);
-  newCity->connections.insert(nc->description(),nc);
+  if(!newCity->connections.contains(nc))
+  {
+   newCity->connections.append( nc);
+   newCity->connectionNames.append(nc->description());
+  }
+
   currConnection = nc;
 
   newCity = new City();
@@ -205,8 +227,11 @@ void Configuration::getSettings()
   newCity->mapType = maptype;
   newCity->curConnectionId = 0 ;
   newCity->companyKey=0;
-  if(!cityList.values().contains(newCity))
-   cityList.insert(newCity->name(), newCity);
+  if(!cityList.contains(newCity))
+  {
+   cityList.append(newCity);
+   cityMap.insert(newCity->name(), newCity);
+  }
   nc = new Connection();
   nc->setId(0);
   nc->setDatabase("Resources/databases/louisville.sqlite3");
@@ -219,7 +244,11 @@ void Configuration::getSettings()
   nc->setHost("");
   nc->setPort(0);
   nc->setCityName(newCity->name());
-  newCity->connections.insert(nc->description(),nc);
+  if(!newCity->connections.contains(nc))
+  {
+   newCity->connections.append( nc);
+   newCity->connectionNames.append(nc->description());
+  }
   currConnection = nc;
 
   newCity = new City();
@@ -233,8 +262,11 @@ void Configuration::getSettings()
   newCity->mapType = maptype;
   newCity->curConnectionId = 0 ;
   newCity->companyKey=0;
-  if(!cityList.values().contains(newCity))
-   cityList.insert(newCity->name(), newCity);
+  if(!cityList.contains(newCity))
+  {
+   cityList.append(newCity);
+   cityMap.insert(newCity->name(), newCity);
+  }
   nc = new Connection();
   nc->setId(0);
   nc->setDatabase("Resources/databases/berlinerstrassenbahn.sqlite3");
@@ -247,26 +279,30 @@ void Configuration::getSettings()
   nc->setHost("");
   nc->setPort(0);
   nc->setCityName(newCity->name());
-  newCity->connections.insert(nc->description(),nc);
+  if(!newCity->connections.contains(nc))
+  {
+   newCity->connections.append( nc);
+   newCity->connectionNames.append(nc->description());
+  }
   currConnection = nc;
 
-  newCity = cityList.values().at(0);
+  newCity = cityList.at(0);
   Overlay* ov = new Overlay("St Louis, MO", "St_Louis_historical_topo");
 
   newCity->city_overlayMap->insert(ov->name, ov);
 
   newCity->curOverlayId = 0;
   newCity->bShowOverlay =true;
-  currCity = cityList.values().at(0);
+  currCity = cityList.at(0);
   currentCityId = 0;
-  currConnection = currCity->connections.values().at(0);
+  currConnection = currCity->connections.at(0);
   currConnection->setId(currCity->curConnectionId);
   if(Overlay::importXml("./overlays.xml"))
   {
    for(Overlay* ov : Overlay::overlayList)
    {
     overlayMap->insert(ov->cityName+"|"+ov->name, ov);
-    City* city = cityList.value(ov->cityName);
+    City* city = cityMap.value(ov->cityName);
     if(city)
     {
      city->city_overlayMap->insert(ov->name, ov);
@@ -295,7 +331,11 @@ void Configuration::getSettings()
   City* nc = new City();
   nc->id = settings.value("id").toInt();
   nc->setName(settings.value("name").toString());
-  cityList.insert(nc->name(),nc);
+  if(!cityList.contains(nc))
+  {
+   cityList.append(nc);
+   cityMap.insert(nc->name(), nc);
+  }
   LatLng pt;
   qDebug() << "lat: " << settings.value("lat",35).toString();
   qDebug() << "lon: " << settings.value("lon",-90).toString();
@@ -364,13 +404,17 @@ void Configuration::getSettings()
     }
 #endif
    }
-   nc->connections.insert(ncn->description(), ncn);
+   if(!nc->connections.contains(ncn))
+   {
+    nc->connections.append( ncn);
+    nc->connectionNames.append(ncn->description());
+   }
   }
   settings.endArray();
 
   if(currentCityId < 0)
   {
-   currCity = cityList.values().at(0);
+   currCity = cityList.at(0);
   }
 
   //qDebug() << "city bounds:" << cityBounds;
@@ -382,7 +426,7 @@ void Configuration::getSettings()
  } // end cities
 
 #if 0 // for testing purposes, create a MySql connection
-  City* currCity = cityList.values().at(3);
+  City* currCity = cityList.at(3);
 
   Connection* nc = new Connection();
   nc->setId(1);
@@ -400,7 +444,7 @@ void Configuration::getSettings()
 #endif
 
 #if 0 // for testing purposes, create a MsSql connection
-  City* currCity = cityList.values().at(3);
+  City* currCity = cityList.at(3);
 
   Connection* nc = new Connection();
   nc->setId(1);
@@ -432,7 +476,7 @@ void Configuration::getSettings()
   for(Overlay* ov : Overlay::overlayList)
   {
    QString cityName = ov->cityName;
-   City* city = cityList.value(ov->cityName);
+   City* city = cityMap.value(ov->cityName);
    if(city && !ov->bounds().isValid())
    {
     ov->setBounds(Bounds(LatLng(city->center.lat()-.3, city->center.lon()-.3), LatLng(city->center.lat()+.3, city->center.lon()+.3)));
@@ -452,10 +496,10 @@ void Configuration::getSettings()
  currentCityId = settings.value("currCity",0).toInt();
  if(currentCityId < 0 || currentCityId >= cityList.count())
   currentCityId = 0;
- currCity = cityList.values().at(currentCityId);
+ currCity = cityList.at(currentCityId);
  if(currCity->curConnectionId < 0 && currCity->connections.size() == 1)
   currCity->curConnectionId =0;
- currConnection =   currCity->connections.values().at(currCity->curConnectionId);
+ currConnection =   currCity->connections.at(currCity->curConnectionId);
  bDisplayWebDebug = settings.value("showDebugMessages", false).toBool();
  bRunInBrowser = settings.value("runInBrowser", false).toBool();
  //settings.endGroup();
@@ -471,7 +515,7 @@ void Configuration::getSettings()
  for(Overlay* ov : Overlay::overlayList)
  {
   overlayMap->insert(ov->cityName+"|"+ov->name, ov);
-  City* city = cityList.value(ov->cityName);
+  City* city = cityMap.value(ov->cityName);
   if(city)
   {
    city->city_overlayMap->insert(ov->name, ov);
@@ -516,8 +560,11 @@ QSqlDatabase Connection::configure(const QString cName)
   db.setHostName(config->currConnection->host());
  if(config->currConnection->port() > 0)
   db.setPort(config->currConnection->port());
- if(config->currConnection->driver() == "QODBC" || config->currConnection->driver() == "QODBC3")
-  db.setDatabaseName(config->currConnection->dsn());
+ if(config->currConnection->servertype() == "MsSql")
+ {
+  //db.setDatabaseName(config->currConnection->dsn());
+     db.setDatabaseName(config->currConnection->database());
+ }
  else
  {
   QString dbName = config->currConnection->database();
