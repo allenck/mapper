@@ -1186,31 +1186,27 @@ void MainWindow::createCityMenu()
 
  for(int i=0; i < config->cityList.count(); i++)
  {
-     City* c = config->cityList.at(i);
-     actionGroup = new QActionGroup(this);
-     connectMenu = cityMenu->addMenu(c->name());
+  City* c = config->cityList.at(i);
+  actionGroup = new QActionGroup(this);
+  connectMenu =new QMenu(c->name());
 
-     for(int j =0; j<c->connections.count(); j++)
-     {
-         Connection* cn = c->connections.at(j);
-         c->curConnectionId = j;
+  for(int j =0; j < c->connections.count(); j++)
+  {
+   Connection* cn = c->connections.at(j);
 
-         QAction* act = new QAction(cn->description() + "...", this);
-         act->setCheckable(true);
-         QPair<City*, Connection*>* pair = new QPair<City*, Connection*>(c, cn);
-         act->setData(VPtr<QPair<City*, Connection*>>::asQVariant(pair));
-         act->setCheckable(true);
-         if(c->id == config->currentCityId && cn->id() == config->currCity->curConnectionId)
-             act->setChecked(true);
-         actionGroup->addAction(act);
-         connectMenu->addAction(act);
-         connect(actionGroup, SIGNAL(triggered(QAction*)), this, SLOT(newCity(QAction*)));
-     }
-     cityMenu->addMenu(connectMenu);
-
-
+   QAction* act = new QAction(cn->description() + "...", this);
+   act->setCheckable(true);
+   QPair<City*, Connection*>* pair = new QPair<City*, Connection*>(c, cn);
+   act->setData(VPtr<QPair<City*, Connection*> >::asQVariant(pair));
+   act->setCheckable(true);
+   if(c->id == config->currentCityId && cn->id() == config->currCity->curConnectionId)
+       act->setChecked(true);
+   actionGroup->addAction(act);
+   connectMenu->addAction(act);
+   connect(actionGroup, SIGNAL(triggered(QAction*)), this, SLOT(newCity(QAction*)));
+  }
+  cityMenu->addMenu(connectMenu);
  }
-
 }
 
 void MainWindow::On_editCityInfo()
@@ -1281,44 +1277,37 @@ void MainWindow::webView_customContextMenu(const QPoint &)
 // New City and/or connection selected.
 void MainWindow::newCity(QAction* act )
 {
-// qDebug() << "newCity " + QString("%1").arg(ix);
-// int i=0, j=0, k = 0;
-// for( i= 0; i< config->cityList.count(); i++)
-// {
-    QPair<City*, Connection*>* pair = VPtr<QPair<City*, Connection*>>::asPtr(act->data());
+  QPair<City*, Connection*>* pair = VPtr<QPair<City*, Connection*>>::asPtr(act->data());
   City* c = pair->first;
-  //connectMenu = cityMenu->addMenu(c.name);
-//  for( j =0; j<c->connections.count(); j++)
-//  {
-   Connection* cn = pair->second;
-//   if(k==ix)
-//   {
-    this->setCursor(QCursor(Qt::WaitCursor));
-    // first, save some settings for the current city
-    config->currCity->center = LatLng(m_latitude, m_longitude);
-    config->currCity->zoom = m_zoom;
-    config->currCity->mapType = m_maptype;
-    if(!config->currCity->connections.contains(config->currConnection))
-    {
-     config->currCity->connections.append(config->currConnection);
-     config->currCity->connectionNames.append(config->currConnection->description());
-    }
-    // Save any changes to currentCity
-    config->cityList.replace(config->currentCityId, config->currCity);
+  Connection* cn = pair->second;
+  this->setCursor(QCursor(Qt::WaitCursor));
+
+  // first, save some settings for the current city
+  config->currCity->center = LatLng(m_latitude, m_longitude);
+  config->currCity->zoom = m_zoom;
+  config->currCity->mapType = m_maptype;
+  if(!config->currCity->connections.contains(config->currConnection))
+  {
+   config->currCity->connections.append(config->currConnection);
+   config->currCity->connectionNames.append(config->currConnection->description());
+  }
+
+  // Save any changes to currentCity
+//    config->cityList.replace(config->currentCityId, config->currCity);
     companyView->clear();
     tractionTypeView->clear();;
-
-    // load the new city and configuration
-    config->currCity = c;
-//    config->currentCityId = pair.first;
-//    config->currCity->curConnectionId =pair.second;
-    config->currConnection = cn;
     config->currCity->lastRoute = m_routeNbr;
     config->currCity->lastRouteName = m_routeName;
     config->currCity->lastRouteEndDate = m_currRouteEndDate;
     config->currCity->bDisplayStationMarkers = bDisplayStationMarkers;
     config->currCity->bDisplayRouteComments = bDisplayRouteComments;
     config->currCity->bShowOverlay = ui->chkShowOverlay->isChecked();
+
+    // load the new city and configuration
+    config->currCity = c;
+    config->currentCityId = c->id;
+    config->currCity->curConnectionId =cn->id();
+    config->currConnection = cn;
 
     qDebug() << c->name() + "/" + cn->description();
     // close the current database and open the new one
