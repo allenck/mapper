@@ -41,7 +41,7 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QS
 }
 #endif
 const QString logFilePath = "mapper.log";
-bool logToFile = false;
+bool logToFile = true;
 bool firstTime = true;
 QMutex mutex;
 void customMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)

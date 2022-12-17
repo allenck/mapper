@@ -3615,7 +3615,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
   "CREATE TABLE [dbo].[Companies]("\
         "[key] [int] IDENTITY(1,1) NOT NULL,"\
         "[Description] [varchar](50) NOT NULL,"\
-    "[routePrefix] [varchar](10) NOT NULL,"\
+        "[routePrefix] [varchar](10) NOT NULL,"\
         "[startDate] [date] NULL,"\
         "[endDate] [date] NULL,"\
         "[firstRoute] [int] NULL,"\

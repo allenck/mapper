@@ -50,6 +50,7 @@ public:
 private:
  static Configuration* _instance;
  explicit Configuration(QObject *parent = 0);
+ void createDefaultSettings();
 
 signals:
 

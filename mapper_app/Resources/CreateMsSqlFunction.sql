@@ -1,33 +1,17 @@
 IF OBJECT_ID (N'dbo.distance', N'FN') IS NOT NULL
     DROP FUNCTION distance;
-GO
-CREATE FUNCTION dbo.distance( @inLat1 DOUBLE , @inLon1 DOUBLE , QinLat2 DOUBLE , @inLon2 DOUBLE )
-RETURNS double
-AS
-BEGIN
-    DECLARE @R double;
-    DECLARE @lat1 double;
-    DECLARE @lat2 double;
-    DECLARE @dLat double;
-    DECLARE @dLon double;
-    DECLARE @a double;
-    DECLARE @c double;
-    DECLARE @d double;
 
-    /*compute the distance in km between two points.*/
-    IF ( @inLat1 = @inLat2 AND @inLon1 = @inLon2 )
-        THEN RETURN 0;
-    END IF;
-
-
-    SET @R = 6371; /*earth radius in km */
-    SET @lat1 = radians( @inLat1 );
-    SET @lat2 = radians( @inLat2 );
-    SET @dLat = radians( @inLat2 - @inLat1 );
-    SET @dLon = radians( @inLon2 - @inLon1 );
-    SET @a = asin( @dLat / 2 ) * asin( @dLat / 2 ) + acos( @lat1 ) * acos( @lat2 ) * asin( @dLon / 2 ) * asin( @dLon / 2 ) ;
-    SET @c = 2.0 * atan2( sqrt( @a ) , sqrt( 1.0 - @a ) ) ;
-    SET @d = @R * @c;
-    /* distance in km */
-    RETURN @d;
+create function [dbo].[fnCalcDistanceMiles] (@Lat1 decimal(8,4), @Long1 decimal(8,4), @Lat2 decimal(8,4), @Long2 decimal(8,4))
+returns decimal (8,4) as
+begin
+declare @d decimal(28,10)
+-- Convert to radians
+set @Lat1 = @Lat1 / 57.2958
+set @Long1 = @Long1 / 57.2958
+set @Lat2 = @Lat2 / 57.2958
+set @Long2 = @Long2 / 57.2958
+-- Calc distance
+set @d = (Sin(@Lat1) * Sin(@Lat2)) + (Cos(@Lat1) * Cos(@Lat2) * Cos(@Long2 - @Long1))
 END
+
+select dbo.distance(1,2,3,4)

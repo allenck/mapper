@@ -67,21 +67,34 @@ void Configuration::saveSettings()
   {
    Connection* cn = c->connections.at(j);
    settings->setArrayIndex(j);
+   settings->remove("");
    settings->setValue("id", cn->id());
-   settings->setValue("database", cn->database());
-   settings->setValue("DSN", cn->dsn());
-   settings->setValue("driver", cn->driver());
-   settings->setValue("PWD", cn->pwd());
-   settings->setValue("UID", cn->uid());
-   settings->setValue("description",cn->description());
    settings->setValue("driver", cn->driver());
    settings->setValue("serverType", cn->servertype());
-   if(cn->host() != "")
-    settings->setValue("hostname", cn->host());
-   if(cn->port() > 0)
-    settings->setValue("port", cn->port());
-   settings->setValue("useDatabase",cn->useDatabase());
    settings->setValue("cityName", cn->cityName());
+   if(cn->servertype()== "Sqlite")
+   {
+       settings->setValue("sqliteFileName", cn->sqlite_fileName());
+   }
+   else if(cn->servertype()== "MsSql")
+   {
+       settings->setValue("odbcConnector", cn->odbc_connectorName());
+       settings->setValue("defaultMsSqlDatabase", cn->defaultMsSqlDatabase());
+   }
+   else if(cn->servertype()== "MySql")
+   {
+    settings->setValue("database", cn->database());
+    settings->setValue("DSN", cn->dsn());
+    settings->setValue("driver", cn->driver());
+    settings->setValue("PWD", cn->pwd());
+    settings->setValue("UID", cn->uid());
+    settings->setValue("description",cn->description());
+    if(cn->host() != "")
+     settings->setValue("hostname", cn->host());
+    if(cn->port() > 0)
+     settings->setValue("port", cn->port());
+    settings->setValue("mySqlDatabase",cn->mySqlDatabase());
+   }
   }
   settings->endArray(); // connections
 
@@ -133,196 +146,16 @@ void Configuration::saveSettings()
 
 void Configuration::getSettings()
 {
- QSettings settings;
- qDebug() << settings.fileName();
- //settingsDb settings;
- int size = settings.beginReadArray("cities");
- if( size == 0)
- {
-  //  create a default configuration
-  City* newCity = new City();
-  newCity->id = 0;
-  newCity->setName("St. Louis, MO");
-  double latitude = 38.65858545118455;
-  double longitude = -90.34764714500002;
-  newCity->center = LatLng(latitude, longitude);
-  qint32 zoom = 10;
-  QString maptype = "roadmap";
-  newCity->center = LatLng(latitude, longitude);
-  newCity->setBounds(Bounds(LatLng(38.558585451, -90.447647145), LatLng(38.758585451, -90.247647145)));
-  newCity->zoom = zoom;
-  newCity->mapType = maptype;
-  newCity->curConnectionId = 0;
-  newCity->companyKey=0;
-  if(!cityList.contains(newCity))
+  QSettings settings;
+  qDebug() << settings.fileName();
+  //settingsDb settings;
+  int size = settings.beginReadArray("cities");
+  if( size == 0)
   {
-   cityList.append( newCity);
-   cityMap.insert(newCity->name(), newCity);
+     createDefaultSettings();
   }
-  newCity->connectionNames.append(newCity->name());
-  Connection* nc = new Connection();
-  nc->setId(0);
-  nc->setDatabase("Resources/databases/StLouis.sqlite3");
-  nc->setDescription ("SQLITE3 connection");
-  nc->setDriver("QSQLITE");
-  nc->setDSN("");
-  nc->setUID("");
-  nc->setPWD("");
-  nc->setServerType("Sqlite");
-  nc->setHost("");
-  nc->setPort(0);
-  nc->setCityName(newCity->name());
-  if(!newCity->connections.contains(nc))
-  {
-   newCity->connections.append( nc);
-   newCity->connectionNames.append(nc->description());
-  }
-  currConnection = nc;
-
-  newCity = new City();
-  newCity->id = 1;
-  newCity->setName("Cincinnati, OH");
-  latitude = 39.10457;
-  longitude = -84.51382;
-  //qint32 zoom = settings.value("zoom").toInt();
-  newCity->center = LatLng(latitude, longitude);
-  newCity->setBounds(Bounds(LatLng(38.995919924, -84.788475037), LatLng(39.213049836, -84.23915863)));
-  newCity->zoom = zoom;
-  newCity->mapType = maptype;
-  newCity->curConnectionId =0 ;
-  newCity->companyKey=0;
-  if(!cityList.contains(newCity))
-  {
-   cityList.append(newCity);
-   cityMap.insert(newCity->name(),newCity);
-  }
-  nc = new Connection();
-  nc->setId(0);
-  nc->setDatabase("Resources/databases/cincinnati.sqlite3");
-  nc->setDescription ("SQLITE3 connection");
-  nc->setDriver("QSQLITE");
-  nc->setDSN("");
-  nc->setUID("");
-  nc->setPWD("");
-  nc->setServerType("Sqlite");
-  nc->setHost("");
-  nc->setPort(0);
-  if(!newCity->connections.contains(nc))
-  {
-   newCity->connections.append( nc);
-   newCity->connectionNames.append(nc->description());
-  }
-
-  currConnection = nc;
-
-  newCity = new City();
-  newCity->id = 2;
-  newCity->setName("Louisville, KY");
-  latitude = 38.25228;
-  longitude = -85.76115;
-  //qint32 zoom = settings.value("zoom").toInt();
-  newCity->center = LatLng(latitude, longitude);
-  newCity->setBounds(Bounds(LatLng(38.15228, -85.86115), LatLng(38.35228, -85.66115)));
-  newCity->zoom = zoom;
-  newCity->mapType = maptype;
-  newCity->curConnectionId = 0 ;
-  newCity->companyKey=0;
-  if(!cityList.contains(newCity))
-  {
-   cityList.append(newCity);
-   cityMap.insert(newCity->name(), newCity);
-  }
-  nc = new Connection();
-  nc->setId(0);
-  nc->setDatabase("Resources/databases/louisville.sqlite3");
-  nc->setDescription ("SQLITE3 connection");
-  nc->setDriver("QSQLITE");
-  nc->setDSN("");
-  nc->setUID("");
-  nc->setPWD("");
-  nc->setServerType("Sqlite");
-  nc->setHost("");
-  nc->setPort(0);
-  nc->setCityName(newCity->name());
-  if(!newCity->connections.contains(nc))
-  {
-   newCity->connections.append( nc);
-   newCity->connectionNames.append(nc->description());
-  }
-  currConnection = nc;
-
-  newCity = new City();
-  newCity->id = 3;
-  newCity->setName("Berlin. Germany");
-  latitude = 52.5315;
-  longitude = 13.00165;
-  newCity->center = LatLng(latitude, longitude);
-  newCity->setBounds(Bounds(LatLng(52.4315, 12.90165), LatLng(52.6315, 13.10165)));
-  newCity->zoom = zoom;
-  newCity->mapType = maptype;
-  newCity->curConnectionId = 0 ;
-  newCity->companyKey=0;
-  if(!cityList.contains(newCity))
-  {
-   cityList.append(newCity);
-   cityMap.insert(newCity->name(), newCity);
-  }
-  nc = new Connection();
-  nc->setId(0);
-  nc->setDatabase("Resources/databases/berlinerstrassenbahn.sqlite3");
-  nc->setDescription ("SQLITE3 connection");
-  nc->setDriver("QSQLITE");
-  nc->setDSN("");
-  nc->setUID("");
-  nc->setPWD("");
-  nc->setServerType("Sqlite");
-  nc->setHost("");
-  nc->setPort(0);
-  nc->setCityName(newCity->name());
-  if(!newCity->connections.contains(nc))
-  {
-   newCity->connections.append( nc);
-   newCity->connectionNames.append(nc->description());
-  }
-  currConnection = nc;
-
-  newCity = cityList.at(0);
-  Overlay* ov = new Overlay("St Louis, MO", "St_Louis_historical_topo");
-
-  newCity->city_overlayMap->insert(ov->name, ov);
-
-  newCity->curOverlayId = 0;
-  newCity->bShowOverlay =true;
-  currCity = cityList.at(0);
-  currentCityId = 0;
-  currConnection = currCity->connections.at(0);
-  currConnection->setId(currCity->curConnectionId);
-  if(Overlay::importXml("./overlays.xml"))
-  {
-   for(Overlay* ov : Overlay::overlayList)
-   {
-    overlayMap->insert(ov->cityName+"|"+ov->name, ov);
-    City* city = cityMap.value(ov->cityName);
-    if(city)
-    {
-     city->city_overlayMap->insert(ov->name, ov);
-    }
-   }
-  }
-
-  saveSettings();
-
-  return;
- } // end default configuration
 
  bool ok = Overlay::importXml("./overlays.xml");
-
-//  settings.remove("center/latitude");
-//  settings.remove("center/longitude");
-//  settings.remove("zoom");
-//  settings.remove("maptype");
-//  newCity->connections.append(nc);
-
 
  // load cities
  for(int i= 0; i < size; i++)
@@ -370,40 +203,48 @@ void Configuration::getSettings()
   nc->savedClipboard = settings.value("savedClipboard").toString();
   nc->curOverlayId = settings.value("currOverlay", -1).toInt();
   nc->bUserMap = settings.value("userMap", false).toBool();
+  QString baseAddr = QDir::currentPath() +QDir::separator() + "Resources" + QDir::separator()+"databases" + QDir::separator();
   int sizec = settings.beginReadArray("connections");
   for(int j = 0; j < sizec; j++)
   {
    settings.setArrayIndex(j);
    Connection* ncn = new Connection();
    ncn->setId(settings.value("id").toInt());
-   ncn->setDatabase(settings.value("database").toString());
    ncn->setDescription(settings.value("description").toString());
    ncn->setDriver(settings.value("driver").toString());
-   ncn->setDSN(settings.value("DSN").toString());
-   ncn->setPWD(settings.value("PWD").toString());
-   ncn->setUID(settings.value("UID").toString());
-   ncn->setHost(settings.value("hostname").toString());
-   ncn->setPort(settings.value("port").toInt());
    ncn->setServerType(settings.value("serverType").toString());
-   ncn->setUseDatabase(settings.value("useDatabase", "default").toString());
-   if(ncn->servertype() == "")
-    ncn->setServerType("MySql");
+   ncn->setCityName(settings.value("cityName", nc->name()).toString());
+
    if(ncn->servertype() == "Sqlite")
    {
-    ncn->setPWD("");
-    ncn->setUID("");
-    ncn->setPort(0);
-    ncn->setHost("");
-    ncn->setUseDatabase("");
-    ncn->setCityName(settings.value("cityName", nc->name()).toString());
-#ifdef WIN32
-    QString ext = ncn->database().mid(ncn->database().lastIndexOf("."));
-    if(ncn->database().toLower().endsWith(".sqlite3") && ext != ".sqlite3")
-    {
-     ncn->setDatabase(ncn->database().replace(ext, ".sqlite3"));
-    }
-#endif
+     QString fileName = settings.value("sqliteFileName").toString();
+     if(fileName.isEmpty())
+         fileName = settings.value("database").toString();
+     QFileInfo info(baseAddr + fileName);
+     if(!info.exists())
+         qDebug() << fileName << " not found";
+//#ifdef WIN32
+//     QString ext = fileName.mid(ncn->database().lastIndexOf("."));
+//     if(fileName.toLower().endsWith(".sqlite3") && ext != ".sqlite3")
+//     {
+//      fileName.replace(ext, ".sqlite3");
+//     }
+//#endif
+     ncn->setSqliteFileName(info.fileName());
    }
+   else if(ncn->servertype() == "MySql") {
+       ncn->setDSN(settings.value("DSN").toString());
+       ncn->setPWD(settings.value("PWD").toString());
+       ncn->setUID(settings.value("UID").toString());
+       ncn->setHost(settings.value("hostname").toString());
+       ncn->setPort(settings.value("port").toInt());
+       ncn->setMySqlDatabase(settings.value("mySqlDatabase").toString());
+   }
+   else if(ncn->servertype() == "MsSql") {
+    ncn->setOdbcConnectorName(settings.value("odbcConnector").toString());
+    ncn->setDefaultMsSqlDatabase(settings.value("defaultMsSqlDatabase").toString());
+   }
+
    if(!nc->connections.contains(ncn))
    {
     nc->connections.append( ncn);
@@ -448,11 +289,11 @@ void Configuration::getSettings()
 
   Connection* nc = new Connection();
   nc->setId(1);
-  nc->setDatabase("StLouisMsSql");
+  nc->setDatabase("Mapper");
   nc->setDescription ("Test MsSql connection");
   nc->setDriver("QODBC");
   nc->setDSN("");
-  nc->setUID("laptop4-win\allen");
+  nc->setUID("");
   nc->setPWD("");
   nc->setServerType("MsSql");
   nc->setHost("");
@@ -549,103 +390,7 @@ Configuration* Configuration::instance()
 
 
 
-QSqlDatabase Connection::configure(const QString cName)
-{
- qDebug() << "Connection: CWD = " << QDir::currentPath();
- config = Configuration::instance();
- sql = SQL::instance();
-  db = QSqlDatabase::addDatabase(config->currConnection->driver(),cName);
- //db.setHostName("10.0.1.100");
- if(config->currConnection->host() != "")
-  db.setHostName(config->currConnection->host());
- if(config->currConnection->port() > 0)
-  db.setPort(config->currConnection->port());
- if(config->currConnection->servertype() == "MsSql")
- {
-  //db.setDatabaseName(config->currConnection->dsn());
-     db.setDatabaseName(config->currConnection->database());
- }
- else
- {
-  QString dbName = config->currConnection->database();
-  QFileInfo info(dbName);
-  if(!info.isAbsolute() && config->currConnection->servertype() == "Sqlite")
-  {
-   if(!dbName.startsWith("Resources/databases/"))
-    dbName = "Resources/databases/" + dbName;
-   if(!dbName.endsWith(".sqlite3"))
-    dbName.append(".sqlite3");
-   //dbName = QDir(config->path + QDir::separator() + QDir::separator()+ dbName).path();
-  }
-  db.setDatabaseName(dbName);
- }
- db.setUserName(config->currConnection->uid());
- db.setPassword(config->currConnection->pwd());
- bOpen = db.open();
- // check for presence of Parameters table.
- QStringList tableList;
-// if(ok)
-// {
- if(bOpen)
- {
-  if(config->currConnection->servertype() != "Sqlite")
-   return db;
-  if(config->currConnection->useDatabase() != "default" && config->currConnection->useDatabase() != "")
-  {
-   QSqlQuery query = QSqlQuery(db);
-   //QString cmd = QString("use [%1]").arg(config->currConnection->useDatabase());
-   QString cmd = QString("use %1").arg(config->currConnection->useDatabase());
-   if(!query.exec(cmd))
-   {
-    SQLERROR(query);
-    db.close();
-    bOpen = false;
-    return db;
-   }
-   if(config->currConnection->servertype() == "Sqlite")
-    sql->checkTables(db);
-   tableList = db.tables();
 
-   if(!tableList.contains("Parameters",Qt::CaseInsensitive))
-   {
-    bOpen = false;
-    return db;
-   }
-   else
-   {
-    QSqlError err = db.lastError();
-    QString msg;
-    msg = err.text() + "\n"
-           + db.driverName() + "\n"
-           + "User:" + db.userName() + "\n"
-           + "Host:" + db.hostName()+ "\n"
-           + "Connection name: " + db.connectionName() + "\n"
-           + "DSN:" + db.databaseName() + "\n"
-    + "driver: " + config->currConnection->driver() + "\n";
-    if(config->currConnection->driver()=="QSQLITE")
-    {
-     QFileInfo info(db.databaseName());
-     msg.append(info.absoluteFilePath());
-    }
-    QMessageBox::warning(NULL, "Warning", msg);
-   }
-  }
-  if(sql->loadSqlite3Functions() && config->currConnection->servertype() == "Sqlite")
-  {
-   sql->checkTables(db);
-  }
- }
- else
- {
-  qDebug() << "unable to open " << db.databaseName() << " " << db.lastError().text();
-  QFileInfo info(db.databaseName());
-  if(info.exists())
-   qDebug() << "file exists.";
-  else
-   qDebug() << "file not found.";
- }
-  return db;
-}
 
 QStringList Configuration::cityNames()
 {
@@ -666,3 +411,162 @@ QString Configuration::lookupCityName(Bounds b)
  }
  return "";
 }
+
+void Configuration::createDefaultSettings()
+{
+    //  create a default configuration
+    City* newCity = new City();
+    newCity->id = 0;
+    newCity->setName("St. Louis, MO");
+    double latitude = 38.65858545118455;
+    double longitude = -90.34764714500002;
+    newCity->center = LatLng(latitude, longitude);
+    qint32 zoom = 10;
+    QString maptype = "roadmap";
+    newCity->center = LatLng(latitude, longitude);
+    newCity->setBounds(Bounds(LatLng(38.558585451, -90.447647145), LatLng(38.758585451, -90.247647145)));
+    newCity->zoom = zoom;
+    newCity->mapType = maptype;
+    newCity->curConnectionId = 0;
+    newCity->companyKey=0;
+    if(!cityList.contains(newCity))
+    {
+     cityList.append( newCity);
+     cityMap.insert(newCity->name(), newCity);
+    }
+    newCity->connectionNames.append(newCity->name());
+    Connection* nc = new Connection();
+    nc->setId(0);
+    nc->setSqliteFileName("StLouis.sqlite3");
+    nc->setDescription ("SQLITE3 connection");
+    nc->setDriver("QSQLITE");
+    nc->setServerType("Sqlite");
+
+    nc->setCityName(newCity->name());
+    if(!newCity->connections.contains(nc))
+    {
+     newCity->connections.append( nc);
+     newCity->connectionNames.append(nc->description());
+    }
+    currConnection = nc;
+
+    newCity = new City();
+    newCity->id = 1;
+    newCity->setName("Cincinnati, OH");
+    latitude = 39.10457;
+    longitude = -84.51382;
+    //qint32 zoom = settings.value("zoom").toInt();
+    newCity->center = LatLng(latitude, longitude);
+    newCity->setBounds(Bounds(LatLng(38.995919924, -84.788475037), LatLng(39.213049836, -84.23915863)));
+    newCity->zoom = zoom;
+    newCity->mapType = maptype;
+    newCity->curConnectionId =0 ;
+    newCity->companyKey=0;
+    if(!cityList.contains(newCity))
+    {
+     cityList.append(newCity);
+     cityMap.insert(newCity->name(),newCity);
+    }
+    nc = new Connection();
+    nc->setId(0);
+    nc->setSqliteFileName("cincinnati.sqlite3");
+    nc->setDescription ("SQLITE3 connection");
+    nc->setDriver("QSQLITE");
+    nc->setServerType("Sqlite");
+    if(!newCity->connections.contains(nc))
+    {
+     newCity->connections.append( nc);
+     newCity->connectionNames.append(nc->description());
+    }
+
+    currConnection = nc;
+
+    newCity = new City();
+    newCity->id = 2;
+    newCity->setName("Louisville, KY");
+    latitude = 38.25228;
+    longitude = -85.76115;
+    //qint32 zoom = settings.value("zoom").toInt();
+    newCity->center = LatLng(latitude, longitude);
+    newCity->setBounds(Bounds(LatLng(38.15228, -85.86115), LatLng(38.35228, -85.66115)));
+    newCity->zoom = zoom;
+    newCity->mapType = maptype;
+    newCity->curConnectionId = 0 ;
+    newCity->companyKey=0;
+    if(!cityList.contains(newCity))
+    {
+     cityList.append(newCity);
+     cityMap.insert(newCity->name(), newCity);
+    }
+    nc = new Connection();
+    nc->setId(0);
+    nc->setSqliteFileName("louisville.sqlite3");
+    nc->setDescription ("SQLITE3 connection");
+    nc->setServerType("Sqlite");
+    nc->setCityName(newCity->name());
+    if(!newCity->connections.contains(nc))
+    {
+     newCity->connections.append( nc);
+     newCity->connectionNames.append(nc->description());
+    }
+    currConnection = nc;
+
+    newCity = new City();
+    newCity->id = 3;
+    newCity->setName("Berlin. Germany");
+    latitude = 52.5315;
+    longitude = 13.00165;
+    newCity->center = LatLng(latitude, longitude);
+    newCity->setBounds(Bounds(LatLng(52.4315, 12.90165), LatLng(52.6315, 13.10165)));
+    newCity->zoom = zoom;
+    newCity->mapType = maptype;
+    newCity->curConnectionId = 0 ;
+    newCity->companyKey=0;
+    if(!cityList.contains(newCity))
+    {
+     cityList.append(newCity);
+     cityMap.insert(newCity->name(), newCity);
+    }
+    nc = new Connection();
+    nc->setId(0);
+    nc->setSqliteFileName("berlinerstrassenbahn.sqlite3");
+    nc->setDescription ("SQLITE3 connection");
+    nc->setDriver("QSQLITE");
+    nc->setServerType("Sqlite");
+    nc->setCityName(newCity->name());
+    if(!newCity->connections.contains(nc))
+    {
+     newCity->connections.append( nc);
+     newCity->connectionNames.append(nc->description());
+    }
+    currConnection = nc;
+
+    Overlay* ov = new Overlay("St Louis, MO", "St_Louis_historical_topo");
+
+    newCity->city_overlayMap->insert(ov->name, ov);
+
+    newCity->curOverlayId = 0;
+    newCity->bShowOverlay =true;
+
+    currentCityId = 0;
+    currConnection = currCity->connections.at(0);
+    currConnection->setId(currCity->curConnectionId);
+    if(Overlay::importXml("./overlays.xml"))
+    {
+     for(Overlay* ov : Overlay::overlayList)
+     {
+      overlayMap->insert(ov->cityName+"|"+ov->name, ov);
+      currCity = cityList.at(0);
+      City* city = cityMap.value(ov->cityName);
+      if(city)
+      {
+       city->city_overlayMap->insert(ov->name, ov);
+      }
+     }
+    }
+    saveSettings();
+
+    return;
+
+} // end default configuration
+

@@ -27,6 +27,10 @@ class Connection : public QObject
  QString _cityName;
  const QString cName;
  QString _connectionName;
+ QString _sqlite_fileName;
+ QString _odbc_connectorName;
+ QString _defaultMsSqlDatabase;
+ QString _mySqlDatabase;
 
 public:
  Connection(QObject* parent = nullptr);
@@ -60,6 +64,15 @@ public:
  static QString dbType(QString name);
  QString connectionName(){return _connectionName;}
  void setConnectionName(QString name) {_connectionName =name; }
+ QString sqlite_fileName() {return _sqlite_fileName;}
+ void setSqliteFileName(QString fn){_sqlite_fileName = fn;}
+ QString odbc_connectorName(){return _odbc_connectorName;}
+ void setOdbcConnectorName(QString fn){_odbc_connectorName = fn;}
+ QString defaultMsSqlDatabase() {return _defaultMsSqlDatabase;}
+ void setDefaultMsSqlDatabase(QString defaultMsSqlDatabase) {_defaultMsSqlDatabase = defaultMsSqlDatabase;}
+ static void configureDb(QSqlDatabase *db, Connection *currConnection);
+ QString mySqlDatabase(){return _mySqlDatabase;}
+ void setMySqlDatabase(QString fn){_mySqlDatabase =fn;}
 };
 
 #endif // CONNECTION_H

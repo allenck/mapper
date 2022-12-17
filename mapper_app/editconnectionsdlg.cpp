@@ -205,7 +205,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
     ui->cbDbType->setCurrentText(c->servertype());
     switch ((DBTYPE)ui->cbDbType->currentIndex()) {
     case Sqlite:
-     ui->txtDbOrDSN->setText(c->database());
+     ui->txtDbOrDSN->setText(c->sqlite_fileName());
      break;
     case MySql:
      ui->txtHost->setText(c->host());
@@ -218,21 +218,18 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
       ui->cbUseDatabase->clear();
       ui->cbUseDatabase->addItems(list);
      }
-     ui->cbUseDatabase->setCurrentText(c->useDatabase());
+     ui->cbUseDatabase->setCurrentText(c->mySqlDatabase());
      break;
     case MsSql:
-     ui->txtHost->setText(c->host());
-     ui->txtPort->setText(QString::number(c->port()));
-     ui->txtUID->setText(c->uid());
-     ui->txtPWD->setText(c->pwd());
+        ui->cbUseDatabase->setCurrentText(c->useDatabase());
+        ui->txtDbOrDSN->setText(c->odbc_connectorName());
+        ui->lblHelp->setText(tr("connecting ..."));
      if(openTestDb())
      {
       QStringList list = SQL::instance()->showMsSqlDatabases(db);
       ui->cbUseDatabase->clear();
       ui->cbUseDatabase->addItems(list);
      }
-     ui->cbUseDatabase->setCurrentText(c->useDatabase());
-     ui->txtDbOrDSN->setText(c->database());
 
   }
  }
@@ -501,32 +498,37 @@ void EditConnectionsDlg::btnOKClicked()
     c = currCity->connections.at(ui->cbConnections->currentIndex());
     c->setDescription(ui->cbConnections->currentText());
    }
+   c->setDriver(ui->cbDriverType->currentText());
+   c->setServerType(ui->cbDbType->currentText());
+
    if(ui->cbDbType->currentText() == "MsSql")
    {
     //c->setDSN(ui->txtDbOrDSN->text());
-    c->setDatabase(ui->txtDbOrDSN->text());
-    c->setUseDatabase(ui->cbUseDatabase->currentText());
+    //c->setDatabase(ui->txtDbOrDSN->text());
+       c->setOdbcConnectorName(ui->txtDbOrDSN->text());
+    c->setDefaultMsSqlDatabase(ui->cbUseDatabase->currentText());
     //QString useDatabase = ui->cbUseDatabase->currentText();
     c->setUseDatabase(savedb);
    }
-   else
+   else if(ui->cbDbType->currentText() == "Sqlite")
    {
     QFileInfo info(ui->txtDbOrDSN->text());
     if(!info.isAbsolute())
     {
-     c->setDatabase(info.completeBaseName());
+     c->setSqliteFileName(info.completeBaseName());
     }
     else
-     c->setDatabase(ui->txtDbOrDSN->text());
+     c->setSqliteFileName(ui->txtDbOrDSN->text());
+   }
+   else // MySql
+   {
     c->setHost(ui->txtHost->text());
     c->setPort(ui->txtPort->text().toInt());
+    c->setUID(ui->txtUID->text());
+    c->setPWD(ui->txtPWD->text());
+    c->setServerType(ui->cbDbType->currentText());
+    c->setMySqlDatabase(ui->cbUseDatabase->currentText());
    }
-   c->setUID(ui->txtUID->text());
-   c->setPWD(ui->txtPWD->text());
-   c->setServerType(ui->cbDbType->currentText());
-   c->setDriver(ui->cbDriverType->currentText());
-   c->setUseDatabase(ui->cbUseDatabase->currentText());
-
    if(ui->cbCities->currentText() == config->currCity->name() && c->id() == config->currConnection->id())
     config->currConnection = c;
    config->currentCityId = config->currCity->id;
@@ -550,14 +552,6 @@ void EditConnectionsDlg::btnOKClicked()
    if(config->currCity->id == currCity->id)
     config->currCity->connections = currCity->connections;
 
-//   ui->cbConnections->clear();
-//   ui->cbConnections->addItem(tr("Add new connection"));
-//   for(int i=0; i < currCity->connections.count(); i++)
-//   {
-//    Connection* c = currCity->connections.at(i);
-//    ui->cbConnections->addItem(c->description());
-//   }
-   //config->cityList.replace(config->currentCityId, config->currCity);
    config->saveSettings();
   }
  }
@@ -708,7 +702,13 @@ bool EditConnectionsDlg::testConnection()
   createSqliteTables(db);
  }
 
- ui->lblHelp->setText(tr("Connection succeeded"));
+ if(ui->cbDbType->currentText() =="MsSql")
+ {
+     QString currDb = getDatabase();
+     ui->lblHelp->setText(tr("Connection succeeded. %1 Has %2 tables! %3").arg(currDb).arg(tableList.count()).arg(tableList.join(',')));
+ }
+ else
+  ui->lblHelp->setText(tr("Connection succeeded"));
  timer->stop();
  this->setCursor(QCursor(Qt::ArrowCursor));
 
@@ -724,15 +724,16 @@ bool EditConnectionsDlg::openTestDb()
  if(ui->cbDbType->currentText() == "Sqlite"  )
  {
   db.setDatabaseName(ui->txtDbOrDSN->text());
-  ui->txtHost->setText("");
-  db.setHostName(ui->txtHost->text());
+//  ui->txtHost->setText("");
+//  db.setHostName(ui->txtHost->text());
  }
  else if(ui->cbDbType->currentText() == "MsSql")
  {
   db.setDatabaseName(ui->txtDbOrDSN->text());
+
  }
- else
- {
+ else if(ui->cbDbType->currentText() == "MySql")
+ { // MySql
   db.setDatabaseName(ui->cbUseDatabase->currentText());
   db.setHostName(ui->txtHost->text());
   int port = ui->txtPort->text().toInt();
@@ -740,8 +741,10 @@ bool EditConnectionsDlg::openTestDb()
    db.setPort(port);
   db.setUserName(ui->txtUID->text());
   db.setPassword(ui->txtPWD->text());
-
  }
+ else
+     throw IllegalArgumentException(tr("invalid server type: %1").arg(ui->cbDbType->currentText()));
+ ui->lblHelp->setText(tr("connecting ..."));
  bool bOpen = db.open();
  if(bOpen)
  {
@@ -1006,3 +1009,4 @@ bool EditConnectionsDlg::verifyDatabase(QString name)
  }
  return true;
 }
+

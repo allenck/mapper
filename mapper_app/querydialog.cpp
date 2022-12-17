@@ -607,34 +607,11 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    //tgtConn = config->currCity->connections.at(config->currCity->curExportConnId);
   //tgtConn = config->currCity->connections.at(ui->cbConnections->itemData(ix).toInt());
 #if 1
-  if(tgtConn->connectionName().isEmpty())
+  //if(tgtConn->connectionName().isEmpty())
   {
    db = QSqlDatabase::addDatabase(tgtConn->driver(), QString("query%1").arg(ix));
    tgtConn->setConnectionName(db.connectionName());
-   tgtDbType = tgtConn->servertype();
-   if(tgtDbType == "MsSql")
-   {
-    db.setDatabaseName(tgtConn->dsn());
-   }
-   else if(tgtDbType == "MySql")
-   {
-       db.setHostName(tgtConn->host());
-       db.setPort(tgtConn->port());
-       db.setDatabaseName(tgtConn->database());
-       db.setUserName(tgtConn->uid());
-       db.setPassword(tgtConn->pwd());
-   }
-   else
-   {
-    db.setDatabaseName(tgtConn->database());
-   }
-  }
-//  else
-//  {
-//   db= QSqlDatabase::database(QString("query%1").arg(ix));
-//   tgtConn->setConnectionName(db.connectionName());
-//  }
-
+   Connection::configureDb(&db, tgtConn);
   if(!db.open())
   {
    ui->go_QueryButton->setEnabled(false);
@@ -646,6 +623,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    ui->go_QueryButton->setEnabled(true);
    if(tgtDbType == "MsSql")
    {
+#if 0
     if(tgtConn->useDatabase() != "default" || tgtConn->useDatabase() != "")
     {
      QSqlQuery query = QSqlQuery(db);
@@ -656,8 +634,10 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
         return;
      }
     }
+#endif
    }
   }
 #endif
   QWidget::setWindowTitle(tr("Manual Sql Query (%1)").arg(ui->cbConnections->currentText()));
  }
+}

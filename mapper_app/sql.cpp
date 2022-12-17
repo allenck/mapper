@@ -311,14 +311,14 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
  else
   commandText = "Select distinct a.route, name, a.endDate, a.companyKey, tractionType, routeAlpha"
                 " from Routes a join altRoute c on a.route =  c.route"
-                " group by a.route, name, a.endDate/*, a.companykey,tractionType, c.routeAlpha*/"
+                " group by a.route, name, a.endDate, a.companykey,tractionType, c.routeAlpha"
                 " order by c.routeAlpha, name, a.endDate";
  }
  else
   commandText = "Select distinct a.route, name, a.endDate, a.companyKey, tractionType, routeAlpha"
                 " from Routes a join altRoute c on a.route = c.route"
                 "  where a.companyKey = " + QString("%1").arg(companyKey)+ ""
-                " group by a.route, name, a.endDate, a.companykey/*, tractionType, c.routeAlpha*/" // ACK company key added to group by
+                " group by a.route, name, a.endDate, a.companykey, tractionType, c.routeAlpha" // ACK company key added to group by
                 " order by c.routeAlpha, name, a.endDate";
  query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
@@ -928,8 +928,10 @@ QList<tractionTypeInfo> SQL::getTractionTypes()
         if(!bQuery)
         {
          SQLERROR(query);
-            db.close();
-            exit(EXIT_FAILURE);
+//            db.close();
+//            exit(EXIT_FAILURE);
+         errSqlMessage(query);
+         return myArray;
         }
         while (query.next())
         {
@@ -4756,16 +4758,17 @@ QList<CompanyData*> SQL::getCompanies()
 
  QString commandText;
  if(config->currConnection->servertype() != "MsSql")
-     commandText = "select `key`, description, startDate, endDate, firstRoute, lastRoute from Companies";
+     commandText = "select `key`, description, routePrefix, startDate, endDate, firstRoute, lastRoute from Companies";
  else
-     commandText = "select [key], description, startDate, endDate, firstRoute, lastRoute from companies";
+     commandText = "select [key], description, routePrefix, startDate, endDate, firstRoute, lastRoute from Companies";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
   SQLERROR(query);
-  db.close();
-  exit(EXIT_FAILURE);
+  //db.close();
+  //exit(EXIT_FAILURE);
+  errSqlMessage(query);
   return myArray;
  }
  while (query.next())
@@ -4773,16 +4776,17 @@ QList<CompanyData*> SQL::getCompanies()
      cd = new CompanyData();
      cd->companyKey = query.value(0).toInt();
      cd->name = query.value(1).toString();
-     if(query.value(2).isNull())
+     cd->routePrefix = query.value(2).toString();
+     if(query.value(3).isNull())
          cd->startDate = QDate();
      else
-         cd->startDate = query.value(2).toDate();
-     if (query.value(3).isNull())
+         cd->startDate = query.value(3).toDate();
+     if (query.value(4).isNull())
          cd->endDate = QDate();
      else
-         cd->endDate = query.value(3).toDate();
-     cd->firstRoute = query.value(4).toInt();
-     cd->lastRoute = query.value(5).toInt();
+         cd->endDate = query.value(4).toDate();
+     cd->firstRoute = query.value(5).toInt();
+     cd->lastRoute = query.value(6).toInt();
      myArray.append(cd);
  }
  std::sort(myArray.begin(), myArray.end(), [](const CompanyData* a, const CompanyData* b) -> bool { return a->name < b->name; });
