@@ -40,7 +40,7 @@ private:
  void findODBCDsn(QString iniFile, QStringList* dsnList);
 #endif
   bool verifyDatabase(QString name);
-  void setControls(DBTYPE dbType);
+  void setControls(int ix);
   City* currCity = nullptr;
 
 private slots:

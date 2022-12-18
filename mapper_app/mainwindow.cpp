@@ -806,36 +806,31 @@ void MainWindow::loadOverlay(Overlay* ov)
 void MainWindow::fillOverlayMenu()
 {
  overlayMenu->clear();
- overlaySignalMapper = new QSignalMapper(this);
- overlayActionGroup = new QActionGroup(this);
+ QActionGroup *overlayActionGroup = new QActionGroup(this);
  qDebug() << "building overlayMenu for:" <<config->currCity->name();
- for(int i = 0; i < config->currCity->city_overlayMap->count(); i++)
+ QMapIterator<QString, Overlay*> iter(*config->currCity->city_overlayMap);
+ while(iter.hasNext())
  {
-  QString name = config->currCity->city_overlayMap->values().at(i)->name;
-  if(name == "")
-      continue;
-  Overlay* ov = config->currCity->city_overlayMap->values().at(i);
+  iter.next();
+  QString name = iter.key();
+  Overlay* ov = iter.value();
   if(!ov->isSelected)
    continue;
   QAction *act = new QAction(name, this);
-  act->setData(i);
+  act->setData(VPtr<Overlay>::asQVariant(ov));
   act->setCheckable(true);
-  act->setToolTip(config->currCity->city_overlayMap->values().at(i)->description);
+  act->setToolTip(ov->description);
   overlayActions.append(act);
-  actionGroup->addAction(act);
-  connect(act, SIGNAL(triggered()), overlaySignalMapper, SLOT(map()));
-  overlaySignalMapper->setMapping(act, i);
+  overlayActionGroup->addAction(act);
   overlayMenu->addAction(act);
   if(config->currCity->curOverlayId >= config->currCity->city_overlayMap->count())
    config->currCity->curOverlayId = 0;
-  //if(config->currCity->curOverlayId == i)
   if(config->currCity->curOverlayId >=0 && name == config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId)->name)
    act->setChecked(true);
-  //act->setToolTip(config->currCity->overlays.at(config->currCity->curOverlayId)->description);
   if(!ui->chkShowOverlay->isEnabled())
    ui->chkShowOverlay->setEnabled(true);
  }
- connect(overlaySignalMapper,SIGNAL(mapped(int)),this, SLOT(newOverlay(int)));
+ connect(overlayActionGroup,SIGNAL(triggered(QAction*)),this, SLOT(newOverlay(QAction*)));
 }
 
 //MainWindow::~MainWindow()
@@ -1186,20 +1181,20 @@ void MainWindow::createCityMenu()
 
  for(int i=0; i < config->cityList.count(); i++)
  {
-  City* c = config->cityList.at(i);
-  actionGroup = new QActionGroup(this);
-  connectMenu =new QMenu(c->name());
+  City* city = config->cityList.at(i);
+  QActionGroup *actionGroup = new QActionGroup(this);
+  QMenu *connectMenu =new QMenu(city->name());
 
-  for(int j =0; j < c->connections.count(); j++)
+  for(int j =0; j < city->connections.count(); j++)
   {
-   Connection* cn = c->connections.at(j);
+   Connection* connection = city->connections.at(j);
 
-   QAction* act = new QAction(cn->description() + "...", this);
+   QAction* act = new QAction(connection->description() + "...", this);
    act->setCheckable(true);
-   QPair<City*, Connection*>* pair = new QPair<City*, Connection*>(c, cn);
+   QPair<City*, Connection*>* pair = new QPair<City*, Connection*>(city, connection);
    act->setData(VPtr<QPair<City*, Connection*> >::asQVariant(pair));
    act->setCheckable(true);
-   if(c->id == config->currentCityId && cn->id() == config->currCity->curConnectionId)
+   if(city->id == config->currentCityId && connection->id() == config->currCity->curConnectionId)
        act->setChecked(true);
    actionGroup->addAction(act);
    connectMenu->addAction(act);
@@ -1264,7 +1259,7 @@ void MainWindow::webView_customContextMenu(const QPoint &)
     QMenu* menu = new QMenu();
     LatLng pos;
     WebViewBridge::instance()->processScript("getRightClick");
-    pos =WebViewBridge::instance()->rightClick();
+    pos = WebViewBridge::instance()->rightClick();
     QAction* currPoint = new QAction(tr("%1, %2").arg(pos.lat()).arg(pos.lon()), this);
     connect(currPoint, &QAction::triggered, [=]{
        QClipboard* clip = QApplication::clipboard();
@@ -1278,8 +1273,8 @@ void MainWindow::webView_customContextMenu(const QPoint &)
 void MainWindow::newCity(QAction* act )
 {
   QPair<City*, Connection*>* pair = VPtr<QPair<City*, Connection*>>::asPtr(act->data());
-  City* c = pair->first;
-  Connection* cn = pair->second;
+  City* city = pair->first;
+  Connection* connection = pair->second;
   this->setCursor(QCursor(Qt::WaitCursor));
 
   // first, save some settings for the current city
@@ -1304,12 +1299,12 @@ void MainWindow::newCity(QAction* act )
     config->currCity->bShowOverlay = ui->chkShowOverlay->isChecked();
 
     // load the new city and configuration
-    config->currCity = c;
-    config->currentCityId = c->id;
-    config->currCity->curConnectionId =cn->id();
-    config->currConnection = cn;
+    config->currCity = city;
+    config->currentCityId = city->id;
+    config->currCity->curConnectionId =connection->id();
+    config->currConnection = connection;
 
-    qDebug() << c->name() + "/" + cn->description();
+    qDebug() << city->name() + "/" + connection->description();
     // close the current database and open the new one
     db.close();
 #if 0
@@ -1427,14 +1422,9 @@ void MainWindow::newCity(QAction* act )
 //  }
 // }
 }
-void MainWindow::newOverlay(int ix)
+void MainWindow::newOverlay(QAction* act)
 {
- Overlay* cOv = config->currCity->city_overlayMap->values().at(ix);
- if(config->currCity->curOverlayId >=0 && config->currCity->curOverlayId < config->currCity->city_overlayMap->count())
- {
-  Overlay* oldOv = config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId);
-  oldOv->isSelected = false;
- }
+ Overlay* cOv = VPtr<Overlay>::asPtr(act->data());
  cOv->isSelected = true;
 
  if(cOv->source == "")

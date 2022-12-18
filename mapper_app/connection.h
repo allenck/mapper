@@ -25,12 +25,13 @@ class Connection : public QObject
  Configuration* config;
  bool bOpen = false;
  QString _cityName;
- const QString cName;
+ //const QString cName;
  QString _connectionName;
  QString _sqlite_fileName;
  QString _odbc_connectorName;
  QString _defaultMsSqlDatabase;
  QString _mySqlDatabase;
+ QString _connectionType;
 
 public:
  Connection(QObject* parent = nullptr);
@@ -73,6 +74,8 @@ public:
  static void configureDb(QSqlDatabase *db, Connection *currConnection);
  QString mySqlDatabase(){return _mySqlDatabase;}
  void setMySqlDatabase(QString fn){_mySqlDatabase =fn;}
+ QString connectionType(){return _connectionType;}
+ void setConnectionType(QString s ) {_connectionType = s;}
 };
 
 #endif // CONNECTION_H

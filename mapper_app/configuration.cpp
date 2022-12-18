@@ -2,6 +2,7 @@
 #include "sql.h"
 #include "overlay.h"
 #include "data.h"
+#include <QApplication>
 
 Configuration::Configuration(QObject *parent) :
     QObject(parent)
@@ -72,23 +73,25 @@ void Configuration::saveSettings()
    settings->setValue("driver", cn->driver());
    settings->setValue("serverType", cn->servertype());
    settings->setValue("cityName", cn->cityName());
-   if(cn->servertype()== "Sqlite")
+   settings->setValue("connectionType", cn->connectionType());
+   settings->setValue("description",cn->description());
+
+   if(cn->connectionType()== "Local")
    {
        settings->setValue("sqliteFileName", cn->sqlite_fileName());
    }
-   else if(cn->servertype()== "MsSql")
+   else if(cn->connectionType()== "ODBC")
    {
        settings->setValue("odbcConnector", cn->odbc_connectorName());
        settings->setValue("defaultMsSqlDatabase", cn->defaultMsSqlDatabase());
    }
-   else if(cn->servertype()== "MySql")
+   else if(cn->connectionType()== "Direct")
    {
     settings->setValue("database", cn->database());
     settings->setValue("DSN", cn->dsn());
     settings->setValue("driver", cn->driver());
     settings->setValue("PWD", cn->pwd());
     settings->setValue("UID", cn->uid());
-    settings->setValue("description",cn->description());
     if(cn->host() != "")
      settings->setValue("hostname", cn->host());
     if(cn->port() > 0)
@@ -205,6 +208,8 @@ void Configuration::getSettings()
   nc->bUserMap = settings.value("userMap", false).toBool();
   QString baseAddr = QDir::currentPath() +QDir::separator() + "Resources" + QDir::separator()+"databases" + QDir::separator();
   int sizec = settings.beginReadArray("connections");
+
+  // connections
   for(int j = 0; j < sizec; j++)
   {
    settings.setArrayIndex(j);
@@ -214,10 +219,13 @@ void Configuration::getSettings()
    ncn->setDriver(settings.value("driver").toString());
    ncn->setServerType(settings.value("serverType").toString());
    ncn->setCityName(settings.value("cityName", nc->name()).toString());
+   ncn->setConnectionType(settings.value("connectionType", "Direct").toString());
 
-   if(ncn->servertype() == "Sqlite")
+   if(ncn->connectionType() == "Local")
    {
-     QString fileName = settings.value("sqliteFileName").toString();
+    ncn->setConnectionType("Local");
+    QString fileName;
+     fileName = settings.value("sqliteFileName").toString();
      if(fileName.isEmpty())
          fileName = settings.value("database").toString();
      QFileInfo info(baseAddr + fileName);
@@ -232,7 +240,7 @@ void Configuration::getSettings()
 //#endif
      ncn->setSqliteFileName(info.fileName());
    }
-   else if(ncn->servertype() == "MySql") {
+   else if(ncn->connectionType() == "Direct") {
        ncn->setDSN(settings.value("DSN").toString());
        ncn->setPWD(settings.value("PWD").toString());
        ncn->setUID(settings.value("UID").toString());
@@ -240,7 +248,7 @@ void Configuration::getSettings()
        ncn->setPort(settings.value("port").toInt());
        ncn->setMySqlDatabase(settings.value("mySqlDatabase").toString());
    }
-   else if(ncn->servertype() == "MsSql") {
+   else if(ncn->connectionType() == "ODBC") {
     ncn->setOdbcConnectorName(settings.value("odbcConnector").toString());
     ncn->setDefaultMsSqlDatabase(settings.value("defaultMsSqlDatabase").toString());
    }
@@ -564,6 +572,8 @@ void Configuration::createDefaultSettings()
       }
      }
     }
+    if(QGuiApplication::screens().count() > 1)
+     bRunInBrowser = true;
     saveSettings();
 
     return;

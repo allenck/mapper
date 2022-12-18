@@ -225,7 +225,7 @@ private slots:
     void txtStreetName_Leave();
     void txtSegment_Leave();
     void newCity(QAction* act );
-    void newOverlay(int ix);
+    void newOverlay(QAction* act);
     void splitRoute_Click();
     void combineRoutes();
     void renameRoute_Click();
@@ -300,10 +300,10 @@ private:
     QMenu *fileMenu;
     QMenu *helpMenu;
     QMenu *cityMenu;
-    QMenu *connectMenu;
+    //QMenu *connectMenu;
     QMenu *toolsMenu;
     QMenu* optionsMenu;
-    QMenu *overlayMenu;
+    QMenu *overlayMenu = nullptr;
     QMenu cbRouteMenu;
     QMenu tab1Menu;
     QMenu *sortMenu;
@@ -358,11 +358,11 @@ private:
     QAction* splitSegmentAct;
     QAction* setInspectedPageAct = nullptr;
     QList<QAction*> cityActions;
-    QActionGroup  *actionGroup;
+    //QActionGroup  *actionGroup;
     QAction* exportOverlaysAct;
     QAction* setCityBoundsAct;
     QList<QAction*> overlayActions;
-    QSignalMapper *overlaySignalMapper;
+    //QSignalMapper *overlaySignalMapper;
     QActionGroup  *overlayActionGroup;
     QString  currentOverlay;
     QList<tractionTypeInfo> tractionTypeList;

@@ -104,7 +104,7 @@ QSqlDatabase Connection::configure(const QString cName)
 void Connection::configureDb(QSqlDatabase* db, Connection* currConnection)
 {
     QString driver = db->driverName();
-    if(driver == "QSQLITE" || driver == "QSQLITE3" )
+    if(currConnection->connectionType() == "Local" )
     {
         QString dbName = currConnection->sqlite_fileName();
         QFileInfo info(dbName);
@@ -118,8 +118,7 @@ void Connection::configureDb(QSqlDatabase* db, Connection* currConnection)
         }
         db->setDatabaseName(dbName);
     }
-    else if(driver == "QMYSQL" ||driver == "QMYSQL3" ||
-            driver == "QMARIADB" ||driver == "QMARIADB3")
+    else if(currConnection->connectionType() == "Direct")
     {
         if(currConnection->host() != "")
          db->setHostName(currConnection->host());
@@ -129,7 +128,7 @@ void Connection::configureDb(QSqlDatabase* db, Connection* currConnection)
         db->setPassword(currConnection->pwd());
         db->setDatabaseName(currConnection->mySqlDatabase());
     }
-    else if(driver == "QODBC" || driver == "QODBC3")
+    else if(currConnection->connectionType() == "ODBC")
     {
         db->setDatabaseName(currConnection->odbc_connectorName());
     }

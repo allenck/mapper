@@ -70,8 +70,8 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
         ts << txt << endl;
         outFile.close();
     } else {
-        fprintf(stderr, "%s %s: %s (%s:%u, %s)\n", formattedTimeMsg.constData(), logLevelMsg.constData(), localMsg.constData(), context.file, context.line, context.function);
-        fflush(stderr);
+        fprintf(stdout, "%s %s: %s (%s:%u, %s)\n", formattedTimeMsg.constData(), logLevelMsg.constData(), localMsg.constData(), context.file, context.line, context.function);
+        fflush(stdout);
     }
 
     if (type == QtFatalMsg)
