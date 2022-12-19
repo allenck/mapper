@@ -3,6 +3,7 @@
 #include <QMessageBox>
 #include "mainwindow.h"
 #include "webviewbridge.h"
+#include "overlay.h"
 
 City::City(QObject *parent) : QObject(parent)
 {

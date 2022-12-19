@@ -4,6 +4,7 @@
 #include <QDir>
 #include "configuration.h"
 #include "sql.h"
+#include <QSqlQuery>
 
 Connection::Connection(QObject *parent) : QObject(parent)
 {
@@ -135,5 +136,17 @@ void Connection::configureDb(QSqlDatabase* db, Connection* currConnection)
     else
     {
      throw IllegalArgumentException(tr("invalid driver name: '%1'").arg(driver));
+    }
+    if(currConnection->connectionType() != "Local" )
+    {
+      if(db->open() && !currConnection->defaultSqlDatabase().isEmpty())
+      {
+        QSqlQuery query = QSqlQuery(*db);
+        if(!query.exec(QString("use %1").arg(currConnection->defaultSqlDatabase())))
+        {
+            QMessageBox::critical(nullptr, tr("Sql error"), tr("An sql error has occured! \n")
+                         + query.lastError().text() + " query:" + query.lastQuery());
+        }
+      }
     }
 }

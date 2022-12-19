@@ -83,7 +83,8 @@ void Configuration::saveSettings()
    else if(cn->connectionType()== "ODBC")
    {
        settings->setValue("odbcConnector", cn->odbc_connectorName());
-       settings->setValue("defaultMsSqlDatabase", cn->defaultMsSqlDatabase());
+       settings->setValue("defaultSqlDatabase", cn->defaultSqlDatabase());
+       settings->setValue("mySqlDatabase", cn->mySqlDatabase());
    }
    else if(cn->connectionType()== "Direct")
    {
@@ -96,6 +97,7 @@ void Configuration::saveSettings()
      settings->setValue("hostname", cn->host());
     if(cn->port() > 0)
      settings->setValue("port", cn->port());
+    settings->setValue("defaultSqlDatabase", cn->defaultSqlDatabase());
     settings->setValue("mySqlDatabase",cn->mySqlDatabase());
    }
   }
@@ -246,11 +248,13 @@ void Configuration::getSettings()
        ncn->setUID(settings.value("UID").toString());
        ncn->setHost(settings.value("hostname").toString());
        ncn->setPort(settings.value("port").toInt());
+       ncn->setDefaultSqlDatabase(settings.value("defaultSqlDatabase").toString());
        ncn->setMySqlDatabase(settings.value("mySqlDatabase").toString());
    }
    else if(ncn->connectionType() == "ODBC") {
     ncn->setOdbcConnectorName(settings.value("odbcConnector").toString());
-    ncn->setDefaultMsSqlDatabase(settings.value("defaultMsSqlDatabase").toString());
+    ncn->setDefaultSqlDatabase(settings.value("defaultSqlDatabase").toString());
+    ncn->setMySqlDatabase(settings.value("mySqlDatabase").toString());
    }
 
    if(!nc->connections.contains(ncn))

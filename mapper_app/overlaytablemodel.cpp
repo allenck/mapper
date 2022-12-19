@@ -2,6 +2,7 @@
 #include "configuration.h"
 #include "sql.h"
 #include <QTextDocument>
+#include <overlay.h>
 
 OverlayTableModel::OverlayTableModel(int cityId, QObject *parent) : QAbstractTableModel(parent)
 {

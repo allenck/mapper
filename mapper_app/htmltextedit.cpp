@@ -6,6 +6,7 @@
 #include <QMenu>
 #include <QTextDocumentFragment>
 #include <QColorDialog>
+#include <QMimeData>
 
 HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
   QTextBrowser(parent)

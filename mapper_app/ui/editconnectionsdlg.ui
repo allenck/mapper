@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>629</width>
+    <width>701</width>
     <height>359</height>
    </rect>
   </property>
@@ -118,6 +118,9 @@
    </item>
    <item row="6" column="7">
     <widget class="QToolButton" name="tbBrowse">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to open a dialog to select the name of a Sqlite database file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>...</string>
      </property>
@@ -136,6 +139,9 @@
    </item>
    <item row="7" column="7">
     <widget class="QToolButton" name="tbReload">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;refresh list of known databases.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>...</string>
      </property>
@@ -263,16 +269,6 @@
      </property>
     </widget>
    </item>
-   <item row="7" column="1" colspan="6">
-    <widget class="QComboBox" name="cbUseDatabase">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the database systen supports multiple databases, select the desired one here&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="placeholderText">
-      <string>Select Database</string>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="1" colspan="7">
     <widget class="QComboBox" name="cbConnections">
      <property name="toolTip">
@@ -327,6 +323,13 @@
      </property>
      <property name="wordWrap">
       <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1" colspan="6">
+    <widget class="QLineEdit" name="txtUseDatabase">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter the name of the database that this connection will use. If the name entered does not exits, you will be asked whether you  wish to create it.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>

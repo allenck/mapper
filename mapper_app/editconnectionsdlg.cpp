@@ -37,6 +37,32 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
      setControls(ui->cbConnect->currentIndex());
   });
 
+  connect(ui->txtUseDatabase, &QLineEdit::editingFinished, [=](){
+      QString database = ui->txtUseDatabase->text();
+      if(db.isOpen())
+      {
+         QSqlQuery query = QSqlQuery(db);
+         QString commandText = "use " + database;
+         if(!query.exec(commandText))
+         {
+          if(query.lastError().driverText().startsWith("Unknown database"))
+          {
+            int rslt = QMessageBox::question(nullptr, tr("Create database?"), tr("The database %1 does not exist on the server."
+                       "\nDo you wish to create it?").arg(database));
+            if(rslt == QMessageBox::Yes)
+                SQL::instance()->createMySqlDatabase(database, db);
+          }
+          else
+          {
+           int rslt = QMessageBox::critical(nullptr, tr("Sql Error"), tr("An SqL error has occurred.\n"
+                                           "Sql error:%1\nquery: \"%2\"").arg(query.lastError().text()).arg(query.lastQuery()),
+                                           QMessageBox::Retry|QMessageBox::Ignore|QMessageBox::Abort);
+            return;
+          }
+         }
+      }
+  });
+
   int index=0, i=0;
   ui->cbCities->clear();
   foreach(City* c, config->cityList)
@@ -61,8 +87,13 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
    if(c->id() == config->currCity->curConnectionId)
     index = i;
    if(c->connectionType() == "ODBC")
+   {
        ui->txtDbOrDSN->setText(c->odbc_connectorName());
-  }
+       ui->txtUseDatabase->setText(c->defaultSqlDatabase());
+
+   }
+   if(c->connectionType()=="Direct")
+     ui->txtUseDatabase->setText(c->defaultSqlDatabase());}
   ui->cbConnections->setCurrentIndex(index);
   cbConnectionsSelectionChanged(index);
 
@@ -212,7 +243,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
     ui->cbDbType->setCurrentText(c->servertype());
     ui->cbConnect->setCurrentText(c->connectionType());
     switch (ui->cbConnect->currentIndex()) {
-    case 0:
+    case 0: // Direct
      ui->txtDbOrDSN->setText(c->sqlite_fileName());
      break;
     case 1:
@@ -223,20 +254,25 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
      if(openTestDb())
      {
       QStringList list = SQL::instance()->showMySqlDatabases(db);
-      ui->cbUseDatabase->clear();
-      ui->cbUseDatabase->addItems(list);
+      QCompleter* completer = new QCompleter(list);
+      ui->txtUseDatabase->setCompleter(completer);
      }
-     ui->cbUseDatabase->setCurrentText(c->mySqlDatabase());
+     ui->txtUseDatabase->setText(c->mySqlDatabase());
      break;
-    case 2:
-        ui->cbUseDatabase->setCurrentText(c->useDatabase());
+    case 2: // ODBC (MsSql or MySql/MariaDb
+        ui->txtUseDatabase->setText(c->useDatabase());
         ui->txtDbOrDSN->setText(c->odbc_connectorName());
         ui->lblHelp->setText(tr("connecting ..."));
      if(openTestDb())
      {
-      QStringList list = SQL::instance()->showMsSqlDatabases(db);
-      ui->cbUseDatabase->clear();
-      ui->cbUseDatabase->addItems(list);
+      QStringList list;
+      if(ui->cbDbType->currentText() == "MsSql")
+        list = SQL::instance()->showMsSqlDatabases(db);
+      else
+        list = SQL::instance()->showMySqlDatabases(db);
+
+      QCompleter* completer = new QCompleter(list);
+      ui->txtUseDatabase->setCompleter(completer);
      }
 
   }
@@ -287,7 +323,7 @@ void EditConnectionsDlg::setControls(int ix)
 
   // use database (required for ODBC)
   ui->label_10->setVisible(true);
-  ui->cbUseDatabase->setVisible(true);
+  ui->txtUseDatabase->setVisible(true);
   ui->tbReload->setVisible(false);
   // host (required for ODBC, MYSQL)
   ui->label_4->setVisible(true);
@@ -327,7 +363,7 @@ void EditConnectionsDlg::setControls(int ix)
 #endif
   // use database (required for ODBC)
   ui->label_10->setVisible(true);
-  ui->cbUseDatabase->setVisible(true);
+  ui->txtUseDatabase->setVisible(true);
   ui->tbReload->setVisible(true);
   // host (required for MYSQL)
   ui->label_4->setVisible(false);
@@ -364,7 +400,7 @@ void EditConnectionsDlg::setControls(int ix)
 
   // use database (required for ODBC)
   ui->label_10->setVisible(false);
-  ui->cbUseDatabase->setVisible(false);
+  ui->txtUseDatabase->setVisible(false);
   ui->tbReload->setVisible(false);
   // host (required for ODBC, MYSQL)
   ui->label_4->setVisible(false);
@@ -495,7 +531,7 @@ void EditConnectionsDlg::btnOKClicked()
    return;
   }
  }
- QString savedb = ui->cbUseDatabase->currentText();
+ QString savedb = ui->txtUseDatabase->text();
  if(!testConnection())
   return;
 
@@ -526,7 +562,7 @@ void EditConnectionsDlg::btnOKClicked()
     //c->setDSN(ui->txtDbOrDSN->text());
     //c->setDatabase(ui->txtDbOrDSN->text());
        c->setOdbcConnectorName(ui->txtDbOrDSN->text());
-    c->setDefaultMsSqlDatabase(ui->cbUseDatabase->currentText());
+    c->setDefaultSqlDatabase(ui->txtUseDatabase->text());
     //QString useDatabase = ui->cbUseDatabase->currentText();
     c->setUseDatabase(savedb);
    }
@@ -547,7 +583,7 @@ void EditConnectionsDlg::btnOKClicked()
     c->setUID(ui->txtUID->text());
     c->setPWD(ui->txtPWD->text());
     c->setServerType(ui->cbDbType->currentText());
-    c->setMySqlDatabase(ui->cbUseDatabase->currentText());
+    c->setMySqlDatabase(ui->txtUseDatabase->text());
    }
    if(ui->cbCities->currentText() == config->currCity->name() && c->id() == config->currConnection->id())
     config->currConnection = c;
@@ -693,7 +729,8 @@ bool EditConnectionsDlg::testConnection()
   }
   if(!file.exists())
   {
-   QMessageBox::StandardButton btn = QMessageBox::information(this, tr("Question"), tr("Sqlite db '%1' does not exist\nDo you wish to create a new database?").arg(file.absoluteFilePath()),QMessageBox::Yes | QMessageBox::No);
+   QMessageBox::StandardButton btn = QMessageBox::information(this, tr("Question"), tr("Sqlite db '%1' does not exist\n"
+                                      "Do you wish to create a new database?").arg(file.absoluteFilePath()),QMessageBox::Yes | QMessageBox::No);
    if(btn == QMessageBox::Yes)
    {
     if(db.open())
@@ -752,9 +789,9 @@ bool EditConnectionsDlg::openTestDb()
   QString connector = ui->txtDbOrDSN->text();
   db.setDatabaseName(connector);
  }
- else if(ui->cbDbType->currentText() == "MySql" && ui->cbConnect->currentText()== "Direct")
+ else if( ui->cbConnect->currentText()== "Direct")
  { // MySql
-  db.setDatabaseName(ui->cbUseDatabase->currentText());
+  db.setDatabaseName(ui->txtUseDatabase->text());
   db.setHostName(ui->txtHost->text());
   int port = ui->txtPort->text().toInt();
   if(port > 0)
@@ -764,12 +801,14 @@ bool EditConnectionsDlg::openTestDb()
  }
  else
      throw IllegalArgumentException(tr("invalid server type: %1").arg(ui->cbDbType->currentText()));
- ui->lblHelp->setText(tr("connecting ..."));
+ ui->lblHelp->setText(tr(""));
  bool bOpen = db.open();
  if(bOpen)
  {
   if(ui->cbDbType->currentText() != "Sqlite" )
-   populateDatabases();
+  {
+      populateDatabases();
+  }
   return true;
  }
  ui->lblHelp->setText(tr("error: %1 %2").arg(db.driverName()).arg(db.lastError().driverText()));
@@ -779,15 +818,14 @@ bool EditConnectionsDlg::openTestDb()
 
 void EditConnectionsDlg::populateDatabases()
 {
-// if(!openTestDb())
-//  return;
- QString currDatabase = ui->cbUseDatabase->currentText();
+  QString currDatabase = ui->txtUseDatabase->text();
+  QSqlQuery query = QSqlQuery(db);
+
   if(ui->cbDbType->currentText() == "MsSql")
   {
    // Select * from Sys.Databases
    QStringList databases;
-   QSqlQuery query = QSqlQuery(db);
-   if(!query.exec("Select * from Sys.Databases"))
+   if(!query.exec("Select SHOWDATABASES()"))
    {
     SQLERROR(query);
    }
@@ -795,28 +833,71 @@ void EditConnectionsDlg::populateDatabases()
    {
     while(query.next())
     {
-     QString dbname = query.value(0).toString();
-     if(dbname == "master" || dbname == "tempdb" || dbname == "msdb" || dbname == "model")
-      continue;
      databases.append(query.value(0).toString());
      qDebug() << "available: " << query.value(0).toString();
     }
-    ui->cbUseDatabase->clear();
-    ui->cbUseDatabase->addItems(databases);
-    if(databases.size() > 0)
-        ui->cbUseDatabase->setCurrentIndex(0);
+    QCompleter* completer = new QCompleter(databases);
+    ui->txtUseDatabase->setCompleter(completer);
+    if(ui->txtUseDatabase->text().isEmpty() && databases.count()==1)
+     ui->txtUseDatabase->setText(databases.at(0));
    }
   }
   else
   {
    // MySql
    QStringList list = SQL::instance()->showMySqlDatabases(db);
-   ui->cbUseDatabase->clear();
-   ui->cbUseDatabase->addItems(list);
-   if(list.contains(currDatabase))
-    ui->cbUseDatabase->setCurrentText(currDatabase);
+   QCompleter* completer = new QCompleter(list);
+   ui->txtUseDatabase->setCompleter(completer);
+   if(ui->txtUseDatabase->text().isEmpty() && list.size()==1)
+       ui->txtUseDatabase->setText(list.at(0));
+       if(!list.contains(currDatabase))
+       {
+         QString database = currDatabase;
+         if(db.isOpen())
+         {
+          QSqlQuery query = QSqlQuery(db);
+          bool retry = true;
+          while (retry)
+          {
+            if(!database.isEmpty())
+            {
+              QString commandText = "use " + database;
+              if(!query.exec(commandText))
+              {
+                if(query.lastError().databaseText().contains("Unknown database"))
+                {
+                  int rslt = QMessageBox::question(nullptr, tr("Create database?"), tr("The database %1 does not exist on the server."
+                        "\nDo you wish to create it?").arg(database));
+                  if(rslt == QMessageBox::No)
+                    SQL::instance()->createMySqlDatabase(database, db);
+                }
+                else
+                {
+                  int rslt = QMessageBox::critical(nullptr, tr("Sql Error"), tr("An SqL error has occurred.\n"
+                                            "Sql error:%1\nquery:\" %2\"").arg(query.lastError().text()).arg(query.lastQuery()),
+                                            QMessageBox::Retry|QMessageBox::Ignore);
+                  if(rslt == QMessageBox::Retry)
+                    continue;
+                  else retry = false;
+                }
+            }
+           }
+            else
+                break;
+          }
+       }
+   }
   }
-  db.close();
+
+  // use desired db
+  if(!query.exec("use "+ currDatabase))
+  {
+    qDebug() << query.lastError().driverText()+ query.lastError().databaseText();
+    ui->lblHelp->setText(query.lastError().driverText() + query.lastError().databaseText());
+    return;
+  }
+  ui->lblHelp->setText(tr("using ")+currDatabase);
+  return;
 }
 
 QString EditConnectionsDlg::getDatabase()
@@ -834,9 +915,10 @@ QString EditConnectionsDlg::getDatabase()
  {
   while(query.next())
   {
+   if(!query.value(0).isNull())
    dbName = query.value(0).toString();
   }
-  ui->cbUseDatabase->setCurrentIndex( ui->cbUseDatabase->findText(dbName));
+  ui->txtUseDatabase->setText(dbName);
  }
  return dbName;
 }
@@ -992,7 +1074,7 @@ void EditConnectionsDlg::ontxtDbOrDsn_editingFinished()
   {
     if(db.isOpen())
     {
-       int ret = QMessageBox::question(this, tr("Create new database?"), tr("The database '%1' does not exist on the server. Do you wish to create it?").arg(dbName));
+       int ret = QMessageBox::question(this, tr("Create new database?"), tr("The database '") +dbName + tr("' does not exist on the server.\n Do you wish to create it?"));
        if(ret == QMessageBox::Yes)
        {
         SQL::instance()->createMySqlDatabase(dbName, db);

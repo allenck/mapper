@@ -6,10 +6,8 @@
 #include <QSettings>
 #include <iostream>
 #include <QDebug>
-#include "settingsdb.h"
 #include "city.h"
 #include "connection.h"
-#include "overlay.h"
 
 class Configuration;
 class SQL;
