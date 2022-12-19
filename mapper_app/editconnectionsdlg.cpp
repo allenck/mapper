@@ -734,7 +734,10 @@ bool EditConnectionsDlg::testConnection()
    if(btn == QMessageBox::Yes)
    {
     if(db.open())
+    {
      createSqliteTables(db);
+     SQL::instance()->executeScript(":/CreateMySqlFunctions.sql");
+    }
    }
    else
    {
@@ -868,8 +871,11 @@ void EditConnectionsDlg::populateDatabases()
                 {
                   int rslt = QMessageBox::question(nullptr, tr("Create database?"), tr("The database %1 does not exist on the server."
                         "\nDo you wish to create it?").arg(database));
-                  if(rslt == QMessageBox::No)
+                  if(rslt == QMessageBox::Yes)
+                  {
                     SQL::instance()->createMySqlDatabase(database, db);
+                    SQL::instance()->executeScript(":/CreateMySqlFunctions.sql");
+                  }
                 }
                 else
                 {
