@@ -198,7 +198,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 #ifdef Q_OS_WIN
   fileUrl = QUrl::fromLocalFile(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm");
 #else
-  fileUrl = QUrl("http://localhost/GoogleMaps2.htm");
+   fileUrl = QUrl::fromLocalFile(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm");
+  //fileUrl = QUrl("http://localhost/GoogleMaps2.htm");
 #endif
   //if(verifyAPIKey(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm", keyTokens.at(0)))
    webView->setUrl(fileUrl);
@@ -4105,8 +4106,9 @@ QString loadPath = tempDir;
 //  copyAndUpdate(cwd + QDir::separator() + "GoogleMaps2b.htm", tempDir, "");
 //  copyAndUpdate(cwd + QDir::separator() + "GoogleMaps.js", tempDir, "");
  updateTarget("./html", tempDir);
+ fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "html"  + QDir::separator() + startFn);
 
-  fileUrl = QUrl("http://localhost:80/GoogleMaps2b.htm");
+ //fileUrl = QUrl("http://localhost:80/GoogleMaps2b.htm");
 #else
     fileUrl = QUrl::fromLocalFile(tempDir  + QDir::separator() + startFn);
 #endif
