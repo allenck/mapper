@@ -1,17 +1,13 @@
-IF OBJECT_ID (N'dbo.distance', N'FN') IS NOT NULL
-    DROP FUNCTION distance;
+/****** Object:  UserDefinedFunction [dbo].[fnCalcDistanceKM]    Script Date: 12/20/2022 12:27:23 PM ******/
+SET ANSI_NULLS ON;
 
-create function [dbo].[fnCalcDistanceMiles] (@Lat1 decimal(8,4), @Long1 decimal(8,4), @Lat2 decimal(8,4), @Long2 decimal(8,4))
-returns decimal (8,4) as
-begin
-declare @d decimal(28,10)
--- Convert to radians
-set @Lat1 = @Lat1 / 57.2958
-set @Long1 = @Long1 / 57.2958
-set @Lat2 = @Lat2 / 57.2958
-set @Long2 = @Long2 / 57.2958
--- Calc distance
-set @d = (Sin(@Lat1) * Sin(@Lat2)) + (Cos(@Lat1) * Cos(@Lat2) * Cos(@Long2 - @Long1))
+
+SET QUOTED_IDENTIFIER ON;
+
+CREATE OR ALTER FUNCTION [dbo].[distance](@lat1 FLOAT, @lat2 FLOAT, @lon1 FLOAT, @lon2 FLOAT)
+RETURNS FLOAT 
+AS
+BEGIN
+
+    RETURN ACOS(SIN(PI()*@lat1/180.0)*SIN(PI()*@lat2/180.0)+COS(PI()*@lat1/180.0)*COS(PI()*@lat2/180.0)*COS(PI()*@lon2/180.0-PI()*@lon1/180.0))*6371
 END
-
-select dbo.distance(1,2,3,4)

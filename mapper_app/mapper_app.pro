@@ -11,12 +11,12 @@ greaterThan(QT_MAJOR_VERSION, 4): {
 }
 message(WEBENGINE  " = "  $$WEBENGINE)
 
-isEmpty(WEBENGINE) {
- QT       += core gui  webkit network sql xml
- greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport printsupport webkitwidgets gui
- message("not  using WebEngine")
-}
-else {
+#isEmpty(WEBENGINE) {
+# QT       += core gui  webkit network sql xml
+# greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport printsupport webkitwidgets gui
+# message("not  using WebEngine")
+#}
+#else {
  QT       += core gui  network sql xml widgets websockets webchannel
  greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport printsupport webenginewidgets gui
  DEFINES += USE_WEBENGINE
@@ -31,7 +31,7 @@ HEADERS += \
 SOURCES += \
     websocketclientwrapper.cpp \
     websockettransport.cpp
-}
+#}
 
 DEFINES += "BUILD_DIR=\"\\\""$$OUT_PWD"\\\"\""
 DEFINES += QT_MESSAGELOGCONTEXT

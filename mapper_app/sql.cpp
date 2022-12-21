@@ -424,7 +424,7 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
   }
  //db.close();
  routeSortType = config->currCity->routeSortType;
- qSort(list.begin(), list.end(), sortbyalpha_route_date);
+ std::sort(list.begin(), list.end(), sortbyalpha_route_date);
  return list;
 }
 
@@ -4075,7 +4075,7 @@ StationInfo SQL::getStationAtPoint(LatLng pt)
             else
                 sti.startDate = query.value(6).toDateTime();
             if (query.value(7).isNull())
-                sti.endDate = QDateTime(QDate(3000,1,1));
+                sti.endDate = QDateTime(QDate(3000,1,1), QTime());
             else
                 sti.endDate = query.value(7).toDateTime();
 
@@ -6311,9 +6311,11 @@ qint32 SQL::getDefaultCompany(qint32 route, QString date)
 
         QString commandText;
         if(config->currConnection->servertype() != "MsSql")
-            commandText = "select `key`, description from Companies where '" + date + "' between startDate and endDate and " + QString("%1").arg(route) + " between firstRoute and lastRoute";
+            commandText = "select `key`, description from Companies where '" + date + "' "
+                          "between startDate and endDate and " + QString("%1").arg(route) + " between firstRoute and lastRoute";
         else
-            commandText = "select [key], description from companies where '" + date + "' between startDate and endDate and " + route + " between firstRoute and lastRoute";
+            commandText = "select [key], description from companies where '" + date + "' "
+                          "between startDate and endDate and " + QString::number(route) + " between firstRoute and lastRoute";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -7490,7 +7492,7 @@ QList<routeIntersects> SQL::updateLikeRoutes(qint32 segmentid, qint32 route, QSt
             ri.startIntersectingSegments.append(sd1);
     }
     //ri.startIntersectingSegments.Sort(compareSegments);
-    qSort(ri.startIntersectingSegments.begin(), ri.startIntersectingSegments.end(), compareSegmentData);
+    std::sort(ri.startIntersectingSegments.begin(), ri.startIntersectingSegments.end(), compareSegmentData);
 
     // get other segments intersecting with the end of this segment
     myArray = getIntersectingSegments(sd._endLat, sd._endLon, .020, sd._routeType);
@@ -7505,7 +7507,7 @@ QList<routeIntersects> SQL::updateLikeRoutes(qint32 segmentid, qint32 route, QSt
             ri.endIntersectingSegments.append(sd2);
     }
     //ri.endIntersectingSegments.Sort(compareSegments);
-    qSort(ri.endIntersectingSegments.begin(), ri.endIntersectingSegments.end(), compareSegmentData);
+    std::sort(ri.endIntersectingSegments.begin(), ri.endIntersectingSegments.end(), compareSegmentData);
 
     // Populate the intersect list
     //foreach (routeData rdi in segmentInfoList)
@@ -7554,9 +7556,9 @@ QList<routeIntersects> SQL::updateLikeRoutes(qint32 segmentid, qint32 route, QSt
                 }
             }
             //ri2.startIntersectingSegments.Sort(compareSegments);
-            qSort(ri2.startIntersectingSegments.begin(), ri2.startIntersectingSegments.end(), compareSegmentData);
+            std::sort(ri2.startIntersectingSegments.begin(), ri2.startIntersectingSegments.end(), compareSegmentData);
             //ri2.endIntersectingSegments.Sort(compareSegments);
-            qSort(ri2.endIntersectingSegments.begin(), ri2.endIntersectingSegments.end(), compareSegmentData);
+            std::sort(ri2.endIntersectingSegments.begin(), ri2.endIntersectingSegments.end(), compareSegmentData);
             if(ri2.endIntersectingSegments.count() == ri.endIntersectingSegments.count() &&
                     ri2.startIntersectingSegments.count() == ri.startIntersectingSegments.count())
             intersectList.append(ri2);
@@ -9953,20 +9955,40 @@ QMap<int,RouteName*>* SQL::routeNameList()
  return list;
 }
 
-bool SQL::createMySqlDatabase(QString dbName, QSqlDatabase db)
+bool SQL::useDatabase(QString dbName, QSqlDatabase db)
+{
+    QSqlQuery query = QSqlQuery(db);
+    QString commandText = "use " +dbName;
+    if(!query.exec(commandText))
+    {
+        SQLERROR(query);
+        return false;
+    }
+    return true;
+}
+
+bool SQL::createSqlDatabase(QString dbName, QSqlDatabase db, QString dbType)
 {
  if(!db.isOpen())
   return false;
  QSqlQuery query = QSqlQuery(db);
 
- QString commandText = "CREATE DATABASE IF NOT EXISTS " + dbName;
+ QString commandText;
+ if(dbType == "MySql")
+  commandText = "CREATE DATABASE IF NOT EXISTS " + dbName;
+ else
+  commandText = "CREATE DATABASE " + dbName;
+
  if(!query.exec(commandText))
  {
   SQLERROR(query);
+  QMessageBox::critical(NULL, "Error", "A fatal SQL error has occured:\n" + query.lastError().text() + "\n"+query.lastQuery() + " line:" + QString("%1").arg(__LINE__));
+
   return false;
  }
- return executeScript(":/databases/mySql_createDatabase.sql",db);
+ return true;
 }
+
 
 //QStringList SQL::listMySqlTables(QString dbName, QSqlDatabase db)
 //{

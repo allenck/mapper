@@ -3964,7 +3964,7 @@ void MainWindow::On_saveImage_clicked()
   if(!saveFilename.endsWith(ext))
    saveFilename.append(ext);
 
-  if(!QPixmap::grabWidget(webView).save(saveFilename, qPrintable(saveExtension)))
+  if(!QWidget::grab(webView->rect()).save(saveFilename, qPrintable(saveExtension)))
   {
    QMessageBox::warning(this, "File could not be saved", "ok", QMessageBox::Ok);
   }

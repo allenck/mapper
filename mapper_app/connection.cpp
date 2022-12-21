@@ -45,10 +45,10 @@ QSqlDatabase Connection::configure(const QString cName)
  {
   if(config->currConnection->servertype() != "Sqlite")
    return db;
-  if(config->currConnection->useDatabase() != "default" && config->currConnection->useDatabase() != "")
+  if(config->currConnection->mySqlDatabase()  != "")
   {
    QSqlQuery query = QSqlQuery(db);
-   //QString cmd = QString("use [%1]").arg(config->currConnection->useDatabase());
+   //QString cmd = QString("use [%1]").arg(config->currConnection->mySqlDatabase());
    QString cmd = QString("use %1").arg(config->currConnection->useDatabase());
    if(!query.exec(cmd))
    {

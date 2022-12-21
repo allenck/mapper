@@ -78,7 +78,7 @@ void SplitSegmentDlg::refreshSegments()
 {
   ui->cbSegments->clear();
   cbSegmentInfoList = SQL::instance()->getSegmentInfo();
-  qSort(cbSegmentInfoList.begin(), cbSegmentInfoList.end(),compareSegmentInfo);
+  std::sort(cbSegmentInfoList.begin(), cbSegmentInfoList.end(),compareSegmentInfo);
   //foreach (segmentInfo sI in cbSegmentInfoList)
   for(int i=0; i < cbSegmentInfoList.count(); i++)
   {

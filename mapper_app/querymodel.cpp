@@ -84,7 +84,7 @@ QVariant QueryModel::data(const QModelIndex &index, int role = Qt::DisplayRole) 
    break;
   case Qt::TextAlignmentRole: // Qt::TextAlignmentRole 7
    break;
-  case Qt::BackgroundColorRole: // Qt::BackgroundColorRole  8
+  case Qt::BackgroundRole: // Qt::BackgroundColorRole  8
    break;
   case Qt::ForegroundRole: // Qt::ForegroundRole 9
    break;

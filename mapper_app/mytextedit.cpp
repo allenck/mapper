@@ -4,10 +4,11 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QMimeData>
+#include <QAction>
 
 MyTextEdit::MyTextEdit(QWidget* parent) : QTextEdit(parent)
 {
- boldAction = new QAction(tr("Bold"),this);
+ boldAction = new QAction(tr("Bold"));
  italicAction = new QAction(tr("Italicize"), this);
  underlineAct = new QAction(tr("Underline"),this);
  textZoomAct = new QAction(tr("Zoom +"), this);
@@ -84,7 +85,7 @@ void MyTextEdit::OnTextZoomAct()
 {
     double pointsize = this->fontPointSize();
     if(pointsize <= 0)
-        this->setFontPointSize(11);
+        QTextEdit:this->setFontPointSize(11);
     this->setFontPointSize(this->fontPointSize()+1.);
     setDirty(true);
 }
@@ -100,7 +101,7 @@ void MyTextEdit::OnSetFontAct()
  //fontDlg.setFont(this->currentFont());
  QFont font = this->currentFont();
  font.setItalic(this->fontItalic());
- font.setWeight(this->fontWeight());
+ font.setWeight((QFont::Weight)this->fontWeight());
  font.setUnderline(this->fontUnderline());
  font.setPointSize(this->fontPointSize());
  bool ok;

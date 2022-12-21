@@ -1,6 +1,7 @@
 #include "exportdlg.h"
 #include "ui_exportdlg.h"
 #include <QCloseEvent>
+#include "vptr.h"
 
 ExportDlg::ExportDlg(Configuration *cfg, QWidget *parent) :
     QDialog(parent),
@@ -18,6 +19,10 @@ ExportDlg::ExportDlg(Configuration *cfg, QWidget *parent) :
  connect(ui->chkAll, SIGNAL(clicked(bool)), this, SLOT(chkAll_changed(bool)));
  connect(ui->btnGo, SIGNAL(clicked()), this, SLOT(btnOK_clicked()));
  connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(btnCancel_clicked()) );
+ connect(ui->btnFinish, &QPushButton::clicked, [=]{
+     timer->stop();
+     close();
+ });
  ui->progressBar->setMinimum(0);
  ui->progressBar->setMaximum(100);
  ui->progressBar->setValue(0);
@@ -33,17 +38,22 @@ ExportDlg::ExportDlg(Configuration *cfg, QWidget *parent) :
      Connection* c = config->currCity->connections.at(i);
      if(c->id() == config->currConnection->id())
          continue;
-     ui->cbConnections->addItem(c->description());
+     ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
  }
+
  for(int i=0; i<config->currCity->connections.count(); i++)
  {
      Connection* c = config->currCity->connections.at(i);
-     if(c->id() == config->currCity->curConnectionId)
+     if(c->id() != config->currCity->curConnectionId)
      {
          ui->cbConnections->setCurrentIndex(i);
          break;
      }
  }
+// connect(ui->cbConnections, &QComboBox::currentTextChanged, [=]{
+//     Connection* c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
+//     c->configure();
+// });
  on_chkAll_toggled(ui->chkAll->isChecked());
 }
 
@@ -302,6 +312,7 @@ void ExportDlg::btnOK_clicked()
 void ExportDlg::quickProcess()
 {
     QApplication::processEvents();
+
     show();
 }
 

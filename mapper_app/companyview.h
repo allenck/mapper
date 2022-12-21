@@ -12,7 +12,7 @@ class MyCompanyTableModel : public QSqlTableModel
 {
     Q_OBJECT
 public:
-    MyCompanyTableModel(QObject *parent = 0, QSqlDatabase db = QSqlDatabase());
+  MyCompanyTableModel(QObject *parent = 0, QSqlDatabase db = QSqlDatabase()) : QSqlTableModel(parent){}
 
 protected:
     QVariant data(const QModelIndex &index, int role) const;

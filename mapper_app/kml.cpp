@@ -215,7 +215,7 @@ QDomElement Kml::createPlacemark(QString oneWay)
 //    } finally {
 //        o.close();
 //    }
- stream.setCodec("UTF-8");
+// stream.setCodec("UTF-8");
  QString sXml = doc.toString();
  doc.save(stream,2);
 }

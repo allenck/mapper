@@ -406,7 +406,7 @@ void RouteView::reSequenceRoute()
   QList<SegmentInfo> old = segmentInfoList;
   //compareSequenceClass comparer = new compareSequenceClass();
   //segmentList.Sort(comparer);
-  qSort(segmentInfoList.begin(),segmentInfoList.end(),ascending_si_segmentId);
+  std::sort(segmentInfoList.begin(),segmentInfoList.end(),ascending_si_segmentId);
   bIsSequenced = true;
   for(int i=0; i < segmentInfoList.count(); i++)
   {

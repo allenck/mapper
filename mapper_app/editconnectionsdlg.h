@@ -34,7 +34,7 @@ private:
  QTcpSocket socket;
  QStringList databases;
  bool createSqliteTables(QSqlDatabase db);
- void populateDatabases();
+ bool populateDatabases();
  QString getDatabase();
 #ifndef Q_WS_WIN
  void findODBCDsn(QString iniFile, QStringList* dsnList);

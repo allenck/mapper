@@ -3,7 +3,7 @@
 # Project created by QtCreator 2016-02-23T15:06:32
 #
 #-------------------------------------------------
-greaterThan(QT_MAJOR_VERSION, 4):QT += widgets
+QT += widgets gui
 
 TARGET = Console
 TEMPLATE = lib

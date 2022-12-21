@@ -104,7 +104,7 @@
 
  Qt::Orientations FlowLayout::expandingDirections() const
  {
-     return 0;
+     return Qt::Horizontal;
  }
 
  bool FlowLayout::hasHeightForWidth() const
@@ -136,7 +136,7 @@
      foreach (item, itemList)
          size = size.expandedTo(item->minimumSize());
 
-     size += QSize(2*margin(), 2*margin());
+//     size += QSize(2*margin(), 2*margin());
      return size;
  }
 

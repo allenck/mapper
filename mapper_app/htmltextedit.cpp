@@ -228,7 +228,7 @@ void HtmlTextEdit::OnSetFontAct()
  //fontDlg.setFont(this->currentFont());
  QFont font = this->currentFont();
  font.setItalic(this->fontItalic());
- font.setWeight(this->fontWeight());
+ font.setWeight(QFont().weight());
  font.setUnderline(this->fontUnderline());
  font.setPointSize(this->fontPointSize());
  bool ok;

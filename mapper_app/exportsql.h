@@ -2,13 +2,13 @@
 #define EXPORTSQL_H
 
 #include <QObject>
-#include "sql.h"
 #include "configuration.h"
+#include "qthread.h"
 //#include "exportdlg.h"
 #include <QSqlQuery>
 
 class QSqldatabase;
-#define SQLERROR(query) \
+#define SQLERROR_E(query) \
 do \
 { \
  QSqlError err = query.lastError(); \
@@ -16,10 +16,8 @@ do \
  qCritical() << query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n"; \
     switch (errSqlMessage(query)) {\
     case QMessageBox::Abort:\
-    emit ExportSql::requestStop();\
+     emit ExportSql::requestStop();\
      return false;\
-    case QMessageBox::Retry:\
-     break;\
     case QMessageBox::Ignore:\
      continue;\
     default:\

@@ -453,6 +453,7 @@ void Configuration::createDefaultSettings()
     nc->setDescription ("SQLITE3 connection");
     nc->setDriver("QSQLITE");
     nc->setServerType("Sqlite");
+    nc->setConnectionType("Local");
 
     nc->setCityName(newCity->name());
     if(!newCity->connections.contains(nc))
@@ -485,6 +486,7 @@ void Configuration::createDefaultSettings()
     nc->setDescription ("SQLITE3 connection");
     nc->setDriver("QSQLITE");
     nc->setServerType("Sqlite");
+    nc->setConnectionType("Local");
     if(!newCity->connections.contains(nc))
     {
      newCity->connections.append( nc);
@@ -516,6 +518,7 @@ void Configuration::createDefaultSettings()
     nc->setDescription ("SQLITE3 connection");
     nc->setServerType("Sqlite");
     nc->setCityName(newCity->name());
+    nc->setConnectionType("Local");
     if(!newCity->connections.contains(nc))
     {
      newCity->connections.append( nc);
@@ -546,6 +549,7 @@ void Configuration::createDefaultSettings()
     nc->setDriver("QSQLITE");
     nc->setServerType("Sqlite");
     nc->setCityName(newCity->name());
+    nc->setConnectionType("Local");
     if(!newCity->connections.contains(nc))
     {
      newCity->connections.append( nc);
@@ -561,8 +565,8 @@ void Configuration::createDefaultSettings()
     newCity->bShowOverlay =true;
 
     currentCityId = 0;
-    currConnection = currCity->connections.at(0);
-    currConnection->setId(currCity->curConnectionId);
+    currConnection = newCity->connections.at(0);
+    currConnection->setId(newCity->curConnectionId);
     if(Overlay::importXml("./overlays.xml"))
     {
      for(Overlay* ov : Overlay::overlayList)

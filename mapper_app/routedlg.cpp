@@ -1475,7 +1475,7 @@ void RouteDlg::btnUpdateTurn_Click()      // SLOT
 {
     //setDefaultTurnInfo();
     QPalette* pBlack = new QPalette();
-    pBlack->setColor(QPalette::Foreground, Qt::black);
+    pBlack->setColor(QPalette::WindowText, Qt::black);
     QString redSS = "color: red";
     QString blackSS = "color: black";
 
