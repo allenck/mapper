@@ -10,6 +10,8 @@
 #include <QMutexLocker>
 #include <QIODevice>
 #include <QFile>
+#include "configuration.h"
+
 #if 0
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
@@ -58,6 +60,7 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
     QByteArray logLevelMsg = logLevelName.toLocal8Bit();
 
     ConsoleInterface::instance()->sendMessage(logLevelName + ": "+ msg);
+    logToFile = Configuration::instance()->loggingOn();
     if (logToFile) {
         QString txt = QString("%1 %2: %3   (%4.%5)").arg(formattedTime, logLevelName, msg,  context.file).arg(context.line);
         QFile outFile(logFilePath);

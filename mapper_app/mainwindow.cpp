@@ -198,11 +198,19 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 #ifdef Q_OS_WIN
   fileUrl = QUrl::fromLocalFile(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm");
 #else
-   fileUrl = QUrl::fromLocalFile(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm");
+   fileUrl = QUrl::fromLocalFile(htmlDir.absolutePath() + QDir::separator()+"GoogleMaps2.htm");
   //fileUrl = QUrl("http://localhost/GoogleMaps2.htm");
 #endif
   //if(verifyAPIKey(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm", keyTokens.at(0)))
-   webView->setUrl(fileUrl);
+   webView->load(fileUrl);
+//   QFile f = QFile(htmlDir.absolutePath() + QDir::separator()+"GoogleMaps2.htm");
+//   if(f.open(QIODevice::ReadOnly))
+//   {
+//    QTextStream stream(&f);
+//    QString htmlText = stream.readAll();
+//    webView->setHtml(htmlText, QUrl("http://localHost:80"));
+//    webView->show();
+//   }
   //else throw Exception("API key invalid");
 
  }
@@ -536,7 +544,7 @@ void MainWindow::reloadMap()
   QUrl fileUrl = QUrl::fromLocalFile(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm");
   //webView->setUrl(fileUrl);
  }
- webView->load(fileUrl);
+ webView->setUrl(fileUrl);
  QVariantList objArray;
  objArray << m_latitude << m_longitude;
  m_bridge->processScript("setCenter", objArray);
@@ -1105,6 +1113,15 @@ void MainWindow::createActions()
  connect(setInspectedPageAct, &QAction::triggered, [=]{
      myWebEnginePage->setInspectedPage(myWebEnginePage);
  });
+ setLoggingAct = new QAction(tr("Log messages to file"), this);
+ setLoggingAct->setCheckable(true);
+ setLoggingAct->setChecked(config->loggingOn());
+ connect(setLoggingAct, &QAction::triggered, [=]{
+  if(config->loggingOn())
+   config->setLoggingOn(false);
+  else
+   config->setLoggingOn(true);
+ });
 }
 
 void MainWindow::createMenus()
@@ -1141,6 +1158,7 @@ void MainWindow::createMenus()
     toolsMenu->addAction(browseCommentsAct);
     toolsMenu->addAction(exportOverlaysAct);
     toolsMenu->addAction(setCityBoundsAct);
+    toolsMenu->addAction(setLoggingAct);
     //toolsMenu->addAction(setInspectedPageAct);
 
     optionsMenu = new Menu(tr("Options"));
@@ -1696,7 +1714,7 @@ void MainWindow::btnClearClicked()
     m_bridge->processScript("clearAll", "");
 }
 
-void MainWindow::on_createKmlFile()
+void MainWindow::on_createKmlFile_triggered()
 {
  int row =         ui->cbRoute->currentIndex();
  RouteData rd = ((RouteData)routeList.at(row));

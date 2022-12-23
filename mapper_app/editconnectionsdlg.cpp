@@ -7,6 +7,8 @@
 #include <QClipboard>
 #include <QApplication>
 #include "vptr.h"
+#include "mymessagebox.h"
+
 
 EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
   QDialog(parent),
@@ -19,50 +21,8 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
   currCity = config->currCity;
   this->setWindowTitle(tr("Edit Connections"));
   drivers = QSqlDatabase::drivers();
-  dbType <<"MySql"<<"MsSql"<<"Sqlite";  // currently supported database types.
-  for(int i=0; i < dbType.count(); i++)
-  {
-   ui->cbDbType->addItem(dbType.at(i), (DBTYPE)i);
-  }
-  for(int i=0; i < drivers.count(); i++)
-  {
-   ui->cbDriverType->addItem(drivers.at(i));
-  }
-  connect(ui->cbDriverType, SIGNAL(currentIndexChanged(int)), this, SLOT(cbDriverTypeSelectionChanged(int)));
-  //ui->cbDriverType->setCurrentText("QSQLITE");
 
-  connect(ui->cbConnect, &QComboBox::currentTextChanged, [=]{
-   setControls(ui->cbConnect->currentIndex());
-  });
-  connect(ui->cbDbType, &QComboBox::currentTextChanged, [=]{
-     setControls(ui->cbConnect->currentIndex());
-  });
-
-  connect(ui->txtUseDatabase, &QLineEdit::editingFinished, [=](){
-      QString database = ui->txtUseDatabase->text();
-      if(db.isOpen() && !database.isEmpty())
-      {
-         QSqlQuery query = QSqlQuery(db);
-         QString commandText = "use " + database;
-         if(!query.exec(commandText))
-         {
-          if(query.lastError().driverText().startsWith("Unknown database"))
-          {
-            int rslt = QMessageBox::question(nullptr, tr("Create database?"), tr("The database %1 does not exist on the server."
-                       "\nDo you wish to create it?").arg(database));
-            if(rslt == QMessageBox::Yes)
-                SQL::instance()->createSqlDatabase(database, db, ui->cbDbType->currentText());
-          }
-          else
-          {
-           int rslt = QMessageBox::critical(nullptr, tr("Sql Error"), tr("An SqL error has occurred.\n"
-                                           "Sql error:%1\nquery: \"%2\"").arg(query.lastError().text()).arg(query.lastQuery()),
-                                           QMessageBox::Retry|QMessageBox::Ignore|QMessageBox::Abort);
-            return;
-          }
-         }
-      }
-  });
+  connection = currCity->connections.at(currCity->curConnectionId);
 
   int index=0, i=0;
   ui->cbCities->clear();
@@ -75,9 +35,32 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
   }
   ui->cbCities->setCurrentIndex(index);
 
-  connect(ui->cbCities, SIGNAL(currentIndexChanged(int)),this, SLOT(cbCitiesSelectionChanged(int)));
-  connect(ui->cbCities, SIGNAL(editTextChanged(QString)), this, SLOT(cbCitiesTextChanged(QString)));
-  connect(ui->cbCities->lineEdit(), SIGNAL(editingFinished()), this, SLOT(cbCitiesLeave()));
+  QStringList connectionTypes = {"Local", "Direct", "ODBC"};
+  ui->cbConnect->addItems(connectionTypes);
+  ui->cbConnect->setCurrentText(connection->connectionType());
+
+  for(int i=0; i < drivers.count(); i++)
+  {
+   ui->cbDriverType->addItem(drivers.at(i));
+   if(connection->driver() == drivers.at(i))
+    ui->cbDriverType->setCurrentIndex(i);
+  }
+
+  dbTypes <<"MySql"<<"MsSql"<<"Sqlite";  // currently supported database types.
+
+  for(int i=0; i < dbTypes.count(); i++)
+  {
+   ui->cbDbType->addItem(dbTypes.at(i), (DBTYPE)i);
+   if(connection->servertype() == dbTypes.at(i))
+   {
+      ui->cbDbType->setCurrentIndex(i);
+   }
+  }
+
+  if(ui->cbConnect->currentIndex() >=0)
+   setControls(ui->cbConnect->currentIndex());
+
+  //MyMessageBox::warning(nullptr, "test", "this is a test",QMessageBox::Ok);
 
   index = 0;
   for(int i=0; i < config->currCity->connections.count(); i++)
@@ -86,45 +69,69 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
    Connection* c = selectedCity->connections.at(i);
    ui->cbConnections->addItem(c->description(),VPtr<Connection>::asQVariant(c));
    if(c->id() == config->currCity->curConnectionId)
-    index = i;
+    ui->cbConnections->setCurrentIndex(i);
    if(c->connectionType() == "ODBC")
    {
        ui->txtDbOrDSN->setText(c->odbc_connectorName());
        ui->txtUseDatabase->setText(c->defaultSqlDatabase());
    }
-   if(c->connectionType()=="Direct")
-     ui->txtUseDatabase->setText(c->defaultSqlDatabase());}
-  ui->cbConnections->setCurrentIndex(index);
-  cbConnectionsSelectionChanged(index);
+   else if(c->connectionType()=="Direct")
+   {
+     ui->txtUseDatabase->setText(c->defaultSqlDatabase());
+     ui->txtHost->setText(connection->host());
+     ui->txtPort->setText(QString::number(connection->port()));
+     ui->txtUID->setText(connection->uid());
+     ui->txtPWD->setText(connection->pwd());
+     ui->txtUseDatabase->setText(c->mySqlDatabase());
+   }
+  else
+   {
+    ui->txtDbOrDSN->setText(connection->sqlite_fileName());
+   }
+  }
 
-  connect(ui->cbConnections, SIGNAL(currentIndexChanged(int)), this, SLOT(cbConnectionsSelectionChanged(int)));
-  connect(ui->cbConnections, SIGNAL(editTextChanged(QString)), this, SLOT(cbConnectionsTextChanged(QString)));
-  connect(ui->btnTest,SIGNAL(clicked(bool)), this, SLOT(btnTestClicked()));
-  connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(btnCancelClicked()));
-  connect(ui->btnOK, SIGNAL(clicked()), this, SLOT(btnOKClicked()));
-  connect(ui->btnDelete, SIGNAL(clicked()), this, SLOT(btnDeleteClicked()));
-  connect(ui->btnAbort, &QPushButton::clicked, [=]{exit(EXIT_FAILURE);});
-    //connect(ui->cbConnections, SIGNAL(signalFocusOut()),this, SLOT(cbConnectionsLeave()));
-  connect(ui->txtHost, SIGNAL(editingFinished()), this, SLOT(txtHostLeave()));
-  connect(ui->txtPort, SIGNAL(editingFinished()), this, SLOT(txtPortLeave()));
-  connect(ui->txtPWD, SIGNAL(editingFinished()), this, SLOT(txtPwdLeave()));
-  connect(ui->txtDbOrDSN, SIGNAL(textChanged(QString)), this, SLOT(txtDsnTextChanged(QString)));
-  connect(ui->txtDbOrDSN, SIGNAL(editingFinished()), this, SLOT(ontxtDbOrDsn_editingFinished()));
-  ui->tbView->setIcon(QIcon(":/show-password.png"));
-  ui->txtPWD->setEchoMode(QLineEdit::Password);
-  connect(ui->tbView, &QToolButton::clicked, [=](bool checked){
-      if(checked)
-      {
-          ui->tbView->setIcon(QIcon(":/show-password.png"));
-          ui->txtPWD->setEchoMode(QLineEdit::Password);
-      }
-      else
-      {
-          ui->tbView->setIcon(QIcon(":/hidden.png"));
-          ui->txtPWD->setEchoMode(QLineEdit::Normal);
-      }
-  });
-  connect(ui->tbReload, &QToolButton::clicked, [=]{
+   connect(ui->cbDriverType, SIGNAL(currentIndexChanged(int)), this, SLOT(cbDriverTypeSelectionChanged(int)));
+
+   connect(ui->cbConnect, &QComboBox::currentTextChanged, [=]{
+    setControls(ui->cbConnect->currentIndex());
+   });
+   connect(ui->cbDbType, &QComboBox::currentTextChanged, [=]{
+      setControls(ui->cbConnect->currentIndex());
+   });
+
+   connect(ui->cbCities, SIGNAL(currentIndexChanged(int)),this, SLOT(cbCitiesSelectionChanged(int)));
+   connect(ui->cbCities, SIGNAL(editTextChanged(QString)), this, SLOT(cbCitiesTextChanged(QString)));
+   connect(ui->cbCities->lineEdit(), SIGNAL(editingFinished()), this, SLOT(cbCitiesLeave()));
+
+   connect(ui->cbConnections, SIGNAL(currentIndexChanged(int)), this, SLOT(cbConnectionsSelectionChanged(int)));
+   connect(ui->cbConnections, SIGNAL(editTextChanged(QString)), this, SLOT(cbConnectionsTextChanged(QString)));
+   connect(ui->btnTest,SIGNAL(clicked(bool)), this, SLOT(btnTestClicked()));
+   connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(btnCancelClicked()));
+   connect(ui->btnOK, SIGNAL(clicked()), this, SLOT(btnOKClicked()));
+   connect(ui->btnDelete, SIGNAL(clicked()), this, SLOT(btnDeleteClicked()));
+   connect(ui->btnAbort, &QPushButton::clicked, [=]{exit(EXIT_FAILURE);});
+     //connect(ui->cbConnections, SIGNAL(signalFocusOut()),this, SLOT(cbConnectionsLeave()));
+   connect(ui->txtHost, SIGNAL(editingFinished()), this, SLOT(txtHostLeave()));
+   connect(ui->txtPort, SIGNAL(editingFinished()), this, SLOT(txtPortLeave()));
+   connect(ui->txtPWD, SIGNAL(editingFinished()), this, SLOT(txtPwdLeave()));
+   connect(ui->txtDbOrDSN, SIGNAL(textChanged(QString)), this, SLOT(txtDsnTextChanged(QString)));
+   connect(ui->txtDbOrDSN, SIGNAL(editingFinished()), this, SLOT(ontxtDbOrDsn_editingFinished()));
+   ui->tbView->setIcon(QIcon(":/show-password.png"));
+   ui->txtPWD->setEchoMode(QLineEdit::Password);
+
+   connect(ui->tbView, &QToolButton::clicked, [=](bool checked){
+    if(checked)
+    {
+        ui->tbView->setIcon(QIcon(":/show-password.png"));
+        ui->txtPWD->setEchoMode(QLineEdit::Password);
+    }
+    else
+    {
+        ui->tbView->setIcon(QIcon(":/hidden.png"));
+        ui->txtPWD->setEchoMode(QLineEdit::Normal);
+    }
+   });
+   connect(ui->tbReload, &QToolButton::clicked, [=]{
       if(db.isOpen())
           populateDatabases();
       else
@@ -132,24 +139,52 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
           ui->lblHelp->setStyleSheet("QLabel {  color : #FF8000; }");
           ui->lblHelp->setText(tr("not open!"));
       }
-  });
-  connect(ui->btnNew, &QPushButton::clicked, [=]{
-   ui->cbDriverType->setCurrentIndex(2);
-   ui->txtDbOrDSN->setText("");
-   ui->txtHost->setText("");
-   ui->txtPort->setText("");
-   ui->txtPWD->setText("");
-   ui->txtUID->setText("");
-   ui->lblHelp->setText("");
-   ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
-   ui->cbDbType->setCurrentIndex(-1);
-   ui->cbDriverType->setCurrentIndex(-1);
-   ui->cbConnect->setCurrentIndex(-1);
-  });
+   });
+   connect(ui->txtUseDatabase, &QLineEdit::editingFinished, [=](){
+      QString database = ui->txtUseDatabase->text();
+      if(db.isOpen() && !database.isEmpty())
+      {
+         QSqlQuery query = QSqlQuery(db);
+         QString commandText = "use " + database;
+         if(!query.exec(commandText))
+         {
+          if(query.lastError().driverText().startsWith("Unknown database"))
+          {
+            int rslt = MyMessageBox::question(nullptr, tr("Create database?"), tr("The database %1 does not exist on the server."
+                       "\nDo you wish to create it?").arg(database));
+            if(rslt == QMessageBox::Yes)
+                SQL::instance()->createSqlDatabase(database, db, ui->cbDbType->currentText());
+          }
+          else
+          {
+           int rslt = MyMessageBox::critical(nullptr, tr("Sql Error"), tr("An SqL error has occurred.\n"
+                                           "Sql error:%1\nquery: \"%2\"").arg(query.lastError().text()).arg(query.lastQuery()),
+                                           QMessageBox::Retry|QMessageBox::Ignore|QMessageBox::Abort);
+            return;
+          }
+         }
+      }
+   });
 
-  timer = new QTimer(this);
-  timer->setInterval(1000);
-  connect(timer, SIGNAL(timeout()), this, SLOT(quickProcess()));
+
+   connect(ui->btnNew, &QPushButton::clicked, [=]{
+    ui->cbDriverType->setCurrentIndex(2);
+    ui->txtDbOrDSN->setText("");
+    ui->txtHost->setText("");
+    ui->txtPort->setText("");
+    ui->txtPWD->setText("");
+    ui->txtUID->setText("");
+    ui->lblHelp->setText("");
+    ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
+    ui->cbDbType->setCurrentIndex(-1);
+    ui->cbDriverType->setCurrentIndex(-1);
+    ui->cbConnect->setCurrentIndex(-1);
+    connection = new Connection();
+   });
+
+   timer = new QTimer(this);
+   timer->setInterval(1000);
+   connect(timer, SIGNAL(timeout()), this, SLOT(quickProcess()));
 }
 
 EditConnectionsDlg::~EditConnectionsDlg()
@@ -316,7 +351,7 @@ void EditConnectionsDlg::setControls(int ix)
  switch (ix) {
  case 1: // Direct
   ui->label_2->setText("Database:");
-  ui->cbDbType->setCurrentIndex(0);
+  //ui->cbDbType->setCurrentIndex(ix);
   ui->txtHost->setEnabled(true);
   ui->txtPort->setEnabled(true);
   ui->txtDbOrDSN->setText("");
@@ -706,13 +741,14 @@ bool EditConnectionsDlg::testConnection()
 //      file = QFileInfo("Resources/databases/"+fn);
   if(file.exists() && !file.isWritable())
   {
-   QMessageBox::warning(this, tr("Warning"), tr("The file pathname '%1' is invalid or not writable").arg(file.absoluteFilePath()));
+   MyMessageBox::warning(this, tr("Warning"), tr("The file pathname '%1' is invalid or not writable").arg(file.absoluteFilePath()));
    return false;
   }
   if(!file.exists())
   {
-   QMessageBox::StandardButton btn = QMessageBox::information(this, tr("Question"), tr("Sqlite db '%1' does not exist\n"
-                                      "Do you wish to create a new database?").arg(file.absoluteFilePath()),QMessageBox::Yes | QMessageBox::No);
+   MyMessageBox* mb = new MyMessageBox(this, tr("Question"), tr("Sqlite db '%1' does not exist,br>"
+                                      "Do you wish to create a new database?").arg(file.absoluteFilePath()), QMessageBox::Question,QMessageBox::Yes | QMessageBox::No);
+   int btn = mb->exec();
    if(btn == QMessageBox::Yes)
    {
     if(db.open())
@@ -821,6 +857,7 @@ bool EditConnectionsDlg::populateDatabases()
    if(!query.exec("SELECT name FROM master.sys.databases"))
    {
     SQLERROR(query);
+    SQL::instance()->sqlErrorMessage(query,QMessageBox::Ok);
     return false;
    }
    else

@@ -24,7 +24,7 @@ private:
  Ui::editConnectionsDlg *ui;
  Configuration* config;
  QStringList drivers;
- QStringList dbType;
+ QStringList dbTypes;
  bool bCbConnectionsTextChanged;
  bool bCbCitiesTextChanged;
  bool testConnection();
@@ -42,6 +42,7 @@ private:
   bool verifyDatabase(QString name);
   void setControls(int ix);
   City* currCity = nullptr;
+  Connection* connection;
 
 private slots:
  void cbCitiesSelectionChanged(int sel);

@@ -8,7 +8,7 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QtAlgorithms>
-
+#include "mymessagebox.h"
 #include "data.h"
 #include "configuration.h"
 #include <QMessageBox>
@@ -197,6 +197,7 @@ public:
     bool useDatabase(QString dbName, QSqlDatabase db);
     QStringList  showMySqlDatabases(QSqlDatabase db);
     QStringList showMsSqlDatabases(QSqlDatabase db);
+    int sqlErrorMessage(QSqlQuery query, QMessageBox::StandardButtons buttons);
 
 signals:
     void details(QString);
@@ -211,10 +212,7 @@ private:
 //    QT_DEPRECATED void populatePointList(SegmentData sd);
     bool insertRouteSegment(RouteData rd);
     bool deleteRoute(RouteData rd);
-    void errSqlMessage(QSqlQuery err)
-    {
 
-    }
 };
 
 #endif // SQL_H

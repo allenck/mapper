@@ -253,7 +253,7 @@ private slots:
     void sbRouteTriggered(int sliderAction);
     void txtRouteNbrLeave();
     void On_saveImage_clicked();
-    void on_createKmlFile();
+    void on_createKmlFile_triggered();
     void fillOverlayMenu();
     void queryOverlay();
 
@@ -361,6 +361,7 @@ private:
     //QActionGroup  *actionGroup;
     QAction* exportOverlaysAct;
     QAction* setCityBoundsAct;
+    QAction* setLoggingAct;
     QList<QAction*> overlayActions;
     //QSignalMapper *overlaySignalMapper;
     QActionGroup  *overlayActionGroup;

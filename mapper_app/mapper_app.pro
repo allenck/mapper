@@ -25,10 +25,12 @@ message(WEBENGINE  " = "  $$WEBENGINE)
 RC_ICONS = Resources/tram-icon.ico
 
 HEADERS += \
+    mymessagebox.h \
     websocketclientwrapper.h \
     websockettransport.h
 
 SOURCES += \
+    mymessagebox.cpp \
     websocketclientwrapper.cpp \
     websockettransport.cpp
 #}

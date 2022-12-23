@@ -98,6 +98,14 @@ bool SQL::dbOpen()
 
     return ok;
 }
+int SQL::sqlErrorMessage(QSqlQuery query, QMessageBox::StandardButtons buttons)
+{
+ MyMessageBox* mb = new MyMessageBox(nullptr, tr("Sqlerror"), tr("An sql error has occurred: %1 "
+                        "<br> <B>Query:</B %2").arg(query.lastError().text()).arg(query.lastQuery()), QMessageBox::Critical, buttons);
+ int ret = mb->exec();
+ return ret;
+}
+
 
 /// <summary>
 /// Begin a transaction
@@ -930,7 +938,7 @@ QList<tractionTypeInfo> SQL::getTractionTypes()
          SQLERROR(query);
 //            db.close();
 //            exit(EXIT_FAILURE);
-         errSqlMessage(query);
+         sqlErrorMessage(query, QMessageBox::Ok);
          return myArray;
         }
         while (query.next())
@@ -4768,7 +4776,7 @@ QList<CompanyData*> SQL::getCompanies()
   SQLERROR(query);
   //db.close();
   //exit(EXIT_FAILURE);
-  errSqlMessage(query);
+  sqlErrorMessage(query, QMessageBox::Ok);
   return myArray;
  }
  while (query.next())

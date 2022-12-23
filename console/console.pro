@@ -3,7 +3,7 @@
 # Project created by QtCreator 2016-02-23T15:06:32
 #
 #-------------------------------------------------
-QT += widgets gui
+QT += core widgets gui
 
 TARGET = Console
 TEMPLATE = lib

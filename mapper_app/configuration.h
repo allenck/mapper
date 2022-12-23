@@ -4,7 +4,7 @@
 #include <QObject>
 #include "data.h"
 #include <QSettings>
-#include <iostream>
+//#include <iostream>
 #include <QDebug>
 #include "city.h"
 #include "connection.h"
@@ -45,10 +45,14 @@ public:
  QStringList cityNames();
  QString lookupCityName(Bounds b);
  QMap<QString, Bounds> cityBounds;
+ bool loggingOn() {return bLoggingOn;}
+ void setLoggingOn(bool b) {bLoggingOn = b;}
+
 private:
  static Configuration* _instance;
  explicit Configuration(QObject *parent = 0);
  void createDefaultSettings();
+ bool bLoggingOn = false;
 
 signals:
 
