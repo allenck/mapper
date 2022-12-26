@@ -45,6 +45,7 @@ QSqlDatabase Connection::configure(const QString cName)
  {
   if(config->currConnection->servertype() != "Sqlite")
    return db;
+  sql->loadSqlite3Functions();
   if(config->currConnection->mySqlDatabase()  != "")
   {
    QSqlQuery query = QSqlQuery(db);
