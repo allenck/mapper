@@ -61,8 +61,13 @@ SOURCES += main.cpp\
     $$PWD/city.cpp \
     $$PWD/connection.cpp \
     $$PWD/latlng.cpp \
-    $$PWD/globalmercator.cpp
-
+    $$PWD/globalmercator.cpp \
+    consoleinterface.cpp \
+    systemconsole.cpp \
+    systemconsoleaction.cpp \
+    jtextarea.cpp \
+    flowlayout.cpp \
+    jtogglebutton.cpp
 
 HEADERS  += mainwindow.h \
     $$PWD/browsecommentsdialog.h \
@@ -128,7 +133,14 @@ HEADERS  += mainwindow.h \
     $$PWD/city.h \
     $$PWD/connection.h \
     $$PWD/latlng.h \
-    $$PWD/globalmercator.h
+    $$PWD/globalmercator.h \
+    consoleinterface.h \
+    systemconsole.h \
+    systemconsoleaction.h \
+    jtextarea.h \
+    flowlayout.h \
+    jtogglebutton.h \
+    preferencespanel.h
 
 FORMS    += ui/mainwindow.ui \
     $$PWD/ui/splitsegmentdlg.ui \

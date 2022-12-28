@@ -1143,7 +1143,6 @@ void MainWindow::createMenus()
     //createCityMenu();
     connectionsMenu->addAction(editConnectionsAct);
     connectionsMenu->addAction(manageOverlaysAct);
-    qDebug() << "city menu complete";
 
     toolsMenu = new Menu(tr("Tools"));
     toolsMenu->addAction(addRouteAct);
@@ -1162,7 +1161,6 @@ void MainWindow::createMenus()
     toolsMenu->addAction(setCityBoundsAct);
     toolsMenu->addAction(setLoggingAct);
     //toolsMenu->addAction(setInspectedPageAct);
-    qDebug() << "tools menu complete";
 
     optionsMenu = new Menu(tr("Options"));
     overlayMenu = new Menu(tr("Overlays"));
@@ -1176,7 +1174,6 @@ void MainWindow::createMenus()
 #ifdef USE_WEBENGINE
     optionsMenu->addAction(runInBrowserAct);
 #endif
-    qDebug() << "options menu complete";
 
     sortMenu = new Menu(tr("Route Sort option"));
     optionsMenu->addMenu(sortMenu);
@@ -1190,8 +1187,8 @@ void MainWindow::createMenus()
     helpMenu->setToolTipsVisible(true);
 //    helpMenu->addAction(webViewAction = new WebViewAction((QObject*)this));
 //#ifndef QT_DEBUG
-//    helpMenu->addAction((systemConsoleAction = new SystemConsoleAction(this)));
-//    systemConsoleAction->setToolTip(tr("Display, info, error and debug messages"));
+    helpMenu->addAction((systemConsoleAction = new SystemConsoleAction(this)));
+    systemConsoleAction->setToolTip(tr("Display, info, error and debug messages"));
 //#endif
     helpMenu->addAction(usingMapper);
     helpMenu->addAction(overlayHelp);
