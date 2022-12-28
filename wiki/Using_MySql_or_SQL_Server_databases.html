@@ -2,33 +2,46 @@
 <html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Using MySql or SQL Server databases</title></head>
 <body style="background-color:#faf0e6">
 <h1>Using MySql or SQL Server databases</h1>
-<h3>Prerequisites</h3>
-<h4>MySql<br>
-</h4>
+<h2>Prerequisites</h3>
+<h>MySql<br>
+</h3>
 Generally, to access a MySql database requires that MySql driver
 plugins are configured and compiled for your version of Qt and
 operating system. This is explained <a href="http://doc.qt.io/qt-4.8/sql-driver.html">here</a>. MySql databases can also be accessed via ODBC.<br>
-<h4>SQL Server<br>
-</h4>
+<h3>SQL Server<br>
+</h3>
 &nbsp;Accessing SQL Server databases requires ODBC. ODBC is supported
 in Windows automatically but must be added for Unix systems. <br>
 <br>
-<h4>ODBC</h4>
+<h3>ODBC Windows</h3>
+
+
 On windows, ODBC datasources must be defined with the ODBC
-configuration utility that is part of Windows. On Unix, it will be
+configuration utility that is part of Windows. <br><br>
+<img src="images/ODBCDataSourceAdministrator.png" width="742" height="526" alt="ODBC Data Source Selection"><br>
+The above image lists two data sources, one for Sql Server, "Mapper" and one for MySql, "Mapper-MySql". You musr 
+create a datasource for each server that you will be accessing. 
+<p> 
+<h3>ODBC Unix</h3>
+On Unix, it will be
 necessary to download and install the <a href="http://www.freetds.org/">FreeTds</a> utilities. <br>
 <br>
-<h4>Creaing a MySql or SQL Server database. <br>
-</h4>
+<h3>Creating a MySql or SQL Server database. <br>
+</h3>
 Assuming that you have successfully created and tested the MySql
 drivers or ODBC datasources, you must then create create a connection
-to the server&nbsp; and a database on the target server. <br>
+to the server&nbsp; and a database on the target server. If no database exists on the server, you can either create
+it with your servers administration utility or enter the database's name in the Database field. If the 
+database does not exist, you will be asked whether you wish to create it. In any case, once the database exists,
+you are ready to populate it with data from one of the other connections for this city. If this is a new city
+and no other database is available to export, you will have to use one of the scripts included with Mapper
+to create the necessary table.<br>
 <br>
-<img style="width: 410px; height: 429px;" alt="Add ODBC connection to SQL Server" src="images/addODBC-MsSql.png"><br>
-If a test is successful then click on the "Add" button to add the connection to the city. <br>
+
+<img src="images/addODBC-MsSql.png" width="703" height="398" alt=""><br>
+If a test is successful then click on the "Add/Update" button to add the connection to the city. <br>
 <br>
-Mapper does not directly support actually creating the database on the
-server. However, the SqlQuery dialog accessible from the Tools menu
+However, the SqlQuery dialog accessible from the Tools menu
 could possibly be utilized. However, it is suggested that the database
 be created with the utility associated with the database server, e.g,
 PHPMyAdmin or MySql Workbench in the case of MySql or SQL Server
@@ -45,15 +58,15 @@ select Export Database from the Tools menu. This will display a dialog:
 Make sure that the target database is selected in the "Export to"
 combobox. Then click on the "All" checkbox&nbsp; which will select all
 the applicable tables since we want to export all the tables. The "Drop
-tables" checkbox is checked because we want to do the export by first
+tables" checkbox should be checked if you want to do the export by first
 dropping the old table on the target and then creating the table and
-insert all the rows. Click on "Go" to start the export process. If
-"Drop tables" is not checked, the export process will compare the
+insert all the rows. If the checkbox is not checked, only database items that are newer will be exported. 
+ If "Drop tables" is not checked, the export process will compare the
 target's data to determine what to export. This option is very slow and
-is not recommended. <br>
+is not recommended. <p>
+Click on "Go" to start the export process.
 <br>
 <br>
 
-  
 
 </body></html>

@@ -405,7 +405,7 @@ private:
     qint32 m_currPoint, m_nbrPoints;
     QList<LatLng> m_points;
     //segmentInfo si;
-    SystemConsoleAction* systemConsoleAction;
+    SystemConsoleAction* systemConsoleAction = nullptr;
     WebViewAction* webViewAction;
     void updateSegmentInfoDisplay(SegmentData sd);
     void createBridge();

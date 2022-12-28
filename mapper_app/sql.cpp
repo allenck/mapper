@@ -9156,7 +9156,7 @@ bool SQL::loadSqlite3Functions()
       QFileInfo info("libsqlfun.so");
       QString path;
       if(!info.exists())
-       qDebug() << "functions/libfunctions.so not found";
+       qDebug() << "functions/libsqlfun.so not found";
       else
        path = info.absoluteFilePath();
       //path.replace(".so", "");
@@ -9170,7 +9170,7 @@ bool SQL::loadSqlite3Functions()
     if(err.text().contains("not authorized"))
      return true; // error was expected and is ok!
     SQLERROR(query);
-    QMessageBox::information(NULL, "open sqlite", QString("error loading functions = %1").arg(err.text()));
+    QMessageBox::critical(NULL, "open sqlite", QString("error loading functions = %1").arg(err.text()));
 
     return ret;
    }
@@ -9492,6 +9492,7 @@ bool SQL::updateTractionType(qint32 tractionType, QString description, QString d
 // check tables to see if alterations need to be made
 void SQL::checkTables(QSqlDatabase db)
 {
+  return; // no need to do agiin
  // check for presence of Parameters table.
  QStringList tableList;
  if(db.isOpen())

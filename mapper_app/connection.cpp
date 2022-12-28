@@ -43,6 +43,11 @@ QSqlDatabase Connection::configure(const QString cName)
 // {
  if((bOpen = db.open()))
  {
+  if(!tablesChecked)
+  {
+   sql->checkTables(db);
+   tablesChecked = true;
+  }
   if(config->currConnection->servertype() != "Sqlite")
    return db;
   sql->loadSqlite3Functions();
@@ -58,8 +63,8 @@ QSqlDatabase Connection::configure(const QString cName)
     bOpen = false;
     return db;
    }
-   if(config->currConnection->servertype() == "Sqlite")
-    sql->checkTables(db);
+//   if(config->currConnection->servertype() == "Sqlite")
+//    sql->checkTables(db);
    tableList = db.tables();
 
    if(!tableList.contains("Parameters",Qt::CaseInsensitive))
@@ -86,10 +91,10 @@ QSqlDatabase Connection::configure(const QString cName)
     QMessageBox::warning(NULL, "Warning", msg);
    }
   }
-  if(sql->loadSqlite3Functions() && config->currConnection->servertype() == "Sqlite")
-  {
-   sql->checkTables(db);
-  }
+//  if(sql->loadSqlite3Functions() && config->currConnection->servertype() == "Sqlite")
+//  {
+//   sql->checkTables(db);
+//  }
  }
  else
  {

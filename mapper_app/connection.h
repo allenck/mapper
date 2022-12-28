@@ -76,6 +76,8 @@ public:
  void setMySqlDatabase(QString name){_mySqlDatabase =name;}
  QString connectionType(){return _connectionType;}
  void setConnectionType(QString s ) {_connectionType = s;}
+ bool tablesChecked = false;  // do not save in settings!
+
 };
 
 #endif // CONNECTION_H

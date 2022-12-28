@@ -79,8 +79,8 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
         fflush(stdout);
     }
 
-    if (type == QtFatalMsg)
-        abort();
+//    if (type == QtFatalMsg)
+//        abort();
 }
 
 int main(int argc, char *argv[])
