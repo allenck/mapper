@@ -22,6 +22,8 @@ SOURCES += $$PWD/functions.cpp \
 
 HEADERS += $$PWD/functions.h\
         $$PWD/functions_global.h \
+ sqlite3.h \
+ sqlite3ext.h
 
 unix:!symbian {
     maemo5 {

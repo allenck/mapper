@@ -219,9 +219,9 @@ void Configuration::getSettings()
    ncn->setId(settings.value("id").toInt());
    ncn->setDescription(settings.value("description").toString());
    ncn->setDriver(settings.value("driver").toString());
-   ncn->setServerType(settings.value("serverType").toString());
+   ncn->setServerType(settings.value("serverType", "Sqlite").toString());
    ncn->setCityName(settings.value("cityName", nc->name()).toString());
-   ncn->setConnectionType(settings.value("connectionType", "Direct").toString());
+   ncn->setConnectionType(settings.value("connectionType", "Local").toString());
 
    if(ncn->connectionType() == "Local")
    {

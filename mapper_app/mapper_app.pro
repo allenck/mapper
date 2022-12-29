@@ -145,14 +145,14 @@ DISTFILES += \
 #INCLUDEPATH += $$PWD/WebView
 #DEPENDPATH += $$PWD/WebView
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../console/release/ -lConsole
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../console/debug/ -lConsole
-else:unix: LIBS += -L$$PWD/../console/ -lConsole
+#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../console/release/ -lConsole
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../console/debug/ -lConsole
+#else:unix: LIBS += -L$$PWD/../console/ -lConsole
 
-INCLUDEPATH += $$PWD/../console/debug
-DEPENDPATH += $$PWD/../console/debug
+#INCLUDEPATH += $$PWD/../console/debug
+#DEPENDPATH += $$PWD/../console/debug
 
-unix:!macx: LIBS += -L$$PWD/./ -lConsole
+#unix:!macx: LIBS += -L$$PWD/./ -lConsole
 
 INCLUDEPATH += $$PWD/.
 DEPENDPATH += $$PWD/.
@@ -171,9 +171,9 @@ INCLUDEPATH += $$PWD/../../../sqlite-amalgamation-3390400
 DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3390400
 
 
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lConsole
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/debug/ -lConsole
-else:unix: LIBS += -L$$OUT_PWD/../console/ -lConsole
+#win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lConsole
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/debug/ -lConsole
+#else:unix: LIBS += -L$$OUT_PWD/../console/ -lConsole
 
 INCLUDEPATH += $$PWD/debug
 DEPENDPATH += $$PWD/debug

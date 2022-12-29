@@ -202,7 +202,7 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
 bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
  Overlay* ov = overlayMap->values().at(index.row());
- QString oldName =ov->cityName +"." + ov->name;
+ QString oldName =ov->cityName +"|" + ov->name;
  QString newName;
  if(role == Qt::CheckStateRole)
  {

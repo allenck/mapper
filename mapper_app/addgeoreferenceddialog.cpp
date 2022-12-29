@@ -11,7 +11,7 @@
 #include <QMessageBox>
 #include "editcomments.h" // for formatting menu
 #include "webviewbridge.h"
-
+#include "sql.h"
 
 AddGeoreferencedDialog::AddGeoreferencedDialog(QWidget *parent) :
   QDialog(parent),
@@ -299,6 +299,7 @@ void AddGeoreferencedDialog::validateWMTS(QString err)
    if(!layer.isNull())
    {
     ov->name = layer.firstChildElement("ows:Title").text();
+    ov->description = layer.firstChildElement("owsLIdentifier").text();
     LatLng sw;
     LatLng ne;
     QDomElement bounds = layer.firstChildElement("ows:WGS84BoundingBox");
@@ -317,6 +318,7 @@ void AddGeoreferencedDialog::validateWMTS(QString err)
      // find city name
      LatLng center = ov->bounds().center();
      ui->edCity->setPlaceholderText(tr("enter city name"));
+     double _distance = qInf();
      for(City* city : config->cityList)
      {
       if(city->bounds().contains(center))
@@ -324,6 +326,14 @@ void AddGeoreferencedDialog::validateWMTS(QString err)
        //ui->edCity->setText(city->name);
        ov->cityName = city->name();
        break;
+      }
+      else
+      {double d;
+       if((d=SQL::instance()->distance(center, city->center) < _distance))
+       {
+        ov->cityName = city->name();
+        _distance = d;
+       }
       }
      }
 
@@ -348,6 +358,23 @@ void AddGeoreferencedDialog::validateWMTS(QString err)
          QString max = tileMatrix_last.firstChildElement("TileMatrix").text();
          ov->maxZoom = max.mid(max.indexOf(":")+1).toInt();
         }
+      }
+      else
+      {
+       QDomElement tileMatrixSet = contents.firstChildElement("TileMatrixSet");
+       QDomNodeList list = tileMatrixSet.elementsByTagName("TileMatrix");
+       if(list.count()> 0)
+       {
+        QDomElement tileMatrix_first = list.at(0).toElement();
+        QString min = tileMatrix_first.firstChildElement("ows:Identifier").text();
+        bool ok;
+        ov->minZoom = min.toInt(&ok);
+
+        QDomElement tileMatrix_last = list.at(list.count()-1).toElement();
+
+        QString max = tileMatrix_last.firstChildElement("ows:Identifier").text();
+        ov->maxZoom = max.toInt(&ok);
+       }
       }
      }
      QDomElement resourceUrl = layer.firstChildElement("ResourceURL");
@@ -391,7 +418,8 @@ void AddGeoreferencedDialog::onWmtsComplete()
  ui->neLon->setText(QString::number(ov->bounds().nePt().lon(),'g', 8));
  ui->swLat->setText(QString::number(ov->bounds().swPt().lat(),'g', 8));
  ui->swLon->setText(QString::number(ov->bounds().swPt().lon(),'g', 8));
- ui->edUrl->setText(ov->urls.at(0));
+ if(ov->urls.count())
+  ui->edUrl->setText(ov->urls.at(0));
  ui->sbMinZoom->setValue(ov->minZoom);
  ui->sbMaxZoom->setValue(ov->maxZoom);
  ui->comboBox->setCurrentText("georeferencer");

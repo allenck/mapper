@@ -9051,7 +9051,7 @@ bool SQL::loadSqlite3Functions()
     qDebug() << "sqlite3 version (from sqlite3.h)" << SQLITE_VERSION;
     if(QString(rslt) != SQLITE_VERSION)
     {\
-      QMessageBox::warning(NULL, tr("Sqlite3 library mismatch"), tr("The Sqlite3 library version, '%1' does not match the version '%2 that the app was compiled with").arg(QString(rslt)).arg(SQLITE_VERSION));
+      MyMessageBox::warning(NULL, tr("Sqlite3 library mismatch"), tr("The Sqlite3 library version, '%1' does not match the version '%2 that the app was compiled with").arg(QString(rslt)).arg(SQLITE_VERSION));
     }
    }
   }
