@@ -4,7 +4,7 @@
 #include <QObject>
 #include "console_global.h"
 
-class CONSOLESHARED_EXPORT ConsoleInterface : public QObject
+class  ConsoleInterface : public QObject
 {
     Q_OBJECT
 public:

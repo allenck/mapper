@@ -69,7 +69,7 @@ public:
   return true;
  }
  public slots:
- void javaScriptConsoleMessage(QWebEnginePage::JavaScriptConsoleMessageLevel level, const QString &message, int lineNumber,
+ void javaScriptConsoleMessage(QWebEnginePage::JavaScriptConsoleMessageLevel /*level*/, const QString &message, int lineNumber,
                           const QString &sourceID)override
  {
   qDebug() << "javaScriptConsoleMessage:" << message << " at"<<lineNumber<<" source:"<<sourceID;
@@ -184,6 +184,8 @@ public:
 #endif
     int selectedSegment() {return m_SegmentId;}
     QDir htmlDir;
+    static MainWindow* _instance;
+    static MainWindow* instance();
 
 public slots:
     void copyRouteInfo_Click();
@@ -292,8 +294,6 @@ private slots:
     void on_overlayHelp();
     void on_usingHelp();
     void processTileMapResource();
-//    void cbStreets_editingFinished();
-//    void cbStreets_currentIndexChanged(int);
 
 private:
     //Webviewer *centralWidget;
@@ -363,6 +363,8 @@ private:
     QAction* setCityBoundsAct;
     QAction* setLoggingAct;
     QList<QAction*> overlayActions;
+    QAction* newCityAct;
+    QAction* removeCityAct;
     //QSignalMapper *overlaySignalMapper;
     QActionGroup  *overlayActionGroup;
     QString  currentOverlay;
@@ -405,7 +407,7 @@ private:
     qint32 m_currPoint, m_nbrPoints;
     QList<LatLng> m_points;
     //segmentInfo si;
-    SystemConsoleAction* systemConsoleAction = nullptr;
+    SystemConsoleAction* systemConsoleAction;
     WebViewAction* webViewAction;
     void updateSegmentInfoDisplay(SegmentData sd);
     void createBridge();
@@ -422,6 +424,7 @@ private:
     QUrl fileUrl;
     bool verifyAPIKey(QString path, QString apiKey);
     ExportDlg* form = nullptr;
+
 private slots:
     void createCityMenu();
     void sbTracks_valueChanged(int);

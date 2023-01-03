@@ -45,13 +45,13 @@ CREATE TABLE if not exists `Intersections` (
   `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE if not exists  `altRoute` (
-  `route` int(11) NOT NULL primary key AUTOINCREMENT,
-  `routePrefix` varchar(10) default '',
-  `routeAlpha` varchar(8) NOT NULL,
-  `baseRoute` int(11) NOT NULL DEFAULT 0,
-  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT `index` unique ( routePrefix, routeAlpha)
+CREATE TABLE if not exists  `altRoute` ( 
+  `route` NOT NULL INTEGER PRIMARY KEY AUTOINCREMENT, 
+  `routePrefix` varchar(10) default '', 
+  `routeAlpha` varchar(8) NOT NULL, 
+  `baseRoute` int(11) NOT NULL DEFAULT 0, 
+  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+  CONSTRAINT `index` unique ( routePrefix, routeAlpha) 
 );
 
 

@@ -5,7 +5,7 @@
 #include "console_global.h"
 
 class NamedIcon;
-class CONSOLESHARED_EXPORT JToggleButton : public QPushButton
+class JToggleButton : public QPushButton
 {
     Q_OBJECT
 public:

@@ -1,6 +1,6 @@
 #include "logger.h"
 #include <QPointer>
-#include "../console/consoleinterface.h"
+#include "consoleinterface.h"
 #include <QDir>
 #include <QDebug>
 

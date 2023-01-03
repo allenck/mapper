@@ -53,19 +53,9 @@ bool SQL::dbOpen()
      msg.append(info.absoluteFilePath());
     }
     QMessageBox::warning(NULL, "Warning", msg);
-#if 0
-    db = QSqlDatabase::addDatabase("QODBC");
-    //db.setHostName("10.0.1.100");
-    //db.setPort(1433);
-    db.setDatabaseName("Newhp2_Berlin");
-    //db.setDatabaseName("SQLSERVER_SAMPLE");
-    db.setUserName("newhp2\\allen");
-    db.setPassword("iic723@knobacres");
-#else
-
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName("Resources/databases/StLouis.sqlite3");
-#endif
+
     bool ok = db.open();
     if(!ok)
     {
@@ -76,7 +66,6 @@ bool SQL::dbOpen()
         qDebug() << "Host:" + db.hostName();
         qDebug() << "Connection name: " + db.connectionName();
         qDebug() << "DSN:" + db.databaseName();
-
     }
     else
     {
@@ -5838,9 +5827,9 @@ qint32 SQL::getRouteCompany(qint32 route)
 /// Retrieve the parameters for the web site
 /// </summary>
 /// <returns></returns>
-parameters SQL::getParameters()
+Parameters SQL::getParameters()
 {
-    parameters parms = parameters();
+    Parameters parms = Parameters();
     QString alphaRoutes;
     try
     {
@@ -5882,6 +5871,44 @@ parameters SQL::getParameters()
     }
     return parms;
 }
+
+bool SQL::insertParameters(Parameters parms, QSqlDatabase db)
+{
+    try
+    {
+        if(!db.isOpen())
+            throw Exception(tr("database not open: %1").arg(__LINE__));
+        //QSqlDatabase db = QSqlDatabase::database();
+
+        QString commandText = "insert into Parameters lat, lon, title, city, minDate, maxDate, alphaRoutes "
+                              " values (:lat, :lon, :title, :city, :minDate, :maxDate, :alphaRoutes, :lastUpdate)";
+        QSqlQuery query = QSqlQuery(db);
+        query.prepare(commandText);
+        query.bindValue(":lat", parms.lat);
+        query.bindValue(":lon", parms.lon);
+        query.bindValue("title", parms.title);
+        query.bindValue("city", parms.city);
+        query.bindValue("minDate", parms.minDate);
+        query.bindValue("maxDate", parms.maxDate);
+        query.bindValue("alphaRoutes", parms.bAlphaRoutes);
+        query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
+        bool bQuery = query.exec();
+        if(!bQuery)
+        {
+            QSqlError err = query.lastError();
+            qDebug() << err.text() + "\n";
+            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+            db.close();
+            exit(EXIT_FAILURE);
+        }
+    }
+    catch (Exception e)
+    {
+        myExceptionHandler(e);
+    }
+    return true;
+}
+
 /// <summary>
 /// Get a list of segments for a route and segmentId
 /// </summary>
@@ -6416,7 +6443,8 @@ qint32 SQL::addCompany(QString name, qint32 route, QString startDate, QString en
 
         if(companyKey == -1)
         {
-            commandText = "insert into Companies (description, startDate, endDate, firstRoute, lastRoute) values ('" + name + "', '"+ startDate + "','"+endDate+"',"+QString("%1").arg(route)+","+QString("%1").arg(route)+")";
+            commandText = "insert into Companies (description, startDate, endDate, firstRoute, lastRoute) "
+                          "values ('" + name + "', '"+ startDate + "','"+endDate+"',"+QString("%1").arg(route)+","+QString("%1").arg(route)+")";
             bQuery = query.exec(commandText);
             if(!bQuery)
             {
@@ -9051,7 +9079,7 @@ bool SQL::loadSqlite3Functions()
     qDebug() << "sqlite3 version (from sqlite3.h)" << SQLITE_VERSION;
     if(QString(rslt) != SQLITE_VERSION)
     {\
-      MyMessageBox::warning(NULL, tr("Sqlite3 library mismatch"), tr("The Sqlite3 library version, '%1' does not match the version '%2 that the app was compiled with").arg(QString(rslt)).arg(SQLITE_VERSION));
+      QMessageBox::warning(NULL, tr("Sqlite3 library mismatch"), tr("The Sqlite3 library version, '%1' does not match the version '%2 that the app was compiled with").arg(QString(rslt)).arg(SQLITE_VERSION));
     }
    }
   }
@@ -9156,7 +9184,7 @@ bool SQL::loadSqlite3Functions()
       QFileInfo info("libsqlfun.so");
       QString path;
       if(!info.exists())
-       qDebug() << "functions/libsqlfun.so not found";
+       qDebug() << "functions/libfunctions.so not found";
       else
        path = info.absoluteFilePath();
       //path.replace(".so", "");
@@ -9170,7 +9198,7 @@ bool SQL::loadSqlite3Functions()
     if(err.text().contains("not authorized"))
      return true; // error was expected and is ok!
     SQLERROR(query);
-    QMessageBox::critical(NULL, "open sqlite", QString("error loading functions = %1").arg(err.text()));
+    QMessageBox::information(NULL, "open sqlite", QString("error loading functions = %1").arg(err.text()));
 
     return ret;
    }
@@ -9492,7 +9520,6 @@ bool SQL::updateTractionType(qint32 tractionType, QString description, QString d
 // check tables to see if alterations need to be made
 void SQL::checkTables(QSqlDatabase db)
 {
-  return; // no need to do agiin
  // check for presence of Parameters table.
  QStringList tableList;
  if(db.isOpen())

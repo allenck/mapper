@@ -1,7 +1,5 @@
 #include "city.h"
-#include "configuration.h"
 #include <QMessageBox>
-#include "mainwindow.h"
 #include "webviewbridge.h"
 #include "overlay.h"
 
@@ -17,6 +15,18 @@ void City::addOverlay(Overlay* ov)
   city_overlayMap->insert(ov->name, ov);
   bDirty = true;
  }
+}
+
+void City::addConnection(Connection* connection)
+{
+   if(!connectionMap.contains(connection->uniqueId().toString()))
+   {
+       connectionMap.insert(connection->uniqueId().toString(), connection);
+       connections.append(connection);
+       connection->setId(connections.count()-1);
+       curConnectionId = connections.count()-1;
+       _connectionUniqueId = connection->uniqueId();
+   }
 }
 
 void City::removeOverlay(Overlay* ov)
@@ -38,3 +48,5 @@ void City::setCityBounds(WebViewBridge* m_bridge)
 }
 
 void City::setCenter(LatLng center){this->center = center;}
+
+void City::setId(int id){this->id = id;}

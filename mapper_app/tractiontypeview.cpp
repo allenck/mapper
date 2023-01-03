@@ -21,7 +21,7 @@ TractionTypeView::TractionTypeView(Configuration *cfg, QObject *parent) :
     model = new MyTractionTypesTableModel(this, db);
     model->setTable("TractionTypes");
     model->setEditStrategy(QSqlTableModel::OnFieldChange);
-    //model->query().setForwardOnly(false);
+    model->query().setForwardOnly(false);
     model->select();
     QString name = model->record(0).value("description").toString();
     tableView->setModel(model);

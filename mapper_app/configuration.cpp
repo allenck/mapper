@@ -19,21 +19,22 @@ void Configuration::saveSettings()
 //  qDebug() << "connection id mismatch: currConnection->id = " +QString("%1").arg(currConnection->id()) + " vs. currCity->curConnectionId = " + QString("%1").arg(currCity->curConnectionId)+"\n";
 //  exit(EXIT_FAILURE);
 // }
- if(!currCity->connections.contains(currConnection))
- {
-  currCity->connections.append(currConnection);
-  currCity->connectionNames.append(currConnection->description());
- }
+// if(!currCity->connections.contains(currConnection))
+// {
+//  currCity->connections.append(currConnection);
+//  currCity->connectionNames.append(currConnection->description());
+// }
  // Save any changes to currentCity
- if(currentCityId >= 0)
- {
-  cityList.replace(currentCityId, currCity);
+// if(currentCityId >= 0)
+// {
+//  cityList.replace(currentCityId, currCity);
 
- }
+// }
 
  QSettings* settings = new QSettings();
  //settingsDb settings;
  settings->beginWriteArray("cities");
+ settings->remove("");
  for(int i=0; i< cityList.count(); i++)
  {
   settings->setArrayIndex(i);
@@ -46,6 +47,7 @@ void Configuration::saveSettings()
   settings->setValue("mapType", c->mapType);
   settings->setValue("zoom", c->zoom);
   settings->setValue("currConnection", c->curConnectionId);
+  settings->setValue("currConnectionUuid", c->connectionUniqueId().toString());
   settings->setValue("currExportConnId", c->curExportConnId);
   settings->setValue("AlphaRoutes", c->bAlphaRoutes);
   settings->setValue("noPanOpt", c->bNoPanOpt);
@@ -64,9 +66,12 @@ void Configuration::saveSettings()
   settings->setValue("bounds", c->bounds().toString());
   //settings.setValue("connection",c->curConnectionId);
   settings->beginWriteArray("connections");
+  settings->remove("");
   for(int j=0; j < c->connections.count(); j++)
   {
    Connection* cn = c->connections.at(j);
+   if(cn->uniqueId().isNull())
+       qDebug() << "invalid unique id " << cn->description() << " ";
    settings->setArrayIndex(j);
    settings->remove("");
    settings->setValue("id", cn->id());
@@ -75,6 +80,7 @@ void Configuration::saveSettings()
    settings->setValue("cityName", cn->cityName());
    settings->setValue("connectionType", cn->connectionType());
    settings->setValue("description",cn->description());
+   settings->setValue("uniqueId", cn->uniqueId().toString());
 
    if(cn->connectionType()== "Local")
    {
@@ -92,7 +98,7 @@ void Configuration::saveSettings()
     settings->setValue("DSN", cn->dsn());
     settings->setValue("driver", cn->driver());
     settings->setValue("PWD", cn->pwd());
-    settings->setValue("UID", cn->uid());
+    settings->setValue("UID", cn->userId());
     if(cn->host() != "")
      settings->setValue("hostname", cn->host());
     if(cn->port() > 0)
@@ -208,6 +214,7 @@ void Configuration::getSettings()
   nc->savedClipboard = settings.value("savedClipboard").toString();
   nc->curOverlayId = settings.value("currOverlay", -1).toInt();
   nc->bUserMap = settings.value("userMap", false).toBool();
+  nc->setConnectionUniqueId(QUuid::fromString(settings.value("currConnectionUuid").toString()));
   QString baseAddr = QDir::currentPath() +QDir::separator() + "Resources" + QDir::separator()+"databases" + QDir::separator();
   int sizec = settings.beginReadArray("connections");
 
@@ -215,14 +222,22 @@ void Configuration::getSettings()
   for(int j = 0; j < sizec; j++)
   {
    settings.setArrayIndex(j);
-   Connection* ncn = new Connection();
-   ncn->setId(settings.value("id").toInt());
+   QString uuid_string = settings.value("uniqueId").toString();
+   QUuid uuid;
+   if(uuid_string.isEmpty())
+       uuid = QUuid::createUuid();
+   else
+       uuid = QUuid::fromString(uuid_string);
+   Connection* ncn = new Connection(uuid);
+   ncn->setId(settings.value("id", -1).toInt());
    ncn->setDescription(settings.value("description").toString());
    ncn->setDriver(settings.value("driver").toString());
-   ncn->setServerType(settings.value("serverType", "Sqlite").toString());
+   ncn->setServerType(settings.value("serverType").toString());
    ncn->setCityName(settings.value("cityName", nc->name()).toString());
-   ncn->setConnectionType(settings.value("connectionType", "Local").toString());
-
+   ncn->setConnectionType(settings.value("connectionType", "Direct").toString());
+   //ncn->setUniqueId(QUuid::fromString(settings.value("uniqueId", QUuid::createUuid().toString()).toString()));
+   if(ncn->id() == nc->curConnectionId)
+       nc->setConnectionUniqueId(uuid);
    if(ncn->connectionType() == "Local")
    {
     ncn->setConnectionType("Local");
@@ -245,7 +260,7 @@ void Configuration::getSettings()
    else if(ncn->connectionType() == "Direct") {
        ncn->setDSN(settings.value("DSN").toString());
        ncn->setPWD(settings.value("PWD").toString());
-       ncn->setUID(settings.value("UID").toString());
+       ncn->setUserId(settings.value("UID").toString());
        ncn->setHost(settings.value("hostname").toString());
        ncn->setPort(settings.value("port").toInt());
        ncn->setDefaultSqlDatabase(settings.value("defaultSqlDatabase").toString());
@@ -259,8 +274,10 @@ void Configuration::getSettings()
 
    if(!nc->connections.contains(ncn))
    {
-    nc->connections.append( ncn);
-    nc->connectionNames.append(ncn->description());
+//    nc->connections.append( ncn);
+//    nc->connectionNames.append(ncn->description());
+//    nc->connectionMap.insert(ncn->uniqueId().toString(), ncn);
+       nc->addConnection(ncn);
    }
   }
   settings.endArray();
@@ -412,6 +429,22 @@ QStringList Configuration::cityNames()
  return result;
 }
 
+void Configuration::addCity(City* city)
+{
+    if(!cityMap.contains(city->name()))
+    {
+        cityList.append(city);
+        cityMap.insert(city->name(), city);
+        if(city->bounds().isValid())
+         cityBounds.insert(city->name(), city->bounds());
+        currCity = city;
+        city->setId(cityList.count()-1);
+        currentCityId = city->id;
+        emit newCityCreated(city);
+    }
+}
+
+
 QString Configuration::lookupCityName(Bounds b)
 {
  QMapIterator<QString, Bounds> iter(cityBounds);
@@ -446,7 +479,7 @@ void Configuration::createDefaultSettings()
      cityList.append( newCity);
      cityMap.insert(newCity->name(), newCity);
     }
-    newCity->connectionNames.append(newCity->name());
+    //newCity->connectionNames.append(newCity->name());
     Connection* nc = new Connection();
     nc->setId(0);
     nc->setSqliteFileName("StLouis.sqlite3");
@@ -458,8 +491,9 @@ void Configuration::createDefaultSettings()
     nc->setCityName(newCity->name());
     if(!newCity->connections.contains(nc))
     {
-     newCity->connections.append( nc);
-     newCity->connectionNames.append(nc->description());
+//     newCity->connections.append( nc);
+//     newCity->connectionNames.append(nc->description());
+        newCity->addConnection(nc);
     }
     currConnection = nc;
 
@@ -489,8 +523,9 @@ void Configuration::createDefaultSettings()
     nc->setConnectionType("Local");
     if(!newCity->connections.contains(nc))
     {
-     newCity->connections.append( nc);
-     newCity->connectionNames.append(nc->description());
+//     newCity->connections.append( nc);
+//     newCity->connectionNames.append(nc->description());
+        newCity->addConnection(nc);
     }
 
     currConnection = nc;
@@ -521,8 +556,9 @@ void Configuration::createDefaultSettings()
     nc->setConnectionType("Local");
     if(!newCity->connections.contains(nc))
     {
-     newCity->connections.append( nc);
-     newCity->connectionNames.append(nc->description());
+//     newCity->connections.append( nc);
+//     newCity->connectionNames.append(nc->description());
+        newCity->addConnection(nc);
     }
     currConnection = nc;
 

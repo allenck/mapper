@@ -26,11 +26,15 @@ RC_ICONS = Resources/tram-icon.ico
 
 HEADERS += \
     mymessagebox.h \
+    ui/newcitydialog.h \
+    ui/removecitydialog.h \
     websocketclientwrapper.h \
     websockettransport.h
 
 SOURCES += \
     mymessagebox.cpp \
+    ui/newcitydialog.cpp \
+    ui/removecitydialog.cpp \
     websocketclientwrapper.cpp \
     websockettransport.cpp
 #}
@@ -171,9 +175,13 @@ INCLUDEPATH += $$PWD/../../../sqlite-amalgamation-3390400
 DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3390400
 
 
-#win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lConsole
-#else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/debug/ -lConsole
-#else:unix: LIBS += -L$$OUT_PWD/../console/ -lConsole
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lConsole
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/debug/ -lConsole
+else:unix: LIBS += -L$$OUT_PWD/../console/ -lConsole
 
 INCLUDEPATH += $$PWD/debug
 DEPENDPATH += $$PWD/debug
+
+FORMS += \
+ ui/newcitydialog.ui \
+ ui/removecitydialog.ui

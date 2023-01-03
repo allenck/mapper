@@ -5,7 +5,7 @@
 #include "console_global.h"
 
 //class WindowInterface;
-class CONSOLESHARED_EXPORT SystemConsoleAction : public QAction
+class SystemConsoleAction : public QAction
 {
  Q_OBJECT
 public:

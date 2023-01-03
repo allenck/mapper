@@ -283,7 +283,7 @@ void RouteDlg::setRouteData(RouteData value)
 void RouteDlg::setAddMode (bool value)
 {
     bAddMode = value;
-    parameters parms = sql->getParameters();
+    Parameters parms = sql->getParameters();
     ui->dateStart->setMinimumDateTime( parms.minDate);
     ui->dateStart->setMaximumDateTime( parms.maxDate);
     ui->dateEnd->setMaximumDateTime( parms.maxDate);
@@ -309,7 +309,7 @@ void RouteDlg::Form_Load()
 //    }
     formNotLoaded = false;
 
-    parameters parms = sql->getParameters();
+    Parameters parms = sql->getParameters();
 //    dateStart.MinDate = parms.minDate;
 //    dateStart.MaxDate = parms.maxDate;
 //    dateEnd.MinDate = parms.minDate;
@@ -377,7 +377,7 @@ void RouteDlg::txtRouteNbr_Leave()
         _rd = RouteData();
         ui->cbRouteName->setCurrentIndex(0);
         ui->cbRouteName->setFocus();
-        parameters parms = sql->getParameters();
+        Parameters parms = sql->getParameters();
 //        dateStart.MinDate = parms.minDate;
 //        dateStart.MaxDate = parms.maxDate;
 //        dateEnd.MaxDate = parms.maxDate;
@@ -468,7 +468,7 @@ void RouteDlg::txtRouteName_Leave()
             }
             else
             {
-                parameters parms = sql->getParameters();
+                Parameters parms = sql->getParameters();
                 ui->dateStart->setMinimumDateTime(parms.minDate);
                 ui->dateStart->setMaximumDateTime(parms.maxDate);
                 ui->dateEnd->setMaximumDateTime(parms.maxDate);

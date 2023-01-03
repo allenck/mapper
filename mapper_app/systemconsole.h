@@ -10,7 +10,7 @@ class QCheckBox;
 class QActionGroup;
 class QMainWindow;
 class QTextStream;
-class CONSOLESHARED_EXPORT SystemConsole : public QObject
+class  SystemConsole : public QObject
 {
  Q_OBJECT
 public:

@@ -13,6 +13,7 @@ class MyMessageBox : public QMessageBox
   static int warning(QWidget* parent, QString title, QString msg, QMessageBox::StandardButtons buttons =QMessageBox::Ok);
   static int question(QWidget* parent, QString title, QString msg, QMessageBox::StandardButtons buttons =QMessageBox::Ok);
   static int critical(QWidget* parent, QString title, QString msg, QMessageBox::StandardButtons buttons =QMessageBox::Ok);
+  static int info(QWidget* parent, QString title, QString msg, QMessageBox::StandardButtons buttons =QMessageBox::Ok);
 
  private:
   void common();

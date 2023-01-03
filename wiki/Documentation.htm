@@ -61,13 +61,14 @@ as the database engine. However, provisions are made to also support
 MySql and Sql Server databases. The routes are displayed on a Google
 Maps map or alternatively an Open Street Map map. It is also possible
 to display a user-defined map. Historical overlays like historical
-topgraphic maps can be tiled on a web server. Several overlays have
-been installed on my server. <br>
+topographic maps can be tiled on a web server. There are numerous sites 
+on the we that have such 'georeferenced' maps; <br>
+0ne such source is the <a href="https://www.davidrumsey.com/">"David Rumsey Map Collection" </a> <br>
 </p>
 <br>
 <p>Main Window<br>
 <br>
-<img style="width: 640px; height: 360px;" alt="Mapper" title="Mapper main window display" src="images/Mainwindow.png"></p>
+<img style="width: 60%; height: 60%;" alt="Mapper" title="Mapper main window display" src="images/Mainwindow.png"></p>
 <h3>Using Mapper</h3>
 <h4>Displaying a route<br>
 </h4>
@@ -125,37 +126,40 @@ to the database. Don't do any "update" or "insert" type SQL queries if
 you don't want to modify the database.&nbsp;</li>
 </ol>
 <br>
-<h4>Adding a connection<br>
-</h4>
-Mapper comes with several populated databases. Initially, St.
+<h4>Modifying a connection</h4>
+<p>
+Each city Mapper has information about has at least one <i>'connection'</i> to a database. The preferred
+database type is "Sqlite" which is implemented as as a local .sqlite3 file. Other database types such as
+MySql/MariaDb or Microsoft Sql Server are also supported and can be located on the same machine or remotely on
+a LAN or the Internet.
+Mapper comes with several populated Sqlit3 databases. Initially, St.
 Louis is
 the default. A second city. Louisville, Kentucky is listed in the City
--&gt; menu. A third database, for Berlin, Germany is included but not
-enabled in the menu. Finally, there is a database for Cincinnati, Ohio
-which is "under construction". To add Berlin (or any other database
+-&gt; menu. A third database, for Berlin, Germany is included. Finally, there is a database for Cincinnati, Ohio. To add Berlin (or any other database
 created by
 Mapper), select Cities- &gt; Edit Connections... You then will see this
 dialog:<br>
 <br>
-<img style="width: 413px; height: 429px;" alt="Edit connections" title="Edit connections" src="images/edit_city_1.png"><br>
+<img style="width: 30%; height: 30%;" alt="Edit connections" title="Edit connections" src="images/edit_city_1.png"><br>
 Although the following example uses a Sqlite3 database, Mapper also
 provides for accessing databases on MySql or SQL Server databases. See <a href="Using_MySql_or_SQL_Server_databases.html">Using MySql or SQL
 Server</a> for more information.<br>
 <br>
-To add a Berlin connection. <br>
-Type in the City combo Box "Berlin, Deutschland"<br>
-then in the Connection combobox type "SQLITE Local
-Berlinerstrassenbahn" (or any other description that defines the
-database and connection type). Select "QSQLITE" as the Driver Type and
-"Sqlite" as the Db type. Finally, click on the browse folder and select
-the "berlinerstrassenbahn.sqlite3" database file name. <br>
-<img style="width: 496px; height: 429px;" alt="Edit Berlin" title="Dialog to add a new connection" src="images/edit_city_2.png"><br>
+To view the Berlin connection. <br>
+Select from the City combo Box "Berlin, Germany"<br>
+You should see something like this: <br>
+<img style="width: 30%; height: 30%;" alt="Edit Berlin" title="Dialog to add a new connection" src="images/edit_city_2.png"><br>
 <br>
 Now, you can click on the "Test" button to test whether the database
-can be opened. Fianlly, the "Update" button (which will have the text
+can be opened. Finally, the "Update" button (which will have the text
 "Add" if the connection is new)&nbsp; must be clicked to add the new
 connection to the Cities menu. <br>
 <br>
+</p>
+<h4>Adding a connection</h4>
+<p>Before adding a City, a new connection must be created. Press the "New" button to create an empty dialog.
+<a href="addConnection.png">New connection</a>
+</p>
 </div>
 
 </body></html>

@@ -5,6 +5,8 @@
 #include "latlng.h"
 #include "data.h"
 #include "exceptions.h"
+#include <QUuid>
+
 class Overlay;
 class Connection;
 class WebViewBridge;
@@ -13,15 +15,16 @@ class City : public QObject
  Q_OBJECT
 public:
  explicit City(QObject *parent = nullptr);
- qint32 id;
+    qint32 id;
  QList<Connection*> connections;
- QStringList connectionNames;
+ QT_DEPRECATED QStringList connectionNames;
+ QMap<QString, Connection*> connectionMap;
  qint32 curConnectionId = 0;
  qint32 curExportConnId =-1;
  qint32 curOverlayId;
  LatLng center;
- QString mapType;
- qint32 zoom;
+ QString mapType = "roadmap";
+ qint32 zoom =8;
  bool bAlphaRoutes = false;
  bool bNoPanOpt = false;
  bool bGeocoderRequest = false;
@@ -32,7 +35,7 @@ public:
  bool bDisplayTerminalMarkers = false;
  bool bDisplayRouteComments = false;
  bool bShowOverlay = false;
- qint32 companyKey;
+ qint32 companyKey=-1;
  qint32 routeSortType = 0;
  QString savedClipboard;
  bool bUserMap = false;
@@ -53,8 +56,14 @@ public:
  }
  QString name() {return _name;}
  void setCenter(LatLng center);
+ void setId(int id);
+ void setConnectionUniqueId(QUuid connectionUniqueId){_connectionUniqueId = connectionUniqueId;}
+ QUuid connectionUniqueId() {return _connectionUniqueId;}
+ void addConnection(Connection*connection);
  private:
  Bounds _bounds;
+ QUuid _connectionUniqueId;
+
 signals:
 
 public slots:

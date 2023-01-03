@@ -528,10 +528,10 @@ class CompanyData
     int firstRoute, lastRoute;
     QString routePrefix;
 };
-class parameters
+class Parameters
 {
 public:
-    parameters(){
+    Parameters(){
         bAlphaRoutes = false;
     }
 

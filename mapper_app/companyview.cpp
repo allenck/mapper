@@ -28,7 +28,7 @@ CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     connect(model, SIGNAL(beforeUpdate(int,QSqlRecord&)), this, SLOT(On_primeInsert(int,QSqlRecord&)));
 
     model->setEditStrategy(QSqlTableModel::OnFieldChange);
-    //model->query().setForwardOnly(false);
+    model->query().setForwardOnly(false);
     model->select();
     QString name = model->record(0).value("description").toString();
     tableView->setModel(model);

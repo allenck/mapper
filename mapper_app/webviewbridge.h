@@ -65,6 +65,8 @@ signals:
     void on_scriptResult(QVariant);
     void on_scriptArrayResult(QVariantList);
     void on_rightClicked(LatLng pos);
+    void on_cityBounds(Bounds bounds);
+
 
 public slots:
     void selectSegment(qint32 i, qint32 SegmentId); //19

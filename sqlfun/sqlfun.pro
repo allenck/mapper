@@ -9,7 +9,7 @@ HEADERS += \
 
 
 build_pass:CONFIG(debug, debug|release) {
- DESTDIR = ../mapper_app
+ DESTDIR = ../mapper_app/debug
 } else {
- DESTDIR = ../mapper_app
+ DESTDIR = ../mapper_app/release
 }

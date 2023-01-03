@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>701</width>
-    <height>359</height>
+    <height>365</height>
    </rect>
   </property>
   <property name="font">
@@ -162,7 +162,7 @@
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Select an existing city from the dropdown list.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="editable">
-      <bool>true</bool>
+      <bool>false</bool>
      </property>
     </widget>
    </item>
@@ -327,7 +327,7 @@
     </widget>
    </item>
    <item row="5" column="1" colspan="7">
-    <widget class="QLineEdit" name="txtUID">
+    <widget class="QLineEdit" name="txtUserId">
      <property name="placeholderText">
       <string>User Id</string>
      </property>
@@ -347,7 +347,7 @@
  </widget>
  <tabstops>
   <tabstop>txtHost</tabstop>
-  <tabstop>txtUID</tabstop>
+  <tabstop>txtUserId</tabstop>
   <tabstop>txtPWD</tabstop>
   <tabstop>btnOK</tabstop>
   <tabstop>btnTest</tabstop>

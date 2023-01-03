@@ -19,7 +19,8 @@ MyMessageBox::MyMessageBox(QWidget* parent, QString title, QString msg, QMessage
 void MyMessageBox::common()
 {
  setIcon(QMessageBox::Information);
- setStyleSheet("color: rgb(0, 0, 0);background: #faf0e6;");
+ setStyleSheet("background-color: #faf0e6;");
+ setStyleSheet("text-color: rgb(0, 0, 0);");
  setStandardButtons(QMessageBox::Ok);
  setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint | Qt::Dialog);
  setModal(true);
@@ -37,6 +38,7 @@ void MyMessageBox::common()
 /*static*/ int MyMessageBox::critical(QWidget* parent, QString title, QString msg, QMessageBox::StandardButtons buttons)
 {
  return functionCommon(parent, title,msg, buttons, QMessageBox::Critical);
+
 }
 
 

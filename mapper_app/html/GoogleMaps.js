@@ -2646,12 +2646,14 @@ function addCityBoundsButton()
       // Append the control to the DIV.
       centerControlDiv.appendChild(centerControl);
 
-      map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(centerControlDiv);
+      if(map.controls[google.maps.ControlPosition.BOTTOM_CENTER].length === 0)
+          map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(centerControlDiv);
 }
 
 function closeCityBoundsButton()
 {
- map.controls[google.maps.ControlPosition.TOP_CENTER].removeAt(0);
+    if(map.controls[google.maps.ControlPosition.BOTTOM_CENTER].length>0)
+        map.controls[google.maps.ControlPosition.BOTTOM_CENTER].removeAt(0);
 }
 
 function downloadFile(url, fileName) {

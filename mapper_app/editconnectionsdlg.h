@@ -17,6 +17,9 @@ class EditConnectionsDlg : public QDialog
 
 public:
  EditConnectionsDlg(QWidget *parent = 0);
+ void setCity(City* city);
+ void refreshCities();
+
  ~EditConnectionsDlg();
  enum DBTYPE {MySql, MsSql,Sqlite};
 
@@ -27,7 +30,7 @@ private:
  QStringList dbTypes;
  bool bCbConnectionsTextChanged;
  bool bCbCitiesTextChanged;
- bool testConnection();
+ bool testConnection(bool bCreate = false);
  bool openTestDb();
  QSqlDatabase db;
  QTimer *timer;
@@ -63,6 +66,7 @@ private slots:
  void txtDsnTextChanged(QString text);
  void on_tbBrowse_clicked();
  void ontxtDbOrDsn_editingFinished();
+
 };
 
 #endif // EDITCONNECTIONSDLG_H

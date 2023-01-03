@@ -31,6 +31,7 @@ public:
  void getSettings();
  void saveSettings();
  void setOverlay(Overlay* ov);
+ void addCity(City*);
  QList<City*> cityList;
  QMap<QString, City*> cityMap;
  QMap<QString, Overlay*>* overlayMap = new QMap<QString, Overlay*>();
@@ -53,9 +54,10 @@ private:
  explicit Configuration(QObject *parent = 0);
  void createDefaultSettings();
  bool bLoggingOn = false;
+ QUuid _connectionUniqueId;
 
 signals:
-
+  void newCityCreated(City*);
 public slots:
 
 };

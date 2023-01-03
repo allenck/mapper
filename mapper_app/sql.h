@@ -101,7 +101,8 @@ public:
     Q_DECL_DEPRECATED void setConfig(Configuration *config);
     QList<QString> getRouteNames(qint32 route);
     qint32 getRouteCompany(qint32 route);
-    parameters getParameters();
+    Parameters getParameters();
+    bool insertParameters(Parameters, QSqlDatabase db);
     QList<RouteData> getRouteSegmentsBySegment(qint32 segmentId);
     QList<RouteData> getRouteDataForRouteName(qint32 route, QString name);
     double Distance(double Lat1, double Lon1, double Lat2, double Lon2);

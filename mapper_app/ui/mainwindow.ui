@@ -538,6 +538,16 @@
              </property>
             </widget>
            </item>
+           <item>
+            <widget class="QCheckBox" name="chkAddPt">
+             <property name="toolTip">
+              <string>Check to automatically turn on add point mode when selecting a segment from the combo box.</string>
+             </property>
+             <property name="text">
+              <string>Add Pt</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </item>
@@ -615,16 +625,6 @@
         </item>
         <item row="7" column="0">
          <widget class="SegmentSelectionWidget" name="ssw" native="true"/>
-        </item>
-        <item row="7" column="3">
-         <widget class="QCheckBox" name="chkAddPt">
-          <property name="toolTip">
-           <string>Check to automatically turn on add point mode when selecting a segment from the combo box.</string>
-          </property>
-          <property name="text">
-           <string>Add Pt</string>
-          </property>
-         </widget>
         </item>
        </layout>
       </widget>

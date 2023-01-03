@@ -2,8 +2,8 @@
 //#include "webviewbridge.h"
 #include "mainwindow.h"
 #include <QMessageBox>
-#include "../console/systemconsole.h"
-#include "../console/consoleinterface.h"
+#include "systemconsole.h"
+#include "consoleinterface.h"
 #include <QString>
 #include "myapplication.h"
 //#include "logger.h"

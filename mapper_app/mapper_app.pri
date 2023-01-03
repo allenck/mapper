@@ -62,7 +62,7 @@ SOURCES += main.cpp\
     $$PWD/connection.cpp \
     $$PWD/latlng.cpp \
     $$PWD/globalmercator.cpp \
-    consoleinterface.cpp \
+    $$PWD/consoleinterface.cpp \
     systemconsole.cpp \
     systemconsoleaction.cpp \
     jtextarea.cpp \

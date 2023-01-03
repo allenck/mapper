@@ -202,7 +202,7 @@ void EditSegmentDialog::On_dtBegin_editingFinished()
  }
 }
 
-void EditSegmentDialog::On_dtEnd_dateChanged(QDate dt)
+void EditSegmentDialog::On_dtEnd_dateChanged(QDate /*dt*/)
 {
  bEndDateEdited = true;
 }

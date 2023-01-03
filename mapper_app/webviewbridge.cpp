@@ -293,6 +293,7 @@ void WebViewBridge::cityBounds(double neLat, double neLng, double swLat, double 
  config->currCity->setCenter(center);
  config->saveSettings();
  processScript("closeCityBoundsButton");
+ emit on_cityBounds(bounds);
 }
 
 void WebViewBridge::rightClicked(QString text)

@@ -1,5 +1,6 @@
 #include <QtGui>
 #include "mainwindow.h"
+#include "ui/removecitydialog.h"
 #ifndef USE_WEBENGINE
 #include <QtWebKit>
 #include <QWebFrame>
@@ -30,8 +31,7 @@
 #include <QFileDialog>
 #include "exportroutedialog.h"
 #include "editcitydialog.h"
-#include "../console/systemconsoleaction.h"
-//#include "../console/systemconsole.h"
+#include "systemconsoleaction.h"
 #include <QStatusBar>
 #include <QWidgetAction>
 #include <QMenuBar>
@@ -44,6 +44,7 @@
 #include <QProcess>
 #include "sql.h"
 #include "replacesegmentdialog.h"
+#include "segmentselectionwidget.h"
 #include "browsecommentsdialog.h"
 //#include "exceptions.h"
 //#include "logger.h"
@@ -63,6 +64,8 @@
 #include "splitroute.h"
 #include "editstation.h"
 #include <QPair>
+#include "ui/newcitydialog.h"
+#include "ui/removecitydialog.h"
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -71,6 +74,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui(new Ui::MainWindow)
 {
  ui->setupUi(this);
+ _instance = this;
  cityMenu = nullptr;
  QCoreApplication::setOrganizationName("ACK Software");
  QCoreApplication::setApplicationName("Mapper");
@@ -197,8 +201,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 #ifdef Q_OS_WIN
   fileUrl = QUrl::fromLocalFile(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm");
 #else
-   //fileUrl = QUrl::fromLocalFile(htmlDir.absolutePath() + QDir::separator()+"GoogleMaps2.htm");
-  fileUrl = QUrl("http://localhost/GoogleMaps2.htm");
+   fileUrl = QUrl::fromLocalFile(htmlDir.absolutePath() + QDir::separator()+"GoogleMaps2.htm");
+  //fileUrl = QUrl("http://localhost/GoogleMaps2.htm");
 #endif
   //if(verifyAPIKey(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm", keyTokens.at(0)))
    webView->load(fileUrl);
@@ -216,7 +220,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  else // run in browser
  {
   qDebug() << "preparing to run in browser";
-  webView = nullptr;
+  webView = NULL;
   ui->groupBox_2->setHidden(true);
   openWebWindow();
   //ui->saveImage->setEnabled(false);
@@ -270,8 +274,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  pgmDir = info3.absolutePath();
  //sql->setConfig(config);
  //ui->setupUi(this);
- webViewAction = nullptr;
- systemConsoleAction = nullptr;
+ webViewAction = NULL;
+ systemConsoleAction = NULL;
 
  QUrl dataUrl("http://ubuntu-2:80/public/map_tiles/overlay.lst");
  m_dataCtrl = new FileDownloader(dataUrl, this);
@@ -283,14 +287,12 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 //#endif
 
  // get list of localhost's mbtiles overlays
- //m_overlays = new FileDownloader(QUrl("http://localhost/map_tiles/mbtiles.php"),this);
+ m_overlays = new FileDownloader(QUrl("http://localhost/map_tiles/mbtiles.php"),this);
  //m_overlays = new FileDownloader(QUrl("http://localhost/tileserver/"),this);connect(m_overlays, SIGNAL(downloaded()), this, SLOT(loadMbtilesData()));
- //connect(m_overlays, SIGNAL(downloaded(QString)), this, SLOT(loadMbtilesData()));
+ connect(m_overlays, SIGNAL(downloaded(QString)), this, SLOT(loadMbtilesData()));
 
  createActions();
- qDebug() << "actions created";
  createMenus();
- qDebug() << "menus created";
 
 // centralWidget = new MapView(this);
 // setCentralWidget(centralWidget);
@@ -494,9 +496,11 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   }
   else
    ui->chkShowOverlay->setEnabled(false);
-
-
 }
+
+/*static*/ MainWindow* MainWindow::_instance = nullptr;
+/*static*/ MainWindow* MainWindow::instance() {return _instance;}
+
 void MainWindow::createBridge()
 {
  //! The object we will expose to JavaScript engine:
@@ -536,7 +540,7 @@ Configuration* MainWindow::getConfiguration()
 
 void MainWindow::reloadMap()
 {
- if(webView == nullptr)
+ if(webView == NULL)
  {
   webView = new QWebEngineView(ui->groupBox_2);
   webView->setObjectName(QStringLiteral("webEngineView"));
@@ -871,6 +875,23 @@ void MainWindow::createActions()
  quitAct->setStatusTip(tr("Exit mapper"));
  connect(quitAct, SIGNAL(triggered()), this, SLOT(quit()));
 
+ newCityAct = new QAction(tr("New City"), this);
+ newCityAct->setStatusTip(tr("Define a new city."));
+ connect(newCityAct, &QAction::triggered, [=]{
+     NewCityDialog* newCityDialog = new NewCityDialog(this);
+     newCityDialog->show();
+     connect(newCityDialog, &NewCityDialog::finished, [=](int result){
+         if(result == QDialog::Rejected)
+             return;
+     });
+ });
+ removeCityAct = new QAction(tr("Remove city"),this);
+ removeCityAct->setStatusTip(tr("Remove city and connections."));
+ connect(removeCityAct, &QAction::triggered, [=]{
+     RemoveCityDialog* dlg = new RemoveCityDialog();
+     dlg->exec();
+ });
+
  displayAct = new QAction(tr("Display route"), this);
  displayAct->setStatusTip(tr("Display the current route"));
  connect(displayAct, SIGNAL(triggered()), this, SLOT(btnDisplayRouteClicked()));
@@ -1137,12 +1158,15 @@ void MainWindow::createMenus()
     cityMenu->setToolTipsVisible(true);
     cityMenu->setToolTip(tr("Select city, connection or manage overlays"));
     cityMenu->setToolTip(tr("Select which city and database connection to use."));
+
     connectionsMenu->addMenu(cityMenu);
     connect(cityMenu, SIGNAL(aboutToShow()), this, SLOT(createCityMenu()));
     connectionsMenu->addSeparator();
     //createCityMenu();
     connectionsMenu->addAction(editConnectionsAct);
     connectionsMenu->addAction(manageOverlaysAct);
+    connectionsMenu->addAction(newCityAct);
+    connectionsMenu->addAction(removeCityAct);
 
     toolsMenu = new Menu(tr("Tools"));
     toolsMenu->addAction(addRouteAct);
@@ -1174,11 +1198,9 @@ void MainWindow::createMenus()
 #ifdef USE_WEBENGINE
     optionsMenu->addAction(runInBrowserAct);
 #endif
-
     sortMenu = new Menu(tr("Route Sort option"));
     optionsMenu->addMenu(sortMenu);
     sortMenu->addAction(sortTypeAct);
-    optionsMenu->addMenu(sortMenu);
 
     menuBar()->addMenu(optionsMenu);
     menuBar()->addMenu(toolsMenu);
@@ -1187,7 +1209,7 @@ void MainWindow::createMenus()
     helpMenu->setToolTipsVisible(true);
 //    helpMenu->addAction(webViewAction = new WebViewAction((QObject*)this));
 //#ifndef QT_DEBUG
-    helpMenu->addAction((systemConsoleAction = new SystemConsoleAction(this)));
+    helpMenu->addAction(systemConsoleAction = new SystemConsoleAction());
     systemConsoleAction->setToolTip(tr("Display, info, error and debug messages"));
 //#endif
     helpMenu->addAction(usingMapper);
@@ -1305,8 +1327,9 @@ void MainWindow::newCity(QAction* act )
   config->currCity->mapType = m_maptype;
   if(!config->currCity->connections.contains(config->currConnection))
   {
-   config->currCity->connections.append(config->currConnection);
-   config->currCity->connectionNames.append(config->currConnection->description());
+      //   config->currCity->connections.append(config->currConnection);
+      //   config->currCity->connectionNames.append(config->currConnection->description());
+      config->currCity->addConnection(config->currConnection);
   }
 
   // Save any changes to currentCity
@@ -2212,7 +2235,7 @@ void MainWindow::refreshCompanies()
         CompanyData* cd = companyList.at(i);
         ui->cbCompany->addItem(cd->name, cd->companyKey);
     }
-    if(routeDlg != nullptr)
+    if(routeDlg != NULL)
      routeDlg->fillCompanies();
 }
 void MainWindow::cbCompanySelectionChanged(int sel)
@@ -2696,9 +2719,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
  db.close();
 #ifndef QT_DEBUG
  //systemConsoleAction->close();
- //delete SystemConsole::getInstance();
+ delete SystemConsole::getInstance();
 #endif
-// if(webViewAction != nullptr)
+// if(webViewAction != NULL)
 //  webViewAction->closeWebView();
  //QMainWindow::closeEvent(event);
  event->accept();

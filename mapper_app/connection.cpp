@@ -11,8 +11,38 @@ Connection::Connection(QObject *parent) : QObject(parent)
  //_DSN = "";
  //_servertype = "Sqlite";
  bOpen = false;
-
+ _uuid = QUuid::createUuid();
 }
+
+Connection::Connection(QUuid uuid, QObject* parent) : QObject(parent)
+{
+  _uuid = uuid;
+}
+
+Connection::Connection(const Connection& o){
+ this->_id = o._id;
+ this->_driver = o._driver;
+ this->_description =o._description;
+ this->_DSN =o._DSN;
+ this->_userId = o._userId;
+ this->_PWD = o._PWD;
+ this->_database = o._database;
+ this->_hostName = o._hostName;
+ this->_port = o._port;
+ this->_useDatabase = o._useDatabase;
+ this->db = o.db;
+ this->_servertype = o._servertype; // "MsSql (default), "MySql"
+ this->bOpen = o.bOpen;
+ this->_cityName = o._cityName;
+ this->_connectionName = o._connectionName;
+ this->_sqlite_fileName = o._sqlite_fileName;
+ this->_odbc_connectorName = o._odbc_connectorName;
+ this->_defaultSqlDatabase = o._defaultSqlDatabase;
+ this->_mySqlDatabase = o._mySqlDatabase;
+ this->_connectionType = o._connectionType;
+ this->_uuid = o._uuid;
+}
+
 
 QSqlDatabase Connection::getDb() { return db;}
 
@@ -43,14 +73,8 @@ QSqlDatabase Connection::configure(const QString cName)
 // {
  if((bOpen = db.open()))
  {
-  if(!tablesChecked)
-  {
-   sql->checkTables(db);
-   tablesChecked = true;
-  }
   if(config->currConnection->servertype() != "Sqlite")
    return db;
-  sql->loadSqlite3Functions();
   if(config->currConnection->mySqlDatabase()  != "")
   {
    QSqlQuery query = QSqlQuery(db);
@@ -63,8 +87,8 @@ QSqlDatabase Connection::configure(const QString cName)
     bOpen = false;
     return db;
    }
-//   if(config->currConnection->servertype() == "Sqlite")
-//    sql->checkTables(db);
+   if(config->currConnection->servertype() == "Sqlite")
+    sql->checkTables(db);
    tableList = db.tables();
 
    if(!tableList.contains("Parameters",Qt::CaseInsensitive))
@@ -91,10 +115,10 @@ QSqlDatabase Connection::configure(const QString cName)
     QMessageBox::warning(NULL, "Warning", msg);
    }
   }
-//  if(sql->loadSqlite3Functions() && config->currConnection->servertype() == "Sqlite")
-//  {
-//   sql->checkTables(db);
-//  }
+  if(sql->loadSqlite3Functions() && config->currConnection->servertype() == "Sqlite")
+  {
+   sql->checkTables(db);
+  }
  }
  else
  {
@@ -131,7 +155,7 @@ void Connection::configureDb(QSqlDatabase* db, Connection* currConnection)
          db->setHostName(currConnection->host());
         if(currConnection->port() > 0)
          db->setPort(currConnection->port());
-        db->setUserName(currConnection->uid());
+        db->setUserName(currConnection->userId());
         db->setPassword(currConnection->pwd());
         db->setDatabaseName(currConnection->mySqlDatabase());
     }

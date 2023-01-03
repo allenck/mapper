@@ -184,8 +184,9 @@ void CreateSqliteDatabaseDialog::on_btnOk_clicked()
    cn->setId(c->connections.count());
    if(!c->connections.contains(cn))
    {
-    c->connections.append(cn);
-    c->connectionNames.append(cn->description());
+//    c->connections.append(cn);
+//    c->connectionNames.append(cn->description());
+       c->addConnection(cn);
    }
    config->saveSettings();
   }

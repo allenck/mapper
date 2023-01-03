@@ -10,6 +10,7 @@
 #include <QCloseEvent>
 #include "sql.h"
 #include "vptr.h"
+#include "mainwindow.h"
 
 QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
     QDialog(parent),
@@ -58,6 +59,21 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
    {
 
    }
+  });
+  connect(MainWindow::instance(), &MainWindow::newCitySelected, [=]
+  {
+      bChanging = true;
+      ui->cbConnections->clear();
+      for(int i=0; i<config->currCity->connections.count(); i++)
+      {
+       Connection* c = config->currCity->connections.at(i);
+       ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
+       if(c->id() == config->currConnection->id())
+        ui->cbConnections->setCurrentIndex(i);
+
+      }
+      bChanging = false;
+      setWindowTitle(tr("Manual Sql Query (%1)").arg(ui->cbConnections->currentText()));
   });
 }
 
