@@ -217,6 +217,7 @@ public:
     SegmentData();
     ~SegmentData() {}
     SegmentData(const SegmentData&);
+    SegmentData(const SegmentInfo&);
     void addPoint(LatLng pt);
     void insertPoint(int ptNum, LatLng pt);
     void movePoint(int ptNum, LatLng pt);

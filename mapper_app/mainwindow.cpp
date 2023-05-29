@@ -3404,8 +3404,8 @@ void MainWindow::addSegment()
     //SQL sql;
     SegmentDlg segmentDlg(config, this);
 //TODO    segmentDlg.routeChanged += new routeChangedEventHandler(segmentDlg_routeChanged);
-    connect(&segmentDlg, &SegmentDlg::companySelectionChanged, [=](int companyKey){
-     ui->cbCompany->setCurrentIndex( ui->cbCompany->findData(companyKey));
+    connect(&segmentDlg, &SegmentDlg::companySelectionChanged, [=](/*int companyKey*/){
+     ui->cbCompany->setCurrentIndex( ui->cbCompany->findData(_rd.companyKey));
      refreshRoutes();
     } );
     connect(&segmentDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs)), this, SLOT(segmentDlg_routeChanged(RouteChangedEventArgs)));

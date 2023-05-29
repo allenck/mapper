@@ -175,9 +175,9 @@ INCLUDEPATH += $$PWD/../../../sqlite-amalgamation-3390400
 DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3390400
 
 
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lConsole
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/debug/ -lConsole
-else:unix: LIBS += -L$$OUT_PWD/../console/ -lConsole
+#win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lConsole
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/debug/ -lConsole
+#else:unix: LIBS += -L$$OUT_PWD/../console/ -lConsole
 
 INCLUDEPATH += $$PWD/debug
 DEPENDPATH += $$PWD/debug

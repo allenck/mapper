@@ -5197,8 +5197,8 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate,
         qDebug()<<"end date ("+ endDate.toString("yyyy/MM/DD") +") before start date("+ startDate.toString("yyyy/MM/DD")+")!";
         return ret;
     }
-    //if (SegmentId <= 0)
-    //    throw (new ApplicationException("invalid segmentid:" + SegmentId));
+    if (SegmentId <= 0)
+        throw (new ApplicationException("invalid segmentid:" + QString::number(SegmentId)));
     if (companyKey < 1)
     {
         qDebug()<<"invalid company key: " + QString("%1").arg(companyKey);
@@ -6485,7 +6485,8 @@ qint32 SQL::addCompany(QString name, qint32 route, QString startDate, QString en
     }
 
     return companyKey;
-}        /// <summary>
+}
+/// <summary>
 /// Add or retrieve a segment Id corresponding to the Description
 /// </summary>
 /// <param name="Description"></param>
@@ -6543,7 +6544,16 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
  {
   qDebug() << "Warning segment '" << Description << "' has less than two points!!";
  }
- commandText = "Insert into Segments (street, Description, OneWay, type, pointArray, tracks) values ('" +street+"','" + Description + "', '" + OneWay + "'," +   QString("%1").arg((qint32)routeType) + ",'" + pointArray+ "', " + QString::number(tracks)+ ")";
+ commandText = "Insert into Segments (street, Description, OneWay, type, pointArray, tracks, "
+               "startLat, startlon, endLat, endLon, length, Direction, startDate, endDate) "
+               "values ('" +street+"','" + Description + "', '" + OneWay + "',"
+               +   QString("%1").arg((qint32)routeType) + ",'"
+               + pointArray+ "', "
+               + QString::number(tracks)
+               + ",0,0,0,0,0"
+               + ", ' ', '1800/01/01'"
+               + ", '2050/12/31'"
+               + ")";
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
@@ -6586,6 +6596,126 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
  emit segmentsChanged(SegmentId);
  return SegmentId;
 }
+
+/// <summary>
+/// Add or retrieve a segment Id corresponding to the Description
+/// </summary>
+/// <param name="Description"></param>
+/// <returns></returns>
+qint32 SQL::addSegment(SegmentData sd, bool *bAlreadyExists, bool forceInsert)
+{
+ int rows = 0;
+ int SegmentId = -1;
+ *(bAlreadyExists) = false;
+ QString street;
+ if(sd._description.contains(","))
+  street = sd._description.mid(0,sd._description.indexOf(","));
+
+ try
+ {
+ if(!dbOpen())
+    throw Exception(tr("database not open: %1").arg(__LINE__));
+ QSqlDatabase db = QSqlDatabase::database();
+ BeginTransaction("addSegment");
+
+ QString commandText = "Select SegmentId from Segments where Description = '" + sd._description
+   + "' and tracks = " + QString("%1").arg(sd._tracks)
+   + " and type = "  + QString("%1").arg(sd._routeType)
+   + " and OneWay= '" + sd._oneWay + "'";
+ QSqlQuery query = QSqlQuery(db);
+ bool bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+  QSqlError err = query.lastError();
+  qDebug() << err.text() + "\n";
+  qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+  db.close();
+  exit(EXIT_FAILURE);
+ }
+ while (query.next())
+ {
+  SegmentId = query.value(0).toInt();
+ }
+
+ if (SegmentId > 0 && !forceInsert)
+ {
+  *(bAlreadyExists) = true;
+  return SegmentId;
+ }
+ // Add a new SegmentId
+ QString pointArray = "";
+ for(int i = 0; i < sd._pointList.count(); i ++)
+ {
+  if(i > 0)
+   pointArray.append(",");
+  LatLng pt = sd._pointList.at(i);
+  pointArray.append(pt.str());
+ }
+ if(pointArray.count() < 2)
+ {
+  qDebug() << "Warning segment '" << sd._description << "' has less than two points!!";
+ }
+ commandText = "Insert into Segments (street, Description, OneWay, type, pointArray, tracks, "
+               "startLat, startlon, endLat, endLon, length, Direction, startDate, endDate) "
+               "values ('" +street+"','" + sd._description + "', '" + sd._oneWay + "',"
+               + QString("%1").arg((qint32)sd._routeType) + ",'"
+               + pointArray+ "', "
+               + QString::number(sd._tracks) + ", "
+               //+ ",0,0,0,0,0"
+               + QString("%1").arg(sd._startLat,0,'f',8) + ", "
+               + QString("%1").arg(sd._startLon,0,'f',8) + ", "
+               + QString("%1").arg(sd._endLat,0,'f',8) + ", "
+               + QString("%1").arg(sd._endLat,0,'f',8) + ", "
+               + QString("%1").arg(sd._length,0,'f',8) + ", "
+               //+ ", ' ', '1800/01/01'"
+               + "'" + sd._direction + "', "
+               + "'" + sd._startDate.toString("yyyy/MM/dd")+"', "
+               //+ ", '2050/12/31'"
+               + "'" + sd._endDate.toString("yyyy/MM/dd")+"'"
+               + ")";
+ bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+  SQLERROR(query);
+    db.close();
+    exit(EXIT_FAILURE);
+  }
+  rows = query.numRowsAffected();
+
+  // Now get the SegmentId (identity) value so it can be returned.
+  if(config->currConnection->servertype() == "Sqlite")
+    commandText = "SELECT LAST_INSERT_ROWID()";
+
+  else
+ if(config->currConnection->servertype() != "MsSql")
+    commandText = "SELECT LAST_INSERT_ID()";
+  else
+    commandText = "SELECT IDENT_CURRENT('Segments')";
+  bQuery = query.exec(commandText);
+ if(!bQuery)
+  {
+    QSqlError err = query.lastError();
+    qDebug() << err.text() + "\n";
+    qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+    db.close();
+    exit(EXIT_FAILURE);
+  }
+  while (query.next())
+  {
+    SegmentId = query.value(0).toInt();
+  }
+
+ }
+ catch (Exception e)
+ {
+    myExceptionHandler(e);
+ }
+ CommitTransaction("addSegment");
+
+ emit segmentsChanged(SegmentId);
+ return SegmentId;
+}
+
 /// <summary>
 /// Split an existing line segment
 /// </summary>
@@ -6749,7 +6879,10 @@ try
   QList<RouteData> routes;
 
 
-  commandText = "SELECT a.route, name, a.startDate, a.endDate, companyKey, tractionType, routeAlpha, normalEnter, normalLeave, reverseEnter, reverseLeave, a.OneWay from Routes a join Segments b on LineKey = b.SegmentId join altRoute c on a.route = c.route where SegmentId = " + QString("%1").arg(SegmentId);
+  commandText = "SELECT a.route, name, a.startDate, a.endDate, companyKey, tractionType, routeAlpha, "
+                "normalEnter, normalLeave, reverseEnter, reverseLeave, a.OneWay, a.Direction "
+                "from Routes a join Segments b on LineKey = b.SegmentId "
+                "join altRoute c on a.route = c.route where SegmentId = " + QString("%1").arg(SegmentId);
   bQuery = query.exec(commandText);
   if(!bQuery)
   {
@@ -6773,6 +6906,7 @@ try
    rd.reverseLeave = query.value(10).toInt();
    rd.lineKey = SegmentId;
    rd.oneWay = query.value(11).toString();
+   rd.direction = query.value(12).toString();
    routes.append( rd);
   }
 
@@ -6804,7 +6938,7 @@ try
    {
 
     commandText = "insert into Routes ( route, name, startDate, endDate, lineKey, companyKey, tractionType, "
-                  "normalEnter, normalLeave, reverseEnter, reverseLeave, OneWay) "
+                  "next, prev, normalEnter, normalLeave, reverseEnter, reverseLeave, OneWay, Direction) "
                   " values ("
                   + QString("%1").arg(rd1.route) + ", '"
                   + rd1.name + "', '"
@@ -6813,11 +6947,14 @@ try
                   + QString("%1").arg(newSegmentId) + ","
                   + QString("%1").arg(rd1.companyKey) + ","
                   + QString("%1").arg(rd1.tractionType) + ","
++ QString("%1").arg(rd1.next) + ","
++ QString("%1").arg(rd1.prev) + ","
                   + QString("%1").arg(normalEnter) + ","
                   + QString("%1").arg(rd1.normalLeave) + ","
                   + QString("%1").arg(rd1.reverseEnter) + ","
                   + QString("%1").arg(reverseLeave) + ", '"
-                  + rd1.oneWay + "')";
+                  + rd1.oneWay + "', '"
+                  + newSd.bearing().strDirection() + "')";
     bQuery = query.exec(commandText);
     if(!bQuery)
     {

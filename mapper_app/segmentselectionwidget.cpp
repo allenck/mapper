@@ -317,8 +317,8 @@ QComboBox* SegmentSelectionWidget::cbSegments()
 
 SegmentData SegmentSelectionWidget::segmentSelected()
 {
-// int segmentId = ui->cbSegments->currentData().toInt();
-// currSd = sql->getSegmentData(segmentId);
+ int m_SegmentId = ui->cbSegments->currentData().toInt();
+ currSd = sql->getSegmentData(m_SegmentId);
  return currSd;
 }
 

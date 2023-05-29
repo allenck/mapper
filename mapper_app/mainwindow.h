@@ -405,6 +405,7 @@ private:
     QMap<int, SegmentData> cbSegmentDataList;  // list of segmentInfo items in cbSegments
 
     qint32 m_currPoint, m_nbrPoints;
+    int m_companyKey;
     QList<LatLng> m_points;
     //segmentInfo si;
     SystemConsoleAction* systemConsoleAction;

@@ -122,6 +122,7 @@ RouteData::RouteData(const RouteData& o)
  bearing = o.bearing;
 }
 
+
 QString RouteData::toString()
 {
  QString str = alphaRoute + " " + name + " " + startDate.toString("yyyy/MM/dd")+ "->"+ endDate.toString("yyyy/MM/dd");
@@ -171,6 +172,31 @@ SegmentData::SegmentData(const SegmentData& o)
  _bearingStart = o._bearingStart;
  _bearingEnd = o._bearingEnd;
  _pointList = o._pointList;
+ if(points == 0 && pointList().count() > 0 )
+  points = pointList().count();
+}
+
+// create a new SegmentData from a SegmentInfo
+SegmentData::SegmentData(const SegmentInfo& o)
+{
+ _segmentId = o.segmentId;
+ _tracks = o.tracks;
+ _routeType = o.routeType;
+ _startLat = o.startLat;
+ _startLon = o.startLon;
+ _endLat = o.endLat;
+ _endLon = o.endLon;
+ _length = o.length;;
+ points = o.points;
+ _streetName = o.streetName;
+ _description = o.description;
+ _startDate = QDate::fromString(o.startDate, "yyyy/MM/dd");
+ _endDate = QDate::fromString(o.endDate, "yyyy/MM/dd");
+ _direction  = o.direction;
+ _bearing = o.bearing;
+ _bearingStart = o.bearingStart;
+ _bearingEnd = o.bearingEnd;
+ _pointList = o.pointList;
  if(points == 0 && pointList().count() > 0 )
   points = pointList().count();
 }

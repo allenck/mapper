@@ -112,5 +112,10 @@ class NullPointerException : public Exception
  public:
   NullPointerException(QString msg) : Exception(msg) {name = "NullPointerException";}
 };
+class ApplicationException : public Exception
+{
+ public:
+  ApplicationException(QString msg) : Exception(msg) {name = "NullPointerException";}
+};
 
 #endif // EXCEPTIONS_H
