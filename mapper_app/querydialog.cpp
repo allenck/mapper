@@ -657,3 +657,10 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   QWidget::setWindowTitle(tr("Manual Sql Query (%1)").arg(ui->cbConnections->currentText()));
  }
 }
+
+ void QueryDialog::executeQuery(QString commandText)
+ {
+  ui->editQuery->clear();
+  ui->editQuery->setText(commandText);
+  on_go_QueryButton_clicked();
+ }

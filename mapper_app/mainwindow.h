@@ -315,6 +315,7 @@ private:
     QAction *renameRouteAct;
     QAction *splitRouteAct;
     QAction *modifyRouteDateAct;
+    QAction *modifyRouteTractionTypeAct;
     QAction *addSegmentAct;
     QAction *deleteRouteAct;
     QAction *updateRouteAct;
@@ -324,6 +325,7 @@ private:
     QAction* addSegmentToRouteAct;
     QAction *deleteSegmentAct;
     QAction *findDupSegmentsAct;
+    QAction *queryRouteUsageAct;
     QAction *findDormantSegmentsAct;
     QAction *selectSegmentAct;
     QAction* editSegmentAct;
@@ -368,7 +370,7 @@ private:
     //QSignalMapper *overlaySignalMapper;
     QActionGroup  *overlayActionGroup;
     QString  currentOverlay;
-    QList<tractionTypeInfo> tractionTypeList;
+    QList<TractionTypeInfo> tractionTypeList;
     QList<CompanyData*> companyList;
 
     TerminalInfo m_terminalInfo;
@@ -436,7 +438,7 @@ private slots:
     void onWebSocketClosed();
     void loadOverlayData();
 //    void refreshSegmentCB();
-
+    void modifyRouteTractionType();
 protected:
     //void resizeEvent(QResizeEvent *event);
 signals:

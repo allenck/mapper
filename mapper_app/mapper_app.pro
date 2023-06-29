@@ -26,6 +26,7 @@ RC_ICONS = Resources/tram-icon.ico
 
 HEADERS += \
     mymessagebox.h \
+    ui/modifyroutetractiontypedlg.h \
     ui/newcitydialog.h \
     ui/removecitydialog.h \
     websocketclientwrapper.h \
@@ -33,6 +34,7 @@ HEADERS += \
 
 SOURCES += \
     mymessagebox.cpp \
+    ui/modifyroutetractiontypedlg.cpp \
     ui/newcitydialog.cpp \
     ui/removecitydialog.cpp \
     websocketclientwrapper.cpp \
@@ -183,5 +185,6 @@ INCLUDEPATH += $$PWD/debug
 DEPENDPATH += $$PWD/debug
 
 FORMS += \
+ ui/modifyroutetractiontypedlg.ui \
  ui/newcitydialog.ui \
  ui/removecitydialog.ui

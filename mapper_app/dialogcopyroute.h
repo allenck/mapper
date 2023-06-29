@@ -26,7 +26,7 @@ private:
 
     QList<RouteData> routeDataList;
     QList<CompanyData*> _companyList;
-    QList<tractionTypeInfo> tractionList;
+    QList<TractionTypeInfo> tractionList;
     SQL* sql;
     int _routeNbr;
     QString _alphaRoute;

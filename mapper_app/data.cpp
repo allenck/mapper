@@ -297,6 +297,17 @@ QString SegmentData::pointsString()
  return ps;
 }
 
+void SegmentData::checkTracks()
+{
+ if(_tracks < 1 || _tracks > 2)
+ {
+  bNeedsUpdate = true;
+  if(_oneWay == "N")
+   _tracks = 2;
+  else
+   _tracks = 1;
+ }
+}
 
 RouteInfo::RouteInfo()
 {

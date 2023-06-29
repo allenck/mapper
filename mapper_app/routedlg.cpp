@@ -107,7 +107,7 @@ void RouteDlg::setSegmentId(qint32 segmentid)
   //foreach (tractionTypeInfo tti in cbTractionType.Items)
   for(int i = 0; i < _tractionList.count(); i++ )
   {
-   tractionTypeInfo tti = (tractionTypeInfo)_tractionList.at(i);
+   TractionTypeInfo tti = (TractionTypeInfo)_tractionList.at(i);
    if (tti.tractionType == _rd.tractionType)
    {
        ui->cbTractionType->setCurrentIndex(i);
@@ -267,7 +267,7 @@ void RouteDlg::setRouteData(RouteData value)
  //foreach (tractionTypeInfo tti in cbTractionType.Items)
  for(int i=0; i < _tractionList.count(); i++)
  {
-  tractionTypeInfo tti = (tractionTypeInfo)_tractionList.at(i);
+  TractionTypeInfo tti = (TractionTypeInfo)_tractionList.at(i);
   if (tti.tractionType == _rd.tractionType)
   {
    ui->cbTractionType->setCurrentIndex(i);
@@ -448,7 +448,7 @@ void RouteDlg::txtRouteName_Leave()
                 //ui->cbTractionType->setCurrentIndex(ix);
                 for( int j=0; j < _tractionList.count(); j++)
                 {
-                    tractionTypeInfo tt = (tractionTypeInfo)_tractionList.at(j);
+                    TractionTypeInfo tt = (TractionTypeInfo)_tractionList.at(j);
                     if(tt.tractionType == rd.tractionType)
                     {
                         ui->cbTractionType->setCurrentIndex(j);
@@ -522,7 +522,7 @@ void RouteDlg::fillSegmentsComboBox()
             //cbTractionType.SelectedIndex = i;
             for(int j=0; j < _tractionList.count(); j++)
             {
-                tractionTypeInfo tti = _tractionList.at(j);
+                TractionTypeInfo tti = _tractionList.at(j);
                 if(tti.tractionType == rd.tractionType)
                 {
                     ui->cbTractionType->setCurrentIndex(j);
@@ -570,7 +570,7 @@ void RouteDlg::fillTractionTypes()
     {
      //if (si.routeType == tti.routeType)
      {
-      tractionTypeInfo tti  = (tractionTypeInfo)_tractionList.at(i);
+      TractionTypeInfo tti  = (TractionTypeInfo)_tractionList.at(i);
       ui->cbTractionType->addItem(tti.ToString(),tti.tractionType);
       //count++;
      }
@@ -676,7 +676,7 @@ void RouteDlg::cbSegments_SelectedIndexChanged(int row)
 //    cbTractionType.SelectedIndex = i;
     for(int i = 0; i < _tractionList.count(); i++)
     {
-     tractionTypeInfo tti = _tractionList.at(i);
+     TractionTypeInfo tti = _tractionList.at(i);
      if(tti.tractionType == rd.tractionType)
      {
       ui->cbTractionType->setCurrentIndex(i);

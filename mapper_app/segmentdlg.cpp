@@ -192,7 +192,7 @@ QString SegmentDlg::routeName()
 qint32 SegmentDlg::tractionType()
 {
     int ix = ui->cbTractionType->currentIndex();
-    tractionTypeInfo tti = (tractionTypeInfo)_tractionTypeList.at(ix);
+    TractionTypeInfo tti = (TractionTypeInfo)_tractionTypeList.at(ix);
     return tti.tractionType;
 }
 bool SegmentDlg::oneWay() { return ui->chkOriginalOneWay->isChecked(); }
@@ -289,7 +289,7 @@ void SegmentDlg::fillTractionTypes()
     //foreach (tractionTypeInfo tti in tractionList)
     for(int i = 0; i < _tractionTypeList.count(); i++)
     {
-     tractionTypeInfo tti = _tractionTypeList.at(i);
+     TractionTypeInfo tti = _tractionTypeList.at(i);
      ui->cbTractionType->addItem(tti.ToString());
     }
     //cbTractionType.Text = "";
@@ -790,7 +790,7 @@ QString SegmentDlg::getColor(qint32 tractionType)
  //foreach (tractionTypeInfo tti in tractionTypeList)
  for(int i=0; i < tractionTypeList.count(); i++)
  {
-  tractionTypeInfo tti = tractionTypeList.at(i);
+  TractionTypeInfo tti = tractionTypeList.at(i);
   if (tractionType == tti.tractionType)
       return tti.displayColor;
  }

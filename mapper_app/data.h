@@ -271,6 +271,7 @@ public:
     bool needsUpdate() {return bNeedsUpdate;}
     void setNeedsUpdate(bool b){bNeedsUpdate = b;}
     void displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst);
+    void checkTracks();
 
  private:
     qint32 _segmentId;
@@ -292,7 +293,10 @@ public:
     QString _whichEnd;     //Not in db, used for sequencing
     QString _oneWay;       //Not in db, used for sequencing
     int _next, _prev;      //Not in db, used for sequencing
+    int _normalEnter, _normalLeave, _reverseEnter, _reverseLeave;
     bool bNeedsUpdate = false;
+    qint32 _tractionType;
+    QString _trackUsage;
     friend class SQL;
 };
 
@@ -393,10 +397,10 @@ class TerminalInfo
         LatLng endLatLng;
 };
 
-class tractionTypeInfo
+class TractionTypeInfo
 {
     public:
-        tractionTypeInfo(){}
+        TractionTypeInfo(){}
         qint32 tractionType;
         QString description;
         QString displayColor;

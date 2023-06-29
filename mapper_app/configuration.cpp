@@ -153,6 +153,7 @@ void Configuration::saveSettings()
  settings->setValue("currCity", currentCityId);
  settings->setValue("showDebugMessages", bDisplayWebDebug);
  settings->setValue("runInBrowser", bRunInBrowser);
+ settings->setValue("saveImageDir", saveImageDir);
 }
 
 void Configuration::getSettings()
@@ -372,6 +373,7 @@ void Configuration::getSettings()
  currConnection =   currCity->connections.at(currCity->curConnectionId);
  bDisplayWebDebug = settings.value("showDebugMessages", false).toBool();
  bRunInBrowser = settings.value("runInBrowser", false).toBool();
+ saveImageDir = settings.value("saveImageDir", "").toString();
  //settings.endGroup();
 
  settings.beginGroup("query");

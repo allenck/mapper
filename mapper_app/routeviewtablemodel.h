@@ -37,6 +37,7 @@ public:
      TYPE,
      ONEWAY,
      USAGE,
+     TRACTIONTYPE,
      DISTANCE,
      NEXT,
      PREV,

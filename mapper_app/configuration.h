@@ -43,6 +43,7 @@ public:
  QStringList localOverlayList;
  QStringList georeferencedList;
  QString path;
+ QString saveImageDir;
  QStringList cityNames();
  QString lookupCityName(Bounds b);
  QMap<QString, Bounds> cityBounds;

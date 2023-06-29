@@ -21,7 +21,7 @@ EditSegmentDialog::EditSegmentDialog(SegmentData sd, QWidget *parent) :
  segmentSelected(sd);
 
  ui->ssw->initialize();
- connect(ui->ssw, SIGNAL(segmentSelected(SegmentData)), this, SLOT(segmentSelected(segmentData)));
+ connect(ui->ssw, SIGNAL(segmentSelected(SegmentData)), this, SLOT(segmentSelected(SegmentData)));
 }
 
 void EditSegmentDialog::common()

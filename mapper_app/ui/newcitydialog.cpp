@@ -5,6 +5,7 @@
 #include "webviewbridge.h"
 #include "mymessagebox.h"
 #include <QApplication>
+#include "webviewbridge.h"
 
 NewCityDialog::NewCityDialog(QWidget *parent) :
     QDialog(parent),

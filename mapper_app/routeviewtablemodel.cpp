@@ -121,6 +121,8 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
        return si.oneWay;
    case USAGE:
        return si.trackUsage;
+   case TRACTIONTYPE:
+    return si.tractionType;
    case TRACKS:
        return si.tracks;
    case TYPE:
@@ -166,6 +168,8 @@ QVariant RouteViewTableModel::headerData(int section, Qt::Orientation orientatio
             return tr("Trk");
         case USAGE:
             return tr("Use");
+        case TRACTIONTYPE:
+            return tr("TractionType");
         case TYPE:
             return tr("RouteType");
         case NEXT:
@@ -261,6 +265,9 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
     si.trackUsage = s;
    break;
   }
+  case TRACTIONTYPE:
+   si.tractionType = value.toInt();
+   break;
 //  case TRACKS:
 //    tracks = value.toInt();
 //    if(tracks == 1 || tracks == 2)
@@ -353,6 +360,7 @@ Qt::ItemFlags RouteViewTableModel::flags(const QModelIndex &index) const
      return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
     case ONEWAY: // 1Way
     case USAGE:
+    case TRACTIONTYPE:
      return QAbstractTableModel::flags(index) | Qt::ItemIsEditable | Qt::ItemIsEnabled;
     case TRACKS:
      return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
@@ -432,9 +440,11 @@ void RouteViewTableModel::commitChanges()
 
   if(si.oneWay == "N")
    si.trackUsage = " ";
-  if(siOld.trackUsage != si.trackUsage)
+  if(siOld.trackUsage != si.trackUsage || siOld.tractionType != si.tractionType)
   {
-   if(!SQL::instance()->updateRoute(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"), rd.lineKey, rd.next, rd.prev, si.trackUsage ))
+   //if(!SQL::instance()->updateRoute(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"), rd.lineKey, rd.next, rd.prev, si.trackUsage ))
+   rd.tractionType = si.tractionType;
+   if(!SQL::instance()->updateRoute(rd))
     return;
   }
 

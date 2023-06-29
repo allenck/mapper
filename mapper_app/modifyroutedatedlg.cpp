@@ -29,6 +29,7 @@ void ModifyRouteDateDlg::setConfiguration(Configuration *cfg)
 {
  config = cfg;
 }
+
 void ModifyRouteDateDlg::setRouteData(QList<RouteData> routeList, int currentIx)
 {
  this->routeList = routeList;
@@ -47,6 +48,7 @@ RouteData* ModifyRouteDateDlg::getRouteData()
 {
  return _rd;
 }
+
 void ModifyRouteDateDlg::dateTimePicker1_ValueChanged(QDate date) //SLOT
 {
  ui->lblError->setText("");

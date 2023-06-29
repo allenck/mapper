@@ -66,6 +66,8 @@
 #include <QPair>
 #include "ui/newcitydialog.h"
 #include "ui/removecitydialog.h"
+#include "ui/modifyroutetractiontypedlg.h"
+
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -435,6 +437,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui->ssw->cbSegments()->addAction(addSegmentToRouteAct);
   ui->ssw->cbSegments()->addAction(deleteSegmentAct);
   ui->ssw->cbSegments()->addAction(findDupSegmentsAct);
+  ui->ssw->cbSegments()->addAction(queryRouteUsageAct);
   ui->ssw->cbSegments()->addAction(findDormantSegmentsAct);
   ui->ssw->cbSegments()->addAction(selectSegmentAct);
   ui->ssw->cbSegments()->addAction(editSegmentAct);
@@ -908,6 +911,11 @@ void MainWindow::createActions()
  modifyRouteDateAct->setStatusTip(tr("Modify the begin or end date for a route"));
  connect(modifyRouteDateAct, SIGNAL(triggered()), this, SLOT(modifyRouteDate()));
 
+ modifyRouteTractionTypeAct = new QAction(tr("Modify route traction type"), this);
+ modifyRouteTractionTypeAct->setStatusTip(tr("Modify the tractionn type on a date"));
+ connect(modifyRouteTractionTypeAct, SIGNAL(triggered()), this, SLOT(modifyRouteTractionType()));
+
+
  routeCommentsAct = new QAction(tr("Route Comment"), this);
  routeCommentsAct->setStatusTip(tr("Update route comment"));
  connect(routeCommentsAct, SIGNAL(triggered()), this, SLOT(updateRouteComment()));
@@ -964,6 +972,17 @@ void MainWindow::createActions()
  findDupSegmentsAct=new QAction(tr("Show duplicate segments view"),this);
  findDupSegmentsAct->setToolTip(tr("Display a view of duplicate segments"));
  connect(findDupSegmentsAct, SIGNAL(triggered()),this, SLOT(findDupSegments()));
+
+ queryRouteUsageAct=new QAction(tr("Query route usage"),this);
+ queryRouteUsageAct->setToolTip((tr("Show routes using this segment")));
+ connect(queryRouteUsageAct, &QAction::triggered, [=] {
+  if(!queryDlg)
+  {
+   queryDlg = new QueryDialog(config, this);
+  }
+  queryDlg->executeQuery(tr("select * from Routes where lineKey = %1").arg(ui->ssw->segmentSelected().segmentId()));
+  queryDlg->show();
+ });
 
  addSegmentToRouteAct = new QAction(tr("Add segment to route"), this);
  connect(addSegmentToRouteAct, &QAction::triggered, [=]{
@@ -1263,6 +1282,7 @@ void MainWindow::cbRoute_customContextMenu( const QPoint& )
     cbRouteMenu.addAction(deleteRouteAct);
     cbRouteMenu.addAction(displayAct);
     cbRouteMenu.addAction(modifyRouteDateAct);
+    cbRouteMenu.addAction(modifyRouteTractionTypeAct);
     cbRouteMenu.addAction(renameRouteAct);
     cbRouteMenu.addAction(rerouteAct);
     cbRouteMenu.addAction(routeCommentsAct);
@@ -1729,7 +1749,7 @@ QString MainWindow::getColor(qint32 tractionType)
  //foreach (tractionTypeInfo tti in tractionTypeList)
  for(int i=0; i < tractionTypeList.count(); i++)
  {
-  tractionTypeInfo tti = tractionTypeList.at(i);
+  TractionTypeInfo tti = tractionTypeList.at(i);
   if (tractionType == tti.tractionType)
       return tti.displayColor;
  }
@@ -1837,8 +1857,8 @@ void MainWindow::On_displayRoute(RouteData rd)
  }
 
  QString markerType = "green";
- QList< tractionTypeInfo> tractionTypes= sql->getTractionTypes();
- foreach(tractionTypeInfo tti,tractionTypeList)
+ QList< TractionTypeInfo> tractionTypes= sql->getTractionTypes();
+ foreach(TractionTypeInfo tti,tractionTypeList)
  {
   //tractionTypeInfo tti = (tractionTypeInfo)tractionTypeList.at(i);
   if (tti.tractionType == ri.tractionType)
@@ -3398,6 +3418,34 @@ void MainWindow::modifyRouteDate()
 #endif
 }
 
+void MainWindow::modifyRouteTractionType()
+{
+ ModifyRouteTractionTypeDlg* form = new ModifyRouteTractionTypeDlg();
+ form->setConfiguration(config);
+ form->setRouteData(routeList, ui->cbRoute->currentIndex());
+
+ qint32 rslt = form->exec();
+ if (rslt == form->Accepted)
+ {
+  refreshRoutes();
+
+  //cbRoutes.SelectedItem = form.RouteData;
+  //cbRoutes.SelectedIndex = cbRoutes.FindString(form.RouteData.ToString());
+  for(int i=0; i <routeList.count(); i++)
+  {
+   RouteData rd =routeList.at(i);
+   if(rd.toString() == form->getRouteData()->toString())
+   {
+    ui->cbRoute->setCurrentIndex(i);
+
+    break;
+   }
+  }
+  routeView->updateRouteView();
+ }
+
+}
+
 void MainWindow::addSegment()
 {
 #if 1 // TODO
@@ -3997,9 +4045,10 @@ void MainWindow::QueryDialogAct_triggered()
 
 void MainWindow::On_saveImage_clicked()
 {
+ QString saveFilename;
  if(!config->bRunInBrowser)
  {
-  QString saveFilename = QFileDialog::getSaveFileName(this, "Save as", "Choose a filename", "PNG(*.png);; TIFF(*.tiff *.tif);; JPEG(*.jpg *.jpeg)");
+  saveFilename = QFileDialog::getSaveFileName(this, "Save as", config->saveImageDir, "PNG(*.png);; TIFF(*.tiff *.tif);; JPEG(*.jpg *.jpeg)");
 
   QString saveExtension = "PNG";
   int pos = saveFilename.lastIndexOf('.');
@@ -4017,6 +4066,9 @@ void MainWindow::On_saveImage_clicked()
  else {
     m_bridge->processScript("screenshot");
  }
+ QFileInfo info(saveFilename);
+ config->saveImageDir= info.absolutePath();
+ config->saveSettings();
 }
 
 void MainWindow::exportRoute()

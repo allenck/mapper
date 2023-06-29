@@ -18,6 +18,9 @@ public:
  explicit QueryDialog(Configuration* cfg, QWidget *parent = 0);
  ~QueryDialog();
  void setMaxTabResults(int num);
+
+public slots:
+ void executeQuery(QString commandText);
     
 private:
  Ui::QueryDialog *ui;
