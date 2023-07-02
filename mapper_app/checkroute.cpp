@@ -1,8 +1,9 @@
 #include "checkroute.h"
 
-checkRoute::checkRoute(QList<SegmentInfo> list, Configuration *cfg, QObject *parent) : QObject(parent)
+checkRoute::checkRoute(QList<SegmentData> list, Configuration *cfg, QObject *parent) : QObject(parent)
 {
-    segmentInfoList = segmentInfoList_old = list;
+    //segmentInfoList = segmentInfoList_old = list;
+    segmentDataList = segmentDataList_old = list;
     config = cfg;
     //sql->setConfig(config);
     sql = SQL::instance();
@@ -19,57 +20,58 @@ bool checkRoute::checkConnectingSegments()
 
     int segmentsNotConnected = 0;
     int segmentsMultiplyConnected=0;
-    for(int i=0; i < segmentInfoList.count(); i++)
+    for(int i=0; i < segmentDataList.count(); i++)
     {
-        SegmentInfo *si = (SegmentInfo*)&segmentInfoList.at(i);
+        //SegmentInfo *si = (SegmentInfo*)&segmentInfoList.at(i);
+     SegmentData* sd = (SegmentData*)&segmentDataList.at(i);
         // check connections to start of segment
         int startConnects = 0;
         int nextSegment=-1;
         int endConnects =0;
         int prevSegment=-1;
 
-        foreach(SegmentInfo si2, segmentInfoList)
+        foreach(SegmentData sd2, segmentDataList)
         {
-            if(si->segmentId == si2.segmentId)  // ignore self
+            if(sd->segmentId() == sd2.segmentId())  // ignore self
                 continue;
-            if(si->oneWay == "N")
+            if(sd->oneWay() == "N")
             {
                 // Only check connections to start if a twoway segment
-                if(si->oneWay == "N" && si2.oneWay =="N" || (si->oneWay == "N" && si2.oneWay == "Y")) // only twoway can connect start to start!
+                if(sd->oneWay() == "N" && sd2.oneWay() =="N" || (sd->oneWay() == "N" && sd2.oneWay() == "Y")) // only twoway can connect start to start!
                 {
-                    double dist = sql->Distance(si->startLat, si->startLon, si2.startLat, si2.startLon);
+                    double dist = sql->Distance(sd->startLat(), sd->startLon(), sd2.startLat(), sd2.startLon());
 
                     if(dist < .020)
                     {
                         if(startConnects == 0)
                         {
-                            nextSegment = si2.segmentId;
+                            nextSegment = sd2.segmentId();
                             startConnects++;
                         }
                         else
-                        if(isDirectionCorrect(si->normalEnter, reverseBearing( si->bearingStart.getBearing()), reverseBearing(si2.bearingStart.getBearing())))
+                        if(isDirectionCorrect(sd->normalEnter(), reverseBearing( sd->bearingStart().getBearing()), reverseBearing(sd2.bearingStart().getBearing())))
                         {
-                            nextSegment = si2.segmentId;
+                            nextSegment = sd2.segmentId();
                         }
                         else
                             startConnects++;
                     }
                 }
-                if((si->oneWay == "N" && si2.oneWay =="N") || si2.oneWay == "Y" || (si->oneWay == "Y" && si2.oneWay =="Y") )
+                if((sd->oneWay() == "N" && sd2.oneWay() =="N") || sd2.oneWay() == "Y" || (sd->oneWay() == "Y" && sd2.oneWay() =="Y") )
                 {
-                    double dist = sql->Distance(si->startLat, si->startLon, si2.endLat, si2.endLon);
+                    double dist = sql->Distance(sd->startLat(), sd->startLon(), sd2.endLat(), sd2.endLon());
 
                     if(dist < .020 )
                     {
                         if(startConnects == 0)
                         {
-                            nextSegment = si2.segmentId;
+                            nextSegment = sd2.segmentId();
                             startConnects++;
                         }
                         else
-                        if(isDirectionCorrect(si->normalEnter,reverseBearing( si->bearingStart.getBearing()), reverseBearing(si2.bearingStart.getBearing()) ))
+                        if(isDirectionCorrect(sd->normalEnter(),reverseBearing( sd->bearingStart().getBearing()), reverseBearing(sd2.bearingStart().getBearing()) ))
                         {
-                            nextSegment = si2.segmentId;
+                            nextSegment = sd2.segmentId();
                         }
                         else
                             startConnects++;
@@ -77,41 +79,41 @@ bool checkRoute::checkConnectingSegments()
                 }
             }
             // Now check connections to end
-            if((si->oneWay == "N" && si2.oneWay =="N") || si2.oneWay == "Y" || (si->oneWay == "N" && si2.oneWay =="Y"))
+            if((sd->oneWay() == "N" && sd2.oneWay() =="N") || sd2.oneWay() == "Y" || (sd->oneWay() == "N" && sd2.oneWay() =="Y"))
             {
-                double dist = sql->Distance(si->endLat, si->endLon, si2.startLat, si2.startLon);
+                double dist = sql->Distance(sd->endLat(), sd->endLon(), sd2.startLat(), sd2.startLon());
 
                 if(dist < .020)
                 {
                     if(endConnects == 0)
                     {
-                        prevSegment = si2.segmentId;
+                        prevSegment = sd2.segmentId();
                         endConnects++;
                     }
                     else
-                    if(isDirectionCorrect(si->normalLeave, si->bearing.getBearing(), reverseBearing(si2.bearingStart.getBearing())))
+                    if(isDirectionCorrect(sd->normalLeave(), sd->bearing().getBearing(), reverseBearing(sd2.bearingStart().getBearing())))
                     {
-                        prevSegment = si2.segmentId;
+                        prevSegment = sd2.segmentId();
                     }
                     else
                         endConnects++;
                 }
             }
-            if(si->oneWay == "N" && si2.oneWay =="N") // only twoway can connect end to end
+            if(sd->oneWay() == "N" && sd2.oneWay() =="N") // only twoway can connect end to end
             {
-                double dist = sql->Distance(si->endLat, si->endLon, si2.endLat, si2.endLon);
+                double dist = sql->Distance(sd->endLat(), sd->endLon(), sd2.endLat(), sd2.endLon());
 
                 if(dist < .020)
                 {
                     if(endConnects == 0)
                     {
-                        prevSegment = si2.segmentId;
+                        prevSegment = sd2.segmentId();
                         endConnects++;
                     }
                     else
-                    if(isDirectionCorrect(si->normalLeave, si->bearing.getBearing(), reverseBearing(si2.bearingEnd.getBearing())))
+                    if(isDirectionCorrect(sd->normalLeave(), sd->bearing().getBearing(), reverseBearing(sd2.bearingEnd().getBearing())))
                     {
-                        prevSegment = si2.segmentId;
+                        prevSegment = sd2.segmentId();
                     }
                     else
                         endConnects++;
@@ -121,17 +123,17 @@ bool checkRoute::checkConnectingSegments()
         }
         if(startConnects > 0)
         {
-            if(si->next != nextSegment)
+            if(sd->next() != nextSegment)
             {
-                si->next = nextSegment;
+                sd->setNext(nextSegment);
                 bChangesToBeMade = true;
             }
         }
         if(endConnects > 0)
         {
-            if(si->prev != prevSegment)
+            if(sd->prev() != prevSegment)
             {
-                si->prev = prevSegment;
+                sd->setPrev(prevSegment);
                 bChangesToBeMade = true;
             }
         }
@@ -139,58 +141,66 @@ bool checkRoute::checkConnectingSegments()
         {
             segmentsNotConnected++;
 //            qDebug()<< "segment "+ QString("%1").arg(si->segmentId)+ " not connected to another!";
-            notConnectedList.append(*si);
+            notConnectedList.append(*sd);
         }
         if(startConnects > 1 || endConnects > 1)
         {
             segmentsMultiplyConnected ++;
-            qDebug()<< "segment "+ QString("%1").arg(si->segmentId)+ " connects to multiple segments!";
-            multipleConnectionsList.append(*si);
+            qDebug()<< "segment "+ QString("%1").arg(sd->segmentId())+ " connects to multiple segments!";
+            multipleConnectionsList.append(*sd);
         }
     }
     if(segmentsNotConnected > 1 || segmentsMultiplyConnected > 0)
         return false;
     return true;
 }
+
 bool checkRoute::isError()
 {
     return bError;
 }
-QList<SegmentInfo> checkRoute::getnotConnected()
+
+QList<SegmentData> checkRoute::getnotConnected()
 {
     return notConnectedList;
 }
-QList<SegmentInfo> checkRoute::getMultipleConnections()
+QList<SegmentData> checkRoute::getMultipleConnections()
 {
     return multipleConnectionsList;
 }
-SegmentInfo* checkRoute::findSegment(qint32 segId)
+
+SegmentData* checkRoute::findSegment(qint32 segId)
 {
- SegmentInfo* si = NULL;
- for(int i = 0; i < segmentInfoList.count(); i++)
+ SegmentData* sd = NULL;
+ for(int i = 0; i < segmentDataList.count(); i++)
  {
-  si = (SegmentInfo *)&segmentInfoList.at(i);
-  if(si->segmentId == segId)
-   return si;
+  sd = (SegmentData *)&segmentDataList.at(i);
+  if(sd->segmentId() == segId)
+   return sd;
  }
- return si;
+ return sd;
 }
+
 void checkRoute::setStart(qint32 seg)
 {
     startSegment = seg;
 }
+
 void checkRoute::setEnd(qint32 seg)
 {
     endSegment = seg;
 }
+
 qint32 checkRoute::getStart()
 {
     return startSegment;
 }
+
 qint32 checkRoute::getEnd()
 {
     return endSegment;
 }
+
 bool checkRoute::setSeqNbrs()
 {
     if(startSegment < 1)
@@ -205,57 +215,58 @@ bool checkRoute::setSeqNbrs()
 
     while( bWorking)
     {
-     SegmentInfo* si = findSegment(nextSegment);
-     if(si == NULL)
+     SegmentData* sd = findSegment(nextSegment);
+     if(sd == NULL)
       return false;
-     if(si->next == lastSegment && si->oneWay == "N")
+     if(sd->next() == lastSegment && sd->oneWay() == "N")
      {
          // swap next & prev
-         qint32 temp = si->next;
-         si->next = si->prev;
-         si->prev = temp;
+         qint32 temp = sd->next();
+         sd->setNext(sd->prev());
+         sd->setPrev(temp);
      }
-     if(si->next < 1 && si->oneWay == "Y")
+     if(sd->next() < 1 && sd->oneWay() == "Y")
      {
          // swap next & prev
-         qint32 temp = si->next;
-         si->next = si->prev;
-         si->prev = temp;
+         qint32 temp = sd->next();
+         sd->setNext(sd->prev());
+         sd->setPrev(temp);
      }
-     nextSegment = si->next;
-     si->sequence = ++nextSequence;
-     if(si->segmentId == endSegment || nextSequence > segmentInfoList.count())
+     nextSegment = sd->next();
+     sd->setSequence(++nextSequence);
+     if(sd->segmentId() == endSegment || nextSequence > segmentDataList.count())
      {
          bWorking = false;
          break;
      }
-     lastSegment = si->segmentId;
+     lastSegment = sd->segmentId();
     }
     bWorking = true;
     nextSequence = -1;
     nextSegment = endSegment;
     while(bWorking)
     {
-        SegmentInfo* si = findSegment(nextSegment);
+        SegmentData* sd = findSegment(nextSegment);
 //        if(si->next == lastSegment)
 //        {
 //            qint32 temp = si->next;
 //            si->prev = si->next;
 //            si->next = temp;
 //        }
-        nextSegment = si->prev;
-        si->returnSeq = ++nextSequence;
+        nextSegment = sd->prev();
+        sd->setReturnSeq(++nextSequence);
 
-        if(si->segmentId == startSegment || nextSequence > segmentInfoList.count())
+        if(sd->segmentId() == startSegment || nextSequence > segmentDataList.count())
         {
             nextSequence = 0;
             bWorking = false;
             break;
         }
-        lastSegment = si->segmentId;
+        lastSegment = sd->segmentId();
     }
     return true;
 }
+
 double checkRoute::reverseBearing(double b)
 {
     if(b > 180)

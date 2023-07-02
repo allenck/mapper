@@ -127,7 +127,7 @@ void SegmentDlg::setPt(int value)
 void SegmentDlg::setSegmentId(qint32 value)
 {
  _SegmentId = value;
- si = sql->getSegmentInfo(value);
+ sd = sql->getSegmentInfo(value);
  if(_SegmentId> 0)
  {
   bSplitting = true;
@@ -136,7 +136,7 @@ void SegmentDlg::setSegmentId(qint32 value)
   ui->gbOriginal->setTitle(tr("Original segment:"));
   ui->gbNew->setTitle(tr("New segment:"));
   ui->txtOriginalName->setText( sql->getSegmentDescription(_SegmentId));
-  ui->chkOriginalOneWay->setChecked(si.oneWay== "Y");
+  //ui->chkOriginalOneWay->setChecked(sd.oneWay()== "Y");
 
   ui->txtNewName->setText( ui->txtOriginalName->text());
   ui->chkNewOneWay->setChecked(ui->chkOriginalOneWay->isChecked());
@@ -144,8 +144,8 @@ void SegmentDlg::setSegmentId(qint32 value)
   bOriginalChanged = false;
   bNewChanged = false;
   ui->chkOriginalOneWay->setEnabled(true);
-  si =sql->getSegmentInfo(_SegmentId);
-  ui->cbRouteType->setCurrentIndex((qint32)si.routeType);
+  sd =sql->getSegmentInfo(_SegmentId);
+  ui->cbRouteType->setCurrentIndex((qint32)sd.routeType());
   if(!ui->chkOriginalOneWay->isChecked())
    ui->groupBox2->setVisible(false);
   ui->rbNfromBack->setChecked(true);
@@ -196,7 +196,7 @@ qint32 SegmentDlg::tractionType()
     return tti.tractionType;
 }
 bool SegmentDlg::oneWay() { return ui->chkOriginalOneWay->isChecked(); }
-int SegmentDlg::tracks() { return si.tracks; }
+int SegmentDlg::tracks() { return sd.tracks(); }
 
 void SegmentDlg::setRouteData(RouteData value)
 {
@@ -437,7 +437,7 @@ void SegmentDlg::rbUseOriginal_CheckedChanged()     // SLOT
     {
         ui->groupBox2->setVisible(true);
         pi = sql->getPointInfo(_pt, _SegmentId);
-        bearing = Bearing(si.startLat, si.startLon, pi.lat(), pi.lon());
+        bearing = Bearing(sd.startLat(), sd.startLon(), pi.lat(), pi.lon());
         ui->rbNormal->setText( bearing.strDirection());
         ui->rbReverse->setText( bearing.strReverseDirection());
 
@@ -470,9 +470,9 @@ void SegmentDlg::rbUseNew_CheckedChanged()      // SLOT
     {
         ui->groupBox2->setVisible(true);
         pi = sql->getPointInfo(_pt, _SegmentId);
-        bearing = Bearing(pi.lat(), pi.lon(), si.endLat, si.endLon);
-        ui->rbNormal->setText( si.bearing.strDirection());
-        ui->rbReverse->setText( si.bearing.strReverseDirection());
+        bearing = Bearing(pi.lat(), pi.lon(), sd.endLat(), sd.endLon());
+        ui->rbNormal->setText( sd.bearing().strDirection());
+        ui->rbReverse->setText( sd.bearing().strReverseDirection());
 
         ui->rbNormal->setChecked( true);
     }
@@ -583,7 +583,7 @@ void SegmentDlg::chkNewOneWay_Changed(bool bChecked)
         ui->groupBox5->setVisible( false);
         ui->groupBox6->setVisible( false);
         //ui->btnOK->setEnabled(true);
-        ui->sbTracks->setValue(si.tracks);
+        ui->sbTracks->setValue(sd.tracks());
         ui->sbTracks->setEnabled(true);
     }
     else
@@ -692,8 +692,8 @@ void SegmentDlg::btnOK_Click()  // SLOT
   if (ui->chkOriginalOneWay->isChecked())
    originalName += " (1 way)";
   _newSegmentId = sql->splitSegment(_pt, _SegmentId, originalName, ui->chkOriginalOneWay->isChecked()?"Y":"N",
-                                    newName, ui->chkNewOneWay->isChecked()?"Y":"N", si.routeType, (RouteType)ui->cbRouteType->currentIndex(),
-                                    si.tracks,si.tracks, si.streetName, si.streetName);
+                                    newName, ui->chkNewOneWay->isChecked()?"Y":"N", sd.routeType(), (RouteType)ui->cbRouteType->currentIndex(),
+                                    sd.tracks(),sd.tracks(), sd.streetName(), sd.streetName());
   if (_newSegmentId < 0)
   {
    ui->lblErrorText->setText(tr( "split segment failed!"));
@@ -708,7 +708,8 @@ void SegmentDlg::btnOK_Click()  // SLOT
  if (!ui->rbNoAdd->isChecked())
  {
   QString direction;
-  if (si.oneWay == "Y")
+#if 0
+  if (sd.oneWay() == "Y")
   {
    if (ui->rbNormal->isChecked())
     direction = ui->rbNormal->text();
@@ -719,7 +720,8 @@ void SegmentDlg::btnOK_Click()  // SLOT
    //            if (!si.bearing )
    //                direction = "";
    //            else
-   direction = si.bearing.strDirection() + "-" + si.bearing.strReverseDirection();
+   direction = sd.bearing().strDirection() + "-" + sd.bearing().strReverseDirection();
+#endif
   if (ui->rbUseOriginal->isChecked())
    routeSegment = _SegmentId;
   else

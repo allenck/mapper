@@ -32,10 +32,10 @@ public:
     qint32 infoKey ();
     bool WasStationDeleted();
     int LineSegmentId();
-    QDateTime StartDate();
-    void setStartDate(QDateTime value);
-    QDateTime EndDate();
-    void setEndDate(QDateTime value);
+    QDate StartDate();
+    void setStartDate(QDate value);
+    QDate EndDate();
+    void setEndDate(QDate value);
     qint32 Geodb_Loc_Id();
     void setGeodb_Loc_Id(qint32 value);
     void setMarkerType(QString);
@@ -55,8 +55,8 @@ private:
     bool bDirty;
 
     SQL* sql;
-    SegmentInfo si;
-    SegmentData sd;
+    //SegmentInfo si;
+    SegmentInfo sd;
     void setRadioButtons();
     bool bDisplayStationMarkers;
     bool bUpdateExisting;

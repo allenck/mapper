@@ -40,7 +40,7 @@ void DupSegmentView::Resize (int oldcount,int newcount)
     ui->resizeRowsToContents ();
 }
 
-void DupSegmentView::showDupSegments(QList<SegmentData> dupSegmentList)
+void DupSegmentView::showDupSegments(QList<SegmentInfo> dupSegmentList)
 {
     //SQL sql;
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
@@ -151,7 +151,7 @@ void DupSegmentView::tablev_customContextMenu( const QPoint& pt)
         QModelIndex modelIndex = indexes.at(0);
         QModelIndex sourceModelIndex = ((QSortFilterProxyModel*)ui->model())->mapToSource(modelIndex);
         qint32 row = modelRow = sourceModelIndex.row();
-        QList<SegmentData> list = sourceModel->getList();
+        QList<SegmentInfo> list = sourceModel->getList();
         segmentId = list.at(row).segmentId();
         sd1 = list.at(row);
         dupSegmentId = list.at(row).next();
@@ -237,7 +237,7 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
 }
-dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentData> dupSegmentList, QObject *parent)
+dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentInfo> dupSegmentList, QObject *parent)
      : QAbstractTableModel(parent)
  {
      listOfSegments = dupSegmentList;
@@ -338,7 +338,7 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentData> dupSegment
 
      for (int row=0; row < rows; row++) {
          //QPair<QString, QString> pair(" ", " ");
-         SegmentData sd;
+         SegmentInfo sd;
          listOfSegments.insert(position, sd);
      }
 
@@ -365,7 +365,7 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentData> dupSegment
      if (index.isValid() && role == Qt::EditRole) {
          int row = index.row();
 
-         SegmentData sd = listOfSegments.value(row);
+         SegmentInfo sd = listOfSegments.value(row);
 
 //         switch (index.column())
 //             p.first = value.toString();
@@ -398,7 +398,7 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentData> dupSegment
      return QAbstractTableModel::flags(index);
  }
 
- QList< SegmentData > dupSegmentViewTableModel::getList()
+ QList< SegmentInfo > dupSegmentViewTableModel::getList()
  {
      return listOfSegments;
  }

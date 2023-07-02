@@ -70,19 +70,19 @@ qint32 EditStation::SegmentId()
 void EditStation::setSegmentId(qint32 value)
 {
  _segmentId = value;
- si = sql->getSegmentInfo(_segmentId);
+ sd = sql->getSegmentInfo(_segmentId);
  if (_latLng.isValid() && _pt != -1)
      setRadioButtons();
- if(ui->dateStart->date() < QDate::fromString(si.startDate, "yyyy/MM/dd"))
+ if(ui->dateStart->date() < sd.startDate())
  {
-  qDebug() <<"start date change from " << ui->dateStart->date().toString("yyyy/MM/dd") << " to " << si.startDate;
-  ui->dateStart->setDate(QDate::fromString(si.startDate, "yyyy/MM/dd"));
+  qDebug() <<"start date change from " << ui->dateStart->date().toString("yyyy/MM/dd") << " to " << sd.startDate();
+  ui->dateStart->setDate(sd.startDate());
   bDirty = true;
  }
- if(ui->dateEnd->date() > QDate::fromString(si.endDate, "yyyy/MM/dd"))
+ if(ui->dateEnd->date() > sd.endDate())
  {
-  qDebug() <<"end date change from " << ui->dateEnd->date().toString("yyyy/MM/dd") << " to " << si.endDate;
-  ui->dateEnd->setDate(QDate::fromString(si.endDate, "yyyy/MM/dd"));
+  qDebug() <<"end date change from " << ui->dateEnd->date().toString("yyyy/MM/dd") << " to " << sd.endDate();
+  ui->dateEnd->setDate(sd.endDate());
   bDirty = true;
  }
 }
@@ -128,19 +128,19 @@ void EditStation::setStationId(StationInfo sti)
   if(sti.segmentId >= 0)
   {
    _segmentId = sti.segmentId;
-   SegmentInfo si = sql->getSegmentInfo(_segmentId);
-   if(si.segmentId > 0)
+   SegmentInfo sd = sql->getSegmentInfo(_segmentId);
+   if(sd.segmentId() > 0)
    {
-    if(ui->dateStart->date() < QDate::fromString(si.startDate, "yyyy/MM/dd"))
+    if(ui->dateStart->date() < sd.startDate())
     {
-     qDebug() <<"start date change from " << ui->dateStart->date().toString("yyyy/MM/dd") << " to " << si.startDate;
-     ui->dateStart->setDate(QDate::fromString(si.startDate, "yyyy/MM/dd"));
+     qDebug() <<"start date change from " << ui->dateStart->date().toString("yyyy/MM/dd") << " to " << sd.startDate();
+     ui->dateStart->setDate(sd.startDate());
      //bDirty = true;
     }
-    if(ui->dateEnd->date() > QDate::fromString(si.endDate, "yyyy/MM/dd"))
+    if(ui->dateEnd->date() > sd.endDate())
     {
-     qDebug() <<"end date change from " << ui->dateEnd->date().toString("yyyy/MM/dd") << " to " << si.endDate;
-     ui->dateEnd->setDate(QDate::fromString(si.endDate, "yyyy/MM/dd"));
+     qDebug() <<"end date change from " << ui->dateEnd->date().toString("yyyy/MM/dd") << " to " << sd.endDate();
+     ui->dateEnd->setDate(sd.endDate());
      //bDirty = true;
     }
    }
@@ -204,15 +204,15 @@ void EditStation::setIndex(qint32 value)
 qint32 EditStation::infoKey (){ return _infoKey; }
 bool EditStation::WasStationDeleted() {  return _bStationDeleted;  }
 int EditStation::LineSegmentId() {  return _lineSegmentId; }
-QDateTime EditStation::StartDate() {  return ui->dateStart->dateTime(); }
-void EditStation::setStartDate(QDateTime value)
+QDate EditStation::StartDate() {  return ui->dateStart->date(); }
+void EditStation::setStartDate(QDate value)
 {
-    ui->dateStart->setDateTime(value);
+    ui->dateStart->setDate(value);
     //qDebug()<< "editStation: start date -" + ui->dateStart->dateTime().toString();
 }
-QDateTime EditStation::EndDate() { return ui->dateEnd->dateTime(); }
-void EditStation::setEndDate(QDateTime value){
-    ui->dateEnd->setDateTime(value);
+QDate EditStation::EndDate() { return ui->dateEnd->date(); }
+void EditStation::setEndDate(QDate value){
+    ui->dateEnd->setDate(value);
     //qDebug()<< "editStation: end date -" + ui->dateEnd->dateTime().toString();
 }
 qint32 EditStation::Geodb_Loc_Id() {return _bGeodb_loc_id;}
@@ -235,22 +235,22 @@ void EditStation::setRadioButtons()
 {
     StationInfo sti = StationInfo();
     // Closest end check
-    if (sql->Distance(si.startLat, si.startLon, _latLng.lat(), _latLng.lon()) <
-            sql->Distance(si.endLat, si.endLon, _latLng.lat(), _latLng.lon()))
+    if (sql->Distance(sd.startLat(), sd.startLon(), _latLng.lat(), _latLng.lon()) <
+            sql->Distance(sd.endLat(), sd.endLon(), _latLng.lat(), _latLng.lon()))
     {
-     sti = sql->getStationAtPoint( LatLng(si.startLat, si.startLon));
+     sti = sql->getStationAtPoint( LatLng(sd.startLat(), sd.startLon()));
      if (sti.stationKey >=0)
          ui->rbClosestEnd->setEnabled(false);
     }
     else
     {
-     sti = sql->getStationAtPoint( LatLng(si.endLat, si.endLon));
+     sti = sql->getStationAtPoint( LatLng(sd.endLat(), sd.endLon()));
      if (sti.stationKey >= 0)
          ui->rbClosestEnd->setEnabled(false);
     }
 
     // closest point check
-    sd = sql->getSegmentData(/*_pt,*/ _segmentId);
+    sd = sql->getSegmentInfo(/*_pt,*/ _segmentId);
     sti = sql->getStationAtPoint( sd.getStartLatLng());
     if (sti.stationKey >= 0)
         ui->rbClosestPoint->setEnabled(false);
@@ -272,7 +272,7 @@ void EditStation::btnOK_Click()
  if(ui->rbAddPoint->isChecked())
  {
   //sql->insertPoint((qint32)_pt, _segmentId, _latLng.lat(), _latLng.lon(), & _lineSegmentId);
-  SegmentData sd = sql->getSegmentData(_segmentId);
+  SegmentInfo sd = sql->getSegmentInfo(_segmentId);
   sd.insertPoint(_pt, _latLng);
   sql->updateSegment(&sd);
  }
@@ -280,8 +280,8 @@ void EditStation::btnOK_Click()
  {
   if (ui->rbClosestEnd->isChecked())
   {
-   if (sql->Distance(si.startLat, si.startLon, _latLng.lat(), _latLng.lon()) <
-           sql->Distance(si.endLat, si.endLon, _latLng.lat(), _latLng.lon()))
+   if (sql->Distance(sd.startLat(), sd.startLon(), _latLng.lat(), _latLng.lon()) <
+           sql->Distance(sd.endLat(), sd.endLon(), _latLng.lat(), _latLng.lon()))
    {
 //    _latLng = LatLng(si.startLat, si.startLon);
 //    sd = sql->getSegmentData(0, _segmentId);
@@ -292,17 +292,17 @@ void EditStation::btnOK_Click()
 //    _latLng =  LatLng(si.endLat, si.endLon);
 //    sd = sql->getSegmentData(si.lineSegments - 1, _segmentId);
 //    _lineSegmentId = sd.key;
-    sd = sql->getSegmentData(_segmentId);
+    sd = sql->getSegmentInfo(_segmentId);
    }
   }
   else if (ui->rbClosestPoint->isChecked())
   {
-   sd = sql->getSegmentData(/*_pt,*/ _segmentId);
+   sd = sql->getSegmentInfo(/*_pt,*/ _segmentId);
    //_latLng = new LatLng(sd.startLat, sd.startLon);
    //sd = sql->getSegmentData(_pt, _segmentId);
    _lineSegmentId = sd.segmentId();
-   if (sql->Distance(si.startLat, si.startLon, _latLng.lat(), _latLng.lon()) <
-           sql->Distance(si.endLat, si.endLon, _latLng.lat(), _latLng.lon()))
+   if (sql->Distance(sd.startLat(), sd.startLon(), _latLng.lat(), _latLng.lon()) <
+           sql->Distance(sd.endLat(), sd.endLon(), _latLng.lat(), _latLng.lon()))
        _latLng =  sd.getStartLatLng();
    else
        _latLng =  sd.getEndLatLng();
@@ -332,7 +332,7 @@ void EditStation::btnOK_Click()
  else
  {
  //qint32 stationKey = sql->addStation(_stationName, _latLng, _segmentId, ui->dateStart->dateTime().toString("yyyy/MM/dd"),ui->dateEnd->dateTime().toString("yyyy/MM/dd"), 0, si.routeType, markerType);
-  qint32 stationKey = sql->addStation(_stationName, _latLng, _segmentId, ui->dateStart->dateTime().toString("yyyy/MM/dd"),ui->dateEnd->dateTime().toString("yyyy/MM/dd"),-1, -1,si.routeType,markerType, 0);
+  qint32 stationKey = sql->addStation(_stationName, _latLng, _segmentId, ui->dateStart->dateTime().toString("yyyy/MM/dd"),ui->dateEnd->dateTime().toString("yyyy/MM/dd"),-1, -1,sd.routeType(),markerType, 0);
  if (stationKey >= 0)
  {
    QString str = _stationName;

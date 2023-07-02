@@ -11,7 +11,7 @@ class RouteViewTableModel : public QAbstractTableModel
     Q_OBJECT
 public:
     RouteViewTableModel(QObject *parent = 0);
-    RouteViewTableModel(qint32 route, QString name, QDate dtStart, QDate dtEnd, QList<SegmentInfo> segmentInfoList, QObject *parent=0);
+    RouteViewTableModel(qint32 route, QString name, QDate dtStart, QDate dtEnd, QList<SegmentData> segmentInfoList, QObject *parent=0);
 
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
@@ -21,7 +21,7 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role=Qt::EditRole);
     bool insertRows(int position, int rows, const QModelIndex &index=QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index=QModelIndex());
-    QList< SegmentInfo > getList();
+    QList<SegmentData> getList();
     void reset();
     void setSequenced(bool b);
 
@@ -58,14 +58,14 @@ public slots:
     void getRows(int, int); // to get the row numbers that need to be highlighted
 
 private:
-     QList<SegmentInfo> listOfSegments;
+     QList<SegmentData> listOfSegments;
      bool bIsSequenced;
      qint32 selectedRow;
      bool bSelectedRowChanged;
      QDate dtStart;
      QDate dtEnd;
-     QString startDate, endDate;
-     QList<SegmentInfo> saveSegmentInfoList;
+     QDate startDate, endDate;
+     QList<SegmentData> saveSegmentDataList;
      qint32 route;
      QString name;
      qint32 startRow, endRow;

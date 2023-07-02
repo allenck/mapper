@@ -6,7 +6,7 @@ SegmentViewTableModel::SegmentViewTableModel(QObject *parent) :
 {
 }
 
-SegmentViewTableModel::SegmentViewTableModel(QList<SegmentData> segmentDataList, double Lat, double Lon, qint32 route, QString date, QObject *parent)
+SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList, double Lat, double Lon, qint32 route, QString date, QObject *parent)
      : QAbstractTableModel(parent)
  {
      listOfSegments = segmentDataList;
@@ -43,7 +43,7 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentData> segmentDataList,
              return QVariant();
          else
          {
-             SegmentData sd = listOfSegments.at(index.row());
+             SegmentInfo sd = listOfSegments.at(index.row());
              //segmentInfo si = sql->getSegmentInfo(sd.SegmentId);
             if (sql->isRouteUsedOnDate(m_routeNbr, sd.segmentId(), m_date))
                 return Qt::Checked;
@@ -53,7 +53,7 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentData> segmentDataList,
      }
 
      if (role == Qt::DisplayRole) {
-         SegmentData sd = listOfSegments.at(index.row());
+         SegmentInfo sd = listOfSegments.at(index.row());
 
          //segmentInfo si = sql->getSegmentInfo(sd.SegmentId);
          if (sd.segmentId() < 1)
@@ -79,15 +79,16 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentData> segmentDataList,
              return sd.segmentId();
          case DESCRIPTION:
              return sd.description();
-         case ONEWAY:
-             return sd.oneWay();
+         case TRACKS:
+             return sd.tracks();
          case STREETNAME:
              return sd.streetName();
          case DIRECTION:
-             if (sd.oneWay() == "Y")
-                 return (sd.bearing().strDirection());
-             else
-                 return (sd.bearing().strDirection() + "-" + sd.bearing().strReverseDirection());
+//             if (sd.oneWay() == "Y")
+//                 return (sd.bearing().strDirection());
+//             else
+//                 return (sd.bearing().strDirection() + "-" + sd.bearing().strReverseDirection());
+          return sd.direction();
          case LAT:
              if(sd.whichEnd() == "S")
                  return QString("%1").arg(sd.startLat(),0,'f',8);
@@ -164,7 +165,7 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentData> segmentDataList,
 
      for (int row=0; row < rows; row++) {
          //QPair<QString, QString> pair(" ", " ");
-         SegmentData sd;
+         SegmentInfo sd;
          listOfSegments.insert(position, sd);
      }
 
@@ -191,7 +192,7 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentData> segmentDataList,
      if (index.isValid() && role == Qt::EditRole) {
          int row = index.row();
 
-         SegmentData si = listOfSegments.value(row);
+         SegmentInfo si = listOfSegments.value(row);
 
 //         switch (index.column())
 //             p.first = value.toString();
@@ -224,7 +225,7 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentData> segmentDataList,
      return QAbstractTableModel::flags(index);
  }
 
- QList< SegmentData > SegmentViewTableModel::getList()
+ QList< SegmentInfo > SegmentViewTableModel::getList()
  {
      return listOfSegments;
  }

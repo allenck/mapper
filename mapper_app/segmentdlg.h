@@ -48,7 +48,7 @@ private:
     QList<TractionTypeInfo> _tractionTypeList;
     QList<QString> _routeNameList;
     QList<QString> _routeTypeList;
-    SegmentInfo si;
+    SegmentInfo sd;
     LatLng pi;
     Bearing bearing;
     Configuration *config;

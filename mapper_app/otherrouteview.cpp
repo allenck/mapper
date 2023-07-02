@@ -59,14 +59,15 @@ void OtherRouteView::showRoutesUsingSegment(qint32 segmentId)
     QList<RouteData> likeRoutes =   sql->getRoutes(segmentId);
     if(likeRoutes.isEmpty())
         return;
-    SegmentInfo si = sql->getSegmentInfo(segmentId);
-    if(si.segmentId<1)
+    //SegmentData sd = sql->getSegmentData(segmentId);
+    SegmentData sd = SegmentData();
+    if(sd.segmentId()<1)
         return;
     ui->setSortingEnabled(false);
-    myParent->ui->label_7->setText(tr("Routes using segment #%1 %2").arg(si.segmentId).arg(si.description));
+    myParent->ui->label_7->setText(tr("Routes using segment #%1 %2").arg(sd.segmentId()).arg(sd.description()));
 
 
-    sourceModel = new OtherRouteViewTableModel(likeRoutes, si, this);
+    sourceModel = new OtherRouteViewTableModel(likeRoutes, sd, this);
     proxymodel->setSourceModel(sourceModel);
 
     ui->setModel(proxymodel);
@@ -182,11 +183,11 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QObject *parent) :
 {
 }
 
-OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeIntersectList, SegmentInfo siIn, QObject *parent)
+OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeIntersectList, SegmentData sdIn, QObject *parent)
      : QAbstractTableModel(parent)
  {
      listOfRoutes = routeIntersectList;
-     si = siIn;
+     sd = sdIn;
  }
 
  int OtherRouteViewTableModel::rowCount(const QModelIndex &parent) const
@@ -265,7 +266,7 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeInterse
                  return "???";
              }
             case 6:
-             if(si.oneWay == "N")
+             if(sd.oneWay() == "N")
              {
                  switch(rd.reverseEnter)
                  {
@@ -281,7 +282,7 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeInterse
              }
              return "na";
             case 7:
-             if(si.oneWay == "N")
+             if(sd.oneWay() == "N")
              {
                  switch(rd.reverseLeave)
                  {

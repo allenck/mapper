@@ -13,7 +13,7 @@ EditSegmentDialog::EditSegmentDialog(QWidget *parent) :
  common();
 }
 
-EditSegmentDialog::EditSegmentDialog(SegmentData sd, QWidget *parent) :
+EditSegmentDialog::EditSegmentDialog(SegmentInfo sd, QWidget *parent) :
   QDialog(parent),
   ui(new Ui::EditSegmentDialog)
 {
@@ -79,9 +79,9 @@ EditSegmentDialog::~EditSegmentDialog()
  delete ui;
 }
 
-bool compareSegmentInfoByName1(const SegmentInfo & s1, const SegmentInfo & s2)
+bool compareSegmentInfoByName1(const SegmentData & s1, const SegmentData & s2)
 {
-    return s1.description < s2.description;
+    return s1.description() < s2.description();
 }
 
 //void EditSegmentDialog::fillSegments()
@@ -95,12 +95,12 @@ bool compareSegmentInfoByName1(const SegmentInfo & s1, const SegmentInfo & s2)
 // }
 //}
 
-void EditSegmentDialog::segmentSelected(SegmentData sd)
+void EditSegmentDialog::segmentSelected(SegmentInfo sd)
 {
  if(sd.segmentId()<0)
   return;
  this->sd = sd;
- SegmentData newSd = SegmentData(sd);
+ SegmentInfo newSd = SegmentInfo(sd);
 
  // btnUpdate->setEnabled(false);
  ui->buttonBox->button(QDialogButtonBox::Save)->setEnabled(false);
@@ -109,7 +109,7 @@ void EditSegmentDialog::segmentSelected(SegmentData sd)
 
  ui->label_segmentId->setText(QString::number(sd.segmentId()));
  ui->txtDescription->setText(sd.description());
- ui->chkOneWay->setChecked(sd.oneWay() == "Y");
+ //ui->chkOneWay->setChecked(sd.oneWay() == "Y");
  ui->sbTracks->setValue(sd.tracks());
  ui->cbRouteType->setCurrentIndex(sd.routeType());
  ui->dtBegin->setDate(sd.startDate());
@@ -137,6 +137,7 @@ void EditSegmentDialog::On_sbTracks_valueChanged(int v)
  sd.setTracks(v);
 }
 
+#if 0
 void EditSegmentDialog::On_chkOneWay_toggled(bool b)
 {
  if(!b)
@@ -150,7 +151,7 @@ void EditSegmentDialog::On_chkOneWay_toggled(bool b)
  }
  setUpdate();
 }
-
+#endif
 void EditSegmentDialog::On_txtDescription_editingFinished()
 {
  QString txt = ui->txtDescription->text();

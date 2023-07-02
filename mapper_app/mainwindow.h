@@ -139,7 +139,9 @@ public:
     double m_latitude, m_longitude;
     qint32 m_zoom;
     QString m_maptype;
-    QList<SegmentInfo> segmentInfoList;
+    //QList<SegmentInfo> segmentInfoList;
+    QList<SegmentData> segmentDataList;
+
     qint32 m_routeNbr;
     QString m_alphaRoute;
     QString m_currRouteStartDate, m_currRouteEndDate, m_routeName;
@@ -169,7 +171,7 @@ public:
     void moveRouteComment(int route, QString date, double latitude, double longitude, int companyKey);
 
     RouteViewTableModel *sourceModel;
-    void displaySegment(qint32 segmentId, QString segmentName, QString oneWay, QString color, QString trackUsage, bool bClearFirst);
+    void displaySegment(qint32 segmentId, QString segmentName, QString color, QString trackUsage, bool bClearFirst);
     static QString pwd;
     static QString pgmDir;
 #ifndef USE_WEBENGINE
@@ -214,7 +216,7 @@ private slots:
     void btnLastClicked();
     void btnDeletePtClicked();
     //void onResize();
-    void cbSegmentsSelectedValueChanged(SegmentData sd);
+    void cbSegmentsSelectedValueChanged(SegmentInfo sd);
     void cbSegmentsTextChanged(QString text);
     void cbRoutesTextChanged(QString text);
 //    void cbSegments_Leave();
@@ -394,7 +396,7 @@ private:
 
     void createActions();
     void createMenus();
-    void lookupStreetName(SegmentData sd);
+    void lookupStreetName(SegmentInfo sd);
     QString getColor(qint32 tractionType);
     void closeEvent(QCloseEvent *event);
     FileDownloader *m_dataCtrl;
@@ -403,8 +405,8 @@ private:
     Configuration* config;
     MyWebEnginePage* myWebEnginePage = nullptr;
     qint32 m_SegmentId;
-    QT_DEPRECATED QList<SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
-    QMap<int, SegmentData> cbSegmentDataList;  // list of segmentInfo items in cbSegments
+    //QT_DEPRECATED QList<SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
+    QMap<int, SegmentInfo> cbSegmentDataList;  // list of segmentInfo items in cbSegments
 
     qint32 m_currPoint, m_nbrPoints;
     int m_companyKey;
@@ -412,7 +414,7 @@ private:
     //segmentInfo si;
     SystemConsoleAction* systemConsoleAction;
     WebViewAction* webViewAction;
-    void updateSegmentInfoDisplay(SegmentData sd);
+    void updateSegmentInfoDisplay(SegmentInfo sd);
     void createBridge();
     bool openWebWindow();
     void loadOverlay(Overlay* ov);

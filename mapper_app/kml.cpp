@@ -63,11 +63,11 @@ bool Kml::createKml(QString fileName, QString color)
 
  for(int i = 0; i< ri.segments.count(); i++)
  {
-  si = ri.segments.at(i);
-  document.appendChild(createPlacemark(si.oneWay));
-  if(si.oneWay.toLower() == "y")
+  sd = ri.segments.at(i);
+  document.appendChild(createPlacemark(sd.oneWay()));
+  if(sd.oneWay().toLower() == "y")
   {
-   document.appendChild(createArrow(si));
+   document.appendChild(createArrow(sd));
   }
 
 
@@ -81,7 +81,7 @@ QDomElement Kml::createPlacemark(QString oneWay)
 {
  QDomElement placemark = doc.createElement("Placemark");
  QDomElement name = doc.createElement("name" );
- name.appendChild(doc.createTextNode(si.description));
+ name.appendChild(doc.createTextNode(sd.description()));
  placemark.appendChild(name);
  if(oneWay.toLower() != "y")
  {
@@ -144,7 +144,7 @@ QDomElement Kml::createPlacemark(QString oneWay)
 //  points.append(lon);
 //  coords.append(QString("%1,%2,0\n").arg(lon,0,'f',14).arg(lat,0,'f',14));
 
-  coordinates.appendChild(doc.createTextNode(si.pointsString()));
+  coordinates.appendChild(doc.createTextNode(sd.pointsString()));
   placemark.appendChild(lineString);
   lineString.appendChild(coordinates);
 
@@ -220,7 +220,7 @@ QDomElement Kml::createPlacemark(QString oneWay)
  doc.save(stream,2);
 }
 
-QDomElement Kml::createArrow(SegmentInfo si)
+QDomElement Kml::createArrow(SegmentData si)
 {
  QDomElement placemark = doc.createElement("Placemark");
  QDomElement name = doc.createElement("name" );
@@ -231,15 +231,15 @@ QDomElement Kml::createArrow(SegmentInfo si)
  styleUrl.appendChild(doc.createTextNode("#arrow"));
  placemark.appendChild(styleUrl);
 
- int len = si.pointList.count();
+ int len = sd.pointList().count();
  LatLng startPt;
  LatLng endPt;
 
  //segmentData sd = sg.data.at(len-1);
  //startPt =  LatLng(sd.startLat, sd.startLon);
- startPt = si.pointList.last();
+ startPt = sd.pointList().last();
  //endPt =  LatLng(sd.endLat, sd.endLon);
- endPt = si.pointList.at(len-2);
+ endPt = sd.pointList().at(len-2);
 
  Bearing b(startPt, endPt );
  LatLng left = pointRadialDistance(startPt, b.getBearing()-15, .020);

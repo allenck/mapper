@@ -38,7 +38,7 @@ private:
     qint32 curRow, curCol;
     QStringList headers;
     QTableView* ui;
-    QList<SegmentData> myArray;
+    QList<SegmentInfo> myArray;
     Configuration *config;
     SQL* sql;
 

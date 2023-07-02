@@ -129,13 +129,13 @@ void SegmentView::aPaste()
 
 void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
 {
-    SegmentData sdIn;
-    SegmentData si;
+    SegmentInfo sdIn;
+    SegmentInfo si;
     //SQL sql;
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     double a1 = 0;
 
-    sdIn = sql->getSegmentData(SegmentId);
+    sdIn = sql->getSegmentInfo(SegmentId);
     if (sdIn.segmentId() < 1)
     {
         qDebug() << "segmentID " + QString("%1").arg(SegmentId) + " not found";
@@ -216,8 +216,8 @@ void SegmentView::addToRoute()
    parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
  else
  {
-  SegmentData sd = sql->getSegmentData(segmentId);
-  parent->displaySegment(segmentId, sd.description(), sd.oneWay(), sd.oneWay() == "N" ? "#00FF00" : "#045fb4", " ", true);
+  SegmentInfo sd = sql->getSegmentInfo(segmentId);
+  parent->displaySegment(segmentId, sd.description(), /*sd.oneWay(),*/ /*sd.oneWay() == "N" ? "#00FF00" :*/ "#045fb4", " ", true);
  }
  parent->routeDlg->setSegmentId(segmentId); // do before setting route!
  int ix = parent->ui->cbRoute->currentIndex();
@@ -235,7 +235,7 @@ void SegmentView::editSegment()
  QItemSelectionModel * model = ui->selectionModel();
  QModelIndexList indexes = model->selectedIndexes();
  qint32 segmentId = indexes.at(0).data().toInt();
- SegmentData sd = SQL::instance()->getSegmentData(segmentId);
+ SegmentInfo sd = SQL::instance()->getSegmentInfo(segmentId);
  EditSegmentDialog* dlg = new EditSegmentDialog(sd);
  dlg->exec();
 }

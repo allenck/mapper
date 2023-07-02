@@ -29,12 +29,12 @@ public slots:
 
 private:
  RouteInfo ri;
- SegmentInfo si;
+ SegmentData sd;
  SQL* sql;
  QDomDocument doc;
  QDomElement root;
  QDomElement createPlacemark(QString oneWay);
- QDomElement createArrow(SegmentInfo sg);
+ QDomElement createArrow(SegmentData sg);
  LatLng pointRadialDistance(LatLng start, double bearing, double inDistance);
 
 };

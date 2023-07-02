@@ -78,7 +78,7 @@ RouteView::RouteView(QObject* parent )
 
     ui->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
-    sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"), QDate::fromString(endDate, "yyyy/MM/dd"), segmentInfoList);
+    sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"), QDate::fromString(endDate, "yyyy/MM/dd"), segmentDataList);
     saveChangesAct = new QAction(tr("Commit changes"),this);
     saveChangesAct->setStatusTip(tr("Save any uncommitted changes"));
     showColumnsAct = new QAction(tr("Hide extra columns"),this);
@@ -240,15 +240,16 @@ void RouteView::updateRouteView()
     endDate = myParent->m_currRouteEndDate;
     alphaRoute = myParent->m_alphaRoute;
 
-    segmentInfoList = SQL::instance()->getRouteSegmentsInOrder2(route, name, endDate);
+    //segmentInfoList = SQL::instance()->getRouteSegmentsInOrder2(route, name, endDate);
+    segmentDataList = SQL::instance()->getRouteSegmentsInOrder(route, name, endDate);
 
     qDebug()<<"checkRoute: "+alphaRoute + " '"+name+"' "+endDate;
-    chk = new checkRoute(segmentInfoList, config, this);
+    chk = new checkRoute(segmentDataList, config, this);
     chk->setStart(startSegment);
     chk->setEnd(endSegment);
     bIsSequenced = chk->setSeqNbrs();
 
-    if(segmentInfoList.count()== 0)
+    if(segmentDataList.count()== 0)
         return;
 #if 0
     bIsSequenced = true;
@@ -321,14 +322,14 @@ void RouteView::updateRouteView()
 #endif
 
     ui->setSortingEnabled(false);
-    sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"), QDate::fromString(endDate, "yyyy/MM/dd"), segmentInfoList);
+    sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"), QDate::fromString(endDate, "yyyy/MM/dd"), segmentDataList);
     //saveSegmentInfoList = segmentInfoList;  // added 5/6/2012 ack
     //connect(saveChangesAct, SIGNAL(triggered()), sourceModel, SLOT(commitChanges()));
     connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(commitChanges()));
 
-    saveSegmentInfoList.clear();
-    foreach(SegmentInfo si, segmentInfoList)
-        saveSegmentInfoList.append(si);
+    saveSegmentDataList.clear();
+    foreach(SegmentData sd, segmentDataList)
+        saveSegmentDataList.append(sd);
     sourceModel->setSequenced(bIsSequenced);
 
     //routeViewFilterProxyModel* filterProxy = new routeViewFilterProxyModel(this);
@@ -382,11 +383,12 @@ void RouteView::populateList()
 
  ui->setSortingEnabled(true);
 }
-bool ascending_si_segmentId( const SegmentInfo & s1 , const SegmentInfo & s2 )
+bool ascending_si_segmentId( const SegmentData & s1 , const SegmentData & s2 )
 {
  //cout<<"\n" << __FUNCTION__;
- return s1.segmentId < s2.segmentId;
+ return s1.segmentId() < s2.segmentId();
 }
+
 void RouteView::reSequenceRoute()
 {
  //SQL sql;
@@ -401,23 +403,23 @@ void RouteView::reSequenceRoute()
   //bool bOk=false;
   qint32 segmentId = Index.data().toInt();
   qint32 endSegment = -1;
-  endSegment = SQL::instance()->sequenceRouteSegments(segmentId, segmentInfoList, route, name, endDate);
+  endSegment = SQL::instance()->sequenceRouteSegments(segmentId, segmentDataList, route, name, endDate);
 
-  QList<SegmentInfo> old = segmentInfoList;
+  QList<SegmentData> old = segmentDataList;
   //compareSequenceClass comparer = new compareSequenceClass();
   //segmentList.Sort(comparer);
-  std::sort(segmentInfoList.begin(),segmentInfoList.end(),ascending_si_segmentId);
+  std::sort(segmentDataList.begin(),segmentDataList.end(),ascending_si_segmentId);
   bIsSequenced = true;
-  for(int i=0; i < segmentInfoList.count(); i++)
+  for(int i=0; i < segmentDataList.count(); i++)
   {
-   if(segmentInfoList.at(i).sequence == -1 && segmentInfoList.at(i).returnSeq ==-1)
+   if(segmentDataList.at(i).sequence() == -1 && segmentDataList.at(i).returnSeq() ==-1)
    {
        bIsSequenced = false;
        break;
    }
   }
   //populateList();
-  sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"), QDate::fromString(endDate, "yyyy/MM/dd"), segmentInfoList);
+  sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"), QDate::fromString(endDate, "yyyy/MM/dd"), segmentDataList);
   myParent->proxyModel->setSourceModel(sourceModel);
   //connect(saveChangesAct, SIGNAL(triggered()), sourceModel, SLOT(commitChanges()));
   connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(commitChanges()));
@@ -568,30 +570,30 @@ void RouteView::updateTerminals()
     int startSeg = -1, endSeg = -1, startRow=-1, endRow=-1;
     QString startWhichEnd = "S", endWhichEnd = "S";
     myParent->setCursor(QCursor(Qt::WaitCursor));
-    for(int i =0; i < segmentInfoList.count(); i++)
+    for(int i =0; i < segmentDataList.count(); i++)
     {
-        SegmentInfo si = segmentInfoList.at(i);
-        if(si.sequence == 0)
+        SegmentData sd = segmentDataList.at(i);
+        if(sd.sequence() == 0)
         {
-            startSeg = si.segmentId;
+            startSeg = sd.segmentId();
             startRow = i;
-            SegmentInfo si1 = SQL::instance()->getSegmentInfo(si.next);
-            if(SQL::instance()->Distance(si.startLat, si.startLon, si1.startLat, si1.startLon) < .02 ||SQL::instance()->Distance(si.startLat, si.startLon, si1.endLat, si1.endLon) < .02)
+            SegmentInfo sd1 = SQL::instance()->getSegmentInfo(sd.next());
+            if(SQL::instance()->Distance(sd.startLat(), sd.startLon(), sd1.startLat(), sd1.startLon()) < .02 ||SQL::instance()->Distance(sd.startLat(), sd.startLon(), sd1.endLat(), sd1.endLon()) < .02)
             {
                 startWhichEnd = "E";
             }
         }
-        if(si.returnSeq == 0)
+        if(sd.returnSeq() == 0)
         {
-            endSeg = si.segmentId;
+            endSeg = sd.segmentId();
             endRow = i;
-            SegmentInfo si1 = SQL::instance()->getSegmentInfo(si.prev);
-            if(SQL::instance()->Distance(si.startLat, si.startLon, si1.startLat, si1.startLon) < .02 || SQL::instance()->Distance(si.startLat, si.startLon, si1.endLat, si1.endLon) < .02)
+            SegmentInfo sd1 = SQL::instance()->getSegmentInfo(sd.prev());
+            if(SQL::instance()->Distance(sd.startLat(), sd.startLon(), sd1.startLat(), sd1.startLon()) < .02 || SQL::instance()->Distance(sd.startLat(), sd.startLon(), sd1.endLat(), sd1.endLon()) < .02)
             {
                 startWhichEnd = "E";
             }
         }
-        if(si.sequence == -1 && si.returnSeq==-1)
+        if(sd.sequence() == -1 && sd.returnSeq()==-1)
         {
             bIsSequenced = false;
             myParent->setCursor(QCursor(Qt::ArrowCursor));
@@ -600,10 +602,10 @@ void RouteView::updateTerminals()
     }
     if(!bIsSequenced)
         return;
-    for(int i =0; i < segmentInfoList.count(); i++)
+    for(int i =0; i < segmentDataList.count(); i++)
     {
-        SegmentInfo si = segmentInfoList.at(i);
-        SQL::instance()->updateRoute(route, name, endDate, si.segmentId, si.next, si.prev, si.trackUsage);
+        SegmentData sd = segmentDataList.at(i);
+        SQL::instance()->updateRoute(route, name, endDate, sd.segmentId(), sd.next(), sd.prev(), sd.trackUsage());
     }
 
     SQL::instance()->updateTerminals(route, name, startDate, endDate, startSeg, startWhichEnd, endSeg, endWhichEnd);
@@ -753,7 +755,7 @@ void RouteView::editSegment()
  QItemSelectionModel * model = ui->selectionModel();
  QModelIndexList indexes = model->selectedIndexes();
  qint32 segmentId = indexes.at(0).data().toInt();
- SegmentData sd = SQL::instance()->getSegmentData(segmentId);
+ SegmentInfo sd = SQL::instance()->getSegmentInfo(segmentId);
  EditSegmentDialog* dlg = new EditSegmentDialog(sd);
  dlg->exec();
 }

@@ -2,9 +2,9 @@
 #include "ui_replacesegmentdialog.h"
 #include "segmentselectionwidget.h"
 
-bool compareSegmentInfo2(const SegmentInfo & s1, const SegmentInfo & s2)
+bool compareSegmentInfo2(const SegmentData & s1, const SegmentData & s2)
 {
-    return s1.description < s2.description;
+    return s1.description() < s2.description();
 }
 
 ReplaceSegmentDialog::ReplaceSegmentDialog(QWidget *parent) :

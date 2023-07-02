@@ -57,8 +57,10 @@ private:
     QStringList headers;
     QTableView* ui;
     TerminalInfo ti;
-    QList<SegmentInfo> segmentInfoList;  // list of segmentInfo items in cbSegments
-    QList<SegmentInfo> saveSegmentInfoList;  // list of segmentInfo items in cbSegments
+    //QList<SegmentInfo> segmentInfoList;  // list of segmentInfo items in cbSegments
+    QList<SegmentData> segmentDataList;  // list of segmentInfo items in cbSegments
+
+    QList<SegmentData> saveSegmentDataList;  // list of segmentInfo items in cbSegments
     void populateList();
     QAction *copyAction;
     QAction *pasteAction;

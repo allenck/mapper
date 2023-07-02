@@ -23,7 +23,7 @@ void SegmentSelectionWidget::initialize()
  connect(SQL::instance(), &SQL::segmentsChanged, [=](int segmentId){
   if(ui->cbSegments->findData(segmentId) >= 0)
   {
-   SegmentData sd = sql->getSegmentData(segmentId);
+   SegmentInfo sd = sql->getSegmentInfo(segmentId);
    int  ix = ui->cbSegments->findData(segmentId);
    if(ui->cbSegments->itemText(ix) != sd.toString())
     ui->cbSegments->setItemText(ix, sd.toString());
@@ -95,12 +95,12 @@ void SegmentSelectionWidget::refreshSegmentCB()
   refreshStreetsCb();
  ui->cbSegments->clear();
  mapDescriptions.clear();
- cbSegmentDataMap = sql->getSegmentDataList();
+ cbSegmentDataMap = sql->getSegmentInfoList();
  //qSort(cbSegmentDataList.begin(), cbSegmentDataList.end(),compareSegmentDataByName);
  //foreach (segmentInfo sI in cbSegmentInfoList)
- foreach(SegmentData sd, cbSegmentDataMap.values())
+ foreach(SegmentInfo sd, cbSegmentDataMap.values())
  {
-  description = sd.getDescription();
+  description = sd.description();
   tokens = description.split(",");
   if(tokens.count() > 1)
   {
@@ -230,10 +230,10 @@ void SegmentSelectionWidget::refreshStreetsCb()
  ui->cbStreets->clear();
  streets.clear();
  ui->cbStreets->addItem("");
- cbSegmentDataMap = sql->getSegmentDataList();
- foreach(SegmentData sd, cbSegmentDataMap.values())
+ cbSegmentDataMap = sql->getSegmentInfoList();
+ foreach(SegmentInfo sd, cbSegmentDataMap.values())
  {
-  description = sd.getDescription();
+  description = sd.description();
   tokens = description.split(",");
   if(tokens.count() > 1)
   {
@@ -315,10 +315,10 @@ QComboBox* SegmentSelectionWidget::cbSegments()
  return ui->cbSegments;
 }
 
-SegmentData SegmentSelectionWidget::segmentSelected()
+SegmentInfo SegmentSelectionWidget::segmentSelected()
 {
  int m_SegmentId = ui->cbSegments->currentData().toInt();
- currSd = sql->getSegmentData(m_SegmentId);
+ currSd = sql->getSegmentInfo(m_SegmentId);
  return currSd;
 }
 
@@ -330,7 +330,7 @@ void SegmentSelectionWidget::refresh()
 void SegmentSelectionWidget::setCurrentSegment(int segmentId)
 {
  ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(segmentId));
- currSd = sql->getSegmentData(segmentId);
+ currSd = sql->getSegmentInfo(segmentId);
 }
 
 void SegmentSelectionWidget::cbSegmentsTextChanged(QString txt)
@@ -352,7 +352,7 @@ void SegmentSelectionWidget::cbSegments_editingFinished()
   if(ui->cbSegments->currentIndex() < 0)
   {
    // is it valid?
-   SegmentData sd = sql->getSegmentData(segmentId);
+   SegmentInfo sd = sql->getSegmentInfo(segmentId);
    if(sd.segmentId() >= 0)
    {
     ui->cbSegments->addItem(sd.toString(), segmentId);

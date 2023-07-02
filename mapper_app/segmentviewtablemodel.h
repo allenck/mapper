@@ -11,7 +11,7 @@ class SegmentViewTableModel : public QAbstractTableModel
     Q_OBJECT
 public:
     explicit SegmentViewTableModel(QObject *parent = 0);
-    SegmentViewTableModel(QList<SegmentData> segmentDataList, double Lat, double Lon, qint32 route, QString date, QObject *parent=0);
+    SegmentViewTableModel(QList<SegmentInfo> segmentDataList, double Lat, double Lon, qint32 route, QString date, QObject *parent=0);
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
@@ -20,16 +20,16 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role=Qt::EditRole);
     bool insertRows(int position, int rows, const QModelIndex &index=QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index=QModelIndex());
-    QList<SegmentData> getList();
+    QList<SegmentInfo> getList();
     void reset();
-    enum COLUMNS {SEGMENTID, DESCRIPTION, ONEWAY, STREETNAME, DIRECTION, LAT, LON};
+    enum COLUMNS {SEGMENTID, DESCRIPTION, TRACKS, STREETNAME, DIRECTION, LAT, LON};
     int getRow(int segmentId);
 
 signals:
 
 public slots:
 private:
-    QList<SegmentData> listOfSegments;
+    QList<SegmentInfo> listOfSegments;
     double lat, lon;
     double angleDiff(double A1, double A2);
     qint32 m_routeNbr;

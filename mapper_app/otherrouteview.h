@@ -32,7 +32,7 @@ class OtherRouteViewTableModel : public QAbstractTableModel
     Q_OBJECT
 public:
     explicit OtherRouteViewTableModel(QObject *parent = 0);
-    OtherRouteViewTableModel(QList<RouteData> routeDataList, SegmentInfo si, QObject *parent=0);
+    OtherRouteViewTableModel(QList<RouteData> routeDataList, SegmentData sd, QObject *parent=0);
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
@@ -49,7 +49,7 @@ signals:
 public slots:
 private:
     QList<RouteData> listOfRoutes;
-    SegmentInfo si;
+    SegmentData sd;
     bool boolGetItemTableView(QTableView *table);
     QModelIndex currentIndex;
 
