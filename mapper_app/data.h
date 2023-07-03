@@ -436,7 +436,6 @@ class TractionTypeInfo
         }
 };
 
-#if 1
 class SegmentInfo
 {
 
@@ -471,6 +470,7 @@ class SegmentInfo
  //int routeCount;
  //QString trackUsage;
  int _next; // needed for DupSegmentView
+ QString _trackType = " ";
 
  static QStringList ROUTETYPES;// = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
 
@@ -490,7 +490,7 @@ class SegmentInfo
  void deletePoint(int ptnum);
  void checkTracks();
  void displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst);
- QString toString() {return QString("segment %1").arg(_segmentId);}
+ QString toString();
  qint32 segmentId() const {return _segmentId;}
  QDate startDate() {return _startDate;}
  QDate endDate() {return _endDate;}
@@ -530,7 +530,7 @@ class SegmentInfo
  void setWhichEnd(QString whichEnd) {_whichEnd = whichEnd;}
 
 };
-#endif
+
 class routeIntersects
 {
     public:

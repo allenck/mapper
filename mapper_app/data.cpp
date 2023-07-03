@@ -333,20 +333,20 @@ RouteInfo::~RouteInfo()
 {
 
 }
-#if 0
+#if 1
 QString SegmentInfo::toString()
 {
  QString str;
  //QStringList routeTypes = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
 
- if(routeType < 0 || routeType>= SegmentData::ROUTETYPES.count())
-  routeType = (RouteType)0;
- QString trackType = SegmentData::ROUTETYPES.at(routeType);
- QString strSegment = QString("%1").arg(segmentId);
-  if (tracks == 1)
-      str = description + QString("(single/%2) Seg=%1").arg(segmentId).arg(trackType);
+ if(_routeType < 0 || _routeType>= SegmentData::ROUTETYPES.count())
+  _routeType = (RouteType)0;
+ QString trackType = SegmentData::ROUTETYPES.at(_routeType);
+ QString strSegment = QString("%1").arg(_segmentId);
+  if (_tracks == 1)
+      str = _description + QString("(single/%2) Seg=%1").arg(_segmentId).arg(_trackType);
   else
-      str = description + QString(" (double/%2) Seg=%1").arg(segmentId).arg(trackType);
+      str = _description + QString(" (double/%2) Seg=%1").arg(_segmentId).arg(_trackType);
  return str;
 
 }
