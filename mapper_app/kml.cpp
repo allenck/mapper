@@ -61,9 +61,9 @@ bool Kml::createKml(QString fileName, QString color)
  arrowStyle.appendChild(polyStyle);
  document.appendChild(arrowStyle);
 
- for(int i = 0; i< ri.segments.count(); i++)
+ for(int i = 0; i< ri.segmentDataList.count(); i++)
  {
-  sd = ri.segments.at(i);
+  sd = ri.segmentDataList.at(i);
   document.appendChild(createPlacemark(sd.oneWay()));
   if(sd.oneWay().toLower() == "y")
   {

@@ -323,10 +323,29 @@ void SegmentData::checkTracks()
  }
 }
 
-RouteInfo::RouteInfo()
+RouteInfo::RouteInfo(QObject *parent)
 {
  route= -1;
  length = 0;
+ segmentDataList = QList<SegmentData>();
+
+}
+
+RouteInfo::RouteInfo(RouteData rd)
+{
+ this->rd = rd;
+ this->route = rd.route;
+ this->routeName = rd.name;
+ length = 0;
+ segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"));
+}
+
+RouteInfo::RouteInfo(qint32 route, QString name, QString date)
+{
+ length = 0;
+ this->route = route;
+ this->routeName = name;
+ segmentDataList = SQL::instance()->getRouteSegmentsInOrder(route, name, date);
 }
 
 RouteInfo::~RouteInfo()
@@ -487,7 +506,7 @@ void SegmentInfo::displaySegment(QString date, QString color, QString trackUsage
  else if(_routeType == Subway)
   dash = 3;
  objArray.clear();
- objArray << _segmentId << routeNames<<_description<<""<<color<< _tracks << dash << _routeType << trackUsage << _pointList.count()*2 << points;
+ objArray << _segmentId << routeNames<<_description << " " <<color<< _tracks << dash << _routeType << trackUsage << _pointList.count()*2 << points;
  WebViewBridge::instance()->processScript("createSegment", objArray);
 }
 

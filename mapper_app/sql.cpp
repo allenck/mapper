@@ -570,7 +570,7 @@ routeInfo SQL::GetRoutePoints(qint32 route, QString name, QString date)
 #else
 RouteInfo SQL::getRoutePoints(qint32 route, QString name, QString date)
 {
- RouteInfo ri = RouteInfo();
+ RouteInfo ri = RouteInfo(route, name, date);
  SegmentData sd = SegmentData();
  //segmentData sd =  segmentData();
  QSqlQuery query;
@@ -642,7 +642,7 @@ RouteInfo SQL::getRoutePoints(qint32 route, QString name, QString date)
   {
    if (currSegmentId != -1)
    {
-    ri.segments.append(sd);
+    ri.segmentDataList.append(sd);
     sd = SegmentData();
    }
 
@@ -671,7 +671,7 @@ RouteInfo SQL::getRoutePoints(qint32 route, QString name, QString date)
   sd.setPoints(query.value(0).toString());
  }
  ri.length = ri.length/2;
- ri.segments.append(sd);
+ ri.segmentDataList.append(sd);
  return ri;
 }
 #endif

@@ -168,6 +168,7 @@ void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
 
     sourceModel = new SegmentViewTableModel(myArray, lat, lon, myParent->m_routeNbr, myParent->m_currRouteEndDate, this);
     proxymodel->setSourceModel(sourceModel);
+    myParent->ui->intersectingLabel->setText(tr("Segments connectint to %1").arg(sdIn.toString()));
 
     // get the row of the start segment and the end segment
     int numRows = proxymodel->rowCount();
@@ -196,6 +197,7 @@ void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
     ui->horizontalHeader()->resizeSection(5, 70);
     ui->horizontalHeader()->resizeSection(6, 70);
 }
+
 void SegmentView::addToRoute()
 {
  QItemSelectionModel * model = ui->selectionModel();

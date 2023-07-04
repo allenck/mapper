@@ -12,7 +12,6 @@ OtherRouteView::OtherRouteView( QObject *parent) :
     sql = SQL::instance();
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     ui = myParent->ui->tblOtherRouteView;
-    connect(ui->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
 
     ui->setAlternatingRowColors(true);
     ui->resizeColumnsToContents();
@@ -26,6 +25,7 @@ OtherRouteView::OtherRouteView( QObject *parent) :
     proxymodel->setSourceModel(sourceModel);
     ui->setModel(proxymodel);
     //connect(this, SIGNAL(sendRows(int, int)), proxymodel, SLOT(getRows(int,int)));
+    connect(ui->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
 
     myParent->ui->tabWidget->setTabText(2, tr("Like Routes"));
     _instance = this;
@@ -33,6 +33,7 @@ OtherRouteView::OtherRouteView( QObject *parent) :
     ui->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
 }
+
 OtherRouteView* OtherRouteView::instance( QObject* parent)
 {
  if(_instance == NULL)
@@ -59,12 +60,11 @@ void OtherRouteView::showRoutesUsingSegment(qint32 segmentId)
     QList<RouteData> likeRoutes =   sql->getRoutes(segmentId);
     if(likeRoutes.isEmpty())
         return;
-    //SegmentData sd = sql->getSegmentData(segmentId);
-    SegmentData sd = SegmentData();
+    SegmentInfo sd = sql->getSegmentInfo(segmentId);
     if(sd.segmentId()<1)
         return;
     ui->setSortingEnabled(false);
-    myParent->ui->label_7->setText(tr("Routes using segment #%1 %2").arg(sd.segmentId()).arg(sd.description()));
+    myParent->ui->likeRoutesLabel->setText(tr("Routes using segment #%1 %2").arg(sd.segmentId()).arg(sd.description()));
 
 
     sourceModel = new OtherRouteViewTableModel(likeRoutes, sd, this);

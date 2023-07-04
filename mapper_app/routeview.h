@@ -87,6 +87,7 @@ private:
     RouteViewSortProxyModel *proxymodel;
     QModelIndex currentIndex;
     checkRoute *chk;
+    RouteData rd;
 
 private slots:
     void tablev_customContextMenu( const QPoint& );

@@ -242,6 +242,9 @@ void RouteView::updateRouteView()
 
     //segmentInfoList = SQL::instance()->getRouteSegmentsInOrder2(route, name, endDate);
     segmentDataList = SQL::instance()->getRouteSegmentsInOrder(route, name, endDate);
+    //rd = myParent->routeList.at(myParent->ui->cbRoute->currentIndex());
+    rd = myParent->ui->cbRoute->currentData().value<RouteData>();
+    myParent->ui->routeViewLabel->setText(tr("Route segments for route %1").arg(rd.toString()));
 
     qDebug()<<"checkRoute: "+alphaRoute + " '"+name+"' "+endDate;
     chk = new checkRoute(segmentDataList, config, this);
@@ -747,6 +750,8 @@ void RouteView::on_selectSegment_triggered()
  QModelIndexList indexes = model->selectedIndexes();
  QModelIndex Index = indexes.at(0);
  qint32 segmentId = Index.data().toInt();
+ MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
+ myParent->segmentSelected(0,segmentId);
  emit selectSegment(segmentId);
 }
 

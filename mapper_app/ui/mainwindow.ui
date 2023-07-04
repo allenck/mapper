@@ -14,8 +14,8 @@
    <string>Mapper</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout_2">
-    <item row="0" column="0">
+   <layout class="QVBoxLayout" name="verticalLayout_5">
+    <item>
      <widget class="QSplitter" name="splitter">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -143,7 +143,7 @@
           </property>
           <property name="font">
            <font>
-            <pointsize>7</pointsize>
+            <pointsize>10</pointsize>
            </font>
           </property>
           <property name="toolTip">
@@ -153,7 +153,7 @@
            <enum>QTabWidget::Rounded</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="tab">
            <property name="sizePolicy">
@@ -171,11 +171,15 @@
            <attribute name="toolTip">
             <string>Display all the segments that make up a route. </string>
            </attribute>
-           <layout class="QFormLayout" name="formLayout">
-            <property name="fieldGrowthPolicy">
-             <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-            </property>
-            <item row="0" column="0" colspan="2">
+           <layout class="QVBoxLayout" name="verticalLayout_6">
+            <item>
+             <widget class="QLabel" name="routeViewLabel">
+              <property name="text">
+               <string>TextLabel</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QTableView" name="tblRouteView">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
@@ -208,7 +212,14 @@
            <attribute name="toolTip">
             <string>Display segments intersecting at a point. </string>
            </attribute>
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <layout class="QVBoxLayout" name="verticalLayout_3">
+            <item>
+             <widget class="QLabel" name="intersectingLabel">
+              <property name="text">
+               <string>TextLabel</string>
+              </property>
+             </widget>
+            </item>
             <item>
              <widget class="QTableView" name="tblSegmentView">
               <property name="sizePolicy">
@@ -239,7 +250,7 @@
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout">
             <item>
-             <widget class="QLabel" name="label_7">
+             <widget class="QLabel" name="likeRoutesLabel">
               <property name="font">
                <font>
                 <pointsize>9</pointsize>
@@ -271,7 +282,14 @@
            <attribute name="title">
             <string>Stations</string>
            </attribute>
-           <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <widget class="QLabel" name="stationsLabel">
+              <property name="text">
+               <string>TextLabel</string>
+              </property>
+             </widget>
+            </item>
             <item>
              <widget class="QTableView" name="tblStationView">
               <property name="font">
@@ -420,6 +438,9 @@
           <layout class="QHBoxLayout" name="horizontalLayout_3">
            <item>
             <widget class="QPushButton" name="btnFirst">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="toolTip">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Go to beginning (tail) of segment.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
@@ -440,6 +461,9 @@
            </item>
            <item>
             <widget class="QPushButton" name="btnPrev">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="toolTip">
               <string>Previous point.</string>
              </property>
@@ -460,6 +484,9 @@
            </item>
            <item>
             <widget class="QPushButton" name="btnNext">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="toolTip">
               <string>Next point.</string>
              </property>
@@ -480,6 +507,9 @@
            </item>
            <item>
             <widget class="QPushButton" name="btnLast">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="toolTip">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Go to last point (head) of segment.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
@@ -500,6 +530,9 @@
            </item>
            <item>
             <widget class="QPushButton" name="btnSplit">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="toolTip">
               <string>Split a line at current point.</string>
              </property>
@@ -520,6 +553,9 @@
            </item>
            <item>
             <widget class="QPushButton" name="btnDeletePt">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="toolTip">
               <string>Delete current point. </string>
              </property>

@@ -384,7 +384,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   connect(ui->txtSegment, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(txtSegment_customContextMenu(const QPoint&)));
   connect(ui->txtSegment, SIGNAL(textChanged(QString)), this, SLOT(txtSegment_TextChanged(QString)));
   connect(ui->txtSegment, SIGNAL(editingFinished()), this, SLOT(txtSegment_Leave()));
-  connect(ui->btnSplit, SIGNAL(clicked()),this, SLOT(btnSplit_Click()));
+  connect(ui->btnSplit, SIGNAL(clicked()),this, SLOT(btnSplit_Clicked()));
   connect(ui->chkShowOverlay, SIGNAL(clicked(bool)),this, SLOT(chkShowOverlayChanged(bool)));
   if(!config->bRunInBrowser)
    connect(webView, SIGNAL(loadStarted()), this, SLOT(linkActivated()));
@@ -499,6 +499,14 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   }
   else
    ui->chkShowOverlay->setEnabled(false);
+
+//  ui->btnFirst->setEnabled(false);
+//  ui->btnNext->setEnabled(false);
+//  ui->btnPrev->setEnabled(false);
+//  ui->btnLast->setEnabled(false);
+//  ui->btnSplit->setEnabled(false);
+
+
 }
 
 /*static*/ MainWindow* MainWindow::_instance = nullptr;
@@ -1694,7 +1702,7 @@ void MainWindow::refreshRoutes()
          RouteData rd = (RouteData)routeList.at(i);
          QString rdStartDate = rd.startDate.toString("yyyy/MM/dd");
 //         if(ui->cbRoute->findText(rd.toString())< 0)
-            ui->cbRoute->addItem(rd.toString());
+            ui->cbRoute->addItem(rd.toString(),QVariant::fromValue(rd));
          if( rd.toString() == currText)
             ui->cbRoute->setCurrentIndex(i);
     }
@@ -1732,7 +1740,7 @@ void MainWindow::txtRouteNbrLeave()
     {
          RouteData rd = (RouteData)routeList.at(i);
          QString rdStartDate = rd.startDate.toString("yyyy/MM/dd");
-         ui->cbRoute->addItem(rd.toString());
+         ui->cbRoute->addItem(rd.toString(), QVariant::fromValue(rd));
     }
     ui->sbRoute->setRange(0, routeList.count());
 
@@ -1764,7 +1772,8 @@ void MainWindow::on_createKmlFile_triggered()
 {
  int row =         ui->cbRoute->currentIndex();
  RouteData rd = ((RouteData)routeList.at(row));
- RouteInfo ri = sql->getRoutePoints(rd.route,rd.name, ui->dateEdit->text());
+ //RouteInfo ri = sql->getRoutePoints(rd.route,rd.name, ui->dateEdit->text());
+ RouteInfo ri(rd.route,rd.name, ui->dateEdit->text());
  Kml* kml = new Kml(ri );
  QString fileName = QFileDialog::getOpenFileName(this,"Create Kml file", QDir::homePath(),"Kml files (*.kml");
  if(!fileName.isEmpty())
@@ -1785,7 +1794,8 @@ void MainWindow::On_displayRoute(RouteData rd)
  if(!ui->chkNoClear->isChecked())
   btnClearClicked();
 
- RouteInfo ri = sql->getRoutePoints(rd.route,rd.name, ui->dateEdit->text());
+ //RouteInfo ri = sql->getRoutePoints(rd.route,rd.name, ui->dateEdit->text());
+ RouteInfo ri = RouteInfo(rd.route,rd.name, ui->dateEdit->text());
 
 // LatLng startPt =  LatLng();
 // LatLng endPt =  LatLng();
@@ -1818,9 +1828,9 @@ void MainWindow::On_displayRoute(RouteData rd)
   }
  }
  //foreach (segmentGroup sg in ri.segments)
- for(int i = 0; i< ri.segments.count(); i++)
+ for(int i = 0; i< ri.segmentDataList.count(); i++)
  {
-  SegmentData sd = ri.segments.at(i);
+  SegmentData sd = ri.segmentDataList.at(i);
   if(sd.segmentId() == 367)
    qDebug() << "halt";
   objArray.clear();
@@ -1988,6 +1998,7 @@ default:
    }
   }
   setCursor(Qt::ArrowCursor);
+  bFirstSegmentDisplayed=true;
 }
 
 void MainWindow::getInfoWindowComments(double lat, double lon, int route, QString date, int func)
@@ -2446,6 +2457,9 @@ void MainWindow::setLen(qint32 len)
 }
 void MainWindow::btnFirstClicked()
 {
+ if(!bFirstSegmentDisplayed)
+  return;
+
     //SQL sql;
     getArray();
 //    Object[] objArray = new Object[6];
@@ -2483,6 +2497,8 @@ void MainWindow::btnFirstClicked()
 
 void MainWindow::btnNextClicked()
 {
+ if(!bFirstSegmentDisplayed)
+  return;
     //SQL sql;
     getArray();
     if(m_currPoint < 0 || m_nbrPoints <2)
@@ -2570,6 +2586,8 @@ void MainWindow::lookupStreetName(SegmentInfo sd)
 
 void MainWindow::btnLastClicked()
 {
+ if(!bFirstSegmentDisplayed)
+  return;
     //SQL sql;
 
     getArray();
@@ -2618,6 +2636,8 @@ void MainWindow::btnLastClicked()
 
 void MainWindow::btnPrevClicked()
 {
+ if(!bFirstSegmentDisplayed)
+  return;
     //SQL sql;
     getArray();
     if (m_currPoint > 0)
@@ -2746,8 +2766,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
  //QMainWindow::closeEvent(event);
  event->accept();
 }
-void MainWindow::btnSplit_Click()    // SLOT
+void MainWindow::btnSplit_Clicked()    // SLOT
 {
+ if(!bFirstSegmentDisplayed)
+  return;
  //SQL sql;
  SegmentDlg segmentDlg(config, this);
  //segmentDlg.setConfiguration(config);
@@ -2823,6 +2845,7 @@ void MainWindow::displaySegment(qint32 segmentId, QString segmentName, /*QString
     SegmentInfo sd = sql->getSegmentInfo(segmentId);
     sd.displaySegment(ui->dateEdit->text(),color, trackUsage, bClearFirst);
     m_currPoint = 0;
+    bFirstSegmentDisplayed = true;
     ui->lblPoint->setText(QString::number(m_currPoint));
 
 
@@ -2831,6 +2854,7 @@ void MainWindow::displaySegment(qint32 segmentId, QString segmentName, /*QString
     ui->btnPrev->setEnabled(false);
     ui->btnLast->setEnabled(true);
     ui->btnSplit->setEnabled(false);
+    ui->btnDeletePt->setEnabled(true);
     getArray();
     return;
 }
@@ -3208,6 +3232,8 @@ void MainWindow::insertPoint(int SegmentId, qint32 i, double newLat, double newL
 /// <param name="e"></param>
 void MainWindow::btnDeletePtClicked()
 {
+ if(!bFirstSegmentDisplayed)
+  return;
  SegmentInfo sd = sql->getSegmentInfo(m_SegmentId);
 
  if(sd.segmentId() == m_SegmentId)

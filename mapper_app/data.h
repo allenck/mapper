@@ -258,10 +258,21 @@ public:
     void setNext(int next){_next = next;}
     int prev() {return _prev;}
     void setPrev(int prev){_prev = prev;}
-    Bearing bearing() {return _bearing;}
+    Bearing bearing() {
+     _bearing = Bearing(_startLat, _startLon, _endLat, _endLon);
+     _direction = _bearing.strDirection();
+     _length = _bearing.Distance();
+     return _bearing;
+    }
     void setBearing(Bearing bearing){_bearing = bearing;}
-    Bearing bearingStart() {return _bearingStart;}
-    Bearing bearingEnd() {return _bearingEnd;}
+    Bearing bearingStart() {
+     _bearingStart = Bearing(_startLat, _startLon, _pointList.at(1).lat(), _pointList.at(1).lon());
+     return _bearingStart;
+    }
+    Bearing bearingEnd() {
+     _bearingEnd =  Bearing(_pointList.at(points-2).lat(), _pointList.at(points-2).lon(), _endLat, _endLon);
+     return _bearingEnd;
+    }
     QDate startDate() {return _startDate;}
     QDate endDate() {return _endDate;}
     double length() {return _length;}
@@ -290,10 +301,6 @@ public:
      _bounds = Bounds(_sw, _ne);
      return _bounds;
     }
-    void setBounds(Bounds bounds) {
-     if(bounds.isValid())
-      _bounds = bounds;
-    }
  private:
     qint32 _segmentId=-1;
     qint8 _tracks;
@@ -321,6 +328,11 @@ public:
     QString _trackUsage;
     LatLng _sw;
     LatLng _ne;
+    void setBounds(Bounds bounds) {
+     if(bounds.isValid())
+      _bounds = bounds;
+    }
+
     friend class SQL;
 };
 
@@ -360,7 +372,7 @@ signals:
 public slots:
 
 };
-
+Q_DECLARE_METATYPE(RouteData)
 
 
 class segmentGroup
@@ -386,15 +398,17 @@ class segmentGroup
 class RouteInfo
 {
 	public:
-        //explicit routeInfo(QObject *parent = 0);
-        RouteInfo();
+        explicit RouteInfo(QObject *parent = 0);
+        RouteInfo(qint32 route, QString name, QString date);
+        RouteInfo(RouteData rd);
         qint32	route;
         QString routeName;
         qint32	tractionType;
         //QList<segmentGroup> segments;  // array of segmentGroup objects
-        QList<SegmentData> segments;
+        QList<SegmentData> segmentDataList;
         ~RouteInfo();
         double length;
+        RouteData rd;
 };
 
 
@@ -505,7 +519,12 @@ class SegmentInfo
  RouteType routeType() {return _routeType;}
  int tracks() {return _tracks;}
  QList<LatLng> pointList() {return _pointList;}
- Bearing bearing() {return _bearing;}
+ Bearing bearing() {
+  _bearing = Bearing(_startLat, _startLon, _endLat, _endLon);
+  _direction = _bearing.strDirection();
+  _length = _bearing.Distance();
+  return _bearing;
+ }
  double length() { return _length;}
  void setStartLat(double lat) {_startLat = lat;}
  void setStartLon(double lon) {_startLon = lon;}
@@ -524,10 +543,22 @@ class SegmentInfo
  void setNeedsUpdate(bool b) {_bNeedsUpdate = b;}
  LatLng getStartLatLng() {return LatLng(_startLat, _startLon);}
  LatLng getEndLatLng() {return LatLng(_endLat, _endLon);}
- Bearing bearingStart() {return _bearingStart;}
- Bearing bearingEnd() {return _bearingEnd;}
+ Bearing bearingStart() {
+  _bearingStart = Bearing(_startLat, _startLon, _pointList.at(1).lat(), _pointList.at(1).lon());
+  return _bearingStart;
+ }
+ Bearing bearingEnd() {
+  _bearingEnd =  Bearing(_pointList.at(points-2).lat(), _pointList.at(points-2).lon(), _endLat, _endLon);
+  return _bearingEnd;
+ }
  int next() const {return _next;}
  void setWhichEnd(QString whichEnd) {_whichEnd = whichEnd;}
+ Bounds bounds() {
+  LatLng _sw = LatLng(_startLat < _endLat ? _startLat : _endLat, _startLon < _endLon ? _startLon : _endLon );
+  LatLng _ne = LatLng(_startLat > _endLat ? _startLat : _endLat, _startLon > _endLon ? _startLon : _endLon );
+  _bounds = Bounds(_sw, _ne);
+  return _bounds;
+ }
 
 };
 

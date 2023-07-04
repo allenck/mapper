@@ -244,7 +244,7 @@ private slots:
     void btnDeleteSegment_Click();
     //void btnDisplay_Click();
     //void chkShowWindow_CheckedChanged();
-    void btnSplit_Click();
+    void btnSplit_Clicked();
 //    void selectSegment();
     void AddRoute();
     void addModeToggled(bool isChecked);
@@ -393,6 +393,7 @@ private:
     bool bCbStreets_text_changed = false;
     QString saveStreet = "";
     bool bCbStreetsRefreshing = false;
+    bool bFirstSegmentDisplayed = false;
 
     void createActions();
     void createMenus();
@@ -446,6 +447,7 @@ protected:
 signals:
     //void sendRows(int, int);
     void newCitySelected();
+    friend class RouteView;
 };
 
 class Menu : public QMenu
