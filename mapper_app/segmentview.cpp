@@ -211,8 +211,8 @@ void SegmentView::addToRoute()
   //routeDlg->SegmentChanged += new segmentChangedEventHandler(segmentChanged);
   connect(parent->routeDlg, SIGNAL(SegmentChangedEvent(qint32, qint32)),parent, SLOT(segmentChanged(qint32,qint32)));
  }
- if(parent->selectedSegment() == segmentId)
-  return; // already selected
+// if(parent->selectedSegment() == segmentId)
+//  return; // already selected
 
  if(parent->m_segmentStatus == "Y")
    parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));

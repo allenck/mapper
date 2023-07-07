@@ -2437,8 +2437,6 @@ void MainWindow::getArray()
     if (m_currPoint > ((int)m_nbrPoints - 1))
         m_currPoint = (int)m_nbrPoints - 1;
     ui->lblPoint->setText(QString::number(m_currPoint));
-
-
 }
 
 void MainWindow::setDebug(QString str)

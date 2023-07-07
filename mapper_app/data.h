@@ -252,8 +252,7 @@ public:
     void setDescription(QString description){_description = description;}
     QString oneWay() const {return _oneWay;}
     void setOneWay(QString oneWay){_oneWay = oneWay;}
-    QString direction() {return _oneWay;}
-    void setDirection(QString direction){_direction = direction;}
+    QString direction() {return _direction;}
     int next() const {return _next;}
     void setNext(int next){_next = next;}
     int prev() {return _prev;}
@@ -328,6 +327,7 @@ public:
     QString _trackUsage;
     LatLng _sw;
     LatLng _ne;
+    void setDirection(QString direction){_direction = direction;}
     void setBounds(Bounds bounds) {
      if(bounds.isValid())
       _bounds = bounds;
@@ -365,6 +365,7 @@ public:
     LatLng endLatLng;
     SegmentInfo* sd = nullptr;
     Bearing* bearing = nullptr;
+    bool bNeedsUpdate = false;
 
     QString toString();
 signals:

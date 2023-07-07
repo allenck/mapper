@@ -305,8 +305,8 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
                  "from Routes a join altRoute c on a.route =  c.route "
                  "group by a.route, name, a.endDate, a.companykey,tractionType, c.routeAlpha "
                  "order by c.routeAlpha, name, a.endDate;";
- else
-  commandText = "Select distinct a.route, name, a.endDate, a.companyKey, tractionType, routeAlpha"
+  else
+   commandText = "Select distinct a.route, name, a.endDate, a.companyKey, tractionType, routeAlpha"
                 " from Routes a join altRoute c on a.route =  c.route"
                 " group by a.route, name, a.endDate, a.companykey,tractionType, c.routeAlpha"
                 " order by c.routeAlpha, name, a.endDate";
@@ -9356,6 +9356,7 @@ bool SQL::updateRoute(RouteData rd)
 
  QString commandText = "update Routes set next = " + QString("%1").arg(rd.next)
              + ", trackUsage  = '" + rd.trackUsage + "'"
+             + ", oneWay  = '" + rd.oneWay + "'"
              + ", prev =" + QString("%1").arg(rd.prev)
              + ", tractionType =" + QString("%1").arg(rd.tractionType)
              + ", lastUpdate=:lastUpdate"

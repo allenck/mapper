@@ -24,9 +24,30 @@ EditSegmentDialog::EditSegmentDialog(SegmentInfo sd, QWidget *parent) :
  connect(ui->ssw, SIGNAL(segmentSelected(SegmentData)), this, SLOT(segmentSelected(SegmentData)));
 }
 
+EditSegmentDialog::EditSegmentDialog(RouteData* rd, SegmentInfo sd, QWidget *parent) :
+  QDialog(parent),
+  ui(new Ui::EditSegmentDialog)
+{
+ this->rd = rd;
+ common();
+ segmentSelected(sd);
+
+ ui->ssw->initialize();
+ connect(ui->ssw, SIGNAL(segmentSelected(SegmentData)), this, SLOT(segmentSelected(SegmentData)));
+}
+
 void EditSegmentDialog::common()
 {
  ui->setupUi(this);
+ if(rd->route < 0)
+ {
+  ui->chkOneWay->setVisible(false);
+  ui->trackUsage->setVisible(sd.tracks()==2);
+ }
+ else
+ {
+  ui->chkOneWay->setChecked(rd->oneWay == "Y");
+ }
  this->config = Configuration::instance();
  sql = SQL::instance();
  b_cbSegments_TextChanged = false;
@@ -72,6 +93,7 @@ void EditSegmentDialog::common()
 // connect(ui->cbSegments, SIGNAL(editTextChanged(QString)), this, SLOT(On_cbSegmentsTextChanged(QString)));
 // connect(ui->cbSegments,SIGNAL(signalFocusOut()), this, SLOT(On_cbSegments_Leave()));
  connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(On_buttonBox_accepted()));
+ connect(ui->trackUsage, SIGNAL(currentIndexChanged), this, SLOT(On_trackUsageChanged(int)));
 }
 
 EditSegmentDialog::~EditSegmentDialog()
@@ -110,6 +132,23 @@ void EditSegmentDialog::segmentSelected(SegmentInfo sd)
  ui->label_segmentId->setText(QString::number(sd.segmentId()));
  ui->txtDescription->setText(sd.description());
  //ui->chkOneWay->setChecked(sd.oneWay() == "Y");
+ if(rd->route > 0  && sd.tracks()== 1)
+ {
+  ui->chkOneWay->setChecked(rd->oneWay == "Y");
+ }
+ if(rd->route > 0  && sd.tracks()== 2)
+ {
+  if(rd->trackUsage =="L")
+   ui->trackUsage->setCurrentIndex(1); // left track
+  else  if(rd->trackUsage =="R")
+   ui->trackUsage->setCurrentIndex(2); // right track
+  else
+   ui->trackUsage->setCurrentIndex(0); // both tracks
+ }
+
+ ui->usageLabel->setVisible(rd->route>0);
+ ui->trackUsage->setVisible(rd->route>0);
+
  ui->sbTracks->setValue(sd.tracks());
  ui->cbRouteType->setCurrentIndex(sd.routeType());
  ui->dtBegin->setDate(sd.startDate());
@@ -135,23 +174,49 @@ void EditSegmentDialog::On_cbRouteType_currentIndexChanged(int i)
 void EditSegmentDialog::On_sbTracks_valueChanged(int v)
 {
  sd.setTracks(v);
+ if(rd->route > 0 )
+ {
+  ui->chkOneWay->setChecked(v==1);
+  ui->trackUsage->setVisible(v==2);
+  ui->usageLabel->setVisible(v==2);
+
+ }
 }
 
-#if 0
+
 void EditSegmentDialog::On_chkOneWay_toggled(bool b)
 {
  if(!b)
  {
-  sd.setOneWay("N");
+  //sd.setOneWay("N");
+  rd->oneWay = "N";
  }
  else
  {
-  sd.setOneWay("Y");
-  //On_sbTracks_valueChanged(2);
+  //sd.setOneWay("Y");
+  rd->oneWay = "N";
+
  }
- setUpdate();
+ rd->bNeedsUpdate = true;
 }
-#endif
+
+void  EditSegmentDialog::On_trackUsageChanged(int i)
+{
+ switch(i)
+ {
+ case  1:
+  rd->trackUsage="L";
+  break;
+ case 2:
+  rd->trackUsage="R";
+  break;
+ default:
+  rd->trackUsage=" ";
+  break;
+ }
+ rd->bNeedsUpdate = true;
+}
+
 void EditSegmentDialog::On_txtDescription_editingFinished()
 {
  QString txt = ui->txtDescription->text();
@@ -334,7 +399,17 @@ void EditSegmentDialog::On_btnSave_clicked()
   sql->RollbackTransaction("updateSegment");
   return;
  }
+ if(rd->bNeedsUpdate)
+ {
+  if(!sql->updateRoute(*rd))
+  {
+   sql->RollbackTransaction("updateSegment");
+   return;
+  }
+ }
  sql->CommitTransaction("updateSegment");
+ rd->bNeedsUpdate = false;
+ sd.setNeedsUpdate(false);
 
 // btnUpdate->setEnabled(false);
 // ui->buttonBox->button(QDialogButtonBox::Save)->setEnabled(false);

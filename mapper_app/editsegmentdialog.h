@@ -19,6 +19,7 @@ class EditSegmentDialog : public QDialog
 public:
  explicit EditSegmentDialog(QWidget *parent = 0);
  EditSegmentDialog(SegmentInfo sd, QWidget *parent = 0);
+ EditSegmentDialog(RouteData *rd, SegmentInfo sd, QWidget *parent=0);
  ~EditSegmentDialog();
 
 private:
@@ -38,13 +39,14 @@ private:
  WebViewBridge* m_bridge;
  QString m_segmentStatus;
  QString m_segmentColor;
+ RouteData* rd;
 
 private slots:
  //void fillSegments();
  void segmentSelected(SegmentInfo sd);
  void On_cbRouteType_currentIndexChanged(int);
  void On_sbTracks_valueChanged(int);
- //void On_chkOneWay_toggled(bool);
+ void On_chkOneWay_toggled(bool);
  void On_txtDescription_editingFinished();
  void On_dtBegin_dateChanged(QDate);
  void On_dtEnd_dateChanged(QDate);
@@ -55,6 +57,7 @@ private slots:
  void On_dtEnd_editingFinished();
  void On_buttonBox_accepted();
  void On_segmentStatusSignal(QString, QString);
+ void On_trackUsageChanged(int);
 };
 
 #endif // EDITSEGMENTDIALOG_H

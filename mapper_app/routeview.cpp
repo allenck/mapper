@@ -761,7 +761,7 @@ void RouteView::editSegment()
  QModelIndexList indexes = model->selectedIndexes();
  qint32 segmentId = indexes.at(0).data().toInt();
  SegmentInfo sd = SQL::instance()->getSegmentInfo(segmentId);
- EditSegmentDialog* dlg = new EditSegmentDialog(sd);
+ EditSegmentDialog* dlg = new EditSegmentDialog(&rd, sd);
  dlg->exec();
 }
 
