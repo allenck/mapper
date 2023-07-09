@@ -909,9 +909,9 @@ QStringList SQL::getAlphaRoutes(QString text)
     return list;
 }
 
-QList<TractionTypeInfo> SQL::getTractionTypes()
+QMap<int,TractionTypeInfo> SQL::getTractionTypes()
 {
-    QList<TractionTypeInfo> myArray;
+    QMap<int,TractionTypeInfo> myArray;
     TractionTypeInfo tti;
     try
     {
@@ -938,17 +938,14 @@ QList<TractionTypeInfo> SQL::getTractionTypes()
             tti.displayColor = query.value(2).toString();
             tti.routeType = (RouteType)query.value(3).toInt();
             tti.icon = query.value(4).toString();
-            myArray.append(tti);
+            myArray.insert(tti.tractionType, tti);
         }
-        
     }
     catch (Exception& e)
     {
         myExceptionHandler(e);
 
     }
-
-    
     return myArray;
 }
 #if 0
@@ -1541,6 +1538,7 @@ QList<SegmentData> SQL::getRouteSegmentsInOrder(qint32 route, QString name, QStr
     sd._bearingStart = Bearing(startLat, startLon, endLat, endLon);
     sd._description = query.value(5).toString();
 //    si.oneWay = query.value(6).toString();
+    // query.value(6).toString(); direction not used
     sd._next = query.value(8).toInt();
     sd._prev = query.value(9).toInt();
     sd._normalEnter = query.value(10).toInt();

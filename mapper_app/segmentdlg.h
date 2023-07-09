@@ -45,7 +45,7 @@ private:
     bool bNewChanged;
     bool bRouteChanged;
     QList<CompanyData*> _companyList;
-    QList<TractionTypeInfo> _tractionTypeList;
+    QMap<int, TractionTypeInfo> _tractionTypeList;
     QList<QString> _routeNameList;
     QList<QString> _routeTypeList;
     SegmentInfo sd;
@@ -57,7 +57,7 @@ private:
     QString strNoRoute;
     bool bNewRouteNbr;
     bool bSplitting;
-    QList<TractionTypeInfo> tractionTypeList;
+    QMap<int, TractionTypeInfo> tractionTypeList;
     void fillCompanies();
     void fillTractionTypes();
     void checkUpdate();

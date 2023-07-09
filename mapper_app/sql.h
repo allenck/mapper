@@ -41,7 +41,7 @@ public:
     TerminalInfo getTerminalInfo(qint32 route, QString name, QString endDate);
     QList<TerminalInfo> getTerminalInfoUsingSegment(int segmentId);
     QString getAlphaRoute(qint32 route, qint32 company);
-    QList<TractionTypeInfo> getTractionTypes();
+    QMap<int, TractionTypeInfo> getTractionTypes();
     //QT_DEPRECATED QList<SegmentInfo> getSegmentInfo();
     QMap<int, SegmentInfo> getSegmentInfoList();
     //QT_DEPRECATED SegmentInfo getSegmentInfo(qint32 segmentId);

@@ -73,7 +73,7 @@ void DialogCopyRoute::fillTractionTypes()
     //foreach (tractionTypeInfo tti in tractionList)
     for(int i = 0; i < tractionList.count(); i++)
     {
-        ui->cbTractionType->addItem(((TractionTypeInfo)tractionList.at(i)).ToString());
+        ui->cbTractionType->addItem(((TractionTypeInfo)tractionList.values().at(i)).ToString());
     }
     //cbTractionType.Text = "";
 }
@@ -177,7 +177,7 @@ void DialogCopyRoute::txtRouteNbr_Leave()      // SLOT
                 //cbTractionType.SelectedIndex = ix;
                 for(int j =0; j< tractionList.count(); j++)
                 {
-                    TractionTypeInfo tti = tractionList.at(j);
+                    TractionTypeInfo tti = tractionList.values().at(j);
                     if(tti.tractionType == rd.tractionType)
                     {
                         ui->cbTractionType->setCurrentIndex(j);
@@ -258,7 +258,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
 
 //    sql->OpenConnection();
 //    sql->BeginTransaction("CopyRoute");
-    qint32  tractionType = (tractionList.at(ui->cbTractionType->currentIndex())).tractionType;
+    qint32  tractionType = (tractionList.values().at(ui->cbTractionType->currentIndex())).tractionType;
     //foreach (routeData rd1 in myArray)
 
     if(ui->dateStart->date() > _rd.endDate || ui->dateEnd->date() < _rd.startDate)
@@ -366,7 +366,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     _rd.startDate = ui->dateStart->date();
     _rd.endDate = ui->dateEnd->date();
     _rd.companyKey = ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey;
-    _rd.tractionType = ((TractionTypeInfo)tractionList.at(ui->cbTractionType->currentIndex())).tractionType;
+    _rd.tractionType = ((TractionTypeInfo)tractionList.values().at(ui->cbTractionType->currentIndex())).tractionType;
 
     this->accept();
     this->close();

@@ -8,8 +8,8 @@ ModifyRouteTractionTypeDlg::ModifyRouteTractionTypeDlg(QWidget *parent) :
 {
  ui->setupUi(this);
  ui->comboBox->clear();
- QList<TractionTypeInfo> tractionTypeList = sql->getTractionTypes();
- foreach(TractionTypeInfo ti, tractionTypeList)
+ QMap<int,TractionTypeInfo> tractionTypeList = sql->getTractionTypes();
+ foreach(TractionTypeInfo ti, tractionTypeList.values())
  {
   ui->comboBox->addItem(ti.ToString(), ti.tractionType);
  }

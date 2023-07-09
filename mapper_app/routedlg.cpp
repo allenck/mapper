@@ -107,7 +107,7 @@ void RouteDlg::setSegmentId(qint32 segmentid)
   //foreach (tractionTypeInfo tti in cbTractionType.Items)
   for(int i = 0; i < _tractionList.count(); i++ )
   {
-   TractionTypeInfo tti = (TractionTypeInfo)_tractionList.at(i);
+   TractionTypeInfo tti = (TractionTypeInfo)_tractionList.values().at(i);
    if (tti.tractionType == _rd.tractionType)
    {
        ui->cbTractionType->setCurrentIndex(i);
@@ -267,7 +267,7 @@ void RouteDlg::setRouteData(RouteData value)
  //foreach (tractionTypeInfo tti in cbTractionType.Items)
  for(int i=0; i < _tractionList.count(); i++)
  {
-  TractionTypeInfo tti = (TractionTypeInfo)_tractionList.at(i);
+  TractionTypeInfo tti = (TractionTypeInfo)_tractionList.values().at(i);
   if (tti.tractionType == _rd.tractionType)
   {
    ui->cbTractionType->setCurrentIndex(i);
@@ -448,7 +448,7 @@ void RouteDlg::txtRouteName_Leave()
                 //ui->cbTractionType->setCurrentIndex(ix);
                 for( int j=0; j < _tractionList.count(); j++)
                 {
-                    TractionTypeInfo tt = (TractionTypeInfo)_tractionList.at(j);
+                    TractionTypeInfo tt = (TractionTypeInfo)_tractionList.values().at(j);
                     if(tt.tractionType == rd.tractionType)
                     {
                         ui->cbTractionType->setCurrentIndex(j);
@@ -522,7 +522,7 @@ void RouteDlg::fillSegmentsComboBox()
             //cbTractionType.SelectedIndex = i;
             for(int j=0; j < _tractionList.count(); j++)
             {
-                TractionTypeInfo tti = _tractionList.at(j);
+                TractionTypeInfo tti = _tractionList.values().at(j);
                 if(tti.tractionType == rd.tractionType)
                 {
                     ui->cbTractionType->setCurrentIndex(j);
@@ -570,7 +570,7 @@ void RouteDlg::fillTractionTypes()
     {
      //if (si.routeType == tti.routeType)
      {
-      TractionTypeInfo tti  = (TractionTypeInfo)_tractionList.at(i);
+      TractionTypeInfo tti  = (TractionTypeInfo)_tractionList.values().at(i);
       ui->cbTractionType->addItem(tti.ToString(),tti.tractionType);
       //count++;
      }
@@ -676,7 +676,7 @@ void RouteDlg::cbSegments_SelectedIndexChanged(int row)
 //    cbTractionType.SelectedIndex = i;
     for(int i = 0; i < _tractionList.count(); i++)
     {
-     TractionTypeInfo tti = _tractionList.at(i);
+     TractionTypeInfo tti = _tractionList.values().at(i);
      if(tti.tractionType == rd.tractionType)
      {
       ui->cbTractionType->setCurrentIndex(i);
@@ -1431,7 +1431,7 @@ void RouteDlg::btnDelete_Click()              // SLOT
  // update routes before and or after to exclude the segment for the specified dates
  if (_rd.route >0 && ui->dateStart->date() < _rd.startDate)
  {
-  int tractionType = _tractionList.at(ui->cbTractionType->currentIndex()).tractionType;
+  int tractionType = _tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType;
   if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->date(),
                               _rd.startDate.addDays(-1), _segmentId, _rd.companyKey,
                               /*cbTractionType.SelectedIndex + 1*/tractionType, direction, _rd.next, _rd.prev,
@@ -1445,7 +1445,7 @@ void RouteDlg::btnDelete_Click()              // SLOT
  }
  if (_rd.route > 0 && ui->dateEnd->date() > _rd.endDate)
  {
-     int tractionType = _tractionList.at(ui->cbTractionType->currentIndex()).tractionType;
+     int tractionType = _tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType;
 
      if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), _rd.endDate.addDays(1),
                                  ui->dateEnd->date(), _segmentId, companyKey, /*cbTractionType.SelectedIndex + 1*/tractionType,
@@ -1695,7 +1695,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
   }
   if (sql->doesRouteSegmentExist(_routeNbr, ui->cbRouteName->currentText(), _segmentId, ui->dateStart->text(), ui->dateEnd->text()) == false)
   {
-      int tractionType = _tractionList.at(ui->cbTractionType->currentIndex()).tractionType;
+      int tractionType = _tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType;
       if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->date(), ui->dateEnd->date(),
                                   _segmentId, companyKey, /*cbTractionType.SelectedIndex+1*/tractionType, direction, 0, 0,
                                   normalEnter, normalLeave, reverseEnter, reverseLeave, ui->cbOneWay->isChecked()?"Y":"N", trackUsage))
@@ -1739,7 +1739,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
    if(ui->rbLeft->isChecked()) trackUsage = "L";
    if(ui->rbRight->isChecked()) trackUsage = "R";
   }
-  int tractionType = _tractionList.at(ui->cbTractionType->currentIndex()).tractionType;
+  int tractionType = _tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType;
   if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->date(), ui->dateEnd->date(),
                               _segmentId, companyKey, /*cbTractionType.SelectedIndex+1*/tractionType, direction, 0,0,
                               normalEnter, normalLeave, reverseEnter, reverseLeave, ui->cbOneWay?"Y":"N", trackUsage))
@@ -1780,7 +1780,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
  // notify client btnAdd.Text == "Add"
  //if (routeChanged != null)
  {
-     int tractionType = _tractionList.at(ui->cbTractionType->currentIndex()).tractionType;
+     int tractionType = _tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType;
      //routeChanged(this, new routeChangedEventArgs(_routeNbr, ui->cbRouteName->currentText(), _SegmentId, /*cbTractionType.SelectedIndex + 1*/tractionType, companyKey, dateEnd.Value, btnAdd.Text == "Add" ? routeChangedType.Add : routeChangedType.Update));
 //     RouteChangedEventArgs args =RouteChangedEventArgs(_routeNbr, ui->cbRouteName->currentText(), _SegmentId, /*cbTractionType.SelectedIndex + 1*/tractionType, companyKey, ui->dateEnd->date(), ui->btnAdd->text() == "Add" ? "Add" : "Update");
     RouteChangedEventArgs args = RouteChangedEventArgs(_rd, ui->btnAdd->text() == "Add" ? "Add" : "Update");
@@ -1867,7 +1867,7 @@ void RouteDlg::checkDirection(QString routeDirection)
                 //System.Media.SystemSounds.Beep.Play();
                 return;
             }
-            int tractionType = _tractionList.at(ui->cbTractionType->currentIndex()).tractionType;
+            int tractionType = _tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType;
             QString trackUsage = " ";
             if(ui->cbOneWay->isChecked())
             {
@@ -1991,7 +1991,7 @@ void RouteDlg::checkDirection(QString routeDirection)
 
 
          QString direction = sd.bearing().strDirection();
-         int tractionType = _tractionList.at(ui->cbTractionType->currentIndex()).tractionType;
+         int tractionType = _tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType;
          QString trackUsage = " ";
          if(ui->cbOneWay->isChecked())
          {

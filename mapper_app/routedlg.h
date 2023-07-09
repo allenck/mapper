@@ -51,7 +51,7 @@ private:
     QString _alphaRoute;
     QList<RouteData> _segmentInfoList;
     QList<CompanyData*> _companyList;
-    QList<TractionTypeInfo> _tractionList;
+    QMap<int,TractionTypeInfo> _tractionList;
     QList<QString> _routeNamesList;
     SQL* sql;
     qint32 _segmentId;

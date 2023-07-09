@@ -192,7 +192,7 @@ QString SegmentDlg::routeName()
 qint32 SegmentDlg::tractionType()
 {
     int ix = ui->cbTractionType->currentIndex();
-    TractionTypeInfo tti = (TractionTypeInfo)_tractionTypeList.at(ix);
+    TractionTypeInfo tti = (TractionTypeInfo)_tractionTypeList.values().at(ix);
     return tti.tractionType;
 }
 bool SegmentDlg::oneWay() { return ui->chkOriginalOneWay->isChecked(); }
@@ -289,7 +289,7 @@ void SegmentDlg::fillTractionTypes()
     //foreach (tractionTypeInfo tti in tractionList)
     for(int i = 0; i < _tractionTypeList.count(); i++)
     {
-     TractionTypeInfo tti = _tractionTypeList.at(i);
+     TractionTypeInfo tti = _tractionTypeList.values().at(i);
      ui->cbTractionType->addItem(tti.ToString());
     }
     //cbTractionType.Text = "";
@@ -731,7 +731,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
    _routeNbr = sql->addAltRoute(_alphaRoute, cd->routePrefix);
   if (_routeNbr > 0)
   {
-   int tractionType = _tractionTypeList.at(ui->cbTractionType->currentIndex()).tractionType;
+   int tractionType = _tractionTypeList.values().at(ui->cbTractionType->currentIndex()).tractionType;
 
    RouteData rd = sql->getRouteData(_routeNbr, routeSegment, ui->dateStart->text(), ui->dateEnd->text());
    if (rd.route < 0)
@@ -792,7 +792,7 @@ QString SegmentDlg::getColor(qint32 tractionType)
  //foreach (tractionTypeInfo tti in tractionTypeList)
  for(int i=0; i < tractionTypeList.count(); i++)
  {
-  TractionTypeInfo tti = tractionTypeList.at(i);
+  TractionTypeInfo tti = tractionTypeList.values().at(i);
   if (tractionType == tti.tractionType)
       return tti.displayColor;
  }

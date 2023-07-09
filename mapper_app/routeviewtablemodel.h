@@ -69,6 +69,7 @@ private:
      qint32 route;
      QString name;
      qint32 startRow, endRow;
+     QMap<int, TractionTypeInfo> tractionTypes;
 
      friend class RouteView;
 };

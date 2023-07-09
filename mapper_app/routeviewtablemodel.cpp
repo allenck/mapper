@@ -10,6 +10,7 @@ RouteViewTableModel::RouteViewTableModel(QObject *parent) :
  selectedRow = -1;
  bSelectedRowChanged = false;
  bIsSequenced = false;
+ tractionTypes = SQL::instance()->getTractionTypes();
 }
 
 RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtStart, QDate dtEnd, QList<SegmentData> segmentDataList, QObject *parent)
@@ -37,6 +38,8 @@ RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtSta
   if(ti.endSegment == sd.segmentId())
    endRow = i;
  }
+
+ tractionTypes = SQL::instance()->getTractionTypes();
 
 }
 
@@ -124,7 +127,8 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
    case USAGE:
        return sd.trackUsage();
    case TRACTIONTYPE:
-    return sd.tractionType();
+       //return sd.tractionType();
+       return tractionTypes.value(sd.tractionType()).description;
    case TRACKS:
        return sd.tracks();
    case TYPE:

@@ -8,6 +8,7 @@ SOURCES += main.cpp\
     $$PWD/routeselector.cpp \
     $$PWD/segmentselectionwidget.cpp \
     $$PWD/splitsegmentdlg.cpp \
+    $$PWD/ttitemdelegate.cpp \
     addgeoreferenceddialog.cpp \
     $$PWD/exceptions.cpp \
     $$PWD/myapplication.cpp \
@@ -79,6 +80,7 @@ HEADERS  += mainwindow.h \
     $$PWD/routeselector.h \
     $$PWD/segmentselectionwidget.h \
     $$PWD/splitsegmentdlg.h \
+    $$PWD/ttitemdelegate.h \
     $$PWD/vptr.h \
     addgeoreferenceddialog.h \
     $$PWD/exceptions.h \

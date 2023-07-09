@@ -372,7 +372,7 @@ private:
     //QSignalMapper *overlaySignalMapper;
     QActionGroup  *overlayActionGroup;
     QString  currentOverlay;
-    QList<TractionTypeInfo> tractionTypeList;
+    QMap<int,TractionTypeInfo> tractionTypeList;
     QList<CompanyData*> companyList;
 
     TerminalInfo m_terminalInfo;

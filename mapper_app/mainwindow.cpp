@@ -1695,6 +1695,8 @@ void MainWindow::refreshRoutes()
     ui->cbRoute->clear();
 
     routeList = sql->getRoutesByEndDate(companyKey);
+    if(routeList.isEmpty())
+     qDebug() << "no routes selected for company " << companyKey;
 
     int len = routeList.count();
     for(int i=0; i<len; i++)
@@ -1757,7 +1759,7 @@ QString MainWindow::getColor(qint32 tractionType)
  //foreach (tractionTypeInfo tti in tractionTypeList)
  for(int i=0; i < tractionTypeList.count(); i++)
  {
-  TractionTypeInfo tti = tractionTypeList.at(i);
+  TractionTypeInfo tti = tractionTypeList.values().at(i);
   if (tractionType == tti.tractionType)
       return tti.displayColor;
  }
@@ -1867,8 +1869,8 @@ void MainWindow::On_displayRoute(RouteData rd)
  }
 
  QString markerType = "green";
- QList< TractionTypeInfo> tractionTypes= sql->getTractionTypes();
- foreach(TractionTypeInfo tti,tractionTypeList)
+ QMap<int, TractionTypeInfo> tractionTypes= sql->getTractionTypes();
+ foreach(TractionTypeInfo tti,tractionTypeList.values())
  {
   //tractionTypeInfo tti = (tractionTypeInfo)tractionTypeList.at(i);
   if (tti.tractionType == ri.tractionType)

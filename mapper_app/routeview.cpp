@@ -5,6 +5,7 @@
 #include "editsegmentdialog.h"
 #include "webviewbridge.h"
 #include "otherrouteview.h"
+#include "ttitemdelegate.h"
 
 RouteView::RouteView(QObject* parent )
 {
@@ -371,7 +372,7 @@ void RouteView::updateRouteView()
     ui->horizontalHeader()->resizeSection(7,35);
     ui->horizontalHeader()->resizeSection(8,65);
     ui->horizontalHeader()->resizeSection(9,65);
-
+    ui->setItemDelegateForColumn(sourceModel->TRACTIONTYPE, new TTItemDelegate());
     //populateList();
 }
 void RouteView::populateList()

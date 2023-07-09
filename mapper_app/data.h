@@ -253,6 +253,7 @@ public:
     QString oneWay() const {return _oneWay;}
     void setOneWay(QString oneWay){_oneWay = oneWay;}
     QString direction() {return _direction;}
+    void setDirection(QString direction){_direction = direction;}
     int next() const {return _next;}
     void setNext(int next){_next = next;}
     int prev() {return _prev;}
@@ -327,7 +328,6 @@ public:
     QString _trackUsage;
     LatLng _sw;
     LatLng _ne;
-    void setDirection(QString direction){_direction = direction;}
     void setBounds(Bounds bounds) {
      if(bounds.isValid())
       _bounds = bounds;
