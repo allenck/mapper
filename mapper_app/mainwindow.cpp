@@ -429,6 +429,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui->cbRoute->addAction(modifyRouteDateAct);
   ui->cbRoute->addAction(renameRouteAct);
   ui->cbRoute->addAction(routeCommentsAct);
+  ui->cbRoute->addAction(refreshRoutesAct);
   ui->cbRoute->addAction(splitRouteAct);
   ui->cbRoute->addAction(updateRouteAct);
   ui->cbRoute->addAction(updateTerminalsAct);
@@ -4148,7 +4149,8 @@ void MainWindow::updateSegmentInfoDisplay(SegmentInfo sd)
 void MainWindow::On_editSegment_triggered()
 {
  SegmentInfo sd = sql->getSegmentInfo(ui->ssw->cbSegments()->currentData().toInt());
- EditSegmentDialog dlg(sd,this);
+ RouteData rd = sql->getRouteData(m_routeNbr,sd.segmentId(),m_currRouteStartDate, m_currRouteEndDate);
+ EditSegmentDialog dlg(&rd, sd,this);
  int ret = dlg.exec();
  if(ret == QDialog::Accepted)
   //refreshSegmentCB();

@@ -545,11 +545,13 @@ class SegmentInfo
  LatLng getStartLatLng() {return LatLng(_startLat, _startLon);}
  LatLng getEndLatLng() {return LatLng(_endLat, _endLon);}
  Bearing bearingStart() {
-  _bearingStart = Bearing(_startLat, _startLon, _pointList.at(1).lat(), _pointList.at(1).lon());
+  if(_pointList.count() > 1)
+   _bearingStart = Bearing(_startLat, _startLon, _pointList.at(1).lat(), _pointList.at(1).lon());
   return _bearingStart;
  }
  Bearing bearingEnd() {
-  _bearingEnd =  Bearing(_pointList.at(points-2).lat(), _pointList.at(points-2).lon(), _endLat, _endLon);
+  if(_pointList.count() > 1)
+   _bearingEnd =  Bearing(_pointList.at(points-2).lat(), _pointList.at(points-2).lon(), _endLat, _endLon);
   return _bearingEnd;
  }
  int next() const {return _next;}

@@ -5380,6 +5380,8 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate,
                             qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave,
                             QString oneWay, QString trackUsage) //16
 {
+    if(startDate.isNull() || endDate.isNull() || !startDate.isValid() || !endDate.isValid() || endDate < startDate)
+     throw IllegalArgumentException(tr("invalid dates"));
     bool ret = false;
     int rows = 0;
     if (routeNbr < 1)
@@ -9318,6 +9320,8 @@ bool SQL::deleteStation(qint32 stationKey)
 
 bool SQL::updateRoute(qint32 route, QString name, QString endDate, qint32 segmentId, qint32 next, qint32 prev, QString trackUsage)
 {
+ if(!QDate::fromString(endDate, "yyyy/MM/dd").isValid())
+  throw IllegalArgumentException(tr("invalid date '%1'").arg(endDate));
  bool ret = false;
  int rows = 0;
  QSqlDatabase db = QSqlDatabase::database();
@@ -9381,6 +9385,13 @@ bool SQL::updateRoute(RouteData rd)
 
 int SQL::updateRouteDate(int segmentId, QString startDate, QString endDate)
 {
+ QDate dateStart = QDate::fromString(startDate, "yyyy/MM/dd");
+ if(dateStart.isNull() || !dateStart.isValid())
+  throw IllegalArgumentException(tr("invalid start date '%1'").arg(startDate));
+ QDate dateEnd = QDate::fromString(endDate, "yyyy/MM/dd");
+ if(dateEnd.isNull() || !dateEnd.isValid() || dateEnd < dateStart)
+    throw IllegalArgumentException(tr("invalid end date '%1'").arg(endDate));
+
  QSqlDatabase db = QSqlDatabase::database();
  QString commandText = "Update Routes set startDate = '" + startDate
              + "', endDate='" + endDate+ "'"
