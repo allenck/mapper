@@ -1488,7 +1488,7 @@ QList<SegmentData> SQL::getRouteSegmentsInOrder(qint32 route, QString name, QStr
                   " b.startDate, b.endDate, c.length, c.tracks, c.pointArray, b.OneWay, b.TrackUsage, c.type,"
                   " b.tractionType"
                   " from Routes b join Segments c on c.segmentId = LineKey"
-                  " where b.Route = " + QString("%1").arg(route) + " and Name = '" + name + "'"
+                  " where b.Route = " + QString("%1").arg(route) + " and trim(b.Name) = '" + name + "'"
                   " and '" + date + "' between b.StartDate and b.endDate"
                   /*" and b.endDate <= '"+ date + "'*/" order by b.startDate, b.endDate, c.segmentid";
    else
@@ -1497,7 +1497,7 @@ QList<SegmentData> SQL::getRouteSegmentsInOrder(qint32 route, QString name, QStr
                   " b.startDate, b.endDate, c.length, c.tracks, c.pointArray, b.OneWay, b.TrackUsage, c.type,"
                   " b.tractionType"
                   " from Routes b join Segments c on c.segmentId = LineKey"
-                  " where b.Route = " + QString("%1").arg(route) + " and Name = '" + name + "'"
+                  " where b.Route = " + QString("%1").arg(route) + " and trim(b.Name) = '" + name + "'"
                   "  order by b.startDate, b.endDate, c.segmentid";
    // Note: 1st Query fails if route has a single segment
    QSqlQuery query = QSqlQuery(db);
