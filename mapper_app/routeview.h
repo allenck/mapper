@@ -75,6 +75,7 @@ private:
     QAction* selectSegmentAct;
     QAction *editSegmentAct;
     QAction* showColumnsAct;
+    QAction* convertToSingleTrackAct;
 
     QMenu *startTerminal;
     QMenu *endTerminal;

@@ -188,8 +188,11 @@ SegmentData::SegmentData(const SegmentData& o)
  _oneWay = o._oneWay;
  _direction = o._direction;
  _bounds = o._bounds;
+ _route = o._route;
+ _companyKey = o._companyKey;
+ _routeName = o._routeName;
 }
-#if 1
+
 // create a new SegmentData from a SegmentInfo
 SegmentData::SegmentData(const SegmentInfo& o)
 {
@@ -214,7 +217,7 @@ SegmentData::SegmentData(const SegmentInfo& o)
  if(points == 0 && pointList().count() > 0 )
   points = pointList().count();
 }
-#endif
+
 QString SegmentData::toString()
 {
  QString str;

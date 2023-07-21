@@ -295,6 +295,9 @@ public:
     void setTractionType(int t) {_tractionType = t;}
     int reverseEnter() {return _reverseEnter;}
     int reverseLeave() {return _reverseLeave;}
+    int route() {return _route;}
+    int companyKey() {return _companyKey;}
+    QString routeName() {return _routeName;}
     Bounds bounds() {
      LatLng _sw = LatLng(_startLat < _endLat ? _startLat : _endLat, _startLon < _endLon ? _startLon : _endLon );
      LatLng _ne = LatLng(_startLat > _endLat ? _startLat : _endLat, _startLon > _endLon ? _startLon : _endLon );
@@ -304,6 +307,7 @@ public:
  private:
     qint32 _segmentId=-1;
     qint8 _tracks;
+    int _route;
     RouteType _routeType;
     double _startLat, _startLon, _endLat, _endLon;
     double _length;
@@ -332,6 +336,9 @@ public:
      if(bounds.isValid())
       _bounds = bounds;
     }
+    int _companyKey = -1;
+    QString _routeName;
+
 
     friend class SQL;
 };
@@ -366,6 +373,7 @@ public:
     SegmentInfo* sd = nullptr;
     Bearing* bearing = nullptr;
     bool bNeedsUpdate = false;
+    RouteType routeType;
 
     QString toString();
 signals:

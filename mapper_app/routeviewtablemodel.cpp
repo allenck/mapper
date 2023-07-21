@@ -364,6 +364,7 @@ Qt::ItemFlags RouteViewTableModel::flags(const QModelIndex &index) const
     case SEGMENTID:
     case NAME:
      return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+    case TYPE:
     case ONEWAY: // 1Way
     case USAGE:
     case TRACTIONTYPE:
@@ -439,14 +440,14 @@ void RouteViewTableModel::commitChanges()
   }
 
   SQL::instance()->BeginTransaction("updateRoute");
-  if(sdOld.oneWay() != sd.oneWay()  || sdOld.length() != sd.length()  || sdOld.needsUpdate())
+  if(sdOld.oneWay() != sd.oneWay()  || sdOld.length() != sd.length()  || sdOld.needsUpdate() || sdOld.routeType() != sd.routeType())
   {
-   SQL::instance()->updateSegmentDescription(sd.segmentId(), sd.description(), /*sd.oneWay(),*/ sd.tracks(), sd.length());
+   SQL::instance()->updateSegmentDescription(sd.segmentId(), sd.description(), /*sd.oneWay(),*/ sd.tracks(), sd.length(), sd.routeType());
   }
 
   if(sd.oneWay() == "N")
    sd.setTrackUsage(" ");
-  if(sdOld.trackUsage() != sd.trackUsage() || sdOld.tractionType() != sd.tractionType())
+  if(sdOld.trackUsage() != sd.trackUsage() || sdOld.tractionType() != sd.tractionType() )
   {
    //if(!SQL::instance()->updateRoute(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"), rd.lineKey, rd.next, rd.prev, si.trackUsage ))
    rd.tractionType = sd.tractionType();

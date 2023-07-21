@@ -1287,7 +1287,7 @@ void SQL::populatePointList(SegmentData sd)
 
 SegmentInfo SQL::getSegmentInfo(qint32 SegmentId)
 {
- SegmentInfo sd;
+ SegmentInfo si;
 
  try
  {
@@ -1320,55 +1320,55 @@ SegmentInfo SQL::getSegmentInfo(qint32 SegmentId)
   if (!query.isActive())
   {
 
-      return sd;
+      return si;
   }
   while (query.next())
   {
-   sd._segmentId = query.value(0).toInt();
-   sd._description = query.value(1).toString();
-   sd._tracks = query.value(2). toInt();
-   sd._routeType = (RouteType)query.value(3).toInt();
-   sd._startLat = query.value(4).toDouble();
-   sd._startLon = query.value(5).toDouble();
-   sd._endLat = query.value(6).toDouble();
-   sd._endLon = query.value(7).toDouble();
-   sd._length = query.value(8).toDouble();
-   sd._startDate = query.value(9).toDate();
-   sd._endDate = query.value(10).toDate();
-   sd._direction = query.value(11).toString();
-   sd._streetName = query.value(12).toString();
-   sd.setPoints(query.value(13).toString());  // array of points
+   si._segmentId = query.value(0).toInt();
+   si._description = query.value(1).toString();
+   si._tracks = query.value(2). toInt();
+   si._routeType = (RouteType)query.value(3).toInt();
+   si._startLat = query.value(4).toDouble();
+   si._startLon = query.value(5).toDouble();
+   si._endLat = query.value(6).toDouble();
+   si._endLon = query.value(7).toDouble();
+   si._length = query.value(8).toDouble();
+   si._startDate = query.value(9).toDate();
+   si._endDate = query.value(10).toDate();
+   si._direction = query.value(11).toString();
+   si._streetName = query.value(12).toString();
+   si.setPoints(query.value(13).toString());  // array of points
   }
-  if((sd._startLat ==0 ||sd._startLat ==0 || sd._endLat == 0 || sd._endLon ==0) && sd._pointList.count() > 1 )
+  if((si._startLat ==0 ||si._startLat ==0 || si._endLat == 0 || si._endLon ==0) && si._pointList.count() > 1 )
   {
-   sd._startLat = sd._pointList.at(0).lat();
-   sd._startLon = sd._pointList.at(0).lon();
-   sd._endLat = sd._pointList.at(sd.points-1).lat();
-   sd._endLon = sd._pointList.at(sd.points-1).lon();
+   si._startLat = si._pointList.at(0).lat();
+   si._startLon = si._pointList.at(0).lon();
+   si._endLat = si._pointList.at(si.points-1).lat();
+   si._endLon = si._pointList.at(si.points-1).lon();
   }
-  sd._bearing = Bearing(sd._startLat, sd._startLon, sd._endLat, sd._endLon);
-  if(sd._pointList.count() > 1)
+  si._bearing = Bearing(si._startLat, si._startLon, si._endLat, si._endLon);
+  if(si._pointList.count() > 1)
   {
-   sd._bearingStart = Bearing(sd._startLat, sd._startLon, sd._pointList.at(1).lat(), sd._pointList.at(1).lon());
-   sd._bearingEnd = Bearing(sd._pointList.at(sd.points-2).lat(), sd._pointList.at(sd.points-2).lon(), sd._endLat, sd._endLon);
+   si._bearingStart = Bearing(si._startLat, si._startLon, si._pointList.at(1).lat(), si._pointList.at(1).lon());
+   si._bearingEnd = Bearing(si._pointList.at(si.points-2).lat(), si._pointList.at(si.points-2).lon(), si._endLat, si._endLon);
   }
-  sd._bounds = Bounds(query.value(13).toString());
-  if(sd._length == 0 && sd._pointList.count() > 1)
+  si._bounds = Bounds(query.value(13).toString());
+  if(si._length == 0 && si._pointList.count() > 1)
   {
    //sd._length = distance(LatLng(sd._startLat, sd._startLon), LatLng(sd._endLat, sd._endLon));
-   for(int i=0; i <  sd.points-2; i++)
-    sd._length += distance(sd._pointList.at(i), sd._pointList.at(i+1));
+   for(int i=0; i <  si.points-2; i++)
+    si._length += distance(si._pointList.at(i), si._pointList.at(i+1));
   }
 
 
-  return  sd;
+  return  si;
  }
  catch (Exception& e)
  {
     myExceptionHandler(e);
  }
 
- return sd;
+ return si;
 } 
 
 
@@ -1484,9 +1484,9 @@ QList<SegmentData> SQL::getRouteSegmentsInOrder(qint32 route, QString name, QStr
    QString  commandText;
    if(firstTry)
     commandText = "Select c.startLat, c.startLon, c.endLat, c.endLon, c.segmentId, c.description, c.oneWay, "
-                  "b.direction, b.next, b.prev, b.normalEnter, b.normalLeave, b.reverseEnter, b.reverseLeave,"
+                  " b.direction, b.next, b.prev, b.normalEnter, b.normalLeave, b.reverseEnter, b.reverseLeave,"
                   " b.startDate, b.endDate, c.length, c.tracks, c.pointArray, b.OneWay, b.TrackUsage, c.type,"
-                  " b.tractionType"
+                  " b.tractionType, b.route, b.companyKey, name"
                   " from Routes b join Segments c on c.segmentId = LineKey"
                   " where b.Route = " + QString("%1").arg(route) + " and trim(b.Name) = '" + name + "'"
                   " and '" + date + "' between b.StartDate and b.endDate"
@@ -1495,7 +1495,7 @@ QList<SegmentData> SQL::getRouteSegmentsInOrder(qint32 route, QString name, QStr
     commandText = "Select c.startLat, c.startLon, c.endLat, c.endLon, c.segmentId, c.description, c.oneWay,"
                   " b.direction, b.next, b.prev, b.normalEnter, b.normalLeave, b.reverseEnter, b.reverseLeave"
                   " b.startDate, b.endDate, c.length, c.tracks, c.pointArray, b.OneWay, b.TrackUsage, c.type,"
-                  " b.tractionType"
+                  " b.tractionType, b.route, b.companyKey, name"
                   " from Routes b join Segments c on c.segmentId = LineKey"
                   " where b.Route = " + QString("%1").arg(route) + " and trim(b.Name) = '" + name + "'"
                   "  order by b.startDate, b.endDate, c.segmentid";
@@ -1561,6 +1561,9 @@ QList<SegmentData> SQL::getRouteSegmentsInOrder(qint32 route, QString name, QStr
     sd._trackUsage = query.value(20).toString();
     sd._routeType = (RouteType)query.value(21).toInt();
     sd._tractionType = query.value(22).toInt();
+    sd._route = query.value(23).toInt();
+    sd._companyKey = query.value(24).toInt();
+    sd._routeName = query.value(25).toString();
     if(sd._tractionType < 0)
      qDebug() << tr("invalid tractionType") << sd.tractionType();
     sd._bearing = Bearing(sd._startLat, sd._startLon, sd._endLat, sd._endLon);
@@ -3075,7 +3078,7 @@ double SQL::Distance(double Lat1, double Lon1, double Lat2, double Lon2)
     return d; // distance in kilometers
 }
 
-bool SQL::updateSegmentDescription(qint32 SegmentId, QString description, /*QString oneWay,*/ int tracks, double length)
+bool SQL::updateSegmentDescription(qint32 SegmentId, QString description, /*QString oneWay,*/ int tracks, double length, RouteType type)
 {
  qint32 rows = 0;
 
@@ -3092,7 +3095,8 @@ bool SQL::updateSegmentDescription(qint32 SegmentId, QString description, /*QStr
  QString commandText = "update Segments set description = '" + description +
    "', oneWay = '" + oneWay + "', tracks="+QString::number(tracks) +
    ", street = '" +street +
-   "', length=" +QString::number(length,'g',8)+
+   "', length=" +QString::number(length,'g',8) +
+   ", type = " +QString::number(type) +
    ", lastUpdate=:lastUpdate where SegmentId = " + QString("%1").arg(SegmentId);
  QSqlQuery query = QSqlQuery(db);
  query.prepare(commandText);
@@ -6866,17 +6870,18 @@ qint32 SQL::addSegment(SegmentInfo sd, bool *bAlreadyExists, bool forceInsert)
  {
   qDebug() << "Warning segment '" << sd._description << "' has less than two points!!";
  }
- commandText = "Insert into Segments (street, Description, OneWay, type, pointArray, tracks, "
+ commandText = "Insert into Segments (street, Description, /*OneWay,*/ type, pointArray, points, tracks, "
                "startLat, startlon, endLat, endLon, length, Direction, startDate, endDate) "
                "values ('" +street+"','" + sd._description + "', "/*'" + sd._oneWay + "',"*/
                + QString("%1").arg((qint32)sd._routeType) + ",'"
                + pointArray+ "', "
+               + QString("%1").arg(sd.points) + ", "
                + QString::number(sd._tracks) + ", "
                //+ ",0,0,0,0,0"
                + QString("%1").arg(sd._startLat,0,'f',8) + ", "
                + QString("%1").arg(sd._startLon,0,'f',8) + ", "
                + QString("%1").arg(sd._endLat,0,'f',8) + ", "
-               + QString("%1").arg(sd._endLat,0,'f',8) + ", "
+               + QString("%1").arg(sd._endLon,0,'f',8) + ", "
                + QString("%1").arg(sd._length,0,'f',8) + ", "
                //+ ", ' ', '1800/01/01'"
                + "'" + sd._direction + "', "
@@ -7230,7 +7235,7 @@ RouteData SQL::getRouteData(qint32 route, qint32 SegmentId, QString startDate, Q
 
  QString commandText = "Select a.route, name, a.startDate, a.endDate, a.companyKey, a.tractionType,"
                        "b.routeAlpha, a.OneWay, a.TrackUsage, "
-                       "s.startLat, s.startLon, s.endLat, s.endLon, s.tracks, s.description "
+                       "s.startLat, s.startLon, s.endLat, s.endLon, s.tracks, s.description, s.Type "
                        " from Routes a "
                        " join Segments s on a.linekey = s.segmentId "
                        " join altRoute b on a.route = b.route"
@@ -7268,6 +7273,7 @@ RouteData SQL::getRouteData(qint32 route, qint32 SegmentId, QString startDate, Q
   rd.bearing = new Bearing(query.value(8).toDouble(),query.value(9).toDouble(), query.value(10).toDouble(),query.value(11).toDouble());
   rd.sd->_tracks = query.value(12).toInt();
   rd.sd->_description = query.value(13).toString();
+  rd.routeType = (RouteType)query.value(14).toInt();
  }
 
 
@@ -9361,6 +9367,7 @@ bool SQL::updateRoute(RouteData rd)
              + ", oneWay  = '" + rd.oneWay + "'"
              + ", prev =" + QString("%1").arg(rd.prev)
              + ", tractionType =" + QString("%1").arg(rd.tractionType)
+             + ", routeType = " + QString("%1").arg(rd.routeType)
              + ", lastUpdate=:lastUpdate"
              " where route ="+QString("%1").arg(rd.route)
              + " and name ='"+rd.name+"' and endDate='"+rd.endDate.toString("yyyy/MM/dd")
@@ -10452,7 +10459,7 @@ bool SQL::createSqlDatabase(QString dbName, QSqlDatabase db, QString dbType)
 // return list;
 //}
 
-QStringList SQL:: showMySqlDatabases(QSqlDatabase db)
+QStringList SQL::showMySqlDatabases(QSqlDatabase db)
 {
  QStringList list;
  if(!db.isOpen())
@@ -10473,7 +10480,7 @@ QStringList SQL:: showMySqlDatabases(QSqlDatabase db)
  return list;
 }
 
-QStringList SQL:: showMsSqlDatabases(QSqlDatabase db)
+QStringList SQL::showMsSqlDatabases(QSqlDatabase db)
 {
  QStringList list;
  if(!db.isOpen())
@@ -10492,4 +10499,126 @@ QStringList SQL:: showMsSqlDatabases(QSqlDatabase db)
  return list;
 }
 
+// create a duplicate segment with a different number of tracks
+SegmentInfo SQL::convertSegment(int segmentId, int tracks)
+{
+ SegmentInfo si = getSegmentInfo(segmentId);
+ if(si.segmentId()< 1)
+  return si;
 
+ // see if another segment exists with the same starting and ending points.
+ SegmentInfo si1;
+ try
+ {
+  if(!dbOpen())
+      throw Exception(tr("database not open: %1").arg(__LINE__));
+  QSqlDatabase db = QSqlDatabase::database();
+  QString commandText;
+
+  if(config->currConnection->servertype() != "MsSql")
+       commandText = "Select `SegmentId`, Description, tracks, type,"
+                     " StartLat, StartLon, EndLat, EndLon, length, StartDate, EndDate, Direction,"
+                     " Street, pointArray from Segments"
+                     " where tracks = " + QString("%1").arg(tracks)
+                     + " and distance(startLat, startLon, "
+                     + QString("%1").arg(si.startLat()) + ", " + QString("%1").arg(si.startLon())+ ") < .020 and "
+                     + " distance(endLat, endLon, "
+                     + QString("%1").arg(si.endLat()) + ", " + QString("%1").arg(si.endLon()) + ") < .020";
+  else
+       commandText = "Select `SegmentId`, Description, tracks, type,"
+                     " StartLat, StartLon, EndLat, EndLon, length, StartDate, EndDate, Direction,"
+                     " Street, pointArray from Segments"
+                     " where tracks = " + QString("%1").arg(tracks)
+                     + " and distance(startLat, startLon, "
+                     + QString("%1").arg(si.startLat()) + ", " + QString("%1").arg(si.startLon())+ ") < .020 and "
+                     + " distance(endLat, endLon, "
+                     + QString("%1").arg(si.endLat()) + ", " + QString("%1").arg(si.endLon()) + ") < .020";
+  QSqlQuery query = QSqlQuery(db);
+//  bool bQuery = query.prepare(commandText);
+//  if(!bQuery)
+//  {
+//   SQLERROR(query);
+//      db.close();
+//      exit(EXIT_FAILURE);
+//  }
+//  query.bindValue(":startLat", si.startLat());
+//  query.bindValue(":startLon", si.startLon());
+//  query.bindValue(":endLat", si.endLat());
+//  query.bindValue(":endLon", si.endLon());
+
+  bool bQuery = query.exec(commandText);
+  qDebug() << query.lastQuery() << " line:" <<__LINE__;
+
+  if(!bQuery)
+  {
+      QSqlError err = query.lastError();
+      qDebug() << err.text() + "\n";
+      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+      db.close();
+      exit(EXIT_FAILURE);
+  }
+  if (!query.isActive())
+  {
+    // no dup segment exists
+   si._segmentId = -1;
+   si._tracks = tracks;
+   bool alreadyExists = false;
+   int newSegmentId = addSegment(si, &alreadyExists,false);
+   si._segmentId = newSegmentId;
+      return si;
+  }
+  while (query.next())
+  {
+   si1._segmentId = query.value(0).toInt();
+   si1._description = query.value(1).toString();
+   si1._tracks = query.value(2). toInt();
+   si1._routeType = (RouteType)query.value(3).toInt();
+   si1._startLat = query.value(4).toDouble();
+   si1._startLon = query.value(5).toDouble();
+   si1._endLat = query.value(6).toDouble();
+   si1._endLon = query.value(7).toDouble();
+   si1._length = query.value(8).toDouble();
+   si1._startDate = query.value(9).toDate();
+   si1._endDate = query.value(10).toDate();
+   si1._direction = query.value(11).toString();
+   si1._streetName = query.value(12).toString();
+   si1.setPoints(query.value(13).toString());  // array of points
+
+   if((si1._startLat ==0 ||si1._startLat ==0 || si1._endLat == 0 || si1._endLon ==0) && si1._pointList.count() > 1 )
+   {
+    si1._startLat = si1._pointList.at(0).lat();
+    si1._startLon = si1._pointList.at(0).lon();
+    si1._endLat = si1._pointList.at(si1.points-1).lat();
+    si1._endLon = si1._pointList.at(si1.points-1).lon();
+   }
+   si1._bearing = Bearing(si1._startLat, si1._startLon, si1._endLat, si1._endLon);
+   if(si1._pointList.count() > 1)
+   {
+    si1._bearingStart = Bearing(si1._startLat, si1._startLon, si1._pointList.at(1).lat(), si1._pointList.at(1).lon());
+    si1._bearingEnd = Bearing(si1._pointList.at(si1.points-2).lat(), si1._pointList.at(si1.points-2).lon(), si1._endLat, si1._endLon);
+   }
+   si1._bounds = Bounds(query.value(13).toString());
+   if(si1._length == 0 && si1._pointList.count() > 1)
+   {
+    //sd._length = distance(LatLng(sd._startLat, sd._startLon), LatLng(sd._endLat, sd._endLon));
+    for(int i=0; i <  si1.points-2; i++)
+    si1._length += distance(si1._pointList.at(i), si1._pointList.at(i+1));
+   }
+  }
+ }
+ catch (Exception& e)
+ {
+    myExceptionHandler(e);
+ }
+ if(si1.segmentId() < 0)
+ {
+     si._segmentId = -1;
+     bool alreadyExists = false;
+     si._tracks = tracks;
+     int newSegmentId = addSegment(si, &alreadyExists,true);
+     si._segmentId = newSegmentId;
+        return si;
+ }
+ return si1; // already exists
+
+}

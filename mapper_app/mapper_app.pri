@@ -6,6 +6,7 @@ SOURCES += main.cpp\
     $$PWD/overlay.cpp \
     $$PWD/replacesegmentdialog.cpp \
     $$PWD/routeselector.cpp \
+    $$PWD/rtitemdelegate.cpp \
     $$PWD/segmentselectionwidget.cpp \
     $$PWD/splitsegmentdlg.cpp \
     $$PWD/ttitemdelegate.cpp \
@@ -78,6 +79,7 @@ HEADERS  += mainwindow.h \
     $$PWD/overlay.h \
     $$PWD/replacesegmentdialog.h \
     $$PWD/routeselector.h \
+    $$PWD/rtitemdelegate.h \
     $$PWD/segmentselectionwidget.h \
     $$PWD/splitsegmentdlg.h \
     $$PWD/ttitemdelegate.h \

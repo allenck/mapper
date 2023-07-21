@@ -6,6 +6,7 @@
 #include "webviewbridge.h"
 #include "otherrouteview.h"
 #include "ttitemdelegate.h"
+#include "rtitemdelegate.h"
 
 RouteView::RouteView(QObject* parent )
 {
@@ -90,6 +91,23 @@ RouteView::RouteView(QObject* parent )
      ui->setColumnHidden(RouteViewTableModel::PREV, b);
      ui->setColumnHidden(RouteViewTableModel::SEQ, b);
      ui->setColumnHidden(RouteViewTableModel::RSEQ, b);
+    });
+
+    convertToSingleTrackAct = new QAction(tr("Convert to single track"),this);
+    connect(convertToSingleTrackAct, &QAction::triggered, [=]{
+     QItemSelectionModel * model = ui->selectionModel();
+     QModelIndexList indexes = model->selectedIndexes();
+     qint32 segmentId = indexes.at(0).data().toInt();
+     QModelIndex ix = proxymodel->mapToSource(indexes.at(0));
+     SegmentData sd = sourceModel->listOfSegments.at(ix.row());
+     SegmentInfo si = SQL::instance()->convertSegment(segmentId, 1);
+     if(si.segmentId() > 0 && si.segmentId() != sd.segmentId()){
+      bool ok = SQL::instance()->deleteRouteSegment(sd.route(), sd.routeName(),sd.segmentId(), sd.startDate().toString("yyyy/MM/dd"), sd.endDate().toString("yyyy/MM/dd"));
+      qDebug() << "old segment deleted " << sd.segmentId() << ok;
+      ok = SQL::instance()->addSegmentToRoute(sd.route(),sd.routeName(), sd.startDate(),sd.endDate(), si.segmentId(),sd.companyKey(),
+                                         sd.tractionType(),sd.direction(), -1, -1, 0,0,0,0,"N", " ");
+      qDebug() << "new segment added " << si.segmentId() << ok;
+     }
     });
     //connect(saveChangesAct, SIGNAL(triggered()), sourceModel, SLOT(commitChanges()));
     connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(commitChanges()));
@@ -191,6 +209,15 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
 
      menu.addAction(editSegmentAct);
      menu.addAction(showColumnsAct);
+
+     {
+      QItemSelectionModel * model = ui->selectionModel();
+      QModelIndexList indexes = model->selectedIndexes();
+      qint32 segmentId = indexes.at(0).data().toInt();
+      SegmentInfo sd = SQL::instance()->getSegmentInfo(segmentId);
+      if(sd.tracks()==2)
+       menu.addAction(convertToSingleTrackAct);
+     }
      if(sourceModel->changedRows.count() > 0)
      {
          menu.addSeparator();
@@ -373,6 +400,7 @@ void RouteView::updateRouteView()
     ui->horizontalHeader()->resizeSection(8,65);
     ui->horizontalHeader()->resizeSection(9,65);
     ui->setItemDelegateForColumn(sourceModel->TRACTIONTYPE, new TTItemDelegate());
+    ui->setItemDelegateForColumn(sourceModel->TYPE, new RTItemDelegate());
     //populateList();
 }
 void RouteView::populateList()
@@ -653,85 +681,6 @@ void RouteView::unDeleteSegment()
     sourceModel->unDeleteRow(segmentId, ix);
 }
 
-//bool sortbyrow( const RowChanged & s1 , const RowChanged & s2 )
-//{
-//    return s1.row > s2.row;
-//}
-
-//void RouteView::commitChanges()
-//{
-// //mainWindow * myParent = qobject_cast<mainWindow*>(m_parent);
-
-// // sort rows in descending sequence.
-// qSort(*sourceModel->changedRows.begin(),*sourceModel->changedRows.end(), sortbyrow );
-
-// for(int i=0; i < sourceModel->changedRows.count(); i++)
-// {
-//  int row = sourceModel->changedRows.at(i)->row;
-//  //SegmentInfo si = sourceModel->getList().at(row);
-//  SegmentInfo si = saveSegmentInfoList.at(row);
-////  for(int j = 0; j < sourceModel->listOfSegments.count(); j++)
-////  {
-////   if(sourceModel->listOfSegments.at(j).segmentId == sourceModel->changedRows.at(i)->segmentId)
-////   {
-////    si = sourceModel->listOfSegments.at(j);
-////    break;
-////   }
-////  }
-//  if(si.segmentId != sourceModel->changedRows.at(i)->segmentId)
-//  {
-//      qDebug() << "Error, wrong segmentId found!";
-//      return;
-//  }
-//  //segmentInfo siOld = segmentInfoList.at(row);
-//  SegmentInfo siOld = saveSegmentInfoList.at(row);
-
-//  RouteData rd = SQL::instance()->getRouteData(route, siOld.segmentId, siOld.startDate, siOld.endDate);
-//  if(rd.route <= 0)
-//  {
-//      qDebug()<< "route data not found";
-//      qDebug() << "route="+ QString("%1").arg(route)+ " segmentId="+ QString("%1").arg(siOld.segmentId)+ " "+ siOld.startDate + " "+siOld.endDate;
-//      return;
-//  }
-
-//  SQL::instance()->BeginTransaction("updateRoute");
-//  if(siOld.oneWay != si.oneWay || siOld.tracks != si.tracks || siOld.length != si.length  || siOld.bNeedsUpdate)
-//  {
-//   SQL::instance()->updateSegmentDescription(si.segmentId, si.description, si.oneWay, si.tracks, si.length);
-//  }
-
-//  if(!SQL::instance()->deleteRouteSegment(route, name, si.segmentId, siOld.startDate, siOld.endDate))
-//      return;
-//  if(siOld.startDate < startDate)
-//  {
-//   // add back segment used before route start date
-//   QString newEndDate = QDate::fromString(startDate, "yyyy/MM/dd").addDays(-1).toString("yyyy/MM/dd");
-//   if(!SQL::instance()->addSegmentToRoute(route, name, startDate, newEndDate, si.segmentId, rd.companyKey, rd.tractionType, si.bearing.strDirection(),si.next, si.prev, si.normalEnter, si.normalLeave, si.reverseEnter, si.reverseLeave))
-//       return;
-//  }
-//  if(siOld.endDate > endDate)
-//  {
-//   QString newStartDate = QDate::fromString(endDate, "yyyy/MM/dd").addDays(-1).toString("yyyy/MM/dd");
-//   if(!SQL::instance()->addSegmentToRoute(route, name, newStartDate, endDate, si.segmentId, rd.companyKey, rd.tractionType, si.bearing.strDirection(),si.next, si.prev, si.normalEnter, si.normalLeave, si.reverseEnter, si.reverseLeave))
-//       return;
-//  }
-//  if(sourceModel->changedRows.at(i)->bDeleted)
-//  {
-//   //myParent->ProcessScript("clearPolyline", QString("%1").arg(si.segmentId));
-//   webViewBridge::instance()->processScript("clearPolyline", QString("%1").arg(si.segmentId));
-//  }
-//  if(sourceModel->changedRows.at(i)->bChanged && !sourceModel->changedRows.at(i)->bDeleted)
-//  {
-//      if(!SQL::instance()->addSegmentToRoute(route, name, si.startDate, si.endDate, si.segmentId, rd.companyKey, rd.tractionType, si.bearing.strDirection(),si.next, si.prev, si.normalEnter, si.normalLeave, si.reverseEnter, si.reverseLeave))
-//          return;
-//  }
-//  SQL::instance()->CommitTransaction("updateRoute");
-//  sourceModel->removeRow(row);
-// }
-// sourceModel->changedRows.clear();
-// //myParent->refreshRoutes();
-// emit refreshRoutes();
-//}
 void RouteView::commitChanges()
 {
  sourceModel->commitChanges();

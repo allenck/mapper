@@ -75,7 +75,7 @@ public:
     QList<SegmentData> getIntersectingSegments(double lat, double lon, double radius);
     QList<SegmentInfo> getIntersectingSegments(double lat, double lon, double radius, RouteType type);
     bool updateRecord(SegmentInfo sd);
-    bool updateSegmentDescription(qint32 SegmentId, QString description, int tracks, double length);
+    bool updateSegmentDescription(qint32 SegmentId, QString description, int tracks, double length, RouteType type);
     QList<CompanyData *> getCompanies();
     CompanyData *getCompany(qint32 companyKey);
     QList<RouteData> getRouteSegmentsForDate(qint32 route, QString name, QString date);
@@ -203,6 +203,7 @@ public:
     QStringList  showMySqlDatabases(QSqlDatabase db);
     QStringList showMsSqlDatabases(QSqlDatabase db);
     int sqlErrorMessage(QSqlQuery query, QMessageBox::StandardButtons buttons);
+    SegmentInfo convertSegment(int segmentId, int tracks);
 
 signals:
     void details(QString);
