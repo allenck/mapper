@@ -39,7 +39,7 @@ void ModifyRouteTractionTypeDlg::setRouteData(QList<RouteData> routeList, int cu
  ui->comboBox->findData(rd.tractionType);
 }
 
-RouteData* ModifyRouteTractionTypeDlg::getRouteData()
+RouteData *ModifyRouteTractionTypeDlg::getRouteData()
 {
  return _rd;
 }

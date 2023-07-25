@@ -2927,7 +2927,7 @@ void MainWindow::txtSegment_Leave( )
  if (bSegmentChanged)
  {
   SegmentInfo sd = sql->getSegmentInfo(m_SegmentId);
-  sql->updateSegmentDescription(m_SegmentId, ui->txtSegment->text(), /*sd.oneWay(),*/ ui->sbTracks->value(), sd.length(), sd.routeType());
+  sql->updateSegmentDetails(m_SegmentId, ui->txtSegment->text(), /*sd.oneWay(),*/ ui->sbTracks->value(), sd.length(), sd.routeType());
   bSegmentChanged = false;
   int segmentId = m_SegmentId;
 //  refreshSegmentCB();

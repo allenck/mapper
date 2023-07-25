@@ -48,11 +48,11 @@ public:
      ENDDATE
     };
     int getRow(int segmentId);
-    void commitChanges();
+    bool commitChanges();
 
 signals:
     void rowChange(qint32 row, qint32 segmentid, bool bDeleted, bool bChanged);
-    void refreshRoutes();
+    //void refreshRoutes();
 
 public slots:
     void getRows(int, int); // to get the row numbers that need to be highlighted

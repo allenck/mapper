@@ -75,7 +75,7 @@ public:
     QList<SegmentData> getIntersectingSegments(double lat, double lon, double radius);
     QList<SegmentInfo> getIntersectingSegments(double lat, double lon, double radius, RouteType type);
     bool updateRecord(SegmentInfo sd);
-    bool updateSegmentDescription(qint32 SegmentId, QString description, int tracks, double length, RouteType type);
+    bool updateSegmentDetails(qint32 SegmentId, QString description, int tracks, double length, RouteType type);
     QList<CompanyData *> getCompanies();
     CompanyData *getCompany(qint32 companyKey);
     QList<RouteData> getRouteSegmentsForDate(qint32 route, QString name, QString date);
@@ -154,6 +154,7 @@ public:
     QList<StationInfo> getStationsLikeName(QString);
     QT_DEPRECATED bool updateRoute(qint32 route, QString name, QString endDate, qint32 segmentId, qint32 next, qint32 prev, QString trackUsage);
     bool updateRoute(RouteData rd);
+    bool updateRoute(SegmentData sd);
     int updateRouteDate(int segmentId, QString startDate, QString endDate);
     int updateRouteSegment(int segmentId, QString startDate, QString endDate, int newSegment);
     QDate getFirstCommentDate(qint32 route, QDate date, qint32 companyKey);

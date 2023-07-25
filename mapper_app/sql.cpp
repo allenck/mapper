@@ -3078,7 +3078,7 @@ double SQL::Distance(double Lat1, double Lon1, double Lat2, double Lon2)
     return d; // distance in kilometers
 }
 
-bool SQL::updateSegmentDescription(qint32 SegmentId, QString description, /*QString oneWay,*/ int tracks, double length, RouteType type)
+bool SQL::updateSegmentDetails(qint32 SegmentId, QString description, int tracks, double length, RouteType type)
 {
  qint32 rows = 0;
 
@@ -9372,6 +9372,39 @@ bool SQL::updateRoute(RouteData rd)
              " where route ="+QString("%1").arg(rd.route)
              + " and name ='"+rd.name+"' and endDate='"+rd.endDate.toString("yyyy/MM/dd")
              +"' and lineKey="+QString("%1").arg(rd.lineKey);
+ QSqlQuery query = QSqlQuery(db);
+ query.prepare(commandText);
+ query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
+ bool bQuery = query.exec();
+ if(!bQuery)
+ {
+     QSqlError err = query.lastError();
+     qDebug() << err.text() + "\n";
+     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+     db.close();
+     exit(EXIT_FAILURE);
+ }
+ rows = query.numRowsAffected();
+ if (rows > 0)
+     ret = true;
+ return ret;
+}
+
+bool SQL::updateRoute(SegmentData sd)
+{
+ bool ret = false;
+ int rows = 0;
+ QSqlDatabase db = QSqlDatabase::database();
+
+ QString commandText = "update Routes set next = " + QString("%1").arg(sd.next())
+             + ", trackUsage  = '" + sd.trackUsage() + "'"
+             + ", oneWay  = '" + sd.oneWay() + "'"
+             + ", prev =" + QString("%1").arg(sd.prev())
+             + ", tractionType =" + QString("%1").arg(sd.tractionType())
+             + ", lastUpdate=:lastUpdate"
+             " where route ="+QString("%1").arg(sd.route())
+             + " and name ='"+sd.routeName()+"' and endDate='"+sd.endDate().toString("yyyy/MM/dd")
+             +"' and lineKey="+QString("%1").arg(sd.segmentId());
  QSqlQuery query = QSqlQuery(db);
  query.prepare(commandText);
  query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());

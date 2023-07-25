@@ -17,7 +17,7 @@ class ModifyRouteTractionTypeDlg : public QDialog
   ~ModifyRouteTractionTypeDlg();
   void setConfiguration(Configuration* config);
   void setRouteData(QList<RouteData> routeList, int currentIx);
-  RouteData* getRouteData();
+  RouteData *getRouteData();
 
  private:
   Ui::ModifyRouteTractionTypeDlg *ui;

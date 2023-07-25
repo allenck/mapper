@@ -89,6 +89,7 @@ private:
     QModelIndex currentIndex;
     checkRoute *chk;
     RouteData rd;
+    MainWindow* myParent;
 
 private slots:
     void tablev_customContextMenu( const QPoint& );

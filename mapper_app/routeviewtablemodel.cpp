@@ -274,6 +274,9 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
   case TRACTIONTYPE:
    sd.setTractionType(value.toInt());
    break;
+  case TYPE:
+   sd.setRouteType((RouteType)value.toInt());
+   break;
 //  case TRACKS:
 //    tracks = value.toInt();
 //    if(tracks == 1 || tracks == 2)
@@ -296,7 +299,6 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
         sd.setEndDate(value.toDate());
       }
       break;
-
   }
   listOfSegments.replace(row, sd);
 
@@ -412,7 +414,7 @@ bool sortbyrow( const RowChanged & s1 , const RowChanged & s2 )
     return s1.row > s2.row;
 }
 
-void RouteViewTableModel::commitChanges()
+bool RouteViewTableModel::commitChanges()
 {
  //mainWindow * myParent = qobject_cast<mainWindow*>(m_parent);
 
@@ -426,23 +428,23 @@ void RouteViewTableModel::commitChanges()
   if(sd.segmentId() != changedRows.at(i)->segmentId)
   {
       qDebug() << "Error, wrong segmentId found! " << sd.segmentId() << " vs << changedRows.at(i)->segmentId";
-      return;
+      return false;
   }
   //segmentInfo siOld = segmentInfoList.at(row);
   SegmentData sdOld = saveSegmentDataList.at(row);
 
-  RouteData rd = SQL::instance()->getRouteData(route, sd.segmentId(), sd.startDate().toString("yyyy/MM/dd"), sd.endDate().toString("yyyy/MM/dd"));
-  if(rd.route <= 0)
-  {
-      qDebug()<< "route data not found:";
-      qDebug() << " route="+ QString("%1").arg(route)+ " segmentId="+ QString("%1").arg(sdOld.segmentId())+ " "+ sdOld.startDate().toString("yyyy/MM/dd")+ " "+sdOld.endDate().toString("yyyy/MM/dd");
-      throw RecordNotFoundException(tr("route not found: %1, segment: %2 %3 %4").arg(route).arg(sdOld.segmentId()).arg(sdOld.startDate().toString("yyyy/MM/dd")).arg(sdOld.endDate().toString("yyyy/MM/dd")));
-  }
+//  RouteData rd = SQL::instance()->getRouteData(route, sd.segmentId(), sd.startDate().toString("yyyy/MM/dd"), sd.endDate().toString("yyyy/MM/dd"));
+//  if(rd.route <= 0)
+//  {
+//      qDebug()<< "route data not found:";
+//      qDebug() << " route="+ QString("%1").arg(route)+ " segmentId="+ QString("%1").arg(sdOld.segmentId())+ " "+ sdOld.startDate().toString("yyyy/MM/dd")+ " "+sdOld.endDate().toString("yyyy/MM/dd");
+//      throw RecordNotFoundException(tr("route not found: %1, segment: %2 %3 %4").arg(route).arg(sdOld.segmentId()).arg(sdOld.startDate().toString("yyyy/MM/dd")).arg(sdOld.endDate().toString("yyyy/MM/dd")));
+//  }
 
   SQL::instance()->BeginTransaction("updateRoute");
   if(sdOld.oneWay() != sd.oneWay()  || sdOld.length() != sd.length()  || sdOld.needsUpdate() || sdOld.routeType() != sd.routeType())
   {
-   SQL::instance()->updateSegmentDescription(sd.segmentId(), sd.description(), /*sd.oneWay(),*/ sd.tracks(), sd.length(), sd.routeType());
+   SQL::instance()->updateSegmentDetails(sd.segmentId(), sd.description(), /*sd.oneWay(),*/ sd.tracks(), sd.length(), sd.routeType());
   }
 
   if(sd.oneWay() == "N")
@@ -450,30 +452,30 @@ void RouteViewTableModel::commitChanges()
   if(sdOld.trackUsage() != sd.trackUsage() || sdOld.tractionType() != sd.tractionType() )
   {
    //if(!SQL::instance()->updateRoute(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"), rd.lineKey, rd.next, rd.prev, si.trackUsage ))
-   rd.tractionType = sd.tractionType();
-   if(!SQL::instance()->updateRoute(rd))
-    return;
+   //rd.tractionType = sd.tractionType();
+   if(!SQL::instance()->updateRoute(sd))
+    return false;
   }
 
   if(!SQL::instance()->deleteRouteSegment(route, name, sd.segmentId(), sdOld.startDate().toString("yyyy/MM/dd"), sdOld.endDate().toString("yyyy/MM/dd")))
-      return;
+      return false;
   if(sdOld.startDate() < startDate)
   {
    // add back segment used before route start date
    QDate newEndDate = startDate.addDays(-1);
-   if(!SQL::instance()->addSegmentToRoute(route, name, sd.startDate(), newEndDate, sd.segmentId(), rd.companyKey,
-                                          rd.tractionType, sd.bearing().strDirection(),sd.next(), sd.prev(),
-                                          sd.normalEnter(), sd.normalLeave(), sd.reverseEnter(), sd.reverseLeave(), rd.oneWay, sd.trackUsage()))
-       return;
+   if(!SQL::instance()->addSegmentToRoute(route, name, sd.startDate(), newEndDate, sd.segmentId(), sd.companyKey(),
+                                          sd.tractionType(), sd.bearing().strDirection(),sd.next(), sd.prev(),
+                                          sd.normalEnter(), sd.normalLeave(), sd.reverseEnter(), sd.reverseLeave(), sd.oneWay(), sd.trackUsage()))
+       return false;
   }
 
   if(sdOld.endDate() > endDate)
   {
    QDate newStartDate = endDate.addDays(+1);
-   if(!SQL::instance()->addSegmentToRoute(route, name, newStartDate, sd.endDate(), sd.segmentId(), rd.companyKey,
-                                          rd.tractionType, sd.bearing().strDirection(),sd.next(), sd.prev(),
-                                          sd.normalEnter(), sd.normalLeave(), sd.reverseEnter(), sd.reverseLeave(), rd.oneWay, sd.trackUsage()))
-       return;
+   if(!SQL::instance()->addSegmentToRoute(route, name, newStartDate, sd.endDate(), sd.segmentId(), sd.companyKey(),
+                                          sd.tractionType(), sd.bearing().strDirection(),sd.next(), sd.prev(),
+                                          sd.normalEnter(), sd.normalLeave(), sd.reverseEnter(), sd.reverseLeave(), sd.oneWay(), sd.trackUsage()))
+       return false;
   }
   if(changedRows.at(i)->bDeleted)
   {
@@ -483,10 +485,10 @@ void RouteViewTableModel::commitChanges()
   if(changedRows.at(i)->bChanged && !changedRows.at(i)->bDeleted)
   {
       if(!SQL::instance()->addSegmentToRoute(route, name, sd.startDate(), sd.endDate(),
-                                             sd.segmentId(), rd.companyKey, rd.tractionType,
+                                             sd.segmentId(),sd.companyKey(), sd.tractionType(),
                                              sd.bearing().strDirection(),sd.next(), sd.prev(), sd.normalEnter(), sd.normalLeave(),
                                              sd.reverseEnter(), sd.reverseLeave(), sd.oneWay(), sd.trackUsage()))
-          return;
+          return false;
   }
   if(changedRows.at(i)->bDeleted)
    removeRow(row);
@@ -499,8 +501,9 @@ void RouteViewTableModel::commitChanges()
  }
  changedRows.clear();
  //myParent->refreshRoutes();
- emit refreshRoutes();
-//    updateRouteView();
+ //emit refreshRoutes();
+ //updateRouteView();
+ return true;
 }
 
 

@@ -35,7 +35,7 @@ class SegmentSelectionWidget : public QWidget
   void cbSegments_editingFinished();
 
  signals:
-  void segmentSelected(SegmentInfo sd);
+  void segmentSelected(SegmentData sd);
 
  private:
   Ui::SegmentSelectionWidget *ui;

@@ -15,7 +15,7 @@ RouteView::RouteView(QObject* parent )
     config = Configuration::instance();
 
     //sql.setConfig(config);
-    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
+    myParent = qobject_cast<MainWindow*>(m_parent);
     ui = myParent->ui->tblRouteView;
     connect(ui->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
 
@@ -683,7 +683,12 @@ void RouteView::unDeleteSegment()
 
 void RouteView::commitChanges()
 {
- sourceModel->commitChanges();
+ bool rslt = sourceModel->commitChanges();
+ if(rslt)
+ {
+  myParent->refreshRoutes();
+  myParent->btnDisplayRouteClicked();
+ }
 }
 
 bool RouteView::bUncomittedChanges()
