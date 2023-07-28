@@ -266,10 +266,14 @@ public:
     }
     void setBearing(Bearing bearing){_bearing = bearing;}
     Bearing bearingStart() {
+     if(_pointList.count() < 2)
+      return _bearing;
      _bearingStart = Bearing(_startLat, _startLon, _pointList.at(1).lat(), _pointList.at(1).lon());
      return _bearingStart;
     }
     Bearing bearingEnd() {
+     if(_pointList.count() < 2)
+      return _bearing;
      _bearingEnd =  Bearing(_pointList.at(points-2).lat(), _pointList.at(points-2).lon(), _endLat, _endLon);
      return _bearingEnd;
     }
