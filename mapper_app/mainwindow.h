@@ -135,6 +135,7 @@ public:
 
     QList<RouteData> routeList;
     QAction *saveChangesAct;
+    QAction *discardChangesAct;
 
     double m_latitude, m_longitude;
     qint32 m_zoom;

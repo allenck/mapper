@@ -72,6 +72,7 @@ private:
     QAction *deleteSegmentAct;
     QAction *unDeleteSegmentAct;
     QAction *saveChangesAct;
+    QAction *discardChangesAct;
     QAction* selectSegmentAct;
     QAction *editSegmentAct;
     QAction* showColumnsAct;

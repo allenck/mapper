@@ -127,7 +127,7 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
              case 1:
                  return tr("Name");
              case 2:
-                 return tr("1Way");
+                 return tr("Tracks");
              case 3:
                  return tr("Street");
              case 4:

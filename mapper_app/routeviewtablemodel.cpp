@@ -459,16 +459,22 @@ bool RouteViewTableModel::commitChanges()
 
   if(!SQL::instance()->deleteRouteSegment(route, name, sd.segmentId(), sdOld.startDate().toString("yyyy/MM/dd"), sdOld.endDate().toString("yyyy/MM/dd")))
       return false;
-  if(sdOld.startDate() < startDate)
+  try
   {
-   // add back segment used before route start date
-   QDate newEndDate = startDate.addDays(-1);
-   if(!SQL::instance()->addSegmentToRoute(route, name, sd.startDate(), newEndDate, sd.segmentId(), sd.companyKey(),
-                                          sd.tractionType(), sd.bearing().strDirection(),sd.next(), sd.prev(),
-                                          sd.normalEnter(), sd.normalLeave(), sd.reverseEnter(), sd.reverseLeave(), sd.oneWay(), sd.trackUsage()))
-       return false;
+   if(sdOld.startDate() < startDate)
+   {
+    // add back segment used before route start date
+    QDate newEndDate = startDate.addDays(-1);
+    if(!SQL::instance()->addSegmentToRoute(route, name, sd.startDate(), newEndDate, sd.segmentId(), sd.companyKey(),
+                                           sd.tractionType(), sd.bearing().strDirection(),sd.next(), sd.prev(),
+                                           sd.normalEnter(), sd.normalLeave(), sd.reverseEnter(), sd.reverseLeave(), sd.oneWay(), sd.trackUsage()))
+        return false;
+   }
   }
+  catch (IllegalArgumentException* ex)
+  {
 
+  }
   if(sdOld.endDate() > endDate)
   {
    QDate newStartDate = endDate.addDays(+1);
@@ -506,6 +512,12 @@ bool RouteViewTableModel::commitChanges()
  return true;
 }
 
+void RouteViewTableModel::discardChanges()
+{
+ listOfSegments = saveSegmentDataList;
+ changedRows.clear();
+ reset();
+}
 
 // Called by RouteView to add to list of segments to be deleted.
 void RouteViewTableModel::deleteRow(qint32 segmentId, const QModelIndex &index)

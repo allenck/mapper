@@ -49,6 +49,7 @@ public:
     };
     int getRow(int segmentId);
     bool commitChanges();
+    void discardChanges();
 
 signals:
     void rowChange(qint32 row, qint32 segmentid, bool bDeleted, bool bChanged);

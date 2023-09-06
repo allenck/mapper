@@ -315,6 +315,9 @@
    <property name="text">
     <string>Delete original route</string>
    </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
   </widget>
   <widget class="QLabel" name="lblHelp">
    <property name="geometry">

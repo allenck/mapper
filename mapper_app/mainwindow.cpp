@@ -1021,6 +1021,11 @@ void MainWindow::createActions()
  saveChangesAct = new QAction(tr("Commit changes"), this);
  saveChangesAct->setStatusTip(tr("Commit changes to database"));
  connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(saveChanges()));
+ discardChangesAct = new QAction(tr("Discard changes"));
+ discardChangesAct->setStatusTip(tr("Discard any changes"));
+ connect(discardChangesAct, &QAction::triggered, [=] {
+     routeView->model()->discardChanges();
+ });
 
  addRouteAct = new QAction(tr("Add new Route"),this);
  addRouteAct->setToolTip(tr("Add a new route"));
@@ -1320,10 +1325,17 @@ void MainWindow::txtSegment_customContextMenu(const QPoint &)
 void MainWindow::tab1CustomContextMenu(const QPoint &)
 {
     tab1Menu.addAction(saveChangesAct);
+    tab1Menu.addAction(discardChangesAct);
     if(!routeView->bUncomittedChanges())
+    {
        saveChangesAct->setEnabled(false);
+       discardChangesAct->setEnabled(false);
+    }
     else
+    {
        saveChangesAct->setEnabled(true);
+       discardChangesAct->setEnabled(true);
+    }
     tab1Menu.exec(QCursor::pos());
 }
 

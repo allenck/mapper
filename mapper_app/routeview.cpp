@@ -83,6 +83,8 @@ RouteView::RouteView(QObject* parent )
     sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"), QDate::fromString(endDate, "yyyy/MM/dd"), segmentDataList);
     saveChangesAct = new QAction(tr("Commit changes"),this);
     saveChangesAct->setStatusTip(tr("Save any uncommitted changes"));
+    discardChangesAct = new QAction(tr("Abandon changes"),this);
+    discardChangesAct->setStatusTip(tr("Discard any changes"));
     showColumnsAct = new QAction(tr("Hide extra columns"),this);
     showColumnsAct->setCheckable(true);
     connect(showColumnsAct, &QAction::toggled, [=]{
@@ -111,6 +113,10 @@ RouteView::RouteView(QObject* parent )
     });
     //connect(saveChangesAct, SIGNAL(triggered()), sourceModel, SLOT(commitChanges()));
     connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(commitChanges()));
+    connect(discardChangesAct, &QAction::triggered, [=]{
+     segmentDataList = saveSegmentDataList;
+     sourceModel->reset();
+    });
 
     myParent->proxyModel = proxymodel = new RouteViewSortProxyModel(this);
     myParent->proxyModel->setSourceModel(sourceModel);
@@ -174,6 +180,7 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
          menu.addAction(deleteSegmentAct);
      //if(curRow == 0)
      menu.addAction(saveChangesAct);
+     menu.addAction(discardChangesAct);
      menu.addAction(selectSegmentAct);
      menu.addAction(reSequenceAction);
 //        if(!startTerminal)
@@ -222,6 +229,7 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
      {
          menu.addSeparator();
          menu.addAction(saveChangesAct);
+         menu.addAction(discardChangesAct);
      }
      menu.exec(QCursor::pos());
 
@@ -689,6 +697,7 @@ void RouteView::commitChanges()
   myParent->refreshRoutes();
   myParent->btnDisplayRouteClicked();
  }
+ myParent-> setCursor(Qt::ArrowCursor);
 }
 
 bool RouteView::bUncomittedChanges()

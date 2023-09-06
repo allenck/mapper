@@ -68,6 +68,10 @@ void CompanyView::refresh()
 {
     model->select();
     tableView->show();
+
+    // also refresh Mainwindow Company ComboBox
+    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
+    myParent->refreshCompanies();
 }
 
 void CompanyView::clear()
