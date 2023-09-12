@@ -62,6 +62,7 @@ private:
     void fillTractionTypes();
     void checkUpdate();
     QString getColor(qint32 tractionType);
+    QStringList _locations;
 
 private slots:
     void rbUseOriginal_CheckedChanged();

@@ -170,6 +170,7 @@ public:
     void updateStation(qint32 stationKey, qint32 segmentId);
     void moveStationMarker(qint32 stationKey, qint32 segmentId, double lat, double lon);
     void moveRouteComment(int route, QString date, double latitude, double longitude, int companyKey);
+    void addModeToggled(bool isChecked);
 
     RouteViewTableModel *sourceModel;
     void displaySegment(qint32 segmentId, QString segmentName, QString color, QString trackUsage, bool bClearFirst);
@@ -248,7 +249,6 @@ private slots:
     void btnSplit_Clicked();
 //    void selectSegment();
     void AddRoute();
-    void addModeToggled(bool isChecked);
     void reloadMap();
     void displayStationMarkersToggeled(bool bChecked);
     void displayTerminalMarkersToggeled(bool bChecked);

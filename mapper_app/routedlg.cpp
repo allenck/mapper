@@ -1848,7 +1848,7 @@ void RouteDlg::checkDirection(QString routeDirection)
 
           bool bAlreadyExists = false;
           seq =0;
-          sdReverse.setSegmentId(sql->addSegment(sdReverse.description(), "Y", sd.tracks(), sdReverse.routeType(), sdReverse.pointList(), & bAlreadyExists));
+          sdReverse.setSegmentId(sql->addSegment(sdReverse.description(), "Y", sd.tracks(), sdReverse.routeType(), sdReverse.pointList(), sd.location(), & bAlreadyExists));
 //          if (sdReverse.segmentId != -1 && !bAlreadyExists)
 //          {
 //              SegmentData sd = sql->getSegmentData(si.segmentId);

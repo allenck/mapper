@@ -4876,7 +4876,7 @@ QString SQL::getSegmentOneWay(qint32 SegmentId)
     return description;
 }
 
-bool SQL::doesSegmentExist(QString descr, QString oneWay)
+bool SQL::doesSegmentExist(QString descr, QString oneWay, QString location)
 {
     bool ret = false;
     int count = 0;
@@ -4887,7 +4887,7 @@ bool SQL::doesSegmentExist(QString descr, QString oneWay)
         QSqlDatabase db = QSqlDatabase::database();
 
         QString commandText = "select count(*) from Segments where description = '" +
-            descr + "' and oneWay= '" + oneWay + "'";
+            descr + "' and oneWay= '" + oneWay + "' and Location= '" + location + "'";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -6765,7 +6765,7 @@ qint32 SQL::addCompany(QString name, qint32 route, QString startDate, QString en
 /// </summary>
 /// <param name="Description"></param>
 /// <returns></returns>
-qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteType routeType, const QList<LatLng> pointList, bool *bAlreadyExists, bool forceInsert)
+qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteType routeType, const QList<LatLng> pointList, QString location, bool *bAlreadyExists, bool forceInsert)
 {
  int rows = 0;
  int SegmentId = -1;
@@ -6818,9 +6818,9 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
  {
   qDebug() << "Warning segment '" << Description << "' has less than two points!!";
  }
- commandText = "Insert into Segments (street, Description, OneWay, type, pointArray, tracks, "
+ commandText = "Insert into Segments (street, Location, Description, OneWay, type, pointArray, tracks, "
                "startLat, startlon, endLat, endLon, length, Direction, startDate, endDate) "
-               "values ('" +street+"','" + Description + "', '" + OneWay + "',"
+               "values ('" +street+"','" + location + "','" + Description + "', '" + OneWay + "',"
                +   QString("%1").arg((qint32)routeType) + ",'"
                + pointArray+ "', "
                + QString::number(tracks)
@@ -6829,6 +6829,7 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
                + ", '2050/12/31'"
                + ")";
  bQuery = query.exec(commandText);
+ qDebug() << "SQL::addSegment: " << commandText;
  if(!bQuery)
  {
   SQLERROR(query);
@@ -6929,9 +6930,9 @@ qint32 SQL::addSegment(SegmentInfo sd, bool *bAlreadyExists, bool forceInsert)
  {
   qDebug() << "Warning segment '" << sd._description << "' has less than two points!!";
  }
- commandText = "Insert into Segments (street, Description, /*OneWay,*/ type, pointArray, points, tracks, "
+ commandText = "Insert into Segments (street, Location, Description, /*OneWay,*/ type, pointArray, points, tracks, "
                "startLat, startlon, endLat, endLon, length, Direction, startDate, endDate) "
-               "values ('" +street+"','" + sd._description + "', "/*'" + sd._oneWay + "',"*/
+               "values ('" +street+"','" + sd.location()+"','"+ sd._description + "', "/*'" + sd._oneWay + "',"*/
                + QString("%1").arg((qint32)sd._routeType) + ",'"
                + pointArray+ "', "
                + QString("%1").arg(sd.points) + ", "

@@ -24,6 +24,13 @@ SegmentDlg::SegmentDlg(Configuration *cfg, QWidget *parent) :
  strNoRoute = tr("No route selected!");
  bNewRouteNbr=false;
  tractionTypeList = sql->getTractionTypes();
+ _locations = sql->getLocations();
+ ui->cbLocation->clear();
+ ui->cbLocation->addItems(_locations);
+ ((MainWindow*)myParent)->addModeToggled(false);
+// infoLat = m_latitude;
+// infoLon = m_longitude;
+
 
  connect(ui->txtOriginalName, SIGNAL(textChanged(QString)), this, SLOT(txtOriginalName_TextChanged(QString)));
  connect(ui->txtOriginalName, SIGNAL(editingFinished()),this,SLOT(txtOriginalName_Leave()));
@@ -137,7 +144,7 @@ void SegmentDlg::setSegmentId(qint32 value)
   ui->gbOriginal->setTitle(tr("Original segment:"));
   ui->gbNew->setTitle(tr("New segment:"));
   ui->txtOriginalName->setText( sql->getSegmentDescription(_SegmentId));
-  //ui->chkOriginalOneWay->setChecked(sd.oneWay()== "Y");
+  ui->cbLocation->setCurrentText(sd._location);
 
   ui->txtNewName->setText( ui->txtOriginalName->text());
   ui->chkNewOneWay->setChecked(ui->chkOriginalOneWay->isChecked());
@@ -634,12 +641,12 @@ void SegmentDlg::btnOK_Click()  // SLOT
   ui->lblErrorText->setText(tr( "New name must not be blank"));
   return;
  }
- if (sql->doesSegmentExist(ui->txtOriginalName->text(), ui->chkOriginalOneWay->isChecked()?"Y":"N"))
+ if (sql->doesSegmentExist(ui->txtOriginalName->text(), ui->chkOriginalOneWay->isChecked()?"Y":"N", ui->cbLocation->currentText()))
  {
   ui->lblErrorText->setText(tr( "Original name '%1' already present!").arg(ui->txtOriginalName->text()));
   return;
  }
- if (sql->doesSegmentExist(ui->txtNewName->text(), ui->chkNewOneWay->isChecked()?"Y":"N"))
+ if (sql->doesSegmentExist(ui->txtNewName->text(), ui->chkNewOneWay->isChecked()?"Y":"N", ui->cbLocation->currentText()))
  {
   ui->lblErrorText->setText(tr( "New name '%1' already present!").arg(ui->txtNewName->text()));
   return;
@@ -685,14 +692,24 @@ void SegmentDlg::btnOK_Click()  // SLOT
   QString strBiDirectional = ui->chkNewOneWay->isChecked()?"N":"Y";
   RouteType rt = (RouteType)ui->cbRouteType->currentIndex();
   QList<LatLng> pointList = QList<LatLng>();
-  _newSegmentId = sql->addSegment(newName, strOneWay, ui->sbTracks->value(), rt, pointList, & bAlreadyExists);
+  _newSegmentId = sql->addSegment(newName, strOneWay, ui->sbTracks->value(), rt, pointList, ui->cbLocation->currentText(), &bAlreadyExists);
   if (_newSegmentId < 0)
   {
    ui->lblErrorText->setText(tr( "add segment failed!"));
    setCursor(Qt::ArrowCursor);
    return;
   }
-
+  if(!ui->cbLocation->currentText().isEmpty())
+  {
+   QString saveLoc = ui->cbLocation->currentText();
+   SegmentInfo si = sql->getSegmentInfo(_newSegmentId);
+   si.setLocation(saveLoc);
+   sql->updateSegment(&si);
+   ui->cbLocation->clear();
+   _locations = sql->getLocations();
+   ui->cbLocation->addItems(_locations);
+   ui->cbLocation->setCurrentText(saveLoc);
+  }
  }
  else
  {
@@ -792,6 +809,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
  if(ui->cbRouteName->currentText().length() > 0)
   _routeName = ui->cbRouteName->currentText();
  //this.DialogResult = DialogResult.OK;
+
  this->accept();
  setCursor(Qt::ArrowCursor);
  this->close();

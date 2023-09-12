@@ -71,7 +71,7 @@ public:
     //QList<segmentData> getIntersectingSegments(double lat, double lon, double radius) __attribute_deprecated__;
 
     QT_DEPRECATED QString getSegmentOneWay(qint32 SegmentId);
-    QT_DEPRECATED bool doesSegmentExist(QString descr, QString oneWay);
+    bool doesSegmentExist(QString descr, QString oneWay, QString location = "");
     QString getSegmentDescription(qint32 SegmentId);
     QList<SegmentData> getIntersectingSegments(double lat, double lon, double radius);
     QList<SegmentInfo> getIntersectingSegments(double lat, double lon, double radius, RouteType type);
@@ -118,7 +118,7 @@ public:
     qint32 getDefaultCompany(qint32 route, QString date);
     LatLng getPointInfo(qint32 pt, qint32 SegmentId);
     qint32 addCompany(QString name, qint32 route, QString startDate, QString endDate);
-    QT_DEPRECATED qint32 addSegment(QString Description, QString OneWay, int tracks, RouteType routeType, const QList<LatLng> pointList, bool * bAlreadyExists, bool forceInsert= false);
+    qint32 addSegment(QString Description, QString OneWay, int tracks, RouteType routeType, const QList<LatLng> pointList, QString Location, bool * bAlreadyExists, bool forceInsert= false);
     qint32 addSegment(SegmentInfo sd, bool *bAlreadyExists, bool forceInsert);
     qint32 splitSegment(qint32 pt, qint32 SegmentId, QString oldDesc, QString oldOneWay, QString newDesc, QString newOneWay, RouteType routeType, RouteType newRouteType, int oldTracks, int newTracks, QString oldStreet, QString newStreet);
     RouteData getRouteData(qint32 route, qint32 SegmentId, QString startDate, QString endDate);

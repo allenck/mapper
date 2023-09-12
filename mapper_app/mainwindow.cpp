@@ -1797,6 +1797,7 @@ void MainWindow::on_createKmlFile_triggered()
 
 void MainWindow::btnDisplayRouteClicked()
 {
+ addModeToggled(false);
  int row =         ui->cbRoute->currentIndex();
  if(row < 0) return;
  RouteData rd = ((RouteData)routeList.at(row));
