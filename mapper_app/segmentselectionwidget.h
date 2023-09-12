@@ -23,6 +23,7 @@ class SegmentSelectionWidget : public QWidget
   void refresh();
   void setCurrentSegment(int segmentId);
   void initialize();
+  QStringList locations() {return _locations;}
 
  public slots:
   void refreshSegmentCB();
@@ -54,6 +55,7 @@ class SegmentSelectionWidget : public QWidget
   QMutex mutex2;
   QMap<QString, int> mapDescriptions;
   bool b_cbSegments_TextChanged = false;
+  QStringList _locations;
 };
 
 #endif // SEGMENTSELECTIONWIDGET_H

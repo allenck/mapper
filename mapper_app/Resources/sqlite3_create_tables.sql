@@ -71,6 +71,7 @@ CREATE TABLE if not exists `Segments` (
   `StartDate` date NOT NULL DEFAULT '1800-01-01',
   `endDate` date NOT NULL DEFAULT '1800-01-01',
   `Direction` varchar(6) NOT NULL DEFAULT ' ',
+  `Locality` varchar(15) NOT NULL DEFAULT ' ',
   `pointArray` text,
   `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

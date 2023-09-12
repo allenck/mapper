@@ -308,6 +308,8 @@ public:
      _bounds = Bounds(_sw, _ne);
      return _bounds;
     }
+    QString location() {return _location;}
+    void setLocation(QString loc) {_location = loc;}
  private:
     qint32 _segmentId=-1;
     qint8 _tracks;
@@ -342,7 +344,7 @@ public:
     }
     int _companyKey = -1;
     QString _routeName;
-
+    QString _location;
 
     friend class SQL;
 };
@@ -498,6 +500,7 @@ class SegmentInfo
  //QString trackUsage;
  int _next; // needed for DupSegmentView
  QString _trackType = " ";
+ QString _location;
 
  static QStringList ROUTETYPES;// = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
 
@@ -509,6 +512,7 @@ class SegmentInfo
   _bounds = Bounds();
   _bNeedsUpdate = false;
  }
+ SegmentInfo(const SegmentInfo& );
  void setPoints(QString sPoints);
  QString pointsString();
  void addPoint(LatLng pt);
@@ -574,7 +578,8 @@ class SegmentInfo
   _bounds = Bounds(_sw, _ne);
   return _bounds;
  }
-
+ QString location() {return _location;}
+ void setLocation(QString loc) {_location = loc;}
 };
 
 class routeIntersects

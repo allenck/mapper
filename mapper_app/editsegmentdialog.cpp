@@ -122,6 +122,8 @@ void EditSegmentDialog::segmentSelected(SegmentInfo sd)
  if(sd.segmentId()<0)
   return;
  this->sd = sd;
+ ui->ssw->initialize();
+
  SegmentInfo newSd = SegmentInfo(sd);
 
  // btnUpdate->setEnabled(false);
@@ -129,6 +131,7 @@ void EditSegmentDialog::segmentSelected(SegmentInfo sd)
  bStartDateEdited = false;
  bEndDateEdited = false;
 
+ ui->ssw->setCurrentSegment(sd.segmentId());
  ui->label_segmentId->setText(QString::number(sd.segmentId()));
  ui->txtDescription->setText(sd.description());
  //ui->chkOneWay->setChecked(sd.oneWay() == "Y");

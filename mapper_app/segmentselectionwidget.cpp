@@ -14,6 +14,12 @@ SegmentSelectionWidget::SegmentSelectionWidget(QWidget *parent) :
  cbSegmentsGrp->addButton(ui->rbBoth);
  ui->rbBoth->setChecked(true);
  sql = SQL::instance();
+
+ _locations = sql->getLocations();
+ //_locations.insert(0, " ");
+ ui->cbLocation->clear();
+ ui->cbLocation->addItems(_locations);
+
 }
 
 void SegmentSelectionWidget::initialize()
@@ -44,6 +50,10 @@ void SegmentSelectionWidget::initialize()
  connect(ui->rbBoth, &QRadioButton::clicked, [=]{
   saveStreet = ui->cbStreets->currentText();
   refreshSegmentCB();
+ });
+ connect(ui->cbLocation, &QComboBox::currentTextChanged, [=]{
+  if(!bCbStreetsRefreshing)
+   refreshStreetsCb();
  });
 
  QSortFilterProxyModel* proxy = new QSortFilterProxyModel(ui->cbStreets);
@@ -95,18 +105,34 @@ void SegmentSelectionWidget::refreshSegmentCB()
   refreshStreetsCb();
  ui->cbSegments->clear();
  mapDescriptions.clear();
- cbSegmentDataMap = sql->getSegmentInfoList();
+ cbSegmentDataMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
  //qSort(cbSegmentDataList.begin(), cbSegmentDataList.end(),compareSegmentDataByName);
  //foreach (segmentInfo sI in cbSegmentInfoList)
  foreach(SegmentInfo sd, cbSegmentDataMap.values())
  {
   description = sd.description();
+  if(!sd.location().isEmpty())
+  {
+   if(!_locations.contains(sd.location()))
+    _locations.append(sd.location());
+  }
   tokens = description.split(",");
   if(tokens.count() > 1)
   {
    QString street = tokens.at(0).trimmed();
-   if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
-   if(street == selectedStreet)
+   int locStart = street.indexOf("(");
+   if(locStart > 0) {
+    int locEnd = street.indexOf(")");
+    if(locEnd >0)
+    {
+     QString loc = street.mid(locStart+1, locEnd-locStart-1);
+     if(!_locations.contains(loc))
+      _locations.append(loc);
+//     sd.setLocation(loc);
+    }
+    street= street.mid(0, street.indexOf("("));
+   }
+   if(street == selectedStreet && ui->cbLocation->currentText() == sd.location())
    {
     // populate streets
     if((sd.tracks() == 2 && ui->rbDouble->isChecked() ) ||
@@ -145,7 +171,7 @@ void SegmentSelectionWidget::refreshSegmentCB()
      street = tokens.at(0).trimmed();
      if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
      //if(street2.indexOf(" ")) street2= street2.mid(0, street2.indexOf(" "));
-     if(street == selectedStreet)
+     if(street == selectedStreet && ui->cbLocation->currentText() == sd.location())
      {
       // populate streets
       if((sd.tracks() == 2 && ui->rbDouble->isChecked() ) ||
@@ -201,6 +227,8 @@ void SegmentSelectionWidget::refreshSegmentCB()
    }
    qDebug() << "bypass " << sd.toString();
   }
+  if(sd._bNeedsUpdate)
+   sql->updateSegment(&sd);
  }
  if(m_SegmentId >0)
   ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(m_SegmentId));
@@ -213,6 +241,8 @@ void SegmentSelectionWidget::refreshSegmentCB()
   iter.next();
   ui->cbSegments->addItem(iter.key(), iter.value());
  }
+// ui->cbLocation->clear();
+// ui->cbLocation->addItems(_locations);
  bRefreshingSegments = false;
 }
 
@@ -230,9 +260,10 @@ void SegmentSelectionWidget::refreshStreetsCb()
  ui->cbStreets->clear();
  streets.clear();
  ui->cbStreets->addItem("");
- cbSegmentDataMap = sql->getSegmentInfoList();
+ cbSegmentDataMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
  foreach(SegmentInfo sd, cbSegmentDataMap.values())
  {
+#if 0
   description = sd.description();
   tokens = description.split(",");
   if(tokens.count() > 1)
@@ -262,6 +293,12 @@ void SegmentSelectionWidget::refreshStreetsCb()
   {
    tokens = description.split(" ");
   }
+#else
+  if(!streets.contains(sd._streetName))
+  {
+   streets.append(sd._streetName);
+  }
+#endif
  } // end for
  streets.sort();
  ui->cbStreets->addItems(streets);
@@ -329,8 +366,10 @@ void SegmentSelectionWidget::refresh()
 
 void SegmentSelectionWidget::setCurrentSegment(int segmentId)
 {
- ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(segmentId));
  currSd = sql->getSegmentInfo(segmentId);
+ ui->cbLocation->findText(currSd.location());
+ ui->cbStreets->findText(currSd._description);
+ ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(segmentId));
 }
 
 void SegmentSelectionWidget::cbSegmentsTextChanged(QString txt)

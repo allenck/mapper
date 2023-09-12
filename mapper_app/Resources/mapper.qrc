@@ -54,5 +54,6 @@
         <file>mySql_createDatabase.sql</file>
         <file>reload.png</file>
         <file>CreateMsSqlFunction.sql</file>
+        <file>recreateSegmentsTable.sql</file>
     </qresource>
 </RCC>

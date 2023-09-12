@@ -1,6 +1,7 @@
 #include "segmentdlg.h"
 #include "ui_segmentdlg.h"
 #include "webviewbridge.h"
+#include "mainwindow.h"
 
 SegmentDlg::SegmentDlg(Configuration *cfg, QWidget *parent) :
     QDialog(parent),
@@ -260,12 +261,22 @@ void SegmentDlg::fillCompanies()
      CompanyData* cd = _companyList.at(i);
      ui->cbCompany->addItem(cd->toString(), cd->companyKey);
     }
-    //cbCompany.SelectedIndex = 0;
+    ui->cbCompany->findData(((MainWindow*)myParent)->ui->cbCompany->currentData());
 
 }
+
 void SegmentDlg::cbCompany_currentIndexChanged(int companyKey)
 {
  CompanyData* cd = _companyList.at(companyKey);
+ if(ui->dateStart->date() > cd->endDate)
+ {
+  ui->dateStart->setDate(cd->startDate);
+ }
+ if(ui->dateEnd->date() > cd->endDate)
+ {
+  ui->dateEnd->setDate(cd->endDate);
+ }
+
  if(ui->dateStart->date() < cd->startDate)
  {
   ui->dateStart->setMinimumDate(cd->startDate);

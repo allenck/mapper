@@ -43,7 +43,8 @@ public:
     QString getAlphaRoute(qint32 route, qint32 company);
     QMap<int, TractionTypeInfo> getTractionTypes();
     //QT_DEPRECATED QList<SegmentInfo> getSegmentInfo();
-    QMap<int, SegmentInfo> getSegmentInfoList();
+    QMap<int, SegmentInfo> getSegmentInfoList(QString locality = " ");
+    QStringList getLocations();
     //QT_DEPRECATED SegmentInfo getSegmentInfo(qint32 segmentId);
     SegmentInfo getSegmentInfo(qint32 SegmentId);
     QList<SegmentData> getRouteSegmentsInOrder(qint32 route, QString name, QString date);

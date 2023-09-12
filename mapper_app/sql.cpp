@@ -997,15 +997,28 @@ QList<SegmentInfo> SQL::getSegmentInfo()
  return myArray;
 }
 #endif
-QMap<int, SegmentInfo> SQL::getSegmentInfoList()
+QMap<int, SegmentInfo> SQL::getSegmentInfoList(QString location)
 {
  QMap<int, SegmentInfo> myArray;
 
  QSqlDatabase db = QSqlDatabase::database();
 
- QString commandText = "Select SegmentId, description, OneWay, startDate, endDate,"
-                       " length, points, startLat, startLon, endLat, EndLon, type, street, "
-                       "pointArray, tracks from Segments order by description";
+
+ QString commandText;
+ if(location != " " && !location.isEmpty())
+ {
+  commandText= "Select SegmentId, description, OneWay, startDate, endDate,"
+                       " length, points, startLat, startLon, endLat, EndLon, type, street,"
+                       " location, pointArray, tracks from Segments where Locality = '"
+                       + location + "' "
+                       + "order by description";
+ }
+ else {
+   commandText= "Select SegmentId, description, OneWay, startDate, endDate,"
+                        " length, points, startLat, startLon, endLat, EndLon, type, street,"
+                        " location, pointArray, tracks from Segments order by description";
+
+  }
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -1034,21 +1047,66 @@ QMap<int, SegmentInfo> SQL::getSegmentInfoList()
   sd._direction = sd._bearing.strDirection();
   sd._routeType = (RouteType)query.value(11).toInt();
   sd._streetName = query.value(12).toString();
-  sd.setPoints(query.value(13).toString());  // array of points
+  sd._location = query.value(13).toString();
+  sd.setPoints(query.value(14).toString());  // array of points
 //  if(sd.pointList().isEmpty())
 //   populatePointList(sd);
-  sd._tracks = query.value(14).toInt();
+  sd._tracks = query.value(15).toInt();
   if(sd.pointList().count() > 1)
   {
    sd._bearingStart = Bearing(sd._startLat, sd._startLon, sd.pointList().at(1).lat(), sd.pointList().at(1).lon());
    sd._bearingEnd = Bearing(sd.pointList().at(sd.points-2).lat(), sd.pointList().at(sd.points-2).lon(), sd._endLat, sd._endLon);
   }
-  sd._bounds = Bounds(query.value(13).toString());
-
+  sd._bounds = Bounds(query.value(14).toString());
+  if(sd._streetName.isEmpty() || sd._streetName.indexOf("(")> 0)
+  {
+   QStringList tokens = sd._description.split(",");
+   if(tokens.count() > 1)
+   {
+    QString street = tokens.at(0).trimmed();
+    street= street.mid(0, street.indexOf("("));
+    sd._streetName = street;
+    sd._bNeedsUpdate = true;
+   }
+   else
+   {
+    tokens = sd._description.split(" ");
+    if(tokens.count() > 1)
+    {
+     QString street = tokens.at(0).trimmed();
+     street= street.mid(0, street.indexOf("("));
+     sd._streetName = street;
+     sd._bNeedsUpdate = true;
+    }
+   }
+  }
   myArray.insert(sd.segmentId(),sd);
  }
 
  return myArray;
+}
+
+QStringList SQL::getLocations()
+{
+ QSqlDatabase db = QSqlDatabase::database();
+ QStringList list;
+
+ QString commandText = "select location from segments group by location";
+ QSqlQuery query = QSqlQuery(db);
+ bool bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+  SQLERROR(query);
+     qDebug() << "Is default database correct?";
+//            db.close();
+//            exit(EXIT_FAILURE);
+     return list;
+ }
+ while (query.next())
+ {
+  list.append(query.value(0).toString());
+ }
+ return  list;
 }
 #if 0
 SegmentInfo SQL::getSegmentInfo(int segmentId)
@@ -1299,12 +1357,12 @@ SegmentInfo SQL::getSegmentInfo(qint32 SegmentId)
   if(config->currConnection->servertype() != "MsSql")
        commandText = "Select `SegmentId`, Description, tracks, type,"
                      " StartLat, StartLon, EndLat, EndLon, length, StartDate, EndDate, Direction,"
-                     " Street, pointArray from Segments"
+                     " Street, location, pointArray from Segments"
                      " where SegmentId = " + QString("%1").arg(SegmentId);
   else
        commandText = "Select `SegmentId`, Description, tracks, type,"
                      " StartLat, StartLon, EndLat, EndLon, length, StartDate, EndDate, Direction,"
-                     " Street, pointArray from Segments"
+                     " Street, location, pointArray from Segments"
                      " where SegmentId = " + QString("%1").arg(SegmentId);
   QSqlQuery query = QSqlQuery(db);
   bool bQuery = query.exec(commandText);
@@ -1337,7 +1395,8 @@ SegmentInfo SQL::getSegmentInfo(qint32 SegmentId)
    si._endDate = query.value(10).toDate();
    si._direction = query.value(11).toString();
    si._streetName = query.value(12).toString();
-   si.setPoints(query.value(13).toString());  // array of points
+   si._location = query.value(13).toString();
+   si.setPoints(query.value(14).toString());  // array of points
   }
   if((si._startLat ==0 ||si._startLat ==0 || si._endLat == 0 || si._endLon ==0) && si._pointList.count() > 1 )
   {
@@ -1352,7 +1411,7 @@ SegmentInfo SQL::getSegmentInfo(qint32 SegmentId)
    si._bearingStart = Bearing(si._startLat, si._startLon, si._pointList.at(1).lat(), si._pointList.at(1).lon());
    si._bearingEnd = Bearing(si._pointList.at(si.points-2).lat(), si._pointList.at(si.points-2).lon(), si._endLat, si._endLon);
   }
-  si._bounds = Bounds(query.value(13).toString());
+  si._bounds = Bounds(query.value(14).toString());
   if(si._length == 0 && si._pointList.count() > 1)
   {
    //sd._length = distance(LatLng(sd._startLat, sd._startLon), LatLng(sd._endLat, sd._endLon));
@@ -3460,7 +3519,7 @@ bool SQL::updateSegment(SegmentInfo* sd)
    + "pointArray='" + sd->pointsString() + "', "
    + "description='" + sd->_description + "',"
    + "street='" + sd->_streetName + "',"
-//   + "oneWay='" + sd->oneWay + "',"
+   + "location='" + sd->_location + "',"
    + "tracks="+ QString::number(sd->_tracks) + ","
    + "type="+QString::number((int)sd->_routeType) + ","
    + "startDate='" + sd->_startDate.toString("yyyy/MM/dd") + "', "
@@ -3534,7 +3593,7 @@ bool SQL::updateSegment(SegmentData* sd)
    + "pointArray='" + sd->pointsString() + "', "
    + "description='" + sd->_description + "',"
    + "street='" + sd->_streetName + "',"
-//   + "oneWay='" + sd->oneWay + "',"
+   + "location='" + sd->_location + "',"
    + "tracks="+ QString::number(sd->_tracks) + ","
    + "type="+QString::number((int)sd->_routeType) + ","
    + "startDate='" + sd->_startDate.toString("yyyy/MM/dd") + "', "
@@ -9987,6 +10046,12 @@ void SQL::checkTables(QSqlDatabase db)
   {
    addColumn("Segments", "street", "text");
   }
+
+  if(!doesColumnExist("Segments", "location"))
+  {
+   addColumn("Segments", "location", "text not null default ' '");
+  }
+
 
   if(!doesColumnExist("Companies", "routePrefix"))
   {

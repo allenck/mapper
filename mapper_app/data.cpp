@@ -191,6 +191,7 @@ SegmentData::SegmentData(const SegmentData& o)
  _route = o._route;
  _companyKey = o._companyKey;
  _routeName = o._routeName;
+ _location = o._location;
 }
 
 // create a new SegmentData from a SegmentInfo
@@ -216,6 +217,7 @@ SegmentData::SegmentData(const SegmentInfo& o)
  _pointList = o._pointList;
  if(points == 0 && pointList().count() > 0 )
   points = pointList().count();
+ _location = o._location;
 }
 
 QString SegmentData::toString()
@@ -354,6 +356,35 @@ RouteInfo::RouteInfo(qint32 route, QString name, QString date)
 RouteInfo::~RouteInfo()
 {
 
+}
+SegmentInfo::SegmentInfo(const SegmentInfo& o)
+{
+ _description = o._description;
+ _segmentId = o._segmentId;
+ lineSegments = o.lineSegments;
+ points = o.points;
+ _length = o._length;
+ _startDate = o._startDate;
+ _endDate = o._endDate;
+ _bearing = o._bearing;
+ _startLat = o._startLat;
+ _startLon = o._startLon;
+ _endLat = o._endLat;
+ _endLon = o._endLon;
+ _direction = o._direction;
+ _bearingStart = o._bearingStart;
+ _bearingEnd = o._bearingEnd;
+ _whichEnd = o._whichEnd;
+ _routeType = o._routeType;
+ tractionType = o.tractionType;
+ _streetName = o._streetName;
+ _pointList= o._pointList;
+ _bounds = o._bounds;
+ _tracks = o._tracks;
+ _bNeedsUpdate = o._bNeedsUpdate;
+ _next = o._next;
+ _trackType = o._trackType;
+ _location = o._location;
 }
 #if 1
 QString SegmentInfo::toString()
