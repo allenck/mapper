@@ -20,8 +20,8 @@ EditSegmentDialog::EditSegmentDialog(SegmentInfo sd, QWidget *parent) :
  common();
  segmentSelected(sd);
 
- ui->ssw->initialize();
- connect(ui->ssw, SIGNAL(segmentSelected(SegmentData)), this, SLOT(segmentSelected(SegmentData)));
+ //ui->ssw->initialize();
+ //connect(ui->ssw, SIGNAL(segmentSelected(SegmentData)), this, SLOT(segmentSelected(SegmentData)));
 }
 
 EditSegmentDialog::EditSegmentDialog(RouteData* rd, SegmentInfo sd, QWidget *parent) :
@@ -32,13 +32,18 @@ EditSegmentDialog::EditSegmentDialog(RouteData* rd, SegmentInfo sd, QWidget *par
  common();
  segmentSelected(sd);
 
- ui->ssw->initialize();
- connect(ui->ssw, SIGNAL(segmentSelected(SegmentData)), this, SLOT(segmentSelected(SegmentData)));
+// ui->ssw->initialize();
+// connect(ui->ssw, SIGNAL(segmentSelected(SegmentData)), this, SLOT(segmentSelected(SegmentData)));
 }
 
 void EditSegmentDialog::common()
 {
  ui->setupUi(this);
+ sql = SQL::instance();
+
+ _locations = sql->getLocations();
+ ui->cbLocation->clear();
+ ui->cbLocation->addItems(_locations);
  if(rd->route < 0)
  {
   ui->chkOneWay->setVisible(false);
@@ -49,7 +54,6 @@ void EditSegmentDialog::common()
   ui->chkOneWay->setChecked(rd->oneWay == "Y");
  }
  this->config = Configuration::instance();
- sql = SQL::instance();
  b_cbSegments_TextChanged = false;
  bStartDateEdited = false;
  bEndDateEdited = false;
@@ -122,7 +126,7 @@ void EditSegmentDialog::segmentSelected(SegmentInfo sd)
  if(sd.segmentId()<0)
   return;
  this->sd = sd;
- ui->ssw->initialize();
+ //ui->ssw->initialize();
 
  SegmentInfo newSd = SegmentInfo(sd);
 
@@ -131,7 +135,13 @@ void EditSegmentDialog::segmentSelected(SegmentInfo sd)
  bStartDateEdited = false;
  bEndDateEdited = false;
 
- ui->ssw->setCurrentSegment(sd.segmentId());
+ ui->cbLocation->setCurrentText(sd.location());
+ connect(ui->cbLocation, &QComboBox::editTextChanged, [=]{
+  if(!_locations.contains( ui->cbLocation->currentText()))
+  {
+   qDebug() << "location " << " added";
+  }
+ });
  ui->label_segmentId->setText(QString::number(sd.segmentId()));
  ui->txtDescription->setText(sd.description());
  //ui->chkOneWay->setChecked(sd.oneWay() == "Y");
@@ -370,6 +380,7 @@ void EditSegmentDialog::On_btnSave_clicked()
 
  sd.setEndDate(ui->dtEnd->date());
  sd.setStartDate(ui->dtBegin->date());
+ sd.setLocation(ui->cbLocation->currentText());
 
  sql->BeginTransaction("updateSegment");
  QList<RouteData> list = sql->getRouteSegmentsForDate(sd.segmentId(), sd.startDate().toString("yyyy/MM/dd"));
@@ -425,7 +436,7 @@ void EditSegmentDialog::On_btnSave_clicked()
  //displaySegment(sd.SegmentId, si.description, si.oneWay, m_segmentColor, true);
   sd.displaySegment(ui->dtEnd->date().toString("yyyy/MM/dd"),m_segmentColor, "", true);
  }
- ui->ssw->refresh();
+ //ui->ssw->refresh();
 }
 
 void EditSegmentDialog::On_segmentStatusSignal(QString txt, QString color)

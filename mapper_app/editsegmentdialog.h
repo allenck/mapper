@@ -40,6 +40,7 @@ private:
  QString m_segmentStatus;
  QString m_segmentColor;
  RouteData* rd;
+ QStringList _locations;
 
 private slots:
  //void fillSegments();

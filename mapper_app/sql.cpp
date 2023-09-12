@@ -1009,7 +1009,7 @@ QMap<int, SegmentInfo> SQL::getSegmentInfoList(QString location)
  {
   commandText= "Select SegmentId, description, OneWay, startDate, endDate,"
                        " length, points, startLat, startLon, endLat, EndLon, type, street,"
-                       " location, pointArray, tracks from Segments where Locality = '"
+                       " location, pointArray, tracks from Segments where location = '"
                        + location + "' "
                        + "order by description";
  }
@@ -10049,7 +10049,8 @@ void SQL::checkTables(QSqlDatabase db)
 
   if(!doesColumnExist("Segments", "location"))
   {
-   addColumn("Segments", "location", "text not null default ' '");
+   addColumn("Segments", "location", "text not null default ''");
+   executeScript(":/recreateSegmentsTable.sql",db);
   }
 
 

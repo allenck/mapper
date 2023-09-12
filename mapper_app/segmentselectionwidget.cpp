@@ -15,15 +15,12 @@ SegmentSelectionWidget::SegmentSelectionWidget(QWidget *parent) :
  ui->rbBoth->setChecked(true);
  sql = SQL::instance();
 
- _locations = sql->getLocations();
- //_locations.insert(0, " ");
- ui->cbLocation->clear();
- ui->cbLocation->addItems(_locations);
-
 }
 
 void SegmentSelectionWidget::initialize()
 {
+ refreshLocations();
+
  refreshSegmentCB();
 
  connect(SQL::instance(), &SQL::segmentsChanged, [=](int segmentId){
@@ -89,6 +86,13 @@ SegmentSelectionWidget::~SegmentSelectionWidget()
 bool compareSegmentDataByName(const SegmentData & s1, const SegmentData & s2)
 {
  return s1.getDescription() < s2.getDescription();
+}
+
+void SegmentSelectionWidget::refreshLocations()
+{
+ _locations = sql->getLocations();
+ ui->cbLocation->clear();
+ ui->cbLocation->addItems(_locations);
 }
 
 void SegmentSelectionWidget::refreshSegmentCB()
@@ -248,7 +252,7 @@ void SegmentSelectionWidget::refreshSegmentCB()
 
 void SegmentSelectionWidget::refreshStreetsCb()
 {
- QMutexLocker locker(&mutex2);
+ //QMutexLocker locker(&mutex2);
 
  QStringList streets;
  QStringList tokens;

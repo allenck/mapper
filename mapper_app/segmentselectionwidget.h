@@ -26,6 +26,7 @@ class SegmentSelectionWidget : public QWidget
   QStringList locations() {return _locations;}
 
  public slots:
+  void refreshLocations();
   void refreshSegmentCB();
   void refreshStreetsCb();
   void cbStreets_editingFinished();
