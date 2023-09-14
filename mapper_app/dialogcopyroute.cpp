@@ -381,16 +381,16 @@ void DialogCopyRoute::cbCompany_SelectedIndexChanged(int row) // SLOT
     if (cd->name == "")
         return;
 
-    if (ui->dateEnd->date() < cd->startDate || ui->dateStart->date() > cd->endDate)
-    {
-        ui->lblHelp->setText(tr("Company not valid for specified dates!"));
-        //System.Media.SystemSounds.Question.Play();
-        ui->dateStart->setFocus();
-    }
-    if (ui->dateStart->date() < cd->startDate)
-        ui->dateStart->setDate(cd->startDate);
-    if (ui->dateEnd->date() > cd->endDate)
-        ui->dateEnd->setDate(cd->endDate);
+//    if (ui->dateEnd->date() < cd->startDate || ui->dateStart->date() > cd->endDate)
+//    {
+//        ui->lblHelp->setText(tr("Company not valid for specified dates!"));
+//        //System.Media.SystemSounds.Question.Play();
+//        ui->dateStart->setFocus();
+//    }
+//    if (ui->dateStart->date() < cd->startDate)
+     ui->dateStart->setDate(cd->startDate);
+//    if (ui->dateEnd->date() > cd->endDate)
+     ui->dateEnd->setDate(cd->endDate);
 }
 
 void DialogCopyRoute::dateStart_ValueChanged()   //SLOT
