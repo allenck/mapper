@@ -4,6 +4,7 @@ SOURCES += main.cpp\
     $$PWD/logger.cpp \
     $$PWD/mytextedit.cpp \
     $$PWD/overlay.cpp \
+    $$PWD/queryeditmodel.cpp \
     $$PWD/replacesegmentdialog.cpp \
     $$PWD/routeselector.cpp \
     $$PWD/rtitemdelegate.cpp \
@@ -77,6 +78,7 @@ HEADERS  += mainwindow.h \
     $$PWD/logger.h \
     $$PWD/mytextedit.h \
     $$PWD/overlay.h \
+    $$PWD/queryeditmodel.h \
     $$PWD/replacesegmentdialog.h \
     $$PWD/routeselector.h \
     $$PWD/rtitemdelegate.h \

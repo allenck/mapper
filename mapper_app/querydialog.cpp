@@ -11,6 +11,7 @@
 #include "sql.h"
 #include "vptr.h"
 #include "mainwindow.h"
+#include "queryeditmodel.h"
 
 QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
     QDialog(parent),
@@ -75,6 +76,12 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
       bChanging = false;
       setWindowTitle(tr("Manual Sql Query (%1)").arg(ui->cbConnections->currentText()));
   });
+  connect(ui->cbEditStrategy, &QComboBox::currentTextChanged, [=]{
+   if(ui->cbEditStrategy->currentIndex() ==2)
+    ui->pbSubmit->setVisible(true);
+   else
+    ui->pbSubmit->setVisible(false);
+  });
 }
 
 QueryDialog::~QueryDialog()
@@ -106,6 +113,11 @@ void QueryDialog::on_clear_QueryButton_clicked()
 {
  ui->editQuery->clear();
  currQueryFilename = "";
+
+ for (int ix =ui->widget_query_view->count()-1; ix > 0; ix--)
+  ui->widget_query_view->removeTab(ix);
+ ui->queryResultText->clear();
+
 }
 
 void QueryDialog::on_load_QueryButton_clicked()
@@ -201,16 +213,14 @@ loadIt:
 
 void QueryDialog::on_go_QueryButton_clicked()
 {
+ i_Message_Error=0;
+ i_Message_Result_Yes=0;
+ i_Message_Result_No=0;
+ i_Message_Rows_effected=0;
+ i_Message_Total=0;
+ i_Rows_Total=0;
 
  // ui->treeDbList->currentIndex()
- QWidget *tab_First_Result=0;
- QStringList sa_Message_Text;
- int i_Message_Error=0;
- int i_Message_Result_Yes=0;
- int i_Message_Result_No=0;
- int i_Message_Rows_effected=0;
- int i_Message_Total=0;
- int i_Rows_Total=0;
  //DbConnection *dbc = this_dblist->getDbConnection(this_dblist->current_index);
 // if (!db)
 // {
@@ -241,7 +251,6 @@ void QueryDialog::on_go_QueryButton_clicked()
  // initialize new sql query object
 // QWidget * tab_search=(GeomCollTab*)(*(tab_GeomColl))->parentWidget();
 // QWidget *tab_main_child;
-QString s_Search; //=tab_search->objectName();
 // for (int i=0; i<((GeomCollTab*)this_parent)->count(); ++i)
 // {
 //  tab_search = ((GeomCollTab*)this_parent)->widget(i);
@@ -271,75 +280,88 @@ QString s_Search; //=tab_search->objectName();
  {
   if (txt.trimmed().isEmpty())
    continue;
-  QueryModel *query_view_model = new QueryModel(this ,db, config->currConnection->servertype());
-  //queryModelList.append(query_view_modell);
-  query_view_model->setQuery(txt, db);
-  if (query_view_model->lastError().isValid())
+  QStringList tokens = txt.split(" ");
+  if(tokens.count() >= 4
+     && tokens.at(0).compare("select", Qt::CaseInsensitive)  == 0
+     && tokens.at(1) == "*"
+     && tokens.at(2).compare("from", Qt::CaseInsensitive) == 0
+     )
   {
-   //query_View->hide();
-   //queryResultText->show();
-   sa_Message_Text.append(QString("%1\n%2").arg(query_view_model->lastError().driverText()).arg(query_view_model->lastError().databaseText()));
-   sa_Message_Text.append(txt);
-   i_Message_Error++;
-   if(ui->cb_stop_query_on_error->isChecked())
-   {
-    sa_Message_Text.append(tr("Query stopped because of errors"));
-    for (int i=0; i<sa_Message_Text.count(); i++)
-     s_Search+=sa_Message_Text[i]+"\n";
-    ui->queryResultText->setPlainText(s_Search);
-    return;
-   }
+   processSelect(tokens.at(3), txt);
   }
   else
   {
-   // query was successful
-   if (query_view_model->query().isSelect())
+   QueryModel *query_view_model = new QueryModel(this ,db, config->currConnection->servertype());
+   //queryModelList.append(query_view_modell);
+   query_view_model->setQuery(txt, db);
+   if (query_view_model->lastError().isValid())
    {
-    i_Rows_Total += query_view_model->rowCount();
-    i_Message_Result_Yes++;
-    if (i_Message_Result_Yes <= i_Max_Tab_Results)
+    //query_View->hide();
+    //queryResultText->show();
+    sa_Message_Text.append(QString("%1\n%2").arg(query_view_model->lastError().driverText()).arg(query_view_model->lastError().databaseText()));
+    sa_Message_Text.append(txt);
+    i_Message_Error++;
+    if(ui->cb_stop_query_on_error->isChecked())
     {
-     QTableView *query_view = new QTableView();
-     query_view->setAlternatingRowColors(true);
-     query_view->setSelectionMode(QAbstractItemView::ContiguousSelection);
-     connect(query_view->horizontalHeader(),SIGNAL(sectionDoubleClicked(int)),this,SLOT(slot_QueryView_horizontalHeader_sectionDoubleClicked(int)));
-     connect(query_view,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(slot_queryView_row_DoubleClicked(QModelIndex)));
-     query_view->setContextMenuPolicy(Qt::CustomContextMenu);
-     connect(query_view,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(tablev_customContextMenu(QPoint)));
-     myHeaderView *hv = new myHeaderView(Qt::Horizontal, query_view);
-     query_view->setHorizontalHeader(hv);
-//     query_view->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
-//     connect(query_view->horizontalHeader(),SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(queryViewHeaderContextMenuRequested(const QPoint)));
-//     query_view->horizontalHeader()->setMovable(true);
-     query_view->setSortingEnabled(false);
-     QSortFilterProxyModel *sm = new QSortFilterProxyModel(query_view);
-     sm->setSourceModel(query_view_model);
-     query_view->setModel(sm);
-     query_view->setSortingEnabled(true);
-     sm->sort(-1,Qt::AscendingOrder);
-     QString tabTitle = tr("Result ") + QString("%1").arg(ui->widget_query_view->count());
-     if (tab_First_Result == 0)
-     {
-      tab_First_Result=query_view;
-     }
-     int i_tab = ui->widget_query_view->addTab(query_view, tabTitle);
-     //qDebug() << QString("tab %1 added").arg(i_tab);
-     query_view_model->setTabName(tabTitle);
-     query_view->resizeColumnsToContents();
-     query_view->resizeRowsToContents();
-    }
-    if (i_Message_Result_Yes == i_Max_Tab_Results)
-    {
-     sa_Message_Text.append(QString(tr("No more Tab-Results will be shown. Maximum allowed: %1 .")).arg(i_Max_Tab_Results));
+     sa_Message_Text.append(tr("Query stopped because of errors"));
+     for (int i=0; i<sa_Message_Text.count(); i++)
+      s_Search+=sa_Message_Text[i]+"\n";
+     ui->queryResultText->setPlainText(s_Search);
+     return;
     }
    }
    else
    {
-    //query_View->hide();
-    //queryResultText->show();
-    sa_Message_Text.append(QString("%1 rows affected.").arg(query_view_model->query().numRowsAffected()));
-    i_Message_Rows_effected+=query_view_model->query().numRowsAffected();
-    i_Message_Result_No++;
+    // query was successful
+    if (query_view_model->query().isSelect())
+    {
+     i_Rows_Total += query_view_model->rowCount();
+     i_Message_Result_Yes++;
+     if (i_Message_Result_Yes <= i_Max_Tab_Results)
+     {
+      QTableView *query_view = new QTableView();
+      query_view->setAlternatingRowColors(true);
+      query_view->setSelectionMode(QAbstractItemView::ContiguousSelection);
+      connect(query_view->horizontalHeader(),SIGNAL(sectionDoubleClicked(int)),this,SLOT(slot_QueryView_horizontalHeader_sectionDoubleClicked(int)));
+      connect(query_view,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(slot_queryView_row_DoubleClicked(QModelIndex)));
+      query_view->setContextMenuPolicy(Qt::CustomContextMenu);
+      connect(query_view,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(tablev_customContextMenu(QPoint)));
+      myHeaderView *hv = new myHeaderView(Qt::Horizontal, query_view);
+      query_view->setHorizontalHeader(hv);
+ //     query_view->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+ //     connect(query_view->horizontalHeader(),SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(queryViewHeaderContextMenuRequested(const QPoint)));
+ //     query_view->horizontalHeader()->setMovable(true);
+
+      query_view->setSortingEnabled(false);
+      QSortFilterProxyModel *sm = new QSortFilterProxyModel(query_view);
+      sm->setSourceModel(query_view_model);
+      query_view->setModel(sm);
+      query_view->setSortingEnabled(true);
+      sm->sort(-1,Qt::AscendingOrder);
+      QString tabTitle = tr("Result ") + QString("%1").arg(ui->widget_query_view->count());
+      if (tab_First_Result == 0)
+      {
+       tab_First_Result=query_view;
+      }
+      int i_tab = ui->widget_query_view->addTab(query_view, tabTitle);
+      //qDebug() << QString("tab %1 added").arg(i_tab);
+      query_view_model->setTabName(tabTitle);
+      query_view->resizeColumnsToContents();
+      query_view->resizeRowsToContents();
+     }
+     if (i_Message_Result_Yes == i_Max_Tab_Results)
+     {
+      sa_Message_Text.append(QString(tr("No more Tab-Results will be shown. Maximum allowed: %1 .")).arg(i_Max_Tab_Results));
+     }
+    }
+    else
+    {
+     //query_View->hide();
+     //queryResultText->show();
+     sa_Message_Text.append(QString("%1 rows affected.").arg(query_view_model->query().numRowsAffected()));
+     i_Message_Rows_effected+=query_view_model->query().numRowsAffected();
+     i_Message_Result_No++;
+    }
    }
   }
   qApp->processEvents();
@@ -396,6 +418,82 @@ QString s_Search; //=tab_search->objectName();
  timer->stop();
 }
 
+void QueryDialog::processSelect(QString table, QString commandLine)
+{
+ QWidget *tab_First_Result=0;
+
+ QSqlDatabase db = QSqlDatabase::database();
+ QueryEditModel* model = new QueryEditModel(nullptr, db);
+ model->setTable(table);
+ QString whereClause;
+ if(commandLine.contains("where", Qt::CaseInsensitive))
+ {
+  whereClause = commandLine.mid(commandLine.indexOf("where", Qt::CaseInsensitive)+5).trimmed();
+  int ix;
+  if((ix = whereClause.indexOf(";")) >= 0)
+   whereClause = whereClause.mid(0,ix);
+  if((ix = whereClause.indexOf("order by", Qt::CaseInsensitive))>= 0)
+   whereClause = whereClause.mid(0,ix);
+  if(!whereClause.isEmpty())
+   model->setFilter(whereClause);
+ }
+ bool rslt = model->select();
+ if(rslt)
+ {
+  QTableView *query_view = new QTableView();
+  query_view->setAlternatingRowColors(true);
+  query_view->setSelectionMode(QAbstractItemView::ContiguousSelection);
+  connect(query_view->horizontalHeader(),SIGNAL(sectionDoubleClicked(int)),this,SLOT(slot_QueryView_horizontalHeader_sectionDoubleClicked(int)));
+  connect(query_view,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(slot_queryView_row_DoubleClicked(QModelIndex)));
+  query_view->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(query_view,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(tablev_customContextMenu(QPoint)));
+  myHeaderView *hv = new myHeaderView(Qt::Horizontal, query_view);
+  query_view->setHorizontalHeader(hv);
+  query_view->setSortingEnabled(false);
+  QSortFilterProxyModel *sm = new QSortFilterProxyModel(query_view);
+  sm->setSourceModel(model);
+  model->setEditStrategy((QueryEditModel::EditStrategy)ui->cbEditStrategy->currentIndex());
+  query_view->setModel(sm);
+  query_view->setSortingEnabled(true);
+  sm->sort(-1,Qt::AscendingOrder);
+  QString tabTitle = tr("Result ") + QString("%1").arg(ui->widget_query_view->count());
+  if (tab_First_Result == 0)
+  {
+   tab_First_Result=query_view;
+  }
+  int i_tab = ui->widget_query_view->addTab(query_view, tabTitle);
+  //qDebug() << QString("tab %1 added").arg(i_tab);
+  model->setTabName(tabTitle);
+  query_view->resizeColumnsToContents();
+  query_view->resizeRowsToContents();
+  i_Rows_Total += model->rowCount();
+
+  connect(ui->pbSubmit, &QPushButton::clicked, [=] {
+   model->submit();
+  });
+  ui->pbSubmit->setVisible(false);
+ }
+ else
+ {
+  QSqlError err = model->lastError();
+  if (err.isValid())
+  {
+   //query_View->hide();
+   //queryResultText->show();
+   sa_Message_Text.append(QString("%1\n%2").arg(model->lastError().driverText()).arg(model->lastError().databaseText()));
+   sa_Message_Text.append(commandLine);
+   i_Message_Error++;
+   if(ui->cb_stop_query_on_error->isChecked())
+   {
+    sa_Message_Text.append(tr("Query stopped because of errors"));
+    for (int i=0; i<sa_Message_Text.count(); i++)
+     s_Search+=sa_Message_Text[i]+"\n";
+    ui->queryResultText->setPlainText(s_Search);
+    return;
+   }
+  }
+ }
+}
 void QueryDialog::quickProcess()
 {
  QApplication::processEvents();
@@ -448,9 +546,18 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
  // Obtain the view used in the active widget (current active tab), then determine it's sortproxymodel and it's sourcemodel to get the model used for this query.
  QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
  QSortFilterProxyModel *proxyModel =  qobject_cast<QSortFilterProxyModel *>(view->model());
- QueryModel * model =  qobject_cast<QueryModel*>(proxyModel->sourceModel());
- qDebug()<< model->tabName;
- model->edit(proxyModel->mapToSource(index));
+ if(qobject_cast<QueryModel*>(proxyModel->sourceModel()))
+ {
+  QueryModel * model =  qobject_cast<QueryModel*>(proxyModel->sourceModel());
+  qDebug()<< model->tabName;
+  model->edit(proxyModel->mapToSource(index));
+ }
+ else
+ {
+  QueryEditModel * model =  qobject_cast<QueryEditModel*>(proxyModel->sourceModel());
+  qDebug()<< model->tabName;
+  model->edit(proxyModel->mapToSource(index));
+ }
 }
 
 //create table input context menu
@@ -559,12 +666,22 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    return;   // no results present
   QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
   QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel *>(view->model());
-  QueryModel * model = qobject_cast<QueryModel*>(proxyModel->sourceModel());
-  //QItemSelectionModel *selmodel = view->selectionModel();
-  //const QItemSelection &sellist = proxyModel->mapSelectionToSource (selmodel->selection());
+  if(qobject_cast<QueryModel*>(proxyModel->sourceModel()))
+  {
+   QueryModel * model = qobject_cast<QueryModel*>(proxyModel->sourceModel());
+   //QItemSelectionModel *selmodel = view->selectionModel();
+   //const QItemSelection &sellist = proxyModel->mapSelectionToSource (selmodel->selection());
 
-  QClipboard *clip = QApplication::clipboard();
-  clip->setText(model->data(currentIndexQueryView,Qt::DisplayRole).toString());
+   QClipboard *clip = QApplication::clipboard();
+   clip->setText(model->data(currentIndexQueryView,Qt::DisplayRole).toString());
+  }
+  else
+  {
+   QueryEditModel * model = qobject_cast<QueryEditModel*>(proxyModel->sourceModel());
+   QClipboard *clip = QApplication::clipboard();
+   clip->setText(model->data(currentIndexQueryView,Qt::DisplayRole).toString());
+
+  }
  }
 // void QueryDialog::onMoveOrRezize_columns()
 // {

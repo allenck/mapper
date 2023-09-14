@@ -373,7 +373,7 @@ public:
     qint32 reverseLeave;        // Not defined for one Way
     QString oneWay;
     QString trackUsage;
-    int next, prev;
+    int next =-1, prev=-1;
     LatLng startLatLng;
     LatLng endLatLng;
     SegmentInfo* sd = nullptr;
@@ -498,7 +498,8 @@ class SegmentInfo
  bool _bNeedsUpdate;
  //int routeCount;
  //QString trackUsage;
- int _next; // needed for DupSegmentView
+ int _next = -1; // needed for DupSegmentView
+ int _prev = -1;
  QString _trackType = " ";
  QString _location;
 

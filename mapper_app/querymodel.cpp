@@ -21,6 +21,7 @@ void QueryModel::sort( int column, Qt::SortOrder order)
  //table_blobs->on_init_list(-1);
  return QSqlQueryModel::sort(column, order);
 }
+
 QVariant QueryModel::data(const QModelIndex &index, int role = Qt::DisplayRole) const
 {
  if (!index.isValid())

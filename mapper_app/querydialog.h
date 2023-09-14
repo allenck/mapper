@@ -38,6 +38,16 @@ private:
  Connection* tgtConn;
  QString tgtDbType;
  bool bChanging;
+ void processSelect(QString table, QString commandLine);
+ QWidget *tab_First_Result=0;
+ QStringList sa_Message_Text;
+ int i_Message_Error=0;
+ int i_Message_Result_Yes=0;
+ int i_Message_Result_No=0;
+ int i_Message_Rows_effected=0;
+ int i_Message_Total=0;
+ int i_Rows_Total=0;
+ QString s_Search; //=tab_search->objectName();
 
 private slots:
  void on_go_QueryButton_clicked();
