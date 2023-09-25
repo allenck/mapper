@@ -7,11 +7,11 @@
 #include "data.h"
 #include <QList>
 
-class checkRoute : public QObject
+class CheckRoute : public QObject
 {
     Q_OBJECT
 public:
-    explicit checkRoute(QList<SegmentData> list, Configuration * cfg, QObject *parent = 0);
+    explicit CheckRoute(QList<SegmentData> list, Configuration * cfg, QObject *parent = 0);
     QList<SegmentData> getnotConnected();
     QList<SegmentData> getMultipleConnections();
     void setStart(qint32 seg);

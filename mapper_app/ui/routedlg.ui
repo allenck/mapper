@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>506</width>
+    <width>538</width>
     <height>490</height>
    </rect>
   </property>
@@ -28,6 +28,9 @@
    </item>
    <item row="2" column="1">
     <widget class="QLineEdit" name="txtRouteNbr">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter an existing route number, e.g. '20' or 'M1'. Enter a range, eg. '200,299' to create a new numeric number in that range.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="maxLength">
       <number>8</number>
      </property>
@@ -90,13 +93,6 @@
        </widget>
       </item>
      </layout>
-    </widget>
-   </item>
-   <item row="4" column="6" colspan="3">
-    <widget class="QCheckBox" name="chkOtherRoutes">
-     <property name="text">
-      <string>Check other routes</string>
-     </property>
     </widget>
    </item>
    <item row="7" column="0">
@@ -195,61 +191,10 @@
    <item row="3" column="3" colspan="2">
     <widget class="QComboBox" name="cbTractionType"/>
    </item>
-   <item row="11" column="0">
-    <widget class="QLabel" name="lblHelpText">
-     <property name="palette">
-      <palette>
-       <active>
-        <colorrole role="WindowText">
-         <brush brushstyle="SolidPattern">
-          <color alpha="255">
-           <red>255</red>
-           <green>0</green>
-           <blue>127</blue>
-          </color>
-         </brush>
-        </colorrole>
-       </active>
-       <inactive>
-        <colorrole role="WindowText">
-         <brush brushstyle="SolidPattern">
-          <color alpha="255">
-           <red>255</red>
-           <green>0</green>
-           <blue>127</blue>
-          </color>
-         </brush>
-        </colorrole>
-       </inactive>
-       <disabled>
-        <colorrole role="WindowText">
-         <brush brushstyle="SolidPattern">
-          <color alpha="255">
-           <red>159</red>
-           <green>158</green>
-           <blue>158</blue>
-          </color>
-         </brush>
-        </colorrole>
-       </disabled>
-      </palette>
-     </property>
-     <property name="text">
-      <string>TextLabel..</string>
-     </property>
-    </widget>
-   </item>
    <item row="6" column="1" colspan="3">
     <widget class="QDateEdit" name="dateEnd">
      <property name="displayFormat">
       <string>yyyy/MM/dd</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="6" colspan="3">
-    <widget class="QCheckBox" name="chkLockDate">
-     <property name="text">
-      <string>Lock date</string>
      </property>
     </widget>
    </item>
@@ -431,6 +376,57 @@
      </property>
     </widget>
    </item>
+   <item row="3" column="7">
+    <widget class="QCheckBox" name="chkOtherRoutes">
+     <property name="text">
+      <string>Check other routes</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="0" colspan="9">
+    <widget class="QLabel" name="lblHelpText">
+     <property name="palette">
+      <palette>
+       <active>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>255</red>
+           <green>0</green>
+           <blue>127</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </active>
+       <inactive>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>255</red>
+           <green>0</green>
+           <blue>127</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </inactive>
+       <disabled>
+        <colorrole role="WindowText">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>159</red>
+           <green>158</green>
+           <blue>158</blue>
+          </color>
+         </brush>
+        </colorrole>
+       </disabled>
+      </palette>
+     </property>
+     <property name="text">
+      <string>TextLabel..</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -446,7 +442,6 @@
   <tabstop>txtRouteNbr</tabstop>
   <tabstop>cbRouteName</tabstop>
   <tabstop>cbTractionType</tabstop>
-  <tabstop>chkOtherRoutes</tabstop>
   <tabstop>rbNormal</tabstop>
   <tabstop>rbNFromLeft</tabstop>
   <tabstop>rbNFromBack</tabstop>
@@ -464,7 +459,6 @@
   <tabstop>btnDelete</tabstop>
   <tabstop>btnUpdateTurn</tabstop>
   <tabstop>btnOK</tabstop>
-  <tabstop>chkLockDate</tabstop>
   <tabstop>rbReverse</tabstop>
  </tabstops>
  <resources/>

@@ -35,13 +35,6 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="2" colspan="2">
-    <widget class="QLineEdit" name="txtRouteNbr">
-     <property name="maxLength">
-      <number>6</number>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="4" colspan="3">
     <widget class="QLineEdit" name="txtRouteName">
      <property name="maxLength">
@@ -148,6 +141,16 @@
     <widget class="QDateEdit" name="dateStart">
      <property name="displayFormat">
       <string>yyyy/MM/dd</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="3">
+    <widget class="QLineEdit" name="txtRouteNbr">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter an existing route number, e.g. '20' or 'M1'. Enter a range, eg. '200,299' to create a new numeric number in that range.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="maxLength">
+      <number>9</number>
      </property>
     </widget>
    </item>

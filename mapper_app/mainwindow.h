@@ -170,7 +170,6 @@ public:
     void updateStation(qint32 stationKey, qint32 segmentId);
     void moveStationMarker(qint32 stationKey, qint32 segmentId, double lat, double lon);
     void moveRouteComment(int route, QString date, double latitude, double longitude, int companyKey);
-    void addModeToggled(bool isChecked);
 
     RouteViewTableModel *sourceModel;
     void displaySegment(qint32 segmentId, QString segmentName, QString color, QString trackUsage, bool bClearFirst);
@@ -200,6 +199,7 @@ public slots:
     void segmentStatus(QString str, QString color);
     void saveChanges();
     void On_displayRoute(RouteData);
+    void addModeToggled(bool isChecked);
 
 private slots:
     void about();
@@ -238,7 +238,7 @@ private slots:
     void modifyRouteDate();
     void addSegment();
     void deleteRoute();
-    void updateRoute();
+    void updateRoute(SegmentData* sd = nullptr);
     void updateTerminals();
     void segmentChanged(qint32 changedSegment, qint32 newSegment);
     void segmentDlg_routeChanged(RouteChangedEventArgs);
@@ -370,6 +370,8 @@ private:
     QList<QAction*> overlayActions;
     QAction* newCityAct;
     QAction* removeCityAct;
+    QAction* changeRouteNumberAct;
+    QAction* checkSegmentsAct;
     //QSignalMapper *overlaySignalMapper;
     QActionGroup  *overlayActionGroup;
     QString  currentOverlay;
@@ -408,7 +410,7 @@ private:
     MyWebEnginePage* myWebEnginePage = nullptr;
     qint32 m_SegmentId;
     //QT_DEPRECATED QList<SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
-    QMap<int, SegmentInfo> cbSegmentDataList;  // list of segmentInfo items in cbSegments
+    QMap<int, SegmentData> cbSegmentDataList;  // list of segmentInfo items in cbSegments
 
     qint32 m_currPoint, m_nbrPoints;
     int m_companyKey;

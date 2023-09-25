@@ -67,7 +67,7 @@
 #include "ui/newcitydialog.h"
 #include "ui/removecitydialog.h"
 #include "ui/modifyroutetractiontypedlg.h"
-
+#include "dialogchangeroute.h"
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -348,7 +348,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   segmentView = new SegmentView(config, this);
   connect(segmentView, SIGNAL(selectSegment(int)), this, SLOT(on_selectSegment(int)));
   otherRouteView =  OtherRouteView::instance(this);
-  connect(otherRouteView, SIGNAL(displayRoute(RouteData)), this, SLOT(On_displayRoute(RouteData)));
+  connect(otherRouteView, SIGNAL(displayRoute(displayRoute)), this, SLOT(On_displayRoute(displayRoute)));
   stationView = new StationView(config, this);
   companyView = new CompanyView(config, this);
   tractionTypeView = new TractionTypeView(config, this);
@@ -443,6 +443,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui->ssw->cbSegments()->addAction(selectSegmentAct);
   ui->ssw->cbSegments()->addAction(editSegmentAct);
   ui->ssw->cbSegments()->addAction(splitSegmentAct);
+  ui->ssw->cbSegments()->addAction(checkSegmentsAct);
 
   connect(SQL::instance(), &SQL::segmentsChanged, [=]{
    cbSegmentDataList = sql->getSegmentInfoList();
@@ -996,7 +997,7 @@ void MainWindow::createActions()
  addSegmentToRouteAct = new QAction(tr("Add segment to route"), this);
  connect(addSegmentToRouteAct, &QAction::triggered, [=]{
 //     int ix = ui->cbSegments->currentIndex();
-     SegmentInfo sd = ui->ssw->segmentSelected();
+     SegmentData sd = ui->ssw->segmentSelected();
 
      int row =         ui->cbRoute->currentIndex();
      if(row < 0) return;
@@ -1177,6 +1178,31 @@ void MainWindow::createActions()
   else
    config->setLoggingOn(true);
  });
+
+ changeRouteNumberAct = new QAction(tr("Change route number"),this);
+ changeRouteNumberAct->setToolTip(tr("Change the route number for a route"));
+ connect(changeRouteNumberAct, &QAction::triggered, [=]{
+  int row =         ui->cbRoute->currentIndex();
+  if(row < 0) return;
+  RouteData rd = ((RouteData)routeList.at(row));
+  DialogChangeRoute* dlg = new DialogChangeRoute();
+  int rslt = dlg->exec();
+  if(rslt == QDialog::DialogCode::Accepted )
+  {
+   int newRoute = dlg->getNumber();
+   bool rslt = sql->renumberRoute(rd.alphaRoute, newRoute);
+   if(rslt)
+   {
+    refreshRoutes();
+   }
+  }
+ });
+
+ checkSegmentsAct = new QAction(tr("Check segments"),this);
+ checkSegmentsAct->setToolTip(tr("update ditection, bounds, etc; Update routes usin segments"));
+ connect(checkSegmentsAct, &QAction::triggered, [=]{
+  sql->checkSegments();
+ });
 }
 
 void MainWindow::createMenus()
@@ -1305,6 +1331,7 @@ void MainWindow::cbRoute_customContextMenu( const QPoint& )
     cbRouteMenu.addAction(replaceSegments);
     cbRouteMenu.addAction(exportRouteAct);
     cbRouteMenu.addAction(updateTerminalsAct);
+    cbRouteMenu.addAction(changeRouteNumberAct);
     updateTerminalsAct->setEnabled(routeView->isSequenced());
     cbRouteMenu.exec(QCursor::pos());
 }
@@ -1565,7 +1592,7 @@ void MainWindow::about()
 void MainWindow::btnDeleteSegment_Click()   //SLOT
 {
     //SQL sql;
-    SegmentInfo sd;
+    SegmentData sd;
 //    int ix = ui->cbSegments->currentIndex();
     //            sI = (segmentInfo)segmentInfoList[ix];
     //sI = (SegmentInfo)cbSegmentInfoList.at(ix);
@@ -1583,10 +1610,10 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
         // Get all the segments intersecting both ends using the same point
         updateIntersection(0, sd.startLat(), sd.startLon());
         updateIntersection(0, sd.endLat(), sd.endLon());
-        SegmentInfo sdDup = sql->getSegmentInSameDirection(sd);
+        SegmentData sdDup = sql->getSegmentInSameDirection(sd);
 
         // Get a list of all routes using this segment.
-        QList<RouteData> segmentDataList = sql->getRouteSegmentsBySegment(sd.segmentId());
+        QList<SegmentData> segmentDataList = sql->getRouteSegmentsBySegment(sd.segmentId());
         if ( segmentDataList.count() > 0)
         {
             if ( sdDup.segmentId() >= 0)
@@ -1606,8 +1633,10 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
                         //foreach (routeData rd in segmentInfoList)
                     for(int i =0; i< segmentDataList.count(); i++)
                         {
-                        RouteData rd = (RouteData)segmentDataList.at(i);
-                        if (sql->deleteRouteSegment(rd.route, rd.name, rd.lineKey, rd.startDate.toString("yyyy/MM/dd"), rd.endDate.toString("yyyy/MM/dd")) != true)
+                        SegmentData rd = segmentDataList.at(i);
+                        if (sql->deleteRouteSegment(rd.route(), rd.routeName(), rd.segmentId(),
+                                                    rd.startDate().toString("yyyy/MM/dd"),
+                                                    rd.endDate().toString("yyyy/MM/dd")) != true)
                             {
                                 //infoPanel.Text = "Delete Error";
                                 statusBar()->showMessage(tr("Delete failed"));
@@ -1616,11 +1645,13 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
                                 QApplication::beep();
                                 return;
                             }
-                        if (sql->doesRouteSegmentExist(rd.route, rd.name, sdDup.segmentId(), rd.startDate.toString("yyyy/MM/dd"), rd.endDate.toString("yyyy/MM/dd")))
+                        if (sql->doesRouteSegmentExist(rd.route(), rd.routeName(), sdDup.segmentId(),
+                                                       rd.startDate(), rd.endDate()))
                                 continue;
-                            if (!sql->addSegmentToRoute(rd.route, rd.name, rd.startDate, rd.endDate, sdDup.segmentId(), rd.companyKey,
-                                                        rd.tractionType, rd.direction, rd.next, rd.prev, rd.normalEnter,
-                                                        rd.normalLeave, rd.reverseEnter, rd.reverseLeave, rd.oneWay, rd.trackUsage))
+                            if (!sql->addSegmentToRoute(rd.route(), rd.routeName(), rd.startDate(), rd.endDate(), sdDup.segmentId(),
+                                                        rd.companyKey(),
+                                                        rd.tractionType(), rd.direction(), rd.next(), rd.prev(), rd.normalEnter(),
+                                                        rd.normalLeave(), rd.reverseEnter(), rd.reverseLeave(), rd.oneWay(), rd.trackUsage()))
                             {
                                 //infoPanel.Text = "Update Error";
                                 statusBar()->showMessage(tr("Update failed"));
@@ -1788,8 +1819,8 @@ void MainWindow::on_createKmlFile_triggered()
  int row =         ui->cbRoute->currentIndex();
  RouteData rd = ((RouteData)routeList.at(row));
  //RouteInfo ri = sql->getRoutePoints(rd.route,rd.name, ui->dateEdit->text());
- RouteInfo ri(rd.route,rd.name, ui->dateEdit->text());
- Kml* kml = new Kml(ri );
+ //RouteInfo ri(rd.route,rd.name, ui->dateEdit->text());
+ Kml* kml = new Kml(rd.name,  segmentDataList);
  QString fileName = QFileDialog::getOpenFileName(this,"Create Kml file", QDir::homePath(),"Kml files (*.kml");
  if(!fileName.isEmpty())
  kml->createKml(fileName, "ff0000ff");
@@ -1811,8 +1842,8 @@ void MainWindow::On_displayRoute(RouteData rd)
   btnClearClicked();
 
  //RouteInfo ri = sql->getRoutePoints(rd.route,rd.name, ui->dateEdit->text());
- RouteInfo ri = RouteInfo(rd.route,rd.name, ui->dateEdit->text());
-
+ //RouteInfo ri = RouteInfo(rd.route,rd.name, ui->dateEdit->text());
+ QList<SegmentData> segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route, rd.name, ui->dateEdit->text());
 // LatLng startPt =  LatLng();
 // LatLng endPt =  LatLng();
 // LatLng swPt = LatLng(90,180);
@@ -1823,7 +1854,7 @@ void MainWindow::On_displayRoute(RouteData rd)
  bool bFirst = true;
 
  QVariantList objArray;
- if (ri.route < 1)
+ if (rd.route < 1)
   return; // no data
     //string str = (m_routeNbr<10?"0":"")+ m_routeNbr;
  m_alphaRoute = sql->getAlphaRoute(m_routeNbr, rd.companyKey);
@@ -1843,10 +1874,11 @@ void MainWindow::On_displayRoute(RouteData rd)
    m_bridge->processScript("addRouteEndMarker", objArray);
   }
  }
+ double length = 0.0;
  //foreach (segmentGroup sg in ri.segments)
- for(int i = 0; i< ri.segmentDataList.count(); i++)
+ for(int i = 0; i< segmentDataList.count(); i++)
  {
-  SegmentData sd = ri.segmentDataList.at(i);
+  SegmentData sd = segmentDataList.at(i);
   if(sd.segmentId() == 367)
    qDebug() << "halt";
   objArray.clear();
@@ -1873,21 +1905,30 @@ void MainWindow::On_displayRoute(RouteData rd)
   if(sd.trackUsage().isEmpty()) // fix for MySql not storing field correctly
    sd.setTrackUsage(" ");
   objArray.clear();
-  objArray <<   sd.segmentId() << ri.routeName <<  sd.description() << sd.oneWay() << color << sd.tracks()
+  objArray <<   sd.segmentId() << rd.name <<  sd.description() << sd.oneWay() << color << sd.tracks()
              << dash << sd.routeType() << sd.trackUsage() << points.count();
   objArray.append(points);
   m_bridge->processScript("createSegment",objArray);
 
-  statusBar()->showMessage(tr("route length = %1 km, %2 miles").arg(ri.length).arg(ri.length*0.621371192));
-
+  //statusBar()->showMessage(tr("route length = %1 km, %2 miles").arg(sd.length()).arg(sd.length()*0.621371192));
+  if(sd.tracks() == 2)
+  {
+   if(sd.oneWay() == "Y")
+    length += sd.length();
+   else
+    length += sd.length()*2;
+  }
+  else
+   length += sd.length();
  }
+ statusBar()->showMessage(tr("route length = %1 km, %2 miles").arg(length).arg(length*0.621371192));
 
  QString markerType = "green";
  QMap<int, TractionTypeInfo> tractionTypes= sql->getTractionTypes();
  foreach(TractionTypeInfo tti,tractionTypeList.values())
  {
   //tractionTypeInfo tti = (tractionTypeInfo)tractionTypeList.at(i);
-  if (tti.tractionType == ri.tractionType)
+  if (tti.tractionType == rd.tractionType)
   {
    switch (tti.routeType)
    {
@@ -1967,14 +2008,14 @@ default:
    QDate dt = QDate::fromString(m_currRouteStartDate, "yyyy/MM/dd");
    dt = sql->getFirstCommentDate(m_routeNbr, dt, rd.companyKey);
    RouteComments rc = sql->getRouteComment(m_routeNbr, dt, -1);
-   if(rc.infoKey < 0)
+   if(rc.commentKey < 0)
    {
     rc = sql->getRouteComment(0, dt, -1);
    }
    if(rc.ci.comments.isEmpty())
    {
     rc = sql->getNextRouteComment(m_routeNbr, dt, -1);
-    if(rc.infoKey < 0)
+    if(rc.commentKey < 0)
     {
      rc = sql->getNextRouteComment(0, dt, -1);
     }
@@ -2027,7 +2068,7 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
  if(func < 0)
  {
   rc = sql->getPrevRouteComment(route, dt, -1);
-  if(rc.infoKey < 0)
+  if(rc.commentKey < 0)
   {
    rc = sql->getPrevRouteComment(0, dt, -1);
   }
@@ -2035,7 +2076,7 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
  else
  {
   rc = sql->getNextRouteComment(route, dt, -1);
-  if(rc.infoKey < 0)
+  if(rc.commentKey < 0)
   {
    rc = sql->getNextRouteComment(0, dt, -1);
   }
@@ -2047,11 +2088,11 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
   {
    RouteComments rcNext = sql->getNextRouteComment(route, rc.date, -1);
    QString sNext;
-   if(rcNext.infoKey>=0)
+   if(rcNext.commentKey>=0)
     sNext = "<input type='button' name='next' value='>' onClick='nextRouteComment()'/>";
    RouteComments rcPrev = sql->getPrevRouteComment(route, rc.date, -1);
    QString sPrev;
-   if(rcPrev.infoKey >= 0)
+   if(rcPrev.commentKey >= 0)
      sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
    rc.ci.comments.insert(i,sPrev+sNext);
   }
@@ -3194,13 +3235,13 @@ void MainWindow::updateIntersection(qint32 i, double newLat, double newLon)
  SegmentInfo sd = sql->getSegmentInfo(m_SegmentId);
  // get all the points within 100 meters
  //QList<segmentData> myArray = sql->getIntersectingSegments(newLat, newLon, .020, si.routeType);
- QList<SegmentInfo> myArray = sql->getIntersectingSegments(newLat, newLon, .020, sd.routeType());
+ QList<SegmentData> myArray = sql->getIntersectingSegments(newLat, newLon, .020, sd.routeType());
  int currSegment = m_SegmentId;
  //foreach (segmentData sd in myArray)
  for(int i=0; i< myArray.count(); i++)
  {
   //segmentData sd= (segmentData)myArray.at(i);
-  SegmentInfo sd = myArray.at(i);
+  SegmentData sd = myArray.at(i);
   //QString oneWay = sql->getSegmentOneWay(sd.SegmentId);
   m_SegmentId = sd.segmentId();
   //m_nbrPoints = sql->getNbrPoints(m_SegmentId);
@@ -3572,7 +3613,7 @@ void MainWindow::deleteRoute()
 #endif
 }
 
-void MainWindow::updateRoute()
+void MainWindow::updateRoute(SegmentData* sd )
 {
     //SQL sql;
 //        QList<SegmentInfo> segmentInfoList = sql->getSegmentInfo();
@@ -3585,6 +3626,17 @@ void MainWindow::updateRoute()
         connect(routeDlg, SIGNAL(SegmentChangedEvent(qint32, qint32)),this, SLOT(segmentChanged(qint32,qint32)));
         //routeDlg->routeChanged += new routeChangedEventHandler(RouteChanged);
         connect(routeDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs )), this, SLOT(RouteChanged(RouteChangedEventArgs )));
+    }
+
+    if(sd)
+    {
+     routeDlg->setRouteNbr( sd->route());
+     routeDlg->setSegmentId( sd->segmentId());
+     routeDlg->setRouteData(*sd);
+     routeDlg->show();
+     routeDlg->raise();
+     routeDlg->activateWindow();
+     return;
     }
 
     if(m_SegmentId >= 0)
@@ -3780,6 +3832,7 @@ void MainWindow::addModeToggled(bool isChecked)
     else
         m_bridge->processScript("addModeOn");
 }
+
 void MainWindow::displayStationMarkersToggeled(bool bChecked)
 {
     bDisplayStationMarkers = bChecked;
@@ -3991,13 +4044,13 @@ void MainWindow::locateStreet()
 
 void MainWindow::findDupSegments()
 {
-    QList<SegmentInfo> myArray;
+    QList<SegmentData> myArray;
     this->setCursor(QCursor(Qt::WaitCursor));
     //foreach(segmentInfo si in segmentInfoList)
-    foreach(SegmentInfo sd, cbSegmentDataList)
+    foreach(SegmentData sd, cbSegmentDataList)
     {
 //        SegmentInfo si = cbSegmentInfoList.at(i);
-        SegmentInfo sdDup = sql->getSegmentInSameDirection(sd);
+        SegmentData sdDup = sql->getSegmentInSameDirection(sd);
 //        sdDup.next = si.segmentId;
 
         if(sdDup.segmentId() > -1)

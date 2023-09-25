@@ -885,6 +885,7 @@ function initMap()
      scrollwheel: true,
      tilt: 0
   }
+
  });
 
  options = /** @type {google.maps.MapTypeControlOptions} */(
@@ -902,6 +903,7 @@ function initMap()
   }
  });
  map.setOptions(defaultOptions);
+    map.setOptions( { styles: styles["hide"] })
  map.setMapTypeId(mapTypeId);
  stationArray = new google.maps.MVCArray();
 
@@ -954,6 +956,21 @@ function initMap()
             }
         }, true);
 } // end initialize()
+
+const styles = {
+  default: [],
+  hide: [
+    {
+      featureType: "poi",
+      stylers: [{ visibility: "off" }],
+    },
+    {
+      featureType: "transit",
+      elementType: "labels.icon",
+      stylers: [{ visibility: "off" }],
+    },
+  ],
+};
 
 function initialize()
 {
@@ -2586,6 +2603,7 @@ function setDefaultOptions()
 {
  //alert("setDefaultOptions");
  map.setOptions(defaultOptions);
+ map.setOptions({ styles: styles["hide"] });
  myRslt = 0;
 }
 
@@ -2593,6 +2611,7 @@ function setOptions()
 {
  //alert("setDefaultOptions");
  map.setOptions(options);
+ map.setOptions({ styles: styles["hide"] });
 }
 
 function isOverlayLoaded()

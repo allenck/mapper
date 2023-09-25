@@ -224,6 +224,7 @@ public:
     void deletePoint(int ptNum);
     void setPoints(QString);
     QString toString();
+    QString toString2();
     static QStringList ROUTETYPES;// = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
     QString pointsString();
     int segmentId() const {return _segmentId;}
@@ -252,8 +253,15 @@ public:
     void setDescription(QString description){_description = description;}
     QString oneWay() const {return _oneWay;}
     void setOneWay(QString oneWay){_oneWay = oneWay;}
-    QString direction() {return _direction;}
-    void setDirection(QString direction){_direction = direction;}
+    QString direction() {
+     _bearing = Bearing(_startLat, _startLon, _endLat, _endLon);
+     if(tracks() == 1)
+      _direction = _bearing.strDirection();
+     else
+      _direction = _bearing.strDirection() + "-" + _bearing.strReverseDirection();
+     return _direction;
+    }
+    void setDirection(QString direction){_direction = direction;} // ??
     int next() const {return _next;}
     void setNext(int next){_next = next;}
     int prev() {return _prev;}
@@ -277,18 +285,21 @@ public:
      _bearingEnd =  Bearing(_pointList.at(points-2).lat(), _pointList.at(points-2).lon(), _endLat, _endLon);
      return _bearingEnd;
     }
-    QDate startDate() {return _startDate;}
-    QDate endDate() {return _endDate;}
+    double getLength();
+    QDate startDate() const {return _startDate;}
+    QDate endDate() const {return _endDate;}
+    void setEndDate(QDate endDate) {_endDate = endDate;}
     double length() {return _length;}
     void setRouteType(RouteType rt) {_routeType = rt;}
     void setStartDate(QDate dt) {_startDate = dt;}
-    void setEndDate(QDate dt) {_endDate = dt;}
     bool needsUpdate() {return _bNeedsUpdate;}
     void setNeedsUpdate(bool b){_bNeedsUpdate = b;}
     void displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst);
     void checkTracks();
     int normalEnter() {return _normalEnter;}
+    void setNormalEnter(int normalEnter) {_normalEnter = normalEnter;}
     int normalLeave() {return _normalLeave;}
+    void setNormalLeave(int normalLeave) {_normalLeave = normalLeave;}
     void setSequence(int seq) {_sequence = seq;}
     void setReturnSeq(int seq) {_returnSeq = seq;}
     int sequence() const {return _sequence;}
@@ -298,10 +309,15 @@ public:
     int tractionType() {return _tractionType;}
     void setTractionType(int t) {_tractionType = t;}
     int reverseEnter() {return _reverseEnter;}
+    void setReverseEnter(int reverseEnter) {_reverseEnter = reverseEnter;}
     int reverseLeave() {return _reverseLeave;}
-    int route() {return _route;}
+    void setReverseLeave(int reverseLeave) {_reverseLeave = reverseLeave;}
+    int route() const {return _route;}
+    void setRoute(int route){_route = route;}
     int companyKey() {return _companyKey;}
-    QString routeName() {return _routeName;}
+    void setCompanyKey(int key) {_companyKey = key;}
+    QString routeName() const {return _routeName;}
+    void setRouteName(QString name) {_routeName = name;}
     Bounds bounds() {
      LatLng _sw = LatLng(_startLat < _endLat ? _startLat : _endLat, _startLon < _endLon ? _startLon : _endLon );
      LatLng _ne = LatLng(_startLat > _endLat ? _startLat : _endLat, _startLon > _endLon ? _startLon : _endLon );
@@ -310,6 +326,9 @@ public:
     }
     QString location() {return _location;}
     void setLocation(QString loc) {_location = loc;}
+    void setAlphaRoute(QString alphaRoute) {_alphaRoute = alphaRoute;}
+    QString alphaRoute() {return _alphaRoute;}
+
  private:
     qint32 _segmentId=-1;
     qint8 _tracks;
@@ -345,9 +364,10 @@ public:
     int _companyKey = -1;
     QString _routeName;
     QString _location;
-
+    QString _alphaRoute;
     friend class SQL;
 };
+Q_DECLARE_METATYPE(SegmentData)
 
 class RouteData
 {
@@ -364,6 +384,7 @@ public:
     QDate startDate;
     QDate endDate;
     qint32 companyKey;
+
     qint32 lineKey;
     qint32 tractionType;
     QString direction;
@@ -376,7 +397,7 @@ public:
     int next =-1, prev=-1;
     LatLng startLatLng;
     LatLng endLatLng;
-    SegmentInfo* sd = nullptr;
+    SegmentData sd;
     Bearing* bearing = nullptr;
     bool bNeedsUpdate = false;
     RouteType routeType;
@@ -410,6 +431,7 @@ class segmentGroup
         ~segmentGroup();
 };
 
+#if 0
 class RouteInfo
 {
 	public:
@@ -425,8 +447,7 @@ class RouteInfo
         double length;
         RouteData rd;
 };
-
-
+#endif
 
 class TerminalInfo
 {
@@ -473,7 +494,7 @@ class SegmentInfo
  //QString oneWay;
  qint32 _segmentId = -1;
  qint32 lineSegments;
- qint32 points;
+ qint32 _points;
  double _length;
  QDate _startDate = QDate::fromString("1880/01/01", "yyyy/MM/dd");
  QDate _endDate= QDate::fromString("2050/12/31", "yyyy/MM/dd");
@@ -568,7 +589,7 @@ class SegmentInfo
  }
  Bearing bearingEnd() {
   if(_pointList.count() > 1)
-   _bearingEnd =  Bearing(_pointList.at(points-2).lat(), _pointList.at(points-2).lon(), _endLat, _endLon);
+   _bearingEnd =  Bearing(_pointList.at(_points-2).lat(), _pointList.at(_points-2).lon(), _endLat, _endLon);
   return _bearingEnd;
  }
  int next() const {return _next;}
@@ -583,13 +604,13 @@ class SegmentInfo
  void setLocation(QString loc) {_location = loc;}
 };
 
-class routeIntersects
+class RouteIntersects
 {
     public:
-    explicit routeIntersects(QObject *parent = 0){Q_UNUSED(parent)}
-        RouteData rd;
-        QList<SegmentInfo> startIntersectingSegments;
-        QList<SegmentInfo> endIntersectingSegments;
+    explicit RouteIntersects(QObject *parent = 0){Q_UNUSED(parent)}
+        SegmentData rd;
+        QList<SegmentData> startIntersectingSegments;
+        QList<SegmentData> endIntersectingSegments;
 };
 
 // Stations are some type of transit stop whether it be a Rapid Transit or railroad station or a streetcar or bus stop.
@@ -670,12 +691,11 @@ class RowChanged
 public:
     qint32 row;
     QPersistentModelIndex index;
-    bool bChanged;
-    bool bDeleted;
+    bool bChanged = false;
+    bool bDeleted = false;
     qint32 segmentId;
+    SegmentData osd;
     SegmentData sd;
-    QString startDate;
-    QString endDate;
     RowChanged()
     {
      //si = SegmentInfo();
@@ -685,13 +705,26 @@ public:
      bDeleted = false;
      index = QPersistentModelIndex();
     }
+    RowChanged(int row,SegmentData sd )
+    {
+     this->row = row;
+     this->sd = SegmentData(sd);
+     bDeleted = true;
+    }
+    RowChanged(int row,bool bChanged, SegmentData osd, SegmentData sd)
+    {
+     this->row = row;
+     this->bChanged = bChanged;
+     this->sd = SegmentData(sd);
+     this->osd =SegmentData(osd);
+    }
 };
 
 struct RouteComments
 {
     qint32 route;
     QDate date;
-    qint32 infoKey;
+    qint32 commentKey;
     CommentInfo ci;
     LatLng pos;
     qint32 companyKey;

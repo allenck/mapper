@@ -25,6 +25,7 @@ message(WEBENGINE  " = "  $$WEBENGINE)
 RC_ICONS = Resources/tram-icon.ico
 
 HEADERS += \
+    dialogchangeroute.h \
     mymessagebox.h \
     ui/modifyroutetractiontypedlg.h \
     ui/newcitydialog.h \
@@ -33,6 +34,7 @@ HEADERS += \
     websockettransport.h
 
 SOURCES += \
+    dialogchangeroute.cpp \
     mymessagebox.cpp \
     ui/modifyroutetractiontypedlg.cpp \
     ui/newcitydialog.cpp \
@@ -185,6 +187,7 @@ INCLUDEPATH += $$PWD/debug
 DEPENDPATH += $$PWD/debug
 
 FORMS += \
+ dialogchangeroute.ui \
  ui/modifyroutetractiontypedlg.ui \
  ui/newcitydialog.ui \
  ui/removecitydialog.ui

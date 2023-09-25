@@ -1,4 +1,4 @@
-#include "segmentview.h"
+﻿#include "segmentview.h"
 #include "editsegmentdialog.h"
 #include "webviewbridge.h"
 
@@ -51,6 +51,7 @@ SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
      emit selectSegment(segmentId);
     });
 
+
     ui->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
     sourceModel = new SegmentViewTableModel();
@@ -90,7 +91,7 @@ void SegmentView::tablev_customContextMenu( const QPoint& pt)
         if(indexes.size() > 0)
         {
         QModelIndex ix = indexes.at(0);
-         if(!(ix.data(Qt::CheckStateRole) == Qt::Checked))
+         if((ix.data(Qt::CheckStateRole) != Qt::Checked))
             menu.addAction(addToRouteAct);
         }
         menu.addAction(editSegmentAct);
@@ -214,11 +215,12 @@ void SegmentView::addToRoute()
 // if(parent->selectedSegment() == segmentId)
 //  return; // already selected
 
+ SegmentData sd = sourceModel->selectedSegment(indexes.at(0).row());
  if(parent->m_segmentStatus == "Y")
    parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
  else
  {
-  SegmentInfo sd = sql->getSegmentInfo(segmentId);
+  //SegmentInfo sd = sql->getSegmentInfo(segmentId);
   parent->displaySegment(segmentId, sd.description(), /*sd.oneWay(),*/ /*sd.oneWay() == "N" ? "#00FF00" :*/ "#045fb4", " ", true);
  }
  parent->routeDlg->setSegmentId(segmentId); // do before setting route!
@@ -226,12 +228,18 @@ void SegmentView::addToRoute()
  if(ix >= 0)
  {
   RouteData rd = parent->routeList.at(ix);
-  parent->routeDlg->setRouteData(rd);
+  sd.setRoute(rd.route);
+  sd.setRouteName(rd.name);
+  sd.setStartDate(rd.startDate);
+  sd.setEndDate(rd.endDate);
+  sd.setCompanyKey(rd.companyKey);
+  parent->routeDlg->setRouteData(sd);
  }
  parent->routeDlg->show();
  parent->routeDlg->raise();
  parent->routeDlg->activateWindow();
 }
+
 void SegmentView::editSegment()
 {
  QItemSelectionModel * model = ui->selectionModel();

@@ -1,9 +1,10 @@
 #include "kml.h"
 
-Kml::Kml(RouteInfo ri, QObject *parent) :
+Kml::Kml(QString routeName, QList<SegmentData>segmentDataList, QObject *parent) :
   QObject(parent)
 {
- this->ri = ri;
+ this->routeName = routeName;
+ this->segmentDataList = segmentDataList;
 }
 
 
@@ -16,7 +17,7 @@ bool Kml::createKml(QString fileName, QString color)
  root = doc.createElement("kml");
  root.setAttribute("xmlns","http://www.opengis.net/kml/2.2");
  QDomElement document = doc.createElement("Document");
- document.setAttribute("name", ri.routeName);
+ document.setAttribute("name", routeName);
  root.appendChild(document);
  doc.appendChild(root);
 
@@ -61,9 +62,9 @@ bool Kml::createKml(QString fileName, QString color)
  arrowStyle.appendChild(polyStyle);
  document.appendChild(arrowStyle);
 
- for(int i = 0; i< ri.segmentDataList.count(); i++)
+ for(int i = 0; i< segmentDataList.count(); i++)
  {
-  sd = ri.segmentDataList.at(i);
+  sd = segmentDataList.at(i);
   document.appendChild(createPlacemark(sd.oneWay()));
   if(sd.oneWay().toLower() == "y")
   {

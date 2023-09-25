@@ -57,7 +57,7 @@ void OtherRouteView::showRoutesUsingSegment(qint32 segmentId)
     //SQL sql;
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     //sql->setConfig(myParent->getConfiguration());
-    QList<RouteData> likeRoutes =   sql->getRoutes(segmentId);
+    QList<SegmentData> likeRoutes =   sql->getRoutes(segmentId);
     if(likeRoutes.isEmpty())
         return;
     SegmentInfo sd = sql->getSegmentInfo(segmentId);
@@ -103,7 +103,7 @@ void OtherRouteView::tablev_customContextMenu( const QPoint& pt)
         QModelIndex modelIndex = indexes.at(0);
         QModelIndex sourceModelIndex = ((QSortFilterProxyModel*)ui->model())->mapToSource(modelIndex);
         qint32 row = sourceModelIndex.row();
-        QList<RouteData> list = sourceModel->getList();
+        QList<SegmentData> list = sourceModel->getList();
         rd = list.at(row);
 
         menu.addAction(displayRouteAct);
@@ -183,7 +183,7 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QObject *parent) :
 {
 }
 
-OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeIntersectList, SegmentData sdIn, QObject *parent)
+OtherRouteViewTableModel::OtherRouteViewTableModel(QList<SegmentData> routeIntersectList, SegmentData sdIn, QObject *parent)
      : QAbstractTableModel(parent)
  {
      listOfRoutes = routeIntersectList;
@@ -225,23 +225,23 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeInterse
 //         }
 //     }
 
-     RouteData rd = listOfRoutes.at(index.row());
+     SegmentData rd = listOfRoutes.at(index.row());
      if (role == Qt::DisplayRole) {
          switch(index.column())
          {
          case 0:
              //TODO setup checkbox if segment used in route.
-             return rd.alphaRoute;
+             return rd.alphaRoute();
          case 1:
-             return rd.name; // route name
+             return rd.routeName(); // route name
          case 2:
-             return rd.startDate.toString("yyyy/MM/dd");
+             return rd.startDate().toString("yyyy/MM/dd");
          case 3:
-             return rd.endDate.toString("yyyy/MM/dd");
+             return rd.endDate().toString("yyyy/MM/dd");
 //         case 4:
 //             return si.description; // segment name
          case 4:
-             switch(rd.normalEnter)
+             switch(rd.normalEnter())
              {
                 case 1:
                  return "left";
@@ -254,7 +254,7 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeInterse
              }
 
          case 5:
-             switch(rd.normalLeave)
+             switch(rd.normalLeave())
              {
                 case 1:
                  return "left";
@@ -268,7 +268,7 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeInterse
             case 6:
              if(sd.oneWay() == "N")
              {
-                 switch(rd.reverseEnter)
+                 switch(rd.reverseEnter())
                  {
                     case 1:
                      return "left";
@@ -284,7 +284,7 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeInterse
             case 7:
              if(sd.oneWay() == "N")
              {
-                 switch(rd.reverseLeave)
+                 switch(rd.reverseLeave())
                  {
                     case 1:
                      return "left";
@@ -342,7 +342,7 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeInterse
 
      for (int row=0; row < rows; row++) {
          //QPair<QString, QString> pair(" ", " ");
-         RouteData rd;
+         SegmentData rd;
          listOfRoutes.insert(position, rd);
      }
 
@@ -369,7 +369,7 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeInterse
      if (index.isValid() && role == Qt::EditRole) {
          int row = index.row();
 
-         RouteData rd = listOfRoutes.value(row);
+         SegmentData rd = listOfRoutes.value(row);
 
 //         switch (index.column())
 //             p.first = value.toString();
@@ -402,7 +402,7 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeInterse
      return QAbstractTableModel::flags(index);
  }
 
- QList< RouteData > OtherRouteViewTableModel::getList()
+ QList< SegmentData > OtherRouteViewTableModel::getList()
  {
      return listOfRoutes;
  }

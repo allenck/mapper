@@ -1,6 +1,6 @@
 #include "checkroute.h"
 
-checkRoute::checkRoute(QList<SegmentData> list, Configuration *cfg, QObject *parent) : QObject(parent)
+CheckRoute::CheckRoute(QList<SegmentData> list, Configuration *cfg, QObject *parent) : QObject(parent)
 {
     //segmentInfoList = segmentInfoList_old = list;
     segmentDataList = segmentDataList_old = list;
@@ -10,7 +10,7 @@ checkRoute::checkRoute(QList<SegmentData> list, Configuration *cfg, QObject *par
     bError = checkConnectingSegments();
 }
 
-bool checkRoute::checkConnectingSegments()
+bool CheckRoute::checkConnectingSegments()
 {
     notConnectedList.clear();
     multipleConnectionsList.clear();
@@ -155,21 +155,21 @@ bool checkRoute::checkConnectingSegments()
     return true;
 }
 
-bool checkRoute::isError()
+bool CheckRoute::isError()
 {
     return bError;
 }
 
-QList<SegmentData> checkRoute::getnotConnected()
+QList<SegmentData> CheckRoute::getnotConnected()
 {
     return notConnectedList;
 }
-QList<SegmentData> checkRoute::getMultipleConnections()
+QList<SegmentData> CheckRoute::getMultipleConnections()
 {
     return multipleConnectionsList;
 }
 
-SegmentData* checkRoute::findSegment(qint32 segId)
+SegmentData* CheckRoute::findSegment(qint32 segId)
 {
  SegmentData* sd = NULL;
  for(int i = 0; i < segmentDataList.count(); i++)
@@ -181,27 +181,27 @@ SegmentData* checkRoute::findSegment(qint32 segId)
  return sd;
 }
 
-void checkRoute::setStart(qint32 seg)
+void CheckRoute::setStart(qint32 seg)
 {
     startSegment = seg;
 }
 
-void checkRoute::setEnd(qint32 seg)
+void CheckRoute::setEnd(qint32 seg)
 {
     endSegment = seg;
 }
 
-qint32 checkRoute::getStart()
+qint32 CheckRoute::getStart()
 {
     return startSegment;
 }
 
-qint32 checkRoute::getEnd()
+qint32 CheckRoute::getEnd()
 {
     return endSegment;
 }
 
-bool checkRoute::setSeqNbrs()
+bool CheckRoute::setSeqNbrs()
 {
     if(startSegment < 1)
         return false;
@@ -267,7 +267,7 @@ bool checkRoute::setSeqNbrs()
     return true;
 }
 
-double checkRoute::reverseBearing(double b)
+double CheckRoute::reverseBearing(double b)
 {
     if(b > 180)
         return b-180.0;
@@ -275,7 +275,7 @@ double checkRoute::reverseBearing(double b)
         return b + 180.0;
 }
 // b1 is the bearing of the source turning to bearing b2
-bool checkRoute::isDirectionCorrect(qint32 turn, double b1, double b2)
+bool CheckRoute::isDirectionCorrect(qint32 turn, double b1, double b2)
 {
     double diff = b2 - b1;
     if(diff < 0)

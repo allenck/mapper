@@ -1,7 +1,7 @@
 ﻿#include "sql.h"
-
 #include "data.h"
 #include "../functions/sqlite3.h"
+#include <QApplication>
 //#ifdef Q_OS_UNIX
 //#include "/home/allen/Qt/5.15.2/Src/qtbase/src/3rdparty/sqlite/sqlite3.h"
 //#else
@@ -11,6 +11,7 @@
 #include <QDebug>
 #include <QTextEdit>
 #include <routeselector.h>
+#include "mainwindow.h"
 
 SQL* SQL::_instance = NULL;
 SQL::SQL()
@@ -426,148 +427,6 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
 }
 
 #if 0
-routeInfo SQL::GetRoutePoints(qint32 route, QString name, QString date)
-{
- routeInfo ri = routeInfo();
- segmentGroup sg = segmentGroup();
- segmentData sd =  segmentData();
- QSqlQuery query;
- QString commandText;
- qint32 currSegmentId = -1, sequence = -1, prevSeq = -1;
- double prevLat = 0, prevLon = 0, distance = 0;
- QString sDistance, sOneWay;
-
- ri.route = route;
- //ri.segments = QList<segmentData>();
- qint32 SegmentId;
- try
- {
-  if(!dbOpen())
-      throw Exception(tr("database not open: %1").arg(__LINE__));
-  QSqlDatabase db = QSqlDatabase::database();
-  QString strRoute = QString("%1").arg( route);
-  commandText = "select name, tractionType from Routes where route = " + strRoute + " and '" + date + "' between startDate and endDate";
-  query = QSqlQuery(db);
-  bool bQuery = query.exec(commandText);
-  if(!bQuery)
-  {
-      QSqlError err = query.lastError();
-      qDebug() << err.text() + "\n";
-      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-      db.close();
-      exit(EXIT_FAILURE);
-  }
-  if(!query.isActive())
-  {
-      return routeInfo();
-  }
-  while (query.next())
-  {
-      ri.routeName = query.value(0).toString();
-      ri.tractionType = query.value(1).toInt();
-      break;
-  }
-  if(config->currConnection->servertype() == "MsSql")
-   commandText = "SELECT StartLat, StartLon, EndLat, EndLon, StreetName, SegmentId, Sequence, Description, OneWay, route, TractionType, length FROM view_all_route_points where Route = " + strRoute + " and '" + date + "' between startDate and endDate and RTRIM(LTRIM(name)) = '" + name + "' order by route, segmentId, sequence";
-  else
-   commandText = "SELECT StartLat, StartLon, EndLat, EndLon, StreetName, SegmentId, Sequence, Description, OneWay, route, TractionType, length FROM view_all_route_points where Route = " + strRoute + " and '" + date + "' between startDate and endDate and TRIM(name) = '" + name + "' order by route, segmentId, sequence";
-
-  //qDebug() << commandText;
-  bQuery = query.exec(commandText);
-  if(!bQuery)
-  {
-   QSqlError err = query.lastError();
-   qDebug() << err.text() + "\n";
-   qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-   db.close();
-   exit(EXIT_FAILURE);
-  }
-  if (!query.isActive())
-  {
-   return routeInfo();
-  }
-  while (query.next())
-  {
-   SegmentId = query.value(5).toInt();
-   sequence = query.value(6).toInt());
-   distance = query.value(11).toDouble();
-   sDistance = query.value(11).toString();
-   sOneWay = query.value(8).toString();
-
-   if (SegmentId != currSegmentId)
-   {
-    if (currSegmentId != -1)
-    {
-     prevSeq = -1;
-     ri.segments.append(sg);
-     sg = segmentGroup();
-    }
-    prevSeq = -1;
-    prevLat = query.value(0).toDouble();
-    prevLon = query.value(1).toDouble();
-
-    sg.SegmentId = SegmentId;
-    sg.Description = query.value(7).toString();
-    sg.OneWay = query.value(8).toString();
-    sg.tractionType = query.value(10).toInt();
-    //if (sg.tractionType < 1 || sg.tractionType > 6)
-    //    sg.tractionType = 0;
-    //sg.data = QList<segmentGroup>();
-    //ri.segments.append(sg);
-    currSegmentId = SegmentId;
-   }
-   sd = segmentData();
-   sd.startLat = query.value(0).toDouble();
-   sd.startLon = query.value(1).toDouble();
-   sd.endLat = query.value(2).toDouble();
-   sd.endLon = query.value(3).toDouble();
-   sd.streetName = query.value(4).toString();
-   sd.SegmentId = SegmentId;
-   sd.sequence = sequence;
-   sd.description = query.value(7).toString();
-   sd.route = query.value(9).toInt();
-   sd.oneWay = (sOneWay.toLower()=="y");
-   if(sd.oneWay)
-    sd.distance = distance;
-   else
-    sd.distance = distance*2;
-
-   Bearing b(sd.startLat, sd.startLon, sd.endLat, sd.endLon);
-   double calcDistance = b.Distance();
-   if(calcDistance < distance)
-   {
-    if(sd.oneWay)
-     sd.distance = calcDistance;
-    else
-     sd.distance = calcDistance*2;
-   }
-   sg.distance += sd.distance;
-   ri.length += sd.distance;
-
-   if (sequence == prevSeq)
-   {
-    qDebug() << QString(tr("Duplicate route segment: %1 ignored")).arg(currSegmentId)+ " Route:"+ QString("%1").arg(route)+ " " + name + " "+ date;
-    continue;
-   }
-   else
-    sg.data.append(sd);
-   if( prevLat != sd.startLat || prevLon != sd.startLon)
-    qDebug() << tr("Start location mismatch: segmentId = ") + QString("%1").arg(SegmentId) + " sequence = " +QString("%1").arg(sequence);
-   if((prevSeq + 1) != sequence)
-    qDebug() << tr("Sequence error: segmentId = ") + QString("%1").arg(SegmentId) + " sequence = " +QString("%1").arg(sequence);
-   prevSeq++;
-   prevLat = sd.endLat;
-   prevLon = sd.endLon;
-  }
-  ri.segments.append(sg);
- }
- catch (Exception& e)
- {
-  myExceptionHandler(e);
- }
- return ri;
-}
-#else
 RouteInfo SQL::getRoutePoints(qint32 route, QString name, QString date)
 {
  RouteInfo ri = RouteInfo(route, name, date);
@@ -871,6 +730,7 @@ QString SQL::getAlphaRoute(qint32 route, qint32 company)
 
  return routeAlpha;
 }
+
 QStringList SQL::getAlphaRoutes(QString text)
 {
     QStringList list;
@@ -907,6 +767,20 @@ QStringList SQL::getAlphaRoutes(QString text)
     }
 
     return list;
+}
+
+bool SQL::deleteAlphaRoute(QString routeAlpha)
+{
+ QSqlDatabase db = QSqlDatabase::database();
+ QString commandText = "delete from altRoute where routeAlpha = '" + routeAlpha + "'";
+ QSqlQuery query = QSqlQuery(db);
+ bool bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+  SQLERROR(query);
+  return false;
+ }
+ return  true;
 }
 
 QMap<int,TractionTypeInfo> SQL::getTractionTypes()
@@ -997,9 +871,9 @@ QList<SegmentInfo> SQL::getSegmentInfo()
  return myArray;
 }
 #endif
-QMap<int, SegmentInfo> SQL::getSegmentInfoList(QString location)
+QMap<int, SegmentData> SQL::getSegmentInfoList(QString location)
 {
- QMap<int, SegmentInfo> myArray;
+ QMap<int, SegmentData> myArray;
 
  QSqlDatabase db = QSqlDatabase::database();
 
@@ -1009,14 +883,14 @@ QMap<int, SegmentInfo> SQL::getSegmentInfoList(QString location)
  {
   commandText= "Select SegmentId, description, OneWay, startDate, endDate,"
                        " length, points, startLat, startLon, endLat, EndLon, type, street,"
-                       " location, pointArray, tracks from Segments where location = '"
+                       " location, pointArray, tracks, direction from Segments where location = '"
                        + location + "' "
                        + "order by description";
  }
  else {
    commandText= "Select SegmentId, description, OneWay, startDate, endDate,"
                         " length, points, startLat, startLon, endLat, EndLon, type, street,"
-                        " location, pointArray, tracks from Segments order by description";
+                        " location, pointArray, tracks, direction from Segments order by description";
 
   }
  QSqlQuery query = QSqlQuery(db);
@@ -1027,7 +901,7 @@ QMap<int, SegmentInfo> SQL::getSegmentInfoList(QString location)
      qDebug() << "Is default database correct?";
 //            db.close();
 //            exit(EXIT_FAILURE);
-     return QMap<int, SegmentInfo>();
+     return QMap<int, SegmentData>();
  }
  while (query.next())
  {
@@ -1038,7 +912,7 @@ QMap<int, SegmentInfo> SQL::getSegmentInfoList(QString location)
   sd._startDate = query.value(3).toDate();
   sd._endDate = query.value(4).toDate();
   sd._length = query.value(5).toDouble();
-  sd.points = query.value(6).toInt();
+  sd._points = query.value(6).toInt();
   sd._startLat = query.value(7).toDouble();
   sd._startLon = query.value(8).toDouble();
   sd._endLat = query.value(9).toDouble();
@@ -1048,16 +922,23 @@ QMap<int, SegmentInfo> SQL::getSegmentInfoList(QString location)
   sd._routeType = (RouteType)query.value(11).toInt();
   sd._streetName = query.value(12).toString();
   sd._location = query.value(13).toString();
-  sd.setPoints(query.value(14).toString());  // array of points
-//  if(sd.pointList().isEmpty())
-//   populatePointList(sd);
+  QString pointArray = query.value(14).toString();
   sd._tracks = query.value(15).toInt();
+  sd.direction() = query.value(16).toString();
+
+  sd.setPoints(pointArray);  // initialize array of points (i.e pointList)
   if(sd.pointList().count() > 1)
   {
    sd._bearingStart = Bearing(sd._startLat, sd._startLon, sd.pointList().at(1).lat(), sd.pointList().at(1).lon());
-   sd._bearingEnd = Bearing(sd.pointList().at(sd.points-2).lat(), sd.pointList().at(sd.points-2).lon(), sd._endLat, sd._endLon);
+   sd._bearingEnd = Bearing(sd.pointList().at(sd._points-2).lat(), sd.pointList().at(sd._points-2).lon(), sd._endLat, sd._endLon);
   }
-  sd._bounds = Bounds(query.value(14).toString());
+
+  sd._bounds = Bounds(pointArray);
+  if(sd.description().isEmpty())
+  {
+   sd._description = sd._bearing.strDirection();
+   sd._bNeedsUpdate = true;
+  }
   if(sd._streetName.isEmpty() || sd._streetName.indexOf("(")> 0)
   {
    QStringList tokens = sd._description.split(",");
@@ -1402,20 +1283,20 @@ SegmentInfo SQL::getSegmentInfo(qint32 SegmentId)
   {
    si._startLat = si._pointList.at(0).lat();
    si._startLon = si._pointList.at(0).lon();
-   si._endLat = si._pointList.at(si.points-1).lat();
-   si._endLon = si._pointList.at(si.points-1).lon();
+   si._endLat = si._pointList.at(si._points-1).lat();
+   si._endLon = si._pointList.at(si._points-1).lon();
   }
   si._bearing = Bearing(si._startLat, si._startLon, si._endLat, si._endLon);
   if(si._pointList.count() > 1)
   {
    si._bearingStart = Bearing(si._startLat, si._startLon, si._pointList.at(1).lat(), si._pointList.at(1).lon());
-   si._bearingEnd = Bearing(si._pointList.at(si.points-2).lat(), si._pointList.at(si.points-2).lon(), si._endLat, si._endLon);
+   si._bearingEnd = Bearing(si._pointList.at(si._points-2).lat(), si._pointList.at(si._points-2).lon(), si._endLat, si._endLon);
   }
   si._bounds = Bounds(query.value(14).toString());
   if(si._length == 0 && si._pointList.count() > 1)
   {
    //sd._length = distance(LatLng(sd._startLat, sd._startLon), LatLng(sd._endLat, sd._endLon));
-   for(int i=0; i <  si.points-2; i++)
+   for(int i=0; i <  si._points-2; i++)
     si._length += distance(si._pointList.at(i), si._pointList.at(i+1));
   }
 
@@ -1543,19 +1424,21 @@ QList<SegmentData> SQL::getRouteSegmentsInOrder(qint32 route, QString name, QStr
    QString  commandText;
    if(firstTry)
     commandText = "Select c.startLat, c.startLon, c.endLat, c.endLon, c.segmentId, c.description, c.oneWay, "
-                  " b.direction, b.next, b.prev, b.normalEnter, b.normalLeave, b.reverseEnter, b.reverseLeave,"
+                  " c.direction, b.next, b.prev, b.normalEnter, b.normalLeave, b.reverseEnter, b.reverseLeave,"
                   " b.startDate, b.endDate, c.length, c.tracks, c.pointArray, b.OneWay, b.TrackUsage, c.type,"
-                  " b.tractionType, b.route, b.companyKey, name"
+                  " b.tractionType, b.route, b.companyKey, name, a.routeAlpha"
                   " from Routes b join Segments c on c.segmentId = LineKey"
+                  " join altRoute a on a.route = b.route"
                   " where b.Route = " + QString("%1").arg(route) + " and trim(b.Name) = '" + name + "'"
                   " and '" + date + "' between b.StartDate and b.endDate"
                   /*" and b.endDate <= '"+ date + "'*/" order by b.startDate, b.endDate, c.segmentid";
    else
     commandText = "Select c.startLat, c.startLon, c.endLat, c.endLon, c.segmentId, c.description, c.oneWay,"
-                  " b.direction, b.next, b.prev, b.normalEnter, b.normalLeave, b.reverseEnter, b.reverseLeave"
+                  " c.direction, b.next, b.prev, b.normalEnter, b.normalLeave, b.reverseEnter, b.reverseLeave"
                   " b.startDate, b.endDate, c.length, c.tracks, c.pointArray, b.OneWay, b.TrackUsage, c.type,"
-                  " b.tractionType, b.route, b.companyKey, name"
+                  " b.tractionType, b.route, b.companyKey, name, a.routeAlpha"
                   " from Routes b join Segments c on c.segmentId = LineKey"
+                  " join altRoute a on a.route = b.route"
                   " where b.Route = " + QString("%1").arg(route) + " and trim(b.Name) = '" + name + "'"
                   "  order by b.startDate, b.endDate, c.segmentid";
    // Note: 1st Query fails if route has a single segment
@@ -1623,6 +1506,8 @@ QList<SegmentData> SQL::getRouteSegmentsInOrder(qint32 route, QString name, QStr
     sd._route = query.value(23).toInt();
     sd._companyKey = query.value(24).toInt();
     sd._routeName = query.value(25).toString();
+    sd._alphaRoute = query.value(26).toString();
+
     if(sd._tractionType < 0)
      qDebug() << tr("invalid tractionType") << sd.tractionType();
     sd._bearing = Bearing(sd._startLat, sd._startLon, sd._endLat, sd._endLon);
@@ -1632,6 +1517,15 @@ QList<SegmentData> SQL::getRouteSegmentsInOrder(qint32 route, QString name, QStr
         sd._direction = (sd._bearing.strDirection() + "-" + sd._bearing.strReverseDirection());
     if(sd._next == -1 && sd._prev == -1)
         bSequenceInfoPresent=false;
+
+    if(sd._normalEnter > 2 || sd._normalEnter < 0)
+     sd._normalEnter = 0;
+    if(sd._normalLeave > 2 || sd._normalLeave < 0)
+     sd._normalLeave = 0;
+    if(sd._reverseEnter > 2 || sd._reverseEnter < 0)
+     sd._reverseEnter = 0;
+    if(sd._reverseLeave > 2 || sd._reverseLeave < 0)
+     sd._reverseLeave = 0;
     myArray.append(sd);
    }
    break;
@@ -2079,18 +1973,18 @@ QList<segmentData> SQL::getIntersectingSegments(double lat, double lon, double r
     return myArray;
 }
 #else
-QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double radius, RouteType type)
+QList<SegmentData> SQL::getIntersectingSegments(double lat, double lon, double radius, RouteType type)
 {
- QList<SegmentInfo> myArray;
- SegmentInfo sd =  SegmentInfo();
- double startLat=0, startLon=0, endLat=0, endLon = 0;
- qint32 segmentId=0, sequence = 0;
+ QList<SegmentData> myArray;
+ SegmentData sd =  SegmentData();
+// double startLat=0, startLon=0, endLat=0, endLon = 0;
+// qint32 segmentId=0, sequence = 0;
  double distance = 0, length =0;
- qint32 currSegment = -1;
+//qint32 currSegment = -1;
  double curSegmentDistance = radius+1;
- QString streetName = "", description="", oneWay="", pointArray="" ;
+// QString streetName = "", description="", oneWay="", pointArray="" ;
  QString typeWhere = "type="+QString::number(type);
- int tracks = 0;
+// int tracks = 0;
  if(type == Surface || type == SurfacePRW)
   typeWhere = "type in(0,1)";
  if(type == RapidTransit || type == Subway)
@@ -2103,15 +1997,26 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
 
   QString commandText;
   if(config->currConnection->servertype() != "MsSql")
-   commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon, a.length, a.street, " \
-        "a.description, a.OneWay, a.pointArray, a.tracks, a.type " \
-              "from Segments a " \
-              "where "+typeWhere + " and (distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", a.startLat, a.startLon) < " + QString("%1").arg(radius,0,'f',8 )+ " OR distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", a.endLat, a.endLon) < " + QString("%1").arg(radius,0,'f',8) + ") " \
-              "order by a.segmentId";
-        else
-            commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon,"
-              " a.length, a.street, a.description, a.OneWay, a.pointArray, a.tracks, a.type from Segments a "
-              "where "+ typeWhere + " and (dbo.distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", a.startLat, a.startLon) < " + QString("%1").arg(radius,0,'f',8 )+ " OR dbo.distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", a.endLat, a.endLon) < " + QString("%1").arg(radius,0,'f',8) + ") order by a.segmentId";
+   commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon, "
+        "a.length, a.street, "
+        "a.description, a.OneWay, a.pointArray, a.tracks, a.type"
+        " from Segments a "
+        " where "+typeWhere + " and (distance(" + QString("%1").arg(lat,0,'f',8) + ","
+        + QString("%1").arg(lon,0,'f',8) + ", a.startLat, a.startLon) < " + QString("%1").arg(radius,0,'f',8 )
+        + " OR distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8)
+        + ", a.endLat, a.endLon) < " + QString("%1").arg(radius,0,'f',8) + ") "
+        "order by a.segmentId";
+   else
+    commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon,"
+        " a.length, a.street, a.description, a.OneWay, a.pointArray, a.tracks,"
+        " a.type"
+        " from Segments a "
+        "where "+ typeWhere + " and (dbo.distance(" + QString("%1").arg(lat,0,'f',8)
+        + "," + QString("%1").arg(lon,0,'f',8) + ", a.startLat, a.startLon) < "
+        + QString("%1").arg(radius,0,'f',8 )+ " OR dbo.distance(" + QString("%1").arg(lat,0,'f',8)
+        + "," + QString("%1").arg(lon,0,'f',8) + ", a.endLat, a.endLon) < "
+        + QString("%1").arg(radius,0,'f',8) + ") "
+        "order by a.segmentId";
   //qDebug() << commandText + "\n";
   QSqlQuery query = QSqlQuery(db);
   bool bQuery = query.exec(commandText);
@@ -2124,75 +2029,79 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
 
   while(query.next())
   {
-   segmentId = query.value(0).toInt();
-   startLat = query.value(1).toDouble();
-   startLon = query.value(2).toDouble();
-   endLat = query.value(3).toDouble();
-   endLon = query.value(4).toDouble();
-   length = query.value(5).toDouble();
-   streetName = query.value(6).toString();
-   description = query.value(7).toString();
-   oneWay = query.value(8).toString();
-   pointArray = query.value(9).toString();
-   tracks = query.value(10).toInt();
-   type = (RouteType)query.value(11).toInt();
-   if (segmentId != currSegment)
-   {
-    if (currSegment > 0 && curSegmentDistance < radius)
-    {
-        myArray.append(sd);
-    }
+   sd = SegmentData();
+   sd._segmentId = query.value(0).toInt();
+   sd._startLat = query.value(1).toDouble();
+   sd._startLon = query.value(2).toDouble();
+   sd._endLat = query.value(3).toDouble();
+   sd._endLon = query.value(4).toDouble();
+   sd._length = query.value(5).toDouble();
+   sd._streetName = query.value(6).toString();
+   sd._description = query.value(7).toString();
+   sd._oneWay = query.value(8).toString();
+   sd.setPoints(query.value(9).toString());
+   sd._tracks = query.value(10).toInt();
+   sd._routeType = (RouteType)query.value(11).toInt();
 
-    sd =  SegmentInfo();
-    currSegment = segmentId;
+
+//   if (segmentId != currSegment)
+//   {
+//    if (currSegment > 0 && curSegmentDistance < radius)
+//    {
+//        myArray.append(sd);
+//    }
+
+//    sd =  SegmentData();
+//    currSegment = segmentId;
     curSegmentDistance = radius + 1.0;
-   }
+//   }
 
-   distance = Distance(lat, lon, startLat, startLon);
+   distance = Distance(lat, lon, sd._startLat, sd._startLon);
    if (distance < curSegmentDistance)
    {
-    sd._segmentId = segmentId;
-    sd._startLat = startLat;
-    sd._startLon = startLon;
-    sd._endLat = endLat;
-    sd._endLon = endLon;
-    sd._length = distance;
-    curSegmentDistance = distance;
-    sd._streetName = streetName;
-    sd._routeType = type;
+//    sd._segmentId = segmentId;
+//    sd._startLat = startLat;
+//    sd._startLon = startLon;
+//    sd._endLat = endLat;
+//    sd._endLon = endLon;
+//    sd._length = distance;
+//    curSegmentDistance = distance;
+//    sd._streetName = streetName;
+//    sd._routeType = type;
     sd._whichEnd = "S";
-    sd._description = description;
-    sd._bearing = Bearing(lat, lon, startLat, startLon);
-//    sd._oneWay = oneWay;
-    sd._tracks = tracks;
-    sd._routeType = type;
+//    sd._description = description;
+//    sd._bearing = Bearing(lat, lon, startLat, startLon);
+////    sd._oneWay = oneWay;
+//    sd._tracks = tracks;
+//    sd.setPoints(pointArray);
    }
-
    // check the ending point
-   distance = Distance(lat, lon, endLat, endLon);
+   distance = Distance(lat, lon, sd._endLat, sd._endLon);
    if (distance < curSegmentDistance)
    {
-    sd._segmentId = segmentId;
-    sd._startLat = startLat;
-    sd._startLon = startLon;
-    sd._endLat = endLat;
-    sd._endLon = endLon;
-    sd._length = distance;
-    curSegmentDistance = distance;
-    sd._streetName = streetName;
-    sd._routeType = (RouteType)type;
+//    sd._segmentId = segmentId;
+//    sd._startLat = startLat;
+//    sd._startLon = startLon;
+//    sd._endLat = endLat;
+//    sd._endLon = endLon;
+//    sd._length = distance;
+//    curSegmentDistance = distance;
+//    sd._streetName = streetName;
+//    sd._routeType = (RouteType)type;
     sd._whichEnd = "E";
-    sd._description = description;
-    sd._bearing = Bearing(lat, lon, endLat, endLon);
-   //sd._oneWay = oneWay;
-    sd._tracks = tracks;
-    sd._routeType = type;
-   }
-   sd.setPoints(pointArray);
-  }
+//    sd._description = description;
+//    sd._bearing = Bearing(lat, lon, endLat, endLon);
+//   //sd._oneWay = oneWay;
+//    sd._tracks = tracks;
+//    sd._routeType = type;
+//    sd.setPoints(pointArray);
 
-  if(curSegmentDistance < radius)
+   }
+//  }
+
+//  if(curSegmentDistance < radius)
       myArray.append(sd);
+  }
  }
  catch (Exception e)
  {
@@ -2531,12 +2440,12 @@ QList<SegmentData> SQL::getIntersectingSegments(double lat, double lon, double r
 /// <param name="routeName"></param>
 /// <param name="date"></param>
 /// <returns></returns>
-QList<SegmentData> SQL::getIntersectingRouteSegmentsAtPoint(double lat, double lon, double radius, qint32 route,
+QList<SegmentData> SQL::getIntersectingRouteSegmentsAtPoint(int ignoreThis, double lat, double lon, double radius, qint32 route,
                                                             QString routeName, QString date)
 {
  QList<SegmentData> myArray = QList<SegmentData>();
 // double startLat = 0, startLon = 0, endLat = 0, endLon = 0;
-// double lastStartLat = 0, lastStartLon = 0;
+// double lastStartLat = 0, lastStartLon = 0;ign
 // qint32 segmentId = 0;
 // qint32 currSegment = -1;
 // QString direction = "";
@@ -2546,14 +2455,15 @@ QList<SegmentData> SQL::getIntersectingRouteSegmentsAtPoint(double lat, double l
 
  QSqlDatabase db = QSqlDatabase::database();
 //    QString commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon, c.direction, b.description, b.oneWay,  c.next, c.prev, c.normalEnter, c.normalLeave, c.reverseEnter, c.reverseLeave from LineSegment a join Segments b on b.segmentId = a.SegmentId join Routes c on c.lineKey = a.segmentId where c.route = " + QString("%1").arg(route) + " and c.name = '" + routeName + "' and '" + date + "' between c.startDate and c.endDate order by a.segmentId, a.sequence";
- QString commandText = "select b.segmentId, b.startLat, b.startLon, b.endLat, b.EndLon, c.direction, b.description,"
-                       " b.oneWay,  c.next, c.prev, c.normalEnter, c.normalLeave, c.reverseEnter, c.reverseLeave,"
-                       " b.pointArray, b.tracks"
+ QString commandText = "select b.segmentId, b.startLat, b.startLon, b.endLat, b.EndLon, c.direction,"
+                       " b.description, b.oneWay,  c.next, c.prev, c.normalEnter, c.normalLeave,"
+                       " c.reverseEnter, c.reverseLeave, b.pointArray, b.tracks, c.startDate, c.endDate"
                        " from Segments b join Routes c on c.lineKey = b.segmentId"
                        " where c.route = " + QString("%1").arg(route)
                        + " and c.name = '" + routeName
                        + "' and '" + date + "' between c.startDate and c.endDate"
-                       " order by b.segmentId";
+                       + " and b.segmentId != " + QString("%1").arg(ignoreThis)
+                       + " order by b.segmentId";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -2584,6 +2494,8 @@ QList<SegmentData> SQL::getIntersectingRouteSegmentsAtPoint(double lat, double l
   sd._normalLeave = query.value(11).toInt();
   sd._reverseEnter = query.value(12).toInt();
   sd._reverseLeave = query.value(13).toInt();
+  sd._startDate = query.value(14).toDate();
+  sd._endDate = query.value(15).toDate();
   if(sd._pointList.count() >=2)
   {
    sd._bearingStart = Bearing(sd._startLat, sd._startLon, sd._pointList.at(1).lat(), sd._pointList.at(1).lon());
@@ -2597,12 +2509,17 @@ QList<SegmentData> SQL::getIntersectingRouteSegmentsAtPoint(double lat, double l
       sd._whichEnd = "E";
   else
       sd._whichEnd = "S";
+  sd._route = route;
+  sd._routeName = routeName;
+
   if (distanceToEnd < radius || distanceToStart < radius)
-  myArray.append(sd);
+   myArray.append(sd);
  }
  return myArray;
 }
 
+#if 0
+// original fu
 int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList, qint32 route, QString name, QString date)
 {
  QList<SegmentData> intersects;
@@ -2630,6 +2547,8 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList,
   SegmentData* sd0 = (SegmentData*)&segmentList.at(i);
   sd0->_sequence = -1;
   sd0->_returnSeq = -1;
+  sd0->_next = -1;
+  sd0->_prev = -1;
  }
 
  while (currSegment >= 0 )//&& sequence < segmentList.Count && reverseSeq < segmentList.Count)
@@ -2645,6 +2564,7 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList,
 
     if (bOutbound)
     {
+     //outbound
      if (sd->_sequence != -1)
      {
       //currSegment = -1;
@@ -2658,6 +2578,7 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList,
     }
     else
     {
+     //inbound
      if (sd->_returnSeq != -1)
      {
       currSegment = -1;
@@ -2673,7 +2594,7 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList,
   if (currSegment == -1)
    break;
 
-  if (bfirstSegment && sd->_oneWay=="N")
+  if (bfirstSegment && sd->_oneWay != "Y")
   {
    intersects = getIntersectingRouteSegmentsAtPoint(sd->startLat(), sd->startLon(), .020, route, name, date);
    if ( intersects.count() <= 1)
@@ -2736,6 +2657,7 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList,
      a2 = sdj->_bearingStart.getBearing();
     else
      a2 = sdj->_bearingEnd.getBearing();
+
 
     diff = angleDiff(a1, a2);
     //diff = angleDiff(si->bearingEnd.getBearing, sij->bearingStart.getBearing);
@@ -2904,12 +2826,22 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList,
       a2 = sdk->_bearingEnd.getBearing();
      diff = angleDiff(a1, a2);
     }
-    text = text + "\n possible choices were segment " + QString("%1").arg(sdk->_segmentId) + " angle: " + QString("%1").arg(diff) + "° " + sdk->_description;
+    text = text + "\n possible choices were segment " + QString("%1").arg(sdk->_segmentId)
+      + " angle: " + QString("%1").arg(diff) + "° " + sdk->_description;
    }
    if(text != "")
    {
+
+    MainWindow::instance()->m_bridge->processScript("clearMarker");
+    QVariantList objArray;
+    if(sd->whichEnd()=="S")
+     objArray << 0 << sd->startLat()<<sd->startLon()<<7<<"pointO"<<sd->_segmentId;
+    else
+     objArray << 0 << sd->endLat()<<sd->endLon()<<7<<"pointO"<<sd->_segmentId;
+    MainWindow::instance()->m_bridge->processScript("addMarker",objArray);
     qDebug() << text;
-    QMessageBox* box = new QMessageBox(QMessageBox::Information, tr("Segment connection error"), tr("The following segment has an error connecting to the next segment"));
+    QMessageBox* box = new QMessageBox(QMessageBox::Information, tr("Segment connection error"),
+                                       tr("The following segment has an error connecting to the next segment"));
     box->setInformativeText(text);
     box->exec();
    }
@@ -2954,7 +2886,155 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList,
  }
  return endSegment;
 }
+#else
+int SQL::sequenceRouteSegments(qint32 startSegment, QList<SegmentData> segmentList, qint32 route, QString name, QString date)
+{
+ QList<SegmentData> intersects;
+ qint32 endSegment = -1;
+ double dToBegin = 0, dToEnd=0;
+ double diff;
+ qint32 matchedSegment=-1;
+ qint32 _startSegment = startSegment;
+ qint32 currSegment = startSegment;
+ SegmentData sdx = SegmentData();
+ sdx._segmentId = -1;
+ SegmentData* sd;
+ qint32 sequence = 0, reverseSeq = 0;
+ bool bForward = true;
+ double nextLat = 0, nextLon = 0;
+ bool bOutbound = true;
+ double a1 = 0, a2 = 0;
+ bool bfirstSegment = true;
+ QMap<int, SegmentData*> segmentMap;
+ QString matchedto = "S";
 
+ if(!dbOpen())
+  throw Exception(tr("database not open: %1").arg(__LINE__));
+
+ //foreach (segmentInfo si0 in segmentList)
+ for(int i = 0; i < segmentList.count(); i ++)
+ {
+  SegmentData* sd0 = (SegmentData*)&segmentList.at(i);
+  sd0->_sequence = -1;
+  sd0->_returnSeq = -1;
+  sd0->_next = -1;
+  sd0->_prev = -1;
+  segmentMap.insert(sd0->segmentId(), sd0);
+ }
+ sd = segmentMap.value(startSegment);
+ currSegment = sd->segmentId();
+ while(currSegment != -1)
+ {
+  if(sd->next() == -1)
+  {
+   // get segments intersecting to this segment's end.
+   if(matchedto == "S")
+    intersects = getIntersectingRouteSegmentsAtPoint(sd->segmentId(), sd->endLat(), sd->endLon(), .020, route, name, date);
+   else
+    intersects = getIntersectingRouteSegmentsAtPoint(sd->segmentId(), sd->startLat(), sd->startLon(), .020, route, name, date);
+
+   MainWindow::instance()->m_bridge->processScript("clearMarker");
+   QVariantList objArray;
+   if(sd->whichEnd()=="E")
+    objArray << 0 << sd->startLat()<<sd->startLon()<<2<<"pointO"<<sd->_segmentId;
+   else
+    objArray << 0 << sd->endLat()<<sd->endLon()<<1<<"pointO"<<sd->_segmentId;
+   MainWindow::instance()->m_bridge->processScript("addMarker",objArray);
+   qApp->processEvents();
+
+   if(intersects.count()< 1)
+   {
+    break; // no segments intersect
+   }
+   for(int i=0; i < intersects.count(); i++)
+   {
+    SegmentData* currI = (SegmentData*)&intersects.at(i);
+
+//    if(currI->segmentId() == sd->segmentId())
+//     continue; // ignore self
+    if(intersects.count() < 1)
+    {
+     currSegment = -1;
+     break;
+    }
+
+    if(intersects.count() == 1)
+    {
+     if((sd->tracks()==2 && sd->oneWay()!= "Y" && currI->tracks() == 2 && currI->oneWay()!="Y" )
+        || (sd->tracks() == 2 && sd->oneWay()!= "Y" && (currI->tracks()==1 && currI->oneWay()!= "Y"))
+        || (sd->tracks() == 1 && sd->oneWay()!= "Y" && (currI->tracks() == 1 && currI->oneWay()!= "Y"))
+        || (sd->tracks() == 1 && (currI->tracks()==2 && currI->oneWay()!= "N"))
+        || sd->tracks() == 1 && sd->oneWay() == "Y" && (currI->tracks()==1 && currI->whichEnd()=="S")
+        )
+     {
+      sd->_next = currI->segmentId();
+      segmentMap.value(sd->_next)->_prev = sd->segmentId();
+//      if(currI->whichEnd() == "E")
+//      {
+//       segmentMap.value(currI->segmentId())->_prev = sd->segmentId();
+//       matchedto = "S";
+//      }
+//      else
+//      {
+//       segmentMap.value(currI->segmentId())->_next = sd->segmentId();
+//       matchedto = "E";
+//      }
+      matchedto = currI->whichEnd();
+//     }
+//     else if((currI->tracks()==1  && currI->whichEnd()== "S")
+//        || (currI->tracks() == 2))
+//     {
+//      sd->_next = currI->segmentId();
+//     }
+//     else if(currI->tracks()==1 && (currI->whichEnd() == "E" || currI->oneWay() == "Y"))
+//     {
+//      segmentMap.value(currI->segmentId())->_prev = sd->segmentId();
+     }
+     else
+     {
+      qDebug() << "no match";
+      break;
+     }
+     //matchedto = currentIntersect->whichEnd();
+     //sd = segmentMap.value(sd->next());
+     qDebug() << sd->segmentId() << " " << sd->description() << " connects to "
+              << currI->whichEnd() << " " << currI->segmentId() << " " << currI->description();
+     qApp->processEvents();
+     //sd = currI;
+     sd = segmentMap.value(sd->next());
+     currSegment = sd->segmentId();
+
+    }
+    else
+    {
+     qDebug() << "more than one intersects";
+     for(int i=0; i < intersects.count(); i++)
+     {
+      SegmentData* currI = (SegmentData*)&intersects.at(i);
+      if(sd->tracks() == 2 && currI->tracks() ==1 && (currI->oneWay() != "Y" ||currI->whichEnd()=="S"))
+      {
+       sd->_next = currI->segmentId();
+       segmentMap.value(sd->_next)->_prev = sd->segmentId();
+
+       qDebug() << sd->segmentId() << " " << sd->description() << " connects to "
+                << currI->whichEnd() << " " << currI->segmentId() << " " << currI->description();
+       qApp->processEvents();
+       //sd = currI;
+       sd = segmentMap.value(sd->next());
+       currSegment = sd->segmentId();
+       break;
+      }
+     }
+
+     currSegment = -1;
+     break;
+    }
+   }
+  }
+ }
+ return currSegment;
+}
+#endif
 /// <summary>
 /// return the number of points in a segment.
 /// </summary>
@@ -5202,6 +5282,21 @@ qint32 SQL::addAltRoute(QString routeAlpha, QString routePrefix)
  return route;
 }
 
+bool SQL::addAltRoute(int routeNum, QString routeAlpha){
+ QSqlDatabase db = QSqlDatabase::database();
+ QString commandText = "insert into altRoute (route, routeAlpha, routePrefix) values (" +QString::number(routeNum)
+   + ", '" + routeAlpha + "',' ')";
+ QSqlQuery query = QSqlQuery(db);
+ bool bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+  SQLERROR(query);
+  return false;
+ }
+ return true;
+}
+
+
 bool SQL::updateAltRoute(int route, QString routeAlpha)
 {
  QSqlDatabase db = QSqlDatabase::database();
@@ -5327,6 +5422,13 @@ bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QStri
         myExceptionHandler(e);
     }
     return ret;
+}
+bool SQL::addSegmentToRoute(SegmentData sd)
+{
+  return addSegmentToRoute( sd.route(), sd.routeName(), sd.startDate(),
+                            sd.endDate(), sd.segmentId(), sd.companyKey(),
+                            sd.tractionType(), sd.direction(), sd.next(), sd.prev(), sd.normalEnter(), sd.normalLeave(),
+                            sd.reverseEnter(), sd.reverseLeave(), sd.oneWay(), sd.trackUsage());
 }
 
 bool SQL::addSegmentToRoute(RouteData rd)
@@ -5653,6 +5755,32 @@ qint32 SQL::getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * 
         *(newAlphaRoute) = "OS";
         return route;
     }
+    if(routeAlpha.contains(","))
+    {
+     QStringList tokens = routeAlpha.split(",");
+     if(tokens.count() != 2)
+      return -1;
+     bool bOk;
+     int lowRange = tokens.at(0).toUInt(&bOk);
+     if(!bOk)
+      return -1;
+     int highRange = tokens.at(1).toUInt(&bOk);
+     if(!bOk)
+      return -1;
+     if(highRange > lowRange)
+     {
+      QMessageBox::critical(nullptr, tr("Error"), tr("Range end must be greater than start in range %1 to %2").arg(lowRange).arg(highRange));
+      return -1;
+     }
+     int last = nextRouteNumberInRange(lowRange, highRange)+1;
+     if(last > highRange)
+     {
+      QMessageBox::critical(nullptr, tr("Error"), tr("No numbers available in range %1 to %2").arg(lowRange).arg(highRange));
+      return -1;
+     }
+     return last;
+    }
+
         //route = Convert.ToInt32(routeAlpha);
     bool bOk=false;
     route = routeAlpha.toInt(&bOk, 10);
@@ -5708,7 +5836,6 @@ qint32 SQL::getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * 
 /// <returns></returns>
 QList<RouteData> SQL::getRouteInfo(qint32 route)
 {
-
     QList<RouteData>  myArray;
     try
     {
@@ -5716,7 +5843,8 @@ QList<RouteData> SQL::getRouteInfo(qint32 route)
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
-        QString commandText = "Select distinct a.route, name, startDate, endDate, routeAlpha from Routes a join altRoute b on a.route = b.route where a.route = " + QString("%1").arg(route) + " group by a.route, name, startDate, endDate, routeAlpha";
+        QString commandText = "Select distinct a.route, name, startDate, endDate, routeAlpha"
+        " from Routes a join altRoute b on a.route = b.route where a.route = " + QString("%1").arg(route) + " group by a.route, name, startDate, endDate, routeAlpha";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -6183,7 +6311,127 @@ bool SQL::insertParameters(Parameters parms, QSqlDatabase db)
 /// </summary>
 /// <param name="route"></param>
 /// <returns></returns>
-QList<RouteData> SQL::getRouteSegmentsBySegment(qint32 segmentId)
+QList<SegmentData> SQL::getRouteSegmentsBySegment(qint32 segmentId)
+{
+    QList<SegmentData> myArray;
+//    try
+//    {
+        if(!dbOpen())
+            throw Exception(tr("database not open: %1").arg(__LINE__));
+        QSqlDatabase db = QSqlDatabase::database();
+
+        QString commandText = "Select a.route, name, startDate, endDate, lineKey, companyKey,"
+              " tractionType, direction, normalEnter, normalLeave, reverseEnter, reverseLeave,"
+              " routeAlpha, OneWay"
+              " from Routes a join altRoute b on a.route = b.route"
+              " where lineKey = " + QString("%1").arg(segmentId)
+              + " order by routeAlpha, name, endDate";
+        QSqlQuery query = QSqlQuery(db);
+        bool bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+            SQLERROR(query);
+            exit(EXIT_FAILURE);
+        }
+        while (query.next())
+        {
+            SegmentData sd =  SegmentData();
+            sd._route = query.value(0).toInt();
+            sd.routeName() = query.value(1).toString();
+            sd._startDate =query.value(2).toDate();
+            sd._endDate = query.value(3).toDate();
+            sd._segmentId = query.value(4).toInt();
+            sd._companyKey = query.value(5).toInt();
+            sd._tractionType = query.value(6).toInt();
+            sd._direction = query.value(7).toString();
+            sd._normalEnter = query.value(8).toInt();
+            sd._normalLeave = query.value(9).toInt();
+            sd._reverseEnter = query.value(10).toInt();
+            sd._reverseLeave = query.value(11).toInt();
+            sd._alphaRoute = query.value(12).toString();
+            QString rdStartDate= sd._startDate.toString("yyyy/MM/dd");
+            sd._oneWay = query.value(13).toString();
+            myArray.append(sd);
+        }
+//    }
+//    catch (Exception e)
+//    {
+//        myExceptionHandler(e);
+
+//    }
+//    IComparer compareRoutes = new compareAlphaRoutesClass();
+//    myArray.Sort(compareRoutes);
+    return myArray;
+}
+
+QList<SegmentData> SQL::getRouteSegmentsBySegment(int route, qint32 segmentId)
+{
+    QList<SegmentData> myArray;
+//    try
+//    {
+        if(!dbOpen())
+            throw Exception(tr("database not open: %1").arg(__LINE__));
+        QSqlDatabase db = QSqlDatabase::database();
+
+        QString commandText = "Select r.route, r.name, r.startDate, r.endDate, r.lineKey, r.companyKey,"
+              " tractionType, r.direction, normalEnter, normalLeave, reverseEnter, reverseLeave,"
+              " routeAlpha, r.OneWay, s.description, next, prev"
+              " from Routes r"
+              " join altRoute a on a.route = r.route"
+              " join segments s on s.segmentId = r.lineKey"
+              " where r.lineKey = " + QString("%1").arg(segmentId)
+              + " and a.route = " + QString("%1").arg(route)
+              + " order by routeAlpha, name, r.startDate";
+        QSqlQuery query = QSqlQuery(db);
+        bool bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+            SQLERROR(query);
+            exit(EXIT_FAILURE);
+        }
+        while (query.next())
+        {
+            SegmentData sd =  SegmentData();
+            sd._route = query.value(0).toInt();
+            sd._routeName = query.value(1).toString();
+            sd._startDate =query.value(2).toDate();
+            sd._endDate = query.value(3).toDate();
+            sd._segmentId = query.value(4).toInt();
+            sd._companyKey = query.value(5).toInt();
+            sd._tractionType = query.value(6).toInt();
+            sd._direction = query.value(7).toString();
+            sd._normalEnter = query.value(8).toInt();
+            sd._normalLeave = query.value(9).toInt();
+            sd._reverseEnter = query.value(10).toInt();
+            sd._reverseLeave = query.value(11).toInt();
+            sd._alphaRoute = query.value(12).toString();
+            sd._oneWay = query.value(13).toString();
+            sd._description = query.value(14).toString();
+            sd._next = query.value(15).toInt();
+            sd._prev = query.value(16).toInt();
+
+            if(sd._normalEnter > 2 || sd._normalEnter < 0)
+             sd._normalEnter = 0;
+            if(sd._normalLeave > 2 || sd._normalLeave < 0)
+             sd._normalLeave = 0;
+            if(sd._reverseEnter > 2 || sd._reverseEnter < 0)
+             sd._reverseEnter = 0;
+            if(sd._reverseLeave > 2 || sd._reverseLeave < 0)
+             sd._reverseLeave = 0;
+            myArray.append(sd);
+        }
+//    }
+//    catch (Exception e)
+//    {
+//        myExceptionHandler(e);
+
+//    }
+//    IComparer compareRoutes = new compareAlphaRoutesClass();
+//    myArray.Sort(compareRoutes);
+    return myArray;
+}
+
+QList<RouteData> SQL::getRouteSegmentsForRouteNbr(QString route)
 {
     QList<RouteData> myArray;
 //    try
@@ -6192,16 +6440,17 @@ QList<RouteData> SQL::getRouteSegmentsBySegment(qint32 segmentId)
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
-        QString commandText = "Select a.route, name, startDate, endDate, lineKey, companyKey, tractionType, direction, "
-              "normalEnter, normalLeave, reverseEnter, reverseLeave, routeAlpha, OneWay"
-              " from Routes a join altRoute b on a.route = b.route where lineKey = " + QString("%1").arg(segmentId)
-              + " order by routeAlpha, name, endDate";
+        QString commandText = "Select a.route, name, a.startDate, a.endDate, lineKey, companyKey, tractionType, "
+              "direction, next, prev, trackUsage,"
+              "normalEnter, normalLeave, reverseEnter, reverseLeave, routeAlpha, a.OneWay"
+              " from Routes a join altRoute b on a.route = b.route where b.routeAlpha = '" + route + "'"
+              + " order by companyKey, name, a.endDate";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
             SQLERROR(query);
-            exit(EXIT_FAILURE);
+            throw Exception();
         }
         while (query.next())
         {
@@ -6214,25 +6463,21 @@ QList<RouteData> SQL::getRouteSegmentsBySegment(qint32 segmentId)
             rd.companyKey = query.value(5).toInt();
             rd.tractionType = query.value(6).toInt();
             rd.direction = query.value(7).toString();
-            rd.normalEnter = query.value(8).toInt();
-            rd.normalLeave = query.value(9).toInt();
-            rd.reverseEnter = query.value(10).toInt();
-            rd.reverseLeave = query.value(11).toInt();
-            rd.alphaRoute = query.value(12).toString();
+            rd.next = query.value(8).toInt();
+            rd.prev = query.value(9).toInt();
+            rd.trackUsage = query.value(10).toString();
+            rd.normalEnter = query.value(11).toInt();
+            rd.normalLeave = query.value(12).toInt();
+            rd.reverseEnter = query.value(13).toInt();
+            rd.reverseLeave = query.value(14).toInt();
+            rd.alphaRoute = query.value(15).toString();
             QString rdStartDate= rd.startDate.toString("yyyy/MM/dd");
-            rd.oneWay = query.value(13).toString();
+            rd.oneWay = query.value(16).toString();
             myArray.append(rd);
         }
-//    }
-//    catch (Exception e)
-//    {
-//        myExceptionHandler(e);
-
-//    }
-//    IComparer compareRoutes = new compareAlphaRoutesClass();
-//    myArray.Sort(compareRoutes);
     return myArray;
 }
+
 /// <summary>
 /// Get start and end dates, company key and traction type for a route
 /// </summary>
@@ -6434,10 +6679,21 @@ QDate SQL::getRoutesNextDateForSegment(qint32 route, QString name, qint32 Segmen
 
     return dt;
 }
-bool SQL::doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate)
+
+bool SQL::doesRouteSegmentExist(SegmentData sd)
+{
+ return doesRouteSegmentExist(sd.route(), sd.routeName(), sd.segmentId(), sd.startDate(), sd.endDate());
+}
+
+bool SQL::doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QDate startDate, QDate endDate)
 {
     bool ret = false;
     int count = 0;
+    if(route <= 0 || name.isEmpty() || segmentId <= 0 || !startDate.isValid() || !endDate.isValid()
+       || (startDate > endDate))
+    {
+     throw IllegalArgumentException("doesRouteSegmentExist: invalid arguments");
+    }
     try
     {
         if(!dbOpen())
@@ -6448,8 +6704,7 @@ bool SQL::doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QS
                               + " and name = '" + name
                               + "' and lineKey= " + QString("%1").arg(segmentId)
                               + " and startDate = '"
-                              + startDate + "' and endDate='"
-                              + endDate + "'";
+                              + startDate.toString("yyyy/MM/dd") + "' and endDate='"+ endDate.toString("yyyy/MM/dd") + "'";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -6470,6 +6725,10 @@ bool SQL::doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QS
         }
         if (count > 0)
             ret = true;
+        else
+        {
+         qDebug() << "no results: " << commandText;
+        }
     }
     catch (Exception e)
     {
@@ -6478,29 +6737,29 @@ bool SQL::doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QS
     return ret;
 }
 
-SegmentInfo SQL::getSegmentInSameDirection(SegmentInfo sdIn)
+SegmentData SQL::getSegmentInSameDirection(SegmentData sdIn)
 {
     sdIn._bearing = Bearing(sdIn._startLat, sdIn._startLon, sdIn._endLat, sdIn._endLon);
     SegmentInfo sd = SegmentInfo();
-    QList<SegmentInfo> startIntersects = getIntersectingSegments(sdIn._startLat, sdIn._startLon, .020, sdIn._routeType);
+    QList<SegmentData> startIntersects = getIntersectingSegments(sdIn._startLat, sdIn._startLon, .020, sdIn._routeType);
     Bearing b = Bearing();
     if(startIntersects.isEmpty())
         return sd;
 
-    QList<SegmentInfo> endIntersects = getIntersectingSegments(sdIn._endLat, sdIn._endLon, .020, sdIn._routeType);
+    QList<SegmentData> endIntersects = getIntersectingSegments(sdIn._endLat, sdIn._endLon, .020, sdIn._routeType);
     if(endIntersects.isEmpty())
         return sd;
 
     //foreach (segmentData sdStart in startIntersects)
     for(int i= 0; i <startIntersects.count();i++)
     {
-        SegmentInfo sdStart = startIntersects.at(i);
+        SegmentData sdStart = startIntersects.at(i);
         if (sdStart._segmentId == sdIn._segmentId)
             continue;
         //foreach (segmentData sdEnd in endIntersects)
         for(int j=0; j <endIntersects.count(); j++)
         {
-            SegmentInfo sdEnd =endIntersects.at(j);
+            SegmentData sdEnd =endIntersects.at(j);
             if (sdEnd._segmentId == sdIn._segmentId)
                 continue;
             b = Bearing(sdEnd._startLat, sdEnd._startLon, sdEnd._endLat, sdEnd._endLon);
@@ -6877,7 +7136,7 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
 /// </summary>
 /// <param name="Description"></param>
 /// <returns></returns>
-qint32 SQL::addSegment(SegmentInfo sd, bool *bAlreadyExists, bool forceInsert)
+qint32 SQL::addSegment(SegmentData sd, bool *bAlreadyExists, bool forceInsert)
 {
  int rows = 0;
  int SegmentId = -1;
@@ -7331,8 +7590,8 @@ RouteData SQL::getRouteData(qint32 route, qint32 SegmentId, QString startDate, Q
   rd.oneWay = query.value(7).toString();
   rd.trackUsage = query.value(8).toString();
   rd.bearing = new Bearing(query.value(8).toDouble(),query.value(9).toDouble(), query.value(10).toDouble(),query.value(11).toDouble());
-  rd.sd->_tracks = query.value(12).toInt();
-  rd.sd->_description = query.value(13).toString();
+  rd.sd._tracks = query.value(12).toInt();
+  rd.sd._description = query.value(13).toString();
   rd.routeType = (RouteType)query.value(14).toInt();
  }
 
@@ -7488,9 +7747,13 @@ bool SQL::deleteRoute(qint32 route, QString name, QString startDate, QString end
 
         QString commandText;
         if(config->currConnection->servertype() != "MsSql")
-            commandText = "delete from Routes where route = " + QString("%1").arg(route) + " and name = '" + name + "' and startDate = '" + startDate + "' and endDate = '" + endDate + "'";
+            commandText = "delete from Routes where route = " + QString("%1").arg(route)
+              + " and name = '" + name
+              + "' and startDate = '" + startDate + "' and endDate = '" + endDate + "'";
         else
-            commandText = "delete from [dbo].[routes] where [route] = " + QString("%1").arg(route) + " and name = '" + name + "' and startDate = '" + startDate + "' and endDate = '" + endDate + "'";
+            commandText = "delete from [dbo].[routes] where [route] = " + QString("%1").arg(route)
+              + " and name = '" + name
+              + "' and startDate = '" + startDate + "' and endDate = '" + endDate + "'";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -7521,6 +7784,7 @@ bool SQL::deleteRoute(qint32 route, QString name, QString startDate, QString end
     return ret;
 }
 
+
 // delete a single segment
 bool SQL::deleteRoute(RouteData rd)
 {
@@ -7533,6 +7797,42 @@ bool SQL::deleteRoute(RouteData rd)
   commandText = "delete from Routes where route = " + QString("%1").arg(rd.route) + " and name = '" + rd.name + "' and startDate = '" + rd.startDate.toString("yyyy/MM/dd") + "' and endDate = '" + rd.endDate.toString("yyyy/MM/dd") + "' and lineKey ="+ QString::number(rd.lineKey);
  else
   commandText = "delete from [dbo].[routes] where [route] = " + QString("%1").arg(rd.route) + " and name = '" + rd.name + "' and startDate = '" + rd.startDate.toString("yyyy/MM/dd") + "' and endDate = '" + rd.endDate.toString("yyyy/MM/dd") + "'";
+ QSqlQuery query = QSqlQuery(db);
+ bool bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+  SQLERROR(query);
+  return false;
+ }
+ rows = query.numRowsAffected();
+ if (rows == 0)
+ {
+     //myConnection.Close();
+     //ret = false;
+     //throw (new ApplicationException("deleteRoute: not found. " + myCommand.commandText));
+     qDebug()<<"deleteRoute: not found. " + commandText;
+     return false;
+ }
+
+ return ret;
+}
+
+// delete a single segment
+bool SQL::deleteRoute(SegmentData sd)
+{
+ bool ret = true;
+ int rows = 0;
+ QSqlDatabase db = QSqlDatabase::database();
+
+ QString commandText;
+ if(config->currConnection->servertype() != "MsSql")
+  commandText = "delete from Routes where route = " + QString("%1").arg(sd.route()) + " and name = '" + sd.routeName()
+    + "' and startDate = '" + sd.startDate().toString("yyyy/MM/dd") + "' and endDate = '" + sd.endDate().toString("yyyy/MM/dd")
+    + "' and lineKey ="+ QString::number(sd.segmentId());
+ else
+  commandText = "delete from [dbo].[routes] where [route] = " + QString("%1").arg(sd.route()) + " and name = '"
+    + sd.routeName() + "' and startDate = '" + sd.startDate().toString("yyyy/MM/dd") + "' and endDate = '"
+    + sd.endDate().toString("yyyy/MM/dd") + "'";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -7820,7 +8120,7 @@ bool SQL::insertRouteSegment(RouteData rd)
   throw IllegalArgumentException("Invalid dates ");
 
  commandText = "INSERT INTO Routes(Route, Name, StartDate, EndDate, LineKey, companyKey, tractionType, direction, "
-               "normalEnter, normalleave, reverseEnter, reverseLeave, oneWay, trackusage) "
+               "next, prev, normalEnter, normalleave, reverseEnter, reverseLeave, oneWay, trackusage) "
                "VALUES(" + QString("%1").arg(rd.route) + ", '"
                + rd.name.trimmed() + "', '"
                + rd.startDate.toString("yyyy/MM/dd") + "', '"
@@ -7829,6 +8129,8 @@ bool SQL::insertRouteSegment(RouteData rd)
                + QString("%1").arg(rd.companyKey)+","
                + QString("%1").arg(rd.tractionType)+",'"
                + rd.direction +"', "
+               + QString("%1").arg(rd.next) + ","
+               + QString("%1").arg(rd.prev) + ","
                + QString("%1").arg(rd.normalEnter) + ","
                + QString("%1").arg(rd.normalLeave) + ","
                + QString("%1").arg(rd.reverseEnter) + ", "
@@ -7854,9 +8156,11 @@ bool SQL::insertRouteSegment(RouteData rd)
 /// <param name="endDate"></param>
 /// <param name="segmentId"></param>
 /// <returns></returns>
-QList<RouteData> SQL::getConflictingRouteSegments(qint32 route, QString name, QString startDate, QString endDate, qint32 segmentId)
+QList<SegmentData> SQL::getConflictingRouteSegments(qint32 route, QString name,
+                                                    QString startDate, QString endDate,
+                                                    qint32 segmentId)
 {
-    QList<RouteData> myArray;
+    QList<SegmentData> myArray;
     try
     {
         if(!dbOpen())
@@ -7877,21 +8181,21 @@ QList<RouteData> SQL::getConflictingRouteSegments(qint32 route, QString name, QS
         }
         while (query.next())
         {
-            RouteData rd = RouteData();
-            rd.route = query.value(0).toInt();
-            rd.name = query.value(1).toString();
-            rd.startDate = query.value(2).toDate();
-            rd.endDate = query.value(3).toDate();
-            rd.lineKey = query.value(4).toInt();
-            rd.tractionType =query.value(5).toInt();
-            rd.companyKey = query.value(6).toInt();
-            rd.direction = query.value(7).toString();
-            rd.normalEnter = query.value(8).toInt();
-            rd.normalLeave = query.value(9).toInt();
-            rd.reverseEnter = query.value(10).toInt();
-            rd.reverseLeave = query.value(11).toInt();
-            rd.oneWay = query.value(12).toString();
-            myArray.append(rd);
+            SegmentData sd = SegmentData();
+            sd._route = query.value(0).toInt();
+            sd._routeName = query.value(1).toString();
+            sd._startDate = query.value(2).toDate();
+            sd._endDate = query.value(3).toDate();
+            sd._segmentId = query.value(4).toInt();
+            sd._tractionType =query.value(5).toInt();
+            sd._companyKey = query.value(6).toInt();
+            sd._direction = query.value(7).toString();
+            sd._normalEnter = query.value(8).toInt();
+            sd._normalLeave = query.value(9).toInt();
+            sd._reverseEnter = query.value(10).toInt();
+            sd._reverseLeave = query.value(11).toInt();
+            sd._oneWay = query.value(12).toString();
+            myArray.append(sd);
         }
     }
     catch (Exception e)
@@ -7910,35 +8214,35 @@ bool compareSegmentInfo(const SegmentInfo & sd1, const SegmentInfo & sd2)
  return sd1.segmentId() < sd2.segmentId();
 }
 
-QList<RouteData> SQL::getRoutes(qint32 segmentid)
+QList<SegmentData> SQL::getRoutes(qint32 segmentid)
 {
     SegmentInfo sd = getSegmentInfo(segmentid);  // get some info about the segment.
     //QList<SegmentData>  myArray;
     //compareSegmentDataClass compareSegments = new compareSegmentDataClass();
 
     // get a list of all the routes using this segment on this date
-    QList<RouteData> segmentInfoList = getRouteSegmentsBySegment(segmentid);
+    QList<SegmentData> segmentInfoList = getRouteSegmentsBySegment(segmentid);
 
     return segmentInfoList;
 }
 
-QList<routeIntersects> SQL::updateLikeRoutes(qint32 segmentid, qint32 route, QString name, QString date, bool bAllRoutes)
+QList<RouteIntersects> SQL::updateLikeRoutes(qint32 segmentid, qint32 route, QString name, QString date, bool bAllRoutes)
 {
-    QList<routeIntersects> intersectList;
-    routeIntersects ri;
+    QList<RouteIntersects> intersectList;
+    RouteIntersects ri;
     SegmentInfo sd = getSegmentInfo(segmentid);  // get some info about the segment.
-    QList<SegmentInfo>  myArray;
+    QList<SegmentData>  myArray;
     //compareSegmentDataClass compareSegments = new compareSegmentDataClass();
 
     // get a list of all the routes using this segment on this date
-    QList<RouteData> segmentInfoList = getRouteSegmentsBySegment(segmentid);
+    QList<SegmentData> segmentInfoList = getRouteSegmentsBySegment(segmentid);
 
     // get other segments intersecting with the start of this segment
-    myArray = getIntersectingSegments(sd._startLat, sd._startLon, .020, sd._routeType);
+    myArray = getIntersectingSegments(sd.startLat(), sd.startLon(), .020, sd.routeType());
     //foreach (segmentData sd1 in myArray)
     for(int i=0; i < myArray.count(); i++)
     {
-        SegmentInfo sd1 = myArray.at(i);
+        SegmentData sd1 = myArray.at(i);
         if (sd1._segmentId == segmentid)
             continue;   // ignore myself
         // select only those segments actually used.
@@ -7946,14 +8250,14 @@ QList<routeIntersects> SQL::updateLikeRoutes(qint32 segmentid, qint32 route, QSt
             ri.startIntersectingSegments.append(sd1);
     }
     //ri.startIntersectingSegments.Sort(compareSegments);
-    std::sort(ri.startIntersectingSegments.begin(), ri.startIntersectingSegments.end(), compareSegmentInfo);
+    std::sort(ri.startIntersectingSegments.begin(), ri.startIntersectingSegments.end(), compareSegmentData);
 
     // get other segments intersecting with the end of this segment
     myArray = getIntersectingSegments(sd._endLat, sd._endLon, .020, sd._routeType);
     //foreach (segmentData sd2 in myArray)
     for(int i=0; i < myArray.count(); i++)
     {
-        SegmentInfo sd2 = myArray.at(i);
+        SegmentData sd2 = myArray.at(i);
         if (sd2._segmentId == segmentid)
             continue;   // ignore myself
         // select only those segments actually used
@@ -7961,33 +8265,33 @@ QList<routeIntersects> SQL::updateLikeRoutes(qint32 segmentid, qint32 route, QSt
             ri.endIntersectingSegments.append(sd2);
     }
     //ri.endIntersectingSegments.Sort(compareSegments);
-    std::sort(ri.endIntersectingSegments.begin(), ri.endIntersectingSegments.end(), compareSegmentInfo);
+    std::sort(ri.endIntersectingSegments.begin(), ri.endIntersectingSegments.end(), compareSegmentData);
 
     // Populate the intersect list
     //foreach (routeData rdi in segmentInfoList)
     for(int i =0; i < segmentInfoList.count(); i++)
     {
-        RouteData rdi = segmentInfoList.at(i);
+        SegmentData rdi = segmentInfoList.at(i);
         // Get my info
-        if (rdi.route == route && rdi.name == name && rdi.endDate.toString("yyyy/MM/dd") == date)
+        if (rdi.route() == route && rdi.routeName() == name && rdi.endDate().toString("yyyy/MM/dd") == date)
             ri.rd = rdi;
         else
         {
-            routeIntersects ri2 =  routeIntersects();
+            RouteIntersects ri2 =  RouteIntersects();
             ri2.rd = rdi;
             myArray = getIntersectingSegments(sd._startLat, sd._startLon, .020, sd._routeType);
             //foreach (segmentData sd1 in myArray)
             for(int i=0; i < myArray.count(); i++)
             {
-                SegmentInfo sd1 = myArray.at(i);
+                SegmentData sd1 = myArray.at(i);
                 //foreach (segmentData mysd1 in ri.startIntersectingSegments)
                 for(int j=0; j < ri.startIntersectingSegments.count(); j++)
                 {
-                    SegmentInfo mysd1 = ri.startIntersectingSegments.at(j);
+                    SegmentData mysd1 = ri.startIntersectingSegments.at(j);
                     if (sd1._segmentId == mysd1._segmentId )
                     {
                         // select only those segments actually used.
-                        if (isRouteUsedOnDate(rdi.route, sd1._segmentId, rdi.endDate.toString("yyyy/MM/dd")))
+                        if (isRouteUsedOnDate(rdi.route(), sd1.segmentId(), rdi.endDate().toString("yyyy/MM/dd")))
                             ri2.startIntersectingSegments.append(sd1);
                     }
                 }
@@ -7996,23 +8300,23 @@ QList<routeIntersects> SQL::updateLikeRoutes(qint32 segmentid, qint32 route, QSt
             //foreach(segmentData sd2 in myArray)
             for(int i=0; i < myArray.count(); i++)
             {
-                SegmentInfo sd2 = myArray.at(i);
+                SegmentData sd2 = myArray.at(i);
                 //foreach (segmentData mysd2 in ri.endIntersectingSegments)
                 for(int j=0; j < ri.endIntersectingSegments.count(); j++)
                 {
-                     SegmentInfo mysd2 = ri.endIntersectingSegments.at(j);
+                     SegmentData mysd2 = ri.endIntersectingSegments.at(j);
                     if (sd2._segmentId == mysd2._segmentId )
                     {
                         // select only those segments actually used
-                        if (isRouteUsedOnDate(rdi.route, sd2._segmentId, rdi.endDate.toString("yyyy/MM/dd")))
+                        if (isRouteUsedOnDate(rdi.route(), sd2.segmentId(), rdi.endDate().toString("yyyy/MM/dd")))
                             ri2.endIntersectingSegments.append(sd2);
                     }
                 }
             }
             //ri2.startIntersectingSegments.Sort(compareSegments);
-            std::sort(ri2.startIntersectingSegments.begin(), ri2.startIntersectingSegments.end(), compareSegmentInfo);
+            std::sort(ri2.startIntersectingSegments.begin(), ri2.startIntersectingSegments.end(), compareSegmentData);
             //ri2.endIntersectingSegments.Sort(compareSegments);
-            std::sort(ri2.endIntersectingSegments.begin(), ri2.endIntersectingSegments.end(), compareSegmentInfo);
+            std::sort(ri2.endIntersectingSegments.begin(), ri2.endIntersectingSegments.end(), compareSegmentData);
             if(ri2.endIntersectingSegments.count() == ri.endIntersectingSegments.count() &&
                     ri2.startIntersectingSegments.count() == ri.startIntersectingSegments.count())
             intersectList.append(ri2);
@@ -8023,20 +8327,20 @@ QList<routeIntersects> SQL::updateLikeRoutes(qint32 segmentid, qint32 route, QSt
 SegmentData SQL::getSegmentInOppositeDirection(SegmentData sdIn)
 {
     SegmentData sd;
-    QList<SegmentInfo> startIntersects = getIntersectingSegments(sdIn._startLat, sdIn._startLon, .020, sdIn._routeType);
+    QList<SegmentData> startIntersects = getIntersectingSegments(sdIn._startLat, sdIn._startLon, .020, sdIn._routeType);
     Bearing b = Bearing();
 
-    QList<SegmentInfo> endIntersects = getIntersectingSegments(sdIn._endLat, sdIn._endLon, .020, sdIn._routeType);
+    QList<SegmentData> endIntersects = getIntersectingSegments(sdIn._endLat, sdIn._endLon, .020, sdIn._routeType);
     //foreach (segmentData sdStart in startIntersects)
     for(int i=0; i < startIntersects.count(); i++)
     {
-        SegmentInfo sdStart = startIntersects.at(i);
+        SegmentData sdStart = startIntersects.at(i);
         if (sdStart._segmentId == sdIn._segmentId)
             continue;
         //foreach (segmentData sdEnd in endIntersects)
         for(int j=0; j < endIntersects.count(); j++)
         {
-            SegmentInfo sdEnd = endIntersects.at(j);
+            SegmentData sdEnd = endIntersects.at(j);
             if (sdEnd._segmentId == sdIn._segmentId)
                 continue;
             b =  Bearing(sdEnd._startLat, sdEnd._startLon, sdEnd._endLat, sdEnd._endLon);
@@ -8600,7 +8904,7 @@ RouteComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
 
     RouteComments rc;
     rc.route = -1;
-    rc.infoKey=-1;
+    rc.commentKey=-1;
     rc.ci.commentKey = -1;
     rc.ci.comments = "";
     rc.ci.tags = "";
@@ -8647,7 +8951,7 @@ RouteComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
         }
         while (query.next())
         {
-            rc.infoKey = query.value(0).toInt();
+            rc.commentKey = query.value(0).toInt();
             rc.ci.commentKey = query.value(1).toInt();
             rc.companyKey = query.value(2).toInt();
             rc.ci.comments = query.value(3).toString();
@@ -8692,7 +8996,7 @@ bool SQL::updateRouteComment(RouteComments rc)
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         QSqlQuery query = QSqlQuery(db);
-        if(rc.infoKey == -1)
+        if(rc.commentKey == -1)
         {
             db.transaction();
             //qDebug()<< rc.ci.comments;
@@ -8910,7 +9214,7 @@ RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyK
 
     RouteComments rc;
     rc.route = -1;
-    rc.infoKey=-1;
+    rc.commentKey=-1;
     rc.ci.commentKey = -1;
     rc.ci.comments = "";
     rc.ci.tags = "";
@@ -8947,7 +9251,7 @@ RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyK
         }
         while (query.next())
         {
-            rc.infoKey = query.value(0).toInt();
+            rc.commentKey = query.value(0).toInt();
             rc.ci.comments = query.value(1).toString();
             rc.ci.tags = query.value(2).toString();
             rc.date = query.value(3).toDate();
@@ -8991,7 +9295,7 @@ RouteComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 companyK
 
     RouteComments rc;
     rc.route =-1;
-    rc.infoKey=-1;
+    rc.commentKey=-1;
     rc.ci.commentKey = -1;
     rc.ci.comments = "";
     rc.ci.tags = "";
@@ -9026,7 +9330,7 @@ RouteComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 companyK
         }
         while (query.next())
         {
-            rc.infoKey = query.value(0).toInt();
+            rc.commentKey = query.value(0).toInt();
             rc.ci.comments = query.value(1).toString();
             rc.ci.tags = query.value(2).toString();
             rc.date = query.value(3).toDate();
@@ -9426,8 +9730,14 @@ bool SQL::updateRoute(RouteData rd)
              + ", trackUsage  = '" + rd.trackUsage + "'"
              + ", oneWay  = '" + rd.oneWay + "'"
              + ", prev =" + QString("%1").arg(rd.prev)
-             + ", tractionType =" + QString("%1").arg(rd.tractionType)
-             + ", routeType = " + QString("%1").arg(rd.routeType)
+             + ", direction =" + QString("%1").arg(rd.direction)
+             + ", tractionType = " + QString("%1").arg(rd.tractionType)
+             + ", companyKey = " + QString::number(rd.companyKey)
+             + ", normalEnter = " + QString::number(rd.normalEnter)
+             + ", normalLeave = " + QString::number(rd.normalLeave)
+             + ", reverseEnter = " + QString::number(rd.reverseEnter)
+             + ", reverseLeave = " + QString::number(rd.reverseLeave)
+             + ", lineKey = " + QString::number(rd.lineKey)
              + ", lastUpdate=:lastUpdate"
              " where route ="+QString("%1").arg(rd.route)
              + " and name ='"+rd.name+"' and endDate='"+rd.endDate.toString("yyyy/MM/dd")
@@ -9450,21 +9760,54 @@ bool SQL::updateRoute(RouteData rd)
  return ret;
 }
 
-bool SQL::updateRoute(SegmentData sd)
+bool SQL::updateRoute(SegmentData osd, SegmentData sd)
 {
  bool ret = false;
  int rows = 0;
  QSqlDatabase db = QSqlDatabase::database();
+ // changes to route and lineKey not possible!
+ if(osd.route() != sd.route() || osd.segmentId() != sd.segmentId())
+ {
+  qDebug() << " illegal change to route or segmentId";
+  return false;
+ }
+ if( sd.startDate() > sd.endDate())
+ {
+  qDebug() << " date error ";
+  return false;
+ }
+ if(sd._normalEnter > 2 || sd._normalEnter < 0
+  || sd._normalLeave > 2 || sd._normalLeave < 0
+  || sd._reverseEnter > 2 || sd._reverseEnter < 0
+  || sd._reverseLeave > 2 || sd._reverseLeave < 0)
+ {
+  qDebug() << "invalid normal/reverse vales";
+  return false;
+ }
+
+ if(sd.trackUsage().isEmpty() )
+  sd.setTrackUsage(" ");
 
  QString commandText = "update Routes set next = " + QString("%1").arg(sd.next())
+             + ", prev =" + QString("%1").arg(sd.prev())
              + ", trackUsage  = '" + sd.trackUsage() + "'"
              + ", oneWay  = '" + sd.oneWay() + "'"
-             + ", prev =" + QString("%1").arg(sd.prev())
+             + ", direction  = '" + sd.direction() + "'"
+             + ", companyKey =" + QString("%1").arg(sd.companyKey())
              + ", tractionType =" + QString("%1").arg(sd.tractionType())
+             + ", normalEnter = " + QString::number(sd.normalEnter())
+             + ", normalLeave = " + QString::number(sd.normalLeave())
+             + ", reverseEnter = " + QString::number(sd.reverseEnter())
+             + ", reverseLeave = " + QString::number(sd.reverseLeave())
+             + ", name = '" + sd.routeName() + "'"
+             + ", startDate = '" + sd.startDate().toString("yyyy/MM/dd")+ "'"
+             + ", endDate = '" + sd.endDate().toString("yyyy/MM/dd")+ "'"
              + ", lastUpdate=:lastUpdate"
-             " where route ="+QString("%1").arg(sd.route())
-             + " and name ='"+sd.routeName()+"' and endDate='"+sd.endDate().toString("yyyy/MM/dd")
-             +"' and lineKey="+QString("%1").arg(sd.segmentId());
+             " where route =" + QString("%1").arg(sd.route())
+             + " and name ='" + osd.routeName() + "'"
+             + " and startDate ='" + osd.startDate().toString("yyyy/MM/dd")+ "'"
+             + " and endDate='" + osd.endDate().toString("yyyy/MM/dd")+ "'"
+             + " and lineKey=" + QString("%1").arg(sd.segmentId());
  QSqlQuery query = QSqlQuery(db);
  query.prepare(commandText);
  query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
@@ -9474,12 +9817,14 @@ bool SQL::updateRoute(SegmentData sd)
      QSqlError err = query.lastError();
      qDebug() << err.text() + "\n";
      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     db.close();
-     exit(EXIT_FAILURE);
+     throw Exception(err.text());
  }
+  qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
  rows = query.numRowsAffected();
  if (rows > 0)
      ret = true;
+ else
+  qDebug() << "update failed: " << commandText;
  return ret;
 }
 
@@ -9556,6 +9901,20 @@ QStringList SQL::showDatabases(QString connection, QString servertype)
  }
  return ret;
 }
+
+//bool SQL::isTransactionActive()
+//{
+// QSqlDatabase db = QSqlDatabase::database();
+// QVariant v = db.driver()->handle();
+// sqlite3 *handle = NULL;
+// if (v.isValid() && strcmp(v.typeName(), "sqlite3*") == 0)
+// {
+//  // v.data() returns a pointer to the handle
+//  handle = *static_cast<sqlite3 **>(v.data());
+
+//  int sqlite3_get_autocommit(handle);
+// }
+//}
 
 bool SQL::loadSqlite3Functions()
 {
@@ -9714,97 +10073,40 @@ bool SQL::checkSegments()
  QSqlQuery query = QSqlQuery(db);
  QString commandText;
  bool bQuery;
- QList<SegmentData> myArray;
+ QMap<int, SegmentData> myArray;
  SegmentData sd;
 
- try
+
+ myArray = getSegmentInfoList();
+ foreach(SegmentData sd, myArray.values())
  {
-  if(!dbOpen())
-   throw Exception(tr("database not open: %1").arg(__LINE__));
-
-  commandText = "Select SegmentId, description, OneWay, startDate, endDate, length, points, startLat, startLon, endLat, EndLon, type, tracks from Segments ";
-  bQuery = query.exec(commandText);
-  if(!bQuery)
+  if(sd._bNeedsUpdate)
   {
-   QSqlError err = query.lastError();
-   qDebug() << err.text() + "\n";
-   qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-//   db.close();
-//   exit(EXIT_FAILURE);
-   return false;
+   updateSegment(&sd);
   }
-  while (query.next())
-  {
-   sd = SegmentData();
-   sd._segmentId = query.value(0).toInt();
-   sd._description = query.value(1).toString();
-   sd._oneWay = query.value(2).toString();
-   sd._startDate = query.value(3).toDate() ;
-   sd._endDate = query.value(4).toDate();
-   sd._length = query.value(5).toDouble();
-   sd.points = query.value(6).toInt();
-   sd._startLat = query.value(7).toDouble();
-   sd._startLon = query.value(8).toDouble();
-   sd._endLat = query.value(9).toDouble();
-   sd._endLon = query.value(10).toDouble();
-   sd._bearing = Bearing(sd._startLat, sd._startLon, sd._endLat, sd._endLon);
-   sd._direction = sd._bearing.strDirection();
-   if (sd._oneWay == "N")
-    sd._direction += "-" + sd._bearing.strReverseDirection();
-   sd._routeType = (RouteType)query.value(11).toInt();
-   sd._tracks = query.value(12).toInt();
-   sd.checkTracks();
 
-   myArray.append(sd);
-  }
- }
- catch (Exception& e)
- {
-     myExceptionHandler(e);
- }
-
-
- foreach(SegmentData sd, myArray)
- {
-  commandText = "select count(*) from LineSegment where SegmentId = " + QString("%1").arg(sd.segmentId());
-  bQuery = query.exec(commandText);
-  if(!bQuery)
+  // get list of routes using segment
+  QList<SegmentData> routeList = getRouteSegmentsBySegment(sd.segmentId());
+  if(!routeList.isEmpty())
   {
-   QSqlError err = query.lastError();
-   qDebug() << err.text() + "\n";
-   qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-   db.close();
-   exit(EXIT_FAILURE);
-  }
-  int count=0;
-  while (query.next())
-  {
-   count = query.value(0).toInt();
-  }
-  if(count == 0)
-  {
-   // need to add a LineSegment
-   commandText = "INSERT INTO LineSegment( StartLat, StartLon, EndLat, EndLon, StreetName, SegmentId,"
-                 " Sequence, Length)  VALUES( "
-                 + QString("%1").arg(sd.startLat(),0,'f',8)
-                 + ", " + QString("%1").arg(sd.startLon(),0,'f',8)
-                 + ", " + QString("%1").arg(sd.endLat(),0,'f',8)
-                 + ", " + QString("%1").arg(sd.endLon(),0,'f',8) + ", '" + "??"
-                 + "', " + QString("%1").arg(sd.segmentId())
-                 + ", " + QString("%1").arg(0) + ", " + QString("%1").arg(sd.length()) + ")";
-   bQuery = query.exec(commandText);
-   if(!bQuery)
+   foreach(SegmentData rd, routeList)
    {
-    QSqlError err = query.lastError();
-    qDebug() << err.text() + "\n";
-    qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-    db.close();
-    exit(EXIT_FAILURE);
+    bool bNeedsUpdate = false;
+    if(rd.direction() != sd._direction)
+    {
+     rd.direction() = sd._direction;
+      bNeedsUpdate = true;
+    }
+    if(bNeedsUpdate)
+       updateRoute(rd, rd);
    }
-   qDebug() << QString("Segment %1 corrected").arg(sd.segmentId());
   }
- }
+  else {
+   // segment not used
+   qDebug() << "segment " << sd.segmentId() << " " <<sd.description() << " is not being used";
+  }
 
+ }
  return true;
 }
 
@@ -10370,8 +10672,8 @@ bool SQL::replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegmen
    RouteData rd;
    rd.startLatLng = LatLng(query.value(0).toDouble(), query.value(1).toDouble());
    rd.endLatLng = LatLng(query.value(2).toDouble(), query.value(3).toDouble());
-   rd.lineKey = rd.sd->_segmentId = query.value(4).toInt();
-   rd.sd->_description = query.value(5).toString();
+   rd.lineKey = rd.sd._segmentId = query.value(4).toInt();
+   rd.sd._description = query.value(5).toString();
    rd.route = query.value(6).toInt();
    rd.name = query.value(7).toString();
    rd.direction = query.value(8).toString();
@@ -10383,23 +10685,23 @@ bool SQL::replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegmen
    rd.reverseLeave = query.value(14).toInt();
    rd.startDate = query.value(15).toDate();
    rd.endDate = query.value(16).toDate();
-   rd.sd->_length = query.value(17).toInt();
-   rd.sd->_tracks = query.value(18).toInt();
+   rd.sd._length = query.value(17).toInt();
+   rd.sd._tracks = query.value(18).toInt();
    rd.oneWay = query.value(19).toString();
    rd.trackUsage = query.value(20).toString();
-   rd.sd->_routeType = (RouteType)query.value(21).toInt();
+   rd.sd._routeType = (RouteType)query.value(21).toInt();
    rd.companyKey = query.value(22).toInt();
    rd.tractionType =query.value(23).toInt();
    rd.bearing = new Bearing(rd.startLatLng, rd.endLatLng);
    list.append(rd);
   }
 
-
   foreach(RouteData rd, list)
   {
    if(rd.startDate > ignoreDate)
    {
-    QString err =tr("ignoring route %1, name %2, segment %3, %4, startDate = %5").arg(rd.route).arg(rd.name).arg(rd.lineKey).arg(rd.sd->_description).arg(rd.startDate.toString("yyyy/MM/dd"));
+    QString err =tr("ignoring route %1, name %2, segment %3, %4, startDate = %5").arg(rd.route).arg(rd.name)
+      .arg(rd.lineKey).arg(rd.sd._description).arg(rd.startDate.toString("yyyy/MM/dd"));
     emit details(err);
     continue;
    }
@@ -10412,10 +10714,10 @@ bool SQL::replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegmen
    {
     bool ok;
     RouteData newRd = RouteData(rd);
-    newRd.sd = new SegmentInfo(SQL::getSegmentInfo(segment.toInt(&ok)));
+    newRd.sd = SegmentInfo(SQL::getSegmentInfo(segment.toInt(&ok)));
     newRd.lineKey = segment.toInt(&ok);
-    double diffBearing = rd.bearing->getBearing() - newRd.sd->_bearing.getBearing();
-    if(newRd.sd->_tracks == 2)
+    double diffBearing = rd.bearing->getBearing() - newRd.sd._bearing.getBearing();
+    if(newRd.sd._tracks == 2)
     {
      newRd.oneWay = "Y";
      if(diffBearing > 45.0)
@@ -10424,8 +10726,7 @@ bool SQL::replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegmen
       newRd.trackUsage = "R";
     }
     if(SQL::doesRouteSegmentExist(newRd.route, newRd.name, newRd.lineKey,
-                                  newRd.startDate.toString("yyyy/MM/dd"),
-                                  newRd.endDate.toString("yyyy/MM/dd")))
+                                  newRd.startDate, newRd.endDate))
      continue;
 
 
@@ -10436,8 +10737,8 @@ bool SQL::replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegmen
     }
     QString detail;
     detail = detail.append("route ").append(QString("%1").arg(rd.route)).append(" ").append(rd.name).append(", Segment ")
-      .append(QString("%1").arg(rd.lineKey)).append(" ").append(rd.sd->_description).append(" replaced with ")
-      .append(QString("%1").arg(newRd.lineKey)).append(" ").append(newRd.sd->_description);
+      .append(QString("%1").arg(rd.lineKey)).append(" ").append(rd.sd._description).append(" replaced with ")
+      .append(QString("%1").arg(newRd.lineKey)).append(" ").append(newRd.sd._description);
     qDebug() << detail;
     emit details(detail);
 
@@ -10688,20 +10989,20 @@ SegmentInfo SQL::convertSegment(int segmentId, int tracks)
    {
     si1._startLat = si1._pointList.at(0).lat();
     si1._startLon = si1._pointList.at(0).lon();
-    si1._endLat = si1._pointList.at(si1.points-1).lat();
-    si1._endLon = si1._pointList.at(si1.points-1).lon();
+    si1._endLat = si1._pointList.at(si1._points-1).lat();
+    si1._endLon = si1._pointList.at(si1._points-1).lon();
    }
    si1._bearing = Bearing(si1._startLat, si1._startLon, si1._endLat, si1._endLon);
    if(si1._pointList.count() > 1)
    {
     si1._bearingStart = Bearing(si1._startLat, si1._startLon, si1._pointList.at(1).lat(), si1._pointList.at(1).lon());
-    si1._bearingEnd = Bearing(si1._pointList.at(si1.points-2).lat(), si1._pointList.at(si1.points-2).lon(), si1._endLat, si1._endLon);
+    si1._bearingEnd = Bearing(si1._pointList.at(si1._points-2).lat(), si1._pointList.at(si1._points-2).lon(), si1._endLat, si1._endLon);
    }
    si1._bounds = Bounds(query.value(13).toString());
    if(si1._length == 0 && si1._pointList.count() > 1)
    {
     //sd._length = distance(LatLng(sd._startLat, sd._startLon), LatLng(sd._endLat, sd._endLon));
-    for(int i=0; i <  si1.points-2; i++)
+    for(int i=0; i <  si1._points-2; i++)
     si1._length += distance(si1._pointList.at(i), si1._pointList.at(i+1));
    }
   }
@@ -10720,5 +11021,250 @@ SegmentInfo SQL::convertSegment(int segmentId, int tracks)
         return si;
  }
  return si1; // already exists
+
+}
+
+int SQL::nextRouteNumberInRange(int lowRange, int highRange){
+ QSqlDatabase db = QSqlDatabase::database();
+ QString commandText = "select max(route) from altRoute where route >= " + QString::number(lowRange) + " and route < " +QString::number(highRange);
+ QSqlQuery query = QSqlQuery(db);
+ bool bQuery = query.exec(commandText);
+ qDebug() << query.lastQuery() << " line:" <<__LINE__;
+
+ if(!bQuery)
+ {
+     QSqlError err = query.lastError();
+     qDebug() << err.text() + "\n";
+     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+     db.close();
+     exit(EXIT_FAILURE);
+ }
+ while(query.next())
+ {
+  return query.value(0).toUInt();
+ }
+ return 0;
+}
+
+bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute)
+{
+ QSqlDatabase db = QSqlDatabase::database();
+ QString commandText;
+ QSqlQuery query = QSqlQuery(db);
+ //int oldRouteNumber = -1;
+
+ BeginTransaction("renumber");
+
+ try
+ {
+//  commandText = "select route from altRoute where routeAlpha = '" + oldAlphaRoute + "'";
+//  bool bQuery = query.exec(commandText);
+//  qDebug() << query.lastQuery() << " line:" <<__LINE__;
+
+//  if(!bQuery)
+//  {
+//      QSqlError err = query.lastError();
+//      qDebug() << err.text() + "\n";
+//      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+//      db.close();
+//      exit(EXIT_FAILURE);
+//  }
+//  while(query.next())
+//  {
+//   oldRouteNumber = query.value(0).toUInt();
+//   break;
+//  }
+//  if(oldRouteNumber == -1)
+//  {
+//   RollbackTransaction("renumber");
+//   return false;
+//  }
+
+  QList<RouteData> routes = getRouteSegmentsForRouteNbr(oldAlphaRoute);
+  if(routes.isEmpty())
+  {
+   RollbackTransaction("renumber");
+   return false;
+  }
+  foreach(RouteData rd, routes)
+  {
+   if(!deleteRoute(rd))
+   {
+    RollbackTransaction("renumber");
+    return false;
+   }
+  }
+
+  bool rslt = deleteAlphaRoute(oldAlphaRoute);
+  if(!rslt)
+  {
+   RollbackTransaction("renumber");
+   return false;
+  }
+  rslt = SQL::addAltRoute(newRoute, QString::number(newRoute));
+  if(!rslt)
+  {
+   RollbackTransaction("renumber");
+   return false;
+  }
+
+  foreach(RouteData rd, routes)
+  {
+   int oldRouteNumber = rd.route;
+   rd.route = newRoute;
+   if(!insertRouteSegment(rd))
+   {
+    RollbackTransaction("renumber");
+    return false;
+   }
+
+   QList<RouteComments> comments = commentsForRoute(oldRouteNumber);
+   if(!comments.isEmpty())
+   {
+    foreach(RouteComments rc, comments)
+    {
+     if(!deleteRouteComment(rc))
+     {
+      RollbackTransaction("renumber");
+      return false;
+     }
+     rc.route = newRoute;
+     if(!updateRouteComment(rc))
+     {
+      RollbackTransaction("renumber");
+      return false;
+     }
+    }
+   }
+   QList<TerminalInfo> terminals = terminalsForRoute(oldRouteNumber);
+   if(!terminals.isEmpty())
+   {
+    foreach(TerminalInfo te, terminals)
+    {
+     if(!deleteTerminalInfo(oldRouteNumber))
+     {
+      RollbackTransaction("renumber");
+      return false;
+     }
+     te.route = newRoute;
+     if(!updateTerminals(te))
+     {
+      RollbackTransaction("renumber");
+      return false;
+     }
+    }
+
+    if(!updateRouteForStations(oldRouteNumber, newRoute))
+    {
+     RollbackTransaction("renumber");
+     return false;
+    }
+   }
+  }
+ }
+ catch(Exception ex)
+ {
+  RollbackTransaction("renumber");
+  return false;
+ }
+
+
+ CommitTransaction("renumber");
+ return true;
+}
+
+QList<RouteComments> SQL::commentsForRoute(int route)
+{
+
+ QSqlDatabase db = QSqlDatabase::database();
+ QString commandText = "select route, date, commentKey, companyKey, latitude, longitude "
+                       "from RouteComments where route = " +QString::number(route);
+ QSqlQuery query = QSqlQuery(db);
+ QList<RouteComments>myArray;
+ bool bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+     QSqlError err = query.lastError();
+     qDebug() << err.text() + "\n";
+     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+     throw Exception();
+     ;
+ }
+ while (query.next())
+ {
+  RouteComments rc;
+  rc.route = query.value(0).toInt();
+  rc.date = query.value(1).toDate();
+  rc.commentKey = query.value(2).toInt();
+  rc.companyKey = query.value(3).toInt();
+  rc.pos = LatLng(query.value(4).toDouble(), query.value(5).toDouble());
+  myArray.append(rc);
+ }
+
+ return myArray;
+}
+
+QList<TerminalInfo> SQL::terminalsForRoute(int route)
+{
+ QSqlDatabase db = QSqlDatabase::database();
+ QString commandText = "select route, name, startDate, endDate,startSegment, startWhichEnd,"
+                       "endSegment, endWhichEnd from terminals where route = " + QString::number(route);
+ QSqlQuery query = QSqlQuery(db);
+ QList<TerminalInfo> myArray;
+ bool bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+     QSqlError err = query.lastError();
+     qDebug() << err.text() + "\n";
+     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+     throw Exception();
+ }
+ while(query.next())
+ {
+  TerminalInfo te;
+  te.route = query.value(0).toInt();
+  te.startDate = query.value(1).toDateTime();
+  te.endDate = query.value(2).toDateTime();
+  te.startSegment = query.value(3).toInt();
+  te.startWhichEnd = query.value(4).toChar();
+  te.endSegment = query.value(5).toInt();
+  te.endWhichEnd = query.value(6).toChar();
+  myArray.append(te);
+ }
+
+ return myArray;
+}
+
+bool SQL::updateRouteForStations(int oldRoute, int newRoute)
+{
+ QSqlDatabase db = QSqlDatabase::database();
+ QString commandText = "update stations set route = " + QString::number(newRoute) + " where route = "
+                       + QString::number(oldRoute);
+ QSqlQuery query = QSqlQuery(db);
+ bool bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+     QSqlError err = query.lastError();
+     qDebug() << err.text() + "\n";
+     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+     return false;
+ }
+ return true;
+}
+
+bool SQL::deleteTerminalInfo(int route)
+{
+ QSqlDatabase db = QSqlDatabase::database();
+ QString commandText = "delete from terminals where route = " + QString::number(route);
+ QSqlQuery query = QSqlQuery(db);
+ bool bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+     QSqlError err = query.lastError();
+     qDebug() << err.text() + "\n";
+     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+     return false;
+ }
+ return true;
 
 }

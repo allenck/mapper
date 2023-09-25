@@ -6,7 +6,7 @@ SegmentViewTableModel::SegmentViewTableModel(QObject *parent) :
 {
 }
 
-SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList, double Lat, double Lon, qint32 route, QString date, QObject *parent)
+SegmentViewTableModel::SegmentViewTableModel(QList<SegmentData> segmentDataList, double Lat, double Lon, qint32 route, QString date, QObject *parent)
      : QAbstractTableModel(parent)
  {
      listOfSegments = segmentDataList;
@@ -43,7 +43,7 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
              return QVariant();
          else
          {
-             SegmentInfo sd = listOfSegments.at(index.row());
+             SegmentData sd = listOfSegments.at(index.row());
              //segmentInfo si = sql->getSegmentInfo(sd.SegmentId);
             if (sql->isRouteUsedOnDate(m_routeNbr, sd.segmentId(), m_date))
                 return Qt::Checked;
@@ -53,7 +53,7 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
      }
 
      if (role == Qt::DisplayRole) {
-         SegmentInfo sd = listOfSegments.at(index.row());
+         SegmentData sd = listOfSegments.at(index.row());
 
          //segmentInfo si = sql->getSegmentInfo(sd.SegmentId);
          if (sd.segmentId() < 1)
@@ -192,7 +192,7 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
      if (index.isValid() && role == Qt::EditRole) {
          int row = index.row();
 
-         SegmentInfo si = listOfSegments.value(row);
+         SegmentData si = listOfSegments.value(row);
 
 //         switch (index.column())
 //             p.first = value.toString();
@@ -225,8 +225,12 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
      return QAbstractTableModel::flags(index);
  }
 
- QList< SegmentInfo > SegmentViewTableModel::getList()
+ QList< SegmentData > SegmentViewTableModel::getList()
  {
      return listOfSegments;
  }
 
+ SegmentData SegmentViewTableModel::selectedSegment(int row)
+ {
+  return listOfSegments.at(row);
+ }

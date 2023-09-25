@@ -37,13 +37,13 @@ public:
     QList<RouteData> routeList;
     QList<RouteData> getRoutesByEndDate();
     QList<RouteData> getRoutesByEndDate(qint32 companyKey);
-    QT_DEPRECATED RouteInfo getRoutePoints(qint32 route, QString name, QString date);
+    //QT_DEPRECATED RouteInfo getRoutePoints(qint32 route, QString name, QString date);
     TerminalInfo getTerminalInfo(qint32 route, QString name, QString endDate);
     QList<TerminalInfo> getTerminalInfoUsingSegment(int segmentId);
     QString getAlphaRoute(qint32 route, qint32 company);
     QMap<int, TractionTypeInfo> getTractionTypes();
     //QT_DEPRECATED QList<SegmentInfo> getSegmentInfo();
-    QMap<int, SegmentInfo> getSegmentInfoList(QString locality = " ");
+    QMap<int, SegmentData> getSegmentInfoList(QString locality = " ");
     QStringList getLocations();
     //QT_DEPRECATED SegmentInfo getSegmentInfo(qint32 segmentId);
     SegmentInfo getSegmentInfo(qint32 SegmentId);
@@ -74,7 +74,7 @@ public:
     bool doesSegmentExist(QString descr, QString oneWay, QString location = "");
     QString getSegmentDescription(qint32 SegmentId);
     QList<SegmentData> getIntersectingSegments(double lat, double lon, double radius);
-    QList<SegmentInfo> getIntersectingSegments(double lat, double lon, double radius, RouteType type);
+    QList<SegmentData> getIntersectingSegments(double lat, double lon, double radius, RouteType type);
     bool updateRecord(SegmentInfo sd);
     bool updateSegmentDetails(qint32 SegmentId, QString description, int tracks, double length, RouteType type);
     QList<CompanyData *> getCompanies();
@@ -82,11 +82,12 @@ public:
     QList<RouteData> getRouteSegmentsForDate(qint32 route, QString name, QString date);
     QList<RouteData> getRouteSegmentsForDate(qint32 segmentId, QString date);
     qint32 addAltRoute(QString routeAlpha, QString routePrefix);
+    bool addAltRoute(int routeNum, QString routeAlpha);
     bool updateAltRoute(int route, QString routeAlpha);
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate, QString routeStartDate, QString routeEndDate);
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate);
-    bool addSegmentToRoute(RouteData rd);
-//    QT_DEPRECATED bool addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate,
+    bool addSegmentToRoute(SegmentData rd);
+    QT_DEPRECATED bool addSegmentToRoute(RouteData rd);
 //                           qint32 SegmentId, qint32 companyKey, qint32 tractionType, QString direction,
 //                           qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave,
 //                           QString oneWay, QString trackUsage);
@@ -105,21 +106,24 @@ public:
     qint32 getRouteCompany(qint32 route);
     Parameters getParameters();
     bool insertParameters(Parameters, QSqlDatabase db);
-    QList<RouteData> getRouteSegmentsBySegment(qint32 segmentId);
+    QList<SegmentData> getRouteSegmentsBySegment(qint32 segmentId);
+    QList<SegmentData> getRouteSegmentsBySegment(int route, qint32 segmentId);
+    QList<RouteData> getRouteSegmentsForRouteNbr(QString route);
     QList<RouteData> getRouteDataForRouteName(qint32 route, QString name);
     double Distance(double Lat1, double Lon1, double Lat2, double Lon2);
-    QList<SegmentData> getIntersectingRouteSegmentsAtPoint(double lat, double lon, double radius, qint32 route, QString routeName, QString date);
+    QList<SegmentData> getIntersectingRouteSegmentsAtPoint(int ignore, double lat, double lon, double radius, qint32 route, QString routeName, QString date);
     QDate getRoutesEarliestDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
     QDate getRoutesLatestDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
     QDate getRoutesNextDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
-    bool doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate);
-    SegmentInfo getSegmentInSameDirection(SegmentInfo siIn);
+    bool doesRouteSegmentExist(SegmentData sd);
+    bool doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QDate startDate, QDate endDate);
+    SegmentData getSegmentInSameDirection(SegmentData siIn);
     bool deleteSegment(qint32 SegmentId);
     qint32 getDefaultCompany(qint32 route, QString date);
     LatLng getPointInfo(qint32 pt, qint32 SegmentId);
     qint32 addCompany(QString name, qint32 route, QString startDate, QString endDate);
     qint32 addSegment(QString Description, QString OneWay, int tracks, RouteType routeType, const QList<LatLng> pointList, QString Location, bool * bAlreadyExists, bool forceInsert= false);
-    qint32 addSegment(SegmentInfo sd, bool *bAlreadyExists, bool forceInsert);
+    qint32 addSegment(SegmentData sd, bool *bAlreadyExists, bool forceInsert);
     qint32 splitSegment(qint32 pt, qint32 SegmentId, QString oldDesc, QString oldOneWay, QString newDesc, QString newOneWay, RouteType routeType, RouteType newRouteType, int oldTracks, int newTracks, QString oldStreet, QString newStreet);
     RouteData getRouteData(qint32 route, qint32 SegmentId, QString startDate, QString endDate);
     bool updateSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId, qint32 companyKey, qint32 tractionType, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString biDirectional);
@@ -127,9 +131,11 @@ public:
     bool deleteRoute(qint32 route, QString name, QString startDate, QString endDate);
     bool modifyRouteDate(RouteData* rd, bool bStartDate, QDate dt, QString name1, QString name2);
     bool modifyCurrentRoute(RouteData* rd, bool bStartDate, QDate dt, QString name1, QString name2);
-    QList<RouteData> getConflictingRouteSegments(qint32 route, QString name, QString startDate, QString endDate, qint32 segmentId);
-    QList<RouteData> getRoutes(qint32 segmentid);
-    QList<routeIntersects> updateLikeRoutes(qint32 segmentid, qint32 route, QString name, QString date, bool bAllRoutes = false);
+    QList<SegmentData> getConflictingRouteSegments(qint32 route, QString name,
+                                                   QString startDate, QString endDate,
+                                                   qint32 segmentId);
+    QList<SegmentData> getRoutes(qint32 segmentid);
+    QList<RouteIntersects> updateLikeRoutes(qint32 segmentid, qint32 route, QString name, QString date, bool bAllRoutes = false);
     SegmentData getSegmentInOppositeDirection(SegmentData siIn);
     bool isRouteUsedOnDate(qint32 route, qint32 segmentId,  QString date);
     CommentInfo getComments(qint32 infoKey);
@@ -155,7 +161,7 @@ public:
     QList<StationInfo> getStationsLikeName(QString);
     QT_DEPRECATED bool updateRoute(qint32 route, QString name, QString endDate, qint32 segmentId, qint32 next, qint32 prev, QString trackUsage);
     bool updateRoute(RouteData rd);
-    bool updateRoute(SegmentData sd);
+    bool updateRoute(SegmentData osd, SegmentData sd);
     int updateRouteDate(int segmentId, QString startDate, QString endDate);
     int updateRouteSegment(int segmentId, QString startDate, QString endDate, int newSegment);
     QDate getFirstCommentDate(qint32 route, QDate date, qint32 companyKey);
@@ -169,11 +175,14 @@ public:
 
     QStringList showDatabases(QString Connection, QString servertype);
     QStringList getAlphaRoutes(QString text);
+    bool deleteAlphaRoute(QString routeAlpha);
+
+    //bool isTransactionActive();
     bool loadSqlite3Functions();
     bool checkConnectingSegments(QList<SegmentData> segmentDataList);
 
 //    QStringList getTableList(QSqlDatabase db, QString dbType);
-    Q_DECL_DEPRECATED bool checkSegments();
+    bool checkSegments();
     bool doesColumnExist(QString table, QString column);
     bool doesConstraintExist(QString tbName, QString name);
     bool addColumn(QString table, QString name, QString type);
@@ -193,7 +202,7 @@ public:
     int getCountOfStationsUsingSegment(int segmentId);
     bool deleteAndReplaceSegmentWith(int segmentId1, int segmentId2);
     bool updateSegmentDates(SegmentInfo *sd);
-    QList<SegmentData> getUnusedSegments();
+    QT_DEPRECATED QList<SegmentData> getUnusedSegments();
     bool replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegments, QDate ignoreDate);
     bool updateSegmentDates(); // Global
     void updateSegmentDates(int segmentId);
@@ -206,6 +215,14 @@ public:
     QStringList showMsSqlDatabases(QSqlDatabase db);
     int sqlErrorMessage(QSqlQuery query, QMessageBox::StandardButtons buttons);
     SegmentInfo convertSegment(int segmentId, int tracks);
+    int nextRouteNumberInRange(int lowRange, int highRange);
+    bool renumberRoute(QString oldAlphaRoute, int newRoute);
+    QList<RouteComments> commentsForRoute(int route);
+    QList<TerminalInfo> terminalsForRoute(int route);
+    bool updateRouteForStations(int oldRoute, int newRoute);
+    bool deleteTerminalInfo(int route);
+    bool deleteRoute(SegmentData rd);
+    bool deleteRoute(RouteData rd);
 
 signals:
     void details(QString);
@@ -219,7 +236,6 @@ private:
     QString currentTransaction;
 //    QT_DEPRECATED void populatePointList(SegmentData sd);
     bool insertRouteSegment(RouteData rd);
-    bool deleteRoute(RouteData rd);
 
 };
 

@@ -77,6 +77,8 @@ private:
     QAction *editSegmentAct;
     QAction* showColumnsAct;
     QAction* convertToSingleTrackAct;
+    QAction* updateRouteAct;
+    QAction* splitSegmentAct;
 
     QMenu *startTerminal;
     QMenu *endTerminal;
@@ -88,7 +90,7 @@ private:
     RouteViewTableModel *sourceModel;
     RouteViewSortProxyModel *proxymodel;
     QModelIndex currentIndex;
-    checkRoute *chk;
+    CheckRoute *chk;
     RouteData rd;
     MainWindow* myParent;
 

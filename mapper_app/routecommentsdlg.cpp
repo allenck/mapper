@@ -132,7 +132,7 @@ bool RouteCommentsDlg::readComment(int pos)
     else
             rc = sql->getRouteComment(_route, _date, _companyKey);
 
-    if(rc.infoKey != -1)
+    if(rc.commentKey != -1)
     {
         _rc = rc;
         _date = _rc.date;

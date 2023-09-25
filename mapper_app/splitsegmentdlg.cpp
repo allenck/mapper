@@ -2,7 +2,7 @@
 #include "ui_splitsegmentdlg.h"
 #include "data.h"
 
-bool compareSegmentInfo1(const SegmentInfo & s1, const SegmentInfo & s2)
+bool compareSegmentInfo1(const SegmentData & s1, const SegmentData & s2)
 {
     return s1.description() < s2.description();
 }
@@ -86,12 +86,12 @@ void SplitSegmentDlg::refreshSegments()
   //foreach (segmentInfo sI in cbSegmentInfoList)
   for(int i=0; i < cbSegmentDataList.count(); i++)
   {
-   SegmentInfo sd = cbSegmentDataList.values().at(i);
+   SegmentData sd = cbSegmentDataList.values().at(i);
    ui->cbSegments->addItem(sd.toString(), sd.segmentId());
   }
 }
 
-void SplitSegmentDlg::setupDates(SegmentInfo sd){
+void SplitSegmentDlg::setupDates(SegmentData sd){
  ui->dateFrom1->setEnabled(true);
  ui->dateTo2->setEnabled(true);
  ui->dateFrom1->setDate( sd.startDate());
@@ -110,7 +110,7 @@ void SplitSegmentDlg::setupDates(SegmentInfo sd){
 void SplitSegmentDlg::setSegment(int segmentId)
 {
  sd = SQL::instance()->getSegmentInfo(segmentId);
- SQL::instance()->updateSegmentDates(&sd); // update segment's begin and end dates.
+ SQL::instance()->updateSegmentDates(sd.segmentId()); // update segment's begin and end dates.
  ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(sd.segmentId()));
  ui->txtNewSegmentName1->setText(sd.description());
 
@@ -135,7 +135,7 @@ bool SplitSegmentDlg::processChanges()
  si.description = ui->txtNewSegmentName1->text();
  siNew.description = ui->txtNewSegmentName2->text();
 #else
- SegmentInfo sdNew = SegmentInfo(sd);
+ SegmentData sdNew = SegmentData(sd);
  sd.setEndDate(ui->dateTo1->date());
  sd.setRouteType((RouteType)ui->cbTrackType1->currentIndex());
    sdNew.setEndDate(ui->dateTo1->date());
@@ -146,7 +146,7 @@ bool SplitSegmentDlg::processChanges()
 #endif
 
  // find all the routes using this segment
- QList<RouteData> routes = SQL::instance()->getRouteSegmentsBySegment(sd.segmentId());
+ QList<SegmentData> routes = SQL::instance()->getRouteSegmentsBySegment(sd.segmentId());
 
  // update the database with changes
  SQL::instance()->BeginTransaction("splitSegment");
@@ -174,16 +174,16 @@ bool SplitSegmentDlg::processChanges()
  int routesChanged = 0;
  if(ui->chkUpdateAffectedRoutes)
  {
-  foreach(RouteData rd, routes)
+  foreach(SegmentData rd, routes)
   {
-   if(rd.lineKey != sd.segmentId())
+   if(rd.segmentId() != sd.segmentId())
     continue;
 
    // If split date is between route segment's start and en dates
-   if( rd.endDate > sd.endDate()
-       &&  rd.startDate < sd.startDate())
+   if( rd.endDate() > sd.endDate()
+       &&  rd.startDate() < sd.startDate())
    {
-    if(!SQL::instance()->updateRouteDate(sd.segmentId(), rd.startDate.toString("yyyy/MM/dd"), sd.endDate().toString("yyyy/MM/dd")))
+    if(!SQL::instance()->updateRouteDate(sd.segmentId(), rd.startDate().toString("yyyy/MM/dd"), sd.endDate().toString("yyyy/MM/dd")))
     {
      SQL::instance()->RollbackTransaction("splitSegment");
      return false;
@@ -193,8 +193,8 @@ bool SplitSegmentDlg::processChanges()
     siNew.endDate = rd.endDate.toString("yyyy/MM/dd");
     rd.lineKey = siNew.segmentId;
 #else
-    sdNew.setEndDate(rd.endDate);
-    rd.lineKey = newSegmentId;
+    sdNew.setEndDate(rd.endDate());
+    rd.setSegmentId(newSegmentId);
 #endif
     if(!SQL::instance()->addSegmentToRoute(rd))
     {
@@ -207,14 +207,15 @@ bool SplitSegmentDlg::processChanges()
    }
 
    // route segment's end date is before split date, nothing to do
-   if(rd.endDate < sd.endDate())
+   if(rd.endDate() < sd.endDate())
     continue;
 
    // if route segment's start date is after split date, use new segment
-   if(rd.startDate> sd.endDate())
+   if(rd.startDate()> sd.endDate())
    {
     //if(!SQL::instance()->updateRoute(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"), newSegmentId, rd.next, rd.prev))
-    if(!SQL::instance()->updateRouteSegment(rd.lineKey, rd.startDate.toString("yyyy/MM/dd"),rd.endDate.toString("yyyy/MM/dd"),newSegmentId))
+    if(!SQL::instance()->updateRouteSegment(rd.segmentId(), rd.startDate().toString("yyyy/MM/dd"),
+                                            rd.endDate().toString("yyyy/MM/dd"),newSegmentId))
     {
      SQL::instance()->RollbackTransaction("splitSegment");
      return false;

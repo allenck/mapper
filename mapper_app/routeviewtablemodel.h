@@ -25,7 +25,7 @@ public:
     void reset();
     void setSequenced(bool b);
 
-    QList<RowChanged*> changedRows;
+    QMap<int, RowChanged*> changedMap;
     void deleteRow(qint32 segmentId, const QModelIndex &index);
     void unDeleteRow(qint32 segmentId, const QModelIndex &index);
     bool isSegmentMarkedForDelete(qint32 segmentId);
@@ -48,8 +48,6 @@ public:
      ENDDATE
     };
     int getRow(int segmentId);
-    bool commitChanges();
-    void discardChanges();
 
 signals:
     void rowChange(qint32 row, qint32 segmentid, bool bDeleted, bool bChanged);
@@ -57,6 +55,8 @@ signals:
 
 public slots:
     void getRows(int, int); // to get the row numbers that need to be highlighted
+    bool commitChanges();
+    void discardChanges();
 
 private:
      QList<SegmentData> listOfSegments;
