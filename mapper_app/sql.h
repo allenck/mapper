@@ -54,6 +54,7 @@ public:
 //    Q_DECL_DEPRECATED qint32 getNbrPoints(qint32 segmentId);
     qint32 sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList, qint32 route, QString name, QString date);
     double angleDiff(double A1, double A2);
+    double connectingAngle(SegmentData sd, QString enterAt, SegmentData sd2);
 //    Q_DECL_DEPRECATED bool addPoint( qint32 pt, qint32 SegmentId, double BeginLat, double BeginLon,  double EndLat, double EndLon,  QString StreetName);
 //    Q_DECL_DEPRECATED bool movePoint(qint32 pt, qint32 SegmentId, double BeginLat, double BeginLon);
     void BeginTransaction (QString name);

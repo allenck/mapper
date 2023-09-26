@@ -880,6 +880,7 @@ void MainWindow::NotYetInplemented()
 
 void MainWindow::createActions()
 {
+
  aboutAct = new QAction(tr("&About"), this);
  aboutAct->setStatusTip(tr("Show the application's About box"));
  connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
@@ -1210,6 +1211,33 @@ void MainWindow::createMenus()
     fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->setToolTipsVisible(true);
     fileMenu->setToolTip(tr(" select quit option tp exit program."));
+    saveSettingsAct = new QAction(tr("Save current settings"), this);
+    saveSettingsAct->setStatusTip(tr("save current selections an settings."));
+    fileMenu->addAction(saveSettingsAct);
+    connect(saveSettingsAct, &QAction::triggered, [=]{
+     QSettings settings;
+     //settingsDb settings;
+     settings.setValue("geometry", saveGeometry());
+     settings.setValue("windowState", saveState());
+     settings.setValue("splitter", ui->splitter->saveState());
+    //    settings.setValue("center/latitude", m_latitude);
+    //    settings.setValue("center/longitude", m_longitude);
+    //    settings.setValue("zoom", m_zoom );
+    //    settings.setValue("maptype", m_maptype);
+     config->currCity->center = LatLng(m_latitude, m_longitude);
+     config->currCity->zoom = m_zoom;
+     config->currCity->mapType = m_maptype;
+     config->currCity->bNoPanOpt = ui->chkNoPan->isChecked();
+     config->currCity->lastRoute = m_routeNbr;
+     config->currCity->lastRouteName = m_routeName;
+     config->currCity->lastRouteEndDate = m_currRouteEndDate;
+     config->currCity->bDisplayStationMarkers = bDisplayStationMarkers;
+     config->currCity->bDisplayTerminalMarkers = bDisplayTerminalMarkers;
+     config->currCity->bDisplayRouteComments = bDisplayRouteComments;
+     config->currCity->bShowOverlay = ui->chkShowOverlay->isChecked();
+     config->currCity->companyKey = ui->cbCompany->currentIndex();
+     config->saveSettings();
+    });
     fileMenu->addAction(quitAct);
     QMenu* connectionsMenu = new Menu("City");
     menuBar()->addMenu(connectionsMenu);
@@ -1797,6 +1825,7 @@ void MainWindow::quit()
 {
     this->close();
 }
+
 QString MainWindow::getColor(qint32 tractionType)
 {
  QString color = "#DF01D7";

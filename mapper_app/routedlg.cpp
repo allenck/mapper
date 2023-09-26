@@ -62,6 +62,7 @@ RouteDlg::RouteDlg(Configuration *cfg, QWidget *parent) :
      ui->gbReverseEnter->setVisible(false);
      ui->gbReverseLeave->setVisible(false);
     });
+    ui->gbUsage->setVisible(false);
 
 //    connect(this, SIGNAL(setStartDate(QDate)), ui->dateStart, SLOT(setDate(QDate)));
 //    connect(this,SIGNAL(setEndDate(QDate)), ui->dateEnd, SLOT(setDate(QDate)));

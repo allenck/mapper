@@ -141,7 +141,6 @@ void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
     {
         qDebug() << "segmentID " + QString("%1").arg(SegmentId) + " not found";
         return;
-
     }
 //    if (sdIn.bearingStart == null || sdIn.bearingEnd == null)
 //        return;

@@ -372,6 +372,8 @@ private:
     QAction* removeCityAct;
     QAction* changeRouteNumberAct;
     QAction* checkSegmentsAct;
+    QAction* saveSettingsAct;
+
     //QSignalMapper *overlaySignalMapper;
     QActionGroup  *overlayActionGroup;
     QString  currentOverlay;

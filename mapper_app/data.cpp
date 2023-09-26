@@ -107,6 +107,7 @@ RouteData::RouteData(const RouteData& o)
  startDate = o.startDate;
  endDate = o.endDate;
  companyKey = o.companyKey;
+
  lineKey = o.lineKey;
  tractionType = o.tractionType;
  direction = o.direction;
