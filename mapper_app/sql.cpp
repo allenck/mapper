@@ -101,11 +101,11 @@ int SQL::sqlErrorMessage(QSqlQuery query, QMessageBox::StandardButtons buttons)
 /// Begin a transaction
 /// </summary>
 /// <param name="name"></param>
-void SQL::BeginTransaction (QString name)
+void SQL::beginTransaction (QString name)
 {
  if(!currentTransaction.isEmpty())
  {
-//  qDebug() << "Warning! Begin transaction ignored for '" + name + "'; transaction '" + currentTransaction + "' is already active";
+  qDebug() << "Warning! Begin transaction ignored for '" + name + "'; transaction '" + currentTransaction + "' is already active";
   return;
  }
  QString commandText = "Begin Transaction " +name;
@@ -128,11 +128,11 @@ void SQL::BeginTransaction (QString name)
 /// Commits a series of sql commands
 /// </summary>
 /// <param name="name"></param>
-void SQL::CommitTransaction (QString name)
+void SQL::commitTransaction (QString name)
 {
   if(name != currentTransaction)
   {
-//   qDebug() << QString("Commit transaction for '%1' ignored because another transaction: '%2' is active").arg(name).arg(currentTransaction);
+   qDebug() << "Warning: " << QString("Commit transaction for '%1' ignored because another transaction: '%2' is active").arg(name).arg(currentTransaction);
       return;
   }
   QString commandText = "Commit Transaction " +name;
@@ -156,7 +156,7 @@ void SQL::CommitTransaction (QString name)
 /// Aborts and rolls back a series of SQL commands
 /// </summary>
 /// <param name="name"></param>
-void SQL::RollbackTransaction (QString name)
+void SQL::rollbackTransaction (QString name)
 {
  QString commandText = "Rollback Transaction " +name;
  QSqlDatabase db = QSqlDatabase::database();
@@ -1299,8 +1299,6 @@ SegmentInfo SQL::getSegmentInfo(qint32 SegmentId)
    for(int i=0; i <  si._points-2; i++)
     si._length += distance(si._pointList.at(i), si._pointList.at(i+1));
   }
-
-
   return  si;
  }
  catch (Exception& e)
@@ -3858,7 +3856,7 @@ bool SQL::updateSegment(qint32 SegmentId)
  if(!dbOpen())
      throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
- BeginTransaction("UpdateSegment");
+ beginTransaction("UpdateSegment");
 
  QString commandText = "Select startLat, startLon, endLat, endLon, length, pointArray, oneWay, tracks, street from Segments where SegmentId = " + QString("%1").arg(SegmentId);
  QSqlQuery query = QSqlQuery(db);
@@ -3871,7 +3869,7 @@ bool SQL::updateSegment(qint32 SegmentId)
  }
  if (!query.isActive())
  {
-  RollbackTransaction("UpdateSegment");
+  rollbackTransaction("UpdateSegment");
   return true;
  }
 
@@ -3915,7 +3913,7 @@ bool SQL::updateSegment(qint32 SegmentId)
      sd._direction = b.strDirection();
  if(points < 2)
  {
-  RollbackTransaction("UpdateSegment");
+  rollbackTransaction("UpdateSegment");
   return false;
  }
 
@@ -3944,11 +3942,11 @@ bool SQL::updateSegment(qint32 SegmentId)
  rows = query.numRowsAffected();
  if (rows == 0)
  {
-   CommitTransaction("UpdateSegment");
+   commitTransaction("UpdateSegment");
    return ret;
  }
  ret = true;
- CommitTransaction("UpdateSegment");
+ commitTransaction("UpdateSegment");
  emit segmentsChanged(SegmentId);
 
  return ret;
@@ -4057,7 +4055,7 @@ bool SQL::updateStation(qint32 stationKey, qint32 infoKey)
         if(!dbOpen())
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
-        BeginTransaction("updateStation");
+        beginTransaction("updateStation");
 
         QString commandText = "update Stations set infoKey = " + QString("%1").arg(infoKey) + ",lastUpdate=:lastUpdate " +
             "where stationKey = " + QString("%1").arg(stationKey);
@@ -4076,7 +4074,7 @@ bool SQL::updateStation(qint32 stationKey, qint32 infoKey)
         rows = query.numRowsAffected();
         if(rows > 0)
         {
-            CommitTransaction("updateStation");
+            commitTransaction("updateStation");
             ret = true;
         }
     }
@@ -4096,7 +4094,7 @@ bool SQL::updateStationRoute(qint32 stationKey, qint32 route) // not used
         if(!dbOpen())
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
-        BeginTransaction("updateStation");
+        beginTransaction("updateStation");
 
         QString commandText = "update Stations set route = " + QString("%1").arg(route) + " " +
             "where stationKey = " + QString("%1").arg(stationKey);
@@ -4113,7 +4111,7 @@ bool SQL::updateStationRoute(qint32 stationKey, qint32 route) // not used
         rows = query.numRowsAffected();
         if(rows > 0)
         {
-            CommitTransaction("updateStation");
+            commitTransaction("updateStation");
             ret = true;
         }
     }
@@ -4133,7 +4131,7 @@ bool SQL::updateStation(qint32 stationKey, LatLng latLng)
         if(!dbOpen())
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
-        BeginTransaction("updateStation");
+        beginTransaction("updateStation");
 
         QString commandText = "update Stations set latitude = " + QString("%1").arg(latLng.lat(),0,'f',8) + ", longitude = " + QString("%1").arg(latLng.lon(),0,'f',8) + ",lastUpdate=:lastUpdate where stationKey = " + QString("%1").arg(stationKey);
         QSqlQuery query = QSqlQuery(db);
@@ -4151,7 +4149,7 @@ bool SQL::updateStation(qint32 stationKey, LatLng latLng)
         rows = query.numRowsAffected();
         if (rows > 0)
         {
-            CommitTransaction("updateStation");
+            commitTransaction("updateStation");
             ret = true;
         }
     }
@@ -4172,7 +4170,7 @@ bool SQL::updateStation(qint32 stationKey, LatLng latLng, qint32 segmentId)
         if(!dbOpen())
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
-        BeginTransaction("updateStation");
+        beginTransaction("updateStation");
 
         QString commandText;
         QSqlQuery query = QSqlQuery(db);
@@ -4219,7 +4217,7 @@ bool SQL::updateStation(qint32 stationKey, LatLng latLng, qint32 segmentId)
         rows = query.numRowsAffected();
         if (rows > 0)
         {
-            CommitTransaction("updateStation");
+            commitTransaction("updateStation");
             ret = true;
         }
 //    }
@@ -4241,7 +4239,7 @@ bool SQL::updateStation(qint32 stationKey,  qint32 route, qint32 lineSegmentId, 
         if(!dbOpen())
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
-        BeginTransaction("updateStation");
+        beginTransaction("updateStation");
 
         QString commandText = "select route from Stations where stationKey = " + QString("%1").arg(stationKey);
         QSqlQuery query = QSqlQuery(db);
@@ -4272,7 +4270,7 @@ bool SQL::updateStation(qint32 stationKey,  qint32 route, qint32 lineSegmentId, 
             rows = query.numRowsAffected();
             if (rows >= 0)
             {
-                CommitTransaction("updateStation");
+                commitTransaction("updateStation");
                 ret = true;
             }
         }
@@ -4282,16 +4280,16 @@ bool SQL::updateStation(qint32 stationKey,  qint32 route, qint32 lineSegmentId, 
             StationInfo sti = getStationInfo(stationKey);
             if(sti.route < 1)
             {
-                RollbackTransaction("updateStation");
+                rollbackTransaction("updateStation");
                 return false;
             }
             *(newStationId) = addStation(sti.stationName,LatLng(sti.latitude, sti.longitude),lineSegmentId, startDate, endDate, sti.geodb_loc_id, sti.infoKey, sti.routeType, sti.markerType, point);
             if(*(newStationId) < 0)
             {
-                RollbackTransaction("updateStation");
+                rollbackTransaction("updateStation");
                 return false;
             }
-            CommitTransaction("updateStation");
+            commitTransaction("updateStation");
         }
 
     }
@@ -5253,6 +5251,46 @@ CompanyData* SQL::getCompany(qint32 companyKey)
     }
     return cd;
 }
+
+bool SQL::doesAltRouteExist(int route, QString alphaRoute)
+{
+ bool ret = false;
+ int count = 0;
+ try
+ {
+     if(!dbOpen())
+         throw Exception(tr("database not open: %1").arg(__LINE__));
+     QSqlDatabase db = QSqlDatabase::database();
+
+     QString commandText = "select count(*) from altRoute where route = " + QString::number(route)
+       + " and routeAlpha = '" + alphaRoute + "'";
+     QSqlQuery query = QSqlQuery(db);
+     bool bQuery = query.exec(commandText);
+     if(!bQuery)
+     {
+         QSqlError err = query.lastError();
+         qDebug() << err.text() + "\n";
+         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+         db.close();
+         exit(EXIT_FAILURE);
+     }
+     if (!query.isActive())
+     {
+         return false;
+     }
+     while (query.next())
+     {
+         count = query.value(0).toInt();
+     }
+     if (count > 0)
+         ret = true;
+ }
+ catch (Exception e)
+ {
+     myExceptionHandler(e);
+ }
+ return ret;
+}
 /// <summary>
 /// Add a new route number.
 /// </summary>
@@ -5402,7 +5440,7 @@ bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QStri
         if(!dbOpen())
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
-        BeginTransaction("deleteRoute");
+        beginTransaction("deleteRoute");
         if(config->currConnection->servertype() == "MsSql")
          commandText = "delete from Routes where route = " + QString("%1").arg(route) + " and LTRIM(RTRIM(name)) = '" + name + "' and LineKey = " + QString("%1").arg(SegmentId) + " and startDate = '" + startDate + "' and endDate = '" + endDate + "'";
         else
@@ -5474,7 +5512,7 @@ bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QStri
         }
         rows = query.numRowsAffected();
 
-        CommitTransaction("deleteRoute");
+        commitTransaction("deleteRoute");
         ret = true;
     }
     catch (Exception e)
@@ -5815,38 +5853,12 @@ qint32 SQL::getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * 
         *(newAlphaRoute) = "OS";
         return route;
     }
-    if(routeAlpha.contains(","))
-    {
-     QStringList tokens = routeAlpha.split(",");
-     if(tokens.count() != 2)
-      return -1;
-     bool bOk;
-     int lowRange = tokens.at(0).toUInt(&bOk);
-     if(!bOk)
-      return -1;
-     int highRange = tokens.at(1).toUInt(&bOk);
-     if(!bOk)
-      return -1;
-     if(highRange > lowRange)
-     {
-      QMessageBox::critical(nullptr, tr("Error"), tr("Range end must be greater than start in range %1 to %2").arg(lowRange).arg(highRange));
-      return -1;
-     }
-     int last = nextRouteNumberInRange(lowRange, highRange)+1;
-     if(last > highRange)
-     {
-      QMessageBox::critical(nullptr, tr("Error"), tr("No numbers available in range %1 to %2").arg(lowRange).arg(highRange));
-      return -1;
-     }
-     return last;
-    }
 
         //route = Convert.ToInt32(routeAlpha);
     bool bOk=false;
     route = routeAlpha.toInt(&bOk, 10);
     if(!bOk)
     {
-
         route = -1;
         if (config->currCity->bAlphaRoutes)
         {
@@ -5858,6 +5870,16 @@ qint32 SQL::getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * 
             *(newAlphaRoute) = "";
         }
     }
+    else
+    {
+     QString alphaRoute = getAlphaRoute(route, companyKey);
+     if(!alphaRoute.isEmpty())
+     {
+      *newAlphaRoute = alphaRoute;
+      *bAlphaRoute = true;
+      return route;
+     }
+    }
 
     if (route != -1)
         *(newAlphaRoute) = (route < 10 ? "0" : "") + QString("%1").arg(route);
@@ -5866,28 +5888,62 @@ qint32 SQL::getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * 
     QSqlDatabase db = QSqlDatabase::database();
     QString commandText ;
     if(config->currConnection->servertype() != "MsSql")
-     commandText = "select route from altRoute a join Companies c on c.routePrefix = a.routePrefix where routeAlpha = '" + routeAlpha + "' and c.`Key` =" + QString::number(companyKey);
+     commandText = "select route from altRoute a"
+                   " join Companies c on c.routePrefix = a.routePrefix"
+                   " where routeAlpha = '" + routeAlpha + "'"
+                   " and c.`Key` =" + QString::number(companyKey);
     else
-     commandText = "select route from altRoute a join Companies c on c.routePrefix = a.routePrefix where routeAlpha = '" + routeAlpha + "' and c.[Key] =" + QString::number(companyKey);
-        QSqlQuery query = QSqlQuery(db);
-        bool bQuery = query.exec(commandText);
-        if(!bQuery)
-        {
-         SQLERROR(query);
-         db.close();
-         exit(EXIT_FAILURE);
-        }
-        if (!query.isActive())
-        {
-            return -1;
-        }
-        route = -1;
-        while (query.next())
-        {
-         route = query.value(0).toInt();
-        }
+     commandText = "select route from altRoute a"
+                   " join Companies c on c.routePrefix = a.routePrefix"
+                   " where routeAlpha = '" + routeAlpha + "'"
+                   " and c.[Key] =" + QString::number(companyKey);
+    QSqlQuery query = QSqlQuery(db);
+    bool bQuery = query.exec(commandText);
+    if(!bQuery)
+    {
+     SQLERROR(query);
+     db.close();
+     //exit(EXIT_FAILURE);
+     throw Exception();
+    }
+    if (!query.isActive())
+    {
+        return -1;
+    }
+    route = -1;
+    while (query.next())
+    {
+     route = query.value(0).toInt();
+    }
 
     return route;
+}
+
+
+int SQL:: findNextRouteInRange(QString routeAlpha)
+{
+ QStringList tokens = routeAlpha.split(",");
+ if(tokens.count() != 2)
+  return -1;
+ bool bOk;
+ int lowRange = tokens.at(0).toUInt(&bOk);
+ if(!bOk)
+  return -1;
+ int highRange = tokens.at(1).toUInt(&bOk);
+ if(!bOk)
+  return -1;
+ if(highRange < lowRange)
+ {
+  QMessageBox::critical(nullptr, tr("Error"), tr("Range end must be greater than start in range %1 to %2").arg(lowRange).arg(highRange));
+  return -1;
+ }
+ int last = nextRouteNumberInRange(lowRange, highRange)+1;
+ if(last > highRange)
+ {
+  QMessageBox::critical(nullptr, tr("Error"), tr("No numbers available in range %1 to %2").arg(lowRange).arg(highRange));
+  return -1;
+ }
+ return last;
 }
  /// <summary>
 /// Get a list of distinct routeData items
@@ -5958,7 +6014,7 @@ bool SQL::updateCompany(qint32 companyKey, qint32 route)
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         QString commandText;
-        BeginTransaction("updateCompanies");
+        beginTransaction("updateCompanies");
         if(config->currConnection->servertype() != "MsSql")
             commandText = "select `key`, description, startDate, endDate, firstRoute, lastRoute from Companies where `key` = " + QString("%1").arg(companyKey);
         else
@@ -6021,7 +6077,7 @@ bool SQL::updateCompany(qint32 companyKey, qint32 route)
         myExceptionHandler(e);
 
     }
-    CommitTransaction("updateCompanies");
+    commitTransaction("updateCompanies");
     return ret;
 }
 
@@ -6130,7 +6186,7 @@ void SQL::updateSegmentDates(int segmentId)
         //return false;
         //throw (new ApplicationException("addSegmentToRoute: segment not found\n" + commandText));
         segStartDate = "1890-1-1";
-        segEndDate = "1890-1-1";
+        segEndDate = "2050-12-31";
 
     }
     while (query.next())
@@ -6140,7 +6196,7 @@ void SQL::updateSegmentDates(int segmentId)
         else
             segStartDate = query.value(0).toDateTime().toString("yyyy/MM/dd");
         if (query.value(1).isNull())
-            segEndDate = "1890-01-01";
+            segEndDate = "2050-12-31";
         else
             segEndDate = query.value(1).toDateTime().toString("yyyy/MM/dd");
     }
@@ -6869,7 +6925,7 @@ bool SQL::deleteSegment(qint32 SegmentId)
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
-        BeginTransaction("deleteSegment");
+        beginTransaction("deleteSegment");
 
         QString commandText;
         QSqlQuery query = QSqlQuery(db);
@@ -6924,7 +6980,7 @@ bool SQL::deleteSegment(qint32 SegmentId)
     {
         myExceptionHandler(e);
     }
-    CommitTransaction("deleteSegment");
+    commitTransaction("deleteSegment");
     return ret;
 }
 /// <summary>
@@ -7102,7 +7158,7 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
  if(!dbOpen())
     throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
- BeginTransaction("addSegment");
+ beginTransaction("addSegment");
 
  QString commandText = "Select SegmentId from Segments where Description = '" + Description
    + "' and tracks = " + QString("%1").arg(tracks)
@@ -7189,7 +7245,7 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
  {
     myExceptionHandler(e);
  }
- CommitTransaction("addSegment");
+ commitTransaction("addSegment");
 
  emit segmentsChanged(SegmentId);
  return SegmentId;
@@ -7214,7 +7270,7 @@ qint32 SQL::addSegment(SegmentData sd, bool *bAlreadyExists, bool forceInsert)
  if(!dbOpen())
     throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
- BeginTransaction("addSegment");
+ beginTransaction("addSegment");
 
  QString commandText = "Select SegmentId from Segments where Description = '" + sd._description
    + "' and tracks = " + QString("%1").arg(sd._tracks)
@@ -7309,7 +7365,7 @@ qint32 SQL::addSegment(SegmentData sd, bool *bAlreadyExists, bool forceInsert)
  {
     myExceptionHandler(e);
  }
- CommitTransaction("addSegment");
+ commitTransaction("addSegment");
 
  emit segmentsChanged(SegmentId);
  return SegmentId;
@@ -7338,7 +7394,7 @@ try
  QSqlQuery query = QSqlQuery(db);
  QString commandText;
  bool bQuery;
- BeginTransaction("splitSegment");
+ beginTransaction("splitSegment");
 
  SegmentInfo oldSd = getSegmentInfo(SegmentId); // Original segment before any changes.
 
@@ -7595,7 +7651,7 @@ try
 
   updateSegmentDates(SegmentId);
   updateSegmentDates(newSegmentId);
-  CommitTransaction("splitSegment");
+  commitTransaction("splitSegment");
 
  }
  catch (Exception e)
@@ -7685,7 +7741,7 @@ bool SQL::updateSegmentToRoute(qint32 routeNbr, QString routeName, QString start
         if(!dbOpen())
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
-        BeginTransaction("updateSegmentToRoute");
+        beginTransaction("updateSegmentToRoute");
 
         QString commandText = "Update Routes set companyKey= " +QString("%1").arg( companyKey)
           + ", tractionType=" + QString("%1").arg(tractionType)
@@ -7720,7 +7776,7 @@ bool SQL::updateSegmentToRoute(qint32 routeNbr, QString routeName, QString start
 
         updateSegmentDates(SegmentId);
 
-        CommitTransaction("updateSegmentToRoute");
+        commitTransaction("updateSegmentToRoute");
 
         ret = true;
     }
@@ -7807,7 +7863,7 @@ bool SQL::deleteRoute(qint32 route, QString name, QString startDate, QString end
         if(!dbOpen())
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
-        BeginTransaction("deleteRoute");
+        beginTransaction("deleteRoute");
 
         QString commandText;
         if(config->currConnection->servertype() != "MsSql")
@@ -7838,7 +7894,7 @@ bool SQL::deleteRoute(qint32 route, QString name, QString startDate, QString end
             exit(EXIT_FAILURE);
         }
 
-        CommitTransaction("deleteRoute");
+        commitTransaction("deleteRoute");
         ret = true;
     }
     catch (Exception e)
@@ -7921,7 +7977,7 @@ bool SQL::modifyRouteDate(RouteData* rd, bool bStartDate, QDate dt, QString name
 {
  bool ret = true;
  int rows = 0;
-  BeginTransaction("modifyRouteDate");
+  beginTransaction("modifyRouteDate");
 //  if(otherRd != NULL)
 //  {
 //   if( bStartDate)
@@ -7944,9 +8000,9 @@ bool SQL::modifyRouteDate(RouteData* rd, bool bStartDate, QDate dt, QString name
    ret = false;
 
   if(ret)
-   CommitTransaction("modifyRouteDate");
+   commitTransaction("modifyRouteDate");
   else
-   RollbackTransaction("modifyRouteDate");
+   rollbackTransaction("modifyRouteDate");
  return ret;
 }
 
@@ -8776,7 +8832,7 @@ int SQL::addComment(QString comments, QString tags)
         if(!dbOpen())
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
-        BeginTransaction("addComment");
+        beginTransaction("addComment");
 
         //if(config->currConnection->servertype() != "MySql")
         {
@@ -8829,7 +8885,7 @@ int SQL::addComment(QString comments, QString tags)
             {
                 infoKey = query.value(0).toInt();
             }
-            CommitTransaction("addComment");
+            commitTransaction("addComment");
         }
     }
     catch (Exception e)
@@ -9220,7 +9276,7 @@ bool SQL::deleteRouteComment(RouteComments rc)
         QSqlDatabase db = QSqlDatabase::database();
         QSqlQuery query = QSqlQuery(db);
 
-        BeginTransaction("deleteRouteComment");
+        beginTransaction("deleteRouteComment");
 
         commandText = "delete from RouteComments where route = :route and date = :date";
         bQuery = query.prepare(commandText);
@@ -9249,7 +9305,7 @@ bool SQL::deleteRouteComment(RouteComments rc)
         {
          if(deleteComment(rc.ci.commentKey))
          {
-          CommitTransaction("deleteRouteComment");
+          commitTransaction("deleteRouteComment");
           ret = true;
          }
         }
@@ -9260,7 +9316,7 @@ bool SQL::deleteRouteComment(RouteComments rc)
    {
        myExceptionHandler(e);
    }
-    RollbackTransaction("deleteRouteComment");
+    rollbackTransaction("deleteRouteComment");
    return ret;
 }
 
@@ -10512,7 +10568,7 @@ bool SQL::executeScript(QString path, QSqlDatabase db)
    {
     SQLERROR(query);
     //ui->lblHelp->setText(err.text());
-    RollbackTransaction("");
+    rollbackTransaction("");
     return false;
    }
    sqltext="";
@@ -10608,7 +10664,7 @@ bool SQL::deleteAndReplaceSegmentWith(int segmentId1, int segmentId2)
  QSqlQuery query = QSqlQuery(db);
  int rows =0;
 
- BeginTransaction("replaceSegment");
+ beginTransaction("replaceSegment");
  QString commandText = "update routes set lineKey = " + QString("%1").arg(segmentId2) + "  where linekey =" + QString("%1").arg(segmentId1) ;
  if(!query.exec(commandText))
  {
@@ -10620,7 +10676,7 @@ bool SQL::deleteAndReplaceSegmentWith(int segmentId1, int segmentId2)
  {
   if(!deleteSegment(segmentId1))
   {
-   RollbackTransaction("replaceSegment");
+   rollbackTransaction("replaceSegment");
    return false;
   }
 
@@ -10631,13 +10687,13 @@ bool SQL::deleteAndReplaceSegmentWith(int segmentId1, int segmentId2)
    if(!query.exec(commandText))
    {
     SQLERROR(query);
-    RollbackTransaction("replaceSegment");
+    rollbackTransaction("replaceSegment");
     return false;
    }
    if(rows != cnt)
    {
     qDebug() << "number of stations updated not equal expected" << rows << " vs " << cnt;
-    RollbackTransaction("replaceSement");
+    rollbackTransaction("replaceSement");
     return false;
    }
   }
@@ -10652,23 +10708,23 @@ bool SQL::deleteAndReplaceSegmentWith(int segmentId1, int segmentId2)
      ti.endSegment = segmentId2;
     if(!updateTerminals(ti))
     {
-     RollbackTransaction("replaceSegment");
+     rollbackTransaction("replaceSegment");
      return false;
     }
    }
   }
-  CommitTransaction("replaceSegment");
+  commitTransaction("replaceSegment");
   return true;
  }
  else
  {
   if(!deleteSegment(segmentId1))
   {
-   RollbackTransaction("replaceSegment");
+   rollbackTransaction("replaceSegment");
    return false;
   }
  }
- CommitTransaction("replaceSegment");
+ commitTransaction("replaceSegment");
  return true;
 }
 
@@ -10703,7 +10759,7 @@ bool SQL::replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegmen
  QSqlQuery query = QSqlQuery(db);
 
  QString oldIn = "(";
- BeginTransaction("replaceSegments");
+ beginTransaction("replaceSegments");
  bool bFirst = true;
  foreach(QString segment, oldSegments)
  {
@@ -10727,7 +10783,7 @@ bool SQL::replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegmen
   if(!query.exec(commandText))
   {
    SQLERROR(query);
-   RollbackTransaction("replaceSegments");
+   rollbackTransaction("replaceSegments");
    return false;
   }
   QList<RouteData> list;
@@ -10771,7 +10827,7 @@ bool SQL::replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegmen
    }
    if(!SQL::deleteRouteSegment(rd.route,rd.name, rd.lineKey,rd.startDate.toString("yyyy/MM/dd"),rd.endDate.toString("yyyy/MM/dd")))
    {
-    RollbackTransaction("replaceSegments");
+    rollbackTransaction("replaceSegments");
     throw RecordNotFoundException(tr("Unable to delete %1 %2 %3 %4 segment: %5").arg(rd.route).arg(rd.name).arg(rd.startDate.toString("yyyy/MM/dd")).arg(rd.endDate.toString("yyyy/MM/dd")).arg(rd.lineKey));
    }
    foreach(QString segment, newSegments)
@@ -10796,7 +10852,7 @@ bool SQL::replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegmen
 
     if(!insertRouteSegment(newRd))
     {
-     RollbackTransaction("replaceSegments");
+     rollbackTransaction("replaceSegments");
      throw Exception("failed:" + commandText);
     }
     QString detail;
@@ -10808,7 +10864,7 @@ bool SQL::replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegmen
 
    }
  }
- CommitTransaction("replaceSegments");
+ commitTransaction("replaceSegments");
  return true;
 }
 
@@ -11117,7 +11173,7 @@ bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute)
  QSqlQuery query = QSqlQuery(db);
  //int oldRouteNumber = -1;
 
- BeginTransaction("renumber");
+ beginTransaction("renumber");
 
  try
  {
@@ -11147,14 +11203,14 @@ bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute)
   QList<RouteData> routes = getRouteSegmentsForRouteNbr(oldAlphaRoute);
   if(routes.isEmpty())
   {
-   RollbackTransaction("renumber");
+   rollbackTransaction("renumber");
    return false;
   }
   foreach(RouteData rd, routes)
   {
    if(!deleteRoute(rd))
    {
-    RollbackTransaction("renumber");
+    rollbackTransaction("renumber");
     return false;
    }
   }
@@ -11162,13 +11218,13 @@ bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute)
   bool rslt = deleteAlphaRoute(oldAlphaRoute);
   if(!rslt)
   {
-   RollbackTransaction("renumber");
+   rollbackTransaction("renumber");
    return false;
   }
   rslt = SQL::addAltRoute(newRoute, QString::number(newRoute));
   if(!rslt)
   {
-   RollbackTransaction("renumber");
+   rollbackTransaction("renumber");
    return false;
   }
 
@@ -11178,7 +11234,7 @@ bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute)
    rd.route = newRoute;
    if(!insertRouteSegment(rd))
    {
-    RollbackTransaction("renumber");
+    rollbackTransaction("renumber");
     return false;
    }
 
@@ -11189,13 +11245,13 @@ bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute)
     {
      if(!deleteRouteComment(rc))
      {
-      RollbackTransaction("renumber");
+      rollbackTransaction("renumber");
       return false;
      }
      rc.route = newRoute;
      if(!updateRouteComment(rc))
      {
-      RollbackTransaction("renumber");
+      rollbackTransaction("renumber");
       return false;
      }
     }
@@ -11207,20 +11263,20 @@ bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute)
     {
      if(!deleteTerminalInfo(oldRouteNumber))
      {
-      RollbackTransaction("renumber");
+      rollbackTransaction("renumber");
       return false;
      }
      te.route = newRoute;
      if(!updateTerminals(te))
      {
-      RollbackTransaction("renumber");
+      rollbackTransaction("renumber");
       return false;
      }
     }
 
     if(!updateRouteForStations(oldRouteNumber, newRoute))
     {
-     RollbackTransaction("renumber");
+     rollbackTransaction("renumber");
      return false;
     }
    }
@@ -11228,12 +11284,12 @@ bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute)
  }
  catch(Exception ex)
  {
-  RollbackTransaction("renumber");
+  rollbackTransaction("renumber");
   return false;
  }
 
 
- CommitTransaction("renumber");
+ commitTransaction("renumber");
  return true;
 }
 

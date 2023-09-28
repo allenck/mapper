@@ -382,7 +382,7 @@ void EditSegmentDialog::On_btnSave_clicked()
  sd.setStartDate(ui->dtBegin->date());
  sd.setLocation(ui->cbLocation->currentText());
 
- sql->BeginTransaction("updateSegment");
+ sql->beginTransaction("updateSegment");
  QList<RouteData> list = sql->getRouteSegmentsForDate(sd.segmentId(), sd.startDate().toString("yyyy/MM/dd"));
  foreach(RouteData rd, list)
  {
@@ -410,18 +410,18 @@ void EditSegmentDialog::On_btnSave_clicked()
  }
  if(!sql->updateSegment(&sd))
  {
-  sql->RollbackTransaction("updateSegment");
+  sql->rollbackTransaction("updateSegment");
   return;
  }
  if(rd->bNeedsUpdate)
  {
   if(!sql->updateRoute(*rd))
   {
-   sql->RollbackTransaction("updateSegment");
+   sql->rollbackTransaction("updateSegment");
    return;
   }
  }
- sql->CommitTransaction("updateSegment");
+ sql->commitTransaction("updateSegment");
  rd->bNeedsUpdate = false;
  sd.setNeedsUpdate(false);
 

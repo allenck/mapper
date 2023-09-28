@@ -2603,7 +2603,7 @@ function setDefaultOptions()
 {
  //alert("setDefaultOptions");
  map.setOptions(defaultOptions);
- map.setOptions({ styles: styles["hide"] });
+ map.setOptions({ styles: styles["default"] });
  myRslt = 0;
 }
 
@@ -2612,6 +2612,11 @@ function setOptions()
  //alert("setDefaultOptions");
  map.setOptions(options);
  map.setOptions({ styles: styles["hide"] });
+}
+
+function setOption(option)
+{
+ map.setOptions(option);
 }
 
 function isOverlayLoaded()

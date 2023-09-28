@@ -57,9 +57,9 @@ public:
     double connectingAngle(SegmentData sd, QString enterAt, SegmentData sd2);
 //    Q_DECL_DEPRECATED bool addPoint( qint32 pt, qint32 SegmentId, double BeginLat, double BeginLon,  double EndLat, double EndLon,  QString StreetName);
 //    Q_DECL_DEPRECATED bool movePoint(qint32 pt, qint32 SegmentId, double BeginLat, double BeginLon);
-    void BeginTransaction (QString name);
-    void CommitTransaction (QString name);
-    void RollbackTransaction (QString name);
+    void beginTransaction (QString name);
+    void commitTransaction (QString name);
+    void rollbackTransaction (QString name);
     Q_DECL_DEPRECATED bool updateSegment(qint32 SegmentId);
     LatLng getPointOnSegment(qint32 pt, qint32 segmentId);
     StationInfo getStationAtPoint(LatLng pt);
@@ -82,6 +82,7 @@ public:
     CompanyData *getCompany(qint32 companyKey);
     QList<RouteData> getRouteSegmentsForDate(qint32 route, QString name, QString date);
     QList<RouteData> getRouteSegmentsForDate(qint32 segmentId, QString date);
+    bool doesAltRouteExist(int route, QString alphaRoute);
     qint32 addAltRoute(QString routeAlpha, QString routePrefix);
     bool addAltRoute(int routeNum, QString routeAlpha);
     bool updateAltRoute(int route, QString routeAlpha);
@@ -98,6 +99,7 @@ public:
                            qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave,
                            QString oneWay, QString trackUsage);
     qint32 getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * bAlphaRoute, int companyKey);
+    int findNextRouteInRange(QString txt);
     bool updateTerminals(TerminalInfo ti);
     bool updateTerminals(qint32 route, QString name, QString startDate, QString endDate, qint32 startSegment, QString startWhichEnd, qint32 endSegment, QString endWhichEnd);
     QList<RouteData> getRouteInfo(qint32 route);
@@ -224,6 +226,7 @@ public:
     bool deleteTerminalInfo(int route);
     bool deleteRoute(SegmentData rd);
     bool deleteRoute(RouteData rd);
+    QString currentTransaction;
 
 signals:
     void details(QString);
@@ -234,7 +237,6 @@ private:
     void myExceptionHandler(Exception e);
     Configuration *config =nullptr;
    // bool compareSegmentData(const segmentData & sd1, const segmentData &sd2);
-    QString currentTransaction;
 //    QT_DEPRECATED void populatePointList(SegmentData sd);
     bool insertRouteSegment(RouteData rd);
 

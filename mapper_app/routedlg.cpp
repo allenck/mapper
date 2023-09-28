@@ -256,23 +256,25 @@ void RouteDlg::setRouteData(SegmentData sd)
  ui->dateEnd->setDate(sd.endDate());
  displayDates(__FUNCTION__);
  //if (ui->cbCompany->currentIndex() == -1)
- {
-  int companyKey= 0;
-  if(_rd.route >= 1)
-   companyKey = sd.companyKey();
-  else
-   companyKey = sql->getDefaultCompany(_routeNbr, ui->dateEnd->dateTime().toString("yyyy/MM/dd"));
-  for(int i=0;i<_companyList.count();i++)
-  {
-   CompanyData* cd =(CompanyData*)_companyList.at(i);
-   if(companyKey == cd->companyKey)
-   {
-    ui->cbCompany->setCurrentIndex(i);
-      // cbCompany.SelectedText = cd.ToString();
-    break;
-   }
-  }
- }
+// {
+//  int companyKey= 0;
+//  if(_rd.route >= 1)
+//   companyKey = sd.companyKey();
+//  else
+//   companyKey = sql->getDefaultCompany(_routeNbr, ui->dateEnd->dateTime().toString("yyyy/MM/dd"));
+//  for(int i=0;i<_companyList.count();i++)
+//  {
+//   CompanyData* cd =(CompanyData*)_companyList.at(i);
+//   if(companyKey == cd->companyKey)
+//   {
+//    ui->cbCompany->setCurrentIndex(i);
+//      // cbCompany.SelectedText = cd.ToString();
+//    break;
+//   }
+//  }
+// }
+ if(sd.companyKey()>0)
+  ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(sd.companyKey()));
 
  ui->gbUsage->setVisible(sd.tracks() == 1);
 
@@ -409,16 +411,29 @@ void RouteDlg::txtRouteNbr_Leave()
     bool bAlphaRoute = false;
     bNewRouteNbr = false;
     //bRouteChanging = false;
-    int companyKey = ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt();
+    int companyKey = ui->cbCompany->currentData().toInt();
+    if(ui->txtRouteNbr->text().contains(","))
+    {
+     int nxt = sql->findNextRouteInRange(ui->txtRouteNbr->text());
+     if(nxt >= 0)
+     {
+      ui->txtRouteNbr->setText(QString::number(nxt));
+     }
+    }
     int newRoute = sql->getNumericRoute(ui->txtRouteNbr->text(), & _alphaRoute, & bAlphaRoute, companyKey);
     if(newRoute < 0)
     {
         QMessageBox::StandardButtons rslt;
-        rslt = QMessageBox::warning(this,tr("Route number not found"), tr( "The route number was not found. Enter Yes to add it"), QMessageBox::Yes | QMessageBox::No);
+        rslt = QMessageBox::warning(this,tr("Route number not found"),
+                                    tr( "The route number was not found. Enter Yes to add it"), QMessageBox::Yes | QMessageBox::No);
         switch (rslt)
         {
             case QMessageBox::Yes:
                 bNewRouteNbr = true;
+                bool bok;
+                newRoute = ui->txtRouteNbr->text().toInt(&bok);
+                if(!bok)
+                 newRoute = sql->findNextRouteInRange("1000,1099");
                 break;
             case QMessageBox::No:
                 break;
@@ -434,6 +449,7 @@ void RouteDlg::txtRouteNbr_Leave()
 
     _routeNbr = newRoute;
     sd.setRoute(newRoute);
+    sd.setAlphaRoute(ui->txtRouteNbr->text());
     if (!config->currCity->bAlphaRoutes && bAlphaRoute)
     {
         ui->lblHelpText->setText(tr( "Must be a number!"));
@@ -499,8 +515,9 @@ void RouteDlg::txtRouteName_Leave()
         //System.Media.SystemSounds.Beep.Play();
         return;
     }
+    sd.setRouteName(ui->cbRouteName->currentText());
 
-    QList<RouteData> rdList = sql->getRouteDataForRouteName(_routeNbr, ui->cbRouteName->currentText());
+    QList<RouteData> rdList = sql->getRouteDataForRouteName(sd.route(), ui->cbRouteName->currentText());
     if (rdList.count()>0)
     {
         //foreach (routeData rd in rdList)
@@ -981,7 +998,7 @@ void RouteDlg::checkUpdate(QString func)
 //            ui->btnDelete->setEnabled(true);
 //        }
 //    }
-    if (sql->doesRouteSegmentExist(_routeNbr, ui->cbRouteName->currentText(), sd.segmentId(), ui->dateStart->date(),
+    if (sql->doesRouteSegmentExist(sd.route(), ui->cbRouteName->currentText(), sd.segmentId(), ui->dateStart->date(),
                                    ui->dateEnd->date()))
     {
         ui->btnAdd->setText(tr("Update"));
@@ -1399,7 +1416,7 @@ void RouteDlg::btnDelete_Click()              // SLOT
       direction = si.bearing().strDirection() + "-" + si.bearing().strReverseDirection();
  }
 //    sql->OpenConnection();
- sql->BeginTransaction("deleteSegment");
+ sql->beginTransaction("deleteSegment");
 
  if (!sql->deleteRouteSegment(_routeNbr, ui->cbRouteName->currentText(), _segmentId, ui->dateStart->text(), ui->dateEnd->text()) == true)
  {
@@ -1449,7 +1466,7 @@ void RouteDlg::btnDelete_Click()              // SLOT
          return;
      }
  }
- sql->CommitTransaction("deleteSegment");
+ sql->commitTransaction("deleteSegment");
  //sql->myConnection.Close();
  fillSegmentsComboBox();
 
@@ -1706,17 +1723,26 @@ void RouteDlg::btnAdd_Click()         // SLOT
   {
    CompanyData* cd = sql->getCompany(companyKey);
       //if (_routeNbr == -1 && _alphaRoute != "")
-   _routeNbr = sql->addAltRoute(ui->txtRouteNbr->text(), cd->routePrefix);
-   sd.setRoute(_routeNbr);
+//   _routeNbr = sql->addAltRoute(ui->txtRouteNbr->text(), cd->routePrefix);
+//   sd.setRoute(_routeNbr);
+   sql->beginTransaction("addRouteSegment");
+   if(!sql->doesAltRouteExist(sd.route(), sd.alphaRoute()))
+   {
+    if(!sql->addAltRoute(sd.route(), sd.alphaRoute()))
+    {
+     sql->rollbackTransaction("addRouteSegment");
+     return;
+    }
+   }
    QString trackUsage = " ";
-   SegmentData sd = sql->getSegmentInfo(_segmentId);
+   //SegmentData sd = sql->getSegmentInfo(_segmentId);
    if(ui->cbOneWay->isChecked() && sd.tracks() ==2)
    {
     if(ui->rbLeft->isChecked()) trackUsage = "L";
     if(ui->rbRight->isChecked()) trackUsage = "R";
    }
-   if (!sql->doesRouteSegmentExist(_routeNbr, ui->cbRouteName->currentText(), _segmentId,
-                                   ui->dateStart->date(), ui->dateEnd->date()) == false)
+   if (!sql->doesRouteSegmentExist(sd.route(), ui->cbRouteName->currentText(), _segmentId,
+                                   ui->dateStart->date(), ui->dateEnd->date()))
    {
  //      if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->date(), ui->dateEnd->date(),
  //                                  _segmentId, companyKey, /*cbTractionType.SelectedIndex+1*/tractionType, direction, 0, 0,
@@ -1732,9 +1758,14 @@ void RouteDlg::btnAdd_Click()         // SLOT
            ui->lblHelpText->setText(tr( "Add Error"));
            //System.Media.SystemSounds.Beep.Play();
            fillSegmentsComboBox();
-           throw  Exception("add/update failed");
+           sql->rollbackTransaction("addRouteSegment");
        }
+       else
+        sql->commitTransaction("addRouteSegment");
    }
+   else
+    sql->rollbackTransaction("addRouteSegment");
+   Q_ASSERT(sql->currentTransaction.isEmpty());
   }
   else
   {
@@ -2213,6 +2244,16 @@ void RouteDlg::cbCompany_SelectedIndexChanged(int i)
      ui->lblHelpText->setText(tr("Select a company"));
      return;
  }
+
+ if(sd.startDate() >= cd->startDate)
+ {
+    ui->dateStart->setDate(sd.startDate());
+ }
+ if(sd.endDate() <= cd->endDate)
+ {
+  ui->dateEnd->setDate(cd->endDate);
+ }
+
  CalculateDates();
 
  if(cd->startDate > _rd.startDate)

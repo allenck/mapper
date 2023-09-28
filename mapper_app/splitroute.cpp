@@ -350,12 +350,12 @@ void SplitRoute::btnOK_Click()
         return;
     }
     setCursor(Qt::WaitCursor);
-    sql->BeginTransaction("SplitRoute");
+    sql->beginTransaction("SplitRoute");
     //cd = sql->getCompany(ui->cbCompany1->itemData(ui->cbCompany1->currentIndex()).toInt());
     cd = _companyList.at(ui->cbCompany1->currentIndex());
     if(cd->companyKey < 0)
     {
-     sql->RollbackTransaction("SplitRoute");
+     sql->rollbackTransaction("SplitRoute");
      setCursor(Qt::ArrowCursor);
      return;
     }
@@ -378,7 +378,7 @@ void SplitRoute::btnOK_Click()
         ui->lblHelp->setText (tr("Route 1 already exists"));
         QApplication::beep();
         setCursor(Qt::ArrowCursor);
-        sql->RollbackTransaction("SplitRoute");
+        sql->rollbackTransaction("SplitRoute");
         return;
        }
       }
@@ -401,7 +401,7 @@ void SplitRoute::btnOK_Click()
         ui->lblHelp->setText (tr("Route 2 already exists"));
         QApplication::beep();
         setCursor(Qt::ArrowCursor);
-        sql->RollbackTransaction("SplitRoute");
+        sql->rollbackTransaction("SplitRoute");
         return;
        }
       }
@@ -421,7 +421,7 @@ void SplitRoute::btnOK_Click()
        ui->lblHelp->setText (tr("delete failed"));
        QApplication::beep();
        setCursor(Qt::ArrowCursor);
-       sql->RollbackTransaction("SplitRoute");
+       sql->rollbackTransaction("SplitRoute");
        return;
       }
      }
@@ -438,7 +438,7 @@ void SplitRoute::btnOK_Click()
        ui->lblHelp->setText (tr("add failed"));
        QApplication::beep();
        setCursor(Qt::ArrowCursor);
-       sql->RollbackTransaction("SplitRoute");
+       sql->rollbackTransaction("SplitRoute");
        return;
       }
      }
@@ -455,7 +455,7 @@ void SplitRoute::btnOK_Click()
        ui->lblHelp->setText (tr("add failed"));
        QApplication::beep();
        setCursor(Qt::ArrowCursor);
-       sql->RollbackTransaction("SplitRoute");
+       sql->rollbackTransaction("SplitRoute");
        return;
       }
 
@@ -470,7 +470,7 @@ void SplitRoute::btnOK_Click()
       ui->lblHelp->setText (tr("add failed"));
       QApplication::beep();
       setCursor(Qt::ArrowCursor);
-      sql->RollbackTransaction("SplitRoute");
+      sql->rollbackTransaction("SplitRoute");
       return;
      }
 
@@ -483,7 +483,7 @@ void SplitRoute::btnOK_Click()
       ui->lblHelp->setText (tr("add failed"));
       QApplication::beep();
       setCursor(Qt::ArrowCursor);
-      sql->RollbackTransaction("SplitRoute");
+      sql->rollbackTransaction("SplitRoute");
       return;
      }
      _newRoute.route = _routeNbr2;
@@ -494,7 +494,7 @@ void SplitRoute::btnOK_Click()
      _newRoute.tractionType = rd1.tractionType;
 
     }
-    sql->CommitTransaction("SplitRoute");
+    sql->commitTransaction("SplitRoute");
 
     this->accept();
     setCursor(Qt::ArrowCursor);

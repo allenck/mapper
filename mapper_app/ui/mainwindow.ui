@@ -38,7 +38,7 @@
         </font>
        </property>
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click on left button to display earlier route. Click on right button tp display the newer route.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="title">
         <string/>
@@ -695,15 +695,15 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>CComboBox</class>
+   <extends>QComboBox</extends>
+   <header>ccombobox.h</header>
+  </customwidget>
+  <customwidget>
    <class>SegmentSelectionWidget</class>
    <extends>QWidget</extends>
    <header>segmentselectionwidget.h</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>CComboBox</class>
-   <extends>QComboBox</extends>
-   <header>ccombobox.h</header>
   </customwidget>
  </customwidgets>
  <resources>

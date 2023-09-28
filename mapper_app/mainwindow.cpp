@@ -436,6 +436,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
   ui->ssw->cbSegments()->setContextMenuPolicy(Qt::ActionsContextMenu);
   ui->ssw->cbSegments()->addAction(addSegmentToRouteAct);
+  ui->ssw->cbSegments()->addAction(addSegmentToNewRouteAct);
   ui->ssw->cbSegments()->addAction(deleteSegmentAct);
   ui->ssw->cbSegments()->addAction(findDupSegmentsAct);
   ui->ssw->cbSegments()->addAction(queryRouteUsageAct);
@@ -456,7 +457,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   //routeView = new RouteView(this);
 //  refreshSegmentCB();
   refreshCompanies();
-  ui->cbCompany->setCurrentIndex(config->currCity->companyKey);
+  ui->cbCompany->setCurrentIndex( ui->cbCompany->findData(config->currCity->companyKey));
   refreshRoutes();
   stationView->showStations();
   ui->chkNoPan->setChecked(config->currCity->bNoPanOpt);
@@ -981,7 +982,7 @@ void MainWindow::createActions()
  connect(editSegmentAct, SIGNAL(triggered()), this, SLOT(On_editSegment_triggered()));
 
  findDupSegmentsAct=new QAction(tr("Show duplicate segments view"),this);
- findDupSegmentsAct->setToolTip(tr("Display a view of duplicate segments"));
+ findDupSegmentsAct->setStatusTip(tr("Display a view of duplicate segments"));
  connect(findDupSegmentsAct, SIGNAL(triggered()),this, SLOT(findDupSegments()));
 
  queryRouteUsageAct=new QAction(tr("Query route usage"),this);
@@ -999,9 +1000,15 @@ void MainWindow::createActions()
  connect(addSegmentToRouteAct, &QAction::triggered, [=]{
 //     int ix = ui->cbSegments->currentIndex();
      SegmentData sd = ui->ssw->segmentSelected();
+     sd.setCompanyKey(ui->cbCompany->currentData().toInt());
 
      int row =         ui->cbRoute->currentIndex();
-     if(row < 0) return;
+     if(row < 0)
+     {
+      // No route selected. call updateRoute instead.
+      updateRoute(&sd);
+      return;
+     }
      RouteData rd = ((RouteData)routeList.at(row));
      bool b = SQL::instance()->addSegmentToRoute(rd.route, rd.name, rd.startDate, rd.endDate,
                                         sd.segmentId(), rd.companyKey,
@@ -1013,6 +1020,21 @@ void MainWindow::createActions()
         displaySegment(sd.segmentId(), sd.description(), /*sd.oneWay(),*/ /*ttColors[e.tractionType]*/getColor(rd.tractionType), rd.trackUsage, true);
 
     }
+ });
+
+ addSegmentToNewRouteAct = new QAction(tr("Add segment via UpdateRoute"),this);
+ addSegmentToNewRouteAct->setStatusTip(tr("Add via UpdateRoute possibly creating new route."));
+ connect(addSegmentToNewRouteAct, &QAction::triggered, [=]{
+  SegmentData sd = ui->ssw->segmentSelected();
+  sd.setRoute(-1);
+  sd.setCompanyKey(ui->cbCompany->currentData().toInt());
+  CompanyData* cd = sql->getCompany(sd.companyKey());
+  if(sd.startDate() < cd->startDate)
+   sd.setStartDate(cd->startDate);
+  if(sd.endDate() > cd->endDate)
+   sd.setEndDate(cd->endDate);
+
+  updateRoute(&sd);
  });
 
  findDormantSegmentsAct = new QAction(tr("Find dormant segments"),this);
@@ -1204,6 +1226,17 @@ void MainWindow::createActions()
  connect(checkSegmentsAct, &QAction::triggered, [=]{
   sql->checkSegments();
  });
+
+ showGoogleMapFeaturesAct = new QAction(tr("Show Google Map Features"), this);
+ showGoogleMapFeaturesAct->setStatusTip(tr("Show or hide Google Maps features of interest."));
+ showGoogleMapFeaturesAct->setCheckable(true);
+ showGoogleMapFeaturesAct->setChecked(config->bShowGMFeatures);
+ connect(showGoogleMapFeaturesAct, &QAction::toggled, [=]{
+  if(!showGoogleMapFeaturesAct->isChecked())
+   m_bridge->processScript("setOption", "{ styles: styles[\"hide\"] }");
+  else
+   m_bridge->processScript("setOption", "{ styles: styles[\"default\"] }");
+ });
 }
 
 void MainWindow::createMenus()
@@ -1235,7 +1268,7 @@ void MainWindow::createMenus()
      config->currCity->bDisplayTerminalMarkers = bDisplayTerminalMarkers;
      config->currCity->bDisplayRouteComments = bDisplayRouteComments;
      config->currCity->bShowOverlay = ui->chkShowOverlay->isChecked();
-     config->currCity->companyKey = ui->cbCompany->currentIndex();
+     config->currCity->companyKey = ui->cbCompany->currentData().toInt();
      config->saveSettings();
     });
     fileMenu->addAction(quitAct);
@@ -1288,6 +1321,7 @@ void MainWindow::createMenus()
     sortMenu = new Menu(tr("Route Sort option"));
     optionsMenu->addMenu(sortMenu);
     sortMenu->addAction(sortTypeAct);
+    optionsMenu->addAction(showGoogleMapFeaturesAct);
 
     menuBar()->addMenu(optionsMenu);
     menuBar()->addMenu(toolsMenu);
@@ -1513,7 +1547,7 @@ void MainWindow::newCity(QAction* act )
 
     //refreshSegmentCB();
     ui->ssw->refresh();
-    ui->cbCompany->setCurrentIndex(config->currCity->companyKey);
+    ui->cbCompany->findData(config->currCity->companyKey);
     refreshCompanies();
     cbSort->setCurrentIndex(config->currCity->routeSortType);
     refreshRoutes();
@@ -3659,6 +3693,7 @@ void MainWindow::updateRoute(SegmentData* sd )
 
     if(sd)
     {
+     try{
      routeDlg->setRouteNbr( sd->route());
      routeDlg->setSegmentId( sd->segmentId());
      routeDlg->setRouteData(*sd);
@@ -3666,6 +3701,11 @@ void MainWindow::updateRoute(SegmentData* sd )
      routeDlg->raise();
      routeDlg->activateWindow();
      return;
+     }
+     catch(IllegalArgumentException)
+     {
+      return;
+     }
     }
 
     if(m_SegmentId >= 0)

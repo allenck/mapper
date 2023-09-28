@@ -36,6 +36,7 @@ CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     QSqlRecord r = model->record(0);
     int ixRoutePrefix = r.indexOf("routePrefix");
     tableView->horizontalHeader()->moveSection(ixRoutePrefix,2);
+    tableView->resizeColumnsToContents();
 
     bNeedsRefresh = false;
     //connect(tableView, SIGNAL())

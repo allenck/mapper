@@ -461,7 +461,7 @@ bool RouteViewTableModel::commitChanges()
   RowChanged* rc = changedMap.values().at(i);
   int row = rc->row;
 
-  SQL::instance()->BeginTransaction("updateRoute");
+  SQL::instance()->beginTransaction("updateRoute");
 
   if( SQL::instance()->doesRouteSegmentExist(rc->osd.route(), rc->osd.routeName(),
                                              rc->osd.segmentId(), rc->osd.startDate(),
@@ -471,7 +471,7 @@ bool RouteViewTableModel::commitChanges()
     {
      if(!SQL::instance()->updateRoute(rc->osd, rc->sd))
      {
-      SQL::instance()->RollbackTransaction("updateRoute");
+      SQL::instance()->rollbackTransaction("updateRoute");
       return false;
      }
     }
@@ -482,13 +482,13 @@ bool RouteViewTableModel::commitChanges()
                                             rc->osd.segmentId(), rc->osd.startDate().toString("yyyy/MM/dd"),
                                             rc->osd.endDate().toString("yyyy/MM/dd")))
      {
-      SQL::instance()->RollbackTransaction("updateRoute");
+      SQL::instance()->rollbackTransaction("updateRoute");
       return false;
      }
     }
   }
  }
- SQL::instance()->CommitTransaction("updateRoute");
+ SQL::instance()->commitTransaction("updateRoute");
 
  changedMap.clear();
  //myParent->refreshRoutes();

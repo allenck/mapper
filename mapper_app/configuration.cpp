@@ -154,6 +154,7 @@ void Configuration::saveSettings()
  settings->setValue("showDebugMessages", bDisplayWebDebug);
  settings->setValue("runInBrowser", bRunInBrowser);
  settings->setValue("saveImageDir", saveImageDir);
+ settings->setValue("showGMFeatures", bShowGMFeatures);
 }
 
 void Configuration::getSettings()
@@ -374,6 +375,7 @@ void Configuration::getSettings()
  bDisplayWebDebug = settings.value("showDebugMessages", false).toBool();
  bRunInBrowser = settings.value("runInBrowser", false).toBool();
  saveImageDir = settings.value("saveImageDir", "").toString();
+ bShowGMFeatures = settings.value("showGMFeatures").toBool();
  //settings.endGroup();
 
  settings.beginGroup("query");

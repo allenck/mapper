@@ -351,7 +351,7 @@ public:
     QString _oneWay;       //Not in db, used for sequencing
     qint32 _next=-1, _prev=-1;      //Not in db, used for sequencing
     qint32 _sequence=-1, _returnSeq=-1;
-    qint32 _normalEnter, _normalLeave, _reverseEnter, _reverseLeave;
+    qint32 _normalEnter=0, _normalLeave=0, _reverseEnter=0, _reverseLeave=0;
     bool _bNeedsUpdate = false;
     int _tractionType;
     QString _trackUsage;

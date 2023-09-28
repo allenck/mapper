@@ -75,7 +75,7 @@ void DialogRenameRoute::btnOK_Click()
         //System.Media.SystemSounds.Asterisk.Play();
         return;
     }
-    sql->BeginTransaction("RenameRoute");
+    sql->beginTransaction("RenameRoute");
     CompanyData* cd = sql->getCompany(rd.companyKey);
 
     _routeNbr = sql->addAltRoute(ui->txtNewRouteNbr->text(), cd->routePrefix);
@@ -109,7 +109,7 @@ void DialogRenameRoute::btnOK_Click()
             //throw (new ApplicationException("update terminal failed!"));
             ui->lblHelp->setText(tr("Update terminal failed"));
     }
-    sql->CommitTransaction("RenameRoute");
+    sql->commitTransaction("RenameRoute");
     //sql->myConnection.Close();
 
     _rd.alphaRoute = _alphaRoute;

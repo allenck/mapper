@@ -102,7 +102,7 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
         return;
     }
 
-    sql->BeginTransaction("combineRoutes");
+    sql->beginTransaction("combineRoutes");
     _routeNbr = sql->addAltRoute(ui->txtNewRouteNbr->text(), companyData->routePrefix);
     _alphaRoute = ui->txtNewRouteNbr->text();
 
@@ -145,7 +145,7 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
         {
             ui->lblHelp->setText(tr("add failed: route ")+ QString("%1").arg(_routeNbr));
             //System.Media.SystemSounds.Asterisk.Play();
-            sql->RollbackTransaction("combineRoutes");
+            sql->rollbackTransaction("combineRoutes");
             return;
         }
     }
@@ -160,11 +160,11 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
         {
             ui->lblHelp->setText(tr("add failed"));
             //System.Media.SystemSounds.Asterisk.Play();
-            sql->RollbackTransaction("combineRoutes");
+            sql->rollbackTransaction("combineRoutes");
             return;
         }
     }
-    sql->CommitTransaction("combineRoutes");
+    sql->commitTransaction("combineRoutes");
 
     this->accept();
     this->close();

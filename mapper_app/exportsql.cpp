@@ -2027,7 +2027,7 @@ bool ExportSql::exportSegments()
   //getCount("Routes");
   QString commandText;
 
-  sql->BeginTransaction("Route");
+  sql->beginTransaction("Route");
 
   commandText = "delete from Routes where route=" +  QString("%1").arg(rd.route) +" and name='"+ rd.name + "' and startDate='" + rd.startDate.toString("yyyy/MM/dd") + "' and endDate='" + rd.endDate.toString("yyyy/MM/dd") +"'";
   QSqlQuery query = QSqlQuery(targetDb);
@@ -2265,7 +2265,7 @@ qlQuery query2 = QSqlQuery(targetDb);
      }
  }
 #endif
- sql->CommitTransaction("Routes");
+ sql->commitTransaction("Routes");
  qDebug()<<"Routes: "+ QString("%1").arg(added)+ " added, "+ QString("%1").arg(updated) + " updated, "+ QString("%1").arg(deleted)+ " deleted, "+ QString("%1").arg(notUpdated)+ " not updated, "+QString("%1").arg(errors)+ " errors\n";
  emit uncheck("chkRoutes");
 

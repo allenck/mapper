@@ -149,7 +149,7 @@ bool SplitSegmentDlg::processChanges()
  QList<SegmentData> routes = SQL::instance()->getRouteSegmentsBySegment(sd.segmentId());
 
  // update the database with changes
- SQL::instance()->BeginTransaction("splitSegment");
+ SQL::instance()->beginTransaction("splitSegment");
 
  bool exists = false;
  int newSegmentId;
@@ -161,13 +161,13 @@ bool SplitSegmentDlg::processChanges()
 #endif
  if(exists || newSegmentId <= 0)
  {
-  SQL::instance()->RollbackTransaction("splitSegment");
+  SQL::instance()->rollbackTransaction("splitSegment");
    return false;
  }
 
  if(!SQL::instance()->updateSegment(&sd))
  {
-  SQL::instance()->RollbackTransaction("splitSegment");
+  SQL::instance()->rollbackTransaction("splitSegment");
   return false;
  }
 
@@ -185,7 +185,7 @@ bool SplitSegmentDlg::processChanges()
    {
     if(!SQL::instance()->updateRouteDate(sd.segmentId(), rd.startDate().toString("yyyy/MM/dd"), sd.endDate().toString("yyyy/MM/dd")))
     {
-     SQL::instance()->RollbackTransaction("splitSegment");
+     SQL::instance()->rollbackTransaction("splitSegment");
      return false;
     }
     // remainder of route segment > solit date, add new segment to route
@@ -198,7 +198,7 @@ bool SplitSegmentDlg::processChanges()
 #endif
     if(!SQL::instance()->addSegmentToRoute(rd))
     {
-     SQL::instance()->RollbackTransaction("splitSegment");
+     SQL::instance()->rollbackTransaction("splitSegment");
      return false;
     }
     routesChanged++;
@@ -217,7 +217,7 @@ bool SplitSegmentDlg::processChanges()
     if(!SQL::instance()->updateRouteSegment(rd.segmentId(), rd.startDate().toString("yyyy/MM/dd"),
                                             rd.endDate().toString("yyyy/MM/dd"),newSegmentId))
     {
-     SQL::instance()->RollbackTransaction("splitSegment");
+     SQL::instance()->rollbackTransaction("splitSegment");
      return false;
     }
    }
@@ -231,6 +231,6 @@ bool SplitSegmentDlg::processChanges()
  ui->lblHelp->setPalette(palette);
 
  ui->lblHelp->setText(tr("new segment %1 created; %2 routes changed").arg(newSegmentId).arg(routesChanged));
- SQL::instance()->CommitTransaction("splitSegment");
+ SQL::instance()->commitTransaction("splitSegment");
  return true;
 }

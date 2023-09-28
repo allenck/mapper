@@ -326,6 +326,7 @@ private:
     QAction *updateTerminalsAct;
     //QAction *displaySegmentAct;
     QAction* addSegmentToRouteAct;
+    QAction* addSegmentToNewRouteAct;
     QAction *deleteSegmentAct;
     QAction *findDupSegmentsAct;
     QAction *queryRouteUsageAct;
@@ -373,6 +374,7 @@ private:
     QAction* changeRouteNumberAct;
     QAction* checkSegmentsAct;
     QAction* saveSettingsAct;
+    QAction* showGoogleMapFeaturesAct;
 
     //QSignalMapper *overlaySignalMapper;
     QActionGroup  *overlayActionGroup;

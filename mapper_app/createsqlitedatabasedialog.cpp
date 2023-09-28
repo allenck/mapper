@@ -118,7 +118,7 @@ void CreateSqliteDatabaseDialog::on_btnOk_clicked()
 
  bool bSuccess = true;
  QString commandString;
- sql->BeginTransaction("setup");
+ sql->beginTransaction("setup");
  // Populate the Parameters table
   commandString = "insert into Parameters  (lat, lon, title, city, minDate, maxDate, alphaRoutes) values(:lat, :lon, :title, :city, :minDate,:maxDate, :alphaRoute)";
  QSqlQuery query = QSqlQuery(db);
@@ -153,7 +153,7 @@ void CreateSqliteDatabaseDialog::on_btnOk_clicked()
  }
  if(bSuccess)
  {
-  sql->CommitTransaction("setup");
+  sql->commitTransaction("setup");
   if(ui->chkCreateConnection->isChecked())
   {
    City* c = NULL;
@@ -192,7 +192,7 @@ void CreateSqliteDatabaseDialog::on_btnOk_clicked()
   }
   this->accept();}
  else
-  sql->RollbackTransaction("setup");
+  sql->rollbackTransaction("setup");
 
  this->close();
 }

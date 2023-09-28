@@ -77,7 +77,7 @@ void ReroutingDlg::on_btnOk_clicked()
     }
 
     setCursor(Qt::WaitCursor);
-    sql->BeginTransaction("reroute");
+    sql->beginTransaction("reroute");
     QList<RouteData> myArray = sql->getRouteSegmentsForDate(_rd.route, _rd.name, _rd.endDate.toString("yyyy/MM/dd"));
 
     foreach(RouteData rd, myArray)
@@ -129,7 +129,7 @@ void ReroutingDlg::on_btnOk_clicked()
             return;
         }
     }
-    sql->CommitTransaction("reroute");
+    sql->commitTransaction("reroute");
 
     this->accept();
     setCursor(Qt::ArrowCursor);

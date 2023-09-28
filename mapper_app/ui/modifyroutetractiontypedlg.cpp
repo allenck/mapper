@@ -70,21 +70,21 @@ void ModifyRouteTractionTypeDlg::btnOK_Click()      //SLOT
  QList<RouteData> rdList = sql->getRouteSegmentsForDate(_rd->route, _rd->name, _rd->startDate.toString("yyyy/MM/dd"));
  if(rdList.count())
  {
-  sql->BeginTransaction("ModifyRouteTractionType");
+  sql->beginTransaction("ModifyRouteTractionType");
   foreach(RouteData rd, rdList)
   {
    if(ui->dateEdit->date() >= rd.startDate && ui->dateEdit->date()< rd.endDate)
    {
     if(!sql->deleteRouteSegment(rd.route, rd.name, rd.lineKey, rd.startDate.toString("yyyy/MM/dd"),rd.endDate.toString("yyyy/MM/dd")))
     {
-     sql->CommitTransaction("ModifyRouteTractionType");
+     sql->commitTransaction("ModifyRouteTractionType");
      this->reject();
     }
     RouteData rd1(rd);
     rd1.endDate = ui->dateEdit->date().addDays(-1);
     if(!sql->addSegmentToRoute(rd1))
     {
-     sql->RollbackTransaction("ModifyRouteTractionType");
+     sql->rollbackTransaction("ModifyRouteTractionType");
      this->reject();
     }
     RouteData rd2(rd);
@@ -92,12 +92,12 @@ void ModifyRouteTractionTypeDlg::btnOK_Click()      //SLOT
     rd2.tractionType = ui->comboBox->currentData().toInt();
     if(!sql->addSegmentToRoute(rd2))
     {
-     sql->RollbackTransaction("ModifyRouteTractionType");
+     sql->rollbackTransaction("ModifyRouteTractionType");
      this->reject();
     }
 
    }
   }
-  sql->CommitTransaction("ModifyRouteTractionType");
+  sql->commitTransaction("ModifyRouteTractionType");
  }
 }
