@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>538</width>
+    <width>608</width>
     <height>490</height>
    </rect>
   </property>
@@ -229,7 +229,7 @@
       <item>
        <widget class="QRadioButton" name="rbNFromRight">
         <property name="text">
-         <string>FromRight</string>
+         <string>From Right</string>
         </property>
        </widget>
       </item>

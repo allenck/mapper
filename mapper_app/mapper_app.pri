@@ -11,6 +11,8 @@ SOURCES += main.cpp\
     $$PWD/segmentselectionwidget.cpp \
     $$PWD/splitsegmentdlg.cpp \
     $$PWD/ttitemdelegate.cpp \
+    $$PWD/turncombo.cpp \
+    $$PWD/turndelegate.cpp \
     addgeoreferenceddialog.cpp \
     $$PWD/exceptions.cpp \
     $$PWD/myapplication.cpp \
@@ -85,6 +87,8 @@ HEADERS  += mainwindow.h \
     $$PWD/segmentselectionwidget.h \
     $$PWD/splitsegmentdlg.h \
     $$PWD/ttitemdelegate.h \
+    $$PWD/turncombo.h \
+    $$PWD/turndelegate.h \
     $$PWD/vptr.h \
     addgeoreferenceddialog.h \
     $$PWD/exceptions.h \

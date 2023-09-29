@@ -2,13 +2,13 @@
 #include "ui_splitsegmentdlg.h"
 #include "data.h"
 
-bool compareSegmentInfo1(const SegmentData & s1, const SegmentData & s2)
+bool compareSegmentInfo1(const SegmentInfo & s1, const SegmentInfo & s2)
 {
     return s1.description() < s2.description();
 }
 bool compareSegmentData1(const SegmentData & s1, const SegmentData & s2)
 {
-    return s1.getDescription() < s2.getDescription();
+    return s1.description() < s2.description();
 }
 
 
@@ -82,7 +82,7 @@ void SplitSegmentDlg::refreshSegments()
 {
   ui->cbSegments->clear();
   cbSegmentDataList = SQL::instance()->getSegmentInfoList();
-  std::sort(cbSegmentDataList.values().begin(), cbSegmentDataList.values().end(),compareSegmentInfo1);
+  std::sort(cbSegmentDataList.values().begin(), cbSegmentDataList.values().end(),compareSegmentData1);
   //foreach (segmentInfo sI in cbSegmentInfoList)
   for(int i=0; i < cbSegmentDataList.count(); i++)
   {

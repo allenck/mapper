@@ -39,8 +39,12 @@ public:
      USAGE,
      TRACTIONTYPE,
      DISTANCE,
+     NE,
+     NL,
      NEXT,
      PREV,
+     RE,
+     RL,
      DIR,
      SEQ,
      RSEQ,
@@ -71,6 +75,8 @@ private:
      QString name;
      qint32 startRow, endRow;
      QMap<int, TractionTypeInfo> tractionTypes;
+     QMap<int, QString> turnMap = {{0, "back"}, {1,"Left"},{2,"Right"}};
+     QMap<int, QString> turnMap2 = {{0, "ahead"}, {1,"Left"},{2,"Right"}};
 
      friend class RouteView;
 };

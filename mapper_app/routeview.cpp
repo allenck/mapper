@@ -8,6 +8,7 @@
 #include "rtitemdelegate.h"
 #include "splitsegmentdlg.h"
 #include "checkroute.h"
+#include "turndelegate.h"
 
 RouteView::RouteView(QObject* parent )
 {
@@ -441,6 +442,10 @@ void RouteView::updateRouteView()
     ui->horizontalHeader()->resizeSection(9,65);
     ui->setItemDelegateForColumn(sourceModel->TRACTIONTYPE, new TTItemDelegate());
     ui->setItemDelegateForColumn(sourceModel->TYPE, new RTItemDelegate());
+    ui->setItemDelegateForColumn(sourceModel->NE, new TurnDelegate("back"));
+    ui->setItemDelegateForColumn(sourceModel->NL, new TurnDelegate("ahead"));
+    ui->setItemDelegateForColumn(sourceModel->RE, new TurnDelegate("back"));
+    ui->setItemDelegateForColumn(sourceModel->RL, new TurnDelegate("ahead"));
     //populateList();
 }
 void RouteView::populateList()

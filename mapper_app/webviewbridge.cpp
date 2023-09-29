@@ -63,7 +63,7 @@ void WebViewBridge::processScript(QString func, QString parms)
 }
 void WebViewBridge::processScript(QString func)
 {
- qDebug() << "processScript " << func;
+ //qDebug() << "processScript " << func;
  bResultReceived = false;
  myRslt = QVariant();
  myList = QVariantList();

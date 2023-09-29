@@ -85,7 +85,7 @@ SegmentSelectionWidget::~SegmentSelectionWidget()
 
 bool compareSegmentDataByName(const SegmentData & s1, const SegmentData & s2)
 {
- return s1.getDescription() < s2.getDescription();
+ return s1.description() < s2.description();
 }
 
 void SegmentSelectionWidget::refreshLocations()

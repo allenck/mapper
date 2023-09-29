@@ -145,6 +145,7 @@ class Bounds : public QObject
  Bounds(QString bnds);
  ~Bounds();
  Bounds(const Bounds& other);
+ static Bounds fromPointList(QList<LatLng>);
  bool isValid();
  bool checkValid();
  bool updateBounds(LatLng pt);
@@ -229,10 +230,10 @@ public:
     QString pointsString();
     int segmentId() const {return _segmentId;}
     void setSegmentId(int segmentId){_segmentId = segmentId;}
-    LatLng getStartLatLng() { return LatLng(_startLat, _startLon);}
-    LatLng getEndLatLng() { return LatLng(_endLat, _endLon);}
-    QString getStreetName() { return _streetName;}
-    QString getDescription() const {return _description;}
+    LatLng startLatLng() { return LatLng(_startLat, _startLon);}
+    LatLng endLatLng() { return LatLng(_endLat, _endLon);}
+    QString streetName() { return _streetName;}
+    QString description() const {return _description;}
     int tracks() {return _tracks;}
     void setTracks(int tracks){_tracks = tracks;}
     QList<LatLng> pointList() {return _pointList;}
@@ -247,9 +248,7 @@ public:
     RouteType routeType() {return _routeType;}
     QString whichEnd() {return _whichEnd;}
     void setWhichEnd(QString whichEnd){_whichEnd = whichEnd;}
-    QString streetName() {return _streetName;}
     void setStreetName(QString streetName){_streetName = streetName;}
-    QString description() const {return _description;}
     void setDescription(QString description){_description = description;}
     QString oneWay() const {return _oneWay;}
     void setOneWay(QString oneWay){_oneWay = oneWay;}

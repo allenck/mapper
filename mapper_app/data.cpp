@@ -647,6 +647,30 @@ Bounds::Bounds(const Bounds &other) : QObject()
  bBoundsValid = other.bBoundsValid;
 }
 
+Bounds Bounds::fromPointList(QList<LatLng> list)
+{
+ Bounds b = Bounds();
+ double neLat = b.nePt().lat();
+ double neLon = b.nePt().lon();
+ double swLat = b.swPt().lat();
+ double swLon = b.swPt().lon();
+ foreach(LatLng latLng, list)
+ {
+  if(latLng.lat() > neLat)
+   neLat = latLng.lat();
+  if(latLng.lat() < swLat)
+   swLat = latLng.lat();
+
+  if(latLng.lon() > neLon)
+   neLon = latLng.lon();
+  if(latLng.lon() < swLon)
+   swLon = latLng.lon();
+  b.setBottomLeft(LatLng(swLat, swLon));
+  b.setTopRight(LatLng(neLat, neLon));
+  return b;
+ }
+}
+
 bool Bounds::isValid() {bBoundsValid = checkValid(); return bBoundsValid;}
 bool Bounds::checkValid()
 {

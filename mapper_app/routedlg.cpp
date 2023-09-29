@@ -1264,77 +1264,77 @@ void RouteDlg::checkTurnInfo()
  ui->rbNFromBack->setStyleSheet(blackSS);
  ui->rbNFromLeft->setStyleSheet(blackSS);
  ui->rbNFromRight->setStyleSheet(blackSS);
- switch (sd.normalEnter())
- {
-  case 0:
-   if (!ui->rbNFromBack->isChecked())
-       ui->rbNFromBack->setStyleSheet(redSS);
-   break;
-  case 1:
-   if (!ui->rbNFromLeft->isChecked())
-       ui->rbNFromLeft->setStyleSheet(redSS);
-   break;
-  case 2:
-   if (!ui->rbNFromRight->isChecked())
-       ui->rbNFromRight->setStyleSheet(redSS);
-   break;
- }
+// switch (sd.normalEnter())
+// {
+//  case 0:
+//   if (!ui->rbNFromBack->isChecked())
+//       ui->rbNFromBack->setStyleSheet(redSS);
+//   break;
+//  case 1:
+//   if (!ui->rbNFromLeft->isChecked())
+//       ui->rbNFromLeft->setStyleSheet(redSS);
+//   break;
+//  case 2:
+//   if (!ui->rbNFromRight->isChecked())
+//       ui->rbNFromRight->setStyleSheet(redSS);
+//   break;
+// }
  ui->rbNAhead->setStyleSheet(blackSS);
  ui->rbNToLeft->setStyleSheet(blackSS);
  ui->rbNToRight->setStyleSheet(blackSS);
- switch (sd.normalLeave())
- {
-  case 0:
-   if (!ui->rbNAhead->isChecked())
-    ui->rbNAhead->setStyleSheet(redSS);
-   break;
-  case 1:
-   if (!ui->rbNToLeft->isChecked())
-    ui->rbNToLeft->setStyleSheet(redSS);
-   break;
-  case 2:
-   if (!ui->rbNToRight->isChecked())
-    ui->rbNToRight->setStyleSheet(redSS);
-   break;
- }
- if (sd.oneWay() == "N")
+// switch (sd.normalLeave())
+// {
+//  case 0:
+//   if (!ui->rbNAhead->isChecked())
+//    ui->rbNAhead->setStyleSheet(redSS);
+//   break;
+//  case 1:
+//   if (!ui->rbNToLeft->isChecked())
+//    ui->rbNToLeft->setStyleSheet(redSS);
+//   break;
+//  case 2:
+//   if (!ui->rbNToRight->isChecked())
+//    ui->rbNToRight->setStyleSheet(redSS);
+//   break;
+// }
+ if (sd.oneWay() != "Y")
  {
   ui-> rbRFromBack->setStyleSheet(blackSS);
   ui-> rbRFromLeft->setStyleSheet(blackSS);
   ui->rbRFromRight->setStyleSheet(blackSS);
-  switch (sd.reverseEnter())
-  {
-   case 0:
-    if (!ui->rbRFromBack->isChecked())
-        ui->rbRFromBack->setStyleSheet(redSS);
-    break;
-   case 1:
-    if (!ui->rbRFromLeft->isChecked())
-      ui->rbRFromLeft->setStyleSheet(redSS);
-    break;
-   case 2:
-    if (!ui->rbRFromRight->isChecked())
-     ui->rbRFromRight->setStyleSheet(redSS);
-    break;
-  }
+//  switch (sd.reverseEnter())
+//  {
+//   case 0:
+//    if (!ui->rbRFromBack->isChecked())
+//        ui->rbRFromBack->setStyleSheet(redSS);
+//    break;
+//   case 1:
+//    if (!ui->rbRFromLeft->isChecked())
+//      ui->rbRFromLeft->setStyleSheet(redSS);
+//    break;
+//   case 2:
+//    if (!ui->rbRFromRight->isChecked())
+//     ui->rbRFromRight->setStyleSheet(redSS);
+//    break;
+//  }
   ui->rbRAhead->setStyleSheet(blackSS);
   ui->rbRToLeft->setStyleSheet(blackSS);
   ui->rbRToRight->setStyleSheet(blackSS);
-  switch (sd.reverseLeave())
-  {
-   case 0:
-       if (!ui->rbRAhead->isChecked())
-           ui->rbRAhead->setStyleSheet(redSS);
-       break;
-   case 1:
-       if (!ui->rbRToLeft->isChecked())
-           ui->rbRToLeft->setStyleSheet(redSS);
-       break;
-   case 2:
-       if (!ui->rbRToRight->isChecked())
-           ui->rbRToRight->setStyleSheet(redSS);
-       break;
-  }
+//  switch (sd.reverseLeave())
+//  {
+//   case 0:
+//       if (!ui->rbRAhead->isChecked())
+//           ui->rbRAhead->setStyleSheet(redSS);
+//       break;
+//   case 1:
+//       if (!ui->rbRToLeft->isChecked())
+//           ui->rbRToLeft->setStyleSheet(redSS);
+//       break;
+//   case 2:
+//       if (!ui->rbRToRight->isChecked())
+//           ui->rbRToRight->setStyleSheet(redSS);
+//       break;
+//  }
  }
 }
 
@@ -2156,21 +2156,21 @@ void RouteDlg::rbNFromRight_CheckedChanged(bool bChecked)
 void RouteDlg::rbNToLeft_CheckedChanged(bool bChecked)
 {
     if(bChecked)
-     sd.setNormalEnter(1);
+     sd.setNormalLeave(1);
     checkUpdate(__FUNCTION__);
 }
 
 void RouteDlg::rbNAhead_CheckedChanged(bool bChecked)
 {
     if(bChecked)
-     sd.setNormalEnter(0);
+     sd.setNormalLeave(0);
     checkUpdate(__FUNCTION__);
 }
 
 void RouteDlg::rbNToRight_CheckedChanged(bool bChecked)
 {
     if(bChecked)
-     sd.setNormalEnter(2);
+     sd.setNormalLeave(2);
     checkUpdate(__FUNCTION__);
 }
 

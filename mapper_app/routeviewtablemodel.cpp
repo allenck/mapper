@@ -145,6 +145,14 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
     if(sd.oneWay() == "Y")
      return tr("na");
     return sd.returnSeq();
+   case NE:
+    return turnMap.value(sd.normalEnter());
+   case NL:
+    return turnMap2.value(sd.normalLeave());
+   case RE:
+    return turnMap.value(sd.reverseEnter());
+   case RL:
+    return turnMap2.value(sd.reverseLeave());
    case STARTDATE:
        return sd.startDate().toString("yyyy/MM/dd");
    case ENDDATE:
@@ -188,6 +196,14 @@ QVariant RouteViewTableModel::headerData(int section, Qt::Orientation orientatio
             return tr("Seq");
         case RSEQ:
             return tr("RSeq");
+        case NE:
+         return tr(" from");
+        case NL:
+         return tr("Leave ");
+        case RE:
+         return tr("R from");
+        case RL:
+         return tr("RLeave ");
         case STARTDATE:
             return tr("StartDate");
         case ENDDATE:
@@ -319,7 +335,34 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
    else
     changedMap.value(row)->sd.setReturnSeq(sd.returnSeq());
    break;
-
+  case NE:
+   sd.setNormalEnter(value.toInt());
+   if(!changedMap.contains(index.row()))
+    changedMap.insert(index.row(), new RowChanged(index.row(), true, sd, sd));
+   else
+    changedMap.value(row)->sd.setReturnSeq(sd.normalEnter());
+   break;
+  case NL:
+   sd.setNormalLeave(value.toInt());
+   if(!changedMap.contains(index.row()))
+    changedMap.insert(index.row(), new RowChanged(index.row(), true, sd, sd));
+   else
+    changedMap.value(row)->sd.setReturnSeq(sd.normalLeave());
+   break;
+  case RE:
+   sd.setReverseEnter(value.toInt());
+   if(!changedMap.contains(index.row()))
+    changedMap.insert(index.row(), new RowChanged(index.row(), true, sd, sd));
+   else
+    changedMap.value(row)->sd.setReturnSeq(sd.reverseEnter());
+   break;
+  case RL:
+   sd.setReverseLeave(value.toInt());
+   if(!changedMap.contains(index.row()))
+    changedMap.insert(index.row(), new RowChanged(index.row(), true, sd, sd));
+   else
+    changedMap.value(row)->sd.setReturnSeq(sd.reverseLeave());
+   break;
    case STARTDATE:
       dt = value.toDate();
       if(dt.isValid())
@@ -426,6 +469,12 @@ Qt::ItemFlags RouteViewTableModel::flags(const QModelIndex &index) const
         if(! bIsSequenced)
             return QAbstractTableModel::flags(index) | Qt::ItemIsEditable | Qt::ItemIsEnabled;
         break;
+    case NE:
+    case NL:
+    case RE:
+    case RL:
+     return QAbstractTableModel::flags(index) | Qt::ItemIsEditable | Qt::ItemIsEnabled;
+
     case STARTDATE: //start date
     case ENDDATE: // end date
         return QAbstractTableModel::flags(index) | Qt::ItemIsEditable | Qt::ItemIsEnabled;

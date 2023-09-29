@@ -1,5 +1,5 @@
 #include "consoleinterface.h"
-
+#include <QDebug>
 ConsoleInterface::ConsoleInterface(QObject *parent) :
     QObject(parent)
 {
@@ -14,5 +14,7 @@ ConsoleInterface::~ConsoleInterface() {}
 }
 void ConsoleInterface::sendMessage(QString s)
 {
+ if(s.contains("QSqlQuery::value: not positioned on a valid record"))
+  qDebug() << "debug halt";
  emit message(s);
 }
