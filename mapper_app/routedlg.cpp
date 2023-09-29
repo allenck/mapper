@@ -248,6 +248,9 @@ void RouteDlg::setRouteData(SegmentData sd)
    ui->cbRouteName->setCurrentIndex(i+1);
   }
  }
+ if(sd.companyKey()>0)
+  ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(sd.companyKey()));
+
  ui->dateStart->clearMaximumDateTime();
  ui->dateStart->clearMinimumDateTime();
  ui->dateEnd->clearMaximumDateTime();
@@ -255,26 +258,6 @@ void RouteDlg::setRouteData(SegmentData sd)
  ui->dateStart->setDate(sd.startDate());
  ui->dateEnd->setDate(sd.endDate());
  displayDates(__FUNCTION__);
- //if (ui->cbCompany->currentIndex() == -1)
-// {
-//  int companyKey= 0;
-//  if(_rd.route >= 1)
-//   companyKey = sd.companyKey();
-//  else
-//   companyKey = sql->getDefaultCompany(_routeNbr, ui->dateEnd->dateTime().toString("yyyy/MM/dd"));
-//  for(int i=0;i<_companyList.count();i++)
-//  {
-//   CompanyData* cd =(CompanyData*)_companyList.at(i);
-//   if(companyKey == cd->companyKey)
-//   {
-//    ui->cbCompany->setCurrentIndex(i);
-//      // cbCompany.SelectedText = cd.ToString();
-//    break;
-//   }
-//  }
-// }
- if(sd.companyKey()>0)
-  ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(sd.companyKey()));
 
  ui->gbUsage->setVisible(sd.tracks() == 1);
 
@@ -1617,10 +1600,10 @@ void RouteDlg::btnAdd_Click()         // SLOT
    //foreach (routeData rd in myArray)
    for(int i = 0; i > myArray.count(); i++)
    {
-    SegmentData sd = myArray.at(i);
-    if (sd.startDate() == oldSd.startDate() && sd.endDate() == oldSd.endDate())
+    SegmentData csd = myArray.at(i);
+    if (csd.startDate() == oldSd.startDate() && csd.endDate() == oldSd.endDate())
         continue;
-    if (sd.endDate() >= ui->dateStart->date() && sd.endDate() < ui->dateEnd->date())
+    if (csd.endDate() >= ui->dateStart->date() && csd.endDate() < ui->dateEnd->date())
     {
  //                DialogResult rslt = MessageBox.Show("This item conflicts with:\n" +
  //                    rd.name + " " + sql->formatDate(rd.startDate) + " to " + sql->formatDate(rd.endDate) +
@@ -1629,12 +1612,12 @@ void RouteDlg::btnAdd_Click()         // SLOT
  //                    "Date conflict", MessageBoxButtons.YesNoCancel);
         QMessageBox::StandardButtons rslt;
         rslt = QMessageBox::warning(this,tr("Date conflict"), tr("This item conflicts with:\n")
-                                    + sd.routeName() + " " + sd.startDate().toString("yyyy/MM/dd")
-                                    + " to " + sd.endDate().toString("yyyy/MM/dd") +                                                                                 " Enter Yes to change it's end date to " + ui->dateStart->date().addDays(1).toString("yyyy/MM/dd"), QMessageBox::Yes | QMessageBox::No|QMessageBox::Cancel);
+                                    + csd.routeName() + " " + csd.startDate().toString("yyyy/MM/dd")
+                                    + " to " + csd.endDate().toString("yyyy/MM/dd") +                                                                                 " Enter Yes to change it's end date to " + ui->dateStart->date().addDays(1).toString("yyyy/MM/dd"), QMessageBox::Yes | QMessageBox::No|QMessageBox::Cancel);
         switch (rslt)
         {
             case QMessageBox::Yes:
-                if(!sql->deleteRouteSegment(sd.route(), sd.routeName(), sd.segmentId()
+                if(!sql->deleteRouteSegment(csd.route(), csd.routeName(), csd.segmentId()
                                             ,oldSd.startDate().toString("yyyy/MM/dd"),
                                             oldSd.endDate().toString("yyyy/MM/dd")))
                 {
@@ -1645,7 +1628,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
  //                                       ui->dateStart->date().addDays(-1), rd.lineKey,
  //                                       rd.companyKey, rd.tractionType, rd.direction, 0,0,
  //                                       rd.normalEnter, rd.normalLeave, rd.reverseEnter, rd.reverseLeave, ui->cbOneWay->isChecked()?"Y":"N", rd.trackUsage);
-                if(!sql->addSegmentToRoute(sd))
+                if(!sql->addSegmentToRoute(csd))
                 {
                  ui->lblHelpText->setText(tr("add failed"));
                  throw  Exception("add/update failed");
@@ -1658,7 +1641,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
 
         }
     }
-    if (sd.startDate() <= ui->dateEnd->date())
+    if (csd.startDate() <= ui->dateEnd->date())
     {
  //                DialogResult rslt = MessageBox.Show("This item conflicts with:\n" +
  //                    rd.name + " " + sql->formatDate(rd.startDate) + " to " + sql->formatDate(rd.endDate) +
@@ -1667,11 +1650,11 @@ void RouteDlg::btnAdd_Click()         // SLOT
  //                    "Date conflict", MessageBoxButtons.YesNoCancel);
      QMessageBox::StandardButtons rslt;
      rslt = QMessageBox::warning(this, tr("Date conflict"), tr("This item conflicts with:\n" )
-                                 + sd.routeName() + " " + sd.startDate().toString("yyyy/MM/dd") + " to "
-                                 + sd.endDate().toString("yyyy/MM/dd")
+                                 + csd.routeName() + " " + csd.startDate().toString("yyyy/MM/dd") + " to "
+                                 + csd.endDate().toString("yyyy/MM/dd")
                                  + tr(" Enter Yes to change it's start date to ") +                                            ui->dateEnd->dateTime().addDays(1).toString("yyyy/MM/dd"), QMessageBox::Yes | QMessageBox::No|QMessageBox::Cancel);
      QString trackUsage = " ";
-     if(ui->cbOneWay->isChecked() && sd.tracks() ==2)
+     if(ui->cbOneWay->isChecked() && csd.tracks() ==2)
      {
       if(ui->rbLeft)
        trackUsage = "L";
@@ -1681,8 +1664,8 @@ void RouteDlg::btnAdd_Click()         // SLOT
      switch (rslt)
      {
       case QMessageBox::Yes:
-      if(!sql->deleteRouteSegment(sd.route(), sd.routeName(), sd.segmentId(), sd.startDate().toString("yyyy/MM/dd"),
-                              sd.endDate().toString("yyyy/MM/dd")))
+      if(!sql->deleteRouteSegment(csd.route(), csd.routeName(), csd.segmentId(), csd.startDate().toString("yyyy/MM/dd"),
+                              csd.endDate().toString("yyyy/MM/dd")))
       {
        ui->lblHelpText->setText(tr("delete failed"));
        throw  Exception("add/update failed");
@@ -1692,9 +1675,9 @@ void RouteDlg::btnAdd_Click()         // SLOT
  //                            rd.companyKey, rd.tractionType, rd.direction, rd.next, rd.prev,
  //                            rd.normalEnter, rd.normalLeave, rd.reverseEnter, rd.reverseLeave,
  //                            ui->cbOneWay->isChecked()?"Y":"N",trackUsage);
-      sd.setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
-      sd.setTrackUsage(trackUsage);
-      sql->addSegmentToRoute(sd);
+      csd.setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
+      csd.setTrackUsage(trackUsage);
+      sql->addSegmentToRoute(csd);
           break;
       case QMessageBox::No:
           break;
@@ -1825,7 +1808,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
     sd.setCompanyKey(ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt());
     sd.setTractionType(_tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType);
     sd.setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
-    sd.setRoute(ui->txtRouteNbr->text().toInt());
+//    sd.setRoute(ui->txtRouteNbr->text().toInt());
     if(!sql->updateRoute(oldSd, sd))
     {
      ui->lblHelpText->setText(tr( "Update Error"));
@@ -1842,23 +1825,23 @@ void RouteDlg::btnAdd_Click()         // SLOT
       for(int i=0; i < likeRoutes.count(); i++)
       {
           RouteIntersects ri = likeRoutes.at(i);
-          if (ri.rd.normalEnter() != sd.normalEnter() || ri.rd.normalLeave() != sd.normalLeave() ||
-              (sd.oneWay() != "Y" && (ri.rd.reverseEnter() != sd.reverseEnter() || ri.rd.reverseLeave() != sd.reverseLeave())))
+          if (ri.sd.normalEnter() != sd.normalEnter() || ri.sd.normalLeave() != sd.normalLeave() ||
+              (sd.oneWay() != "Y" && (ri.sd.reverseEnter() != sd.reverseEnter() || ri.sd.reverseLeave() != sd.reverseLeave())))
           {
               //if (MessageBox.Show("Update route " + ri.rd.alphaRoute + " " + ri.rd.name + " " + sql->formatDate(ri.rd.startDate) + " " + sql->formatDate(ri.rd.endDate) +
                   //" with the same data?", "Action required", MessageBoxButtons.YesNo) == DialogResult.Yes)
               QMessageBox::StandardButtons rslt;
-              rslt = QMessageBox::warning(this, tr("Action required"), tr("Update route ")+ri.rd.alphaRoute()
-                                          + " " + ri.rd.routeName() + " " + ri.rd.startDate().toString("yyyy/MM/dd")
-                                          + " " + ri.rd.endDate().toString("yyyy/MM/dd") + tr(" with the same data?"),
+              rslt = QMessageBox::warning(this, tr("Action required"), tr("Update route ")+ri.sd.alphaRoute()
+                                          + " " + ri.sd.routeName() + " " + ri.sd.startDate().toString("yyyy/MM/dd")
+                                          + " " + ri.sd.endDate().toString("yyyy/MM/dd") + tr(" with the same data?"),
                                           QMessageBox::Yes | QMessageBox::No);
               switch(rslt)
               {
                   case QMessageBox::Yes:
-                      sql->updateSegmentToRoute(ri.rd.route(), ri.rd.routeName(), ri.rd.startDate().toString("yyyy/MM/dd"),
-                                                ri.rd.endDate().toString("yyyy/MM/dd"), ri.rd.segmentId(), ri.rd.companyKey(),
-                                                ri.rd.tractionType(), sd.normalEnter(), sd.normalLeave(), sd.reverseEnter(),
-                                                sd.reverseLeave(), ri.rd.oneWay());
+                      sql->updateSegmentToRoute(ri.sd.route(), ri.sd.routeName(), ri.sd.startDate().toString("yyyy/MM/dd"),
+                                                ri.sd.endDate().toString("yyyy/MM/dd"), ri.sd.segmentId(), ri.sd.companyKey(),
+                                                ri.sd.tractionType(), sd.normalEnter(), sd.normalLeave(), sd.reverseEnter(),
+                                                sd.reverseLeave(), ri.sd.oneWay());
                       break;
                   default:
                       break;
@@ -1890,6 +1873,8 @@ void RouteDlg::btnAdd_Click()         // SLOT
  catch(Exception)
  {
   //sql->RollbackTransaction("add/update");
+  if(!sql->currentTransaction.isEmpty())
+   sql->rollbackTransaction(sql->currentTransaction);
   ui->lblHelpText->setText("changes abandoned");
   return;
  }
@@ -1911,7 +1896,7 @@ void RouteDlg::checkDirection(QString routeDirection)
     int seq = 0;
     int companyKey = -1;
     companyKey = -1;
-    SegmentData sd;
+    //SegmentData sd;
     if (ui->cbCompany->currentIndex() >= 0)
     {
         //companyData cd = (companyData)cbCompany.SelectedItem;

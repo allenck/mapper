@@ -51,7 +51,7 @@ public:
     //QT_DEPRECATED QList<SegmentInfo> getRouteSegmentsInOrder2(qint32 route, QString name, QString date);
     QList<RouteData> getRoutes(qint32 segmentid, QString date );
 //    Q_DECL_DEPRECATED QList<LatLng>  GetSegmentPoints(qint32 SegmentId);
-//    Q_DECL_DEPRECATED qint32 getNbrPoints(qint32 segmentId);
+    bool canConnect(SegmentData sd1, QString matchedTo, SegmentData sd2);
     qint32 sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList, qint32 route, QString name, QString date);
     double angleDiff(double A1, double A2);
     double connectingAngle(SegmentData sd, QString enterAt, SegmentData sd2);

@@ -847,7 +847,7 @@ void MainWindow::fillOverlayMenu()
   QAction *act = new QAction(name, this);
   act->setData(VPtr<Overlay>::asQVariant(ov));
   act->setCheckable(true);
-  act->setToolTip(ov->description);
+  act->setStatusTip(ov->description);
   overlayActions.append(act);
   overlayActionGroup->addAction(act);
   overlayMenu->addAction(act);
@@ -949,7 +949,7 @@ void MainWindow::createActions()
  connect(updateRouteAct, SIGNAL(triggered()), this, SLOT(updateRoute()));
 
  replaceSegments = new QAction(tr("Replace segments"),this);
- replaceSegments->setToolTip(tr("Replace list of segments with new list of segments."));
+ replaceSegments->setStatusTip(tr("Replace list of segments with new list of segments."));
  connect(replaceSegments, &QAction::triggered, [=]{
   ReplaceSegmentDialog* dlg = new ReplaceSegmentDialog();
   dlg->exec();
@@ -968,11 +968,11 @@ void MainWindow::createActions()
 //    connect(displaySegmentAct,SIGNAL(triggered()), this, SLOT());
 
  deleteSegmentAct= new QAction(tr("DeleteSegment"),this);
- deleteSegmentAct->setToolTip(tr("Delete this segment if no longer used"));
+ deleteSegmentAct->setStatusTip(tr("Delete this segment if no longer used"));
  connect(deleteSegmentAct,SIGNAL(triggered()), this, SLOT(btnDeleteSegment_Click()));
 
  selectSegmentAct=new QAction(tr("Select segment"),this);
- selectSegmentAct->setToolTip(tr("Select and display segment"));
+ selectSegmentAct->setStatusTip(tr("Select and display segment"));
  //connect(selectSegmentAct,SIGNAL(triggered()), this, SLOT(selectSegment()));
  connect(selectSegmentAct, &QAction::triggered, [=]{
   int segmentId = ui->ssw->cbSegments()->currentData().toInt();
@@ -982,11 +982,11 @@ void MainWindow::createActions()
  connect(editSegmentAct, SIGNAL(triggered()), this, SLOT(On_editSegment_triggered()));
 
  findDupSegmentsAct=new QAction(tr("Show duplicate segments view"),this);
- findDupSegmentsAct->setStatusTip(tr("Display a view of duplicate segments"));
+ findDupSegmentsAct->setStatusTip(tr("Display a view of duplicate segments, i.e. with similar starting and ending points."));
  connect(findDupSegmentsAct, SIGNAL(triggered()),this, SLOT(findDupSegments()));
 
  queryRouteUsageAct=new QAction(tr("Query route usage"),this);
- queryRouteUsageAct->setToolTip((tr("Show routes using this segment")));
+ queryRouteUsageAct->setStatusTip((tr("Show routes using this segment")));
  connect(queryRouteUsageAct, &QAction::triggered, [=] {
   if(!queryDlg)
   {
@@ -997,6 +997,7 @@ void MainWindow::createActions()
  });
 
  addSegmentToRouteAct = new QAction(tr("Add segment to route"), this);
+ addSegmentToRouteAct->setStatusTip(tr("Add segment to current route"));
  connect(addSegmentToRouteAct, &QAction::triggered, [=]{
 //     int ix = ui->cbSegments->currentIndex();
      SegmentData sd = ui->ssw->segmentSelected();
@@ -1038,7 +1039,7 @@ void MainWindow::createActions()
  });
 
  findDormantSegmentsAct = new QAction(tr("Find dormant segments"),this);
- findDupSegmentsAct->setToolTip(tr("Display a lists of segments that are dormant, i.e. not in service"));
+ findDormantSegmentsAct->setStatusTip(tr("Display a lists of segments that are dormant, i.e. not in service"));
 // TODO: find dormant segments
  connect(findDormantSegmentsAct, SIGNAL(triggered()), this, SLOT(NotYetInplemented()));
 
@@ -1052,10 +1053,11 @@ void MainWindow::createActions()
  });
 
  addRouteAct = new QAction(tr("Add new Route"),this);
- addRouteAct->setToolTip(tr("Add a new route"));
+ addRouteAct->setStatusTip(tr("Add a new route"));
  connect(addRouteAct, SIGNAL(triggered()), this, SLOT(AddRoute()));
 
  splitSegmentAct = new QAction(tr("Split segment at a date"),this);
+ splitSegmentAct->setStatusTip(tr("Split a segment at a date."));
  connect(splitSegmentAct, &QAction::triggered, [=]{
   SplitSegmentDlg* splitSegment = new SplitSegmentDlg(m_SegmentId);
   int ret = splitSegment->exec();
@@ -1066,61 +1068,61 @@ void MainWindow::createActions()
 
 
  addPointModeAct = new QAction(tr("Add point mode"), this);
- addPointModeAct->setToolTip(tr("Toggle 'add point' mode. If on, points can be added to the currenly selected segment."));
+ addPointModeAct->setStatusTip(tr("Toggle 'add point' mode. If on, points can be added to the currenly selected segment."));
  addPointModeAct->setCheckable(true);
  addPointModeAct->setChecked(false);
  connect(addPointModeAct, SIGNAL(triggered(bool)), this, SLOT(addModeToggled(bool)));
 
  reloadMapAct = new QAction(tr("Reload Google Maps"), this);
- reloadMapAct->setToolTip(tr("Reload the Google Maps window"));
+ reloadMapAct->setStatusTip(tr("Reload the Google Maps window"));
  connect(reloadMapAct, SIGNAL(triggered()), this, SLOT(reloadMap()));
 
  displayStationMarkersAct = new QAction(tr("Display station markers"),this);
- displayStationMarkersAct->setToolTip(tr("Toggle display of station markers"));
+ displayStationMarkersAct->setStatusTip(tr("Toggle display of station markers"));
  displayStationMarkersAct->setCheckable(true);
  connect(displayStationMarkersAct, SIGNAL(toggled(bool)), this, SLOT(displayStationMarkersToggeled(bool)));
 
  displayTerminalMarkersAct = new QAction(tr("Display terminal markers"),this);
- displayTerminalMarkersAct->setToolTip(tr("Toggle display of terminal markers"));
+ displayTerminalMarkersAct->setStatusTip(tr("Toggle display of terminal markers"));
  displayTerminalMarkersAct->setCheckable(true);
  connect(displayTerminalMarkersAct, SIGNAL(toggled(bool)), this, SLOT(displayTerminalMarkersToggeled(bool)));
 
  createKmlAct = new QAction(tr("Create Kml file"), this);
- createKmlAct->setToolTip(tr("Create Kml file for current route. The KML can then be used to display the route on Google Maps or Google Earth."));
+ createKmlAct->setStatusTip(tr("Create Kml file for current route. The KML can then be used to display the route on Google Maps or Google Earth."));
  connect(createKmlAct, SIGNAL(triggered()), this, SLOT(on_createKmlFile_triggered()));
 
  displayRouteCommentsAct= new QAction(tr("Display route comments"), this);
- displayRouteCommentsAct->setToolTip(tr("Toggle display of route comments"));
+ displayRouteCommentsAct->setStatusTip(tr("Toggle display of route comments"));
  displayRouteCommentsAct->setCheckable(true);
  connect(displayRouteCommentsAct, SIGNAL(toggled(bool)), this, SLOT(displayRouteCommentsToggled(bool)));
 
  geocoderRequestAct = new QAction(tr("Lookup geocoder requests"),this);
- geocoderRequestAct->setToolTip(tr("toggle whether to perform geocoder requests"));
+ geocoderRequestAct->setStatusTip(tr("toggle whether to perform geocoder requests"));
  geocoderRequestAct->setCheckable(true);
  connect(geocoderRequestAct, SIGNAL(toggled(bool)), this, SLOT(geocoderRequestToggled(bool)));
 
  exportDbAct = new QAction(tr("Export database"), this);
- exportDbAct->setToolTip(tr("Export to another database"));
+ exportDbAct->setStatusTip(tr("Export to another database"));
  connect(exportDbAct, SIGNAL(triggered()), this, SLOT(exportDb()));
 
  editConnectionsAct = new QAction(tr("Edit Connections..."), this);
- editConnectionsAct->setToolTip(tr("Select/edit city and manage database connections."));
+ editConnectionsAct->setStatusTip(tr("Select/edit city and manage database connections."));
  connect(editConnectionsAct, SIGNAL(triggered()),this, SLOT(editConnections()));
 
  manageOverlaysAct = new QAction(tr("Manage Overlays"), this);
- manageOverlaysAct->setToolTip(tr("Edit overlay info including selecting which available overlays can be displayed as well as defining additional overlays.."));
+ manageOverlaysAct->setStatusTip(tr("Edit overlay info including selecting which available overlays can be displayed as well as defining additional overlays.."));
  connect(manageOverlaysAct, SIGNAL(triggered()), this, SLOT(On_editCityInfo()));
 
  locateStreetAct = new QAction(tr("Locate Geodb Object"), this);
- locateStreetAct->setToolTip(tr("Locate, a street, bridge, park or bahanhof. For Berlin only."));
+ locateStreetAct->setStatusTip(tr("Locate, a street, bridge, park or bahanhof. For Berlin only."));
  connect(locateStreetAct, SIGNAL(triggered()), this, SLOT(locateStreet()));
 
  combineRoutesAct = new QAction(tr("Combine two routes"), this);
- combineRoutesAct->setToolTip(tr("Combine two routes into one"));
+ combineRoutesAct->setStatusTip(tr("Combine two routes into one"));
  connect(combineRoutesAct, SIGNAL(triggered()), this, SLOT(combineRoutes()));
 
  refreshRoutesAct = new QAction(tr("Refresh Routes"),this);
- refreshRoutesAct->setToolTip(tr("Refresh the routes combobox. Especially after executing manual queries to the database."));
+ refreshRoutesAct->setStatusTip(tr("Refresh the routes combobox. Especially after executing manual queries to the database."));
  connect(refreshRoutesAct, SIGNAL(triggered()), this, SLOT(refreshRoutes()));
 
  cbSort = new QComboBox();
@@ -1139,30 +1141,30 @@ void MainWindow::createActions()
  sortTypeAct->setDefaultWidget(cbSort);
 
  rerouteAct = new QAction(tr("Temp rerouting"),this);
- rerouteAct->setToolTip(tr("Temporarily reroute a route between two dates. After the end date, the route will revert back to the route before the start date"));
+ rerouteAct->setStatusTip(tr("Temporarily reroute a route between two dates. After the end date, the route will revert back to the route before the start date"));
  connect(rerouteAct, SIGNAL(triggered()), this, SLOT(rerouteRoute()));
 
  newSqliteDbAct = new QAction(tr("Create new Sqlite db"),this);
- newSqliteDbAct->setToolTip(tr("Create a new Sqlite3 database."));
+ newSqliteDbAct->setStatusTip(tr("Create a new Sqlite3 database."));
  connect(newSqliteDbAct, SIGNAL(triggered()), this, SLOT(newSqliteDbAct_triggered()));
 
  queryDialogAct = new QAction(tr("SQL Query dialog"), this);
- queryDialogAct->setToolTip(tr("Open a window to make SQL queries on the database."));
+ queryDialogAct->setStatusTip(tr("Open a window to make SQL queries on the database."));
  connect(queryDialogAct, SIGNAL(triggered()), this, SLOT(QueryDialogAct_triggered()));
 
  showDebugMessages = new QAction(tr("Show Debug messages"),this);
  showDebugMessages->setCheckable(true);
- showDebugMessages->setToolTip(tr("If checked, WebViewer debug messages will be displayed. "));
+ showDebugMessages->setStatusTip(tr("If checked, WebViewer debug messages will be displayed. "));
  connect(showDebugMessages, SIGNAL(toggled(bool)), this, SLOT(on_showDebugMessages(bool)));
 #ifdef USE_WEBENGINE
  runInBrowserAct = new QAction(tr("Display map in browser"), this);
  runInBrowserAct->setCheckable(true);
- runInBrowserAct->setToolTip(tr("If checked, map display will be in web browser. You must then restart Mapper"));
+ runInBrowserAct->setStatusTip(tr("If checked, map display will be in web browser. You must then restart Mapper"));
  connect(runInBrowserAct, SIGNAL(triggered(bool)), this, SLOT(on_runInBrowser(bool)));
  runInBrowserAct->setChecked(config->bRunInBrowser);
 #endif
  addGeoreferencedOverlayAct = new QAction(tr("Edit Overlay list"), this);
- addGeoreferencedOverlayAct->setToolTip(tr("Open a dialog to edit list of available overlays."));
+ addGeoreferencedOverlayAct->setStatusTip(tr("Open a dialog to edit list of available overlays."));
  connect(addGeoreferencedOverlayAct, SIGNAL(triggered(bool)), this, SLOT(on_addGeoreferenced(bool)));
 
  browseCommentsAct = new QAction(tr("Browse Comments"), this);
@@ -1177,15 +1179,15 @@ void MainWindow::createActions()
  });
 
  overlayHelp = new QAction(tr("Overlays"),this);
- overlayHelp->setToolTip(tr("Help on setting up a new overlay."));
+ overlayHelp->setStatusTip(tr("Help on setting up a new overlay."));
  connect(overlayHelp, SIGNAL(triggered(bool)), this, SLOT(on_overlayHelp()));
 
  usingMapper = new QAction(tr("Using Mapper"), this);
- usingMapper->setToolTip(tr("User documentation"));
+ usingMapper->setStatusTip(tr("User documentation"));
  connect(usingMapper, SIGNAL(triggered(bool)), this, SLOT(on_usingHelp()));
 
  setCityBoundsAct = new QAction(tr("Set City Bounds"),this);
- setCityBoundsAct->setToolTip(tr("Set the display bounds for thiis city/region"));
+ setCityBoundsAct->setStatusTip(tr("Set the display bounds for thiis city/region"));
  connect(setCityBoundsAct, &QAction::triggered, [=]{config->currCity->setCityBounds(m_bridge);});
 
  setInspectedPageAct = new QAction(tr("Inspect page"),this);
@@ -1203,7 +1205,7 @@ void MainWindow::createActions()
  });
 
  changeRouteNumberAct = new QAction(tr("Change route number"),this);
- changeRouteNumberAct->setToolTip(tr("Change the route number for a route"));
+ changeRouteNumberAct->setStatusTip(tr("Change the route number for a route"));
  connect(changeRouteNumberAct, &QAction::triggered, [=]{
   int row =         ui->cbRoute->currentIndex();
   if(row < 0) return;
@@ -1222,7 +1224,7 @@ void MainWindow::createActions()
  });
 
  checkSegmentsAct = new QAction(tr("Check segments"),this);
- checkSegmentsAct->setToolTip(tr("update ditection, bounds, etc; Update routes usin segments"));
+ checkSegmentsAct->setStatusTip(tr("update ditection, bounds, etc; Update routes usin segments"));
  connect(checkSegmentsAct, &QAction::triggered, [=]{
   sql->checkSegments();
  });
@@ -1403,6 +1405,7 @@ void MainWindow::txtSegment_customContextMenu(const QPoint &)
  if(ui->txtSegment->text().isEmpty()) return;
  QMenu* menu = new QMenu();
  QAction* edit = new QAction(tr("Edit segment"), this);
+ edit->setStatusTip(tr("Edit segment details such as tracks, route type, etc."));
  menu->addAction(edit);
  connect(edit, SIGNAL(triggered(bool)), this, SLOT(On_editSegment_triggered()));
  menu->addAction(splitSegmentAct);

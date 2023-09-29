@@ -608,7 +608,7 @@ class RouteIntersects
 {
     public:
     explicit RouteIntersects(QObject *parent = 0){Q_UNUSED(parent)}
-        SegmentData rd;
+        SegmentData sd;
         QList<SegmentData> startIntersectingSegments;
         QList<SegmentData> endIntersectingSegments;
 };
