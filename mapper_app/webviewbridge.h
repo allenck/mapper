@@ -101,6 +101,7 @@ public slots:
     void cityBounds(double neLat, double neLng, double swLat, double swLng);
     void rightClicked(QString text);
     void screenshot(QString base64image);
+    void initialized();
 
 private slots:
 

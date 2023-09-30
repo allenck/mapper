@@ -200,6 +200,7 @@ public slots:
     void saveChanges();
     void On_displayRoute(RouteData);
     void addModeToggled(bool isChecked);
+    void showGoogleMapFeatures(bool);
 
 private slots:
     void about();
@@ -248,7 +249,7 @@ private slots:
     //void chkShowWindow_CheckedChanged();
     void btnSplit_Clicked();
 //    void selectSegment();
-    void AddRoute();
+    void addRoute();
     void reloadMap();
     void displayStationMarkersToggeled(bool bChecked);
     void displayTerminalMarkersToggeled(bool bChecked);
@@ -455,6 +456,7 @@ signals:
     //void sendRows(int, int);
     void newCitySelected();
     friend class RouteView;
+    friend class WebViewBridge;
 };
 
 class Menu : public QMenu

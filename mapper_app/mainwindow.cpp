@@ -262,6 +262,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  qDebug() << "registering webViewBridge";
  channel->registerObject("webViewBridge", m_bridge);
 
+
  if(!config->bRunInBrowser)
   webView->page()->setWebChannel(channel);
  connect(m_clientWrapper, &WebSocketClientWrapper::clientClosed, this, &MainWindow::onWebSocketClosed);
@@ -454,6 +455,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   connect(ui->cbRoute, SIGNAL(signalFocusOut()), this, SLOT(cbRoutes_Leave()));
   connect(companyView, SIGNAL(dataChanged()), this, SLOT(refreshCompanies()));
 
+
   //routeView = new RouteView(this);
 //  refreshSegmentCB();
   refreshCompanies();
@@ -509,6 +511,9 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 //  ui->btnLast->setEnabled(false);
 //  ui->btnSplit->setEnabled(false);
 
+//  qApp->processEvents();
+//  showGoogleMapFeaturesAct->setChecked(config->bShowGMFeatures);
+//  showGoogleMapFeatures(config->bShowGMFeatures);
 
 }
 
@@ -1054,7 +1059,7 @@ void MainWindow::createActions()
 
  addRouteAct = new QAction(tr("Add new Route"),this);
  addRouteAct->setStatusTip(tr("Add a new route"));
- connect(addRouteAct, SIGNAL(triggered()), this, SLOT(AddRoute()));
+ connect(addRouteAct, SIGNAL(triggered()), this, SLOT(addRoute()));
 
  splitSegmentAct = new QAction(tr("Split segment at a date"),this);
  splitSegmentAct->setStatusTip(tr("Split a segment at a date."));
@@ -1232,13 +1237,8 @@ void MainWindow::createActions()
  showGoogleMapFeaturesAct = new QAction(tr("Show Google Map Features"), this);
  showGoogleMapFeaturesAct->setStatusTip(tr("Show or hide Google Maps features of interest."));
  showGoogleMapFeaturesAct->setCheckable(true);
- showGoogleMapFeaturesAct->setChecked(config->bShowGMFeatures);
- connect(showGoogleMapFeaturesAct, &QAction::toggled, [=]{
-  if(!showGoogleMapFeaturesAct->isChecked())
-   m_bridge->processScript("setOption", "{ styles: styles[\"hide\"] }");
-  else
-   m_bridge->processScript("setOption", "{ styles: styles[\"default\"] }");
- });
+ showGoogleMapFeaturesAct->setChecked(true);
+ connect(showGoogleMapFeaturesAct, SIGNAL(toggled(bool)), this, SLOT(showGoogleMapFeatures(bool)));
 }
 
 void MainWindow::createMenus()
@@ -3888,7 +3888,7 @@ void MainWindow::moveRouteEndMarker(double lat, double lon, qint32 segmentId, qi
     sql->updateTerminals(m_routeNbr, m_routeName, ti.startDate.toString("yyyy/MM/dd"), ti.endDate.toString("yyyy/MM/dd"), ti.startSegment, ti.startWhichEnd, segmentId, i == 0 ? "S" : "E");
 
 }
-void MainWindow::AddRoute()
+void MainWindow::addRoute()
 {
     if(routeDlg == 0)
         routeDlg = new RouteDlg(config, this);
@@ -4565,6 +4565,15 @@ void MainWindow::on_usingHelp()
 void MainWindow::saveChanges()
 {
  routeView->model()->commitChanges();
+}
+
+void MainWindow::showGoogleMapFeatures( bool bShow)
+{
+ if(!bShow)
+  m_bridge->processScript("setOption", "{ styles: styles[\"hide\"] }");
+ else
+  m_bridge->processScript("setOption", "{ styles: styles[\"default\"] }");
+ config->bShowGMFeatures = bShow;
 }
 
 MyWebEnginePage::MyWebEnginePage(QObject* parent) : QWebEnginePage(parent){

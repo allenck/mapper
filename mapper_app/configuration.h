@@ -40,7 +40,7 @@ public:
  static Configuration* instance();
  bool bDisplayWebDebug = false;
  bool bRunInBrowser = false;
- bool bShowGMFeatures =false;
+ bool bShowGMFeatures =true;
  QStringList localOverlayList;
  QStringList georeferencedList;
  QString path;

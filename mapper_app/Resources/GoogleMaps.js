@@ -903,7 +903,7 @@ function initMap()
   }
  });
  map.setOptions(defaultOptions);
-    map.setOptions( { styles: styles["hide"] })
+    //map.setOptions( { styles: styles["hide"] })
  map.setMapTypeId(mapTypeId);
  stationArray = new google.maps.MVCArray();
 
@@ -955,6 +955,7 @@ function initMap()
                 webViewBridge.rightClicked(contextMenuLatLng);
             }
         }, true);
+    webViewBridge.initialized();
 } // end initialize()
 
 const styles = {
@@ -2603,7 +2604,7 @@ function setDefaultOptions()
 {
  //alert("setDefaultOptions");
  map.setOptions(defaultOptions);
- map.setOptions({ styles: styles["default"] });
+ //map.setOptions({ styles: styles["default"] });
  myRslt = 0;
 }
 
@@ -2611,7 +2612,7 @@ function setOptions()
 {
  //alert("setDefaultOptions");
  map.setOptions(options);
- map.setOptions({ styles: styles["hide"] });
+ //map.setOptions({ styles: styles["hide"] });
 }
 
 function setOption(option)

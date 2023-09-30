@@ -375,7 +375,7 @@ void Configuration::getSettings()
  bDisplayWebDebug = settings.value("showDebugMessages", false).toBool();
  bRunInBrowser = settings.value("runInBrowser", false).toBool();
  saveImageDir = settings.value("saveImageDir", "").toString();
- bShowGMFeatures = settings.value("showGMFeatures").toBool();
+ bShowGMFeatures = settings.value("showGMFeatures", true).toBool();
  //settings.endGroup();
 
  settings.beginGroup("query");

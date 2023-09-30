@@ -232,12 +232,19 @@ void WebViewBridge::showSegmentsAtPoint(double lat, double lon, qint32 segmentId
 
     m_parent->segmentView->showSegmentsAtPoint(lat, lon, segmentId);
 }
+
 void WebViewBridge::queryOverlay()
 {
 //    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
 //    m_parent->queryOverlay();
  emit queryOverlaySignal();
 }
+
+void WebViewBridge::initialized()
+{
+ m_parent->showGoogleMapFeaturesAct->trigger();
+}
+
 void WebViewBridge::opacityChanged(QString name, qint32 opacity)
 {
 
