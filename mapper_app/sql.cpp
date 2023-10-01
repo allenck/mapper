@@ -2919,7 +2919,8 @@ bool SQL::canConnect(SegmentData sd1, QString matchedTo, SegmentData sd2)
  return false;
 }
 
-int SQL::sequenceRouteSegments(qint32 startSegment, QList<SegmentData> segmentList, qint32 route, QString name, QString date)
+int SQL::sequenceRouteSegments(qint32 startSegment, QList<SegmentData> segmentList,
+                               qint32 route, QString name, QString date, QString whichEnd)
 {
  QList<SegmentData> intersects;
  qint32 endSegment = -1;
@@ -2938,7 +2939,7 @@ int SQL::sequenceRouteSegments(qint32 startSegment, QList<SegmentData> segmentLi
  double a1 = 0, a2 = 0;
  bool bfirstSegment = true;
  QMap<int, SegmentData*> segmentMap;
- QString matchedto = "S";
+ QString matchedto = whichEnd;
 
  if(!dbOpen())
   throw Exception(tr("database not open: %1").arg(__LINE__));
@@ -2957,7 +2958,8 @@ int SQL::sequenceRouteSegments(qint32 startSegment, QList<SegmentData> segmentLi
  currSegment = sd->segmentId();
  while(currSegment != -1 || (!bForward && currSegment != startSegment))
  {
-  if( (bForward && sd->next() == -1) || (!bForward && sd->prev() == -1))
+  if( (bForward && sd->next() == -1)
+      || (!bForward && (sd->returnSeq() == -1 || sd->sequence()==-1)) )
   {
    // get segments intersecting to this segment's end.
    if(matchedto == "S")
@@ -2973,6 +2975,7 @@ int SQL::sequenceRouteSegments(qint32 startSegment, QList<SegmentData> segmentLi
     objArray << 0 << sd->endLat()<<sd->endLon()<<1<<"pointO"<<sd->_segmentId;
    MainWindow::instance()->m_bridge->processScript("addMarker",objArray);
    qApp->processEvents();
+   QThread::msleep(10);
 
    if(intersects.count()< 1)
    {
@@ -3027,6 +3030,13 @@ int SQL::sequenceRouteSegments(qint32 startSegment, QList<SegmentData> segmentLi
       {
        sd->setReturnSeq(reverseSeq++);
        segmentMap.value(currI->segmentId())->setReturnSeq(reverseSeq++);
+       MainWindow::instance()->m_bridge->processScript("clearMarker");
+       QVariantList objArray;
+       if(sd->whichEnd()=="E")
+        objArray << 0 << currI->startLat()<<currI->startLon()<<2<<"pointO"<<sd->_segmentId;
+       else
+        objArray << 0 << currI->endLat()<<currI->endLon()<<1<<"pointO"<<sd->_segmentId;
+       MainWindow::instance()->m_bridge->processScript("addMarker",objArray);
        return currI->segmentId();
       }
       sd->_next = currI->segmentId();
@@ -3126,7 +3136,7 @@ int SQL::sequenceRouteSegments(qint32 startSegment, QList<SegmentData> segmentLi
     break;
 
   }
-  currSegment = -1;
+
  }
  return currSegment;
 }
@@ -3266,25 +3276,13 @@ double SQL::angleDiff(double A1, double A2)
     return difference;
 }
 
-double SQL::connectingAngle(SegmentData sd, QString enterAt, SegmentData sd2)
+double SQL::connectingAngle(SegmentData sd, QString whichEnd, SegmentData sd2)
 {
  double diff = -180.0;
+ double a1 = whichEnd=="S"? sd.bearingStart().getBearing()-180 : sd.bearingEnd().getBearing();
+ double a2 = sd2.whichEnd()=="S"? sd2.bearingStart().getBearing()-180 : sd2.bearingEnd().getBearing();
 
- // meeting end to start?
- if(enterAt == "S" && sd2.whichEnd() == "S")
-  diff = -angleDiff(sd.bearingEnd().getBearing(), - sd2.bearingStart().getBearing());
- else
- // meeting start to start?
- if(enterAt == "E" && sd2.whichEnd() == "S")
-   diff = angleDiff(sd.bearingStart().getBearing(), - sd2.bearingStart().getBearing());
- else
- // meeting start to end
- if(enterAt == "E" && sd2.whichEnd() == "E")
-  diff = angleDiff(sd.bearingStart().getBearing(), - sd2.bearingEnd().getBearing());
- else
- // meeting end to end
- if(enterAt == "S" && sd2.whichEnd() == "E")
-  diff = angleDiff(sd.bearingEnd().getBearing(), - sd2.bearingEnd().getBearing());
+  diff = angleDiff(a1,a2);
 
  return diff;
 }
@@ -3794,7 +3792,6 @@ bool SQL::updateSegment(SegmentData* sd)
    + "street='" + sd->_streetName + "',"
    + "location='" + sd->_location + "',"
    + "tracks="+ QString::number(sd->_tracks) + ","
-   + "type="+QString::number((int)sd->_routeType) + ","
    + "startDate='" + sd->_startDate.toString("yyyy/MM/dd") + "', "
    + "endDate='" + sd->_endDate.toString("yyyy/MM/dd") + "', "
    + "lastUpdate=:lastUpdate "

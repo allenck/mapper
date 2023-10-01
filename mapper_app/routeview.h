@@ -64,7 +64,8 @@ private:
     void populateList();
     QAction *copyAction;
     QAction *pasteAction;
-    QAction *reSequenceAction;
+    QAction *reSequenceFromStartAct;
+    QAction *reSequenceFromEndAct;
     QAction *startTerminalStartAct;
     QAction *startTerminalEndAct;
     QAction *endTerminalStartAct;
@@ -93,13 +94,15 @@ private:
     CheckRoute *chk;
     RouteData rd;
     MainWindow* myParent;
+    void reSequenceRoute(QString whichEnd);
 
 private slots:
     void tablev_customContextMenu( const QPoint& );
     void aCopy();
     void aPaste();
     void itemSelectionChanged(QModelIndex index );
-    void reSequenceRoute();
+    void reSequenceRouteFromStart();
+    void reSequenceRouteFromEnd();
     void StartRoute_S();
     void StartRoute_E();
     void EndRoute_S();

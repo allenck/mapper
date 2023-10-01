@@ -43,12 +43,17 @@ RouteView::RouteView(QObject* parent )
     pasteAction->setShortcut(tr("Ctrl+V"));
     connect(pasteAction, SIGNAL(triggered()), this, SLOT(aPaste()));
 
-    reSequenceAction = new QAction(tr("&Start route here"), this);
-    reSequenceAction->setStatusTip(tr("Start route at this segment"));
-    reSequenceAction->setShortcut(tr("Alt_Ctrl+S"));
-    connect(reSequenceAction, SIGNAL(triggered()), this, SLOT(reSequenceRoute()));
+    reSequenceFromStartAct = new QAction(tr("&Start route at beginning"), this);
+    reSequenceFromStartAct->setStatusTip(tr("Start route at this segment"));
+    reSequenceFromStartAct->setShortcut(tr("Alt_Ctrl+S"));
+    connect(reSequenceFromStartAct, SIGNAL(triggered()), this, SLOT(reSequenceRouteFromStart()));
 
-    startTerminalStartAct = new QAction(tr("Start at start"), this);
+    reSequenceFromEndAct = new QAction(tr("&Start route at end"), this);
+    reSequenceFromEndAct->setStatusTip(tr("Start route at this segment"));
+    reSequenceFromEndAct->setShortcut(tr("Alt_Ctrl+S"));
+    connect(reSequenceFromEndAct, SIGNAL(triggered()), this, SLOT(reSequenceRouteFromEnd()));
+
+    startTerminalStartAct = new QAction(tr("Start at beginning"), this);
     startTerminalStartAct->setStatusTip(tr("Start terminal is at start of segment"));
     connect(startTerminalStartAct, SIGNAL(triggered()), this, SLOT(StartRoute_S()));
 
@@ -56,7 +61,7 @@ RouteView::RouteView(QObject* parent )
     startTerminalEndAct->setStatusTip(tr("Start terminal is at end of segment"));
     connect(startTerminalEndAct, SIGNAL(triggered()), this, SLOT(StartRoute_E()));
 
-    endTerminalStartAct = new QAction(tr("End terminal at start"), this);
+    endTerminalStartAct = new QAction(tr("End terminal at beginning"), this);
     endTerminalStartAct->setStatusTip(tr("End terminal is at start of segment"));
     connect(endTerminalStartAct, SIGNAL(triggered()), this, SLOT(EndRoute_S()));
 
@@ -205,6 +210,7 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
      txtSegmentId.replace("!", "");
      txtSegmentId.replace("*", "");
      qint32 segmentId = txtSegmentId.toInt();
+     SegmentData sd = sourceModel->segmentData(proxymodel->mapToSource(Index).row());
      if(sourceModel->isSegmentMarkedForDelete(segmentId))
          menu.addAction(unDeleteSegmentAct);
      else
@@ -213,7 +219,13 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
      menu.addAction(saveChangesAct);
      menu.addAction(discardChangesAct);
      menu.addAction(selectSegmentAct);
-     menu.addAction(reSequenceAction);
+     QMenu resequenceMenu = QMenu(tr("Resequence route"));
+     resequenceMenu.addAction(reSequenceFromStartAct);
+     resequenceMenu.addAction(reSequenceFromEndAct);
+     bool enable = (sd.tracks() == 1 && sd.oneWay() != "Y")
+       || (sd.tracks() == 2 && sd.oneWay() == "Y" && sd.trackUsage() != "L");
+     reSequenceFromEndAct->setEnabled(enable);
+     menu.addMenu(&resequenceMenu);
 //        if(!startTerminal)
 //        {
      TerminalInfo ti = SQL::instance()->getTerminalInfo(route,name, endDate);
@@ -466,7 +478,17 @@ bool ascending_si_segmentId( const SegmentData s1 , const SegmentData s2 )
  return s1.segmentId() < s2.segmentId();
 }
 
-void RouteView::reSequenceRoute()
+void RouteView::reSequenceRouteFromStart()
+{
+ reSequenceRoute("S");
+}
+
+void RouteView::reSequenceRouteFromEnd()
+{
+ reSequenceRoute("E");
+}
+
+void RouteView::reSequenceRoute(QString whichEnd)
 {
  //SQL sql;
  MainWindow * myParent = qobject_cast<MainWindow*>(m_parent);
@@ -480,7 +502,8 @@ void RouteView::reSequenceRoute()
   //bool bOk=false;
   qint32 segmentId = Index.data().toInt();
   qint32 endSegment = -1;
-  endSegment = SQL::instance()->sequenceRouteSegments(segmentId, segmentDataList, route, name, endDate);
+  endSegment = SQL::instance()->sequenceRouteSegments(segmentId, segmentDataList, route, name,
+                                                      endDate, whichEnd);
 
   QList<SegmentData> old = segmentDataList;
   //compareSequenceClass comparer = new compareSequenceClass();

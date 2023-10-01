@@ -142,8 +142,8 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
    case SEQ:
        return sd.sequence();
    case RSEQ:
-    if(sd.oneWay() == "Y")
-     return tr("na");
+//    if(sd.oneWay() == "Y")
+//     return tr("na");
     return sd.returnSeq();
    case NE:
     return turnMap.value(sd.normalEnter());
@@ -636,4 +636,9 @@ void RouteViewTableModel::getRows(qint32 start, qint32 end)
  endRow = end;
  beginResetModel();
  endResetModel();
+}
+
+SegmentData RouteViewTableModel::segmentData(int row)
+{
+ return listOfSegments.at(row);
 }

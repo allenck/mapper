@@ -52,6 +52,7 @@ public:
      ENDDATE
     };
     int getRow(int segmentId);
+    SegmentData segmentData(int row);
 
 signals:
     void rowChange(qint32 row, qint32 segmentid, bool bDeleted, bool bChanged);
