@@ -2909,7 +2909,7 @@ bool SQL::canConnect(SegmentData sd1, QString matchedTo, SegmentData sd2)
  if((sd1.tracks()==2 && sd1.oneWay()!= "Y" && sd2.tracks() == 2 && sd2.oneWay()!="Y" )
     || (sd1.tracks() == 2 && sd1.oneWay()!= "Y" && (sd2.tracks()==1 && sd2.oneWay()!= "Y"))
     || (sd1.tracks() == 1 && sd1.oneWay()!= "Y" && (sd2.tracks() == 1 && sd2.oneWay()!= "Y"))
-    || (sd1.tracks() == 1 && (sd2.tracks()==2 && sd2.oneWay()!= "N"))
+    || (sd1.tracks() == 1 && (sd2.tracks()==2 && sd2.oneWay()== "Y"))
     || (sd1.tracks() == 1 /*&& sd->oneWay() == "Y"*/ && (sd2.tracks()==1 && sd2.whichEnd()=="S"))
     || (sd1.tracks() == 2 && sd2.tracks() ==1 && (sd2.oneWay() != "Y" ||sd2.whichEnd()=="S"))
 //    || (sd1.tracks() == 2 &&  sd2.tracks() ==2 && (diff < 45))
@@ -3019,12 +3019,16 @@ int SQL::sequenceRouteSegments(qint32 startSegment, QList<SegmentData> segmentLi
 
     if(intersects.count() == 1)
     {
+#if 0
      if((sd->tracks()==2 && sd->oneWay()!= "Y" && currI->tracks() == 2 && currI->oneWay()!="Y" )
         || (sd->tracks() == 2 && sd->oneWay()!= "Y" && (currI->tracks()==1 && currI->oneWay()!= "Y"))
         || (sd->tracks() == 1 && sd->oneWay()!= "Y" && (currI->tracks() == 1 && currI->oneWay()!= "Y"))
-        || (sd->tracks() == 1 && (currI->tracks()==2 && currI->oneWay()!= "N"))
+        || (sd->tracks() == 1 && (currI->tracks()==2 && currI->oneWay()== "Y"))
         || (sd->tracks() == 1 /*&& sd->oneWay() == "Y"*/ && (currI->tracks()==1 && currI->whichEnd()=="S"))
         )
+#else
+     if(canConnect(*sd, whichEnd, *currI))
+#endif
      {
       if(currI->segmentId() == startSegment)
       {
@@ -3056,8 +3060,9 @@ int SQL::sequenceRouteSegments(qint32 startSegment, QList<SegmentData> segmentLi
       {
        connections = connections + tr("Segment %1 - %2 at %3\n").arg(sdi.segmentId()).arg(sdi.description()).arg(sdi.whichEnd() != "S"?"end":"start");
       }
-      QMessageBox::warning(nullptr, tr("Connect error"), tr("No suitable segment found to connect to segment %1 - %2 at %3")
-                           .arg(sd->segmentId()).arg(sd->description()).arg(matchedto == "S"?"end":"start") + connections);
+      QMessageBox::warning(nullptr, tr("Connect error"), tr("No suitable segment found to connect to segment %1 - %2 at %3\n"
+                           "meeting at %4 degrees")
+                           .arg(sd->segmentId()).arg(sd->description()).arg(matchedto == "S"?"end":"start").arg(diff) + connections);
       currSegment = -1;
       break;
      }
@@ -3134,10 +3139,16 @@ int SQL::sequenceRouteSegments(qint32 startSegment, QList<SegmentData> segmentLi
    }
    if(currSegment == -1)
     break;
-
   }
-
  }
+ SegmentData* currI = segmentMap.value(currSegment);
+ MainWindow::instance()->m_bridge->processScript("clearMarker");
+ QVariantList objArray;
+ if(whichEnd=="E")
+  objArray << 0 << currI->startLat()<<currI->startLon()<<2<<"pointO"<<sd->_segmentId;
+ else
+  objArray << 0 << currI->endLat()<<currI->endLon()<<1<<"pointO"<<sd->_segmentId;
+ MainWindow::instance()->m_bridge->processScript("addMarker",objArray);
  return currSegment;
 }
 #endif

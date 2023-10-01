@@ -305,7 +305,7 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
    if(!changedMap.contains(index.row()))
     changedMap.insert(index.row(), new RowChanged(index.row(), true, sd, sd));
    else
-    changedMap.value(row)->sd.setRouteType(sd.routeType());
+    changedMap.value(row)->sd.setRouteType((RouteType)value.toInt());
    break;
   case NEXT:
    sd.setNext(value.toInt());
@@ -519,6 +519,11 @@ bool RouteViewTableModel::commitChanges()
     if(rc->bChanged )
     {
      if(!SQL::instance()->updateRoute(rc->osd, rc->sd))
+     {
+      SQL::instance()->rollbackTransaction("updateRoute");
+      return false;
+     }
+     if(!SQL::instance()->updateSegment(&rc->sd))
      {
       SQL::instance()->rollbackTransaction("updateRoute");
       return false;

@@ -548,6 +548,7 @@ void RouteView::reSequenceRoute(QString whichEnd)
   }
   emit sendRows (startRow, endRow);
  }
+ sourceModel->reset();
  myParent->setCursor(Qt::ArrowCursor);
 }
 
