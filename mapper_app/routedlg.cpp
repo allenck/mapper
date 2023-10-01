@@ -223,6 +223,7 @@ void RouteDlg::setRouteData(SegmentData sd)
  ui->txtRouteNbr->setText(sd.alphaRoute());
  ui->cbRouteName->clear();
  ui->cbRouteName->addItem(strNoRoute);
+ ui->cbRouteName->setCurrentText(sd.routeName());
  ui->lblSegmentText->setText(sd.toString2());
  cbOneWay_checkedChanged(sd.oneWay()=='Y');
  _segmentInfoList = sql->getRouteSegmentsBySegment(sd.route(), sd.segmentId());

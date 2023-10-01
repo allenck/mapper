@@ -203,6 +203,7 @@ void SegmentView::addToRoute()
  QItemSelectionModel * model = ui->selectionModel();
  QModelIndexList indexes = model->selectedIndexes();
  qint32 segmentId = indexes.at(0).data().toInt();
+
  MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
  if(parent->routeDlg == 0)
  {
@@ -214,7 +215,7 @@ void SegmentView::addToRoute()
 // if(parent->selectedSegment() == segmentId)
 //  return; // already selected
 
- SegmentData sd = sourceModel->selectedSegment(indexes.at(0).row());
+ SegmentData sd = sourceModel->selectedSegment(proxymodel->mapToSource(indexes.at(0)).row());
  if(parent->m_segmentStatus == "Y")
    parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
  else
@@ -228,6 +229,7 @@ void SegmentView::addToRoute()
  {
   RouteData rd = parent->routeList.at(ix);
   sd.setRoute(rd.route);
+  sd.setAlphaRoute(rd.alphaRoute);
   sd.setRouteName(rd.name);
   sd.setStartDate(rd.startDate);
   sd.setEndDate(rd.endDate);
