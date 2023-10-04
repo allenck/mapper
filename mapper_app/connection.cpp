@@ -74,7 +74,10 @@ QSqlDatabase Connection::configure(const QString cName)
  if((bOpen = db.open()))
  {
   if(config->currConnection->servertype() != "Sqlite")
-   return db;
+  {
+      sql->checkTables(db);
+      return db;
+  }
   if(config->currConnection->mySqlDatabase()  != "")
   {
    QSqlQuery query = QSqlQuery(db);
@@ -87,7 +90,8 @@ QSqlDatabase Connection::configure(const QString cName)
     bOpen = false;
     return db;
    }
-   if(config->currConnection->servertype() == "Sqlite")
+   if(config->currConnection->servertype() == "Sqlite"
+           )
     sql->checkTables(db);
    tableList = db.tables();
 

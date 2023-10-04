@@ -189,7 +189,7 @@ public:
     bool checkSegments();
     bool doesColumnExist(QString table, QString column);
     bool doesConstraintExist(QString tbName, QString name);
-    bool addColumn(QString table, QString name, QString type);
+    bool addColumn(QString table, QString name, QString type, QString after = "");
     bool updateSegmentsTable();
     bool updateSegment(SegmentInfo *sd);
     bool updateSegment(SegmentData* sd);

@@ -1408,13 +1408,13 @@ bool ExportSql::exportSegments()
   if(!bDropTables)
   {
    commandText = "select segmentId, description, oneWay, type, startLat, startLon, endLat, endLon, length, points, "
-                 "startDate, endDate, direction, lastUpdate, street, pointArray, tracks "
+                 "startDate, endDate, direction, lastUpdate, street, pointArray, tracks, location "
                  "from Segments where lastUpdate > :lastUpdated  order by lastUpdate";
   }
   else
   {
    commandText = "select segmentId, description, oneWay, type, startLat, startLon, endLat, endLon, length, points, "
-                 "startDate, endDate, direction, lastUpdate, street, pointArray, tracks "
+                 "startDate, endDate, direction, lastUpdate, street, pointArray, tracks, location "
                  "from Segments";
   }
 
@@ -1433,6 +1433,7 @@ bool ExportSql::exportSegments()
   }
   qint32 segmentId=0, segmentId2=0, type=0, type2=0, points=0, points2=0;
   qint8 tracks = 0, tracks2 = 0;
+  QString location, location2;
   QString description="", description2="", oneWay="", oneWay2=0, direction="", direction2="", street="", street2="", pointArray ="", pointArray2="";
   QDateTime lastUpdate, lastUpdate2;
   double startLat=0, startLat2=0, startLon = 0, startLon2=0, endLat=0, endLat2=0, endLon=0, endLon2=0, length=0, length2=0;
@@ -1456,11 +1457,15 @@ bool ExportSql::exportSegments()
    street = query.value(14).toString();
    pointArray = query.value(15).toString();
    tracks = query.value(16).toInt();
+   location = query.value(17).toString();
    bool bFound = false;
 
    if(!bDropTables)
    {
-    commandText = "select segmentId, description, oneWay, type, startLat, startLon, endLat, endLon, length, points, startDate, endDate, direction,lastUpdate, street, pointArray, tracks from Segments where segmentId="+QString("%1").arg(segmentId);
+    commandText = "select segmentId, description, oneWay, type, startLat, startLon, endLat,"
+                  " endLon, length, points, startDate, endDate, direction,lastUpdate, street,"
+                  " pointArray, tracks, location"
+                  " from Segments where segmentId="+QString("%1").arg(segmentId);
     bQuery = query2.exec(commandText);
     if(!bQuery)
     {
@@ -1491,6 +1496,7 @@ bool ExportSql::exportSegments()
      street2 = query.value(14).toString();
      pointArray2 = query.value(15).toString();
      tracks2 = query.value(16).toInt();
+     location2 = query.value(17).toString();
     }
     if(bFound && segmentId== segmentId2 && description == description2 && oneWay == oneWay2 && type == type2 && startLat == startLat2 && startLon == startLon2 && endLat == endLat2 && endLon == endLon2 && length == length2 && points==points2 && startDate.date() == startDate2.date() && endDate.date() == endDate2.date() && direction == direction2 && lastUpdate == lastUpdate2 && street == street2 && pointArray == pointArray2 && tracks == tracks2)
     {
@@ -1544,19 +1550,34 @@ bool ExportSql::exportSegments()
    {
     // Insert the new segment
     if(tgtConn->servertype() != "MsSql")
-     commandText = "insert into Segments (segmentId, description, oneWay, type, startLat, startLon, endLat, endLon, "
-                   "length, points, startDate, endDate, direction, street, pointArray, tracks, lastUpdate) "
+     commandText = "insert into Segments (segmentId, description, oneWay, type, startLat,"
+                   " startLon, endLat, endLon, "
+                   "length, points, startDate, endDate, direction, street, pointArray, tracks,"
+                   " location, lastUpdate) "
                    "values("+QString("%1").arg(segmentId) + ",'"+description+"', '"+oneWay+ "', "
                    + QString("%1").arg(type)+", "+QString("%1").arg(startLat, 0,'f',8)+","
                    + QString("%1").arg(startLon, 0, 'f', 8)+","+QString("%1").arg(endLat, 0, 'f',8)
                    + ","+QString("%1").arg(endLon, 0,'f',8)+","+QString("%1").arg(length,0,'f',8)+","
                    + QString("%1").arg(points)+",'"+startDate.toString("yyyy/MM/dd")
                    + "','"+endDate.toString("yyyy/MM/dd")+"','"+direction + "','" + street + "', '"
-                   + pointArray +"', "+QString::number(tracks) + ", :lastUpdate)";
+                   + pointArray +"', "+QString::number(tracks) + ", '" + location
+                   + "', :lastUpdate)";
     else
     {
      //setIdentityInsert("Segments", true);
-     commandText = "SET IDENTITY_INSERT [dbo].[Segments] ON; insert into Segments (segmentId, description, oneWay, type, startLat, startLon, endLat, endLon, length, points, startDate, endDate, direction, street, pointArray, tracks, lastUpdate) values("+QString("%1").arg(segmentId) + ",'"+description+"', '"+oneWay+ "', "+QString("%1").arg(type)+", "+QString("%1").arg(startLat, 0,'f',8)+","+QString("%1").arg(startLon, 0, 'f', 8)+","+QString("%1").arg(endLat, 0, 'f',8)+","+QString("%1").arg(endLon, 0,'f',8)+","+QString("%1").arg(length,0,'f',8)+","+QString("%1").arg(points)+",'"+startDate.toString("yyyy/MM/dd")+"','"+endDate.toString("yyyy/MM/dd")+"','"+direction + "','" + street + "', '" + pointArray +"', "+QString::number(tracks) + ",:lastUpdate); SET IDENTITY_INSERT [dbo].[Segments] OFF; ";
+     commandText = "SET IDENTITY_INSERT [dbo].[Segments] ON; insert into Segments"
+                   " (segmentId, description, oneWay, type, startLat, startLon, endLat, endLon,"
+                   " length, points, startDate, endDate, direction, street, pointArray, tracks,"
+                   " location, lastUpdate)"
+                   " values("+QString("%1").arg(segmentId) + ",'"+description+"', '"+oneWay+ "', "
+                   +QString("%1").arg(type)+", "+QString("%1").arg(startLat, 0,'f',8)+","
+                   +QString("%1").arg(startLon, 0, 'f', 8)+","+QString("%1").arg(endLat, 0, 'f',8)
+                   +","+QString("%1").arg(endLon, 0,'f',8)+","+QString("%1").arg(length,0,'f',8)+","
+                   +QString("%1").arg(points)+",'"+startDate.toString("yyyy/MM/dd")
+                   +"','"+endDate.toString("yyyy/MM/dd")+"','"+direction + "','" + street
+                   + "', '" + pointArray +"', "+QString::number(tracks)
+                   + ",'" + location
+                   + "',:lastUpdate); SET IDENTITY_INSERT [dbo].[Segments] OFF; ";
     }
     bQuery = query2.prepare(commandText);
     if(!bQuery)
@@ -2996,6 +3017,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
     "[Description] [varchar](100) NOT NULL,"\
     "[OneWay] [char](1) NOT NULL,"\
     "[Tracks] [int] NOT NULL,"\
+    "[Location] [varchar](30),"\
     "[street] [text] NULL,"\
     "[Type] [int] NOT NULL,"\
     "[StartLat] [decimal](15, 13) NOT NULL,"\
@@ -3466,6 +3488,7 @@ bool ExportSql::createAltRouteTable(QSqlDatabase db, QString dbType)
  }
  return true;
 }
+
 bool ExportSql::createParametersTable(QSqlDatabase db, QString dbType)
 {
  QSqlQuery query = QSqlQuery(db);

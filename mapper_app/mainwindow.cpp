@@ -68,6 +68,7 @@
 #include "ui/removecitydialog.h"
 #include "ui/modifyroutetractiontypedlg.h"
 #include "dialogchangeroute.h"
+#include "systemconsole.h"
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -112,6 +113,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  m_longitude = config->currCity->center.lon();
  m_zoom = config->currCity->zoom;
  m_maptype = config->currCity->mapType;
+ m_companyKey = config->currCity->companyKey;
+
  sql = SQL::instance();
 
  createBridge();  // create the webViewBridge
@@ -328,7 +331,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  //connect(ui->chkOneWay, SIGNAL(toggled(bool)), this, SLOT(chkOneWay_Leave(bool)));
  connect(ui->saveImage, SIGNAL(clicked(bool)), this, SLOT(On_saveImage_clicked()));
 
- config->saveSettings();
+ //config->saveSettings();
 
   // Fix for problem where Google thinks webkit is on a mobile device. As a result, you can't drag the
   // map canvas or click on a map. class myWebPage fools it to thinking the browser is Chrome.
@@ -514,7 +517,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 //  qApp->processEvents();
 //  showGoogleMapFeaturesAct->setChecked(config->bShowGMFeatures);
 //  showGoogleMapFeatures(config->bShowGMFeatures);
-
+config->saveSettings();
 }
 
 /*static*/ MainWindow* MainWindow::_instance = nullptr;
@@ -1278,8 +1281,8 @@ void MainWindow::createMenus()
     menuBar()->addMenu(connectionsMenu);
     cityMenu = new Menu(tr("&Cities"));
     cityMenu->setToolTipsVisible(true);
-    cityMenu->setToolTip(tr("Select city, connection or manage overlays"));
-    cityMenu->setToolTip(tr("Select which city and database connection to use."));
+    //cityMenu->setToolTip(tr("Select city, connection or manage overlays"));
+    cityMenu->setStatusTip(tr("Select which city and database connection to use."));
 
     connectionsMenu->addMenu(cityMenu);
     connect(cityMenu, SIGNAL(aboutToShow()), this, SLOT(createCityMenu()));
@@ -1453,6 +1456,8 @@ void MainWindow::newCity(QAction* act )
   City* city = pair->first;
   Connection* connection = pair->second;
   this->setCursor(QCursor(Qt::WaitCursor));
+  enableControls(false);
+  qApp->processEvents();
 
   // first, save some settings for the current city
   config->currCity->center = LatLng(m_latitude, m_longitude);
@@ -1550,7 +1555,7 @@ void MainWindow::newCity(QAction* act )
 
     //refreshSegmentCB();
     ui->ssw->refresh();
-    ui->cbCompany->findData(config->currCity->companyKey);
+    ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(config->currCity->companyKey));
     refreshCompanies();
     cbSort->setCurrentIndex(config->currCity->routeSortType);
     refreshRoutes();
@@ -1573,7 +1578,6 @@ void MainWindow::newCity(QAction* act )
     objArray.clear();
     objArray << m_maptype;
     m_bridge->processScript("setMapType", objArray);
-    this->setCursor(QCursor(Qt::ArrowCursor));
     bDisplayStationMarkers = config->currCity->bDisplayStationMarkers;
     displayStationMarkersAct->setChecked(bDisplayStationMarkers);
     bDisplayTerminalMarkers = config->currCity->bDisplayTerminalMarkers;
@@ -1594,12 +1598,10 @@ void MainWindow::newCity(QAction* act )
     }
     companyView = new CompanyView(config, this);
     tractionTypeView = new TractionTypeView(config, this);
-    return;
-//   }
-//   k++;
-//  }
-// }
+    this->setCursor(QCursor(Qt::ArrowCursor));
+    enableControls(true);
 }
+
 void MainWindow::newOverlay(QAction* act)
 {
  Overlay* cOv = VPtr<Overlay>::asPtr(act->data());
@@ -1791,14 +1793,14 @@ void MainWindow::refreshRoutes()
 {
     //SQL sql;
     bCbRouteRefreshing = true;
-    int ixCompany = ui->cbCompany->currentIndex();
+//    int ixCompany = ui->cbCompany->currentIndex();
     int companyKey = 0;
-    if(ixCompany > 0)
-    {
-        //companyKey = ui->cbCompany->itemData(ixCompany).Int;
-        companyKey = companyList.at(ixCompany-1)->companyKey;
+//    if(ixCompany > 0)
+//    {
+//        //companyKey = ui->cbCompany->itemData(ixCompany).Int;
+        companyKey = ui->cbCompany->currentData().toInt();
 
-    }
+//    }
     int ix = ui->cbRoute->currentIndex();
     QString currText = ui->cbRoute->currentText();
     ui->cbRoute->clear();
@@ -1823,19 +1825,20 @@ void MainWindow::refreshRoutes()
         ui->cbRoute->setCurrentIndex(ix);
     bCbRouteRefreshing = false;
 }
+
 void MainWindow::txtRouteNbrLeave()
 {
     QString txt = ui->txtRouteNbr->text();
     QString txtAlpha = "";
     bool bIsAlpha = false;
-    int ixCompany = ui->cbCompany->currentIndex();
+//    int ixCompany = ui->cbCompany->currentIndex();
     int companyKey = 0;
-    if(ixCompany > 0)
-    {
-        //companyKey = ui->cbCompany->itemData(ixCompany).Int;
-        companyKey = companyList.at(ixCompany-1)->companyKey;
-
-    }
+//    if(ixCompany > 0)
+//    {
+//        //companyKey = ui->cbCompany->itemData(ixCompany).Int;
+//        companyKey = companyList.at(ixCompany-1)->companyKey;
+    companyKey = ui->cbCompany->currentData().toInt();
+//    }
     qint32 newRoute = sql->getNumericRoute(txt, &txtAlpha, &bIsAlpha, companyKey);
     routeList = sql->getRoutesByEndDate(companyKey);
     for(int i = routeList.count()-1; i >= 0; i--)
@@ -1875,6 +1878,7 @@ QString MainWindow::getColor(qint32 tractionType)
  }
  return color;
 }
+
 void MainWindow::btnClearClicked()
 {
     m_bridge->processScript("clearAll", "");
@@ -2391,11 +2395,14 @@ void MainWindow::refreshCompanies()
     }
     if(routeDlg != NULL)
      routeDlg->fillCompanies();
+    ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(m_companyKey));
 }
+
 void MainWindow::cbCompanySelectionChanged(int sel)
 {
     Q_UNUSED (sel);
     //qint32 companyKey = ui->cbCompany->itemData(sel).Int;
+    m_companyKey = ui->cbCompany->currentData().toInt();
     refreshRoutes();
 }
 
@@ -2867,7 +2874,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
  config->currCity->bDisplayTerminalMarkers = bDisplayTerminalMarkers;
  config->currCity->bDisplayRouteComments = bDisplayRouteComments;
  config->currCity->bShowOverlay = ui->chkShowOverlay->isChecked();
- config->currCity->companyKey = ui->cbCompany->currentIndex();
+ config->currCity->companyKey = ui->cbCompany->currentData().toInt();
  config->saveSettings();
 
  settings.setValue("routeView", ui->tblRouteView->horizontalHeader()->saveState());
@@ -4585,3 +4592,22 @@ MyWebEnginePage::MyWebEnginePage(QObject* parent) : QWebEnginePage(parent){
  });
 }
 
+void MainWindow::enableControls( bool b)
+{
+    ui->tabWidget->setEnabled(b);
+    ui->ssw->setEnabled(b);
+    ui->cbRoute->setEnabled(b);
+    ui->cbCompany->setEnabled(b);
+    ui->btnClear->setEnabled(b);
+    ui->btnBack->setEnabled(b);
+    ui->btnDisplayRoute->setEnabled(b);
+    ui->sbRoute->setEnabled(b);
+    ui->saveImage->setEnabled(b);
+    ui->chkNoClear->setEnabled(b);
+    ui->chkNoPan->setEnabled(b);
+    ui->chkShowOverlay->setEnabled(b);
+    ui->txtStreet->setEnabled(b);
+    ui->txtSegment->setEnabled(b);
+    ui->sbTracks->setEnabled(b);
+    ui->chkAddPt->setEnabled(b);
+}

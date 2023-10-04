@@ -24,7 +24,8 @@ void City::addConnection(Connection* connection)
        connectionMap.insert(connection->uniqueId().toString(), connection);
        connections.append(connection);
        connection->setId(connections.count()-1);
-       curConnectionId = connections.count()-1;
+       //curConnectionId = connections.count()-1;
+       //curConnectionId = connection->id();
        _connectionUniqueId = connection->uniqueId();
    }
 }

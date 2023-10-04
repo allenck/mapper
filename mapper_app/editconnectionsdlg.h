@@ -3,7 +3,6 @@
 
 #include <QDialog>
 #include "configuration.h"
-#include "sql.h"
 #include <QTcpSocket>
 
 
@@ -28,14 +27,15 @@ private:
  Configuration* config;
  QStringList drivers;
  QStringList dbTypes;
- bool bCbConnectionsTextChanged;
- bool bCbCitiesTextChanged;
+ bool bCbConnectionsTextChanged = false;
+ bool bCbCitiesTextChanged=false;
  bool testConnection(bool bCreate = false);
  bool openTestDb();
  QSqlDatabase db;
  QTimer *timer;
  QTcpSocket socket;
  QStringList databases;
+ QMap<QString, QString> odbcMap;
  bool createSqliteTables(QSqlDatabase db);
  bool populateDatabases();
  QString getDatabase();
@@ -46,6 +46,7 @@ private:
   void setControls(int ix);
   City* currCity = nullptr;
   Connection* connection;
+  void newConnection();
 
 private slots:
  void cbCitiesSelectionChanged(int sel);

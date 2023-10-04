@@ -438,6 +438,7 @@ private:
     QUrl fileUrl;
     bool verifyAPIKey(QString path, QString apiKey);
     ExportDlg* form = nullptr;
+    void enableControls( bool b);
 
 private slots:
     void createCityMenu();

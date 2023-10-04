@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>803</width>
+    <width>808</width>
     <height>666</height>
    </rect>
   </property>
@@ -141,11 +141,6 @@
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
           <property name="toolTip">
            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the desired view. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
@@ -186,11 +181,6 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
-              </property>
-              <property name="font">
-               <font>
-                <pointsize>8</pointsize>
-               </font>
               </property>
               <property name="toolTip">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -265,7 +255,7 @@
              <widget class="QTableView" name="tblOtherRouteView">
               <property name="font">
                <font>
-                <pointsize>7</pointsize>
+                <pointsize>9</pointsize>
                </font>
               </property>
              </widget>
@@ -413,7 +403,7 @@
         <item row="1" column="4">
          <widget class="QCheckBox" name="chkShowOverlay">
           <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Show an overlay over the current map type display. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, the currently selected overlay will be shown&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="text">
            <string>Show overlay</string>
@@ -605,13 +595,6 @@
           </property>
          </widget>
         </item>
-        <item row="10" column="0" colspan="2">
-         <widget class="QComboBox" name="cbCompany">
-          <property name="toolTip">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a company. Only that company's routes will be displayed. Select 'All companies' to display all routes regardless of which company.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-          </property>
-         </widget>
-        </item>
         <item row="11" column="2">
          <widget class="QLabel" name="label">
           <property name="font">
@@ -665,6 +648,16 @@
         <item row="7" column="0">
          <widget class="SegmentSelectionWidget" name="ssw" native="true"/>
         </item>
+        <item row="10" column="0" colspan="4">
+         <widget class="QComboBox" name="cbCompany">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a company. Only that company's routes will be displayed. Select 'All companies' to display all routes regardless of which company.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+          <property name="placeholderText">
+           <string>Select company name or All</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
       <widget class="QGroupBox" name="groupBox_2">
@@ -686,8 +679,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>803</width>
-     <height>22</height>
+     <width>808</width>
+     <height>26</height>
     </rect>
    </property>
   </widget>

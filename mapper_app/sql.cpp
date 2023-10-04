@@ -10330,7 +10330,9 @@ bool SQL::doesColumnExist(QString table, QString column)
  else if(config->currConnection->servertype() == "MySql")
  {
   int count;
-  commandText = "Select count(*) from information_schema.COLUMNS where table_schema ='" + config->currConnection->database() + "' and table_name = '" + table +"' and column_name = '" + column + "'";
+  commandText = "Select count(*) from information_schema.COLUMNS"
+                " where table_schema ='" + config->currConnection->mySqlDatabase()
+                + "' and table_name = '" + table +"' and column_name = '" + column + "'";
   query.prepare(commandText);
 //  query.bindValue(":tbName",table);
 //  query.bindValue(":schema", db.databaseName());
@@ -10355,7 +10357,8 @@ bool SQL::doesColumnExist(QString table, QString column)
  else if(config->currConnection->servertype() == "MsSql")
  {
   int count;
-  commandText = "Select count(*) from information_schema.COLUMNS where table_schema ='dbo' and table_name = '" + table +"' and column_name = '" + column + "'";
+  //commandText = "Select count(*) from information_schema.COLUMNS where table_schema ='dbo' and table_name = '" + table +"' and column_name = '" + column + "'";
+  commandText = "select col_length('" + table + "','" +column +"')";
   query.prepare(commandText);
 //  query.bindValue(":tbName",table);
 //  query.bindValue(":schema", db.databaseName());
@@ -10417,7 +10420,7 @@ bool SQL::doesConstraintExist(QString tbName, QString name)
  return false;
 }
 
-bool SQL::addColumn(QString tbName, QString name, QString type)
+bool SQL::addColumn(QString tbName, QString name, QString type, QString after)
 {
  QSqlDatabase db = QSqlDatabase();
  QSqlQuery query = QSqlQuery(db);
@@ -10427,7 +10430,7 @@ bool SQL::addColumn(QString tbName, QString name, QString type)
  if(config->currConnection->servertype() == "Sqlite" )
   commandText = "alter table '" + tbName + "' add column  '" + name + "' " + type +" ";
  else if(config->currConnection->servertype() == "MySql")
-  commandText = "alter table " + tbName + " add column " + name + " " + type +"";
+  commandText = "alter table " + tbName + " add column " + name + " " + type +" after " + after;
  else
   commandText = "alter table dbo." + tbName + " add " + name + " " + type +" ";
  query.prepare(commandText);
@@ -10539,16 +10542,24 @@ void SQL::checkTables(QSqlDatabase db)
    addColumn("Segments", "street", "text");
   }
 
-  if(!doesColumnExist("Segments", "location"))
+  if(!doesColumnExist("Segments", "Location"))
   {
-   addColumn("Segments", "location", "text not null default ''");
-   executeScript(":/recreateSegmentsTable.sql",db);
+   addColumn("Segments", "Location", "varchar(30) not null default ''", "Tracks");
+   if(config->currConnection->servertype() == "Sqlite")
+    executeScript(":/recreateSegmentsTable.sql",db);
+   else
+   {
+    if(config->currConnection->servertype() != "MySql")
+      QMessageBox::information(nullptr, tr("Column added"),
+                               tr("one or more columns have been added to the Segments table at the end.\n"
+                                  " You may use a graphical interface to reorder the column."));\
+   }
   }
 
 
-  if(!doesColumnExist("Companies", "routePrefix"))
+  if(!doesColumnExist("Companies", "RoutePrefix"))
   {
-   addColumn("Companies", "routePrefix", "varchar(10)");
+   addColumn("Companies", "RoutePrefix", "varchar(10)");
   }
 
   if(!doesColumnExist("Companies", "info"))
@@ -10556,7 +10567,7 @@ void SQL::checkTables(QSqlDatabase db)
    addColumn("Companies", "info", "varchar(50)");
   }
 
-  if(!doesColumnExist("altRoute", "routePrefix") || !testAltRoute())
+  if(!doesColumnExist("altRoute", "RoutePrefix") || !testAltRoute())
   {
    //addColumn("altRoute", "routePrefix", "varchar(10)");
    executeScript(":/recreateAltRoute.sql",db);

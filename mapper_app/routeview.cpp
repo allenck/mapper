@@ -219,13 +219,13 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
      menu.addAction(saveChangesAct);
      menu.addAction(discardChangesAct);
      menu.addAction(selectSegmentAct);
-     QMenu resequenceMenu = QMenu(tr("Resequence route"));
-     resequenceMenu.addAction(reSequenceFromStartAct);
-     resequenceMenu.addAction(reSequenceFromEndAct);
+     QMenu* resequenceMenu = new QMenu(tr("Resequence route"));
+     resequenceMenu->addAction(reSequenceFromStartAct);
+     resequenceMenu->addAction(reSequenceFromEndAct);
      bool enable = (sd.tracks() == 1 && sd.oneWay() != "Y")
        || (sd.tracks() == 2 && sd.oneWay() == "Y" && sd.trackUsage() != "L");
      reSequenceFromEndAct->setEnabled(enable);
-     menu.addMenu(&resequenceMenu);
+     menu.addMenu(resequenceMenu);
 //        if(!startTerminal)
 //        {
      TerminalInfo ti = SQL::instance()->getTerminalInfo(route,name, endDate);

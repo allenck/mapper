@@ -401,3 +401,4 @@ void AddGeoreferencedDialog::onWmtsComplete()
  setCursor(Qt::ArrowCursor);
  bLoading = false;
 }
+
