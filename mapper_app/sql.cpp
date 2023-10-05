@@ -10331,7 +10331,7 @@ bool SQL::doesColumnExist(QString table, QString column)
  {
   int count;
   commandText = "Select count(*) from information_schema.COLUMNS"
-                " where table_schema ='" + config->currConnection->mySqlDatabase()
+                " where table_schema ='" + config->currConnection->defaultSqlDatabase()
                 + "' and table_name = '" + table +"' and column_name = '" + column + "'";
   query.prepare(commandText);
 //  query.bindValue(":tbName",table);

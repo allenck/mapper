@@ -43,17 +43,18 @@ private:
  void findODBCDsn(QString iniFile, QStringList* dsnList);
 #endif
   bool verifyDatabase(QString name);
-  void setControls(int ix);
+  void setControls(QString txt);
   City* currCity = nullptr;
   Connection* connection;
   void newConnection();
+  void setupComboBoxes();
 
 private slots:
  void cbCitiesSelectionChanged(int sel);
  void cbConnectionsSelectionChanged(int sel);
  void cbDriverTypeSelectionChanged(int sel);
  void btnTestClicked();
- void btnOKClicked();
+ void btnSaveClicked();
  void btnCancelClicked();
  void btnDeleteClicked();
  void cbCitiesTextChanged(QString text);

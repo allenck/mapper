@@ -28,10 +28,10 @@ class Connection : public QObject
  QString _cityName;
  //const QString cName;
  QString _connectionName;
- QString _sqlite_fileName;
+ QString _sqlite_fileName;    // Sqlite
  QString _odbc_connectorName;
- QString _defaultSqlDatabase;
- QString _mySqlDatabase;
+ QString _defaultSqlDatabase; // MySql or MsSql
+ //QString _mySqlDatabase;
  QString _connectionType;
  QUuid   _uuid;
  bool _dirty;
@@ -47,8 +47,8 @@ public:
  QString servertype() {return _servertype;}
  QSqlDatabase configure(const QString cName = QLatin1String(QSqlDatabase::defaultConnection));
  QSqlDatabase getDb();
- QT_DEPRECATED qint32 id() {return _id;}
- QT_DEPRECATED void setId(qint32 i) {_id = i;}
+ qint32 id() {return _id;}
+ void setId(qint32 i) {_id = i;}
  QString description() { return _description;}
  void setDescription(QString s) {_description = s;}
  QString driver() {return _driver;}
@@ -79,8 +79,8 @@ public:
  QString defaultSqlDatabase() {return _defaultSqlDatabase;}
  void setDefaultSqlDatabase(QString defaultSqlDatabase) {_defaultSqlDatabase = defaultSqlDatabase;}
  static void configureDb(QSqlDatabase *db, Connection *currConnection);
- QString mySqlDatabase(){return _mySqlDatabase;}
- void setMySqlDatabase(QString name){_mySqlDatabase =name;}
+ //QString mySqlDatabase(){return _mySqlDatabase;}
+ //void setMySqlDatabase(QString name){_mySqlDatabase =name;}
  QString connectionType(){return _connectionType;}
  void setConnectionType(QString s ) {_connectionType = s;}
  bool tablesChecked = false;  // do not save in settings!

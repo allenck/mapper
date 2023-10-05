@@ -38,7 +38,7 @@ Connection::Connection(const Connection& o){
  this->_sqlite_fileName = o._sqlite_fileName;
  this->_odbc_connectorName = o._odbc_connectorName;
  this->_defaultSqlDatabase = o._defaultSqlDatabase;
- this->_mySqlDatabase = o._mySqlDatabase;
+ //this->_mySqlDatabase = o._mySqlDatabase;
  this->_connectionType = o._connectionType;
  this->_uuid = o._uuid;
 }
@@ -78,7 +78,7 @@ QSqlDatabase Connection::configure(const QString cName)
       sql->checkTables(db);
       return db;
   }
-  if(config->currConnection->mySqlDatabase()  != "")
+  if(config->currConnection->defaultSqlDatabase()  != "")
   {
    QSqlQuery query = QSqlQuery(db);
    //QString cmd = QString("use [%1]").arg(config->currConnection->mySqlDatabase());
@@ -161,7 +161,7 @@ void Connection::configureDb(QSqlDatabase* db, Connection* currConnection)
          db->setPort(currConnection->port());
         db->setUserName(currConnection->userId());
         db->setPassword(currConnection->pwd());
-        db->setDatabaseName(currConnection->mySqlDatabase());
+        db->setDatabaseName(currConnection->defaultSqlDatabase());
     }
     else if(currConnection->connectionType() == "ODBC")
     {

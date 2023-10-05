@@ -28,7 +28,6 @@ HEADERS += \
     dialogchangeroute.h \
     mymessagebox.h \
     ui/modifyroutetractiontypedlg.h \
-    ui/modifyroutetractiontypedlg.h \
     ui/newcitydialog.h \
     ui/removecitydialog.h \
     websocketclientwrapper.h \
@@ -37,7 +36,6 @@ HEADERS += \
 SOURCES += \
     dialogchangeroute.cpp \
     mymessagebox.cpp \
-    ui/modifyroutetractiontypedlg.cpp \
     ui/modifyroutetractiontypedlg.cpp \
     ui/newcitydialog.cpp \
     ui/removecitydialog.cpp \
