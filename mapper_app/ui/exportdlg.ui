@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
+  <property name="toolTip">
+   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the target connection then select the tables which should be exported. Click on &lt;span style=&quot; font-style:italic;&quot;&gt;Go&lt;/span&gt; to export the data.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+  </property>
   <property name="modal">
    <bool>false</bool>
   </property>
@@ -32,6 +35,9 @@
    </item>
    <item row="9" column="0">
     <widget class="QCheckBox" name="chkAll">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check to select all tables&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>All</string>
      </property>
@@ -46,6 +52,9 @@
    </item>
    <item row="8" column="0">
     <widget class="QCheckBox" name="chkNoDelete">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, no deletes will be performed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>No Deletes</string>
      </property>
@@ -144,13 +153,20 @@
    </item>
    <item row="13" column="1">
     <widget class="QPushButton" name="btnGo">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to start exporting the selected tables&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>Go</string>
      </property>
     </widget>
    </item>
    <item row="1" column="0" colspan="3">
-    <widget class="QComboBox" name="cbConnections"/>
+    <widget class="QComboBox" name="cbConnections">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the connection to the target database.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
    </item>
    <item row="2" column="1" colspan="2">
     <widget class="QCheckBox" name="chkLineSegments">
@@ -177,6 +193,9 @@
    </item>
    <item row="11" column="0" colspan="3">
     <widget class="QLabel" name="lblHelp">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>Idle</string>
      </property>
@@ -185,7 +204,7 @@
    <item row="10" column="0">
     <widget class="QCheckBox" name="chkDrop">
      <property name="toolTip">
-      <string>If checked, target table will be dropped and re-created. </string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, target tables will be dropped and re-created. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="text">
       <string>Drop tables</string>
@@ -197,6 +216,9 @@
    </item>
    <item row="13" column="0">
     <widget class="QPushButton" name="btnFinish">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to stop the export.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>Finish</string>
      </property>

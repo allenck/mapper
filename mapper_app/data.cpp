@@ -172,7 +172,7 @@ SegmentData::SegmentData(const SegmentData& o)
  _endLat = o._endLat;
  _endLon = o._endLon;
  _length = o._length;;
- points = o.points;
+ _points = o._points;
  _streetName = o._streetName;
  _description = o._description;
  _startDate = o._startDate;
@@ -182,8 +182,8 @@ SegmentData::SegmentData(const SegmentData& o)
  _bearingStart = o._bearingStart;
  _bearingEnd = o._bearingEnd;
  _pointList = o._pointList;
- if(points == 0 && pointList().count() > 0 )
-  points = pointList().count();
+ if(_points == 0 && pointList().count() > 0 )
+  _points = pointList().count();
  _next = o._next;
  _prev = o._prev;
  _sequence = o._sequence;
@@ -217,7 +217,7 @@ SegmentData::SegmentData(const SegmentInfo& o)
  _endLat = o._endLat;
  _endLon = o._endLon;
  _length = o._length;;
- points = o._points;
+ _points = o._points;
  _streetName = o._streetName;
  _description = o._description;
  _startDate = o._startDate;
@@ -227,8 +227,8 @@ SegmentData::SegmentData(const SegmentInfo& o)
  _bearingStart = o._bearingStart;
  _bearingEnd = o._bearingEnd;
  _pointList = o._pointList;
- if(points == 0 && pointList().count() > 0 )
-  points = pointList().count();
+ if(_points == 0 && pointList().count() > 0 )
+  _points = pointList().count();
  _location = o._location;
 }
 
@@ -319,7 +319,7 @@ void SegmentData::setPoints(QString sPoints)
   _startLat = _pointList.at(0).lat();
   _startLon = _pointList.at(0).lon();
  }
- points = _pointList.count();
+ _points = _pointList.count();
 }
 
 QString SegmentData::pointsString()
@@ -348,9 +348,9 @@ void SegmentData::checkTracks()
 
 double SegmentData::getLength() {
  double len = 0.0;
- if(points >= 2)
+ if(_points >= 2)
  {
-  for(int i=0; i< points-1; i++)
+  for(int i=0; i< _points-1; i++)
   {
    len += SQL::instance()->distance(_pointList.at(i),_pointList.at(i+1));
   }
@@ -409,16 +409,46 @@ SegmentInfo::SegmentInfo(const SegmentInfo& o)
  _bearingEnd = o._bearingEnd;
  _whichEnd = o._whichEnd;
  _routeType = o._routeType;
- tractionType = o.tractionType;
+ _tractionType = o._tractionType;
  _streetName = o._streetName;
  _pointList= o._pointList;
  _bounds = o._bounds;
  _tracks = o._tracks;
  _bNeedsUpdate = o._bNeedsUpdate;
- _next = o._next;
+ //_next = o._next;
  _trackType = o._trackType;
  _location = o._location;
 }
+SegmentInfo::SegmentInfo(const SegmentData& o)
+{
+ _description = o._description;
+ _segmentId = o._segmentId;
+ //lineSegments = o.lineSegments;
+ _points = o._points;
+ _length = o._length;
+ _startDate = o._startDate;
+ _endDate = o._endDate;
+ _bearing = o._bearing;
+ _startLat = o._startLat;
+ _startLon = o._startLon;
+ _endLat = o._endLat;
+ _endLon = o._endLon;
+ _direction = o._direction;
+ _bearingStart = o._bearingStart;
+ _bearingEnd = o._bearingEnd;
+ _whichEnd = o._whichEnd;
+ _routeType = o._routeType;
+ _tractionType = o._tractionType;
+ _streetName = o._streetName;
+ _pointList= o._pointList;
+ _bounds = o._bounds;
+ _tracks = o._tracks;
+ _bNeedsUpdate = o._bNeedsUpdate;
+ //_next = o._next;
+ _trackType = o._trackType;
+ _location = o._location;
+}
+
 #if 1
 QString SegmentInfo::toString()
 {

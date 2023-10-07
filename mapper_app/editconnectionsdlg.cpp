@@ -710,7 +710,7 @@ void EditConnectionsDlg::btnSaveClicked()
         {
          connection->setSqliteFileName(info.absoluteFilePath());
         }
-        if(info.exists())
+        if(!info.exists())
         {
 
            SQL::instance()->executeScript(":/sqlite3_createTables.sql", db);
@@ -954,7 +954,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
      if(!bCreate)
      {
          ui->lblHelp->setStyleSheet("QLabel {  color : #FF8000; }");
-         ui->lblHelp->setText(tr("%1 tables are defined").arg(db.tables().count()));
+         ui->lblHelp->setText(tr("%1 tables are defined in %2").arg(db.tables().count()).arg(fn));
          this->setCursor(QCursor(Qt::ArrowCursor));
        return true;
      }
@@ -1029,7 +1029,11 @@ bool EditConnectionsDlg::openTestDb()
  db = QSqlDatabase::addDatabase(ui->cbDriverType->currentText(),"testConnection");
  if(ui->cbDbType->currentText() == "Sqlite"  )
  {
-  db.setDatabaseName( ui->txtDbOrDSN->text());
+  QFileInfo info(ui->txtDbOrDSN->text());
+  if(info.isAbsolute())
+    db.setDatabaseName( ui->txtDbOrDSN->text());
+  else
+   db.setDatabaseName("Resources/databases/" + ui->txtDbOrDSN->text());
 //  ui->txtHost->setText("");
 //  db.setHostName(ui->txtHost->text());
  }

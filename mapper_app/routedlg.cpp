@@ -501,17 +501,17 @@ void RouteDlg::txtRouteName_Leave()
     }
     sd.setRouteName(ui->cbRouteName->currentText());
 
-    QList<RouteData> rdList = sql->getRouteDataForRouteName(sd.route(), ui->cbRouteName->currentText());
+    QList<SegmentData> rdList = sql->getRouteDataForRouteName(sd.route(), ui->cbRouteName->currentText());
     if (rdList.count()>0)
     {
         //foreach (routeData rd in rdList)
         for(int i = 0; i < rdList.count(); i++)
         {
-            RouteData rd = (RouteData)rdList.at(i);
-            if (rd.route > 0)
+            SegmentData sd = rdList.at(i);
+            if (sd.route() > 0)
             {
-             ui->dateStart->setDate( rd.startDate);
-             ui->dateEnd->setDate(rd.endDate);
+             ui->dateStart->setDate( sd.startDate());
+             ui->dateEnd->setDate(sd.endDate());
              displayDates(__FUNCTION__);
 
                 //cbTractionType.SelectedIndex = rd.tractionType - 1;
@@ -521,7 +521,7 @@ void RouteDlg::txtRouteName_Leave()
                 for( int j=0; j < _tractionList.count(); j++)
                 {
                     TractionTypeInfo tt = (TractionTypeInfo)_tractionList.values().at(j);
-                    if(tt.tractionType == rd.tractionType)
+                    if(tt.tractionType == sd.tractionType())
                     {
                         ui->cbTractionType->setCurrentIndex(j);
                         break;
@@ -531,7 +531,7 @@ void RouteDlg::txtRouteName_Leave()
                 for( int j=0; j < _companyList.count(); j++)
                 {
                     CompanyData* cd = (CompanyData*)_companyList.at(j);
-                    if(cd->companyKey == rd.companyKey)
+                    if(cd->companyKey == sd.companyKey())
                     {
                         ui->cbCompany->setCurrentIndex(j);
                         break;

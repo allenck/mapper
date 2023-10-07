@@ -348,7 +348,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
   routeView = new RouteView(this);
   connect(routeView, SIGNAL(refreshRoutes()), this, SLOT(refreshRoutes()));
-  connect(routeView->model(), SIGNAL(refreshRoutes()), this, SLOT(refreshRoutes()));
+  //connect(routeView->model(), SIGNAL(refreshRoutes()), this, SLOT(refreshRoutes()));
   segmentView = new SegmentView(config, this);
   connect(segmentView, SIGNAL(selectSegment(int)), this, SLOT(on_selectSegment(int)));
   otherRouteView =  OtherRouteView::instance(this);
@@ -422,7 +422,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 //  });
 //  connect(ui->cbStreets, SIGNAL(editingFinished()), this, SLOT(cbStreets_editingFinished()));
 //  connect(ui->cbStreets, SIGNAL(currentIndexChanged(int)), this, SLOT(cbStreets_currentIndexChanged(int)));
-  connect(ui->ssw, SIGNAL(segmentSelected(SegmentData)), this, SLOT(cbSegmentsSelectedValueChanged(SegmentData)));
+  connect(ui->ssw, SIGNAL(segmentSelected(SegmentInfo)), this, SLOT(cbSegmentsSelectedValueChanged(SegmentInfo)));
   // Context menus
   ui->cbRoute->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(ui->cbRoute, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(cbRoute_customContextMenu( const QPoint& )));
@@ -1121,9 +1121,9 @@ void MainWindow::createActions()
  manageOverlaysAct->setStatusTip(tr("Edit overlay info including selecting which available overlays can be displayed as well as defining additional overlays.."));
  connect(manageOverlaysAct, SIGNAL(triggered()), this, SLOT(On_editCityInfo()));
 
- locateStreetAct = new QAction(tr("Locate Geodb Object"), this);
- locateStreetAct->setStatusTip(tr("Locate, a street, bridge, park or bahanhof. For Berlin only."));
- connect(locateStreetAct, SIGNAL(triggered()), this, SLOT(locateStreet()));
+// locateStreetAct = new QAction(tr("Locate Geodb Object"), this);
+// locateStreetAct->setStatusTip(tr("Locate, a street, bridge, park or bahanhof. For Berlin only."));
+// connect(locateStreetAct, SIGNAL(triggered()), this, SLOT(locateStreet()));
 
  combineRoutesAct = new QAction(tr("Combine two routes"), this);
  combineRoutesAct->setStatusTip(tr("Combine two routes into one"));
@@ -1299,7 +1299,7 @@ void MainWindow::createMenus()
     toolsMenu->addAction(addPointModeAct);
     toolsMenu->addAction(createKmlAct);
     toolsMenu->addAction(exportDbAct);
-    toolsMenu->addAction(locateStreetAct);
+    //toolsMenu->addAction(locateStreetAct);
     toolsMenu->addAction(reloadMapAct);
     toolsMenu->addAction(refreshRoutesAct);
     toolsMenu->addAction(newSqliteDbAct);
@@ -4115,11 +4115,11 @@ void MainWindow::editConnections()
  this->setWindowTitle("Mapper - "+ config->currCity->name() + " ("+config->currConnection->description()+")");
 }
 
-void MainWindow::locateStreet()
-{
-    LocateStreetDlg form(this);
-    form.exec();
-}
+//void MainWindow::locateStreet()
+//{
+//    LocateStreetDlg form(this);
+//    form.exec();
+//}
 
 void MainWindow::findDupSegments()
 {

@@ -278,7 +278,7 @@ private slots:
     void exportDb();
     void editConnections();
     void cbCompanySelectionChanged(int sel);
-    void locateStreet();
+    //void locateStreet();
     void findDupSegments();
     void on_webView_statusBarMessage(QString text);
     void on_selectSegment(int segmentId);
@@ -345,7 +345,7 @@ private:
     QAction *exportDbAct;
     QAction *editConnectionsAct;
     QAction* manageOverlaysAct;
-    QAction *locateStreetAct;
+    //QAction *locateStreetAct;
     QAction *combineRoutesAct;
     QAction *refreshRoutesAct;
     QAction *routeCommentsAct;

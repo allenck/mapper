@@ -17,7 +17,7 @@ ExportDlg::ExportDlg(Configuration *cfg, QWidget *parent) :
  timer->start();
 
  connect(ui->chkAll, SIGNAL(clicked(bool)), this, SLOT(chkAll_changed(bool)));
- connect(ui->btnGo, SIGNAL(clicked()), this, SLOT(btnOK_clicked()));
+ connect(ui->btnGo, SIGNAL(clicked()), this, SLOT(btnGo_clicked()));
  connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(btnCancel_clicked()) );
  connect(ui->btnFinish, &QPushButton::clicked, [=]{
      timer->stop();
@@ -92,7 +92,7 @@ void ExportDlg::btnCancel_clicked()
     this->close();
 }
 
-void ExportDlg::btnOK_clicked()
+void ExportDlg::btnGo_clicked()
 {
  ui->btnGo->setEnabled(false);
  ExportSql exprt(config, ui->chkDrop->isChecked(), this);

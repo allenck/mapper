@@ -27,7 +27,7 @@ private:
 private slots:
     void chkAll_changed(bool isChecked);
     void btnCancel_clicked();
-    void btnOK_clicked();
+    void btnGo_clicked();
     void quickProcess();
     void chkOverrideToggled(bool checked);
     void newProgressMsg(QString msg);

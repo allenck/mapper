@@ -231,7 +231,13 @@ public:
     int segmentId() const {return _segmentId;}
     void setSegmentId(int segmentId){_segmentId = segmentId;}
     LatLng startLatLng() { return LatLng(_startLat, _startLon);}
+    void setStartLatLng(LatLng latLng) {_startLat = latLng.lat();
+                                        _startLon = latLng.lon();
+                                       }
     LatLng endLatLng() { return LatLng(_endLat, _endLon);}
+    void setEndLatLng(LatLng latLng) {_endLat = latLng.lat();
+                                      _endLon = latLng.lon();
+                                     }
     QString streetName() { return _streetName;}
     QString description() const {return _description;}
     int tracks() {return _tracks;}
@@ -281,7 +287,7 @@ public:
     Bearing bearingEnd() {
      if(_pointList.count() < 2)
       return _bearing;
-     _bearingEnd =  Bearing(_pointList.at(points-2).lat(), _pointList.at(points-2).lon(), _endLat, _endLon);
+     _bearingEnd =  Bearing(_pointList.at(_points-2).lat(), _pointList.at(_points-2).lon(), _endLat, _endLon);
      return _bearingEnd;
     }
     double getLength();
@@ -335,7 +341,7 @@ public:
     RouteType _routeType;
     double _startLat, _startLon, _endLat, _endLon;
     double _length;
-    qint32	points;
+    qint32	_points;
     QString _streetName;
     QString _description;
     QDate _startDate = QDate::fromString("1880/01/01", "yyyy/MM/dd");
@@ -356,6 +362,8 @@ public:
     QString _trackUsage;
     LatLng _sw;
     LatLng _ne;
+    QString _trackType = " ";
+
     void setBounds(Bounds bounds) {
      if(bounds.isValid())
       _bounds = bounds;
@@ -365,6 +373,7 @@ public:
     QString _location;
     QString _alphaRoute;
     friend class SQL;
+    friend class SegmentInfo;
 };
 Q_DECLARE_METATYPE(SegmentData)
 
@@ -510,7 +519,7 @@ class SegmentInfo
  Bearing _bearingEnd;
  QString _whichEnd;
  RouteType _routeType;
- int tractionType;
+ int _tractionType;
  QString _streetName;
  QList<LatLng> _pointList;
  Bounds _bounds;
@@ -518,8 +527,8 @@ class SegmentInfo
  bool _bNeedsUpdate;
  //int routeCount;
  //QString trackUsage;
- int _next = -1; // needed for DupSegmentView
- int _prev = -1;
+// int _next = -1; // needed for DupSegmentView
+// int _prev = -1;
  QString _trackType = " ";
  QString _location;
 
@@ -534,6 +543,7 @@ class SegmentInfo
   _bNeedsUpdate = false;
  }
  SegmentInfo(const SegmentInfo& );
+ SegmentInfo(const SegmentData&);
  void setPoints(QString sPoints);
  QString pointsString();
  void addPoint(LatLng pt);
@@ -591,7 +601,7 @@ class SegmentInfo
    _bearingEnd =  Bearing(_pointList.at(_points-2).lat(), _pointList.at(_points-2).lon(), _endLat, _endLon);
   return _bearingEnd;
  }
- int next() const {return _next;}
+ //int next() const {return _next;}
  void setWhichEnd(QString whichEnd) {_whichEnd = whichEnd;}
  Bounds bounds() {
   LatLng _sw = LatLng(_startLat < _endLat ? _startLat : _endLat, _startLon < _endLon ? _startLon : _endLon );
@@ -601,6 +611,7 @@ class SegmentInfo
  }
  QString location() {return _location;}
  void setLocation(QString loc) {_location = loc;}
+ friend class SegmentData;
 };
 
 class RouteIntersects

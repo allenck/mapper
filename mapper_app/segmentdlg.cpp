@@ -530,21 +530,21 @@ void SegmentDlg::cbRouteName_Leave()        // SLOT
         return;
     }
     ui->lblErrorText->setText("");
-    QList<RouteData> rdList = sql->getRouteDataForRouteName(_routeNbr, ui->cbRouteName->currentText());
+    QList<SegmentData> rdList = sql->getRouteDataForRouteName(_routeNbr, ui->cbRouteName->currentText());
     if (rdList.count()> 0)
     {
         //foreach (routeData rd in rdList)
         for(int i=0; i < rdList.count(); i++)
         {
-            RouteData rd = rdList.at(i);
-            if (rd.route > 0)
+            SegmentData sd = rdList.at(i);
+            if (sd.route() > 0)
             {
-             ui->dateStart->setDate( rd.startDate);
-              ui->dateEnd->setDate(rd.endDate);
-              if (rd.startDate < ui->dateStart->date())
-                    ui->dateStart->setDate( rd.startDate);
+             ui->dateStart->setDate( sd.startDate());
+              ui->dateEnd->setDate(sd.endDate());
+              if (sd.startDate() < ui->dateStart->date())
+                    ui->dateStart->setDate( sd.startDate());
                 if (ui->dateStart > ui->dateEnd)
-                    ui->dateEnd->setDate(rd.endDate);
+                    ui->dateEnd->setDate(sd.endDate());
                 ui->dateEnd->setFocus();
             }
         }

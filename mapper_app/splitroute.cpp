@@ -270,7 +270,7 @@ void SplitRoute::dateTo2_Leave()
 
 void SplitRoute::btnOK_Click()
 {
-    QList<RouteData> routes;
+    QList<SegmentData> routes;
     ui->lblHelp->setText ("");
     if(ui->dateFrom1->dateTime() > ui->dateFrom2->dateTime())
     {
@@ -370,8 +370,8 @@ void SplitRoute::btnOK_Click()
      //foreach (routeData rd1 in routes)
      for(int i = 0; i <routes.count(); i ++)
      {
-      RouteData rd1 = routes.at(i);
-      if (!(ui->dateFrom1->date() > rd1.endDate || ui->dateTo1->date() < rd1.startDate))
+      SegmentData sd1 = routes.at(i);
+      if (!(ui->dateFrom1->date() > sd1.endDate() || ui->dateTo1->date() < sd1.startDate()))
       {
        if (!ui->chkDeleteOriginal->isChecked())
        {
@@ -393,8 +393,8 @@ void SplitRoute::btnOK_Click()
      //foreach (routeData rd2 in routes)
      for(int i = 0; i <routes.count(); i ++)
      {
-      RouteData rd2 = routes.at(i);
-      if (!(ui->dateFrom2->date() > rd2.endDate || ui->dateTo1->date() < rd2.startDate))
+      SegmentData sd2 = routes.at(i);
+      if (!(ui->dateFrom2->date() > sd2.endDate() || ui->dateTo1->date() < sd2.startDate()))
       {
        if (!ui->chkDeleteOriginal->isChecked())
        {

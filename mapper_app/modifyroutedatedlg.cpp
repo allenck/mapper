@@ -139,7 +139,8 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
  else
   _otherRd = NULL;
 
- if (sql->modifyRouteDate(_rd, ui->rbStart->isChecked(), ui->dateTimePicker1->date(), ui->txtName1->text(), ui->txtName2->text()))
+ if (sql->modifyRouteDate(_rd, ui->rbStart->isChecked(), ui->dateTimePicker1->date(),
+                          ui->txtName1->text(), ui->txtName2->text()))
  {
   if (ui->rbStart->isChecked())
    _rd->startDate = ui->dateTimePicker1->date();

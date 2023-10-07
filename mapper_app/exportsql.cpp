@@ -235,7 +235,7 @@ bool ExportSql::exportAltRoute()
             bQuery = query2.exec();
             if(!bQuery)
             {
-             SQLERROR_E(query);
+             SQLERROR_E(query2);
                 //db.close();
                 //exit(EXIT_FAILURE);
                 errors++;
@@ -2666,6 +2666,7 @@ bool ExportSql::getCount(QString table, bool bDropTable)
   qDebug()<< QString("Row count = %1 lastUpdate = '%2'").arg(rowCount).arg(lastUpdated.toString("yyyy/MM/dd hh:mm:ss"));
  }
  rowsCompleted = 0;
+ return true;
 }
 
 void ExportSql::sendProgress()
@@ -3005,10 +3006,44 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
 
  if(dbType == "Sqlite")
  {
-  commandText = "CREATE TABLE `Segments` (  `SegmentId` integer NOT NULL primary key AUTOINCREMENT,  `Description` varchar(100) NOT NULL,  `OneWay` char(1) NOT NULL DEFAULT 'N', `Tracks` int(2) NOT NULL DEFAULT 2, street 'text', `Type` int(11) NOT NULL DEFAULT 0,  `StartLat` decimal(15,13) NOT NULL DEFAULT 0.0,  `StartLon` decimal(15,13) NOT NULL DEFAULT 0.0,  `EndLat` decimal(15,13) NOT NULL DEFAULT 0.0,  `EndLon` decimal(15,13) NOT NULL DEFAULT 0.0,  `Length` decimal(15,5) NOT NULL DEFAULT 0,  `points` int(11) NOT NULL default 0,  `StartDate` date NOT NULL DEFAULT '0000-00-00',  `endDate` date NOT NULL DEFAULT '0000-00-00',  `Direction` varchar(6) NOT NULL DEFAULT ' ', pointArray 'text',  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP)";
+  commandText = "CREATE TABLE `Segments` (  `SegmentId` integer NOT NULL primary key AUTOINCREMENT,"
+                " `Description` varchar(100) NOT NULL,"
+                " `OneWay` char(1) NOT NULL DEFAULT 'N',"
+                " `Tracks` int(2) NOT NULL DEFAULT 2,"
+                " `Street` 'text',"
+                " `Location` 'text',"
+                " `Type` int(11) NOT NULL DEFAULT 0,"
+                " `StartLat` decimal(15,13) NOT NULL DEFAULT 0.0,"
+                " `StartLon` decimal(15,13) NOT NULL DEFAULT 0.0,"
+                " `EndLat` decimal(15,13) NOT NULL DEFAULT 0.0,"
+                " `EndLon` decimal(15,13) NOT NULL DEFAULT 0.0,"
+                " `Length` decimal(15,5) NOT NULL DEFAULT 0,"
+                " `Points` int(11) NOT NULL default 0,"
+                " `StartDate` date NOT NULL DEFAULT '0000-00-00',"
+                " `EndDate` date NOT NULL DEFAULT '0000-00-00',"
+                " `Direction` varchar(6) NOT NULL DEFAULT ' ',"
+                " `PointArray` 'text',"
+                " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP)";
  }
  else if(dbType == "MySql")
-  commandText = "CREATE TABLE IF NOT EXISTS `Segments` (`SegmentId` int(11) NOT NULL AUTO_INCREMENT,  `Description` varchar(100) NOT NULL,    `OneWay` char(1) NOT NULL,`Tracks` int(2) NOT NULL DEFAULT 2,`street` text, `Type` int NOT NULL Default 0, `StartLat` decimal(15,13) NOT NULL, `StartLon` decimal(15,13) NOT NULL, `EndLat` decimal(15,13) NOT NULL, `EndLon` decimal(15,13) NOT NULL,`Length` decimal(15,5) NOT NULL,  `points` int(11) NOT NULL default 0,  `StartDate` date NOT NULL,`endDate` date NOT NULL, `Direction` varchar(6) NOT NULL, `pointArray` text NOT NULL,`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,PRIMARY KEY (`SegmentId`)) ENGINE=InnoDB AUTO_INCREMENT=1116 DEFAULT CHARSET=latin1";
+  commandText = "CREATE TABLE IF NOT EXISTS `Segments` ("
+                "`SegmentId` int(11) NOT NULL AUTO_INCREMENT,"
+                " `Description` varchar(100) NOT NULL,"
+                " `OneWay` char(1) NOT NULL,"
+                " `Tracks` int(2) NOT NULL DEFAULT 2,"
+                " `Street` text,"
+                " `Location` text,"
+                " `Type` int NOT NULL Default 0,"
+                " `StartLat` decimal(15,13) NOT NULL,"
+                " `StartLon` decimal(15,13) NOT NULL,"
+                " `EndLat` decimal(15,13) NOT NULL,"
+                " `EndLon` decimal(15,13) NOT NULL,"
+                " `Length` decimal(15,5) NOT NULL,"
+                " `Points` int(11) NOT NULL default 0,"
+                " `StartDate` date NOT NULL,"
+                " `EndDate` date NOT NULL, `Direction` varchar(6) NOT NULL,"
+                " `pointArray` text NOT NULL,"
+                " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,PRIMARY KEY (`SegmentId`)) ENGINE=InnoDB AUTO_INCREMENT=1116 DEFAULT CHARSET=latin1";
  else if(dbType == "MsSql")
  {
   commandText = "SET ANSI_PADDING ON;";
@@ -3018,18 +3053,18 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
     "[OneWay] [char](1) NOT NULL,"\
     "[Tracks] [int] NOT NULL,"\
     "[Location] [varchar](30),"\
-    "[street] [text] NULL,"\
+    "[Street] [text] NULL,"\
     "[Type] [int] NOT NULL,"\
     "[StartLat] [decimal](15, 13) NOT NULL,"\
     "[StartLon] [decimal](15, 13) NOT NULL,"\
     "[EndLat] [decimal](15, 13) NOT NULL,"\
     "[EndLon] [decimal](15, 13) NOT NULL,"\
     "[Length] [decimal](15, 5) NOT NULL,"\
-    "[points] [int] NOT NULL,"\
+    "[Points] [int] NOT NULL,"\
     "[StartDate] [date] NOT NULL,"\
-    "[endDate] [date] NOT NULL,"\
+    "[EndDate] [date] NOT NULL,"\
     "[Direction] [varchar](6) NOT NULL,"\
-    "[pointArray] [text] NULL,"\
+    "[PointArray] [text] NULL,"\
     "[lastUpdate] [datetime] NOT NULL,"\
  "CONSTRAINT [pk_Segments] PRIMARY KEY CLUSTERED"\
 "("\
@@ -3041,17 +3076,18 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
   commandText.append("ALTER TABLE [dbo].[Segments] ADD  DEFAULT (2) FOR [Tracks];");
   commandText.append("ALTER TABLE [dbo].[Segments] ADD  DEFAULT ((0)) FOR [Type];");
   commandText.append("ALTER TABLE [dbo].[Segments] ADD  DEFAULT ('') FOR [Description];");
-  commandText.append("ALTER TABLE [dbo].[Segments] ADD  DEFAULT ('') FOR [street];");
+  commandText.append("ALTER TABLE [dbo].[Segments] ADD  DEFAULT ('') FOR [Street];");
+  commandText.append("ALTER TABLE [dbo].[Segments] ADD  DEFAULT ('') FOR [Location];");
   commandText.append("ALTER TABLE [dbo].[Segments] ADD  DEFAULT ((0)) FOR [StartLat];");
   commandText.append("ALTER TABLE [dbo].[Segments] ADD  DEFAULT ((0)) FOR [StartLon];");
   commandText.append("ALTER TABLE [dbo].[Segments] ADD  DEFAULT ((0)) FOR [EndLat];");
   commandText.append("ALTER TABLE [dbo].[Segments] ADD  DEFAULT ((0)) FOR [EndLon];");
   commandText.append("ALTER TABLE [dbo].[Segments] ADD  CONSTRAINT [DF_dbo_Segments_Length]  DEFAULT ((0)) FOR [Length];");
-  commandText.append("ALTER TABLE [dbo].[Segments] ADD  DEFAULT ((0)) FOR [points];");
+  commandText.append("ALTER TABLE [dbo].[Segments] ADD  DEFAULT ((0)) FOR [Points];");
   commandText.append("ALTER TABLE [dbo].[Segments] ADD  CONSTRAINT [DF_Segments_StartDate]  DEFAULT ('1899-01-01') FOR [StartDate];");
-  commandText.append("ALTER TABLE [dbo].[Segments] ADD  CONSTRAINT [DF_Segments_endDate]  DEFAULT ('1899-01-01') FOR [endDate];");
+  commandText.append("ALTER TABLE [dbo].[Segments] ADD  CONSTRAINT [DF_Segments_EndDate]  DEFAULT ('1899-01-01') FOR [endDate];");
   commandText.append("ALTER TABLE [dbo].[Segments] ADD  CONSTRAINT [DF_Segments_Direction]  DEFAULT ('') FOR [Direction];");
-  commandText.append("ALTER TABLE [dbo].[Segments] ADD  CONSTRAINT [DF_Segments_pointArray]  DEFAULT ('') FOR [pointArray];");
+  commandText.append("ALTER TABLE [dbo].[Segments] ADD  CONSTRAINT [DF_Segments_PointArray]  DEFAULT ('') FOR [pointArray];");
   commandText.append("ALTER TABLE [dbo].[Segments] ADD  CONSTRAINT [DF_Segments_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];");
  }
  query.prepare(commandText);

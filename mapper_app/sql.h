@@ -112,8 +112,8 @@ public:
     bool insertParameters(Parameters, QSqlDatabase db);
     QList<SegmentData> getRouteSegmentsBySegment(qint32 segmentId);
     QList<SegmentData> getRouteSegmentsBySegment(int route, qint32 segmentId);
-    QList<RouteData> getRouteSegmentsForRouteNbr(QString route);
-    QList<RouteData> getRouteDataForRouteName(qint32 route, QString name);
+    QList<SegmentData> getRouteSegmentsForRouteNbr(QString route);
+    QList<SegmentData> getRouteDataForRouteName(qint32 route, QString name);
     double Distance(double Lat1, double Lon1, double Lat2, double Lon2);
     QList<SegmentData> getIntersectingRouteSegmentsAtPoint(int ignore, double lat, double lon, double radius, qint32 route, QString routeName, QString date);
     QDate getRoutesEarliestDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
@@ -133,8 +133,8 @@ public:
     bool updateSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId, qint32 companyKey, qint32 tractionType, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString biDirectional);
     RouteData getSegmentInfoForRouteDates(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate);
     bool deleteRoute(qint32 route, QString name, QString startDate, QString endDate);
-    bool modifyRouteDate(RouteData* rd, bool bStartDate, QDate dt, QString name1, QString name2);
-    bool modifyCurrentRoute(RouteData* rd, bool bStartDate, QDate dt, QString name1, QString name2);
+    bool modifyRouteDate(RouteData *rd, bool bStartDate, QDate dt, QString name1, QString name2);
+    bool modifyCurrentRoute(RouteData *rd, bool bStartDate, QDate dt, QString name1, QString name2);
     QList<SegmentData> getConflictingRouteSegments(qint32 route, QString name,
                                                    QString startDate, QString endDate,
                                                    qint32 segmentId);
@@ -239,7 +239,7 @@ private:
     Configuration *config =nullptr;
    // bool compareSegmentData(const segmentData & sd1, const segmentData &sd2);
 //    QT_DEPRECATED void populatePointList(SegmentData sd);
-    bool insertRouteSegment(RouteData rd);
+    bool insertRouteSegment(SegmentData sd);
 
 };
 

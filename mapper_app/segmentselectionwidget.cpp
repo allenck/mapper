@@ -345,8 +345,10 @@ void SegmentSelectionWidget::cbSegments_currentIndexChanged(int index)
  int segmentId = ui->cbSegments->itemData(index).toInt();
  if(initialized)
  {
-  if(segmentId != m_SegmentId)
-   emit segmentSelected(currSd = cbSegmentDataMap.value(segmentId));
+  if(segmentId != m_SegmentId){
+   currSd = cbSegmentDataMap.value(segmentId);
+   emit segmentSelected(SegmentInfo(currSd));
+  }
   m_SegmentId = segmentId;
  }
 }
