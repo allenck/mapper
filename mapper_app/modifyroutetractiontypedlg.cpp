@@ -29,24 +29,24 @@ void ModifyRouteTractionTypeDlg::setRouteData(QList<RouteData> routeList, int cu
 {
  this->routeList = routeList;
  _currentIx = currentIx;
- rd = routeList.at(currentIx);
- _rd = &rd;
+ RouteData rd = routeList.at(currentIx);
+ _sd = &sd;
 
  ui->lblError->setText("");
- ui->lblRoute->setText(_rd->toString());
+ ui->lblRoute->setText(_sd->toString());
 
- ui->dateEdit->setDate(_rd->startDate);
- ui->comboBox->findData(rd.tractionType);
+ ui->dateEdit->setDate(_sd->startDate());
+ ui->comboBox->findData(sd.tractionType());
 }
 
-RouteData *ModifyRouteTractionTypeDlg::getRouteData()
+SegmentData *ModifyRouteTractionTypeDlg::getRouteData()
 {
- return _rd;
+ return _sd;
 }
 
 void ModifyRouteTractionTypeDlg::dateChanged(QDate date)
 {
-  if (date >= _rd->endDate || date >= _rd->startDate)
+  if (date >= _sd->endDate() || date >= _sd->startDate())
   {
    ui->lblError->setText(tr("Invalid date"));
    //System.Media.SystemSounds.Exclamation.Play();
@@ -61,36 +61,37 @@ void ModifyRouteTractionTypeDlg::btnOK_Click()      //SLOT
 {
  bool bResult = true;
  ui->lblError->setText("");
- if(ui->dateEdit->date() < _rd->startDate)
+ if(ui->dateEdit->date() < _sd->startDate())
  {
      ui->lblError->setText(tr("New end date < route start date!"));
      QApplication::beep();
      return;
  }
- QList<RouteData> rdList = sql->getRouteSegmentsForDate(_rd->route, _rd->name, _rd->startDate.toString("yyyy/MM/dd"));
+ QList<SegmentData> rdList = sql->getRouteSegmentsForDate(_sd->route(), _sd->routeName(), _sd->startDate().toString("yyyy/MM/dd"));
  if(rdList.count())
  {
   sql->beginTransaction("ModifyRouteTractionType");
-  foreach(RouteData rd, rdList)
+  foreach(SegmentData sd, rdList)
   {
-   if(ui->dateEdit->date() >= rd.startDate && ui->dateEdit->date()< rd.endDate)
+   if(ui->dateEdit->date() >= sd.startDate() && ui->dateEdit->date()< sd.endDate())
    {
-    if(!sql->deleteRouteSegment(rd.route, rd.name, rd.lineKey, rd.startDate.toString("yyyy/MM/dd"),rd.endDate.toString("yyyy/MM/dd")))
+    //if(!sql->deleteRouteSegment(sd._route, sd._name, sd._lineKey, sd._startDate.toString("yyyy/MM/dd"),sd._endDate.toString("yyyy/MM/dd")))
+    if(!sql->deleteRouteSegment(sd))
     {
      sql->commitTransaction("ModifyRouteTractionType");
      this->reject();
     }
-    RouteData rd1(rd);
-    rd1.endDate = ui->dateEdit->date().addDays(-1);
-    if(!sql->addSegmentToRoute(rd1))
+    SegmentData sd1(sd);
+    sd1.setEndDate(ui->dateEdit->date().addDays(-1));
+    if(!sql->addSegmentToRoute(sd1))
     {
      sql->rollbackTransaction("ModifyRouteTractionType");
      this->reject();
     }
-    RouteData rd2(rd);
-    rd2.startDate = ui->dateEdit->date();
-    rd2.tractionType = ui->comboBox->currentData().toInt();
-    if(!sql->addSegmentToRoute(rd2))
+    SegmentData sd2(sd);
+    sd2.setStartDate(ui->dateEdit->date());
+    sd2.setTractionType(ui->comboBox->currentData().toInt());
+    if(!sql->addSegmentToRoute(sd2))
     {
      sql->rollbackTransaction("ModifyRouteTractionType");
      this->reject();

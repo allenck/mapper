@@ -106,7 +106,7 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
     _routeNbr = sql->addAltRoute(ui->txtNewRouteNbr->text(), companyData->routePrefix);
     _alphaRoute = ui->txtNewRouteNbr->text();
 
-    QList<RouteData> myArray;
+    QList<SegmentData> myArray;
 
 //    // modify the end date for Route 1 to the date previous to the date control.
 //    if (sql->modifyRouteDate(_rd1, false, ui->dateEdit->dateTime().addDays(-1)))
@@ -135,13 +135,13 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
 
     myArray = sql->getRouteSegmentsForDate(_rd1.route, _rd1.name, _rd1.endDate.toString("yyyy/MM/dd"));
 
-    foreach(RouteData rd1, myArray)
+    foreach(SegmentData sd1, myArray)
     {
         if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->date(),
-                                   ui->endDate->date(), rd1.lineKey, rd1.companyKey,
-                                   rd1.tractionType, rd1.direction, rd1.next, rd1.prev,
-                                   rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave,
-                                   rd1.oneWay, rd1.trackUsage) == false)
+                                   ui->endDate->date(), sd1.segmentId(), sd1.companyKey(),
+                                   sd1.tractionType(), sd1.direction(), sd1.next(), sd1.prev(),
+                                   sd1.normalEnter(), sd1.normalLeave(), sd1.reverseEnter(), sd1.reverseLeave(),
+                                   sd1.oneWay(), sd1.trackUsage()) == false)
         {
             ui->lblHelp->setText(tr("add failed: route ")+ QString("%1").arg(_routeNbr));
             //System.Media.SystemSounds.Asterisk.Play();
@@ -151,12 +151,12 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
     }
     myArray = sql->getRouteSegmentsForDate(_rd2.route, _rd2.name, _rd2.endDate.toString("yyyy/MM/dd"));
 
-    foreach(RouteData rd1, myArray)
+    foreach(SegmentData sd1, myArray)
     {
         if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->date(),
-                                   ui->endDate->date(), rd1.lineKey, rd1.companyKey,
-                                   rd1.tractionType, rd1.direction, rd1.next, rd1.prev, rd1.normalEnter, rd1.normalLeave,
-                                   rd1.reverseEnter, rd1.reverseLeave, rd1.oneWay, rd1.trackUsage) == false)
+                                   ui->endDate->date(), sd1.segmentId(), sd1.companyKey(),
+                                   sd1.tractionType(), sd1.direction(), sd1.next(), sd1.prev(), sd1.normalEnter(), sd1.normalLeave(),
+                                   sd1.reverseEnter(), sd1.reverseLeave(), sd1.oneWay(), sd1.trackUsage()) == false)
         {
             ui->lblHelp->setText(tr("add failed"));
             //System.Media.SystemSounds.Asterisk.Play();

@@ -152,6 +152,30 @@ HEADERS  += mainwindow.h \
     jtogglebutton.h \
     preferencespanel.h
 
+HEADERS += \
+        dialogchangeroute.h \
+        mymessagebox.h \
+        modifyroutetractiontypedlg.h \
+        newcitydialog.h \
+        removecitydialog.h \
+        websocketclientwrapper.h \
+        websockettransport.h
+
+    SOURCES += \
+        dialogchangeroute.cpp \
+        mymessagebox.cpp \
+        modifyroutetractiontypedlg.cpp \
+        newcitydialog.cpp \
+        removecitydialog.cpp \
+        websocketclientwrapper.cpp \
+        websockettransport.cpp
+
+FORMS += \
+     ui/dialogchangeroute.ui \
+     ui/modifyroutetractiontypedlg.ui \
+     ui/newcitydialog.ui \
+     ui/removecitydialog.ui
+
 FORMS    += ui/mainwindow.ui \
     $$PWD/ui/splitsegmentdlg.ui \
     ui/addgeoreferenceddialog.ui \

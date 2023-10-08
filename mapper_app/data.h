@@ -392,9 +392,10 @@ public:
     QDate startDate;
     QDate endDate;
     qint32 companyKey;
-
-    qint32 lineKey;
     qint32 tractionType;
+
+#if 0
+    qint32 lineKey;
     QString direction;
     qint32 normalEnter;
     qint32 normalLeave;
@@ -409,7 +410,7 @@ public:
     Bearing* bearing = nullptr;
     bool bNeedsUpdate = false;
     RouteType routeType;
-
+#endif
     QString toString();
 signals:
 
@@ -756,7 +757,7 @@ public:
      this->rd = rd;
      routeNbr = rd.route;
      this->routeName = rd.name;
-     this->routeSegment = rd.lineKey;
+//     this->routeSegment = rd.lineKey;
      tractionType = rd.tractionType;
      companyKey =rd.companyKey;
      dateEnd = rd.endDate;

@@ -87,9 +87,9 @@ RouteData::RouteData()
 {
  route=-1;
  companyKey = -1;
- lineKey = -1;
- trackUsage = " ";
- sd = SegmentInfo();
+// lineKey = -1;
+// trackUsage = " ";
+// sd = SegmentInfo();
 
 }
 
@@ -107,7 +107,7 @@ RouteData::RouteData(const RouteData& o)
  startDate = o.startDate;
  endDate = o.endDate;
  companyKey = o.companyKey;
-
+#if 0
  lineKey = o.lineKey;
  tractionType = o.tractionType;
  direction = o.direction;
@@ -121,6 +121,7 @@ RouteData::RouteData(const RouteData& o)
  trackUsage = o.trackUsage;
  sd = o.sd;
  bearing = o.bearing;
+#endif
 }
 
 

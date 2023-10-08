@@ -19,7 +19,7 @@ class EditSegmentDialog : public QDialog
 public:
  explicit EditSegmentDialog(QWidget *parent = 0);
  EditSegmentDialog(SegmentInfo sd, QWidget *parent = 0);
- EditSegmentDialog(RouteData *rd, SegmentInfo sd, QWidget *parent=0);
+ EditSegmentDialog(SegmentData *sd, SegmentInfo si, QWidget *parent=0);
  ~EditSegmentDialog();
 
 private:
@@ -28,7 +28,9 @@ private:
  SQL* sql;
  //QList<SegmentInfo> segmentlist;
  MainWindow* myParent;
- SegmentInfo sd;
+ SegmentInfo si;
+ SegmentData* sd = nullptr;
+ SegmentData* osd = nullptr;
  void setUpdate();
  //QPushButton* btnUpdate;
  QPushButton* btnVerifyDates;
@@ -44,7 +46,7 @@ private:
 
 private slots:
  //void fillSegments();
- void segmentSelected(SegmentInfo sd);
+ void segmentSelected(SegmentInfo si);
  void On_cbRouteType_currentIndexChanged(int);
  void On_sbTracks_valueChanged(int);
  void On_chkOneWay_toggled(bool);

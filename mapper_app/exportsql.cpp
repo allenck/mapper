@@ -1951,7 +1951,7 @@ bool ExportSql::exportSegments()
   {
       // Check for deleted entries
       emit(progressMsg("Processing Route deletes"));
-      QList<RouteData> tgtRouteList;
+      QList<SegmentData> tgtRouteList;
       commandText = "select route, name, startDate, endDate, lineKey from Routes where lastUpdate <'"+beginTime+"'";
       QSqlQuery query2 = QSqlQuery(targetDb);
       bQuery = query2.exec(commandText);
@@ -1965,14 +1965,14 @@ bool ExportSql::exportSegments()
       }
       while(query2.next())
       {
-          RouteData rd;
-          rd.route = query2.value(0).toInt();
-          rd.name=query2.value(1).toString();
-          rd.startDate = query2.value(2).toDate();
-          rd.endDate = query2.value(3).toDate();
-          rd.lineKey = query2.value(4).toInt();
+          SegmentData sd;
+          sd.setRoute( query2.value(0).toInt());
+          sd.setRouteName(query2.value(1).toString());
+          sd.setStartDate(query2.value(2).toDate());
+          sd.setEndDate(query2.value(3).toDate());
+          sd.setSegmentId(query2.value(4).toInt());
 
-          tgtRouteList.append(rd);
+          tgtRouteList.append(sd);
           qApp->processEvents(QEventLoop::AllEvents);
 
       }
@@ -1980,8 +1980,11 @@ bool ExportSql::exportSegments()
       rowsCompleted = 0;
       for(int i=0; i < tgtRouteList.count(); i++)
       {
-          RouteData rd = tgtRouteList.at(i);
-          commandText = "select count(*) from Routes  where route=" + QString("%1").arg(rd.route) +" and name='"+ rd.name + "' and startDate='" + rd.startDate.toString("yyyy/MM/dd") + "' and endDate='" + rd.endDate.toString("yyyy/MM/dd") + "' and lineKey=" + QString("%1").arg(rd.lineKey);
+          SegmentData sd = tgtRouteList.at(i);
+          commandText = "select count(*) from Routes  where route=" + QString("%1").arg(sd.route())
+                        +" and name='"+ sd.routeName() + "' and startDate='" + sd.startDate().toString("yyyy/MM/dd")
+                        + "' and endDate='" + sd.endDate().toString("yyyy/MM/dd")
+                        + "' and lineKey=" + QString("%1").arg(sd.segmentId());
 
           QSqlQuery query = QSqlQuery(srcDb);
           bool bQuery = query.exec(commandText);
@@ -2004,7 +2007,10 @@ bool ExportSql::exportSegments()
               continue;   // record exists, continue
           }
 
-          commandText = "delete from Routes where route=" + QString("%1").arg(rd.route) +" and name='"+ rd.name + "' and startDate='" + rd.startDate.toString("yyyy/MM/dd") + "' and endDate='" + rd.endDate.toString("yyyy/MM/dd") + "' and lineKey=" + QString("%1").arg(rd.lineKey);
+          commandText = "delete from Routes where route=" + QString("%1").arg(sd.route()) +" and name='"+ sd.routeName() + "'"
+                        " and startDate='" + sd.startDate().toString("yyyy/MM/dd") + "'"
+                        " and endDate='" + sd.endDate().toString("yyyy/MM/dd") + "'"
+                        " and lineKey=" + QString("%1").arg(sd.segmentId());
           //commandText = "delete from Routes where route=" + QString("%1").arg(rd.route) +" and startDate='" + rd.startDate.toString("yyyy/MM/dd") + "' and endDate='" + rd.endDate.toString("yyyy/MM/dd") + "' and lineKey=" + QString("%1").arg(rd.lineKey);
 
           QSqlQuery query2 = QSqlQuery(targetDb);

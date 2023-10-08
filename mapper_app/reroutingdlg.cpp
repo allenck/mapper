@@ -78,15 +78,16 @@ void ReroutingDlg::on_btnOk_clicked()
 
     setCursor(Qt::WaitCursor);
     sql->beginTransaction("reroute");
-    QList<RouteData> myArray = sql->getRouteSegmentsForDate(_rd.route, _rd.name, _rd.endDate.toString("yyyy/MM/dd"));
+    QList<SegmentData> myArray = sql->getRouteSegmentsForDate(_rd.route, _rd.name, _rd.endDate.toString("yyyy/MM/dd"));
 
-    foreach(RouteData rd, myArray)
+    foreach(SegmentData sd, myArray)
     {
         // copy original route before from date
-        if (sql->addSegmentToRoute(rd.route, rd.name, rd.startDate,
-                                   ui->fromDate->date().addDays(-1), rd.lineKey, rd.companyKey,
-                                   rd.tractionType, rd.direction, rd.next, rd.prev,
-                                   rd.normalEnter, rd.normalLeave, rd.reverseEnter, rd.reverseLeave, rd.oneWay, rd.trackUsage) == false)
+        if (sql->addSegmentToRoute(sd.route(), sd.routeName(), sd.startDate(),
+                                   ui->fromDate->date().addDays(-1), sd.segmentId(), sd.companyKey(),
+                                   sd.tractionType(), sd.direction(), sd.next(), sd.prev(),
+                                   sd.normalEnter(), sd.normalLeave(), sd.reverseEnter(), sd.reverseLeave(),
+                                   sd.oneWay(), sd.trackUsage()) == false)
         {
             ui->lblHelp->setText(tr("add failed"));
             //System.Media.SystemSounds.Asterisk.Play();
@@ -95,10 +96,10 @@ void ReroutingDlg::on_btnOk_clicked()
             return;
         }
         // create new route uing new name and fromDate to toDate
-        if (sql->addSegmentToRoute(rd.route, ui->txtRoute->text(), ui->fromDate->date(),
-                                   ui->toDate->date().addDays(-1), rd.lineKey, rd.companyKey,
-                                   rd.tractionType, rd.direction, rd.next, rd.prev, rd.normalEnter,
-                                   rd.normalLeave, rd.reverseEnter, rd.reverseLeave, rd.oneWay, rd.trackUsage) == false)
+        if (sql->addSegmentToRoute(sd.route(), ui->txtRoute->text(), ui->fromDate->date(),
+                                   ui->toDate->date().addDays(-1), sd.segmentId(), sd.companyKey(),
+                                   sd.tractionType(), sd.direction(), sd.next(), sd.prev(), sd.normalEnter(),
+                                   sd.normalLeave(), sd.reverseEnter(), sd.reverseLeave(), sd.oneWay(), sd.trackUsage()) == false)
         {
             ui->lblHelp->setText(tr("add failed"));
             //System.Media.SystemSounds.Asterisk.Play();
@@ -108,9 +109,9 @@ void ReroutingDlg::on_btnOk_clicked()
             return;
         }
         // copy old route back after toDate
-        if (sql->addSegmentToRoute(rd.route, rd.name,  ui->toDate->date(), rd.endDate,
-                                   rd.lineKey, rd.companyKey, rd.tractionType, rd.direction, rd.next, rd.prev,
-                                   rd.normalEnter, rd.normalLeave, rd.reverseEnter, rd.reverseLeave, rd.oneWay, rd.trackUsage) == false)
+        if (sql->addSegmentToRoute(sd.route(), sd.routeName(),  ui->toDate->date(), sd.endDate(),
+                                   sd.segmentId(), sd.companyKey(), sd.tractionType(), sd.direction(), sd.next(), sd.prev(),
+                                   sd.normalEnter(), sd.normalLeave(), sd.reverseEnter(), sd.reverseLeave(), sd.oneWay(), sd.trackUsage()) == false)
         {
             ui->lblHelp->setText(tr("add failed"));
             //System.Media.SystemSounds.Asterisk.Play();
@@ -119,7 +120,8 @@ void ReroutingDlg::on_btnOk_clicked()
 
             return;
         }
-        if(!sql->deleteRouteSegment(rd.route, rd.name, rd.lineKey, rd.startDate.toString("yyyy/MM/dd"), rd.endDate.toString("yyyy/MM/dd")))
+        if(!sql->deleteRouteSegment(sd.route(), sd.routeName(), sd.segmentId(), sd.startDate().toString("yyyy/MM/dd"),
+                                                                                             sd.endDate().toString("yyyy/MM/dd")))
         {
             ui->lblHelp->setText(tr("delete failed"));
             //System.Media.SystemSounds.Asterisk.Play();

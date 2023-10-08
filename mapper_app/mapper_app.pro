@@ -24,23 +24,6 @@ message(WEBENGINE  " = "  $$WEBENGINE)
 
 RC_ICONS = Resources/tram-icon.ico
 
-HEADERS += \
-    dialogchangeroute.h \
-    mymessagebox.h \
-    ui/modifyroutetractiontypedlg.h \
-    ui/newcitydialog.h \
-    ui/removecitydialog.h \
-    websocketclientwrapper.h \
-    websockettransport.h
-
-SOURCES += \
-    dialogchangeroute.cpp \
-    mymessagebox.cpp \
-    ui/modifyroutetractiontypedlg.cpp \
-    ui/newcitydialog.cpp \
-    ui/removecitydialog.cpp \
-    websocketclientwrapper.cpp \
-    websockettransport.cpp
 #}
 
 DEFINES += "BUILD_DIR=\"\\\""$$OUT_PWD"\\\"\""
@@ -70,7 +53,7 @@ include(mapper_app.pri)
 
 OTHER_FILES += \
     Resources/GoogleMaps.htm \
-    Resources/sqlite3_create_tables.sql \
+    Resources/sql/sqlite3_create_tables.sql \
     Resources/arrow-right-double.png \
     Resources/gtk-add.png \
     Resources/list-add.png \
@@ -99,11 +82,11 @@ OTHER_FILES += \
     Resources/trolley-icon_78.gif \
     Resources/diropen.png \
     wiki/index.htm \
-    Resources/recreateAltRoute.sql \
-    Resources/CreateMySqlFunction.sql \
-    Resources/recreateStationTable.sql \
-    Resources/recreateTractionTypes.sql \
-    Resources/recreateCompanies.sql
+    Resources/sql/recreateAltRoute.sql \
+    Resources/sql/CreateMySqlFunction.sql \
+    Resources/sql/recreateStationTable.sql \
+    Resources/sql/recreateTractionTypes.sql \
+    Resources/sql/recreateCompanies.sql
 
 RESOURCES += \
     Resources/mapper.qrc \
@@ -126,10 +109,10 @@ win32:{
 
 DISTFILES += \
     README.txt \
-    Resources/addBiDirectionalToRoutes.sql \
-    Resources/recreateRouteComments.sql \
-    Resources/recreateSegmentsTable.sql \
-    Resources/recreate_routes.sql \
+    Resources/sql/addBiDirectionalToRoutes.sql \
+    Resources/sql/recreateRouteComments.sql \
+    Resources/sql/recreateSegmentsTable.sql \
+    Resources/sql/recreate_routes.sql \
     Resources/scripts \
     Resources/scripts/opacity-slider2.png \
     Resources/scripts/opacity-slider3d14.png \
@@ -138,8 +121,8 @@ DISTFILES += \
     Resources/scripts/qwebchannel.js \
     Resources/GoogleMaps2.htm \
     Resources/GoogleMaps2b.htm \
-    Resources/updateOneWay.sql \
-    Resources/updaterouteoneway.sql \
+    Resources/sql/updateOneWay.sql \
+    Resources/sql/updaterouteoneway.sql \
     Resources/white.png \
     Resources/orange.png \
     Resources/tram.png \
@@ -187,8 +170,3 @@ DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3390400
 INCLUDEPATH += $$PWD/debug
 DEPENDPATH += $$PWD/debug
 
-FORMS += \
- dialogchangeroute.ui \
- ui/modifyroutetractiontypedlg.ui \
- ui/newcitydialog.ui \
- ui/removecitydialog.ui

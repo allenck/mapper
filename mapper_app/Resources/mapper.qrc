@@ -19,7 +19,6 @@
         <file>arrow-right-double.png</file>
         <file>red00.png</file>
         <file>green00.png</file>
-        <file>sqlite3_create_tables.sql</file>
         <file>yellowblank.png</file>
         <file>diropen.png</file>
         <file>go.png</file>
@@ -27,11 +26,6 @@
         <file>filesave.png</file>
         <file>fileload.png</file>
         <file>databases/StLouis.sqlite3</file>
-        <file>recreateAltRoute.sql</file>
-        <file>CreateMySqlFunction.sql</file>
-        <file>recreateStationTable.sql</file>
-        <file>recreateTractionTypes.sql</file>
-        <file>recreateCompanies.sql</file>
         <file>white.png</file>
         <file>orange.png</file>
         <file>rail.png</file>
@@ -42,8 +36,6 @@
         <file>tram.png</file>
         <file>subway.png</file>
         <file>darkred-dot.png</file>
-        <file>addBiDirectionalToRoutes.sql</file>
-        <file>recreateRouteComments.sql</file>
         <file>rollback.png</file>
         <file>tram-icon.ico</file>
         <file>hidden.png</file>
@@ -51,9 +43,20 @@
         <file>databases/berlinerstrassenbahn.sqlite3</file>
         <file>databases/cincinnati.sqlite3</file>
         <file>databases/Louisville.sqlite3</file>
-        <file>mySql_createDatabase.sql</file>
         <file>reload.png</file>
-        <file>CreateMsSqlFunction.sql</file>
-        <file>recreateSegmentsTable.sql</file>
+        <file>sql/addBiDirectionalToRoutes.sql</file>
+        <file>sql/CreateMsSqlFunction.sql</file>
+        <file>sql/CreateMySqlFunction.sql</file>
+        <file>sql/mySql_createDatabase.sql</file>
+        <file>sql/recreateAltRoute.sql</file>
+        <file>sql/recreateCompanies.sql</file>
+        <file>sql/recreateRouteComments.sql</file>
+        <file>sql/recreate_routes.sql</file>
+        <file>sql/recreateSegmentsTable.sql</file>
+        <file>sql/recreateStationTable.sql</file>
+        <file>sql/recreateTractionTypes.sql</file>
+        <file>sql/sqlite3_create_tables.sql</file>
+        <file>sql/updateOneWay.sql</file>
+        <file>sql/updaterouteoneway.sql</file>
     </qresource>
 </RCC>

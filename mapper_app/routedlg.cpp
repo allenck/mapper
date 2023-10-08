@@ -93,7 +93,7 @@ void RouteDlg::setSegmentId(qint32 segmentid)
  if(qobject_cast<MainWindow*>(parent()))
  {
     MainWindow* main = qobject_cast<MainWindow*>(parent());
-    _rd = sql->getSegmentInfoForRouteDates(main->m_routeNbr, main->m_routeName, _segmentId, main->m_currRouteStartDate,
+    _sd = sql->getSegmentInfoForRouteDates(main->m_routeNbr, main->m_routeName, _segmentId, main->m_currRouteStartDate,
                                            main->m_currRouteEndDate);
  }
  bSegmentChanging = false;
@@ -105,13 +105,13 @@ void RouteDlg::setSegmentId(qint32 segmentid)
  //fillCompanies();
  fillSegmentsComboBox(); // list of routes using this segment
  //fillTractionTypes();
- if (_rd.route >0)
+ if (_sd.route() >0)
  {
   //foreach (tractionTypeInfo tti in cbTractionType.Items)
   for(int i = 0; i < _tractionList.count(); i++ )
   {
    TractionTypeInfo tti = (TractionTypeInfo)_tractionList.values().at(i);
-   if (tti.tractionType == _rd.tractionType)
+   if (tti.tractionType == _sd.tractionType())
    {
        ui->cbTractionType->setCurrentIndex(i);
        break;
@@ -119,9 +119,9 @@ void RouteDlg::setSegmentId(qint32 segmentid)
   }
  }
  //ui->cbSegments->setFocus();
- ui->cbOneWay->setChecked(_rd.oneWay == "Y");
+ ui->cbOneWay->setChecked(_sd.oneWay() == "Y");
  //ui->cbOneWay->setEnabled(si.tracks==1);
- if (_rd.oneWay == "Y" && sd.tracks() == 1)
+ if (_sd.oneWay() == "Y" && sd.tracks() == 1)
  {
      ui->gbDirection->setVisible(true);
      ui->gbReverseEnter->setVisible(false);
@@ -130,33 +130,33 @@ void RouteDlg::setSegmentId(qint32 segmentid)
      ui->rbReverse->setText( sd.bearing().strReverseDirection());
      ui->rbNormal->setChecked(true);
  }
- if(_rd.oneWay != "Y" && sd.tracks() == 1)
+ if(_sd.oneWay() != "Y" && sd.tracks() == 1)
  {
   ui->gbDirection->setVisible(false);
   ui->gbReverseEnter->setVisible(true);
   ui->gbReverseLeave->setVisible(true);
  }
- if(_rd.oneWay == "Y" && sd.tracks() == 2)
+ if(_sd.oneWay() == "Y" && sd.tracks() == 2)
  {
   ui->gbUsage->setVisible(true);
-  ui->rbLeft->setChecked(_rd.trackUsage == "L");
-  ui->rbRight->setChecked(_rd.trackUsage == "R");
+  ui->rbLeft->setChecked(_sd.trackUsage() == "L");
+  ui->rbRight->setChecked(_sd.trackUsage() == "R");
  }
  else
  {
   ui->gbUsage->setVisible(false);
  }
 
- RouteData rd = sql->getRouteData(_routeNbr, segmentid, ui->dateStart->date().toString("yyyy/MM/dd"), ui->dateEnd->date().toString("yyyy/MM/dd"));
- if(rd.lineKey < 0)
+ SegmentData sd = sql->getSegmentData(_routeNbr, segmentid, ui->dateStart->date().toString("yyyy/MM/dd"), ui->dateEnd->date().toString("yyyy/MM/dd"));
+ if(sd.segmentId() < 0)
  {
   ui->btnAdd->setText(tr("Add"));
   ui->btnAdd->setEnabled(true);
  }
  else
  {
-  ui->dateStart->setDate(rd.startDate);
-  ui->dateEnd->setDate(rd.endDate);
+  ui->dateStart->setDate(sd.startDate());
+  ui->dateEnd->setDate(sd.endDate());
   bSegmentChanging = false;
   //ui->txtRouteNbr->setFocus();
  }
@@ -181,12 +181,12 @@ void RouteDlg::setRouteNbr(qint32 rt)
         QString str = (QString)_routeNamesList.at(i);
         ui->cbRouteName->addItem(str);
     }
-    if (_rd.route >0  && _rd.route == _routeNbr)
+    if (_sd.route() >0  && _sd.route() == _routeNbr)
     {
-        companyKey = _rd.companyKey;
+        companyKey = _sd.companyKey();
         for(int j=0; j < _routeNamesList.count(); j++)
         {
-            if(_routeNamesList.at(j)== _rd.name)
+            if(_routeNamesList.at(j)== _sd.routeName())
             {
                 ui->cbRouteName->setCurrentIndex(j+1);
                 break;
@@ -244,7 +244,7 @@ void RouteDlg::setRouteData(SegmentData sd)
  {
   QString name = (QString)_routeNamesList.at(i);
   ui->cbRouteName->addItem(name);
-  if(name == _rd.name)
+  if(name == _sd.routeName())
   {
    ui->cbRouteName->setCurrentIndex(i+1);
   }
@@ -266,7 +266,7 @@ void RouteDlg::setRouteData(SegmentData sd)
  for(int i=0; i < _tractionList.count(); i++)
  {
   TractionTypeInfo tti = (TractionTypeInfo)_tractionList.values().at(i);
-  if (tti.tractionType == _rd.tractionType)
+  if (tti.tractionType == _sd.tractionType())
   {
    ui->cbTractionType->setCurrentIndex(i);
    break;
@@ -287,7 +287,7 @@ void RouteDlg::setRouteData(RouteData rd)
  this->_rd = rd;
  _routeNbr = _rd.route;
  _alphaRoute = _rd.alphaRoute;
- _segmentId = _rd.lineKey;;
+ //_segmentId = _rd.lineKey;;
  //int count = 0;
  //bool bFound = false;
  ui->txtRouteNbr->setText(sd.alphaRoute());

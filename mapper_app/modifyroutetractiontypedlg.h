@@ -17,7 +17,7 @@ class ModifyRouteTractionTypeDlg : public QDialog
   ~ModifyRouteTractionTypeDlg();
   void setConfiguration(Configuration* config);
   void setRouteData(QList<RouteData> routeList, int currentIx);
-  RouteData *getRouteData();
+  SegmentData *getRouteData();
 
  private:
   Ui::ModifyRouteTractionTypeDlg *ui;
@@ -25,8 +25,8 @@ class ModifyRouteTractionTypeDlg : public QDialog
   SQL* sql;
   int _currentIx;
   QList<RouteData> routeList;
-  RouteData rd;
-  RouteData* _rd;
+  SegmentData sd;
+  SegmentData* _sd;
 
  private slots:
   void dateChanged(QDate date);

@@ -306,6 +306,7 @@ void RouteView::aPaste()
 {
 
 }
+
 void RouteView::updateRouteView()
 {
     //SQL sql;
@@ -794,8 +795,9 @@ void RouteView::editSegment()
  QItemSelectionModel * model = ui->selectionModel();
  QModelIndexList indexes = model->selectedIndexes();
  qint32 segmentId = indexes.at(0).data().toInt();
- SegmentInfo sd = SQL::instance()->getSegmentInfo(segmentId);
- EditSegmentDialog* dlg = new EditSegmentDialog(&rd, sd);
+ SegmentData sd = segmentDataList.at(proxymodel->mapToSource(indexes.at(0)).row());
+ SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId);
+ EditSegmentDialog* dlg = new EditSegmentDialog(&sd, si);
  dlg->exec();
 }
 

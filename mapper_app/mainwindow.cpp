@@ -1,6 +1,6 @@
 #include <QtGui>
 #include "mainwindow.h"
-#include "ui/removecitydialog.h"
+#include "removecitydialog.h"
 #ifndef USE_WEBENGINE
 #include <QtWebKit>
 #include <QWebFrame>
@@ -64,9 +64,9 @@
 #include "splitroute.h"
 #include "editstation.h"
 #include <QPair>
-#include "ui/newcitydialog.h"
-#include "ui/removecitydialog.h"
-#include "ui/modifyroutetractiontypedlg.h"
+#include "newcitydialog.h"
+#include "removecitydialog.h"
+#include "modifyroutetractiontypedlg.h"
 #include "dialogchangeroute.h"
 #include "systemconsole.h"
 
@@ -1021,12 +1021,12 @@ void MainWindow::createActions()
      RouteData rd = ((RouteData)routeList.at(row));
      bool b = SQL::instance()->addSegmentToRoute(rd.route, rd.name, rd.startDate, rd.endDate,
                                         sd.segmentId(), rd.companyKey,
-                                        rd.tractionType, "?", -1, -1, 0, 0, 0, 0, rd.oneWay, rd.trackUsage);
+                                        sd.tractionType(), "?", -1, -1, 0, 0, 0, 0, sd.oneWay(), sd.trackUsage());
     if(b)
     {
         m_bridge->processScript("clearPolyline", QString("%1").arg(sd.segmentId()));
         //SegmentInfo si = sql->getSegmentInfo(segmentId);
-        displaySegment(sd.segmentId(), sd.description(), /*sd.oneWay(),*/ /*ttColors[e.tractionType]*/getColor(rd.tractionType), rd.trackUsage, true);
+        displaySegment(sd.segmentId(), sd.description(), /*sd.oneWay(),*/ /*ttColors[e.tractionType]*/getColor(rd.tractionType), " ", true);
 
     }
  });
@@ -3572,7 +3572,7 @@ void MainWindow::modifyRouteDate()
     NotYetInplemented();
 #endif
 }
-
+#if 1 // not really needed since historically routes could hane multiple types
 void MainWindow::modifyRouteTractionType()
 {
  ModifyRouteTractionTypeDlg* form = new ModifyRouteTractionTypeDlg();
@@ -3600,7 +3600,7 @@ void MainWindow::modifyRouteTractionType()
  }
 
 }
-
+#endif
 void MainWindow::addSegment()
 {
 #if 1 // TODO
@@ -3625,7 +3625,7 @@ void MainWindow::addSegment()
     //}
     RouteData rd = RouteData();
     if(ui->cbRoute->currentIndex() >= 0)
-     rd = (RouteData)routeList.at(ui->cbRoute->currentIndex());
+     rd = routeList.at(ui->cbRoute->currentIndex());
     segmentDlg.setRouteData (rd);
     if (segmentDlg.exec() == QDialog::Accepted)
     {
@@ -3638,7 +3638,8 @@ void MainWindow::addSegment()
 
         ui->lblSegment->setText(tr("Segment %1:").arg(m_SegmentId));
         //        ui->chkOneWay->setChecked("Y"== sql->getSegmentOneWay(m_SegmentId));
-        SegmentInfo sd = sql->getSegmentInfo(m_SegmentId);
+        SegmentData sd = sql->getSegmentData(rd.route, m_SegmentId, rd.startDate.toString("yyyy/MM/dd"),
+                                             rd.endDate.toString("yyyy/MM/dd"));
         updateSegmentInfoDisplay(sd);
 
         int dash = 0;
@@ -3651,8 +3652,8 @@ void MainWindow::addSegment()
 
         QVariantList objArray;
         objArray << m_SegmentId << segmentDlg.routeName()<<ui->txtSegment->text()
-                 <<rd.oneWay<<getColor(segmentDlg.tractionType())<<sd.tracks() << dash
-                << sd.routeType() << rd.trackUsage << 0;
+                 <<sd.oneWay()<<getColor(segmentDlg.tractionType())<<sd.tracks() << dash
+                << sd.routeType() << sd.trackUsage() << 0;
         m_bridge->processScript("createSegment",objArray);
 
         //webBrowser1.Document.InvokeScript("addModeOn");
@@ -4158,7 +4159,7 @@ void MainWindow::on_selectSegment(int segmentId)
  else
  {
   SegmentInfo sd = sql->getSegmentInfo(segmentId);
-  displaySegment(sd.segmentId(), sd.description(), /*sd.oneWay(),*/ /*ttColors[e.tractionType]*/getColor(_rd.tractionType), _rd.trackUsage, true);
+  displaySegment(sd.segmentId(), sd.description(), getColor(_rd.tractionType), "B", true);
   ProcessScript("selectSegment", QString("%1").arg(segmentId));
  }
 }
@@ -4293,10 +4294,15 @@ void MainWindow::updateSegmentInfoDisplay(SegmentInfo sd)
 
 void MainWindow::On_editSegment_triggered()
 {
- SegmentInfo sd = sql->getSegmentInfo(ui->ssw->cbSegments()->currentData().toInt());
- RouteData rd = sql->getRouteData(m_routeNbr,sd.segmentId(),m_currRouteStartDate, m_currRouteEndDate);
- EditSegmentDialog dlg(&rd, sd,this);
- int ret = dlg.exec();
+ SegmentInfo si = sql->getSegmentInfo(ui->ssw->cbSegments()->currentData().toInt());
+ SegmentData sd = sql->getSegmentData(m_routeNbr,si.segmentId(),m_currRouteStartDate, m_currRouteEndDate);
+
+ EditSegmentDialog* dlg;
+ if(sd.route() >= 0)
+  dlg = new EditSegmentDialog(&sd, si,this);
+ else
+  dlg = new EditSegmentDialog(si,this);
+ int ret = dlg->exec();
  if(ret == QDialog::Accepted)
   //refreshSegmentCB();
   ui->ssw->refresh();

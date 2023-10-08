@@ -761,8 +761,8 @@ void SegmentDlg::btnOK_Click()  // SLOT
   {
    int tractionType = _tractionTypeList.values().at(ui->cbTractionType->currentIndex()).tractionType;
 
-   RouteData rd = sql->getRouteData(_routeNbr, routeSegment, ui->dateStart->text(), ui->dateEnd->text());
-   if (rd.route < 0)
+   SegmentData sd = sql->getSegmentData(_routeNbr, routeSegment, ui->dateStart->text(), ui->dateEnd->text());
+   if (sd.route() < 0)
    {
     int companyKey= ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt();
 

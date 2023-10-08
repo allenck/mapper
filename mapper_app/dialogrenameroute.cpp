@@ -67,7 +67,7 @@ void DialogRenameRoute::btnOK_Click()
 {
     RouteData rd = (RouteData)routeDataList.at(ui->cbRoutes->currentIndex());
 
-    QList<RouteData> myArray = sql->getRouteSegmentsForDate(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"));
+    QList<SegmentData> myArray = sql->getRouteSegmentsForDate(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"));
     //sql->OpenConnection();
     if (myArray.count()==0)
     {
@@ -83,17 +83,18 @@ void DialogRenameRoute::btnOK_Click()
     //foreach (routeData rd1 in myArray)
     for(int i=0; i < myArray.count(); i++)
     {
-        RouteData rd1 = (RouteData)myArray.at(i);
-        if (!sql->deleteRouteSegment(rd1.route, rd1.name, rd1.lineKey,rd1.startDate.toString("yyyy/MM/dd"), rd1.endDate.toString("yyyy/MM/dd")))
+        SegmentData sd1 = myArray.at(i);
+        if (!sql->deleteRouteSegment(sd1.route(), sd1.routeName(), sd1.segmentId(),sd1.startDate().toString("yyyy/MM/dd"),
+                                     sd1.endDate().toString("yyyy/MM/dd")))
         {
             ui->lblHelp->setText(tr("Delete failed"));
             //System.Media.SystemSounds.Asterisk.Play();
             return;
         }
-        if (!sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text(), rd1.startDate,
-            rd1.endDate, rd1.lineKey,
-            rd1.companyKey, rd1.tractionType, rd1.direction, rd1.next, rd1.prev,
-            rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave, rd1.oneWay, rd1.trackUsage))
+        if (!sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text(), sd1.startDate(),
+            sd1.endDate(), sd1.segmentId(),
+            sd1.companyKey(), sd1.tractionType(), sd1.direction(), sd1.next(), sd1.prev(),
+            sd1.normalEnter(), sd1.normalLeave(), sd1.reverseEnter(), sd1.reverseLeave(), sd1.oneWay(), sd1.trackUsage()))
         {
             ui->lblHelp->setText(tr("Update failed"));
             //System.Media.SystemSounds.Asterisk.Play();

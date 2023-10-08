@@ -64,11 +64,12 @@ private:
     SegmentData sd;
     SegmentData oldSd;
     SegmentInfo si;
+    RouteData _rd;
     //bool bIgnoreDirection = false;
     //public event segmentChangedEventHandler SegmentChanged;
     bool formNotLoaded;
     //int normalEnter, normalLeave, reverseEnter, reverseLeave;
-    RouteData _rd;
+    SegmentData _sd;
     bool bSegmentChanging;
     bool bRouteChanging;
     bool bAddMode;
