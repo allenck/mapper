@@ -34,6 +34,7 @@ public:
     bool dbOpen();
     //QSqlDatabase db;
     // http://doc.qt.nokia.com/4.7/qlist.html
+    bool isTransactionActive();
     QList<RouteData> routeList;
     QList<RouteData> getRoutesByEndDate();
     QList<RouteData> getRoutesByEndDate(qint32 companyKey);
@@ -181,8 +182,6 @@ public:
     QStringList showDatabases(QString Connection, QString servertype);
     QStringList getAlphaRoutes(QString text);
     bool deleteAlphaRoute(QString routeAlpha);
-
-    //bool isTransactionActive();
     bool loadSqlite3Functions();
     bool checkConnectingSegments(QList<SegmentData> segmentDataList);
 

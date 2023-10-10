@@ -25,7 +25,6 @@
         <file>trash.png</file>
         <file>filesave.png</file>
         <file>fileload.png</file>
-        <file>databases/StLouis.sqlite3</file>
         <file>white.png</file>
         <file>orange.png</file>
         <file>rail.png</file>
@@ -40,9 +39,6 @@
         <file>tram-icon.ico</file>
         <file>hidden.png</file>
         <file>show-password.png</file>
-        <file>databases/berlinerstrassenbahn.sqlite3</file>
-        <file>databases/cincinnati.sqlite3</file>
-        <file>databases/Louisville.sqlite3</file>
         <file>reload.png</file>
         <file>sql/addBiDirectionalToRoutes.sql</file>
         <file>sql/CreateMsSqlFunction.sql</file>
@@ -58,5 +54,6 @@
         <file>sql/sqlite3_create_tables.sql</file>
         <file>sql/updateOneWay.sql</file>
         <file>sql/updaterouteoneway.sql</file>
+        <file>sql/mysql_recreateCompanies.sql</file>
     </qresource>
 </RCC>

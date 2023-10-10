@@ -88,6 +88,26 @@ bool SQL::dbOpen()
 
     return ok;
 }
+
+bool SQL::isTransactionActive()
+{
+ QSqlDatabase db = QSqlDatabase::database();
+ QVariant v = db.driver()->handle();
+ sqlite3 *handle = NULL;
+ if (v.isValid() && strcmp(v.typeName(), "sqlite3*") == 0)
+ {
+  // v.data() returns a pointer to the handle
+  handle = *static_cast<sqlite3 **>(v.data());
+
+  const char * schema = "";
+  int txn = sqlite3_txn_state(handle, nullptr);
+  if(txn == SQLITE_TXN_WRITE)
+   return true;
+ }
+ return false;
+}
+
+
 int SQL::sqlErrorMessage(QSqlQuery query, QMessageBox::StandardButtons buttons)
 {
  MyMessageBox* mb = new MyMessageBox(nullptr, tr("Sqlerror"), tr("An sql error has occurred: %1 "
@@ -9387,19 +9407,6 @@ QStringList SQL::showDatabases(QString connection, QString servertype)
  return ret;
 }
 
-//bool SQL::isTransactionActive()
-//{
-// QSqlDatabase db = QSqlDatabase::database();
-// QVariant v = db.driver()->handle();
-// sqlite3 *handle = NULL;
-// if (v.isValid() && strcmp(v.typeName(), "sqlite3*") == 0)
-// {
-//  // v.data() returns a pointer to the handle
-//  handle = *static_cast<sqlite3 **>(v.data());
-
-//  int sqlite3_get_autocommit(handle);
-// }
-//}
 
 bool SQL::loadSqlite3Functions()
 {
@@ -9726,7 +9733,11 @@ bool SQL::addColumn(QString tbName, QString name, QString type, QString after)
  if(config->currConnection->servertype() == "Sqlite" )
   commandText = "alter table '" + tbName + "' add column  '" + name + "' " + type +" ";
  else if(config->currConnection->servertype() == "MySql")
-  commandText = "alter table " + tbName + " add column " + name + " " + type +" after " + after;
+ {
+  commandText = "alter table " + tbName + " add column " + name + " " + type +"";
+  if(!after.isEmpty())
+    commandText.append(" after `" + after + "`");
+ }
  else
   commandText = "alter table dbo." + tbName + " add " + name + " " + type +" ";
  query.prepare(commandText);
@@ -9861,13 +9872,24 @@ void SQL::checkTables(QSqlDatabase db)
 
   if(!doesColumnExist("Companies", "info"))
   {
-   addColumn("Companies", "info", "varchar(50)");
+   addColumn("Companies", "info", "varchar(50)", "Description");
   }
 
-  if(!doesColumnExist("altRoute", "RoutePrefix") || !testAltRoute())
+  if(config->currConnection->servertype() == "Sqlite" )
   {
-   //addColumn("altRoute", "routePrefix", "varchar(10)");
-   executeScript(":/recreateAltRoute.sql",db);
+   if(!doesColumnExist("altRoute", "RoutePrefix") || !testAltRoute())
+   {
+    //addColumn("altRoute", "routePrefix", "varchar(10)");
+    executeScript(":/recreateAltRoute.sql",db);
+   }
+  }
+  else
+  {
+   if(!doesColumnExist("altRoute", "RoutePrefix"))
+   {
+    //addColumn("altRoute", "routePrefix", "varchar(10)");
+    executeScript(":/recreateAltRoute.sql",db);
+   }
   }
 
   if(!doesColumnExist("Stations", "suffix"))
@@ -9980,7 +10002,7 @@ bool SQL::testAltRoute()
 {
  QSqlDatabase db = QSqlDatabase();
  QSqlQuery query = QSqlQuery(db);
- QString commandText = "select sql from sqlite_master where tbl_name = 'altRoute' ";
+ QString commandText = "select sql from sqlite_master where tbl_name = 'altRoute'";
  if(!query.exec(commandText))
  {
   SQLERROR(query);

@@ -20,7 +20,7 @@ CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     tableView->setAlternatingRowColors(true);
     connect(tableView->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
 
-    model = new QSqlTableModel(this, db);
+    model = new MyCompanyTableModel(this, db);
     model->setTable("Companies");
     model->setSort(1, Qt::AscendingOrder);
     connect(model, SIGNAL(primeInsert(int,QSqlRecord&)), this, SLOT(On_primeInsert(int,QSqlRecord&)));
@@ -31,8 +31,10 @@ CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     model->query().setForwardOnly(false);
     model->select();
     QString name = model->record(0).value("description").toString();
-    tableView->setModel(model);
-
+    QSortFilterProxyModel* proxyModel = new QSortFilterProxyModel();
+    proxyModel->setSourceModel(model);
+    tableView->setModel(proxyModel);
+    tableView->setSortingEnabled(true);
     QSqlRecord r = model->record(0);
     int ixRoutePrefix = r.indexOf("routePrefix");
     tableView->horizontalHeader()->moveSection(ixRoutePrefix,2);
@@ -132,6 +134,16 @@ void CompanyView::tablev_customContextMenu( const QPoint& pt)
  menu->exec(QCursor::pos());
 
 }
+
+QVariant MyCompanyTableModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+ QVariant value = QSqlTableModel::headerData(section, orientation,role);
+ if(orientation == Qt::Horizontal && role == Qt::DisplayRole)
+  return hdrMap.value(value.toString());
+ return value;
+}
+
+
 QVariant MyCompanyTableModel::data ( const QModelIndex & index, int role ) const
 {
  if (!index.isValid())

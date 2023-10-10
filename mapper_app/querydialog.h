@@ -5,6 +5,8 @@
 #include "configuration.h"
 #include "querymodel.h"
 #include <QTableView>
+#include <QMenu>
+#include <QMenuBar>
 
 namespace Ui {
 class QueryDialog;
@@ -48,12 +50,19 @@ private:
  int i_Message_Total=0;
  int i_Rows_Total=0;
  QString s_Search; //=tab_search->objectName();
+ QMenuBar* menuBar;
+ QMenu* toolsMenu;
+ QString currentQuery;
+ void saveFile(QString s_File_Name);
+ QAction* saveFileAct;
+ QAction* saveAsFileAct;
 
 private slots:
  void on_go_QueryButton_clicked();
  void on_clear_QueryButton_clicked();
  void on_load_QueryButton_clicked();
- void on_save_QueryButton_clicked();
+ void on_save_QueryButton_clicked(QString s_File_Name);
+ void on_saveAs_QueryButton_clicked();
  void quickProcess();
  void slot_queryView_row_DoubleClicked(QModelIndex index);
  void slot_QueryView_horizontalHeader_sectionDoubleClicked(int logicalIndex);
@@ -67,6 +76,8 @@ private slots:
 // void onMoveOrRezize_columns();
 // void onResizeToData();
  void On_cbConnections_CurrentIndexChanged(int);
+ bool processALine(QString txt, QString tabName = "");
+
 };
 
 #endif // QUERYDIALOG_H

@@ -382,7 +382,7 @@ void Configuration::getSettings()
  settings.beginGroup("query");
  q.b_stop_query_on_error = settings.value("stop_query_on_error").toBool();
  q.b_sql_execute_after_loading = settings.value("sql_execute_after_loading").toBool();
- q.s_query_path = settings.value("queryPath", QDir::homePath()).toString();
+ q.s_query_path = settings.value("queryPath", QDir::homePath()+"/Resources/sql/").toString();
  q.geometry = settings.value("geometry").toByteArray();
 
  settings.endGroup();

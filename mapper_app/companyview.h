@@ -15,10 +15,16 @@ public:
   MyCompanyTableModel(QObject *parent = 0, QSqlDatabase db = QSqlDatabase()) : QSqlTableModel(parent){}
 
 protected:
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
     QVariant data(const QModelIndex &index, int role) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
+ private:
+    QMap<QString, QString> hdrMap = {{"key", "Company Key"},{"Description", "Company Name"},
+                                     {"routePrefix", "Prefix"}, {"startDate", "Start"}, {"endDate", "End"},
+                                     {"firstRoute", "First Route"}, {"lastRoute", "Last Route"},
+                                     {"lastUpdate", "Last updated"}, {"info", "Information"}
+                                    };
 };
-
 class CompanyView : public QObject
 {
     Q_OBJECT
@@ -35,7 +41,8 @@ public:
      ENDDATE,
      FIRSTROUTE,
      LASTROUTE,
-     LASTUPDATED
+     LASTUPDATED,
+     INFO
     };
     bool bUncomittedChanges();
 

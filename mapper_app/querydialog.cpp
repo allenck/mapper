@@ -25,6 +25,58 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   db = QSqlDatabase::database();
   tgtConn->setConnectionName(db.connectionName());
 
+  menuBar = new QMenuBar();
+  toolsMenu = new QMenu(tr("Tools"));
+  layout()->setMenuBar(menuBar);
+
+  QMenu* fileMenu= new Menu(tr("File"));
+  menuBar->addMenu(fileMenu);
+  QAction* loadFileAct = new QAction(tr("Load query"), this);
+  fileMenu->addAction(loadFileAct);
+  connect(loadFileAct, &QAction::triggered, [=]{on_load_QueryButton_clicked();});
+  saveFileAct = new QAction(tr("Save query"), this);
+  saveFileAct->setEnabled(false);
+  fileMenu->addAction(saveFileAct);
+  connect(saveFileAct, &QAction::triggered, [=]{on_save_QueryButton_clicked(currQueryFilename);});
+  saveAsFileAct = new QAction(tr("Save query as ..."), this);
+  fileMenu->addAction(saveAsFileAct);
+  connect(saveFileAct, &QAction::triggered, [=]{on_saveAs_QueryButton_clicked();});
+
+  menuBar->addMenu(toolsMenu);
+  //QMenu* tablesMenu = new QMenu(tr("Tables"));
+  connect(toolsMenu, &QMenu::aboutToShow, [=]{
+   QSqlDatabase db = QSqlDatabase::database();
+   QStringList tableList = db.tables(QSql::Tables);
+   QStringList sysTableList = db.tables(QSql::SystemTables);
+   toolsMenu->clear();
+   QMenu* tablesMenu = new QMenu(tr("Tables"));
+   toolsMenu->addMenu(tablesMenu);
+   Connection* c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
+
+   foreach(QString tableName, tableList)
+   {
+    if(sysTableList.contains(tableName))
+     continue;
+    if(c->servertype() == "Sqlite" && tableName.startsWith("sqlite_"))
+     continue;
+    QMenu* tableMenu = new QMenu(tableName);
+    tablesMenu->addMenu(tableMenu);
+    QAction* act = new QAction(tr("show table"),this);
+    act->setData(tableName);
+    tableMenu->addAction(act);
+    connect(act, &QAction::triggered, [=]{
+     QString txt;
+     if(c->servertype() == "Sqlite")
+      txt = QString("pragma table_info('%1')").arg(tableName);
+     else if(c->servertype() == "MySql")
+      txt = "describe " + tableName;
+     else // SQL Server
+      txt = "EXEC sp_help " + tableName;
+     processALine(txt, tableName);
+    });
+   }
+  });
+
   tgtDbType = tgtConn->servertype();
   i_Max_Tab_Results = 10;
   ui->cb_stop_query_on_error->setChecked(config->q.b_stop_query_on_error);
@@ -82,17 +134,21 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
    else
     ui->pbSubmit->setVisible(false);
   });
+  ui->rollback_toolButton->setEnabled(SQL::instance()->isTransactionActive());
+
 }
 
 QueryDialog::~QueryDialog()
 {
  delete ui;
 }
+
 void QueryDialog::resizeEvent(QResizeEvent *e)
 {
  Q_UNUSED(e)
  config->q.geometry = saveGeometry();
 }
+
 void QueryDialog::closeEvent(QCloseEvent *e)
 {
  Q_UNUSED(e)
@@ -117,7 +173,7 @@ void QueryDialog::on_clear_QueryButton_clicked()
  for (int ix =ui->widget_query_view->count()-1; ix > 0; ix--)
   ui->widget_query_view->removeTab(ix);
  ui->queryResultText->clear();
-
+ sa_Message_Text.clear();
 }
 
 void QueryDialog::on_load_QueryButton_clicked()
@@ -129,6 +185,7 @@ void QueryDialog::on_load_QueryButton_clicked()
  if (s_File_Name.isEmpty()) return;
  QFile this_file(s_File_Name);
  QFileInfo this_fi(s_File_Name);
+ currQueryFilename = s_File_Name;
  if (!this_file.open(QIODevice::ReadOnly | QIODevice::Text))
  {
   QMessageBox::critical(this,tr("Error"), "Could not load sql query text file");
@@ -136,6 +193,7 @@ void QueryDialog::on_load_QueryButton_clicked()
  }
  config->q.s_query_path = this_fi.dir().absolutePath();
  currQueryFilename = s_File_Name;
+ saveAsFileAct->setEnabled(true);
 
  if(this_fi.size() > 1000000)
  {
@@ -219,48 +277,13 @@ void QueryDialog::on_go_QueryButton_clicked()
  i_Message_Rows_effected=0;
  i_Message_Total=0;
  i_Rows_Total=0;
+ sa_Message_Text.clear();
 
- // ui->treeDbList->currentIndex()
- //DbConnection *dbc = this_dblist->getDbConnection(this_dblist->current_index);
-// if (!db)
-// {
-//  //query_View->hide();
-//  //queryResultText->show();
-//  ui->queryResultText->setPlainText("No database connection selected.");
-//  return;
-// }
-// if (db.isOpen())
-// {
-//  QSqlError ce = dbc->connect(this_dblist);
-//  if (ce.isValid())
-//  {
-//   //query_View->hide();
-//   //queryResultText->show();
-//   queryResultText->setPlainText(QString("%1\n%2").arg(ce.driverText()).arg(ce.databaseText()));
-//   return;
-//  }
-// }
  // remove all but the first tab.
  for (int ix =ui->widget_query_view->count()-1; ix > 0; ix--)
   ui->widget_query_view->removeTab(ix);
  ui->queryResultText->clear();
 
-// if ((QGeomColl::b_query_as_csv) || (QGeomColl::b_csv_to_file))
-//  return query_as_csv(dbc->db);
-
- // initialize new sql query object
-// QWidget * tab_search=(GeomCollTab*)(*(tab_GeomColl))->parentWidget();
-// QWidget *tab_main_child;
-// for (int i=0; i<((GeomCollTab*)this_parent)->count(); ++i)
-// {
-//  tab_search = ((GeomCollTab*)this_parent)->widget(i);
-//  if (s_Search == tab_search->objectName())
-//   tab_main_child=tab_search;
-// }
-// if (!tab_main_child)
-// {
-//  qDebug()<<"-E-> GeomCollTab::on_go_QueryButton_clicked: searching for ["<<s_Search<<"] failed.";
-// }
  this->setCursor(Qt::WaitCursor);
  timer = new QTimer(this);
  connect(timer,SIGNAL(timeout()),this,SLOT(quickProcess()));
@@ -291,78 +314,9 @@ void QueryDialog::on_go_QueryButton_clicked()
   }
   else
   {
-   QueryModel *query_view_model = new QueryModel(this ,db, config->currConnection->servertype());
-   //queryModelList.append(query_view_modell);
-   query_view_model->setQuery(txt, db);
-   if (query_view_model->lastError().isValid())
-   {
-    //query_View->hide();
-    //queryResultText->show();
-    sa_Message_Text.append(QString("%1\n%2").arg(query_view_model->lastError().driverText()).arg(query_view_model->lastError().databaseText()));
-    sa_Message_Text.append(txt);
-    i_Message_Error++;
-    if(ui->cb_stop_query_on_error->isChecked())
-    {
-     sa_Message_Text.append(tr("Query stopped because of errors"));
-     for (int i=0; i<sa_Message_Text.count(); i++)
-      s_Search+=sa_Message_Text[i]+"\n";
-     ui->queryResultText->setPlainText(s_Search);
-     return;
-    }
-   }
-   else
-   {
-    // query was successful
-    if (query_view_model->query().isSelect())
-    {
-     i_Rows_Total += query_view_model->rowCount();
-     i_Message_Result_Yes++;
-     if (i_Message_Result_Yes <= i_Max_Tab_Results)
-     {
-      QTableView *query_view = new QTableView();
-      query_view->setAlternatingRowColors(true);
-      query_view->setSelectionMode(QAbstractItemView::ContiguousSelection);
-      connect(query_view->horizontalHeader(),SIGNAL(sectionDoubleClicked(int)),this,SLOT(slot_QueryView_horizontalHeader_sectionDoubleClicked(int)));
-      connect(query_view,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(slot_queryView_row_DoubleClicked(QModelIndex)));
-      query_view->setContextMenuPolicy(Qt::CustomContextMenu);
-      connect(query_view,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(tablev_customContextMenu(QPoint)));
-      myHeaderView *hv = new myHeaderView(Qt::Horizontal, query_view);
-      query_view->setHorizontalHeader(hv);
- //     query_view->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
- //     connect(query_view->horizontalHeader(),SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(queryViewHeaderContextMenuRequested(const QPoint)));
- //     query_view->horizontalHeader()->setMovable(true);
-
-      query_view->setSortingEnabled(false);
-      QSortFilterProxyModel *sm = new QSortFilterProxyModel(query_view);
-      sm->setSourceModel(query_view_model);
-      query_view->setModel(sm);
-      query_view->setSortingEnabled(true);
-      sm->sort(-1,Qt::AscendingOrder);
-      QString tabTitle = tr("Result ") + QString("%1").arg(ui->widget_query_view->count());
-      if (tab_First_Result == 0)
-      {
-       tab_First_Result=query_view;
-      }
-      int i_tab = ui->widget_query_view->addTab(query_view, tabTitle);
-      //qDebug() << QString("tab %1 added").arg(i_tab);
-      query_view_model->setTabName(tabTitle);
-      query_view->resizeColumnsToContents();
-      query_view->resizeRowsToContents();
-     }
-     if (i_Message_Result_Yes == i_Max_Tab_Results)
-     {
-      sa_Message_Text.append(QString(tr("No more Tab-Results will be shown. Maximum allowed: %1 .")).arg(i_Max_Tab_Results));
-     }
-    }
-    else
-    {
-     //query_View->hide();
-     //queryResultText->show();
-     sa_Message_Text.append(QString("%1 rows affected.").arg(query_view_model->query().numRowsAffected()));
-     i_Message_Rows_effected+=query_view_model->query().numRowsAffected();
-     i_Message_Result_No++;
-    }
-   }
+   sa_Message_Text.append(txt);
+   if(!processALine(txt))
+    break;
   }
   qApp->processEvents();
  }
@@ -416,6 +370,89 @@ void QueryDialog::on_go_QueryButton_clicked()
  }
  this->setCursor(Qt::ArrowCursor);
  timer->stop();
+ ui->rollback_toolButton->setEnabled(SQL::instance()->isTransactionActive());
+}
+
+bool QueryDialog::processALine(QString txt, QString tabName)
+{
+ QueryModel *query_view_model = new QueryModel(this ,db, config->currConnection->servertype());
+ //queryModelList.append(query_view_modell);
+ query_view_model->setQuery(txt, db);
+ if (query_view_model->lastError().isValid())
+ {
+  //query_View->hide();
+  //queryResultText->show();
+  sa_Message_Text.append(QString("%1\n%2").arg(query_view_model->lastError().driverText(),
+                         query_view_model->lastError().databaseText()));
+  sa_Message_Text.append(txt);
+  i_Message_Error++;
+  if(ui->cb_stop_query_on_error->isChecked())
+  {
+   sa_Message_Text.append(tr("Query stopped because of errors"));
+   for (int i=0; i<sa_Message_Text.count(); i++)
+    s_Search+=sa_Message_Text[i]+"\n";
+   ui->queryResultText->setPlainText(s_Search);
+   return false;
+  }
+  return true;
+ }
+ else
+ {
+  // query was successful
+  if (query_view_model->query().isSelect())
+  {
+   i_Rows_Total += query_view_model->rowCount();
+   i_Message_Result_Yes++;
+   if (i_Message_Result_Yes <= i_Max_Tab_Results)
+   {
+    QTableView *query_view = new QTableView();
+    query_view->setAlternatingRowColors(true);
+    query_view->setSelectionMode(QAbstractItemView::ContiguousSelection);
+    connect(query_view->horizontalHeader(),SIGNAL(sectionDoubleClicked(int)),this,SLOT(slot_QueryView_horizontalHeader_sectionDoubleClicked(int)));
+    connect(query_view,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(slot_queryView_row_DoubleClicked(QModelIndex)));
+    query_view->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(query_view,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(tablev_customContextMenu(QPoint)));
+    myHeaderView *hv = new myHeaderView(Qt::Horizontal, query_view);
+    query_view->setHorizontalHeader(hv);
+//     query_view->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+//     connect(query_view->horizontalHeader(),SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(queryViewHeaderContextMenuRequested(const QPoint)));
+//     query_view->horizontalHeader()->setMovable(true);
+
+    query_view->setSortingEnabled(false);
+    QSortFilterProxyModel *sm = new QSortFilterProxyModel(query_view);
+    sm->setSourceModel(query_view_model);
+    query_view->setModel(sm);
+    query_view->setSortingEnabled(true);
+    sm->sort(-1,Qt::AscendingOrder);
+    QString tabTitle;
+    if(!tabName.isEmpty())
+     tabTitle = tabName;
+    else
+     tabTitle = tr("Result ") + QString("%1").arg(ui->widget_query_view->count());
+    if (tab_First_Result == 0)
+    {
+     tab_First_Result=query_view;
+    }
+    int i_tab = ui->widget_query_view->addTab(query_view, tabTitle);
+    //qDebug() << QString("tab %1 added").arg(i_tab);
+    query_view_model->setTabName(tabTitle);
+    query_view->resizeColumnsToContents();
+    query_view->resizeRowsToContents();
+   }
+   if (i_Message_Result_Yes == i_Max_Tab_Results)
+   {
+    sa_Message_Text.append(QString(tr("No more Tab-Results will be shown. Maximum allowed: %1 .")).arg(i_Max_Tab_Results));
+   }
+  }
+  else
+  {
+   //query_View->hide();
+   //queryResultText->show();
+   sa_Message_Text.append(QString("%1 rows affected.").arg(query_view_model->query().numRowsAffected()));
+   i_Message_Rows_effected+=query_view_model->query().numRowsAffected();
+   i_Message_Result_No++;
+  }
+ }
 }
 
 void QueryDialog::processSelect(QString table, QString commandLine)
@@ -494,6 +531,7 @@ void QueryDialog::processSelect(QString table, QString commandLine)
   }
  }
 }
+
 void QueryDialog::quickProcess()
 {
  QApplication::processEvents();
@@ -504,11 +542,21 @@ void QueryDialog::setMaxTabResults(int num)
  i_Max_Tab_Results = num;
 }
 
-void QueryDialog::on_save_QueryButton_clicked()
+void QueryDialog::on_saveAs_QueryButton_clicked()
 {
  QString s_File_Name = QFileDialog::getSaveFileName(this, "Choose the name of a SQL text file to save to",
                        config->q.s_query_path,"SQL text files (*.sql *.txt);;All Files (*.*)");
  if (s_File_Name.isEmpty()) return;
+ saveFile(s_File_Name);
+}
+
+void QueryDialog::on_save_QueryButton_clicked(QString s_File_Name)
+{
+ saveFile(currQueryFilename);
+}
+
+void QueryDialog::saveFile(QString s_File_Name)
+{
  QFileInfo this_fi(s_File_Name);
  if (this_fi.completeSuffix() == "")
   s_File_Name+=".sql";

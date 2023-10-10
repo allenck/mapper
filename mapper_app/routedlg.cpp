@@ -120,7 +120,7 @@ void RouteDlg::setSegmentId(qint32 segmentid)
  }
  //ui->cbSegments->setFocus();
  ui->cbOneWay->setChecked(_sd.oneWay() == "Y");
- //ui->cbOneWay->setEnabled(si.tracks==1);
+ ui->gbUsage->setVisible(si.tracks()==2 && sd.oneWay() == "Y");
  if (_sd.oneWay() == "Y" && sd.tracks() == 1)
  {
      ui->gbDirection->setVisible(true);
@@ -226,6 +226,7 @@ void RouteDlg::setRouteData(SegmentData sd)
  ui->cbRouteName->setCurrentText(sd.routeName());
  ui->lblSegmentText->setText(sd.toString2());
  cbOneWay_checkedChanged(sd.oneWay()=='Y');
+ ui->gbUsage->setVisible(sd.tracks()==2 && sd.oneWay() == "Y");
  _segmentInfoList = sql->getRouteSegmentsBySegment(sd.route(), sd.segmentId());
  fillSegmentsComboBox();
  ui->cbSegments->findText(sd.toString());

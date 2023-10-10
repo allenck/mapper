@@ -251,7 +251,15 @@ QString SegmentData::toString()
 QString SegmentData::toString2()
 {
  QString str = _description + QString(" Seg=%1").arg(_segmentId)
-  + QString(" (%1-%2)").arg(startDate().toString("yyyy/MM/dd")).arg(endDate().toString("yyyy/MM/dd"));
+  + QString(" (%1-%2) ").arg(startDate().toString("yyyy/MM/dd")).arg(endDate().toString("yyyy/MM/dd"));
+ if(_routeType < 0 || _routeType>= ROUTETYPES.count())
+  _routeType = (RouteType)0;
+ QString trackType = ROUTETYPES.at(_routeType);
+ QString strSegment = QString("%1").arg(_segmentId);
+  if (_tracks == 1)
+      str = str + QString(" (single/%1)").arg(trackType);
+  else
+      str = str + QString(" (double/%1)").arg(trackType);
  return str;
 }
 
