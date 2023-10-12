@@ -3014,7 +3014,6 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
  {
   commandText = "CREATE TABLE `Segments` (  `SegmentId` integer NOT NULL primary key AUTOINCREMENT,"
                 " `Description` varchar(100) NOT NULL,"
-                " `OneWay` char(1) NOT NULL DEFAULT 'N',"
                 " `Tracks` int(2) NOT NULL DEFAULT 2,"
                 " `Street` 'text',"
                 " `Location` 'text',"
@@ -3028,6 +3027,8 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `StartDate` date NOT NULL DEFAULT '0000-00-00',"
                 " `EndDate` date NOT NULL DEFAULT '0000-00-00',"
                 " `Direction` varchar(6) NOT NULL DEFAULT ' ',"
+                " `OneWay` char(1) NOT NULL DEFAULT 'N',"
+                " `Points` int(11) NOT NULL default 0,"
                 " `PointArray` 'text',"
                 " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP)";
  }

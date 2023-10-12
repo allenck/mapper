@@ -48,12 +48,14 @@
         <file>sql/recreateCompanies.sql</file>
         <file>sql/recreateRouteComments.sql</file>
         <file>sql/recreate_routes.sql</file>
-        <file>sql/recreateSegmentsTable.sql</file>
+        <file>sql/sqlite3_recreateSegmentsTable.sql</file>
         <file>sql/recreateStationTable.sql</file>
         <file>sql/recreateTractionTypes.sql</file>
         <file>sql/sqlite3_create_tables.sql</file>
         <file>sql/updateOneWay.sql</file>
         <file>sql/updaterouteoneway.sql</file>
         <file>sql/mysql_recreateCompanies.sql</file>
+        <file>sql/sqlite3_recreateCompanies.sql</file>
+        <file>sql/mySql_recreateSegmentsTable.sql</file>
     </qresource>
 </RCC>

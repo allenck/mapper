@@ -40,7 +40,7 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   connect(saveFileAct, &QAction::triggered, [=]{on_save_QueryButton_clicked(currQueryFilename);});
   saveAsFileAct = new QAction(tr("Save query as ..."), this);
   fileMenu->addAction(saveAsFileAct);
-  connect(saveFileAct, &QAction::triggered, [=]{on_saveAs_QueryButton_clicked();});
+  connect(saveAsFileAct, &QAction::triggered, [=]{on_saveAs_QueryButton_clicked();});
 
   menuBar->addMenu(toolsMenu);
   //QMenu* tablesMenu = new QMenu(tr("Tables"));
@@ -112,6 +112,8 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
    {
 
    }
+   ui->rollback_toolButton->setEnabled(SQL::instance()->isTransactionActive());
+
   });
   connect(MainWindow::instance(), &MainWindow::newCitySelected, [=]
   {
@@ -174,6 +176,11 @@ void QueryDialog::on_clear_QueryButton_clicked()
   ui->widget_query_view->removeTab(ix);
  ui->queryResultText->clear();
  sa_Message_Text.clear();
+ s_Search="";
+
+ currQueryFilename = "";
+ saveFileAct->setEnabled(false);
+
 }
 
 void QueryDialog::on_load_QueryButton_clicked()
@@ -193,7 +200,7 @@ void QueryDialog::on_load_QueryButton_clicked()
  }
  config->q.s_query_path = this_fi.dir().absolutePath();
  currQueryFilename = s_File_Name;
- saveAsFileAct->setEnabled(true);
+ saveFileAct->setEnabled(true);
 
  if(this_fi.size() > 1000000)
  {
@@ -239,24 +246,25 @@ void QueryDialog::on_load_QueryButton_clicked()
    if (query.lastError().isValid())
    {
     errors++;
-    ui->queryResultText->append(QString("%1\n%2").arg(query.lastError().driverText()).arg(query.lastError().databaseText())+"\n");
-    ui->queryResultText->append(QString(tr("Line %1 ")).arg(linesRead--)+" " +query.lastQuery()+"\n");
+    ui->queryResultText->append(QString("<FONT COLOR=\"#FF0000\">%1<BR>%2<FONT COLOR=\"#000000\"><BR>")
+                                .arg(query.lastError().driverText(),query.lastError().databaseText())+"<BR>");
+    ui->queryResultText->append(QString(tr("Line %1 ")).arg(linesRead--)+" " +query.lastQuery()+"<BR>");
     if(ui->cb_stop_query_on_error->isChecked())
     {
-     ui->queryResultText->append(tr("Query stopped because of errors\n"));
+     ui->queryResultText->append(tr("Query stopped because of errors<BR>"));
      this->setCursor(Qt::ArrowCursor);
      return;
     }
    }
    recordsProcessed++;
    if(recordsProcessed%1000 == 0)
-    ui->queryResultText->append(QString(tr("Records processed: %1\n")).arg(recordsProcessed));
+    ui->queryResultText->append(QString(tr("Records processed: %1<BR>")).arg(recordsProcessed));
 
    qApp->processEvents();
   } // !while.atEnd()
   this->setCursor(Qt::ArrowCursor);
-  ui->queryResultText->append(QString(tr("Records processed: %1\n")).arg(recordsProcessed));
-  ui->queryResultText->append(QString(tr("There were errors: %1\n")).arg(errors));
+  ui->queryResultText->append(QString(tr("Records processed: %1<BR>")).arg(recordsProcessed));
+  ui->queryResultText->append(QString(tr("There were errors: %1<BR>")).arg(errors));
   return;
  }
 loadIt:
@@ -314,7 +322,9 @@ void QueryDialog::on_go_QueryButton_clicked()
   }
   else
   {
-   sa_Message_Text.append(txt);
+
+   sa_Message_Text.append("<I>"+txt+ "</I><BR>");
+
    if(!processALine(txt))
     break;
   }
@@ -325,7 +335,7 @@ void QueryDialog::on_go_QueryButton_clicked()
  {
   if (i_Message_Error > 1)
    s_Search="s";
-  sa_Message_Text.append(QString("%1 Statement%2 - that produced errors").arg(i_Message_Error).arg(s_Search));
+  sa_Message_Text.append(QString("%1 Statement%2 - that produced errors<BR>").arg(i_Message_Error).arg(s_Search));
   s_Search="";
   i_Message_Total+=i_Message_Error;
  }
@@ -333,7 +343,7 @@ void QueryDialog::on_go_QueryButton_clicked()
  {
   if (i_Message_Result_Yes > 1)
    s_Search="s";
-  sa_Message_Text.append(QString(tr("%1 Statement%2 - that produced results - were completed correctly.")).arg(i_Message_Result_Yes).arg(s_Search));
+  sa_Message_Text.append(QString(tr("%1 Statement%2 - that produced results - were completed correctly.<BR>")).arg(i_Message_Result_Yes).arg(s_Search));
   s_Search="";
   i_Message_Total+=i_Message_Result_Yes;
  }
@@ -341,7 +351,7 @@ void QueryDialog::on_go_QueryButton_clicked()
  {
   if (i_Message_Result_No > 1)
    s_Search="s";
-  sa_Message_Text.append(QString(tr("%1 Statement%2 - that produced no results - were completed correctly.")).arg(i_Message_Result_No).arg(s_Search));
+  sa_Message_Text.append(QString(tr("%1 Statement%2 - that produced no results - were completed correctly.<BR>")).arg(i_Message_Result_No).arg(s_Search));
   s_Search="";
   i_Message_Total+=i_Message_Result_No;
  }
@@ -349,20 +359,20 @@ void QueryDialog::on_go_QueryButton_clicked()
  {
   if (i_Message_Total > 1)
    s_Search="s";
-  sa_Message_Text.append(QString(tr("%1 Statement%2 - total")).arg(i_Message_Total).arg(s_Search));
+  sa_Message_Text.append(QString(tr("%1 Statement%2 - total<BR>")).arg(i_Message_Total).arg(s_Search));
   s_Search="";
  }
  if (i_Rows_Total > 0)
  {
   if (i_Rows_Total > 1)
    s_Search="s";
-  sa_Message_Text.append(QString(tr("%1 Query-Row%2 returned.")).arg(i_Rows_Total).arg(s_Search));
+  sa_Message_Text.append(QString(tr("%1 Query-Row%2 returned.<BR>")).arg(i_Rows_Total).arg(s_Search));
   s_Search="";
  }
- //sa_Message_Text.append(QString(tr("Rows affected : %1 ")).arg(i_Message_Rows_effected));
+ //sa_Message_Text.append(QString(tr("Rows affected : %1 <BR>")).arg(i_Message_Rows_effected));
  for (int i=0; i<sa_Message_Text.count(); i++)
   s_Search+=sa_Message_Text[i]+"\n";
- ui->queryResultText->setPlainText(s_Search);
+ ui->queryResultText->setText(s_Search);
  sa_Message_Text.clear();
  if (tab_First_Result != 0)
  {
@@ -382,19 +392,18 @@ bool QueryDialog::processALine(QString txt, QString tabName)
  {
   //query_View->hide();
   //queryResultText->show();
-  sa_Message_Text.append(QString("%1\n%2").arg(query_view_model->lastError().driverText(),
+  sa_Message_Text.append(QString("<FONT COLOR=\"#FF0000\">%1<BR>%2<FONT COLOR=\"#000000\"><BR>").arg(query_view_model->lastError().driverText(),
                          query_view_model->lastError().databaseText()));
   sa_Message_Text.append(txt);
   i_Message_Error++;
   if(ui->cb_stop_query_on_error->isChecked())
   {
-   sa_Message_Text.append(tr("Query stopped because of errors"));
+   sa_Message_Text.append(tr("Query stopped because of errors<BR>"));
    for (int i=0; i<sa_Message_Text.count(); i++)
-    s_Search+=sa_Message_Text[i]+"\n";
-   ui->queryResultText->setPlainText(s_Search);
+    s_Search+=sa_Message_Text[i];
+   ui->queryResultText->setText(s_Search);
    return false;
   }
-  return true;
  }
  else
  {
@@ -448,11 +457,12 @@ bool QueryDialog::processALine(QString txt, QString tabName)
   {
    //query_View->hide();
    //queryResultText->show();
-   sa_Message_Text.append(QString("%1 rows affected.").arg(query_view_model->query().numRowsAffected()));
+   sa_Message_Text.append(QString("%1 rows affected.<BR>").arg(query_view_model->query().numRowsAffected()));
    i_Message_Rows_effected+=query_view_model->query().numRowsAffected();
    i_Message_Result_No++;
   }
  }
+ return true;
 }
 
 void QueryDialog::processSelect(QString table, QString commandLine)

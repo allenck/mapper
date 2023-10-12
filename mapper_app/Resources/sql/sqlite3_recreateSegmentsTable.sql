@@ -1,6 +1,9 @@
-BEGIN;
-CREATE TEMPORARY TABLE `t1_backup` like Segments;
-ALTER TABLE `Routes` DROP FOREIGN Key `Routes_ibfk_1`;
+BEGIN TRANSACTION;
+PRAGMA foreign_keys = 0;
+CREATE TEMPORARY TABLE `t1_backup` (SegmentId, Description, OneWay, Tracks, `Type`, StartLat, StartLon, EndLat, EndLon,
+                       Length, Points, StartDate, endDate, Direction, lastUpdate, pointArray, street, location);
+insert into t1_backup SELECT SegmentId, Description, OneWay, Tracks, `Type`, StartLat, StartLon, EndLat, EndLon,
+                       Length, Points, StartDate, endDate, Direction, lastUpdate, pointArray, street, location from `Segments`;
 DROP TABLE `Segments`;
 CREATE TABLE `Segments` ( `SegmentId` integer  primary key AUTOINCREMENT NOT NULL,
                           `Description` varchar(100) NOT NULL,
@@ -20,12 +23,11 @@ CREATE TABLE `Segments` ( `SegmentId` integer  primary key AUTOINCREMENT NOT NUL
                           `Points` int(11) NOT NULL default 0,
                           `PointArray` text,
                           `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP);
-ALTER TABLE `Routes` ADD CONSTRAINT  FOREIGN KEY (`LineKey`) REFERENCES `Segments` (`SegmentId`)
 INSERT INTO `Segments` (SegmentId, Description, OneWay, Tracks,Street, Location, `Type`, StartLat, StartLon,EndLat, EndLon,
                         Length, Points, StartDate, endDate, Direction, lastUpdate, pointArray)
                         select SegmentId, Description, OneWay, Tracks,Street, Location, `Type`, StartLat, StartLon,EndLat, EndLon,
                         Length, points, StartDate, endDate, Direction, lastUpdate, pointArray FROM `t1_backup`;
 drop table t1_backup;
+PRAGMA foreign_keys = 1;
 COMMIT;
 
-select * from Segments

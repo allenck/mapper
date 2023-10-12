@@ -20,7 +20,7 @@ CREATE TABLE `Segments` ( `SegmentId` integer  primary key AUTOINCREMENT NOT NUL
                           `Points` int(11) NOT NULL default 0,
                           `PointArray` text,
                           `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP);
-ALTER TABLE `Routes` ADD CONSTRAINT  FOREIGN KEY (`LineKey`) REFERENCES `Segments` (`SegmentId`)
+ALTER TABLE `Routes` ADD CONSTRAINT `Routes_ibfk_1` FOREIGN KEY (`LineKey`) REFERENCES `Segments` (`SegmentId`)
 INSERT INTO `Segments` (SegmentId, Description, OneWay, Tracks,Street, Location, `Type`, StartLat, StartLon,EndLat, EndLon,
                         Length, Points, StartDate, endDate, Direction, lastUpdate, pointArray)
                         select SegmentId, Description, OneWay, Tracks,Street, Location, `Type`, StartLat, StartLon,EndLat, EndLon,
@@ -28,4 +28,3 @@ INSERT INTO `Segments` (SegmentId, Description, OneWay, Tracks,Street, Location,
 drop table t1_backup;
 COMMIT;
 
-select * from Segments
