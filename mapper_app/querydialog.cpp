@@ -45,14 +45,13 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   menuBar->addMenu(toolsMenu);
   //QMenu* tablesMenu = new QMenu(tr("Tables"));
   connect(toolsMenu, &QMenu::aboutToShow, [=]{
-   QSqlDatabase db = QSqlDatabase::database();
+   Connection* c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
+   QSqlDatabase db = QSqlDatabase::database(c->connectionName());
    QStringList tableList = db.tables(QSql::Tables);
    QStringList sysTableList = db.tables(QSql::SystemTables);
    toolsMenu->clear();
    QMenu* tablesMenu = new QMenu(tr("Tables"));
    toolsMenu->addMenu(tablesMenu);
-   Connection* c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
-
    foreach(QString tableName, tableList)
    {
     if(sysTableList.contains(tableName))
