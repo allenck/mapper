@@ -14,133 +14,85 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
   QDialog(parent),
   ui(new Ui::editConnectionsDlg)
 {
-   ui->setupUi(this);
-   ui->lblHelp->setText("");
-   ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
-   config = Configuration::instance();
-   currCity = config->currCity;
-   this->setWindowTitle(tr("Edit Connections"));
-   drivers = QSqlDatabase::drivers();
+    ui->setupUi(this);
+    ui->lblHelp->setText("");
+    ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
+    config = Configuration::instance();
+    currCity = config->currCity;
+    this->setWindowTitle(tr("Edit Connections"));
+    drivers = QSqlDatabase::drivers();
 
-  // connection that is being edited
-  connection = currCity->connections.at(currCity->curConnectionId);
+   // connection that is being edited
+   connection = currCity->connections.at(currCity->curConnectionId);
 
-  refreshCities();
+   refreshCities();
 
-//  QStringList connectionTypes = {"Local", "Direct", "ODBC"};
-//  ui->cbConnect->clear();
-//  ui->cbConnect->addItems(connectionTypes);
-//  //ui->cbConnect->setCurrentText( connection->connectionType());
-//  ui->cbConnect->setCurrentIndex(ui->cbConnect->findText(connection->connectionType()));
 
-//  for(int i=0; i < drivers.count(); i++)
-//  {
-//   ui->cbDriverType->addItem(drivers.at(i));
-//   if(connection->driver() == drivers.at(i))
-//    ui->cbDriverType->setCurrentIndex(i);
-//  }
-//  ui->cbDriverType->setCurrentIndex(ui->cbDriverType->findText(connection->driver()));
+   dbTypes <<"MySql"<<"MsSql"<<"Sqlite";  // currently supported database types.
 
-  dbTypes <<"MySql"<<"MsSql"<<"Sqlite";  // currently supported database types.
-
-  for(int i=0; i < dbTypes.count(); i++)
-  {
-   ui->cbDbType->addItem(dbTypes.at(i), (DBTYPE)i);
-   if(connection->servertype() == dbTypes.at(i))
+   for(int i=0; i < dbTypes.count(); i++)
    {
-      ui->cbDbType->setCurrentIndex(i);
+     ui->cbDbType->addItem(dbTypes.at(i), (DBTYPE)i);
    }
-  }
-  ui->cbDbType->setCurrentIndex(ui->cbDbType->findText(connection->servertype()));
 
-//  if(ui->cbConnect->currentIndex() >=0)
-//   setControls(ui->cbConnect->currentText());
-
-  //MyMessageBox::warning(nullptr, "test", "this is a test",QMessageBox::Ok);
-
-  int index = 0;
-  for(int i=0; i < config->currCity->connections.count(); i++)
-  {
+   int index = 0;
+   for(int i=0; i < config->currCity->connections.count(); i++)
+   {
     City* selectedCity = config->cityMap.value(ui->cbCities->currentText());
     Connection* connection = selectedCity->connections.at(i);
     setControls(connection->connectionType());
     ui->cbConnections->addItem(connection->description(),VPtr<Connection>::asQVariant(connection));
 
     if(this->connection == connection)
+    {
      index = i;
-  }
+    }
+   }
+   ui->cbDbType->setCurrentText(connection->servertype());
 
-    //if(c->id() == config->currCity->curConnectionId)
-//    if(connection->uniqueId() == config->currCity->connectionUniqueId())
-//    {
-//        index = i;
-//        connection->setValid(false);
-//       ui->cbConnections->setCurrentIndex(i);
-//       if(connection->connectionType() == "ODBC")
-//       {
-//         ui->txtDbOrDSN->setText(connection->odbc_connectorName());
-//         ui->txtUseDatabase->setText(connection->defaultSqlDatabase());
-//       }
-//       else if(connection->connectionType()=="Direct")
-//       {
-//         ui->txtUseDatabase->setText(connection->defaultSqlDatabase());
-//         ui->txtHost->setText(connection->host());
-//         ui->txtPort->setText(QString::number(connection->port()));
-//         ui->txtUserId->setText(connection->userId());
-//         ui->txtPWD->setText(connection->pwd());
-//         ui->txtUseDatabase->setText(connection->defaultSqlDatabase());
-//       }
-//       else
-//       {
-//        ui->txtDbOrDSN->setText(connection->sqlite_fileName());
-//        ui->txtDbOrDSN->setVisible(true);
-//       }
-//    }
-//   }
-
+   QString dbType =  ui->cbDbType->currentText();
    setupComboBoxes();
    cbConnectionsSelectionChanged(index);
 
-   connect(ui->cbDriverType, SIGNAL(currentIndexChanged(int)), this, SLOT(cbDriverTypeSelectionChanged(int)));
+    connect(ui->cbDriverType, SIGNAL(currentIndexChanged(int)), this, SLOT(cbDriverTypeSelectionChanged(int)));
 
-   connect(ui->cbConnect, &QComboBox::currentTextChanged, [=]{
+    connect(ui->cbConnect, &QComboBox::currentTextChanged, [=]{
     setControls(ui->cbConnect->currentText());
     if(ui->cbConnect->currentText() == "ODBC")
         setControls(ui->cbConnect->currentText());
-   });
-   connect(ui->cbDbType, &QComboBox::currentTextChanged, [=]{
-    setupComboBoxes();
-   });
+    });
 
-   connect(ui->cbCities, SIGNAL(currentIndexChanged(int)),this, SLOT(cbCitiesSelectionChanged(int)));
-   connect(ui->cbCities, SIGNAL(editTextChanged(QString)), this, SLOT(cbCitiesTextChanged(QString)));
-   connect(ui->cbCities->lineEdit(), SIGNAL(editingFinished()), this, SLOT(cbCitiesLeave()));
+    connect(ui->cbDbType,SIGNAL(currentIndexChanged()), this,  SLOT(setupComboBoxes()));
 
-   connect(ui->cbConnections, SIGNAL(currentIndexChanged(int)), this, SLOT(cbConnectionsSelectionChanged(int)));
-   connect(ui->cbConnections, SIGNAL(editTextChanged(QString)), this, SLOT(cbConnectionsTextChanged(QString)));
-   connect(ui->cbConnections->lineEdit(), &QLineEdit::editingFinished, [=]{
+    connect(ui->cbCities, SIGNAL(currentIndexChanged(int)),this, SLOT(cbCitiesSelectionChanged(int)));
+    connect(ui->cbCities, SIGNAL(editTextChanged(QString)), this, SLOT(cbCitiesTextChanged(QString)));
+    connect(ui->cbCities->lineEdit(), SIGNAL(editingFinished()), this, SLOT(cbCitiesLeave()));
+
+    connect(ui->cbConnections, SIGNAL(currentIndexChanged(int)), this, SLOT(cbConnectionsSelectionChanged(int)));
+    connect(ui->cbConnections, SIGNAL(editTextChanged(QString)), this, SLOT(cbConnectionsTextChanged(QString)));
+    connect(ui->cbConnections->lineEdit(), &QLineEdit::editingFinished, [=]{
        connection->setDescription(ui->cbConnections->lineEdit()->text());
        connection->setDirty(true);
-   });
-   connect(ui->btnTest,SIGNAL(clicked(bool)), this, SLOT(btnTestClicked()));
-   connect(ui->btnNew, &QPushButton::clicked, [=]{
+    });
+    connect(ui->btnTest,SIGNAL(clicked(bool)), this, SLOT(btnTestClicked()));
+    connect(ui->btnNew, &QPushButton::clicked, [=]{
     newConnection();
-   });
-   connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(btnCancelClicked()));
-   connect(ui->btnSave, SIGNAL(clicked()), this, SLOT(btnSaveClicked()));
-   connect(ui->btnDelete, SIGNAL(clicked()), this, SLOT(btnDeleteClicked()));
-   connect(ui->btnAbort, &QPushButton::clicked, [=]{exit(EXIT_FAILURE);});
-   connect(ui->cbConnections->lineEdit(), SIGNAL(editingFinished()),this, SLOT(cbConnectionsLeave()));
-   connect(ui->txtHost, SIGNAL(editingFinished()), this, SLOT(txtHostLeave()));
-   connect(ui->txtPort, SIGNAL(editingFinished()), this, SLOT(txtPortLeave()));
-   connect(ui->txtPWD, SIGNAL(editingFinished()), this, SLOT(txtPwdLeave()));
-   connect(ui->txtDbOrDSN, SIGNAL(textChanged(QString)), this, SLOT(txtDsnTextChanged(QString)));
-   connect(ui->txtDbOrDSN, SIGNAL(editingFinished()), this, SLOT(ontxtDbOrDsn_editingFinished()));
-   ui->tbView->setIcon(QIcon(":/show-password.png"));
-   ui->txtPWD->setEchoMode(QLineEdit::Password);
+    });
+    connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(btnCancelClicked()));
+    connect(ui->btnSave, SIGNAL(clicked()), this, SLOT(btnSaveClicked()));
+    connect(ui->btnDelete, SIGNAL(clicked()), this, SLOT(btnDeleteClicked()));
+    connect(ui->btnAbort, &QPushButton::clicked, [=]{exit(EXIT_FAILURE);});
+    connect(ui->cbConnections->lineEdit(), SIGNAL(editingFinished()),this, SLOT(cbConnectionsLeave()));
+    connect(ui->txtHost, SIGNAL(editingFinished()), this, SLOT(txtHostLeave()));
+    connect(ui->txtPort, SIGNAL(editingFinished()), this, SLOT(txtPortLeave()));
+    connect(ui->txtPWD, SIGNAL(editingFinished()), this, SLOT(txtPwdLeave()));
+    connect(ui->txtDbOrDSN, SIGNAL(textChanged(QString)), this, SLOT(txtDsnTextChanged(QString)));
+    connect(ui->txtDbOrDSN, SIGNAL(editingFinished()), this, SLOT(ontxtDbOrDsn_editingFinished()));
+    ui->tbView->setIcon(QIcon(":/show-password.png"));
+    ui->txtPWD->setEchoMode(QLineEdit::Password);
 
 
-   connect(ui->tbView, &QToolButton::clicked, [=](bool checked){
+    connect(ui->tbView, &QToolButton::clicked, [=](bool checked){
     if(checked)
     {
         ui->tbView->setIcon(QIcon(":/show-password.png"));
@@ -151,9 +103,9 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
         ui->tbView->setIcon(QIcon(":/hidden.png"));
         ui->txtPWD->setEchoMode(QLineEdit::Normal);
     }
-   });
+    });
 
-   connect(ui->tbReload, &QToolButton::clicked, [=]{
+    connect(ui->tbReload, &QToolButton::clicked, [=]{
        openTestDb();
       if(db.isOpen())
           populateDatabases();
@@ -162,9 +114,9 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
           ui->lblHelp->setStyleSheet("QLabel {  color : #FF8000; }");
           ui->lblHelp->setText(tr("not open!"));
       }
-   });
+    });
 
-   connect(ui->txtUseDatabase, &QLineEdit::editingFinished, [=](){
+    connect(ui->txtUseDatabase, &QLineEdit::editingFinished, [=](){
       QString database = ui->txtUseDatabase->text();
       if(db.isOpen() && !database.isEmpty())
       {
@@ -188,7 +140,7 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
           }
          }
       }
-   });
+    });
 
 //   connect(config, &Configuration::newCityCreated, [=]{
 //      refreshCities();
@@ -211,6 +163,7 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
 //    ui->cbDbType->setCurrentText("Sqlite");
 //    ui->btnOK->setEnabled(false);
 //   });
+
 
    timer = new QTimer(this);
    timer->setInterval(1000);
@@ -373,6 +326,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
      }
     }
     ui->cbDbType->setCurrentText(connection->servertype());
+    ui->cbDriverType->setCurrentText(connection->driver());
     ui->cbConnect->setCurrentText(connection->connectionType());
     if(ui->cbConnect->currentText()== "Local") // Local
     {
@@ -1083,7 +1037,7 @@ bool EditConnectionsDlg::populateDatabases()
   {
    // Select * from Sys.Databases
    QStringList databases;
-   if(!query.exec("SELECT name FROM master.sys.databases"))
+   if(!query.exec("SELECT name FROM sys.databases"))
    {
     SQLERROR(query);
     SQL::instance()->sqlErrorMessage(query,QMessageBox::Ok);
@@ -1118,6 +1072,11 @@ bool EditConnectionsDlg::populateDatabases()
         }
         if(rslt == QMessageBox::No)
             return false;
+    }
+    else
+    {
+        // database exists
+        qDebug() << "database " << currDatabase << " exists";
     }
    }
   }

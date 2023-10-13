@@ -47,7 +47,6 @@ private:
   City* currCity = nullptr;
   Connection* connection;
   void newConnection();
-  void setupComboBoxes();
 
 private slots:
  void cbCitiesSelectionChanged(int sel);
@@ -68,6 +67,7 @@ private slots:
  void txtDsnTextChanged(QString text);
  void on_tbBrowse_clicked();
  void ontxtDbOrDsn_editingFinished();
+ void setupComboBoxes();
 
 };
 

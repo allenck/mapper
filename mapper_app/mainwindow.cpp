@@ -954,7 +954,7 @@ void MainWindow::createActions()
 
  updateRouteAct = new QAction(tr("Update route"),this);
  updateRouteAct->setStatusTip(tr("Update route information "));
- connect(updateRouteAct, SIGNAL(triggered()), this, SLOT(updateRoute()));
+ connect(updateRouteAct, SIGNAL(triggered()), this, SLOT(on_updateRoute()));
 
  replaceSegments = new QAction(tr("Replace segments"),this);
  replaceSegments->setStatusTip(tr("Replace list of segments with new list of segments."));
@@ -1035,9 +1035,12 @@ void MainWindow::createActions()
  addSegmentToNewRouteAct->setStatusTip(tr("Add via UpdateRoute possibly creating new route."));
  connect(addSegmentToNewRouteAct, &QAction::triggered, [=]{
   SegmentData sd = ui->ssw->segmentSelected();
-  sd.setRoute(-1);
+  sd.setRoute(m_routeNbr);
+  sd.setRouteName(_rd.name);
   sd.setCompanyKey(ui->cbCompany->currentData().toInt());
   CompanyData* cd = sql->getCompany(sd.companyKey());
+  sd.setStartDate(_rd.startDate);
+  sd.setEndDate(_rd.endDate);
   if(sd.startDate() < cd->startDate)
    sd.setStartDate(cd->startDate);
   if(sd.endDate() > cd->endDate)
@@ -1412,7 +1415,7 @@ void MainWindow::txtSegment_customContextMenu(const QPoint &)
  menu->addAction(edit);
  connect(edit, SIGNAL(triggered(bool)), this, SLOT(On_editSegment_triggered()));
  menu->addAction(splitSegmentAct);
- menu->addAction(updateRouteAct);
+ //menu->addAction(updateRouteAct);
  menu->exec(QCursor::pos());
 
 }
@@ -3685,6 +3688,14 @@ void MainWindow::deleteRoute()
     }
     refreshRoutes();
 #endif
+}
+
+void MainWindow::on_updateRoute()
+{
+  SegmentData sd = sql->getSegmentData(m_routeNbr, m_SegmentId, _rd.startDate.toString("yyyy/MM/dd"),
+                                       _rd.endDate.toString("yyyy/MM/dd"));
+  sd.setRouteName(_rd.name);
+  updateRoute(&sd);
 }
 
 void MainWindow::updateRoute(SegmentData* sd )

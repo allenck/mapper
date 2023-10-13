@@ -228,6 +228,7 @@ public:
     bool deleteRoute(SegmentData rd);
     //bool deleteRoute(RouteData rd);
     QString currentTransaction;
+    bool doesFunctionExist(QString name, QSqlDatabase db);
 
 signals:
     void details(QString);

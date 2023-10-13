@@ -451,6 +451,7 @@ private slots:
     void loadOverlayData();
 //    void refreshSegmentCB();
     void modifyRouteTractionType();
+    void on_updateRoute();
 protected:
     //void resizeEvent(QResizeEvent *event);
 signals:

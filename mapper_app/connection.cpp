@@ -5,6 +5,7 @@
 #include "configuration.h"
 #include "sql.h"
 #include <QSqlQuery>
+#include "exportsql.h"
 
 Connection::Connection(QObject *parent) : QObject(parent)
 {
@@ -69,6 +70,8 @@ QSqlDatabase Connection::configure(const QString cName)
  configureDb(&db, this);
  // check for presence of Parameters table.
  QStringList tableList;
+ QStringList sysTableList;
+
 // if(ok)
 // {
  if((bOpen = db.open()))
@@ -76,13 +79,13 @@ QSqlDatabase Connection::configure(const QString cName)
   if(config->currConnection->servertype() != "Sqlite")
   {
       sql->checkTables(db);
-      return db;
+      //return db;
   }
   if(config->currConnection->defaultSqlDatabase()  != "")
   {
    QSqlQuery query = QSqlQuery(db);
    //QString cmd = QString("use [%1]").arg(config->currConnection->mySqlDatabase());
-   QString cmd = QString("use %1").arg(config->currConnection->useDatabase());
+   QString cmd = QString("use %1").arg(config->currConnection->defaultSqlDatabase());
    if(!query.exec(cmd))
    {
     SQLERROR(query);
@@ -90,17 +93,79 @@ QSqlDatabase Connection::configure(const QString cName)
     bOpen = false;
     return db;
    }
-   if(config->currConnection->servertype() == "Sqlite"
-           )
+   if(config->currConnection->servertype() == "Sqlite" )
     sql->checkTables(db);
    tableList = db.tables();
-
-   if(!tableList.contains("Parameters",Qt::CaseInsensitive))
-   {
-    bOpen = false;
-    return db;
+   sysTableList = db.tables(QSql::SystemTables);
+   ExportSql* eSql = new ExportSql(config, false);
+   bool tableError = false;
+   try {
+       if(!tableList.contains("Parameters",Qt::CaseInsensitive))
+       {
+        if(!eSql->createParametersTable(db, config->currConnection->servertype()))
+          throw Exception();
+       }
+       if(!tableList.contains("Comments",Qt::CaseInsensitive))
+       {
+        if(!eSql->createCommentsTable(db, config->currConnection->servertype()))
+          throw Exception();
+       }
+       if(!tableList.contains("RouteComments",Qt::CaseInsensitive))
+       {
+        if(!eSql->createRouteCommentsTable(db, config->currConnection->servertype()))
+          throw Exception();
+       }
+       if(!tableList.contains("Segments",Qt::CaseInsensitive))
+       {
+        if(!eSql->createSegmentsTable(db, config->currConnection->servertype()))
+          throw Exception();
+       }
+       if(!tableList.contains("Companies",Qt::CaseInsensitive))
+       {
+        if(!eSql->createCompaniesTable(db, config->currConnection->servertype()))
+          throw Exception();
+       }
+       if(!tableList.contains("Intersections",Qt::CaseInsensitive))
+       {
+        if(!eSql->createIntersectionsTable(db, config->currConnection->servertype()))
+          throw Exception();
+       }
+       if(!tableList.contains("altRoute",Qt::CaseInsensitive))
+       {
+        if(!eSql->createAltRouteTable(db, config->currConnection->servertype()))
+          throw Exception();
+       }
+       if(!tableList.contains("Terminals",Qt::CaseInsensitive))
+       {
+        if(!eSql->createTerminalsTable(db, config->currConnection->servertype()))
+          throw Exception();
+       }
+       if(!tableList.contains("Stations",Qt::CaseInsensitive))
+       {
+        if(!eSql->createStationsTable(db, config->currConnection->servertype()))
+          throw Exception();
+       }
+       if(!tableList.contains("TractionTypes",Qt::CaseInsensitive))
+       {
+        if(!eSql->createTractionTypesTable(db, config->currConnection->servertype()))
+          throw Exception();
+       }
+       if(!tableList.contains("Routes",Qt::CaseInsensitive))
+       {
+        if(!eSql->createRouteTable(db, config->currConnection->servertype()))
+          throw Exception();
+       }
+       if(!SQL::instance()->doesFunctionExist("distance", db))
+       {
+//           if(!eSql->createMsSqlFunctions(db))
+//               throw Exception("distance function error");
+       }
    }
-   else
+   catch (Exception ex)
+   {
+      tableError = true;
+   }
+   if(tableError)
    {
     QSqlError err = db.lastError();
     QString msg;
@@ -179,7 +244,7 @@ void Connection::configureDb(QSqlDatabase* db, Connection* currConnection)
         if(!query.exec(QString("use %1").arg(currConnection->defaultSqlDatabase())))
         {
             QMessageBox::critical(nullptr, tr("Sql error"), tr("An sql error has occured! \n")
-                         + query.lastError().text() + " query:" + query.lastQuery());
+                         + query.lastError().text() + " query: " + query.lastQuery());
         }
       }
     }

@@ -109,6 +109,7 @@ win32:{
 
 DISTFILES += \
     README.txt \
+    Resources/scripts/createMsSqlDistance.sql \
     Resources/sql/addBiDirectionalToRoutes.sql \
     Resources/sql/recreateRouteComments.sql \
     Resources/sql/recreateSegmentsTable.sql \

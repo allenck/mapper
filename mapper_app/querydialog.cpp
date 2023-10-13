@@ -303,8 +303,8 @@ void QueryDialog::on_go_QueryButton_clicked()
  {
   text = cur.selectedText();
  }
- else
-  text = ui->editQuery->toPlainText();
+// else
+//  text = ui->editQuery->toPlainText();
  QStringList list = text.split(";\n");
  foreach(QString txt, list)
  {
@@ -505,7 +505,7 @@ void QueryDialog::processSelect(QString table, QString commandLine)
   QString tabTitle = tr("Result ") + QString("%1").arg(ui->widget_query_view->count());
   if (tab_First_Result == 0)
   {
-   tab_First_Result=query_view;
+   tab_First_Result = query_view;
   }
   int i_tab = ui->widget_query_view->addTab(query_view, tabTitle);
   //qDebug() << QString("tab %1 added").arg(i_tab);
@@ -534,7 +534,7 @@ void QueryDialog::processSelect(QString table, QString commandLine)
     sa_Message_Text.append(tr("Query stopped because of errors"));
     for (int i=0; i<sa_Message_Text.count(); i++)
      s_Search+=sa_Message_Text[i]+"\n";
-    ui->queryResultText->setPlainText(s_Search);
+    ui->queryResultText->setText(s_Search);
     return;
    }
   }

@@ -1244,10 +1244,11 @@ void SQL::populatePointList(SegmentData sd)
 //    return myArray;
 //}
 
-SegmentInfo SQL::getSegmentInfo(qint32 SegmentId)
+SegmentInfo SQL::getSegmentInfo(qint32 segmentId)
 {
  SegmentInfo si;
-
+ if(segmentId <= 0)
+     return si;
  try
  {
   if(!dbOpen())
@@ -1259,12 +1260,12 @@ SegmentInfo SQL::getSegmentInfo(qint32 SegmentId)
        commandText = "Select `SegmentId`, Description, tracks, type,"
                      " StartLat, StartLon, EndLat, EndLon, length, StartDate, EndDate, Direction,"
                      " Street, location, pointArray from Segments"
-                     " where SegmentId = " + QString("%1").arg(SegmentId);
+                     " where SegmentId = " + QString("%1").arg(segmentId);
   else
        commandText = "Select `SegmentId`, Description, tracks, type,"
                      " StartLat, StartLon, EndLat, EndLon, length, StartDate, EndDate, Direction,"
                      " Street, location, pointArray from Segments"
-                     " where SegmentId = " + QString("%1").arg(SegmentId);
+                     " where SegmentId = " + QString("%1").arg(segmentId);
   QSqlQuery query = QSqlQuery(db);
   bool bQuery = query.exec(commandText);
   bQuery = query.exec(commandText);
@@ -1299,6 +1300,8 @@ SegmentInfo SQL::getSegmentInfo(qint32 SegmentId)
    si._location = query.value(13).toString();
    si.setPoints(query.value(14).toString());  // array of points
   }
+
+  si._points = si._pointList.count();
   if((si._startLat ==0 ||si._startLat ==0 || si._endLat == 0 || si._endLon ==0) && si._pointList.count() > 1 )
   {
    si._startLat = si._pointList.at(0).lat();
@@ -4746,7 +4749,7 @@ bool SQL::updateAltRoute(int route, QString routeAlpha)
 
 bool SQL::deleteRouteSegment(SegmentData sd)
 {
- deleteRouteSegment(sd._route, sd._routeName, sd._segmentId, sd._startDate.toString("yyyy/MM/dd"), sd._endDate.toString("yyyy/MM/dd"));
+ return deleteRouteSegment(sd._route, sd._routeName, sd._segmentId, sd._startDate.toString("yyyy/MM/dd"), sd._endDate.toString("yyyy/MM/dd"));
 }
 
 bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate, QString routeStartDate, QString routeEndDate)
@@ -10743,4 +10746,33 @@ bool SQL::deleteTerminalInfo(int route)
  }
  return true;
 
+}
+
+bool SQL::doesFunctionExist(QString name, QSqlDatabase db)
+{
+    //QSqlDatabase db = QSqlDatabase::database();
+    QString commandText =QString("SELECT name,type "
+                                 "FROM   sys.objects "
+                                 "WHERE  object_id = OBJECT_ID(N'[master].[dbo].[%1]') "
+                                        "AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT')")
+            .arg(name);
+    QSqlQuery query = QSqlQuery(db);
+    bool bQuery = query.exec(commandText);
+    if(!bQuery)
+    {
+        QSqlError err = query.lastError();
+        qDebug() << err.text() + "\n";
+        qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+        return false;
+    }
+    QString fName;
+    QString type;
+    while(query.next())
+    {
+        fName = query.value(0).toString();
+        type = query.value(1).toString();
+        if(fName == name)
+            return true;
+    }
+    return false;
 }

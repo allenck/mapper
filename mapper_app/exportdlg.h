@@ -23,6 +23,7 @@ private:
     Configuration * config;
     QTimer *timer;
     bool stopEnabled = false;
+    Connection* currConnection;
 
 private slots:
     void chkAll_changed(bool isChecked);

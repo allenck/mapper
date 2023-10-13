@@ -63,7 +63,8 @@ public:
     bool createTractionTypesTable(QSqlDatabase db, QString dbType);
     bool dropRoutes();
     bool createMySqlFunctions(QSqlDatabase db = QSqlDatabase());
-
+    bool createMsSqlFunctions(QSqlDatabase db);
+    QSqlDatabase targetDb() {return _targetDb;}
 
 signals:
     void progress(int value);
@@ -76,7 +77,7 @@ public slots:
 private:
     QObject *m_parent;
     QSqlDatabase srcDb;
-    QSqlDatabase targetDb;
+    QSqlDatabase _targetDb;
     Configuration *config;
     qint32 added, updated, deleted, errors, notUpdated;
     Connection* srcConn;

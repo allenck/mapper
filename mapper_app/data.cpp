@@ -517,7 +517,8 @@ void SegmentInfo::setPoints(QString sPoints)
   _bNeedsUpdate = true;
  _length = 0;
  QStringList sl = sPoints.split(",");
- if(sl.count()== 0 || ((sl.count()& 0x01) == 1)) return;
+ if(sl.count()== 0 || ((sl.count()& 0x01) == 1))
+     return;
  //bool bOk;
  for(int i=0; i < sl.count(); i+=2)
  {

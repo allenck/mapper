@@ -751,13 +751,13 @@ public:
 
     }
 
-    RouteChangedEventArgs(RouteData rd, QString type)
+    RouteChangedEventArgs(RouteData rd, int segmentId, QString type)
     {
      typeOfChange = type;
      this->rd = rd;
      routeNbr = rd.route;
      this->routeName = rd.name;
-//     this->routeSegment = rd.lineKey;
+     this->routeSegment = segmentId;
      tractionType = rd.tractionType;
      companyKey =rd.companyKey;
      dateEnd = rd.endDate;
@@ -781,9 +781,9 @@ public:
      dateEnd = de;
      typeOfChange = type;
     }
-    qint32 routeNbr;
+    qint32 routeNbr =-1;
     QString routeName;
-    qint32 routeSegment;
+    qint32 routeSegment = -1;
     qint32 tractionType;
     qint32 companyKey;
     QDate dateEnd;

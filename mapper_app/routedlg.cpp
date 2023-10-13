@@ -225,7 +225,8 @@ void RouteDlg::setRouteData(SegmentData sd)
  ui->cbRouteName->addItem(strNoRoute);
  ui->cbRouteName->setCurrentText(sd.routeName());
  ui->lblSegmentText->setText(sd.toString2());
- cbOneWay_checkedChanged(sd.oneWay()=='Y');
+ cbOneWay_checkedChanged(sd.oneWay()=="Y");
+ ui->cbOneWay->setChecked(sd.oneWay()=="Y");
  ui->gbUsage->setVisible(sd.tracks()==2 && sd.oneWay() == "Y");
  _segmentInfoList = sql->getRouteSegmentsBySegment(sd.route(), sd.segmentId());
  fillSegmentsComboBox();
@@ -1881,7 +1882,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
   return;
  }
  //sql->CommitTransaction("add/Update");
- RouteChangedEventArgs args = RouteChangedEventArgs(_rd, ui->btnAdd->text() == "Add" ? "Add" : "Update");
+ RouteChangedEventArgs args = RouteChangedEventArgs(_rd, sd.segmentId(), ui->btnAdd->text() == "Add" ? "Add" : "Update");
  emit routeChangedEvent(args);
 
 } // btnAdd_Click
