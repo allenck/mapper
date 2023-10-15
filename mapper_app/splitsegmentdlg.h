@@ -20,7 +20,7 @@ class SplitSegmentDlg : public QDialog
 
  private:
   Ui::SplitSegmentDlg *ui;
-  QMap<int, SegmentData> cbSegmentDataList;
+  QMap<int, SegmentInfo> cbSegmentInfoList;
   SegmentData sd;
   void setupDates(SegmentData si);
   bool processChanges();

@@ -451,7 +451,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui->ssw->cbSegments()->addAction(checkSegmentsAct);
 
   connect(SQL::instance(), &SQL::segmentsChanged, [=]{
-   cbSegmentDataList = sql->getSegmentInfoList();
+   cbSegmentInfoList = sql->getSegmentInfoList();
   });
 
 //  connect(ui->cbSegments, SIGNAL(signalFocusOut()), this, SLOT( cbSegments_Leave()));
@@ -1038,6 +1038,7 @@ void MainWindow::createActions()
   sd.setRoute(m_routeNbr);
   sd.setRouteName(_rd.name);
   sd.setCompanyKey(ui->cbCompany->currentData().toInt());
+  sd.setTractionType(_rd.tractionType);
   CompanyData* cd = sql->getCompany(sd.companyKey());
   sd.setStartDate(_rd.startDate);
   sd.setEndDate(_rd.endDate);
@@ -2213,7 +2214,7 @@ void MainWindow::onCbRouteIndexChanged(int row)
  ui->dateEdit->setMaximumDate(_rd.endDate);
  m_routeNbr = _rd.route;
  m_routeName = _rd.name;
- routeDlg->setRouteData(_rd);
+ routeDlg->setSegmentData(_rd);
 
  routeView->updateRouteView();
 
@@ -2431,7 +2432,7 @@ void MainWindow::segmentSelected(qint32 pt, qint32 SegmentId)
  {
   routeDlg->setSegmentId(m_SegmentId);
   if (ui->cbRoute->currentIndex() != -1)
-   routeDlg->setRouteData ( (RouteData)routeList.at(        ui->cbRoute->currentIndex()));
+   routeDlg->setSegmentData ( (RouteData)routeList.at(        ui->cbRoute->currentIndex()));
  }
  //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
  lookupStreetName(sd);
@@ -2485,7 +2486,7 @@ void MainWindow::segmentSelected(qint32 pt, qint32 SegmentId)
   RouteData rd = RouteData();
   rd = (RouteData)routeList.at(irx);
   if(routeDlg)
-   routeDlg->setRouteData(rd);
+   routeDlg->setSegmentData(rd);
 
   otherRouteView->showRoutesUsingSegment(SegmentId);
  }
@@ -3311,7 +3312,7 @@ void MainWindow::updateIntersection(qint32 i, double newLat, double newLon)
  SegmentInfo sd = sql->getSegmentInfo(m_SegmentId);
  // get all the points within 100 meters
  //QList<segmentData> myArray = sql->getIntersectingSegments(newLat, newLon, .020, si.routeType);
- QList<SegmentData> myArray = sql->getIntersectingSegments(newLat, newLon, .020, sd.routeType());
+ QList<SegmentInfo> myArray = sql->getIntersectingSegments(newLat, newLon, .020, sd.routeType());
  int currSegment = m_SegmentId;
  //foreach (segmentData sd in myArray)
  for(int i=0; i< myArray.count(); i++)
@@ -3695,6 +3696,8 @@ void MainWindow::on_updateRoute()
   SegmentData sd = sql->getSegmentData(m_routeNbr, m_SegmentId, _rd.startDate.toString("yyyy/MM/dd"),
                                        _rd.endDate.toString("yyyy/MM/dd"));
   sd.setRouteName(_rd.name);
+  sd.setCompanyKey(_rd.companyKey);
+  sd.setTractionType(_rd.tractionType);
   updateRoute(&sd);
 }
 
@@ -3717,8 +3720,8 @@ void MainWindow::updateRoute(SegmentData* sd )
     {
      try{
      routeDlg->setRouteNbr( sd->route());
-     routeDlg->setSegmentId( sd->segmentId());
-     routeDlg->setRouteData(*sd);
+     //routeDlg->setSegmentId( sd->segmentId());
+     routeDlg->setSegmentData(*sd);
      routeDlg->show();
      routeDlg->raise();
      routeDlg->activateWindow();
@@ -3734,7 +3737,7 @@ void MainWindow::updateRoute(SegmentData* sd )
     {
      routeDlg->setRouteNbr( m_routeNbr);
      routeDlg->setSegmentId( m_SegmentId);
-     routeDlg->setRouteData(_rd);
+     routeDlg->setSegmentData(_rd);
      //routeDlg.segmentInfoList = segmentInfoList;
      routeDlg->show();
      routeDlg->raise();
@@ -4138,7 +4141,7 @@ void MainWindow::findDupSegments()
     QList<SegmentData> myArray;
     this->setCursor(QCursor(Qt::WaitCursor));
     //foreach(segmentInfo si in segmentInfoList)
-    foreach(SegmentData sd, cbSegmentDataList)
+    foreach(SegmentData sd, cbSegmentInfoList)
     {
 //        SegmentInfo si = cbSegmentInfoList.at(i);
         SegmentData sdDup = sql->getSegmentInSameDirection(sd);

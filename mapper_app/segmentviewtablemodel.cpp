@@ -6,7 +6,7 @@ SegmentViewTableModel::SegmentViewTableModel(QObject *parent) :
 {
 }
 
-SegmentViewTableModel::SegmentViewTableModel(QList<SegmentData> segmentDataList, double Lat, double Lon, qint32 route, QString date, QObject *parent)
+SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList, double Lat, double Lon, qint32 route, QString date, QObject *parent)
      : QAbstractTableModel(parent)
  {
      listOfSegments = segmentDataList;
@@ -225,7 +225,7 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentData> segmentDataList,
      return QAbstractTableModel::flags(index);
  }
 
- QList< SegmentData > SegmentViewTableModel::getList()
+ QList< SegmentInfo > SegmentViewTableModel::getList()
  {
      return listOfSegments;
  }

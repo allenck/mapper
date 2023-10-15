@@ -109,10 +109,10 @@ void SegmentSelectionWidget::refreshSegmentCB()
   refreshStreetsCb();
  ui->cbSegments->clear();
  mapDescriptions.clear();
- cbSegmentDataMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
+ cbSegmentInfoMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
  //qSort(cbSegmentDataList.begin(), cbSegmentDataList.end(),compareSegmentDataByName);
  //foreach (segmentInfo sI in cbSegmentInfoList)
- foreach(SegmentData sd, cbSegmentDataMap.values())
+ foreach(SegmentData sd, cbSegmentInfoMap.values())
  {
   description = sd.description();
   if(!sd.location().isEmpty())
@@ -264,8 +264,8 @@ void SegmentSelectionWidget::refreshStreetsCb()
  ui->cbStreets->clear();
  streets.clear();
  ui->cbStreets->addItem("");
- cbSegmentDataMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
- foreach(SegmentData sd, cbSegmentDataMap.values())
+ cbSegmentInfoMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
+ foreach(SegmentData sd, cbSegmentInfoMap.values())
  {
 #if 0
   description = sd.description();
@@ -346,7 +346,7 @@ void SegmentSelectionWidget::cbSegments_currentIndexChanged(int index)
  if(initialized)
  {
   if(segmentId != m_SegmentId){
-   currSd = cbSegmentDataMap.value(segmentId);
+   currSd = cbSegmentInfoMap.value(segmentId);
    emit segmentSelected(SegmentInfo(currSd));
   }
   m_SegmentId = segmentId;

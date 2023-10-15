@@ -415,7 +415,7 @@ private:
     MyWebEnginePage* myWebEnginePage = nullptr;
     qint32 m_SegmentId;
     //QT_DEPRECATED QList<SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
-    QMap<int, SegmentData> cbSegmentDataList;  // list of segmentInfo items in cbSegments
+    QMap<int, SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
 
     qint32 m_currPoint, m_nbrPoints;
     int m_companyKey;

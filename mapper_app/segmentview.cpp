@@ -234,7 +234,7 @@ void SegmentView::addToRoute()
   sd.setStartDate(rd.startDate);
   sd.setEndDate(rd.endDate);
   sd.setCompanyKey(rd.companyKey);
-  parent->routeDlg->setRouteData(sd);
+  parent->routeDlg->setSegmentData(sd);
  }
  parent->routeDlg->show();
  parent->routeDlg->raise();

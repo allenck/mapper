@@ -336,8 +336,8 @@ public:
 
  private:
     qint32 _segmentId=-1;
-    qint8 _tracks;
-    int _route;
+    qint8 _tracks=0;
+    int _route=-1;
     RouteType _routeType;
     double _startLat, _startLon, _endLat, _endLon;
     double _length;

@@ -23,7 +23,7 @@ SplitSegmentDlg::SplitSegmentDlg(int segmentId, QWidget *parent) :
  ui->dateTo2->setEnabled(false);
 
  connect(ui->cbSegments, &QComboBox::currentTextChanged, [=]{
-  sd = cbSegmentDataList.values().at(ui->cbSegments->currentIndex());
+  sd = cbSegmentInfoList.values().at(ui->cbSegments->currentIndex());
   setSegment(sd.segmentId());
 
  });
@@ -81,12 +81,12 @@ SplitSegmentDlg::~SplitSegmentDlg()
 void SplitSegmentDlg::refreshSegments()
 {
   ui->cbSegments->clear();
-  cbSegmentDataList = SQL::instance()->getSegmentInfoList();
+  cbSegmentInfoList = SQL::instance()->getSegmentInfoList();
   //std::sort(cbSegmentDataList.values().begin(), cbSegmentDataList.values().end(),compareSegmentData1);
   //foreach (segmentInfo sI in cbSegmentInfoList)
-  for(int i=0; i < cbSegmentDataList.count(); i++)
+  for(int i=0; i < cbSegmentInfoList.count(); i++)
   {
-   SegmentData sd = cbSegmentDataList.values().at(i);
+   SegmentData sd = cbSegmentInfoList.values().at(i);
    ui->cbSegments->addItem(sd.toString(), sd.segmentId());
   }
 }

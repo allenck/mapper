@@ -48,7 +48,7 @@ public slots:
 
 private:
     qint32 curRow, curCol;
-    qint32 route;
+    qint32 route=-1;
     qint32 startSegment, endSegment;
     QString name;
     QString startDate = "1800/01/01";
