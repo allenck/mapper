@@ -85,10 +85,10 @@ void Bearing::calculate()
 
 RouteData::RouteData()
 {
- route=-1;
- companyKey = -1;
-// lineKey = -1;
-// trackUsage = " ";
+ _route=-1;
+ _companyKey = -1;
+ _lineKey = -1;
+ _trackUsage = " ";
 // sd = SegmentInfo();
 
 }
@@ -99,41 +99,38 @@ RouteData::~RouteData()
 
 RouteData::RouteData(const RouteData& o)
 {
- route = o.route;
- alphaRoute = o.alphaRoute;;
+ _route = o._route;
+ _alphaRoute = o._alphaRoute;;
  //baseRoute = o.baseRoute;
- name = o.name;
- defaultDate = o.defaultDate;
- startDate = o.startDate;
- endDate = o.endDate;
- companyKey = o.companyKey;
-#if 0
- lineKey = o.lineKey;
- tractionType = o.tractionType;
- direction = o.direction;
- normalEnter = o.normalEnter;
- normalLeave = o.normalLeave;
- reverseEnter = o.reverseEnter;        // Not defined for one Way
- reverseLeave = o.reverseLeave;        // Not defined for one Way
- oneWay = o.oneWay;
- next= o.next;
- prev= o.prev;
- trackUsage = o.trackUsage;
- sd = o.sd;
- bearing = o.bearing;
-#endif
+ _name = o._name;
+ //defaultDate = o.defaultDate;
+ _startDate = o._startDate;
+ _endDate = o._endDate;
+ _companyKey = o._companyKey;
+ _lineKey = o._lineKey;
+ _tractionType = o._tractionType;
+ _direction = o._direction;
+ _normalEnter = o._normalEnter;
+ _normalLeave = o._normalLeave;
+ _reverseEnter = o._reverseEnter;        // Not defined for one Way
+ _reverseLeave = o._reverseLeave;        // Not defined for one Way
+ _oneWay = o._oneWay;
+ _next= o._next;
+ _prev= o._prev;
+ _trackUsage = o._trackUsage;
+ _tracks = o._tracks;
 }
 
 
 QString RouteData::toString()
 {
  bool isNumeric;
- int num = alphaRoute.toInt(&isNumeric);
+ int num = _alphaRoute.toInt(&isNumeric);
  QString str;
  if(isNumeric)
-  str = alphaRoute + " " + name + " " + startDate.toString("yyyy/MM/dd")+ "->"+ endDate.toString("yyyy/MM/dd");
+  str = _alphaRoute + " " + _name + " " + _startDate.toString("yyyy/MM/dd")+ "->"+ _endDate.toString("yyyy/MM/dd");
  else
-  str = alphaRoute+"(" +QString::number(route)+ ") " + name + " " + startDate.toString("yyyy/MM/dd")+ "->"+ endDate.toString("yyyy/MM/dd");
+  str = _alphaRoute+"(" +QString::number(_route)+ ") " + _name + " " + _startDate.toString("yyyy/MM/dd")+ "->"+ _endDate.toString("yyyy/MM/dd");
 
  return str;
 }
@@ -609,7 +606,7 @@ void SegmentInfo::displaySegment(QString date, QString color, QString trackUsage
    for(i=0; i<myArray.count(); i++)
    {
     RouteData rd = (RouteData)myArray.at(i);
-    routeNames += rd.name;
+    routeNames += rd.routeName();
     //i++;
     if (i+1 < myArray.count())
      routeNames += ",";
@@ -812,7 +809,7 @@ void SegmentData::displaySegment(QString date, QString color, QString trackUsage
    for(i=0; i<myArray.count(); i++)
    {
     RouteData rd = (RouteData)myArray.at(i);
-    routeNames += rd.name;
+    routeNames += rd.routeName();
     //i++;
     if (i+1 < myArray.count())
      routeNames += ",";

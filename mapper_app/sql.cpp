@@ -208,17 +208,17 @@ bool sortbyalpha_route_date( const RouteData & s1 , const RouteData & s2 )
 //cout<<"\n" << __FUNCTION__;
     QString s1Route, s2Route, s1Sfx=".0", s2Sfx = ".0";
 
-    s1Route = s1.alphaRoute;
-    if(s1.alphaRoute.contains('.'))
+    s1Route = s1.alphaRoute();
+    if(s1.alphaRoute().contains('.'))
     {
-        s1Route = s1.alphaRoute.mid(0,s1.alphaRoute.indexOf('.'));
-        s1Sfx = s1.alphaRoute.mid(s1.alphaRoute.indexOf('.'));
+        s1Route = s1.alphaRoute().mid(0,s1.alphaRoute().indexOf('.'));
+        s1Sfx = s1.alphaRoute().mid(s1.alphaRoute().indexOf('.'));
     }
-    s2Route = s2.alphaRoute;
-    if(s2.alphaRoute.contains('.'))
+    s2Route = s2.alphaRoute();
+    if(s2.alphaRoute().contains('.'))
     {
-        s2Route = s2.alphaRoute.mid(0,s2.alphaRoute.indexOf('.'));
-        s2Sfx = s2.alphaRoute.mid(s2.alphaRoute.indexOf('.'));
+        s2Route = s2.alphaRoute().mid(0,s2.alphaRoute().indexOf('.'));
+        s2Sfx = s2.alphaRoute().mid(s2.alphaRoute().indexOf('.'));
     }
     if(s1Route.length() > 0 && s1Route.at(0).isNumber())
     {
@@ -285,15 +285,15 @@ bool sortbyalpha_route_date( const RouteData & s1 , const RouteData & s2 )
        {
     case 0:
     default:
-        return ( s1Route + s1.endDate.toString("yyyy/MM/dd")+ s1Sfx < s2Route + s2.endDate.toString("yyyy/MM/dd")+ s2Sfx);
+        return ( s1Route + s1.endDate().toString("yyyy/MM/dd")+ s1Sfx < s2Route + s2.endDate().toString("yyyy/MM/dd")+ s2Sfx);
     case 1:
-        return ( s1Route + s1.startDate.toString("yyyy/MM/dd")+ s1Sfx < s2Route + s2.startDate.toString("yyyy/MM/dd")+ s2Sfx);
+        return ( s1Route + s1.startDate().toString("yyyy/MM/dd")+ s1Sfx < s2Route + s2.startDate().toString("yyyy/MM/dd")+ s2Sfx);
     case 2:
-        return ( s1Route + s1.name + s1.endDate.toString("yyyy/MM/dd")+ s1Sfx < s2Route + s2.name + s2.endDate.toString("yyyy/MM/dd")+ s2Sfx);
+        return ( s1Route + s1.routeName() + s1.endDate().toString("yyyy/MM/dd")+ s1Sfx < s2Route + s2.routeName() + s2.endDate().toString("yyyy/MM/dd")+ s2Sfx);
     case 3:
-        return ( s1Route + s1.name + s1.startDate.toString("yyyy/MM/dd")+ s1Sfx < s2Route + s2.name + s2.startDate.toString("yyyy/MM/dd")+ s2Sfx);
+        return ( s1Route + s1.routeName() + s1.startDate().toString("yyyy/MM/dd")+ s1Sfx < s2Route + s2.routeName() + s2.startDate().toString("yyyy/MM/dd")+ s2Sfx);
     case 4:
-        return (s1.name + s1Route  + s1.startDate.toString("yyyy/MM/dd")+ s1Sfx <   s2.name + s2Route + s2.startDate.toString("yyyy/MM/dd")+ s2Sfx);
+        return (s1.routeName() + s1Route  + s1.startDate().toString("yyyy/MM/dd")+ s1Sfx <   s2.routeName() + s2Route + s2.startDate().toString("yyyy/MM/dd")+ s2Sfx);
 
 
     }
@@ -364,12 +364,12 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
     currRoute = route;
     currName = name;
     currDate = date;
-    rd.route = route;
-    rd.name = name;
-    rd.endDate = date;
-    rd.companyKey = query.value(3).toInt();
-    rd.tractionType = query.value(4).toInt();
-    rd.alphaRoute = query.value(5).toString();
+    rd._route = route;
+    rd._name = name;
+    rd._endDate = date;
+    rd._companyKey = query.value(3).toInt();
+    rd._tractionType = query.value(4).toInt();
+    rd._alphaRoute = query.value(5).toString();
 //    rd.baseRoute = query.value(6).toInt();
 //    if(rd.baseRoute == 0)
 //     rd.baseRoute = route;
@@ -384,9 +384,10 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
   {
    RouteData *rd1 = (RouteData*)&list.at(i);
    bool bStartDateFound = false;
-   QString strRoute = QString("%1").arg(rd1->route);
+   QString strRoute = QString("%1").arg(rd1->_route);
    //commandText = "Select Max(endDate) from Routes  where route = "+strRoute+" and name = '"+rd1->name+"'  and endDate < '"+rd1->endDate.toString("yyyy/MM/dd")+"' group  by endDate order by endDate asc";
-   commandText = "Select Max(startDate) from Routes  where route = "+strRoute+" and name = '"+rd1->name+"'  and endDate = '"+rd1->endDate.toString("yyyy/MM/dd")+"' and startDate < endDate group  by endDate order by endDate asc";
+   commandText = "Select Max(startDate) from Routes  where route = "+strRoute+" and name = '"+rd1->routeName()
+     +"'  and endDate = '"+rd1->endDate().toString("yyyy/MM/dd")+"' and startDate < endDate group  by endDate order by endDate asc";
 //             if(config->currConnection->servertype() == "MsSql")
 //                 commandText = "Select Max(startDate) from Routes  where route = "+strRoute+" and RTRIM(LTRIM(name)) = '"+rd1->name.trimmed() +"'  and endDate >= '"+rd1->endDate.toString("yyyy/MM/dd")+"' and startDate <= '"+ rd1->endDate.toString("yyyy/MM/dd")+"'group  by endDate order by endDate asc";
 //            else
@@ -402,7 +403,7 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
 
    while (query.next())
    {
-    rd1->startDate = query.value(0).toDate();
+    rd1->_startDate = query.value(0).toDate();
     //rd1->startDate = query.value(0).toDateTime().addDays(1);
     //rd1->startDate.addDays(1);
     bStartDateFound = true;
@@ -411,7 +412,7 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
    if (!bStartDateFound)
    {
        commandText = "Select Min(startDate) from Routes "  \
-           "where route = "+strRoute+"  and startDate <= '"+rd1->endDate.toString("yyyy/MM/dd")+"' " \
+           "where route = "+strRoute+"  and startDate <= '"+rd1->endDate().toString("yyyy/MM/dd")+"' " \
           "group by startDate";
        bQuery = query.exec(commandText);
        if(!bQuery)
@@ -431,13 +432,13 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
 
        while (query.next())
        {
-           rd1->startDate = query.value(0).toDate();
+           rd1->_startDate = query.value(0).toDate();
            //list.append(*rd1);
 
        }
        continue;
    }
-   QString rd1StartDate =rd1->startDate.toString("yyyy/MM/dd");
+   QString rd1StartDate =rd1->_startDate.toString("yyyy/MM/dd");
    //list2.append(rd1);
   }
  //db.close();
@@ -903,14 +904,15 @@ QMap<int, SegmentInfo> SQL::getSegmentInfoList(QString location)
  {
   commandText= "Select SegmentId, description, OneWay, startDate, endDate,"
                        " length, points, startLat, startLon, endLat, EndLon, type, street,"
-                       " location, pointArray, tracks, direction from Segments where location = '"
-                       + location + "' "
+                       " location, pointArray, tracks, direction "
+                       " from Segments where location = '" + location + "' "
                        + "order by description";
  }
  else {
    commandText= "Select SegmentId, description, OneWay, startDate, endDate,"
                         " length, points, startLat, startLon, endLat, EndLon, type, street,"
-                        " location, pointArray, tracks, direction from Segments order by description";
+                        " location, pointArray, tracks, direction"
+                        " from Segments order by description";
 
   }
  QSqlQuery query = QSqlQuery(db);
@@ -1571,19 +1573,20 @@ QList<SegmentData> SQL::getRouteSegmentsInOrder(qint32 route, QString name, QStr
 #endif
 
 // List routes using a segment on a given date
-QList<SegmentData> SQL::getRouteSegmentsForDate(qint32 route, QString name, QString date)
+QList<RouteData> SQL::getRouteSegmentsForDate(qint32 route, QString name, QString date)
 {
- QList<SegmentData> myArray;
+ QList<RouteData> myArray;
  QSqlDatabase db = QSqlDatabase::database();
 
- QString commandText = "SELECT a.Route,Name,StartDate,EndDate,LineKey,companyKey,"
-                       " tractionType,direction, normalEnter, normalLeave,"
+ QString commandText = "SELECT a.Route,Name,a.StartDate,a.EndDate,LineKey,companyKey,"
+                       " tractionType,s.direction, normalEnter, normalLeave,"
                        " reverseEnter, reverseLeave, routeAlpha, a.oneWay, a.trackUsage,"
-                       " a.tracks"
+                       " s.tracks"
                        " from Routes a"
                        " join altRoute c on a.route = c.route"
+                       " join Segments s on a.lineKey = s.segmentId"
                        " where a.Route = " + QString("%1").arg(route) + ""
-                       " and '" + date + "' between startDate and endDate"
+                       " and '" + date + "' between a.startDate and a.endDate"
                        " and TRIM(name) = '" + name + "'";
 
  QSqlQuery query = QSqlQuery(db);
@@ -1602,24 +1605,24 @@ QList<SegmentData> SQL::getRouteSegmentsForDate(qint32 route, QString name, QStr
 
  while (query.next())
  {
-  SegmentData sd = SegmentData();
-  sd._route = query.value(0).toInt();
-  sd._routeName = query.value(1).toString();
-  sd._startDate = query.value(2).toDate();
-  sd._endDate = query.value(3).toDate();
-  sd._segmentId = query.value(4).toInt();
-  sd._companyKey = query.value(5).toInt();
-  sd._tractionType = query.value(6).toInt();
-  sd._direction = query.value(7).toString();
-  sd._normalEnter = query.value(8).toInt();
-  sd._normalLeave = query.value(9).toInt();
-  sd._reverseEnter =query.value(10).toInt();
-  sd._reverseLeave = query.value(11).toInt();
-  sd._alphaRoute =query.value(12).toString();
-  sd._oneWay = query.value(13).toString();
-  sd._trackUsage = query.value(14).toString();
-  sd._tracks = query.value(15).toInt();
-  myArray.append(sd);
+  RouteData rd = RouteData();
+  rd._route = query.value(0).toInt();
+  rd._name = query.value(1).toString();
+  rd._startDate = query.value(2).toDate();
+  rd._endDate = query.value(3).toDate();
+  rd._lineKey = query.value(4).toInt();
+  rd._companyKey = query.value(5).toInt();
+  rd._tractionType = query.value(6).toInt();
+  rd._direction = query.value(7).toString();
+  rd._normalEnter = query.value(8).toInt();
+  rd._normalLeave = query.value(9).toInt();
+  rd._reverseEnter =query.value(10).toInt();
+  rd._reverseLeave = query.value(11).toInt();
+  rd._alphaRoute =query.value(12).toString();
+  rd._oneWay = query.value(13).toString();
+  rd._trackUsage = query.value(14).toString();
+  rd._tracks = query.value(15).toInt();
+  myArray.append(rd);
  }
 
  return myArray;
@@ -1718,13 +1721,13 @@ QList<RouteData> SQL::getRoutes(qint32 segmentid, QString date )
         while (query.next())
         {
             rd = RouteData();
-            rd.route = query.value(0).toInt();
-            rd.name = query.value(1).toString();
-            rd.startDate = query.value(2).toDate();
-            rd.endDate = query.value(3).toDate();
-            rd.companyKey = query.value(4).toInt();
-            rd.tractionType = query.value(5).toInt();
-            rd.alphaRoute = query.value(6).toString();
+            rd._route = query.value(0).toInt();
+            rd._name = query.value(1).toString();
+            rd._startDate = query.value(2).toDate();
+            rd._endDate = query.value(3).toDate();
+            rd._companyKey = query.value(4).toInt();
+            rd._tractionType = query.value(5).toInt();
+            rd._alphaRoute = query.value(6).toString();
             myArray.append(rd);
         }
     }
@@ -5203,13 +5206,13 @@ QList<RouteData> SQL::getRouteInfo(qint32 route)
         while (query.next())
         {
             RouteData rd =  RouteData ();
-            rd.route = query.value(0).toInt();
-            rd.name = query.value(1).toString();
-            rd.startDate = query.value(2).toDate();
-            rd.endDate = query.value(3).toDate();
+            rd._route = query.value(0).toInt();
+            rd._name = query.value(1).toString();
+            rd._startDate = query.value(2).toDate();
+            rd._endDate = query.value(3).toDate();
             //rd.companyKey = (int)myReader.GetInt32(4);
             //rd.tractionType = (int)myReader.GetInt32(5);
-            rd.alphaRoute = query.value(4).toString();
+            rd._alphaRoute = query.value(4).toString();
             myArray.append(rd);
         }
     }
@@ -5879,13 +5882,13 @@ QList<RouteData> SQL::getRouteDataForRouteName(qint32 route, QString name)
         while (query.next())
         {
             rd = RouteData();
-            rd.startDate =query.value(0).toDate();
-            rd.endDate = query.value(1).toDate();
-            rd.name = query.value(2).toString();
-            rd.route = query.value(3).toInt();
-            rd.companyKey = query.value(4).toInt();
-            rd.tractionType = query.value(5).toInt();
-            rd.alphaRoute = query.value(6).toString();
+            rd._startDate =query.value(0).toDate();
+            rd._endDate = query.value(1).toDate();
+            rd._name = query.value(2).toString();
+            rd._route = query.value(3).toInt();
+            rd._companyKey = query.value(4).toInt();
+            rd._tractionType = query.value(5).toInt();
+            rd._alphaRoute = query.value(6).toString();
             myArray.append(rd);
         }
         //rd.companyKey = -1;
@@ -6989,11 +6992,11 @@ QList<SegmentData> SQL::getSegmentDataList(RouteData rd)
                        " from Routes a "
                        " join Segments s on a.linekey = s.segmentId "
                        " join altRoute b on a.route = b.route"
-                       " where a.route = " + QString("%1").arg(rd.route)
-                       + " and a.name = '" + rd.name + "'"
+                       " where a.route = " + QString("%1").arg(rd._route)
+                       + " and a.name = '" + rd._name + "'"
 //                       + " and a.companyKey = " + QString::number(rd.companyKey)
-                       + " and a.startDate = '" + rd.startDate.toString("yyyy/MM/dd") + "'"
-                       + " and a.endDate = '" + rd.endDate.toString("yyyy/MM/dd") + "'";
+                       + " and a.startDate = '" + rd._startDate.toString("yyyy/MM/dd") + "'"
+                       + " and a.endDate = '" + rd._endDate.toString("yyyy/MM/dd") + "'";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -7018,7 +7021,7 @@ QList<SegmentData> SQL::getSegmentDataList(RouteData rd)
   sd._startDate = query.value(2).toDate();
   sd._endDate = query.value(3).toDate();
   //sd._companyKey = query.value(4).toInt();
-  sd._companyKey = rd.companyKey;
+  sd._companyKey = rd._companyKey;
   sd._tractionType = query.value(5).toInt();
   sd._alphaRoute = query.value(6).toString();
   sd._oneWay = query.value(7).toString();
@@ -7106,9 +7109,25 @@ bool SQL::updateSegmentToRoute(qint32 routeNbr, QString routeName, QString start
 
     return ret;
 }
-SegmentData SQL::getSegmentInfoForRouteDates(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate)
+
+SegmentData SQL::getSegmentDataForRouteDates(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate)
 {
-    SegmentData sd;
+ QString where = " where a.Route = " + QString("%1").arg(route) + ""
+                 " and ('" + startDate + "' between a.startDate and a.endDate"
+                 " or  '" + endDate + "' between a.startDate and a.endDate)"
+                 " and name = '" + name + "'"
+                 " and a.LineKey = " + QString("%1").arg(segmentId);
+ QList<SegmentData> list = SegmentDataFromView(where);
+ if(list.count() > 0)
+  return list.at(0);
+ if(list.count()>1)
+  qDebug() << "warning query should not have returned more than 1 row!";
+ return SegmentData();
+}
+
+RouteData SQL::getRouteDataForRouteDates(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate)
+{
+    RouteData rd;
     try
     {
         if(!dbOpen())
@@ -7117,7 +7136,7 @@ SegmentData SQL::getSegmentInfoForRouteDates(qint32 route, QString name, qint32 
 
         QString commandText = "SELECT a.Route,Name,a.StartDate,a.EndDate,LineKey,CompanyKey,tractionType,"
                               " a.direction, normalEnter, normalLeave, reverseEnter, reverseLeave, "
-                              " routeAlpha, a.OneWay, s.tracks, a.TrackUsage, s.street, s.description, s.pointArray"
+                              " routeAlpha, a.OneWay, s.tracks, a.TrackUsage"
                               " from Routes a "
                               " join altRoute c on a.route = c.route"
                               " join Segments s on a.lineKey = s.segmentId"
@@ -7138,40 +7157,35 @@ SegmentData SQL::getSegmentInfoForRouteDates(qint32 route, QString name, qint32 
         }
         if (!query.isActive())
         {
-            return sd;
+            return rd;
         }
         //                myArray = new LatLng[myReader.RecordsAffected];
 
         while (query.next())
         {
-            sd._route = query.value(0).toInt();
-            sd._routeName = query.value(1).toString();
-            sd._startDate = query.value(2).toDate();
-            sd._endDate = query.value(3).toDate();
-            sd._segmentId = query.value(4).toInt();
-            sd._companyKey = query.value(5).toInt();
-            sd._tractionType = query.value(6).toInt();
-            sd._direction = query.value(7).toString();
-            sd._normalEnter = query.value(8).toInt();
-            sd._normalLeave = query.value(9).toInt();
-            sd._reverseEnter = query.value(10).toInt();
-            sd._reverseLeave = query.value(11).toInt();
-            sd._alphaRoute = query.value(12).toString();
-            sd._oneWay = query.value(13).toString();
-            sd._tracks = query.value(14).toInt();
-            sd._trackUsage = query.value(15).toString();
-            sd._streetName = query.value(16).toString();
-            sd._description = query.value(17).toString();
-            sd.setPoints(query.value(18).toString());
+            rd._route = query.value(0).toInt();
+            rd._name = query.value(1).toString();
+            rd._startDate = query.value(2).toDate();
+            rd._endDate = query.value(3).toDate();
+            rd._lineKey = query.value(4).toInt();
+            rd._companyKey = query.value(5).toInt();
+            rd._tractionType = query.value(6).toInt();
+            rd._direction = query.value(7).toString();
+            rd._normalEnter = query.value(8).toInt();
+            rd._normalLeave = query.value(9).toInt();
+            rd._reverseEnter = query.value(10).toInt();
+            rd._reverseLeave = query.value(11).toInt();
+            rd._alphaRoute = query.value(12).toString();
+            rd._oneWay = query.value(13).toString();
+            rd._tracks = query.value(14).toInt();
+            rd._trackUsage = query.value(15).toString();
         }
-        sd._points = sd._pointList.count();
-
     }
     catch (Exception e)
     {
         myExceptionHandler(e);
     }
-    return sd;
+    return rd;
 }
 
 /// <summary>
@@ -7399,7 +7413,7 @@ bool SQL::modifyCurrentRoute(RouteData* crd, bool bStartDate, QDate dt, QString 
   commandText = QString("select Route, Name, StartDate, EndDate, segmentId, CompanyKey,"
                         "  tractionType, next, prev,  normalEnter, normalLeave, reverseEnter, reverseLeave"
                         " from Routes where route = %1 and '%2' between startDate and endDate"
-                        " order by segmentId, endDate").arg(crd->route).arg(crd->startDate.toString("yyyy/MM/dd"));
+                        " order by segmentId, endDate").arg(crd->_route).arg(crd->_startDate.toString("yyyy/MM/dd"));
   if(!query.exec(commandText))
   {
    SQLERROR(query);
@@ -7422,7 +7436,7 @@ bool SQL::modifyCurrentRoute(RouteData* crd, bool bStartDate, QDate dt, QString 
    sd._reverseEnter = query.value(11).toInt();
    sd._reverseLeave = query.value(12).toInt();
 
-   if(crd->startDate == sd._startDate)
+   if(crd->_startDate == sd._startDate)
    {
     commandText = QString("UPDATE Routes set startDate = '%1', lastUpdate=:lastUpdate"
                          " where startDate = '%2' and route= %3 and description = '%4'"
@@ -7440,7 +7454,7 @@ bool SQL::modifyCurrentRoute(RouteData* crd, bool bStartDate, QDate dt, QString 
     rows += query.numRowsAffected();
     continue;
    }
-   if(crd->startDate.addDays(-1) == sd.endDate())
+   if(crd->_startDate.addDays(-1) == sd.endDate())
    {
     commandText = QString("UPDATE Routes set endDate = '%1', lastUpdate=:lastUpdate"
                           " where startDate = '%2' and route= %3 and name = '%4' and lineKey=%5")
@@ -7486,7 +7500,7 @@ bool SQL::modifyCurrentRoute(RouteData* crd, bool bStartDate, QDate dt, QString 
                 " reverseEnter, reverseLeave, oneWay "
                 " from Routes"
                 " where route = %1 and '%2' between startDate and endDate"
-                " order by lineKey, startDate DESC").arg(crd->route).arg(crd->endDate.toString("yyyy/MM/dd"));
+                " order by lineKey, startDate DESC").arg(crd->_route).arg(crd->_endDate.toString("yyyy/MM/dd"));
   if(!query.exec(commandText))
   {
    SQLERROR(query);
@@ -7510,7 +7524,7 @@ bool SQL::modifyCurrentRoute(RouteData* crd, bool bStartDate, QDate dt, QString 
    sd._reverseLeave = query.value(12).toInt();
    sd._oneWay = query.value(13).toString();
 
-   if(crd->endDate == sd._endDate)
+   if(crd->endDate() == sd._endDate)
    {
     commandText = QString("UPDATE Routes set endDate = '%1', lastUpdate=:lastUpdate"
                   " where endDate = '%2' and route= %3 and name = '%4'"
@@ -7526,12 +7540,12 @@ bool SQL::modifyCurrentRoute(RouteData* crd, bool bStartDate, QDate dt, QString 
      return false;
     }
    }
-   if( crd->endDate.addDays(1) == sd._startDate)
+   if( crd->endDate().addDays(1) == sd._startDate)
    {
     commandText = "update Routes set startDate = '" + dt.toString("yyyy/MM/dd")
                   + "',lastUpdate=:lastUpdate where startDate = '"
-                  + crd->startDate.toString("yyyy/MM/dd") + "'"
-                  " and route = " + QString("%1").arg(crd->route);
+                  + crd->startDate().toString("yyyy/MM/dd") + "'"
+                  " and route = " + QString("%1").arg(crd->route());
     QSqlQuery query = QSqlQuery(db);
     query.prepare(commandText);
     query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());continue;

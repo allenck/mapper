@@ -17,7 +17,7 @@
 #include <qfile.h>
 #include <qtextstream.h>
 #include "dialogcopyroute.h"
-#include "dialogrenameroute.h"
+#include "modifyroutedialog.h"
 #include <QMessageBox>
 #include "segmentdlg.h"
 #include "modifyroutedatedlg.h"
@@ -469,7 +469,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   for(int i = 0; i < routeList.count(); i ++ )
   {
    RouteData rd = routeList.at(i);
-   if(rd.route ==config->currCity->lastRoute && rd.name == config->currCity->lastRouteName && rd.endDate.toString("yyyy/MM/dd") == config->currCity->lastRouteEndDate)
+   if(rd.route() ==config->currCity->lastRoute && rd.routeName() == config->currCity->lastRouteName
+      && rd.endDate().toString("yyyy/MM/dd") == config->currCity->lastRouteEndDate)
    {
     bCbRouteRefreshing = true;
     bNoDisplay = true;
@@ -1019,14 +1020,14 @@ void MainWindow::createActions()
       return;
      }
      RouteData rd = ((RouteData)routeList.at(row));
-     bool b = SQL::instance()->addSegmentToRoute(rd.route, rd.name, rd.startDate, rd.endDate,
-                                        sd.segmentId(), rd.companyKey,
+     bool b = SQL::instance()->addSegmentToRoute(rd.route(), rd.routeName(), rd.startDate(), rd.endDate(),
+                                        sd.segmentId(), rd.companyKey(),
                                         sd.tractionType(), "?", -1, -1, 0, 0, 0, 0, sd.oneWay(), sd.trackUsage());
     if(b)
     {
         m_bridge->processScript("clearPolyline", QString("%1").arg(sd.segmentId()));
         //SegmentInfo si = sql->getSegmentInfo(segmentId);
-        displaySegment(sd.segmentId(), sd.description(), /*sd.oneWay(),*/ /*ttColors[e.tractionType]*/getColor(rd.tractionType), " ", true);
+        displaySegment(sd.segmentId(), sd.description(), /*sd.oneWay(),*/ /*ttColors[e.tractionType]*/getColor(rd.tractionType()), " ", true);
 
     }
  });
@@ -1036,12 +1037,12 @@ void MainWindow::createActions()
  connect(addSegmentToNewRouteAct, &QAction::triggered, [=]{
   SegmentData sd = ui->ssw->segmentSelected();
   sd.setRoute(m_routeNbr);
-  sd.setRouteName(_rd.name);
+  sd.setRouteName(_rd.routeName());
   sd.setCompanyKey(ui->cbCompany->currentData().toInt());
-  sd.setTractionType(_rd.tractionType);
+  sd.setTractionType(_rd.tractionType());
   CompanyData* cd = sql->getCompany(sd.companyKey());
-  sd.setStartDate(_rd.startDate);
-  sd.setEndDate(_rd.endDate);
+  sd.setStartDate(_rd.startDate());
+  sd.setEndDate(_rd.endDate());
   if(sd.startDate() < cd->startDate)
    sd.setStartDate(cd->startDate);
   if(sd.endDate() > cd->endDate)
@@ -1227,7 +1228,7 @@ void MainWindow::createActions()
   if(rslt == QDialog::DialogCode::Accepted )
   {
    int newRoute = dlg->getNumber();
-   bool rslt = sql->renumberRoute(rd.alphaRoute, newRoute);
+   bool rslt = sql->renumberRoute(rd.alphaRoute(), newRoute);
    if(rslt)
    {
     refreshRoutes();
@@ -1387,22 +1388,24 @@ void MainWindow::On_editCityInfo()
 void MainWindow::cbRoute_customContextMenu( const QPoint& )
 {
     cbRouteMenu.clear();
+    QMenu* routeMenu = new QMenu(tr("Route Change..."));
+    cbRouteMenu.addMenu(routeMenu);
     cbRouteMenu.addAction(addSegmentAct);
-    cbRouteMenu.addAction(combineRoutesAct);
-    cbRouteMenu.addAction(copyRouteAct);
-    cbRouteMenu.addAction(deleteRouteAct);
+    routeMenu->addAction(combineRoutesAct);
+    routeMenu->addAction(copyRouteAct);
+    routeMenu->addAction(deleteRouteAct);
     cbRouteMenu.addAction(displayAct);
-    cbRouteMenu.addAction(modifyRouteDateAct);
+    routeMenu->addAction(modifyRouteDateAct);
     cbRouteMenu.addAction(modifyRouteTractionTypeAct);
-    cbRouteMenu.addAction(renameRouteAct);
+    routeMenu->addAction(renameRouteAct);
     cbRouteMenu.addAction(rerouteAct);
     cbRouteMenu.addAction(routeCommentsAct);
-    cbRouteMenu.addAction(splitRouteAct);
+    routeMenu->addAction(splitRouteAct);
     cbRouteMenu.addAction(updateRouteAct);
     cbRouteMenu.addAction(replaceSegments);
     cbRouteMenu.addAction(exportRouteAct);
     cbRouteMenu.addAction(updateTerminalsAct);
-    cbRouteMenu.addAction(changeRouteNumberAct);
+    //cbRouteMenu.addAction(changeRouteNumberAct);
     updateTerminalsAct->setEnabled(routeView->isSequenced());
     cbRouteMenu.exec(QCursor::pos());
 }
@@ -1594,7 +1597,8 @@ void MainWindow::newCity(QAction* act )
     for(int i=0; i< routeList.count(); i++)
     {
      RouteData rd = routeList.at(i);
-     if(rd.route ==config->currCity->lastRoute && rd.name == config->currCity->lastRouteName && rd.endDate.toString("yyyy/MM/dd") == config->currCity->lastRouteEndDate)
+     if(rd.route() ==config->currCity->lastRoute && rd.routeName() == config->currCity->lastRouteName
+        && rd.endDate().toString("yyyy/MM/dd") == config->currCity->lastRouteEndDate)
      {
       ui->cbRoute->setCurrentIndex(i);
       break;
@@ -1817,7 +1821,7 @@ void MainWindow::refreshRoutes()
     for(int i=0; i<len; i++)
     {
          RouteData rd = (RouteData)routeList.at(i);
-         QString rdStartDate = rd.startDate.toString("yyyy/MM/dd");
+         QString rdStartDate = rd.startDate().toString("yyyy/MM/dd");
 //         if(ui->cbRoute->findText(rd.toString())< 0)
             ui->cbRoute->addItem(rd.toString(),QVariant::fromValue(rd));
          if( rd.toString() == currText)
@@ -1857,7 +1861,7 @@ void MainWindow::txtRouteNbrLeave()
     for(int i=0; i<len; i++)
     {
          RouteData rd = (RouteData)routeList.at(i);
-         QString rdStartDate = rd.startDate.toString("yyyy/MM/dd");
+         QString rdStartDate = rd.startDate().toString("yyyy/MM/dd");
          ui->cbRoute->addItem(rd.toString(), QVariant::fromValue(rd));
     }
     ui->sbRoute->setRange(0, routeList.count());
@@ -1894,7 +1898,7 @@ void MainWindow::on_createKmlFile_triggered()
  RouteData rd = ((RouteData)routeList.at(row));
  //RouteInfo ri = sql->getRoutePoints(rd.route,rd.name, ui->dateEdit->text());
  //RouteInfo ri(rd.route,rd.name, ui->dateEdit->text());
- Kml* kml = new Kml(rd.name,  segmentDataList);
+ Kml* kml = new Kml(rd.routeName(),  segmentDataList);
  QString fileName = QFileDialog::getOpenFileName(this,"Create Kml file", QDir::homePath(),"Kml files (*.kml");
  if(!fileName.isEmpty())
  kml->createKml(fileName, "ff0000ff");
@@ -1917,7 +1921,7 @@ void MainWindow::On_displayRoute(RouteData rd)
 
  //RouteInfo ri = sql->getRoutePoints(rd.route,rd.name, ui->dateEdit->text());
  //RouteInfo ri = RouteInfo(rd.route,rd.name, ui->dateEdit->text());
- QList<SegmentData> segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route, rd.name, ui->dateEdit->text());
+ QList<SegmentData> segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(), ui->dateEdit->text());
 // LatLng startPt =  LatLng();
 // LatLng endPt =  LatLng();
 // LatLng swPt = LatLng(90,180);
@@ -1928,10 +1932,10 @@ void MainWindow::On_displayRoute(RouteData rd)
  bool bFirst = true;
 
  QVariantList objArray;
- if (rd.route < 1)
+ if (rd.route() < 1)
   return; // no data
     //string str = (m_routeNbr<10?"0":"")+ m_routeNbr;
- m_alphaRoute = sql->getAlphaRoute(m_routeNbr, rd.companyKey);
+ m_alphaRoute = sql->getAlphaRoute(m_routeNbr, rd.companyKey());
  if(bDisplayTerminalMarkers)
  {
   TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, m_currRouteEndDate);
@@ -1979,7 +1983,7 @@ void MainWindow::On_displayRoute(RouteData rd)
   if(sd.trackUsage().isEmpty()) // fix for MySql not storing field correctly
    sd.setTrackUsage(" ");
   objArray.clear();
-  objArray <<   sd.segmentId() << rd.name <<  sd.description() << sd.oneWay() << color << sd.tracks()
+  objArray <<   sd.segmentId() << rd.routeName() <<  sd.description() << sd.oneWay() << color << sd.tracks()
              << dash << sd.routeType() << sd.trackUsage() << points.count();
   objArray.append(points);
   m_bridge->processScript("createSegment",objArray);
@@ -2002,7 +2006,7 @@ void MainWindow::On_displayRoute(RouteData rd)
  foreach(TractionTypeInfo tti,tractionTypeList.values())
  {
   //tractionTypeInfo tti = (tractionTypeInfo)tractionTypeList.at(i);
-  if (tti.tractionType == rd.tractionType)
+  if (tti.tractionType == rd.tractionType())
   {
    switch (tti.routeType)
    {
@@ -2080,7 +2084,7 @@ default:
   //if(!(infoLat == 0 && infoLon ==0))
   {
    QDate dt = QDate::fromString(m_currRouteStartDate, "yyyy/MM/dd");
-   dt = sql->getFirstCommentDate(m_routeNbr, dt, rd.companyKey);
+   dt = sql->getFirstCommentDate(m_routeNbr, dt, rd.companyKey());
    RouteComments rc = sql->getRouteComment(m_routeNbr, dt, -1);
    if(rc.commentKey < 0)
    {
@@ -2206,14 +2210,14 @@ void MainWindow::onCbRouteIndexChanged(int row)
   ui->sbRoute->setSliderPosition(row);
   bNoDisplay = false;
  }
- ui->txtRouteNbr->setText(sql->getAlphaRoute(_rd.route,_rd.companyKey));
- ui->dateEdit->setDate( _rd.endDate);
- m_currRouteStartDate = _rd.startDate.toString("yyyy/MM/dd");
- m_currRouteEndDate = _rd.endDate.toString("yyyy/MM/dd");
- ui->dateEdit->setMinimumDate(_rd.startDate);
- ui->dateEdit->setMaximumDate(_rd.endDate);
- m_routeNbr = _rd.route;
- m_routeName = _rd.name;
+ ui->txtRouteNbr->setText(sql->getAlphaRoute(_rd.route(),_rd.companyKey()));
+ ui->dateEdit->setDate( _rd.endDate());
+ m_currRouteStartDate = _rd.startDate().toString("yyyy/MM/dd");
+ m_currRouteEndDate = _rd.endDate().toString("yyyy/MM/dd");
+ ui->dateEdit->setMinimumDate(_rd.startDate());
+ ui->dateEdit->setMaximumDate(_rd.endDate());
+ m_routeNbr = _rd.route();
+ m_routeName = _rd.routeName();
  routeDlg->setSegmentData(_rd);
 
  routeView->updateRouteView();
@@ -3128,7 +3132,7 @@ void MainWindow::cbRoutes_Leave()
   {
    RouteData rd = (RouteData)routeList.at(i);
 
-   if (rd.alphaRoute.contains(text))
+   if (rd.alphaRoute().contains(text))
    {
     //cbRoutes.SelectedItem = rd;
     ui->cbRoute->setCurrentIndex(i);
@@ -3476,7 +3480,7 @@ void MainWindow::copyRouteInfo_Click()
   for(int i=0; i < routeList.count(); i++)
   {
    RouteData _rd = (RouteData)routeList.at(i);
-   if (rd.route == _rd.route && rd.name == _rd.name && rd.endDate == _rd.endDate)
+   if (rd.route() == _rd.route() && rd.routeName() == _rd.routeName() && rd.endDate() == _rd.endDate())
    {
     bNoDisplay = true;
     ui->cbRoute->setCurrentIndex(i);
@@ -3498,7 +3502,8 @@ void MainWindow::splitRoute_Click()
         for(int i =0; i < routeList.count(); i++)
         {
             RouteData rd = routeList.at(i);
-            if(rd.route == newRoute.route && rd.name == newRoute.name && rd.endDate == newRoute.endDate)
+            if(rd.route() == newRoute.route() && rd.routeName() == newRoute.routeName()
+               && rd.endDate() == newRoute.endDate())
             {
              bNoDisplay = true;
              ui->cbRoute->setCurrentIndex(i);
@@ -3520,7 +3525,7 @@ void MainWindow::rerouteRoute()
 
 void MainWindow::renameRoute_Click()
 {
-    DialogRenameRoute renameRouteDlg(config, this);
+    ModifyRouteDialog renameRouteDlg(config, this);
     //renameRouteDlg.setConfig(config);
     renameRouteDlg.routeData ( (RouteData)routeList.at(ui->cbRoute->currentIndex()));
     int rslt = renameRouteDlg.exec();
@@ -3612,7 +3617,7 @@ void MainWindow::addSegment()
     SegmentDlg segmentDlg(config, this);
 //TODO    segmentDlg.routeChanged += new routeChangedEventHandler(segmentDlg_routeChanged);
     connect(&segmentDlg, &SegmentDlg::companySelectionChanged, [=](/*int companyKey*/){
-     ui->cbCompany->setCurrentIndex( ui->cbCompany->findData(_rd.companyKey));
+     ui->cbCompany->setCurrentIndex( ui->cbCompany->findData(_rd.companyKey()));
      refreshRoutes();
     } );
     connect(&segmentDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs)), this, SLOT(segmentDlg_routeChanged(RouteChangedEventArgs)));
@@ -3642,8 +3647,8 @@ void MainWindow::addSegment()
 
         ui->lblSegment->setText(tr("Segment %1:").arg(m_SegmentId));
         //        ui->chkOneWay->setChecked("Y"== sql->getSegmentOneWay(m_SegmentId));
-        SegmentData sd = sql->getSegmentData(rd.route, m_SegmentId, rd.startDate.toString("yyyy/MM/dd"),
-                                             rd.endDate.toString("yyyy/MM/dd"));
+        SegmentData sd = sql->getSegmentData(rd.route(), m_SegmentId, rd.startDate().toString("yyyy/MM/dd"),
+                                             rd.endDate().toString("yyyy/MM/dd"));
         updateSegmentInfoDisplay(sd);
 
         int dash = 0;
@@ -3680,12 +3685,13 @@ void MainWindow::deleteRoute()
     RouteData rd = routeList.at(        ui->cbRoute->currentIndex());
 
     QMessageBox::StandardButton reply;
-    reply=QMessageBox::warning(this, tr("Confirm Delete"),tr("Are you sure you want to delete route ") + rd.alphaRoute + " " + rd.name + "?", QMessageBox::Yes | QMessageBox::No);
+    reply=QMessageBox::warning(this, tr("Confirm Delete"),tr("Are you sure you want to delete route ")
+                               + rd.alphaRoute() + " " + rd.routeName() + "?", QMessageBox::Yes | QMessageBox::No);
     //DialogResult rslt =  MessageBox.Show("Are you sure you want to delete route " + rd.alphaRoute + " " + rd.name + "?",
         //"Confirm Delete", MessageBoxButtons.YesNo);
     if(reply== QMessageBox::Yes)
     {
-        sql->deleteRoute(rd.route, rd.name, rd.startDate.toString("yyyy/MM/dd"), rd.endDate.toString("yyyy/MM/dd"));
+        sql->deleteRoute(rd.route(), rd.routeName(), rd.startDate().toString("yyyy/MM/dd"), rd.endDate().toString("yyyy/MM/dd"));
     }
     refreshRoutes();
 #endif
@@ -3693,11 +3699,11 @@ void MainWindow::deleteRoute()
 
 void MainWindow::on_updateRoute()
 {
-  SegmentData sd = sql->getSegmentData(m_routeNbr, m_SegmentId, _rd.startDate.toString("yyyy/MM/dd"),
-                                       _rd.endDate.toString("yyyy/MM/dd"));
-  sd.setRouteName(_rd.name);
-  sd.setCompanyKey(_rd.companyKey);
-  sd.setTractionType(_rd.tractionType);
+  SegmentData sd = sql->getSegmentData(m_routeNbr, m_SegmentId, _rd.startDate().toString("yyyy/MM/dd"),
+                                       _rd.endDate().toString("yyyy/MM/dd"));
+  sd.setRouteName(_rd.routeName());
+  sd.setCompanyKey(_rd.companyKey());
+  sd.setTractionType(_rd.tractionType());
   updateRoute(&sd);
 }
 
@@ -3721,6 +3727,8 @@ void MainWindow::updateRoute(SegmentData* sd )
      try{
      routeDlg->setRouteNbr( sd->route());
      //routeDlg->setSegmentId( sd->segmentId());
+     if(sd->alphaRoute().isEmpty())
+      sd->setAlphaRoute(_rd.alphaRoute());
      routeDlg->setSegmentData(*sd);
      routeDlg->show();
      routeDlg->raise();
@@ -3825,7 +3833,7 @@ void MainWindow::segmentDlg_routeChanged(RouteChangedEventArgs args)
         for(int i=0; i<routeList.count(); i++)
         {
             RouteData rd = (RouteData)routeList.at(i);
-            if (rd.route == args.routeNbr && rd.name == args.routeName && args.dateEnd == rd.endDate)
+            if (rd.route() == args.routeNbr && rd.routeName() == args.routeName && args.dateEnd == rd.endDate())
             {
                 //cbRoutes.SelectedItem = rd;
                 ui->cbRoute->setCurrentIndex(i);
@@ -3849,7 +3857,7 @@ void MainWindow::RouteChanged(RouteChangedEventArgs args)
  for(int i=0; i < routeList.count(); i++)
  {
   RouteData rd1 = routeList.at(i);
-  if(rd1.route == args.routeNbr && args.routeName == rd1.name && rd1.endDate == args.dateEnd)
+  if(rd1.route() == args.routeNbr && args.routeName == rd1.routeName() && rd1.endDate() == args.dateEnd)
   {
    bCbRouteRefreshing = true;
    ui->cbRoute->setCurrentIndex(i);
@@ -3873,7 +3881,7 @@ void MainWindow::RouteChanged(RouteChangedEventArgs args)
 //        webBrowser1.Document.InvokeScript("clearPolyline", objArray); // clears the old line
   m_bridge->processScript("clearPolyline", QString("%1").arg(args.routeSegment));
   //SegmentInfo si = sql->getSegmentInfo(args.routeSegment);
-  displaySegment(args.routeSegment, rd.name, /*rd.oneWay,*/ /*ttColors[e.tractionType]*/getColor(args.tractionType), " ", true);
+  displaySegment(args.routeSegment, rd.routeName(), /*rd.oneWay,*/ /*ttColors[e.tractionType]*/getColor(args.tractionType), " ", true);
  }
  routeView->updateRouteView();
 }
@@ -4173,7 +4181,7 @@ void MainWindow::on_selectSegment(int segmentId)
  else
  {
   SegmentInfo sd = sql->getSegmentInfo(segmentId);
-  displaySegment(sd.segmentId(), sd.description(), getColor(_rd.tractionType), "B", true);
+  displaySegment(sd.segmentId(), sd.description(), getColor(_rd.tractionType()), "B", true);
   ProcessScript("selectSegment", QString("%1").arg(segmentId));
  }
 }
@@ -4191,9 +4199,9 @@ void MainWindow::updateRouteComment()
 
  int row =         ui->cbRoute->currentIndex();
  RouteData rd = ((RouteData)routeList.at(row));
- routeCommentsDlg.setCompanyKey(rd.companyKey);
- routeCommentsDlg.setRoute(rd.route);
- routeCommentsDlg.setDate(rd.startDate);
+ routeCommentsDlg.setCompanyKey(rd.companyKey());
+ routeCommentsDlg.setRoute(rd.route());
+ routeCommentsDlg.setDate(rd.startDate());
  routeCommentsDlg.exec();
 }
 

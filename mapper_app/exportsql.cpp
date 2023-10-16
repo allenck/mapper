@@ -2057,7 +2057,8 @@ bool ExportSql::exportSegments()
 
   sql->beginTransaction("Route");
 
-  commandText = "delete from Routes where route=" +  QString("%1").arg(rd.route) +" and name='"+ rd.name + "' and startDate='" + rd.startDate.toString("yyyy/MM/dd") + "' and endDate='" + rd.endDate.toString("yyyy/MM/dd") +"'";
+  commandText = "delete from Routes where route=" +  QString("%1").arg(rd.route()) +" and name='"+ rd.routeName()
+    + "' and startDate='" + rd.startDate().toString("yyyy/MM/dd") + "' and endDate='" + rd.endDate().toString("yyyy/MM/dd") +"'";
   QSqlQuery query = QSqlQuery(_targetDb);
   query.prepare(commandText);
   bool bQuery = query.exec();
@@ -2080,9 +2081,9 @@ bool ExportSql::exportSegments()
 
   query = QSqlQuery(srcDb);
   query.prepare(commandText);
-  query.bindValue(":route", QString::number(rd.route));
-  query.bindValue(":startDate", rd.startDate.toString("yyyy/MM/dd"));
-  query.bindValue(":endDate",rd.endDate.toString("yyyy/MM/dd"));
+  query.bindValue(":route", QString::number(rd.route()));
+  query.bindValue(":startDate", rd.startDate().toString("yyyy/MM/dd"));
+  query.bindValue(":endDate",rd.endDate().toString("yyyy/MM/dd"));
   bQuery = query.exec();
   if(!bQuery)
   {

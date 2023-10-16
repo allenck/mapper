@@ -89,21 +89,21 @@ SegmentDlg::SegmentDlg(Configuration *cfg, QWidget *parent) :
  ui->dateStart->setMaximumDateTime( parms.maxDate);
  ui->dateEnd->setMinimumDateTime( parms.minDate);
  ui->dateEnd->setMaximumDateTime( parms.maxDate);
- ui->dateStart->setDate( _rd.startDate);
- ui->dateEnd->setDate( _rd.endDate);
+ ui->dateStart->setDate( _rd.startDate());
+ ui->dateEnd->setDate( _rd.endDate());
 
  fillCompanies();
  ui->cbRouteName->clear();
  ui->cbRouteName->addItem(strNoRoute);
- if (_rd.route > 0)
+ if (_rd.route() > 0)
  {
-     _routeNbr = _rd.route;
-     ui->txtRouteNbr->setText( _rd.alphaRoute);
+     _routeNbr = _rd.route();
+     ui->txtRouteNbr->setText( _rd.alphaRoute());
      //cbRouteName.Text = _rd.name;
      for(int i = 0; i < _routeNameList.count(); i++)
      {
          QString routeName = _routeNameList.at(i);
-         if(routeName == _rd.name)
+         if(routeName == _rd.routeName())
          {
              ui->cbRouteName->setCurrentIndex(i+1);
              break;
@@ -210,11 +210,11 @@ void SegmentDlg::setRouteData(RouteData value)
 {
     int i = 0;
     //bRouteChanging = true;
-    if (value.route < 1)
+    if (value.route() < 1)
         return;
     _rd = value;
-    _routeNbr = _rd.route;
-    ui->txtRouteNbr->setText( _rd.alphaRoute);
+    _routeNbr = _rd.route();
+    ui->txtRouteNbr->setText( _rd.alphaRoute());
     ui->cbRouteName->clear();
     ui->cbRouteName->addItem(strNoRoute);
     _routeNameList = sql->getRouteNames(_routeNbr);
@@ -224,7 +224,7 @@ void SegmentDlg::setRouteData(RouteData value)
 //    cbRouteName.Text = _rd.name;
     for(int i=0; i < _routeNameList.count(); i++)
     {
-        if(_rd.name == _routeNameList.at(i))
+        if(_rd.routeName() == _routeNameList.at(i))
         {
             ui->cbRouteName->setCurrentIndex(i + 1);
             break;
@@ -236,8 +236,8 @@ void SegmentDlg::setRouteData(RouteData value)
     ui->dateStart->setMaximumDateTime( parms.maxDate);
     ui->dateEnd->setMinimumDateTime( parms.minDate);
     ui->dateEnd->setMaximumDateTime( parms.maxDate);
-    ui->dateStart->setDate( _rd.startDate);
-    ui->dateEnd->setDate( _rd.endDate);
+    ui->dateStart->setDate( _rd.startDate());
+    ui->dateEnd->setDate( _rd.endDate());
 
     //if (ui->cbCompany->currentIndex() == -1)
     {
@@ -245,7 +245,7 @@ void SegmentDlg::setRouteData(RouteData value)
         for (i=0;i < _companyList.count(); i++)
         {
             CompanyData* cd = (CompanyData*)_companyList.at(i);
-            if(cd->companyKey == _rd.companyKey)
+            if(cd->companyKey == _rd.companyKey())
             {
                 ui->cbCompany->setCurrentIndex(i);
                 break;
@@ -390,7 +390,7 @@ void SegmentDlg::txtRouteNbr_Leave()    // SLOT
  }
  for(int i=0; i <_routeNameList.count();i ++)
  {
-     if (_rd.route > 0  && _routeNbr == _rd.route && _rd.name == _routeNameList.at(i))
+     if (_rd.route() > 0  && _routeNbr == _rd.route() && _rd.routeName() == _routeNameList.at(i))
      {
          ui->cbRouteName->setCurrentIndex(i+1);
          break;
@@ -406,7 +406,7 @@ void SegmentDlg::txtRouteNbr_Leave()    // SLOT
          RouteData rd = myArray.at(i);
          for(int i=0; i <_routeNameList.count();i ++)
          {
-             if (rd.name == _routeNameList.at(i))
+             if (rd.routeName() == _routeNameList.at(i))
              {
                  ui->cbRouteName->setCurrentIndex(i+1);
                  break;
@@ -414,8 +414,8 @@ void SegmentDlg::txtRouteNbr_Leave()    // SLOT
          }
          if (bRouteChanged)
          {
-             ui->dateStart->setDate(rd.startDate);
-             ui->dateEnd->setDate( rd.endDate);
+             ui->dateStart->setDate(rd.startDate());
+             ui->dateEnd->setDate( rd.endDate());
              int companyKey = sql->getRouteCompany(_routeNbr);
              //foreach (companyData cd in _companyList)
              for(int j = 0; j < _companyList.count(); j++)
@@ -537,14 +537,14 @@ void SegmentDlg::cbRouteName_Leave()        // SLOT
         for(int i=0; i < rdList.count(); i++)
         {
             RouteData rd = rdList.at(i);
-            if (rd.route > 0)
+            if (rd.route() > 0)
             {
-             ui->dateStart->setDate( rd.startDate);
-              ui->dateEnd->setDate(rd.endDate);
-              if (rd.startDate < ui->dateStart->date())
-                    ui->dateStart->setDate( rd.startDate);
+             ui->dateStart->setDate( rd.startDate());
+              ui->dateEnd->setDate(rd.endDate());
+              if (rd.startDate() < ui->dateStart->date())
+                    ui->dateStart->setDate( rd.startDate());
                 if (ui->dateStart > ui->dateEnd)
-                    ui->dateEnd->setDate(rd.endDate);
+                    ui->dateEnd->setDate(rd.endDate());
                 ui->dateEnd->setFocus();
             }
         }
@@ -802,7 +802,8 @@ void SegmentDlg::btnOK_Click()  // SLOT
  else
  {
   //if (routeChanged != null && _rd != null)
-  RouteChangedEventArgs args = RouteChangedEventArgs(_rd.route, _rd.name, _newSegmentId, _rd.tractionType, _rd.companyKey, _rd.endDate, "Update");
+  RouteChangedEventArgs args = RouteChangedEventArgs(_rd.route(), _rd.routeName(), _newSegmentId,
+                                                     _rd.tractionType(), _rd.companyKey(), _rd.endDate(), "Update");
   emit routeChangedEvent(args);
 
  }

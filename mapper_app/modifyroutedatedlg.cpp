@@ -54,7 +54,7 @@ void ModifyRouteDateDlg::dateTimePicker1_ValueChanged(QDate date) //SLOT
  ui->lblError->setText("");
  if (ui->rbStart->isChecked())
  {
-  if (date >= _rd->endDate)
+  if (date >= _rd->endDate())
   {
    ui->lblError->setText(tr("Invalid date"));
    //System.Media.SystemSounds.Exclamation.Play();
@@ -67,7 +67,7 @@ void ModifyRouteDateDlg::dateTimePicker1_ValueChanged(QDate date) //SLOT
  else
  if (ui->rbEnd->isChecked())
  {
-  if (date <= _rd->startDate)
+  if (date <= _rd->startDate())
   {
    ui->lblError->setText(tr("Invalid date"));
    //System.Media.SystemSounds.Exclamation.Play();
@@ -99,7 +99,7 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
 
  if(ui->rbStart->isChecked())
  {
-  if(ui->dateTimePicker1->date() > _rd->endDate)
+  if(ui->dateTimePicker1->date() > _rd->endDate())
   {
       ui->lblError->setText(tr("New start date > route end date!"));
       QApplication::beep();
@@ -108,7 +108,7 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
  }
  else
  {
-  if(ui->dateTimePicker1->date() < _rd->startDate)
+  if(ui->dateTimePicker1->date() < _rd->startDate())
   {
       ui->lblError->setText(tr("New end date < route start date!"));
       QApplication::beep();
@@ -143,9 +143,9 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
                           ui->txtName1->text(), ui->txtName2->text()))
  {
   if (ui->rbStart->isChecked())
-   _rd->startDate = ui->dateTimePicker1->date();
+   _rd->startDate() = ui->dateTimePicker1->date();
   else
-   _rd->endDate = ui->dateTimePicker1->date();;
+   _rd->endDate() = ui->dateTimePicker1->date();;
 
   this->accept();
   this->close();
@@ -168,35 +168,35 @@ void ModifyRouteDateDlg::rbStartToggled(bool state)
 
  if(state)
  {
-  ui->dateTimePicker1->setDate(_rd->startDate);
+  ui->dateTimePicker1->setDate(_rd->startDate());
   ui->checkBox->setText(tr("Modify prior route end dates"));
   // changing startDate, get the name of the route before this.
   ui->lblName1->setText("PriorName:");
-  ui->txtName1->setText(sql->getPrevRouteName(rd.startDate));
+  ui->txtName1->setText(sql->getPrevRouteName(rd.startDate()));
   ui->lblName2->setText("CurrentName:");
-  ui->txtName2->setText(rd.name);
+  ui->txtName2->setText(rd.routeName());
  }
  else
  {
-  ui->dateTimePicker1->setDate(_rd->endDate);
+  ui->dateTimePicker1->setDate(_rd->endDate());
   ui->checkBox->setText(tr("Modify subsequent route start dates"));
   ui->lblName1->setText("CurrName:");
-  ui->txtName1->setText(rd.name);
+  ui->txtName1->setText(rd.routeName());
   ui->lblName2->setText("NextName:");
-  ui->txtName2->setText(sql->getNextRouteName(rd.endDate));
+  ui->txtName2->setText(sql->getNextRouteName(rd.endDate()));
 
  }
  ui->checkBox->setChecked(false);
  if(ui->rbStart->isChecked() && _currentIx > 0)
  {
   RouteData rd = routeList.at(_currentIx - 1);
-  if(_rd->startDate.addDays(-1) == rd.endDate)
+  if(_rd->startDate().addDays(-1) == rd.endDate())
    ui->checkBox->setChecked(true);
  }
  if(ui->rbEnd->isChecked() &&  _currentIx < routeList.size()-1)
  {
   RouteData rd = routeList.at(_currentIx + 1);
-  if(_rd->endDate.addDays(+1) == rd.startDate)
+  if(_rd->endDate().addDays(+1) == rd.startDate())
    ui->checkBox->setChecked(true);
  }
 }

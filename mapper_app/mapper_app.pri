@@ -2,6 +2,7 @@ SOURCES += main.cpp\
     $$PWD/browsecommentsdialog.cpp \
     $$PWD/lineeditdelegate.cpp \
     $$PWD/logger.cpp \
+    $$PWD/modifyroutedialog.cpp \
     $$PWD/mytextedit.cpp \
     $$PWD/overlay.cpp \
     $$PWD/queryeditmodel.cpp \
@@ -25,7 +26,6 @@ SOURCES += main.cpp\
     routeviewsortproxymodel.cpp \
     configuration.cpp \
     dialogcopyroute.cpp \
-    dialogrenameroute.cpp \
     routedlg.cpp \
     segmentdlg.cpp \
     segmentdescription.cpp \
@@ -78,6 +78,7 @@ HEADERS  += mainwindow.h \
     $$PWD/browsecommentsdialog.h \
     $$PWD/lineeditdelegate.h \
     $$PWD/logger.h \
+    $$PWD/modifyroutedialog.h \
     $$PWD/mytextedit.h \
     $$PWD/overlay.h \
     $$PWD/queryeditmodel.h \
@@ -101,7 +102,6 @@ HEADERS  += mainwindow.h \
     routeview.h \
     configuration.h \
     dialogcopyroute.h \
-    dialogrenameroute.h \
     routedlg.h \
     segmentdlg.h \
     segmentdescription.h \
@@ -177,10 +177,10 @@ FORMS += \
      ui/removecitydialog.ui
 
 FORMS    += ui/mainwindow.ui \
+    $$PWD/ui/modifyroutedialog.ui \
     $$PWD/ui/splitsegmentdlg.ui \
     ui/addgeoreferenceddialog.ui \
     ui/dialogcopyroute.ui \
-    ui/dialogrenameroute.ui \
     ui/routedlg.ui \
     ui/segmentdlg.ui \
     ui/splitroute.ui \

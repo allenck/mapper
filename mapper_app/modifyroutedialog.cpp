@@ -1,7 +1,7 @@
-#include "dialogrenameroute.h"
+#include "modifyroutedialog.h"
 #include "ui_dialogrenameroute.h"
 
-DialogRenameRoute::DialogRenameRoute(Configuration* cfg,QWidget *parent) :
+ModifyRouteDialog::ModifyRouteDialog(Configuration* cfg,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::DialogRenameRoute)
 {
@@ -15,12 +15,12 @@ DialogRenameRoute::DialogRenameRoute(Configuration* cfg,QWidget *parent) :
     connect(ui->buttonBox,SIGNAL(rejected()),this, SLOT(close()));
 }
 
-DialogRenameRoute::~DialogRenameRoute()
+ModifyRouteDialog::~ModifyRouteDialog()
 {
     delete ui;
 }
 
-void DialogRenameRoute::setConfig(Configuration * cfg)
+void ModifyRouteDialog::setConfig(Configuration * cfg)
 {
     config = cfg;
 }
@@ -30,21 +30,21 @@ void DialogRenameRoute::setConfig(Configuration * cfg)
 /// </summary>
 //public configuration Configuration { set { config = value; } }
 
-void DialogRenameRoute::routeData(RouteData value)
+void ModifyRouteDialog::routeData(RouteData value)
 {
 //    if (value == null)
 //        return;
     _rd = value;
 
-    ui->txtNewRouteNbr->setText( _rd.alphaRoute);
-    ui->txtNewRouteName->setText(_rd.name);
+    ui->txtNewRouteNbr->setText( _rd.alphaRoute());
+    ui->txtNewRouteName->setText(_rd.routeName());
     if (routeDataList.count()==0)
         refreshRoutes();
     //foreach (routeData rd in routeDataList)
     for(int i=0; i<routeDataList.count(); i++)
     {
         RouteData rd = (RouteData)routeDataList.at(i);
-        if (rd.route == _rd.route && rd.name == _rd.name && rd.endDate == _rd.endDate)
+        if (rd.route() == _rd.route() && rd.routeName() == _rd.routeName() && rd.endDate() == _rd.endDate())
         {
             //cbRoutes.SelectedItem = rd;
             ui->cbRoutes->setCurrentIndex(i);
@@ -53,21 +53,21 @@ void DialogRenameRoute::routeData(RouteData value)
         }
     }
 }
-RouteData DialogRenameRoute::getRouteData()
+RouteData ModifyRouteDialog::getRouteData()
 {
     return _rd;
 }
-qint32 DialogRenameRoute::newRoute()
+qint32 ModifyRouteDialog::newRoute()
 {
     return _routeNbr;
 }
-QString DialogRenameRoute::newName (){ return ui->txtNewRouteName->text(); }
+QString ModifyRouteDialog::newName (){ return ui->txtNewRouteName->text(); }
 
-void DialogRenameRoute::btnOK_Click()
+void ModifyRouteDialog::btnOK_Click()
 {
     RouteData rd = (RouteData)routeDataList.at(ui->cbRoutes->currentIndex());
 
-    QList<SegmentData> myArray = sql->getRouteSegmentsForDate(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"));
+    QList<RouteData> myArray = sql->getRouteSegmentsForDate(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
     //sql->OpenConnection();
     if (myArray.count()==0)
     {
@@ -76,32 +76,32 @@ void DialogRenameRoute::btnOK_Click()
         return;
     }
     sql->beginTransaction("RenameRoute");
-    CompanyData* cd = sql->getCompany(rd.companyKey);
+    CompanyData* cd = sql->getCompany(rd.companyKey());
 
     _routeNbr = sql->addAltRoute(ui->txtNewRouteNbr->text(), cd->routePrefix);
 
     //foreach (routeData rd1 in myArray)
     for(int i=0; i < myArray.count(); i++)
     {
-        SegmentData sd1 = myArray.at(i);
-        if (!sql->deleteRouteSegment(sd1.route(), sd1.routeName(), sd1.segmentId(),sd1.startDate().toString("yyyy/MM/dd"),
-                                     sd1.endDate().toString("yyyy/MM/dd")))
+        RouteData rd1 = myArray.at(i);
+        if (!sql->deleteRouteSegment(rd1.route(), rd1.routeName(), rd1.segmentId(),rd1.startDate().toString("yyyy/MM/dd"),
+                                     rd1.endDate().toString("yyyy/MM/dd")))
         {
             ui->lblHelp->setText(tr("Delete failed"));
             //System.Media.SystemSounds.Asterisk.Play();
             return;
         }
-        if (!sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text(), sd1.startDate(),
-            sd1.endDate(), sd1.segmentId(),
-            sd1.companyKey(), sd1.tractionType(), sd1.direction(), sd1.next(), sd1.prev(),
-            sd1.normalEnter(), sd1.normalLeave(), sd1.reverseEnter(), sd1.reverseLeave(), sd1.oneWay(), sd1.trackUsage()))
+        if (!sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text(), rd1.startDate(),
+            rd1.endDate(), rd1.segmentId(),
+            rd1.companyKey(), rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
+            rd1.normalEnter(), rd1.normalLeave(), rd1.reverseEnter(), rd1.reverseLeave(), rd1.oneWay(), rd1.trackUsage()))
         {
             ui->lblHelp->setText(tr("Update failed"));
             //System.Media.SystemSounds.Asterisk.Play();
             return;
         }
     }
-    TerminalInfo ti = sql->getTerminalInfo(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"));
+    TerminalInfo ti = sql->getTerminalInfo(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
     if(ti.route == -1)
     {
         //if(!sql->deleteTerminalInfo(rd.route, rd.name, sql->formatDate(rd.endDate)))
@@ -113,15 +113,15 @@ void DialogRenameRoute::btnOK_Click()
     sql->commitTransaction("RenameRoute");
     //sql->myConnection.Close();
 
-    _rd.alphaRoute = _alphaRoute;
-    _rd.name = ui->txtNewRouteName->text();
-    _rd.route = _routeNbr;
+    _rd.setAlphaRoute(_alphaRoute);
+    _rd.setRouteName(ui->txtNewRouteName->text());
+    _rd.setRoute(_routeNbr);
 
 //    this.DialogResult = DialogResult.OK;
 //    this.Close();
     this->setResult(QDialog::Accepted);
 }
-void DialogRenameRoute::refreshRoutes()
+void ModifyRouteDialog::refreshRoutes()
 {
     QString text = ui->cbRoutes->currentText();
     //ui->cbRoutes.Text = "";
@@ -154,18 +154,18 @@ void DialogRenameRoute::refreshRoutes()
 
 }
 
-void DialogRenameRoute::cbRoutes_SelectedIndexChanged()
+void ModifyRouteDialog::cbRoutes_SelectedIndexChanged()
 {
     if (ui->txtNewRouteName->text() == "")
         ui->txtNewRouteName->setText (ui->cbRoutes->currentText());
 }
 
-void DialogRenameRoute::txtNewRouteNbr_TextChanged()
+void ModifyRouteDialog::txtNewRouteNbr_TextChanged()
 {
     bRouteChanged = true;
 }
 
-void DialogRenameRoute::txtNewRouteName_Leave()
+void ModifyRouteDialog::txtNewRouteName_Leave()
 {
     if (ui->txtNewRouteNbr->text() == "")
     {
@@ -184,7 +184,7 @@ void DialogRenameRoute::txtNewRouteName_Leave()
     bool bAlphaRoute = false;
     //bRouteChanging = false;
     QString AlphaRoute;
-    int newRoute = sql->getNumericRoute(ui->txtNewRouteNbr->text(), & AlphaRoute, & bAlphaRoute, _rd.companyKey);
+    int newRoute = sql->getNumericRoute(ui->txtNewRouteNbr->text(), & AlphaRoute, & bAlphaRoute, _rd.companyKey());
 
     _routeNbr = newRoute;
     if (!config->currCity->bAlphaRoutes && bAlphaRoute)

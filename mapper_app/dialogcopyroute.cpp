@@ -82,8 +82,8 @@ void DialogCopyRoute::fillTractionTypes()
 void DialogCopyRoute::setRouteData(RouteData value)
 {
     _rd = value;
-    ui->txtRouteNbr->setText(_rd.alphaRoute);
-    ui->txtRouteName->setText(_rd.name);
+    ui->txtRouteNbr->setText(_rd.alphaRoute());
+    ui->txtRouteName->setText(_rd.routeName());
     bRouteChanged = true;
 
     if (routeDataList.count()== 0)
@@ -92,16 +92,16 @@ void DialogCopyRoute::setRouteData(RouteData value)
     for(int i=0; i < routeDataList.count(); i++)
     {
         RouteData rd = (RouteData)routeDataList.at(i);
-        if (rd.route == _rd.route && rd.name == _rd.name && rd.endDate == _rd.endDate)
+        if (rd.route() == _rd.route() && rd.routeName() == _rd.routeName() && rd.endDate() == _rd.endDate())
         {
             ui->cbRoutes->setCurrentIndex(i);
             ui->txtRouteName->setFocus();
-            ui->dateStart->setDate( rd.startDate);
-            ui->dateEnd->setDate( rd.endDate);
+            ui->dateStart->setDate( rd.startDate());
+            ui->dateEnd->setDate( rd.endDate());
             int j=0;
             foreach(CompanyData* cd, _companyList)
             {
-                if( cd->companyKey == rd.companyKey)
+                if( cd->companyKey == rd.companyKey())
                 {
                     ui->cbCompany->setCurrentIndex(j);
                     break;
@@ -160,18 +160,18 @@ void DialogCopyRoute::txtRouteNbr_Leave()      // SLOT
         for(int i=0; i < myArray.count(); i++)
         {
             RouteData rd =myArray.at(i);
-            ui->txtRouteName->setText(rd.name);
+            ui->txtRouteName->setText(rd.routeName());
             if (bRouteChanged)
             {
-                ui->dateStart->setDate( rd.startDate);
-                ui->dateEnd->setDate( rd.endDate);
+                ui->dateStart->setDate( rd.startDate());
+                ui->dateEnd->setDate( rd.endDate());
                 //cbTractionType.SelectedIndex = rd.tractionType;
                 //int ix = cbTractionType.FindString(rd.tractionType.ToString(), -1);
                 //cbTractionType.SelectedIndex = ix;
                 for(int j =0; j< tractionList.count(); j++)
                 {
                     TractionTypeInfo tti = tractionList.values().at(j);
-                    if(tti.tractionType == rd.tractionType)
+                    if(tti.tractionType == rd.tractionType())
                     {
                         ui->cbTractionType->setCurrentIndex(j);
                         break;
@@ -200,7 +200,7 @@ void DialogCopyRoute::txtRouteNbr_Leave()      // SLOT
 void DialogCopyRoute::btnOK_Click()      // SLOT
 {
     ui->lblHelp->setText("");
-    QList<SegmentData> myArray;
+    QList<RouteData> myArray;
     ui->lblHelp->setText("");
     bool bAlphaRoute = false;
     int companyKey = ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt();
@@ -253,24 +253,24 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     //    return;
     //}
 
-    myArray = sql->getRouteSegmentsForDate(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"));
+    myArray = sql->getRouteSegmentsForDate(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
 
 //    sql->OpenConnection();
 //    sql->BeginTransaction("CopyRoute");
     qint32  tractionType = (tractionList.values().at(ui->cbTractionType->currentIndex())).tractionType;
     //foreach (routeData rd1 in myArray)
 
-    if(ui->dateStart->date() > _rd.endDate || ui->dateEnd->date() < _rd.startDate)
+    if(ui->dateStart->date() > _rd.endDate() || ui->dateEnd->date() < _rd.startDate())
     {
         for (int i =0; i < myArray.count(); i++)
         {
-            SegmentData sd1 = myArray.at(i);
+            RouteData rd1 = myArray.at(i);
             if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(), ui->dateStart->date(),
-                                       ui->dateEnd->date(), sd1.segmentId(),
+                                       ui->dateEnd->date(), rd1.segmentId(),
                                        ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey,
-                                       /*cbTractionType.SelectedIndex + 1*/tractionType, sd1.direction(), sd1.next(), sd1.prev(),
-                                       sd1.normalEnter(), sd1.normalLeave(), sd1.reverseEnter(), sd1.reverseLeave(),
-                                       sd1.oneWay(), sd1.trackUsage()) == false)
+                                       /*cbTractionType.SelectedIndex + 1*/tractionType, rd1.direction(), rd1.next(), rd1.prev(),
+                                       rd1.normalEnter(), rd1.normalLeave(), rd1.reverseEnter(), rd1.reverseLeave(),
+                                       rd1.oneWay(), rd1.trackUsage()) == false)
             {
                 ui->lblHelp->setText(tr("add failed"));
                 //System.Media.SystemSounds.Asterisk.Play();
@@ -283,24 +283,24 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     else
     for (int i =0; i < myArray.count(); i++)
     {
-        SegmentData sd1 = myArray.at(i);
-        SegmentData sd2 = sql->getSegmentInfoForRouteDates(rd.route, ui->txtRouteName->text(), sd1.segmentId(),
-                                                           sd1.startDate().toString("yyyy/MM/dd"),
-                                                           sd1.endDate().toString("yyyy/MM/dd"));
-        if (sd2.route() < 0)
+        RouteData rd1 = myArray.at(i);
+        RouteData rd2 = sql->getRouteDataForRouteDates(rd.route(), ui->txtRouteName->text(), rd1.segmentId(),
+                                                           rd1.startDate().toString("yyyy/MM/dd"),
+                                                           rd1.endDate().toString("yyyy/MM/dd"));
+        if (rd2.route() < 0)
         {
-            if (sql->doesRouteSegmentExist(_routeNbr, ui->txtRouteName->text(), sd2.segmentId(), ui->dateStart->date(), ui->dateEnd->date()))
+            if (sql->doesRouteSegmentExist(_routeNbr, ui->txtRouteName->text(), rd2.segmentId(), ui->dateStart->date(), ui->dateEnd->date()))
             {
-                sql->deleteRouteSegment(_routeNbr, ui->txtRouteName->text(), sd2.segmentId(), ui->dateStart->text(), ui->dateEnd->text());
+                sql->deleteRouteSegment(_routeNbr, ui->txtRouteName->text(), rd2.segmentId(), ui->dateStart->text(), ui->dateEnd->text());
             }
 
             if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(), ui->dateStart->date(), ui->dateEnd->date(),
-                                       sd1.segmentId(),
+                                       rd1.segmentId(),
                                        ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey,
-                                       /*cbTractionType.SelectedIndex + 1*/tractionType, sd1.direction(),
-                                       sd1.next(), sd1.prev(),
-                                       sd1.normalEnter(), sd1.normalLeave(), sd1.reverseEnter(), sd1.reverseLeave(),
-                                       sd1.oneWay(), sd1.trackUsage()) == false)
+                                       /*cbTractionType.SelectedIndex + 1*/tractionType, rd1.direction(),
+                                       rd1.next(), rd1.prev(),
+                                       rd1.normalEnter(), rd1.normalLeave(), rd1.reverseEnter(), rd1.reverseLeave(),
+                                       rd1.oneWay(), rd1.trackUsage()) == false)
             {
                 ui->lblHelp->setText(tr("add failed"));
                 //System.Media.SystemSounds.Asterisk.Play();
@@ -311,8 +311,8 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
         {
             // an existing segment exists for this date range.
             // first, delete the existing segment from the route
-            if (!sql->deleteRouteSegment(_routeNbr, ui->txtRouteName->text(), sd2.segmentId(),
-                                         sd2.startDate().toString("yyyy/MM/dd"), sd2.endDate().toString("yyyy/MM/dd")))
+            if (!sql->deleteRouteSegment(_routeNbr, ui->txtRouteName->text(), rd2.segmentId(),
+                                         rd2.startDate().toString("yyyy/MM/dd"), rd2.endDate().toString("yyyy/MM/dd")))
             {
                 ui->lblHelp->setText(tr("deleteRoute failed!"));
                 //System.Media.SystemSounds.Beep.Play();
@@ -320,13 +320,13 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
                 return;
             }
             // now add back the portion of the route before the current date range
-            if (sd2.startDate() < ui->dateStart->date())
+            if (rd2.startDate() < ui->dateStart->date())
             {
                 if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(),
-                    sd2.startDate(), (ui->dateStart->date().addDays(-1)),
-                    sd2.segmentId(), sd2.companyKey(), sd2.tractionType(), sd2.direction(),
-                                           sd1.next(), sd1.prev(), sd2.normalEnter(),
-                    sd2.normalLeave(), sd2.reverseEnter(), sd2.reverseLeave(), sd2.oneWay(), sd2.trackUsage()) == false)
+                    rd2.startDate(), (ui->dateStart->date().addDays(-1)),
+                    rd2.segmentId(), rd2.companyKey(), rd2.tractionType(), rd2.direction(),
+                                           rd1.next(), rd1.prev(), rd2.normalEnter(),
+                    rd2.normalLeave(), rd2.reverseEnter(), rd2.reverseLeave(), rd2.oneWay(), rd2.trackUsage()) == false)
                 {
                     ui->lblHelp->setText(tr("add failed"));
                     //System.Media.SystemSounds.Asterisk.Play();
@@ -334,12 +334,12 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
                 }
             }
             // now add back any portion of the route after the current date range
-            if (sd2.endDate() > ui->dateEnd->date())
+            if (rd2.endDate() > ui->dateEnd->date())
             {
                 if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(),
-                    (ui->dateEnd->date().addDays(1)), sd2.endDate(),
-                    sd2.segmentId(), sd2.companyKey(), sd2.tractionType(), sd2.direction(), sd2.next(), sd2.prev(),
-                    sd2.normalEnter(), sd2.normalLeave(), sd2.reverseEnter(), sd2.reverseLeave(), sd2.oneWay(), sd2.trackUsage()) == false)
+                    (ui->dateEnd->date().addDays(1)), rd2.endDate(),
+                    rd2.segmentId(), rd2.companyKey(), rd2.tractionType(), rd2.direction(), rd2.next(), rd2.prev(),
+                    rd2.normalEnter(), rd2.normalLeave(), rd2.reverseEnter(), rd2.reverseLeave(), rd2.oneWay(), rd2.trackUsage()) == false)
                 {
                     ui->lblHelp->setText(tr("add failed"));
                     //System.Media.SystemSounds.Asterisk.Play();
@@ -347,14 +347,18 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
                 }
             }
             // now add the segment for the current date range
-            if (sql->doesRouteSegmentExist(_routeNbr, ui->txtRouteName->text(), sd1.segmentId(), ui->dateStart->date(), ui->dateEnd->date()))
+            if (sql->doesRouteSegmentExist(_routeNbr, ui->txtRouteName->text(), rd1.segmentId(),
+                                           ui->dateStart->date(), ui->dateEnd->date()))
             {
-                sql->deleteRouteSegment(_routeNbr, ui->txtRouteName->text(), sd2.segmentId(), ui->dateStart->text(), ui->dateEnd->text());
+                sql->deleteRouteSegment(_routeNbr, ui->txtRouteName->text(), rd2.segmentId(),
+                                        ui->dateStart->text(), ui->dateEnd->text());
             }
-            if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(), ui->dateStart->date(), ui->dateEnd->date(), sd1.segmentId(),
+            if (sql->addSegmentToRoute(_routeNbr, ui->txtRouteName->text(), ui->dateStart->date(),
+                                       ui->dateEnd->date(), rd1.segmentId(),
                      ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey,
-                     /*cbTractionType.SelectedIndex + 1*/tractionType, sd1.direction(), sd1.next(), sd1.prev(),
-                     sd1.normalEnter(), sd1.normalLeave(), sd1.reverseEnter(), sd1.reverseLeave(), sd1.oneWay(), sd1.trackUsage()) == false)
+                     /*cbTractionType.SelectedIndex + 1*/tractionType, rd1.direction(), rd1.next(), rd1.prev(),
+                     rd1.normalEnter(), rd1.normalLeave(), rd1.reverseEnter(), rd1.reverseLeave(),
+                                       rd1.oneWay(), rd1.trackUsage()) == false)
             {
                 ui->lblHelp->setText(tr("add failed"));
                 //System.Media.SystemSounds.Asterisk.Play();
@@ -367,12 +371,12 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     //sql->CommitTransaction("CopyRoute");
     //sql->myConnection.Close();
 
-    _rd.route = _routeNbr;
-    _rd.name = ui->txtRouteName->text();
-    _rd.startDate = ui->dateStart->date();
-    _rd.endDate = ui->dateEnd->date();
-    _rd.companyKey = ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey;
-    _rd.tractionType = ((TractionTypeInfo)tractionList.values().at(ui->cbTractionType->currentIndex())).tractionType;
+    _rd.setRoute(_routeNbr);
+    _rd.setRouteName(ui->txtRouteName->text());
+    _rd.setStartDate(ui->dateStart->date());
+    _rd.setEndDate(ui->dateEnd->date());
+    _rd.setCompanyKey( ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey);
+    _rd.setTractionType( ((TractionTypeInfo)tractionList.values().at(ui->cbTractionType->currentIndex())).tractionType);
 
     this->accept();
     this->close();

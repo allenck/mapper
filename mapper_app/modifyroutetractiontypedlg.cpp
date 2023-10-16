@@ -67,11 +67,11 @@ void ModifyRouteTractionTypeDlg::btnOK_Click()      //SLOT
      QApplication::beep();
      return;
  }
- QList<SegmentData> rdList = sql->getRouteSegmentsForDate(_sd->route(), _sd->routeName(), _sd->startDate().toString("yyyy/MM/dd"));
+ QList<RouteData> rdList = sql->getRouteSegmentsForDate(_sd->route(), _sd->routeName(), _sd->startDate().toString("yyyy/MM/dd"));
  if(rdList.count())
  {
   sql->beginTransaction("ModifyRouteTractionType");
-  foreach(SegmentData sd, rdList)
+  foreach(RouteData rd, rdList)
   {
    if(ui->dateEdit->date() >= sd.startDate() && ui->dateEdit->date()< sd.endDate())
    {

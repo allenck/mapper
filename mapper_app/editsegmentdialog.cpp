@@ -156,11 +156,11 @@ void EditSegmentDialog::segmentSelected(SegmentInfo si)
  ui->chkOneWay->setVisible(sd);
  if(sd)
  {
-  if(rd->route > 0  && si.tracks()== 1)
+  if(rd->route() > 0  && si.tracks()== 1)
   {
    ui->chkOneWay->setChecked(sd->oneWay() == "Y");
   }
-  if(rd->route > 0  && sd->tracks()== 2)
+  if(rd->route() > 0  && sd->tracks()== 2)
   {
    if(sd->trackUsage() =="L")
     ui->trackUsage->setCurrentIndex(1); // left track
@@ -198,7 +198,7 @@ void EditSegmentDialog::On_cbRouteType_currentIndexChanged(int i)
 void EditSegmentDialog::On_sbTracks_valueChanged(int v)
 {
  si.setTracks(v);
- if(rd->route > 0 )
+ if(rd->route() > 0 )
  {
   ui->chkOneWay->setChecked(v==1);
   ui->trackUsage->setVisible(v==2);

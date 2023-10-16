@@ -333,6 +333,11 @@ public:
     void setLocation(QString loc) {_location = loc;}
     void setAlphaRoute(QString alphaRoute) {_alphaRoute = alphaRoute;}
     QString alphaRoute() {return _alphaRoute;}
+    bool operator==(const SegmentData o)
+    {
+     return _route == o._route && _alphaRoute == o._alphaRoute && _routeName == o._routeName
+       && _startDate == o.startDate() && _endDate == o._endDate && _segmentId == o._segmentId;
+    }
 
  private:
     qint32 _segmentId=-1;
@@ -386,37 +391,64 @@ public:
     RouteData();
     ~RouteData();
     RouteData(const RouteData&);
-    qint32 route;
-    QString alphaRoute;
-    QString name;
-    QDate defaultDate;
-    QDate startDate;
-    QDate endDate;
-    qint32 companyKey;
-    qint32 tractionType;
-
-#if 0
-    qint32 lineKey;
-    QString direction;
-    qint32 normalEnter;
-    qint32 normalLeave;
-    qint32 reverseEnter;        // Not defined for one Way
-    qint32 reverseLeave;        // Not defined for one Way
-    QString oneWay;
-    QString trackUsage;
-    int next =-1, prev=-1;
-    LatLng startLatLng;
-    LatLng endLatLng;
-    SegmentData sd;
-    Bearing* bearing = nullptr;
-    bool bNeedsUpdate = false;
-    RouteType routeType;
-#endif
     QString toString();
+    int route() {return _route;}
+    void setRoute(int route) {_route = route;}
+    QString alphaRoute() const {return _alphaRoute;}
+    void setAlphaRoute(QString alphaRoute) {_alphaRoute = alphaRoute;}
+    QString routeName() const {return _name;}
+    void setRouteName(QString name) {_name = name;}
+    QDate startDate() const {return _startDate;}
+    void setStartDate(QDate date) {_startDate = date;}
+    QDate endDate() const {return _endDate;}
+    void setEndDate(QDate date) {_endDate = date;}
+    qint32 companyKey() {return _companyKey;}
+    void setCompanyKey(int key) {_companyKey = key;}
+    qint32 tractionType() {return _tractionType;}
+    void setTractionType(int t) {_tractionType = t;}
+    qint32 lineKey() {return _lineKey;}
+    qint32 segmentId() {return _lineKey;}
+    QString direction() {return _direction;}
+    qint32 normalEnter() {return _normalEnter;}
+    qint32 normalLeave() {return _normalLeave;}
+    qint32 reverseEnter() {return _reverseEnter;}        // Not defined for one Way
+    qint32 reverseLeave() {return _reverseLeave;}        // Not defined for one Way
+    QString oneWay() {return _oneWay;}
+    QString trackUsage() {return _trackUsage;}
+    int next() {return _next;}
+    int prev() {return _prev;}
+    int tracks() {return _tracks;}
+
+ private:
+    qint32 _route = -1;
+    QString _alphaRoute;
+    QString _name;
+    //QDate defaultDate;
+    QDate _startDate;
+    QDate _endDate;
+    qint32 _companyKey;
+    qint32 _tractionType;
+    qint32 _lineKey = -1;
+    QString _direction;
+    qint32 _normalEnter;
+    qint32 _normalLeave;
+    qint32 _reverseEnter;        // Not defined for one Way
+    qint32 _reverseLeave;        // Not defined for one Way
+    QString _oneWay;
+    QString _trackUsage;
+    int _next =-1, _prev=-1;
+    int _tracks;
+//    LatLng startLatLng;
+//    LatLng endLatLng;
+//    SegmentData sd;
+//    Bearing* bearing = nullptr;
+    bool bNeedsUpdate = false;
+    RouteType _routeType;
+
 signals:
 
 public slots:
-
+ friend class SQL;
 };
 Q_DECLARE_METATYPE(RouteData)
 
@@ -756,12 +788,12 @@ public:
     {
      typeOfChange = type;
      this->rd = rd;
-     routeNbr = rd.route;
-     this->routeName = rd.name;
+     routeNbr = rd.route();
+     this->routeName = rd.routeName();
      this->routeSegment = segmentId;
-     tractionType = rd.tractionType;
-     companyKey =rd.companyKey;
-     dateEnd = rd.endDate;
+     tractionType = rd.tractionType();
+     companyKey =rd.companyKey();
+     dateEnd = rd.endDate();
     }
 
     RouteChangedEventArgs(QString type, qint32 s, qint32 tt)

@@ -228,12 +228,12 @@ void SegmentView::addToRoute()
  if(ix >= 0)
  {
   RouteData rd = parent->routeList.at(ix);
-  sd.setRoute(rd.route);
-  sd.setAlphaRoute(rd.alphaRoute);
-  sd.setRouteName(rd.name);
-  sd.setStartDate(rd.startDate);
-  sd.setEndDate(rd.endDate);
-  sd.setCompanyKey(rd.companyKey);
+  sd.setRoute(rd.route());
+  sd.setAlphaRoute(rd.alphaRoute());
+  sd.setRouteName(rd.routeName());
+  sd.setStartDate(rd.startDate());
+  sd.setEndDate(rd.endDate());
+  sd.setCompanyKey(rd.companyKey());
   parent->routeDlg->setSegmentData(sd);
  }
  parent->routeDlg->show();

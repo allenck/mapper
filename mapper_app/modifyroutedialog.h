@@ -1,5 +1,5 @@
-#ifndef DIALOGRENAMEROUTE_H
-#define DIALOGRENAMEROUTE_H
+#ifndef MODIFYROUTEDIALOG_H
+#define MODIFYROUTEDIALOG_H
 
 #include <QDialog>
 #include "data.h"
@@ -10,13 +10,13 @@ namespace Ui {
     class DialogRenameRoute;
 }
 
-class DialogRenameRoute : public QDialog
+class ModifyRouteDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    DialogRenameRoute(Configuration * cfg, QWidget *parent = 0);
-    ~DialogRenameRoute();
+    ModifyRouteDialog(Configuration * cfg, QWidget *parent = 0);
+    ~ModifyRouteDialog();
     qint32 newRoute();
     void routeData(RouteData value);
     RouteData getRouteData();
@@ -42,4 +42,4 @@ private slots:
 
 };
 
-#endif // DIALOGRENAMEROUTE_H
+#endif // MODIFYROUTEDIALOG_H
