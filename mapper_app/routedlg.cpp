@@ -31,7 +31,7 @@ RouteDlg::RouteDlg(Configuration *cfg, QWidget *parent) :
     connect(ui->gbNormalLeave, SIGNAL(toggled(bool)), this, SLOT(gbNormalLeave_Leave()));
     connect(ui->gbReverseEnter, SIGNAL(toggled(bool)), this, SLOT(gbReverseEnter_Leave()));
     connect(ui->gbReverseLeave, SIGNAL(toggled(bool)), this, SLOT(gbReverseLeave_Leave()));
-    connect(ui->btnOK,SIGNAL(clicked()), this, SLOT(btnOK_click()));
+    connect(ui->btnClose,SIGNAL(clicked()), this, SLOT(btnClose_click()));
     connect(ui->btnAdd, SIGNAL(clicked()), this, SLOT(btnAdd_Click()));
     connect(ui->btnUpdateTurn, SIGNAL(clicked()), this, SLOT(btnUpdateTurn_Click()));
     connect(ui->btnDelete, SIGNAL(clicked()), this, SLOT(btnDelete_Click()));
@@ -229,19 +229,19 @@ void RouteDlg::setSegmentData(SegmentData sd)
  ui->cbOneWay->setChecked(sd.oneWay()=="Y");
  ui->gbUsage->setVisible(sd.tracks()==2 && sd.oneWay() == "Y");
  //_segmentDataList = sql->getRouteSegmentsBySegment(sd.route(), sd.segmentId());
- _segmentDataList = ((MainWindow*)parent())->segmentDataList;
+ //_segmentDataList = ((MainWindow*)parent())->segmentDataList;
  fillSegmentsComboBox();
- ui->cbSegments->findText(sd.toString());
- for(int i=0; i < _segmentDataList.count(); i++)
- {
-  SegmentData sd1 = _segmentDataList.at(i);
-  if(sd1.startDate()== sd.startDate() && sd1.endDate() == sd.endDate())
-  {
-   cbSegments_SelectedIndexChanged(i);
-   checkUpdate(__FUNCTION__);
-   break;
-  }
- }
+ ui->cbSegments->setCurrentIndex(ui->cbSegments->findText(sd.toString()));
+// for(int i=0; i < _segmentDataList.count(); i++)
+// {
+//  SegmentData sd1 = _segmentDataList.at(i);
+//  if(sd1.startDate()== sd.startDate() && sd1.endDate() == sd.endDate())
+//  {
+//   cbSegments_SelectedIndexChanged(i);
+//   checkUpdate(__FUNCTION__);
+//   break;
+//  }
+// }
  _routeNamesList = sql->getRouteNames(_routeNbr);
  for(int i=0; i < _routeNamesList.count(); i++)
  {
@@ -651,11 +651,14 @@ void RouteDlg::cbSegments_SelectedIndexChanged(int row)
         return;
     sd = _segmentDataList.at(ix);
     ui->lblSegmentText->setText(sd.toString2());
-    ui->cbRouteName->findText(sd.routeName());
+    ui->cbRouteName->setCurrentIndex(ui->cbRouteName->findText(sd.routeName()));
     _routeNbr = sd.route();
     //txtRouteNbr.Text = rd.route.ToString();
     ui->txtRouteNbr->setText( sd.alphaRoute());
     ui->cbOneWay->setChecked(sd.oneWay() == "Y");
+    ui->gbUsage->setVisible(sd.tracks()==2 && sd.oneWay() == "Y");
+    ui->dateStart->setDate(sd.startDate());
+    ui->dateEnd->setDate(sd.endDate());
     //cbTractionType.SelectedIndex = rd.tractionType-1;
 //    int i = cbTractionType.FindString(rd.tractionType.ToString(), -1);
 //    cbTractionType.SelectedIndex = i;
@@ -680,7 +683,7 @@ void RouteDlg::cbSegments_SelectedIndexChanged(int row)
 
     checkUpdate(__FUNCTION__);
     ui->dateStart->setFocus();
-  #if 0
+  #if 1
     if(sd.oneWay() == "Y")
     {
         if (sd.direction() != "" && sd.direction() != "  ")
@@ -708,7 +711,7 @@ void RouteDlg::cbSegments_SelectedIndexChanged(int row)
     }
 #endif
 
-    btnUpdateTurn_Click();
+    //btnUpdateTurn_Click();
 }
 
 void RouteDlg::setCompany(qint32 companyKey)
@@ -1362,7 +1365,7 @@ void RouteDlg::gbReverseLeave_Leave()      // SLOT   Reverse Leave
     checkUpdate(__FUNCTION__);
 }
 
-void RouteDlg::btnOK_click()      //SLOT
+void RouteDlg::btnClose_click()      //SLOT
 {
  this->setVisible(false);
 }
@@ -1866,12 +1869,12 @@ void RouteDlg::btnAdd_Click()         // SLOT
 
   //fillCompanies();
   //fillComboBox();
-  ui->btnOK->setEnabled(true);
+  ui->btnClose->setEnabled(true);
   ui->btnAdd->setEnabled( false);
   bAddMode = false;
 
   myParent->On_displayRoute(_rd);
-
+  fillSegmentsComboBox();
   //this->setVisible(false);
  }
  catch(Exception)

@@ -272,22 +272,22 @@ public:
     int prev() {return _prev;}
     void setPrev(int prev){_prev = prev;}
     Bearing bearing() {
-     _bearing = Bearing(_startLat, _startLon, _endLat, _endLon);
-     _direction = _bearing.strDirection();
-     _length = _bearing.Distance();
+//     _bearing = Bearing(_startLat, _startLon, _endLat, _endLon);
+//     _direction = _bearing.strDirection();
+//     _length = _bearing.Distance();
      return _bearing;
     }
     void setBearing(Bearing bearing){_bearing = bearing;}
     Bearing bearingStart() {
-     if(_pointList.count() < 2)
-      return _bearing;
-     _bearingStart = Bearing(_startLat, _startLon, _pointList.at(1).lat(), _pointList.at(1).lon());
+//     if(_pointList.count() < 2)
+//      return _bearing;
+//     _bearingStart = Bearing(_startLat, _startLon, _pointList.at(1).lat(), _pointList.at(1).lon());
      return _bearingStart;
     }
     Bearing bearingEnd() {
-     if(_pointList.count() < 2)
-      return _bearing;
-     _bearingEnd =  Bearing(_pointList.at(_points-2).lat(), _pointList.at(_points-2).lon(), _endLat, _endLon);
+//     if(_pointList.count() < 2)
+//      return _bearing;
+//     _bearingEnd =  Bearing(_pointList.at(_points-2).lat(), _pointList.at(_points-2).lon(), _endLat, _endLon);
      return _bearingEnd;
     }
     double getLength();
@@ -324,8 +324,8 @@ public:
     QString routeName() const {return _routeName;}
     void setRouteName(QString name) {_routeName = name;}
     Bounds bounds() {
-     LatLng _sw = LatLng(_startLat < _endLat ? _startLat : _endLat, _startLon < _endLon ? _startLon : _endLon );
-     LatLng _ne = LatLng(_startLat > _endLat ? _startLat : _endLat, _startLon > _endLon ? _startLon : _endLon );
+     _sw = LatLng(_startLat < _endLat ? _startLat : _endLat, _startLon < _endLon ? _startLon : _endLon );
+     _ne = LatLng(_startLat > _endLat ? _startLat : _endLat, _startLon > _endLon ? _startLon : _endLon );
      _bounds = Bounds(_sw, _ne);
      return _bounds;
     }
@@ -363,11 +363,12 @@ public:
     LatLng _sw;
     LatLng _ne;
     QString _trackType = " ";
+    void calculate();
 
-    void setBounds(Bounds bounds) {
-     if(bounds.isValid())
-      _bounds = bounds;
-    }
+//    void setBounds(Bounds bounds) {
+//     if(bounds.isValid())
+//      _bounds = bounds;
+//    }
     int _companyKey = -1;
     QString _routeName;
     QString _location;

@@ -269,6 +269,7 @@ void SegmentData::addPoint(LatLng pt)
 {
  _pointList.append(pt);
  //SQL sql;
+ calculate();
  SQL::instance()->updateSegment(this);
 }
 
@@ -278,6 +279,7 @@ void SegmentData::insertPoint(int ptNum, LatLng pt)
  _pointList.insert(ptNum +1, pt);
  //lineSegments = pointList.count()-1;
  //SQL sql;
+ calculate();
  SQL::instance()->updateSegment(this);
 }
 
@@ -286,6 +288,7 @@ void SegmentData::movePoint(int ptNum, LatLng pt)
  if(ptNum >= _pointList.count()) return;
  _pointList.replace(ptNum, pt);
  //SQL sql;
+ calculate();
  SQL::instance()->updateSegment(this);
 }
 
@@ -296,6 +299,7 @@ void SegmentData::deletePoint(int ptNum)
  else
   qDebug() << QString("delete point %1 from segment %2 failed").arg(ptNum).arg(_segmentId);
  //SQL sql;
+ calculate();
  SQL::instance()->updateSegment(this);
 }
 
@@ -316,19 +320,33 @@ void SegmentData::setPoints(QString sPoints)
    bounds().updateBounds(latLng);
   }
  }
- for(int i = 1; i < _pointList.count(); i++)
+ _points = _pointList.count();
+ calculate();
+}
+
+// calculate Bounds. Bearings and length
+void SegmentData::calculate()
+{
+ if(_points >= 2)
  {
-  Bearing b = Bearing(_pointList.at(i-1), _pointList.at(i));
-  _length += b.Distance();
-  _endLat = _pointList.at(i).lat();
-  _endLon = _pointList.at(i).lon();
+  //_length += _bearing.Distance();
+  _endLat = _pointList.at(_points-1).lat();
+  _endLon = _pointList.at(_points-1).lon();
  }
  if(_pointList.count() > 0)
  {
   _startLat = _pointList.at(0).lat();
   _startLon = _pointList.at(0).lon();
  }
- _points = _pointList.count();
+ if(_points >= 2)
+ {
+  _bearing = Bearing(_pointList.at(0), _pointList.at(_points-1));
+  _bearingStart = Bearing(_startLat, _startLon, _pointList.at(1).lat(), _pointList.at(1).lon());
+  _bearingEnd =  Bearing(_pointList.at(_points-2).lat(), _pointList.at(_points-2).lon(), _endLat, _endLon);
+ _length = getLength();
+  bounds();
+  direction();
+ }
 }
 
 QString SegmentData::pointsString()

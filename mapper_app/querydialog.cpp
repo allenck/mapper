@@ -184,10 +184,12 @@ void QueryDialog::on_clear_QueryButton_clicked()
 
 void QueryDialog::on_load_QueryButton_clicked()
 {
+ setCursor(Qt::WaitCursor);
  QString s_File_Name = QFileDialog::getOpenFileName(this, "Choose a SQL text file",
                        config->q.s_query_path, "SQL text files (*.sql *.txt);;All Files (*.*)");
  // QFileDialog take a long time to close, this should tak care of this - but does not.
  QCoreApplication::processEvents();
+ setCursor(Qt::ArrowCursor);
  if (s_File_Name.isEmpty()) return;
  QFile this_file(s_File_Name);
  QFileInfo this_fi(s_File_Name);
@@ -303,10 +305,16 @@ void QueryDialog::on_go_QueryButton_clicked()
  {
   text = cur.selectedText();
  }
-// else
-//  text = ui->editQuery->toPlainText();
- QStringList list = text.split(";\n");
- foreach(QString txt, list)
+ else
+  text = ui->editQuery->toPlainText(); // select all lines
+
+ QStringList lines = text.split("\n");
+ QString combined;
+ foreach(QString line, lines)
+  combined.append(line + " ");
+ QStringList statements = combined.split(";");
+ QStringList viewList = SQL::instance()->listViews();
+ foreach(QString txt, statements)
  {
   if (txt.trimmed().isEmpty())
    continue;
@@ -315,7 +323,7 @@ void QueryDialog::on_go_QueryButton_clicked()
      && tokens.at(0).compare("select", Qt::CaseInsensitive)  == 0
      && tokens.at(1) == "*"
      && tokens.at(2).compare("from", Qt::CaseInsensitive) == 0
-     )
+      && !viewList.contains(tokens.at(3),Qt::CaseInsensitive) )
   {
    processSelect(tokens.at(3), txt);
   }

@@ -93,7 +93,7 @@ private slots:
     void txtRouteNbr_Leave();
     void txtRouteName_Leave();
     void cbSegments_SelectedIndexChanged(int i);
-    void btnOK_click();
+    void btnClose_click();
     void gbNormalEnter_Leave();
     void gbNormalLeave_Leave();
     void gbReverseEnter_Leave();

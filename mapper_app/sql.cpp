@@ -1419,7 +1419,7 @@ bool SQL::checkConnectingSegments(QList<SegmentData> segmentDataList)
         return false;
     return true;
 }
-
+#if 0
 /// <summary>
 /// Get all route segment info with dup segments
 /// </summary>
@@ -1558,143 +1558,18 @@ QList<SegmentData> SQL::getRouteSegmentsInOrder(qint32 route, QString name, QStr
  //checkConnectingSegments(myArray);
  return myArray;
 }
-#if 0
-/// <summary>
-/// Get all route segment info with dup segments
-/// </summary>
-/// <param name="route"></param>
-/// <param name="name"></param>
-/// <param name="date"></param>
-/// <returns>array of segmentinfo</returns>
-QList<SegmentInfo> SQL::getRouteSegmentsInOrder2(qint32 route, QString name, QString date)
+#else
+QList<SegmentData> SQL::getRouteSegmentsInOrder(qint32 route, QString name, QString date)
 {
- QList<SegmentInfo> myArray;
- SegmentInfo si = SegmentInfo();
- qint32 currSegment = -1, segmentId = -1;
- double startLat = 0, startLon = 0, endLat = 0, endLon = 0;
- QString oneWay = "";
-// try
-// {
-  if(!dbOpen())
-      throw Exception(tr("database not open: %1").arg(__LINE__));
-  QSqlDatabase db = QSqlDatabase::database();
-  bool firstTry = true;
-  while (true)
-  {
-   QString  commandText;
-   if(firstTry)
-    commandText = "Select c.startLat, c.startLon, c.endLat, c.endLon, c.segmentId, c.description, c.oneWay, "
-                  "b.direction, b.next, b.prev, b.normalEnter, b.normalLeave, b.reverseEnter, b.reverseLeave,"
-                  " b.startDate, b.endDate, c.length, c.tracks, c.pointArray, b.OneWay, b.TrackUsage, c.type,"
-                  " b.tractionType"
-                  " from Routes b join Segments c on c.segmentId = LineKey"
-                  " where b.Route = " + QString("%1").arg(route) + " and Name = '" + name + "'"
-                  " and '" + date + "' between b.StartDate and b.endDate"
-                  /*" and b.endDate <= '"+ date + "'*/" order by b.startDate, b.endDate, c.segmentid";
-   else
-    commandText = "Select c.startLat, c.startLon, c.endLat, c.endLon, c.segmentId, c.description, c.oneWay,"
-                  " b.direction, b.next, b.prev, b.normalEnter, b.normalLeave, b.reverseEnter, b.reverseLeave"
-                  " b.startDate, b.endDate, c.length, c.tracks, c.pointArray, b.OneWay, b.TrackUsage, c.type,"
-                  " b.tractionType"
-                  " from Routes b join Segments c on c.segmentId = LineKey"
-                  " where b.Route = " + QString("%1").arg(route) + " and Name = '" + name + "'"
-                  "  order by b.startDate, b.endDate, c.segmentid";
-   // Note: 1st Query fails if route has a single segment
-   QSqlQuery query = QSqlQuery(db);
-   bool bQuery = query.exec(commandText);
-   bool bSequenceInfoPresent = true;
-   if(!bQuery)
-   {
-    SQLERROR(query);
-    if(!firstTry)
-       return myArray;
-    firstTry = false;
-    continue;
-   }
-   qDebug() << "getRouteSegmentsInOrder2: " << commandText << " rows:" << query.size();
+ QString where = "where Route = " + QString("%1").arg(route)
+                 + " and trim(RouteName) = '" + name + "'"
+                 " and '" + date + "' between StartDate and EndDate"
+                 " order by StartDate, EndDate, Segmentid";
 
-   if (!query.isActive())
-   {
-    if(!firstTry)
-       return myArray;
-    firstTry = false;
-    continue;
-
-   }
-   //                myArray = new LatLng[myReader.RecordsAffected];
-
-   while (query.next())
-   {
-    startLat = query.value(0).toDouble();
-    startLon = query.value(1).toDouble();
-    endLat = query.value(2).toDouble();
-    endLon = query.value(3).toDouble();
-    segmentId = query.value(4).toInt();
-    oneWay = query.value(6).toString(); // Note OneWay in Segment!
- //   if (currSegment != segmentId)
- //   {
- //    if (currSegment != -1)
- //    {
- //     si.bearing = Bearing(si.startLat, si.startLon, si.endLat, si.endLon);
- //     if (oneWay == "Y")
- //      si.direction = si.bearing.strDirection();
- //     else
- //      si.direction = si.bearing.strDirection() + "-" + si.bearing.strReverseDirection();
- //     myArray.append(si);
-      si = SegmentInfo();
- //    }
-     si.segmentId = currSegment = segmentId;
-     si.startLat = startLat;
-     si.startLon = startLon;
-     si.bearingStart = Bearing(startLat, startLon, endLat, endLon);
-     si.description = query.value(5).toString();
- //    si.oneWay = query.value(6).toString();
-     si.next = query.value(8).toInt();
-     si.prev = query.value(9).toInt();
-     si.normalEnter = query.value(10).toInt();
-     si.normalLeave = query.value(11).toInt();
-     si.reverseEnter = query.value(12).toInt();
-     si.reverseLeave = query.value(13).toInt();
-     si.startDate = query.value(14).toDateTime().toString("yyyy/MM/dd");
-     si.endDate = query.value(15).toDateTime().toString("yyyy/MM/dd");
- //   }
-    si.endLat = endLat;
-    si.endLon = endLon;
-    si.bearingEnd = Bearing(startLat, startLon, endLat, endLon);
-    si.length = query.value(16).toDouble();
-
-    si.tracks = query.value(17).toInt();
-    si.checkTracks();
-    si.setPoints(query.value(18).toString());
-    si.checkTracks();
-    si.oneWay = query.value(19).toString();
-    si.trackUsage = query.value(20).toString();
-    si.routeType = (RouteType)query.value(21).toInt();
-    si.tractionType = query.value(22).toInt();
- //  }
- //  if (currSegment != -1)
- //  {
-       si.bearing = Bearing(si.startLat, si.startLon, si.endLat, si.endLon);
- //      si.direction = si.bearing.strDirection();
-       if (si.oneWay == "Y")
-           si.direction = (si.bearing.strDirection());
-       else
-           si.direction = (si.bearing.strDirection() + "-" + si.bearing.strReverseDirection());
-       if(si.next == -1 && si.prev == -1)
-           bSequenceInfoPresent=false;
-       myArray.append(si);
-   }
-   break;
-  }
-// }
-// catch (Exception& e)
-// {
-//     myExceptionHandler(e);
-// }
- //checkConnectingSegments(myArray);
- return myArray;
+ return SegmentDataFromView(where);
 }
 #endif
+
 // List routes using a segment on a given date
 QList<SegmentData> SQL::getRouteSegmentsForDate(qint32 route, QString name, QString date)
 {
@@ -10869,4 +10744,89 @@ bool SQL::doesFunctionExist(QString name, QSqlDatabase db)
             return true;
     }
     return false;
+}
+
+QStringList SQL::listViews()
+{
+ QStringList list;
+ QSqlDatabase db = QSqlDatabase::database();
+ QString commandText;
+ if(config->currConnection->servertype() == "MySql")
+  commandText = QString("SHOW FULL TABLES IN %1 WHERE TABLE_TYPE LIKE 'VIEW'")
+    .arg(config->currConnection->defaultSqlDatabase());
+ else if(config->currConnection->servertype() == "Sqlite")
+  commandText = "SELECT name FROM sqlite_schema WHERE type = 'view'";
+ else
+  commandText = "SELECT TABLE_NAME, TABLE_SCHEMA FROM INFORMATION_SCHEMA.VIEWS";
+ QSqlQuery query = QSqlQuery(db);
+ bool bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+     QSqlError err = query.lastError();
+     qDebug() << err.text() + "\n";
+     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+     return list;
+ }
+ while(query.next())
+ {
+  if(config->currConnection->servertype() == "MsSql")
+   list.append(QString("[%1].[%2]").arg(query.value(1).toString()).arg(query.value(0).toString()));
+  else
+   list.append( query.value(0).toString());
+ }
+ return list;
+}
+
+// create SegmentData from RouteView query
+QList<SegmentData>  SQL::SegmentDataFromView(QString where)
+{
+ QSqlDatabase db = QSqlDatabase::database();
+ QString commandText = QString("select * from RouteView %1 ").arg(where);
+ QSqlQuery query = QSqlQuery(db);
+ QList<SegmentData> list;
+ bool bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+     QSqlError err = query.lastError();
+     qDebug() << err.text() + "\n";
+     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+     return list;
+ }
+ while(query.next())
+ {
+  SegmentData sd = SegmentData();
+  sd._route = query.value(0).toInt();
+  sd._alphaRoute = query.value(1).toString();
+  sd._routeName = query.value(2).toString();
+  sd._segmentId = query.value(3).toInt();
+  sd._description = query.value(4).toString();
+  sd._startDate = query.value(5).toDate();
+  sd._endDate = query.value(6).toDate();
+  sd._companyKey = query.value(7).toInt();
+  // company Name not used
+  // tractiontype name not used
+  sd._tracks = query.value(10).toInt();
+  sd._oneWay = query.value(11).toString();
+  sd._trackUsage = query.value(12).toString();
+  sd._length = query.value(13).toDouble();
+  sd._direction = query.value(14).toString();
+  sd._routeType = (RouteType)query.value(15).toInt();
+  sd._streetName = query.value(16).toString();
+  sd._location = query.value(17).toString();
+  sd._startLat = query.value(18).toDouble();
+  sd._startLon = query.value(19).toDouble();
+  sd._endLat = query.value(20).toDouble();
+  sd._endLon = query.value(21).toDouble();
+  sd._tractionType = query.value(22).toInt();
+  sd._next = query.value(23).toInt();
+  sd._prev = query.value(24).toInt();
+  sd._normalEnter = query.value(25).toInt();
+  sd._normalLeave = query.value(26).toInt();
+  sd._reverseLeave = query.value(27).toInt();
+  sd._reverseLeave = query.value(28).toInt();
+  sd._points = query.value(29).toInt();
+  sd.setPoints(query.value(30).toString());
+  list.append(sd);
+ }
+ return list;
 }

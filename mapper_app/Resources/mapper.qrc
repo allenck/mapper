@@ -57,5 +57,6 @@
         <file>sql/mysql_recreateCompanies.sql</file>
         <file>sql/sqlite3_recreateCompanies.sql</file>
         <file>sql/mySql_recreateSegmentsTable.sql</file>
+        <file>sql/create_routeView.sql</file>
     </qresource>
 </RCC>
