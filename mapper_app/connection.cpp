@@ -93,7 +93,7 @@ QSqlDatabase Connection::configure(const QString cName)
     bOpen = false;
     return db;
    }
-   if(config->currConnection->servertype() == "Sqlite" )
+   //if(config->currConnection->servertype() == "Sqlite" )
     sql->checkTables(db);
    tableList = db.tables();
    sysTableList = db.tables(QSql::SystemTables);

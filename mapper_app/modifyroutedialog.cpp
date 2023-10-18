@@ -67,7 +67,7 @@ void ModifyRouteDialog::btnOK_Click()
 {
     RouteData rd = (RouteData)routeDataList.at(ui->cbRoutes->currentIndex());
 
-    QList<RouteData> myArray = sql->getRouteSegmentsForDate(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
+    QList<RouteData> myArray = sql->getRouteDatasForDate(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
     //sql->OpenConnection();
     if (myArray.count()==0)
     {

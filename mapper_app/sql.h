@@ -82,8 +82,9 @@ public:
     bool updateSegmentDetails(qint32 SegmentId, QString description, int tracks, double length, RouteType type);
     QList<CompanyData *> getCompanies();
     CompanyData *getCompany(qint32 companyKey);
-    QList<RouteData> getRouteSegmentsForDate(qint32 route, QString name, QString date);
-    QList<SegmentData> getRouteSegmentsForDate(qint32 segmentId, QString date);
+    QT_DEPRECATED QList<RouteData> getRouteDatasForDate(qint32 route, QString name, QString date);
+    QList<SegmentData> getRouteDatasForDate(int segmentId, QDate date);
+    QT_DEPRECATED QList<SegmentData> getRouteDatasForDate(qint32 segmentId, QString date);
     bool doesAltRouteExist(int route, QString alphaRoute);
     qint32 addAltRoute(QString routeAlpha, QString routePrefix);
     bool addAltRoute(int routeNum, QString routeAlpha);
@@ -170,7 +171,7 @@ public:
     QT_DEPRECATED bool updateRoute(qint32 route, QString name, QString endDate, qint32 segmentId, qint32 next, qint32 prev, QString trackUsage);
     //bool updateRoute(RouteData rd);
     bool updateRoute(SegmentData osd, SegmentData sd);
-    int updateRouteDate(int segmentId, QString startDate, QString endDate);
+    QT_DEPRECATED int updateRouteDate(int segmentId, QString startDate, QString endDate);
     int updateRouteSegment(int segmentId, QString startDate, QString endDate, int newSegment);
     QDate getFirstCommentDate(qint32 route, QDate date, qint32 companyKey);
     RouteComments getRouteComment(qint32 route, QDate date, qint32 companyKey);
@@ -232,7 +233,7 @@ public:
     QString currentTransaction;
     bool doesFunctionExist(QString name, QSqlDatabase db);
     QStringList listViews();
-    QList<SegmentData> SegmentDataFromView(QString where);
+    QList<SegmentData> segmentDataFromView(QString where);
 
 signals:
     void details(QString);

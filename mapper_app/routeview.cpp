@@ -716,7 +716,11 @@ void RouteView::updateTerminals()
     for(int i =0; i < segmentDataList.count(); i++)
     {
         SegmentData sd = segmentDataList.at(i);
-        SQL::instance()->updateRoute(route, name, endDate, sd.segmentId(), sd.next(), sd.prev(), sd.trackUsage());
+        //SQL::instance()->updateRoute(route, name, endDate, sd.segmentId(), sd.next(), sd.prev(), sd.trackUsage());
+        SegmentData newSd = SegmentData(sd);
+        newSd.setRoute(route);
+        newSd.setRouteName(name);
+        SQL::instance()->updateRoute(sd, newSd);
     }
 
     SQL::instance()->updateTerminals(route, name, startDate, endDate, startSeg, startWhichEnd, endSeg, endWhichEnd);

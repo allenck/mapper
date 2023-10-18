@@ -267,7 +267,7 @@ void EditSegmentDialog::On_dtBegin_editingFinished()
  }
  if(dt > sd->startDate())
  {
-  QList<SegmentData> list = sql->getRouteSegmentsForDate(sd->segmentId(), dt.toString("yyyy/MM/dd"));
+  QList<SegmentData> list = sql->getRouteDatasForDate(sd->segmentId(), dt.toString("yyyy/MM/dd"));
   QString detail;
   foreach (SegmentData sd, list)
   {
@@ -307,7 +307,7 @@ void EditSegmentDialog::On_dtEnd_editingFinished()
  }
  if(dt < sd->endDate())
  {
-  QList<SegmentData> list = sql->getRouteSegmentsForDate(sd->segmentId(), dt.toString("yyyy/MM/dd"));
+  QList<SegmentData> list = sql->getRouteDatasForDate(sd->segmentId(), dt.toString("yyyy/MM/dd"));
   QString detail;
   foreach (SegmentData sd, list)
   {
@@ -393,7 +393,7 @@ void EditSegmentDialog::On_btnSave_clicked()
  sd->setLocation(ui->cbLocation->currentText());
 
  sql->beginTransaction("updateSegment");
- QList<SegmentData> list = sql->getRouteSegmentsForDate(sd->segmentId(), sd->startDate().toString("yyyy/MM/dd"));
+ QList<SegmentData> list = sql->getRouteDatasForDate(sd->segmentId(), sd->startDate().toString("yyyy/MM/dd"));
  foreach(SegmentData sd1, list)
  {
   if(sd1.startDate() < QDate::fromString(sd->startDate().toString("yyy/MM/dd")))
@@ -406,7 +406,7 @@ void EditSegmentDialog::On_btnSave_clicked()
   }
  }
 
- list = sql->getRouteSegmentsForDate(sd->segmentId(), sd->endDate().toString("yyyy/MM/dd"));
+ list = sql->getRouteDatasForDate(sd->segmentId(), sd->endDate().toString("yyyy/MM/dd"));
  foreach(SegmentData sd1, list)
  {
   if(sd1.endDate() > sd->endDate())

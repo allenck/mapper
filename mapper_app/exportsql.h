@@ -42,13 +42,13 @@ public:
     bool exportParameters();
     bool exportLineSegments();
     bool exportSegments();
-    bool exportRoute();
+    bool exportRoutes();
     bool exportStations();
     bool exportTerminals();
     bool exportRouteComments();
-    bool export_geodb_geometry();
+    //bool export_geodb_geometry();
 
-    bool exportRoute(RouteData rd);
+    bool exportRoutes(RouteData rd);
     bool createSegmentsTable(QSqlDatabase db, QString dbType);
     bool dropTable(QString table, QSqlDatabase db, QString dbType);
     bool createRouteTable(QSqlDatabase db, QString dbType);

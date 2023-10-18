@@ -1,9 +1,8 @@
-BEGIN TRANSACTION;
-CREATE TEMPORARY TABLE `t1_backup` (stationKey, route, name, suffix, latitude, longitude, startDate, endDate, segmentId, point, infoKey, geodb_loc_id, routeType, lastUpdate);
-insert into t1_backup SELECT stationKey, route, name, suffix, latitude, longitude, startDate, endDate, segmentId, point, infoKey, geodb_loc_id, routeType, lastUpdate from `Stations`;
+BEGIN ;
+CREATE TEMPORARY TABLE `t1_backup`   SELECT stationKey, route, name, suffix, latitude, longitude, startDate, endDate, segmentId, point, infoKey, geodb_loc_id, routeType, lastUpdate from `Stations`;
 DROP TABLE `Stations`;
 CREATE TABLE `Stations` (
-  `stationKey` integer NOT NULL primary key AUTOINCREMENT,
+  `stationKey` integer NOT NULL primary key AUTO_INCREMENT,
   `route` int(11) NOT NULL DEFAULT 0,
   `name` varchar(75) NOT NULL,
   `suffix` varchar(4) NOT NULL DEFAULT '',

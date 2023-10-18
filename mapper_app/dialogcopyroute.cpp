@@ -253,7 +253,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     //    return;
     //}
 
-    myArray = sql->getRouteSegmentsForDate(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
+    myArray = sql->getRouteDatasForDate(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
 
 //    sql->OpenConnection();
 //    sql->BeginTransaction("CopyRoute");

@@ -3725,15 +3725,15 @@ void MainWindow::updateRoute(SegmentData* sd )
     if(sd)
     {
      try{
-     routeDlg->setRouteNbr( sd->route());
-     //routeDlg->setSegmentId( sd->segmentId());
-     if(sd->alphaRoute().isEmpty())
-      sd->setAlphaRoute(_rd.alphaRoute());
-     routeDlg->setSegmentData(*sd);
-     routeDlg->show();
-     routeDlg->raise();
-     routeDlg->activateWindow();
-     return;
+      routeDlg->setRouteNbr( sd->route());
+      //routeDlg->setSegmentId( sd->segmentId());
+      if(sd->alphaRoute().isEmpty())
+       sd->setAlphaRoute(_rd.alphaRoute());
+      routeDlg->setSegmentData(*sd);
+      routeDlg->show();
+      routeDlg->raise();
+      routeDlg->activateWindow();
+      return;
      }
      catch(IllegalArgumentException)
      {

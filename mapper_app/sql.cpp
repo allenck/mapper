@@ -1568,12 +1568,12 @@ QList<SegmentData> SQL::getRouteSegmentsInOrder(qint32 route, QString name, QStr
                  " and '" + date + "' between StartDate and EndDate"
                  " order by StartDate, EndDate, Segmentid";
 
- return SegmentDataFromView(where);
+ return segmentDataFromView(where);
 }
 #endif
 
 // List routes using a segment on a given date
-QList<RouteData> SQL::getRouteSegmentsForDate(qint32 route, QString name, QString date)
+QList<RouteData> SQL::getRouteDatasForDate(qint32 route, QString name, QString date)
 {
  QList<RouteData> myArray;
  QSqlDatabase db = QSqlDatabase::database();
@@ -1628,7 +1628,14 @@ QList<RouteData> SQL::getRouteSegmentsForDate(qint32 route, QString name, QStrin
  return myArray;
 }
 
-QList<SegmentData> SQL::getRouteSegmentsForDate(int segmentId, QString date)
+QList<SegmentData> SQL::getRouteDatasForDate(int segmentId, QDate date)
+{
+ QString where = " where '" + date.toString("yyyy/MM/dd") + "' between startDate and endDate"
+                       " and lineKey = "+QString::number(segmentId);
+ return segmentDataFromView(where);
+}
+
+QList<SegmentData> SQL::getRouteDatasForDate(int segmentId, QString date)
 {
  QList<SegmentData> myArray;
  QSqlDatabase db = QSqlDatabase::database();
@@ -7117,7 +7124,7 @@ SegmentData SQL::getSegmentDataForRouteDates(qint32 route, QString name, qint32 
                  " or  '" + endDate + "' between a.startDate and a.endDate)"
                  " and name = '" + name + "'"
                  " and a.LineKey = " + QString("%1").arg(segmentId);
- QList<SegmentData> list = SegmentDataFromView(where);
+ QList<SegmentData> list = segmentDataFromView(where);
  if(list.count() > 0)
   return list.at(0);
  if(list.count()>1)
@@ -7497,7 +7504,7 @@ bool SQL::modifyCurrentRoute(RouteData* crd, bool bStartDate, QDate dt, QString 
   // modify endDate
   commandText = QString("select Route, Name, StartDate, EndDate, LineKey, CompanyKey,"
                 "  tractionType, next, prev,  normalEnter, normalLeave,"
-                " reverseEnter, reverseLeave, oneWay "
+                " reverseEnter, reverseLeave, oneWay, Sequence, ReverseSeq "
                 " from Routes"
                 " where route = %1 and '%2' between startDate and endDate"
                 " order by lineKey, startDate DESC").arg(crd->_route).arg(crd->_endDate.toString("yyyy/MM/dd"));
@@ -7523,6 +7530,8 @@ bool SQL::modifyCurrentRoute(RouteData* crd, bool bStartDate, QDate dt, QString 
    sd._reverseEnter = query.value(11).toInt();
    sd._reverseLeave = query.value(12).toInt();
    sd._oneWay = query.value(13).toString();
+   sd._sequence = query.value(14).toInt();
+   sd._returnSeq = query.value(15).toInt();
 
    if(crd->endDate() == sd._endDate)
    {
@@ -9178,7 +9187,8 @@ bool SQL::deleteStation(qint32 stationKey)
     return ret;
 }
 
-bool SQL::updateRoute(qint32 route, QString name, QString endDate, qint32 segmentId, qint32 next, qint32 prev, QString trackUsage)
+bool SQL::updateRoute(qint32 route, QString name, QString endDate, qint32 segmentId,
+                      qint32 next, qint32 prev, QString trackUsage)
 {
  if(!QDate::fromString(endDate, "yyyy/MM/dd").isValid())
   throw IllegalArgumentException(tr("invalid date '%1'").arg(endDate));
@@ -9289,6 +9299,8 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd)
              + ", normalLeave = " + QString::number(sd.normalLeave())
              + ", reverseEnter = " + QString::number(sd.reverseEnter())
              + ", reverseLeave = " + QString::number(sd.reverseLeave())
+             + ", Sequence = " + QString::number(sd._sequence)
+             + ", ReverseSeq = " + QString::number(sd._returnSeq)
              + ", name = '" + sd.routeName() + "'"
              + ", startDate = '" + sd.startDate().toString("yyyy/MM/dd")+ "'"
              + ", endDate = '" + sd.endDate().toString("yyyy/MM/dd")+ "'"
@@ -9839,7 +9851,7 @@ void SQL::checkTables(QSqlDatabase db)
   {
    addColumn("Segments", "Location", "varchar(30) not null default ''", "Tracks");
    if(config->currConnection->servertype() == "Sqlite")
-    executeScript(":/recreateSegmentsTable.sql",db);
+    executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
    else
    {
     if(config->currConnection->servertype() != "MySql")
@@ -9848,7 +9860,6 @@ void SQL::checkTables(QSqlDatabase db)
                                   " You may use a graphical interface to reorder the column."));\
    }
   }
-
 
   if(!doesColumnExist("Companies", "RoutePrefix"))
   {
@@ -9865,7 +9876,7 @@ void SQL::checkTables(QSqlDatabase db)
    if(!doesColumnExist("altRoute", "RoutePrefix") || !testAltRoute())
    {
     //addColumn("altRoute", "routePrefix", "varchar(10)");
-    executeScript(":/recreateAltRoute.sql",db);
+    executeScript(":/sql/recreateAltRoute.sql",db);
    }
   }
   else
@@ -9873,49 +9884,64 @@ void SQL::checkTables(QSqlDatabase db)
    if(!doesColumnExist("altRoute", "RoutePrefix"))
    {
     //addColumn("altRoute", "routePrefix", "varchar(10)");
-    executeScript(":/recreateAltRoute.sql",db);
+    executeScript(":/sql/recreateAltRoute.sql",db);
    }
   }
 
   if(!doesColumnExist("Stations", "suffix"))
   {
    //addColumn("altRoute", "routePrefix", "varchar(10)");
-   executeScript(":/recreateStationTable.sql",db);
+   executeScript(":/sql/recreateStationTable.sql",db);
   }
   if(!doesConstraintExist("Stations", "segmentId"))
   {
    // change main unique index to "constraint main unique (`segmentId`,`name`,`startDate`,`endDate`)"
    qDebug("Stations table must be modified!");
-   executeScript(":/recreateStationTable.sql",db);
+   executeScript(":/sql/recreateStationTable.sql",db);
   }
   if(!doesColumnExist("Stations", "markerType"))
   {
    //addColumn("altRoute", "routePrefix", "varchar(10)");
-   executeScript(":/recreateStationTable.sql",db);
+   executeScript(":/sql/recreateStationTable.sql",db);
   }
 #if 1
   if(!doesColumnExist("Routes", "OneWay"))
   {
    addColumn("Routes", "OneWay", "char(1) default 'Y'");
-   executeScript(":/updateOneWay.sql",db);
+   executeScript(":/sql/updateOneWay.sql",db);
   }
+
   if(!doesColumnExist("Routes", "TrackUsage"))
   {
    if(config->currConnection->servertype() == "Sqlite" )
    {
     addColumn("Routes", "TrackUsage", " text check(`TrackUsage` in ('B', 'L', 'R', ' ')) default ' ' NOT NULL");
-    executeScript(":/recreate_routes.sql",db);
+    executeScript(":/sql/sqlite3_recreate_routes.sql",db);
    }
    else if(config->currConnection->servertype() == "MySql")
    {
     addColumn("Routes", "TrackUsage", "ENUM('N', 'B', 'R')");
    }
    // TODO: add Sql Server syntax
-   executeScript(":/recreate_routes.sql");
+   executeScript(":/sql/recreate_routes.sql");
+  }
+
+  if(!doesColumnExist("Routes", "Sequence"))
+  {
+   if(addColumn("Routes", "Sequence", "int(11) NOT NULL DEFAULT -1", "ReverseLeave"))
+    if(addColumn("Routes", "ReverseSeq", "int(11) NOT NULL DEFAULT -1", "Sequence"))
+    {
+     if(config->currConnection->servertype() == "Sqlite" )
+      executeScript(":/sql/sqlite_recreate_routes.sql");
+    }
   }
 
   if(!doesColumnExist("RouteComments", "latitude"))
-   executeScript(":/recreateRouteComments.sql", db);
+   executeScript(":/sql/recreateRouteComments.sql", db);
+
+  QStringList views = listViews();
+  if(!views.contains("RouteView", Qt::CaseInsensitive))
+   executeScript(":/sql/create_routeView.sql");
 
   bool found = false;
   foreach(FKInfo info, fkList)
@@ -10792,7 +10818,7 @@ QStringList SQL::listViews()
 }
 
 // create SegmentData from RouteView query
-QList<SegmentData>  SQL::SegmentDataFromView(QString where)
+QList<SegmentData>  SQL::segmentDataFromView(QString where)
 {
  QSqlDatabase db = QSqlDatabase::database();
  QString commandText = QString("select * from RouteView %1 ").arg(where);
@@ -10838,8 +10864,10 @@ QList<SegmentData>  SQL::SegmentDataFromView(QString where)
   sd._normalLeave = query.value(26).toInt();
   sd._reverseLeave = query.value(27).toInt();
   sd._reverseLeave = query.value(28).toInt();
-  sd._points = query.value(29).toInt();
-  sd.setPoints(query.value(30).toString());
+  sd._sequence = query.value(29).toInt();
+  sd._returnSeq = query.value(30).toInt();
+  sd._points = query.value(31).toInt();
+  sd.setPoints(query.value(32).toString());
   list.append(sd);
  }
  return list;

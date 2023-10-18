@@ -250,7 +250,7 @@ void ExportDlg::btnGo_clicked()
       ui->lblHelp->setText(tr("Routes"));
       qApp->processEvents();
       ui->progressBar->setValue(0);
-      if(!exprt->exportRoute())
+      if(!exprt->exportRoutes())
       {
        ui->lblHelp->setText("Export of Routes has errors");
        ui->btnGo->setEnabled(true);
@@ -303,7 +303,7 @@ void ExportDlg::btnGo_clicked()
   }
   ui->lblHelp->setText(tr("Done"));
 
-  exprt->export_geodb_geometry();
+  //exprt->export_geodb_geometry();
   if(stopEnabled)
       break;
  }

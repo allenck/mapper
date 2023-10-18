@@ -74,6 +74,28 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
      processALine(txt, tableName);
     });
    }
+   toolsMenu->addSeparator();
+   QMenu* viewsMenu = new QMenu(tr("Views"));
+   QStringList views = SQL::instance()->listViews();
+   foreach(QString v, views)
+   {
+    QMenu* viewMenu = new QMenu(v);
+    viewsMenu->addMenu(viewMenu);
+    QAction* act = new QAction(tr("show View"),this);
+    act->setData(v);
+    viewMenu->addAction(act);
+    connect(act, &QAction::triggered, [=]{
+     QString txt;
+     if(c->servertype() == "Sqlite")
+      txt = QString("pragma table_info('%1')").arg(v);
+     else if(c->servertype() == "MySql")
+      txt = "describe " + v;
+     else // SQL Server
+      txt = "EXEC sp_help " + v;
+     processALine(txt, v);
+    });
+   }
+   toolsMenu->addMenu(viewsMenu);
   });
 
   tgtDbType = tgtConn->servertype();
@@ -565,6 +587,7 @@ void QueryDialog::on_saveAs_QueryButton_clicked()
                        config->q.s_query_path,"SQL text files (*.sql *.txt);;All Files (*.*)");
  if (s_File_Name.isEmpty()) return;
  saveFile(s_File_Name);
+ currQueryFilename = s_File_Name;
 }
 
 void QueryDialog::on_save_QueryButton_clicked(QString s_File_Name)
