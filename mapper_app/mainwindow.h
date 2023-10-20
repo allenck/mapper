@@ -201,6 +201,7 @@ public slots:
     void On_displayRoute(RouteData);
     void addModeToggled(bool isChecked);
     void showGoogleMapFeatures(bool);
+    void btnDisplayRouteClicked();
 
 private slots:
     void about();
@@ -210,7 +211,6 @@ private slots:
     void webView_customContextMenu(const QPoint&);
 
     void tab1CustomContextMenu(const QPoint &);
-    void btnDisplayRouteClicked();
     void btnClearClicked();
     void onCbRouteIndexChanged(int);
     void btnFirstClicked();

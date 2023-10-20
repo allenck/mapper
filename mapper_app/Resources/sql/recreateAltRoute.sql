@@ -1,5 +1,5 @@
-BEGIN TRANSACTION;
-CREATE TEMPORARY TABLE t1_backup(route, routePrefix, routeAlpha, baseRoute, lastUpdate);
+BEGIN ;
+CREATE TEMPORARY TABLE t1_backup (route, routePrefix, routeAlpha, baseRoute, lastUpdate);
 INSERT INTO t1_backup SELECT route, routePrefix, routeAlpha, baseRoute, lastUpdate FROM altRoute;
 CREATE TEMPORARY TABLE t2_backup(route, `name`,StartDate,endDate,LineKey, CompanyKey, TractionType,Direction, next, prev,normalEnter,normalleave, reverseEnter, reverseLeave, lastUpdate);
 INSERT INTO t2_backup SELECT route, `name`,StartDate,endDate,LineKey, CompanyKey, TractionType,Direction, next, prev,normalEnter,normalleave, reverseEnter, reverseLeave, lastUpdate FROM Routes;

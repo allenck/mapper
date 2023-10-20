@@ -1896,6 +1896,9 @@ void RouteDlg::btnAdd_Click()         // SLOT
  RouteChangedEventArgs args = RouteChangedEventArgs(_rd, sd.segmentId(), ui->btnAdd->text() == "Add" ? "Add" : "Update");
  emit routeChangedEvent(args);
 
+  myParent->refreshRoutes();
+  myParent->btnDisplayRouteClicked();
+
 } // btnAdd_Click
 
 void RouteDlg::checkDirection(QString routeDirection)

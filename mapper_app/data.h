@@ -434,6 +434,8 @@ public:
     qint32 _normalLeave;
     qint32 _reverseEnter;        // Not defined for one Way
     qint32 _reverseLeave;        // Not defined for one Way
+    qint32 _sequence;
+    qint32 _returnSeq;
     QString _oneWay;
     QString _trackUsage;
     int _next =-1, _prev=-1;

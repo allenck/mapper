@@ -229,7 +229,7 @@ public:
     bool updateRouteForStations(int oldRoute, int newRoute);
     bool deleteTerminalInfo(int route);
     bool deleteRoute(SegmentData rd);
-    //bool deleteRoute(RouteData rd);
+    bool deleteRoute(RouteData rd);
     QString currentTransaction;
     bool doesFunctionExist(QString name, QSqlDatabase db);
     QStringList listViews();
@@ -246,6 +246,7 @@ private:
    // bool compareSegmentData(const segmentData & sd1, const segmentData &sd2);
 //    QT_DEPRECATED void populatePointList(SegmentData sd);
     bool insertRouteSegment(SegmentData sd);
+    bool insertRouteSegment(RouteData sd);
 
 };
 

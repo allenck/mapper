@@ -3126,7 +3126,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
  {
   commandText = "CREATE TABLE `Segments` (  `SegmentId` integer NOT NULL primary key AUTOINCREMENT,"
                 " `Description` varchar(100) NOT NULL,"
-                " `Tracks` int(2) NOT NULL DEFAULT 2,"
+                " `Tracks` int(2) check(`tracks` in (1,2)) NOT NULL DEFAULT 1,"
                 " `Street` 'text',"
                 " `Location` 'text',"
                 " `Type` int(11) NOT NULL DEFAULT 0,"
@@ -3265,7 +3265,7 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
                 " `StartDate` date NOT NULL, "
                 " `EndDate` date NOT NULL, "
                 " `LineKey` int(11) NOT NULL,"
-                " `OneWay` char(1)  DEFAULT 'N' NOT NULL,"
+                " `OneWay` char(1) check(`oneWay` in ('Y','N',' ')) default ' ' NOT NULL,"
                 " `TrackUsage` text check(`TrackUsage` in ('B', 'L', 'R', ' ')) default ' ' NOT NULL,"
                 " `CompanyKey` int(11) NOT NULL DEFAULT 0, "
                 " `tractionType` int(11) NOT NULL DEFAULT 0,"

@@ -7,7 +7,7 @@ insert into t1_backup SELECT SegmentId, Description, OneWay, Tracks, `Type`, Sta
 DROP TABLE `Segments`;
 CREATE TABLE `Segments` ( `SegmentId` integer  primary key AUTOINCREMENT NOT NULL,
                           `Description` varchar(100) NOT NULL,
-                          `Tracks` int(11) NOT NULL DEFAULT 0,
+                          `Tracks` int(11) check(`tracks` in (1,2) )NOT NULL DEFAULT 1,
                           `Street` text not null default '',
                           `Location` text not null default '',
                           `Type` int(11) NOT NULL DEFAULT 0,
