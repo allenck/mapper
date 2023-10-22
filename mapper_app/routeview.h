@@ -80,6 +80,8 @@ private:
     QAction* convertToSingleTrackAct;
     QAction* updateRouteAct;
     QAction* splitSegmentAct;
+    QAction* sortNameAct;
+    QAbstractButton* cornerButton;
 
     QMenu *startTerminal;
     QMenu *endTerminal;
@@ -98,6 +100,7 @@ private:
 
 private slots:
     void tablev_customContextMenu( const QPoint& );
+    void tab1CustomContextMenu(const QPoint &);
     void aCopy();
     void aPaste();
     void itemSelectionChanged(QModelIndex index );

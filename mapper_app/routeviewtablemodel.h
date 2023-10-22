@@ -25,10 +25,10 @@ public:
     void reset();
     void setSequenced(bool b);
 
-    QMap<int, RowChanged*> changedMap;
+    //QMap<int, RowChanged*> changedMap;
     void deleteRow(qint32 segmentId, const QModelIndex &index);
     void unDeleteRow(qint32 segmentId, const QModelIndex &index);
-    bool isSegmentMarkedForDelete(qint32 segmentId);
+    //bool isSegmentMarkedForDelete(qint32 segmentId);
     enum COLUMNS
     {
      SEGMENTID,
@@ -78,6 +78,7 @@ private:
      QMap<int, TractionTypeInfo> tractionTypes;
      QMap<int, QString> turnMap = {{0, "back"}, {1,"Left"},{2,"Right"}};
      QMap<int, QString> turnMap2 = {{0, "ahead"}, {1,"Left"},{2,"Right"}};
+     bool bChangesMade = false; // set when changes need to be comitted.
 
      friend class RouteView;
 };

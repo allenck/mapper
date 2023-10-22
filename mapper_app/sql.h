@@ -23,6 +23,7 @@ do \
  QSqlError err = query.lastError(); \
  qCritical() << "Sql error:" << err.text(); \
  qCritical() << query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n"; \
+ QMessageBox::critical(nullptr, tr("Sql Error"), tr("An SQL error has occurred:\n%1\n%2").arg(err.text(), query.lastQuery()));\
  } while (0)
 
 
@@ -56,7 +57,7 @@ public:
     qint32 sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList,
                                  qint32 route, QString name, QString date, QString whichEnd);
     double angleDiff(double A1, double A2);
-    double connectingAngle(SegmentData sd, QString enterAt, SegmentData sd2);
+    double connectingAngle(SegmentData sd, SegmentData sd2);
 //    Q_DECL_DEPRECATED bool addPoint( qint32 pt, qint32 SegmentId, double BeginLat, double BeginLon,  double EndLat, double EndLon,  QString StreetName);
 //    Q_DECL_DEPRECATED bool movePoint(qint32 pt, qint32 SegmentId, double BeginLat, double BeginLon);
     void beginTransaction (QString name);

@@ -20,17 +20,32 @@ RouteView::RouteView(QObject* parent )
     myParent = qobject_cast<MainWindow*>(m_parent);
     ui = myParent->ui->tblRouteView;
     connect(ui->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
-
-    //ui->setColumnCount(headers.count());
-    //ui->setHorizontalHeaderLabels(headers);
-
-    //ui->resizeColumnsToContents();
+    myParent->ui->tab->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(myParent->ui->tab, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tab1CustomContextMenu(QPoint)));
+    if(auto cornerButton = ui->findChild<QAbstractButton*>(QString(), Qt::FindDirectChildrenOnly)) {
+        //this button is not a normal button, it doesn't paint text or icon
+        //so it is not easy to show text on it, the simplest way is tooltip
+        cornerButton->setToolTip("Sort Description");
+        //disconnect the connected slots to the tableview (the "selectAll" slot)
+        disconnect(cornerButton, Q_NULLPTR, ui, Q_NULLPTR);
+//        //connect "clear" slot to it, here I use QTableWidget's clear, you can connect your own
+//        connect(cornerButton, &QAbstractButton::clicked, ui->tableWidget, &QTableWidget::clear);
+        connect(cornerButton, &QAbstractButton::clicked, [=]{
+         sortNameAct->trigger();
+        });
+        connect(cornerButton, &QAbstractButton::setText, [=](QString txt){
+         cornerButton->setText("Sort");
+        });
+    }
+    ui->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tablev_customContextMenu(QPoint)));
 
     ui->setAlternatingRowColors(true);
 
     //m_myParent = myParent;
     ui->setSelectionBehavior(QAbstractItemView::SelectRows );
     ui->setSelectionMode( QAbstractItemView::SingleSelection );
+    ui->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
 
     //create contextmenu
     copyAction = new QAction(tr("&Copy"), this);
@@ -88,11 +103,35 @@ RouteView::RouteView(QObject* parent )
     ui->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
     sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"), QDate::fromString(endDate, "yyyy/MM/dd"), segmentDataList);
+    ui->hideColumn(sourceModel->NAME);
+//    connect(ui->horizontalHeader(), &QHeaderView::sectionClicked, [=](int section)
+//    {
+//     qDebug() << "section " << section;
+//    });
 
     saveChangesAct = new QAction(tr("Commit changes"),this);
     saveChangesAct->setStatusTip(tr("Save any uncommitted changes"));
     discardChangesAct = new QAction(tr("Abandon changes"),this);
     discardChangesAct->setStatusTip(tr("Discard any changes"));
+    sortNameAct = new QAction(tr("Sort Description"),this);
+    sortNameAct->setStatusTip(tr("Sort table by description"));
+    connect(sortNameAct, &QAction::triggered, [=]{
+     Qt::SortOrder order = ui->horizontalHeader()->sortIndicatorOrder();
+     switch (order) {
+     case Qt::AscendingOrder:
+      order = Qt::DescendingOrder;
+      break;
+     case Qt::DescendingOrder:
+      order = Qt::AscendingOrder;
+      break;
+     default:
+      order = Qt::AscendingOrder;
+     }
+     ui->sortByColumn(model()->NAME, order);
+     ui->hideColumn(model()->NAME);
+    });
+    connect(ui, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tablev_customContextMenu(QPoint)));
+
 
     showColumnsAct = new QAction(tr("Hide extra columns"),this);
     showColumnsAct->setCheckable(true);
@@ -201,23 +240,27 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
      menu.clear();
      menu.addAction(copyAction);
      menu.addAction(pasteAction);
+
      QItemSelectionModel * model = ui->selectionModel();
      QModelIndexList indexes = model->selectedIndexes();
      //qint32 row = model->currentIndex().row();
      //qint32 col =model->currentIndex().column();
+     if(indexes.count()==0)
+      return;
      QModelIndex Index = indexes.at(0);
      QString txtSegmentId = Index.data().toString();
      txtSegmentId.replace("!", "");
      txtSegmentId.replace("*", "");
      qint32 segmentId = txtSegmentId.toInt();
      SegmentData sd = sourceModel->segmentData(proxymodel->mapToSource(Index).row());
-     if(sourceModel->isSegmentMarkedForDelete(segmentId))
+     //if(sourceModel->isSegmentMarkedForDelete(segmentId))
+     if(sd.markedForDelete())
          menu.addAction(unDeleteSegmentAct);
      else
          menu.addAction(deleteSegmentAct);
      //if(curRow == 0)
-     menu.addAction(saveChangesAct);
-     menu.addAction(discardChangesAct);
+     //menu.addAction(saveChangesAct);
+     //menu.addAction(discardChangesAct);
      menu.addAction(selectSegmentAct);
      QMenu* resequenceMenu = new QMenu(tr("Resequence route"));
      resequenceMenu->addAction(reSequenceFromStartAct);
@@ -270,16 +313,38 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
       if(sd.tracks()==2)
        menu.addAction(convertToSingleTrackAct);
      }
-     if(sourceModel->changedMap.values().count() > 0)
+     //if(sourceModel->changedMap.values().count() > 0)
+     if(sourceModel->bChangesMade)
      {
          menu.addSeparator();
          menu.addAction(saveChangesAct);
          menu.addAction(discardChangesAct);
+         menu.addAction(sortNameAct);
      }
      menu.exec(QCursor::pos());
 
  }
 }
+
+void RouteView::tab1CustomContextMenu(const QPoint &)
+{
+ QMenu tab1Menu;
+    tab1Menu.addAction(saveChangesAct);
+    tab1Menu.addAction(discardChangesAct);
+    tab1Menu.addAction(sortNameAct);
+    if(!bUncomittedChanges())
+    {
+       saveChangesAct->setEnabled(false);
+       discardChangesAct->setEnabled(false);
+    }
+    else
+    {
+       saveChangesAct->setEnabled(true);
+       discardChangesAct->setEnabled(true);
+    }
+    tab1Menu.exec(QCursor::pos());
+}
+
 //get QTableView selected item
 bool RouteView::boolGetItemTableView(QTableView *table)
 {
@@ -497,15 +562,17 @@ void RouteView::reSequenceRoute(QString whichEnd)
  QModelIndexList indexes = model->selectedIndexes();
  //qint32 row = model->currentIndex().row();
  //qint32 col =model->currentIndex().column();
- QModelIndex Index = indexes.at(0);
+ QModelIndex proxyIndex = indexes.at(0);
+ QModelIndex srcIndex = proxymodel->mapToSource(proxyIndex);
  //if(col==0)
  {
   //bool bOk=false;
-  qint32 segmentId = Index.data().toInt();
+  qint32 segmentId = this->model()->getList().at(srcIndex.row()).segmentId();
   qint32 endSegment = -1;
   endSegment = SQL::instance()->sequenceRouteSegments(segmentId, segmentDataList, route, name,
                                                       endDate, whichEnd);
-
+  sourceModel->bChangesMade = true;
+#if 0
   QList<SegmentData> old = segmentDataList;
   //compareSequenceClass comparer = new compareSequenceClass();
   //segmentList.Sort(comparer);
@@ -524,6 +591,7 @@ void RouteView::reSequenceRoute(QString whichEnd)
        break;
    }
   }
+#endif
 #if 0
   //populateList();
   sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"), QDate::fromString(endDate, "yyyy/MM/dd"), segmentDataList);
@@ -777,7 +845,8 @@ void RouteView::commitChanges()
 
 bool RouteView::bUncomittedChanges()
 {
- if(sourceModel->changedMap.values().count()>0)
+ //if(sourceModel->changedMap.values().count()>0)
+ if(sourceModel->bChangesMade)
   return true;
  else
   return false;
@@ -818,11 +887,15 @@ void RouteView::on_segmentSelected(int, int segmentId)
 
 void RouteView::checkChanges()
 {
- if(sourceModel->changedMap.values().count() > 0)
+ //if(sourceModel->changedMap.values().count() > 0)
+ if(sourceModel->bChangesMade)
  {
   QMessageBox::StandardButtons rslt;
   MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
-  rslt = QMessageBox::warning(myParent,tr("Commit changes"), tr("There are uncommited changes to the current route. Do you wish to save them?") , QMessageBox::Save | QMessageBox::Discard|QMessageBox::Cancel);
+  rslt = QMessageBox::warning(myParent,tr("Commit changes"),
+                              tr("There are uncommited changes to the current route."
+                                 " Do you wish to save them?"),
+                              QMessageBox::Save | QMessageBox::Discard|QMessageBox::Cancel);
   switch (rslt)
   {
   case QMessageBox::Save:
@@ -830,10 +903,12 @@ void RouteView::checkChanges()
    sourceModel->commitChanges();
    break;
   case QMessageBox::Discard:
-   sourceModel->changedMap.values().clear();
+   //sourceModel->changedMap.values().clear();
+   if(sourceModel->bChangesMade)
    break;
   default:
    break;
   }
  }
 }
+

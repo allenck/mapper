@@ -338,6 +338,8 @@ public:
      return _route == o._route && _alphaRoute == o._alphaRoute && _routeName == o._routeName
        && _startDate == o.startDate() && _endDate == o._endDate && _segmentId == o._segmentId;
     }
+    void markForDelete(bool b) {_markedForDelete = b;}
+    bool markedForDelete() {return _markedForDelete;}
 
  private:
     qint32 _segmentId=-1;
@@ -345,8 +347,8 @@ public:
     int _route=-1;
     RouteType _routeType;
     double _startLat, _startLon, _endLat, _endLon;
-    double _length;
-    qint32	_points;
+    double _length=0;
+    qint32	_points=0;
     QString _streetName;
     QString _description;
     QDate _startDate = QDate::fromString("1880/01/01", "yyyy/MM/dd");
@@ -358,17 +360,18 @@ public:
     Bounds _bounds;
     QList<LatLng> _pointList;
     QString _whichEnd;     //Not in db, used for sequencing
-    QString _oneWay;       //Not in db, used for sequencing
+    QString _oneWay = " ";       //Not in db, used for sequencing
     qint32 _next=-1, _prev=-1;      //Not in db, used for sequencing
     qint32 _sequence=-1, _returnSeq=-1;
     qint32 _normalEnter=0, _normalLeave=0, _reverseEnter=0, _reverseLeave=0;
     bool _bNeedsUpdate = false;
     int _tractionType;
-    QString _trackUsage;
+    QString _trackUsage = " ";
     LatLng _sw;
     LatLng _ne;
     QString _trackType = " ";
     void calculate();
+    bool _markedForDelete = false;
 
 //    void setBounds(Bounds bounds) {
 //     if(bounds.isValid())

@@ -134,8 +134,9 @@ public:
     QString getRouteMarkerImagePath(QString route, bool isStart);
 
     QList<RouteData> routeList;
-    QAction *saveChangesAct;
-    QAction *discardChangesAct;
+//    QAction *saveChangesAct;
+//    QAction *discardChangesAct;
+//    QAction* sortNameAct;
 
     double m_latitude, m_longitude;
     qint32 m_zoom;
@@ -171,7 +172,7 @@ public:
     void moveStationMarker(qint32 stationKey, qint32 segmentId, double lat, double lon);
     void moveRouteComment(int route, QString date, double latitude, double longitude, int companyKey);
 
-    RouteViewTableModel *sourceModel;
+    RouteViewTableModel *routeViewSourceModel;
     void displaySegment(qint32 segmentId, QString segmentName, QString color, QString trackUsage, bool bClearFirst);
     static QString pwd;
     static QString pgmDir;
@@ -197,7 +198,7 @@ public slots:
     void mapInit();
     void refreshCompanies();
     void segmentStatus(QString str, QString color);
-    void saveChanges();
+    //void saveChanges();
     void On_displayRoute(RouteData);
     void addModeToggled(bool isChecked);
     void showGoogleMapFeatures(bool);
@@ -209,8 +210,7 @@ private slots:
     void cbRoute_customContextMenu( const QPoint& );
     void txtSegment_customContextMenu(const QPoint&);
     void webView_customContextMenu(const QPoint&);
-
-    void tab1CustomContextMenu(const QPoint &);
+    //void tab1CustomContextMenu(const QPoint &);
     void btnClearClicked();
     void onCbRouteIndexChanged(int);
     void btnFirstClicked();

@@ -426,7 +426,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   // Context menus
   ui->cbRoute->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(ui->cbRoute, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(cbRoute_customContextMenu( const QPoint& )));
-  connect(ui->tab, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tab1CustomContextMenu(QPoint)));
+  //connect(ui->tab, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tab1CustomContextMenu(QPoint)));
   ui->cbRoute->addAction(addSegmentAct);
   ui->cbRoute->addAction(copyRouteAct);
   ui->cbRoute->addAction(displayAct);
@@ -1010,26 +1010,23 @@ void MainWindow::createActions()
  connect(addSegmentToRouteAct, &QAction::triggered, [=]{
 //     int ix = ui->cbSegments->currentIndex();
      SegmentData sd = ui->ssw->segmentSelected();
+     sd.setRoute(_rd.route());
+     sd.setRouteName(_rd.routeName());
+     sd.setStartDate(_rd.startDate());
+     sd.setEndDate(_rd.endDate());
+     sd.setTractionType(_rd.tractionType());
      sd.setCompanyKey(ui->cbCompany->currentData().toInt());
-
-     int row =         ui->cbRoute->currentIndex();
-     if(row < 0)
+     if(!sql->addSegmentToRoute(sd))
      {
-      // No route selected. call updateRoute instead.
       updateRoute(&sd);
       return;
      }
-     RouteData rd = ((RouteData)routeList.at(row));
-     bool b = SQL::instance()->addSegmentToRoute(rd.route(), rd.routeName(), rd.startDate(), rd.endDate(),
-                                        sd.segmentId(), rd.companyKey(),
-                                        sd.tractionType(), "?", -1, -1, 0, 0, 0, 0, sd.oneWay(), sd.trackUsage());
-    if(b)
-    {
         m_bridge->processScript("clearPolyline", QString("%1").arg(sd.segmentId()));
         //SegmentInfo si = sql->getSegmentInfo(segmentId);
-        displaySegment(sd.segmentId(), sd.description(), /*sd.oneWay(),*/ /*ttColors[e.tractionType]*/getColor(rd.tractionType()), " ", true);
+        displaySegment(sd.segmentId(), sd.description(),
+                       getColor(sd.tractionType()),
+                       " ", true);
 
-    }
  });
 
  addSegmentToNewRouteAct = new QAction(tr("Add segment via UpdateRoute"),this);
@@ -1055,7 +1052,7 @@ void MainWindow::createActions()
  findDormantSegmentsAct->setStatusTip(tr("Display a lists of segments that are dormant, i.e. not in service"));
 // TODO: find dormant segments
  connect(findDormantSegmentsAct, SIGNAL(triggered()), this, SLOT(NotYetInplemented()));
-
+#if 0
  saveChangesAct = new QAction(tr("Commit changes"), this);
  saveChangesAct->setStatusTip(tr("Commit changes to database"));
  connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(saveChanges()));
@@ -1065,6 +1062,24 @@ void MainWindow::createActions()
      routeView->model()->discardChanges();
  });
 
+ sortNameAct = new QAction(tr("Sort descripion"),this);
+ sortNameAct->setStatusTip(tr("Sort descriptions"));
+ connect(sortNameAct, &QAction::triggered, [=]{
+  Qt::SortOrder order = ui->tblRouteView->horizontalHeader()->sortIndicatorOrder();
+  switch (order) {
+  case Qt::AscendingOrder:
+   order = Qt::DescendingOrder;
+   break;
+  case Qt::DescendingOrder:
+   order = Qt::AscendingOrder;
+   break;
+  default:
+   order = Qt::AscendingOrder;
+  }
+  ui->tblRouteView->sortByColumn(routeViewSourceModel->NAME, order);
+  ui->tblRouteView->hideColumn(routeViewSourceModel->NAME);
+ });
+#endif
  addRouteAct = new QAction(tr("Add new Route"),this);
  addRouteAct->setStatusTip(tr("Add a new route"));
  connect(addRouteAct, SIGNAL(triggered()), this, SLOT(addRoute()));
@@ -1423,11 +1438,12 @@ void MainWindow::txtSegment_customContextMenu(const QPoint &)
  menu->exec(QCursor::pos());
 
 }
-
+#if 0
 void MainWindow::tab1CustomContextMenu(const QPoint &)
 {
     tab1Menu.addAction(saveChangesAct);
     tab1Menu.addAction(discardChangesAct);
+    tab1Menu.addAction(sortNameAct);
     if(!routeView->bUncomittedChanges())
     {
        saveChangesAct->setEnabled(false);
@@ -1440,7 +1456,7 @@ void MainWindow::tab1CustomContextMenu(const QPoint &)
     }
     tab1Menu.exec(QCursor::pos());
 }
-
+#endif
 void MainWindow::webView_customContextMenu(const QPoint &)
 {
     QMenu* menu = new QMenu();
@@ -4596,12 +4612,12 @@ void MainWindow::on_usingHelp()
   QDesktopServices::openUrl(wikiRoot+"/Documentation.htm");
  }
 }
-
+#if 0
 void MainWindow::saveChanges()
 {
  routeView->model()->commitChanges();
 }
-
+#endif
 void MainWindow::showGoogleMapFeatures( bool bShow)
 {
  if(!bShow)
