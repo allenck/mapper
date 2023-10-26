@@ -57,9 +57,12 @@ private:
     QStringList headers;
     QTableView* ui;
     TerminalInfo ti;
+//    QList<QVariant> hiddenCols;
+//    QList<QVariant> movedCols;
+
+
     //QList<SegmentInfo> segmentInfoList;  // list of segmentInfo items in cbSegments
     QList<SegmentData> segmentDataList;  // list of segmentInfo items in cbSegments
-
     QList<SegmentData> saveSegmentDataList;  // list of segmentInfo items in cbSegments
     void populateList();
     QAction *copyAction;
@@ -76,12 +79,14 @@ private:
     QAction *discardChangesAct;
     QAction* selectSegmentAct;
     QAction *editSegmentAct;
-    QAction* showColumnsAct;
+    //QAction* showColumnsAct;
     QAction* convertToSingleTrackAct;
     QAction* updateRouteAct;
     QAction* splitSegmentAct;
     QAction* sortNameAct;
-    QAbstractButton* cornerButton;
+    QAction* hideColumnAct;
+    QAction* showColumnAct;
+    QAbstractButton* cornerButtonAct;
 
     QMenu *startTerminal;
     QMenu *endTerminal;

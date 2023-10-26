@@ -22,6 +22,13 @@ struct query
  QByteArray geometry;
 };
 
+struct routeView
+{
+  QList<QVariant> hiddenColumns;
+  QList<QVariant> movedColumns;
+  QByteArray state;
+};
+
 class Configuration : public QObject
 {
  Q_OBJECT
@@ -37,6 +44,7 @@ public:
  QMap<QString, Overlay*>* overlayMap = new QMap<QString, Overlay*>();
  qint32 currentCityId;
  query q;
+ routeView rv;
  static Configuration* instance();
  bool bDisplayWebDebug = false;
  bool bRunInBrowser = false;

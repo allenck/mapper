@@ -64,12 +64,12 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
          if( sql->Distance(lat, lon, sd.startLat(),sd.startLon()) < .020)
          {
              sd.setWhichEnd("S");
-             a2 = sd.bearingStart().getBearing();
+             a2 = sd.bearingStart().angle();
          }
          else
          {
              sd.setWhichEnd("E");
-             a2 = sd.bearingEnd().getBearing();
+             a2 = sd.bearingEnd().angle();
          }
          //diff = angleDiff(a1, a2);
          switch(index.column())

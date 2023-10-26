@@ -148,12 +148,12 @@ void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
     if(qAbs(lat - sdIn.startLat())< .00000001 && qAbs(lon - sdIn.startLon()) < .00000001)
     {
         sdIn.whichEnd() = "S";
-        a1 = sdIn.bearingStart().getBearing();
+        a1 = sdIn.bearingStart().angle();
     }
     else
     {
         sdIn.setWhichEnd("E");
-        a1 = sdIn.bearingEnd().getBearing();
+        a1 = sdIn.bearingEnd().angle();
     }
     // get all the points within .020km
     myParent->setCursor(QCursor(Qt::WaitCursor));

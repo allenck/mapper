@@ -57,7 +57,7 @@ public:
     qint32 sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList,
                                  qint32 route, QString name, QString date, QString whichEnd);
     double angleDiff(double A1, double A2);
-    double connectingAngle(SegmentData sd, SegmentData sd2);
+    double intersectingAngle(SegmentData sd, SegmentData sd2);
 //    Q_DECL_DEPRECATED bool addPoint( qint32 pt, qint32 SegmentId, double BeginLat, double BeginLon,  double EndLat, double EndLon,  QString StreetName);
 //    Q_DECL_DEPRECATED bool movePoint(qint32 pt, qint32 SegmentId, double BeginLat, double BeginLon);
     void beginTransaction (QString name);
@@ -119,7 +119,7 @@ public:
     QList<SegmentData> getRouteSegmentsForRouteNbr(QString route);
     QList<RouteData> getRouteDataForRouteName(qint32 route, QString name);
     double Distance(double Lat1, double Lon1, double Lat2, double Lon2);
-    QList<SegmentData> getIntersectingRouteSegmentsAtPoint(int ignore, double lat, double lon, double radius, qint32 route, QString routeName, QString date);
+    QList<SegmentData *> getIntersectingRouteSegmentsAtPoint(int ignore, double lat, double lon, double radius, qint32 route, QString routeName, QString date);
     QDate getRoutesEarliestDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
     QDate getRoutesLatestDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
     QDate getRoutesNextDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);

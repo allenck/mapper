@@ -151,6 +151,14 @@ void Configuration::saveSettings()
  settings->setValue("geometry", q.geometry);
  settings->endGroup();
 
+
+ settings->beginGroup("routeView");
+ settings->setValue("routeView_hidden_cols", rv.hiddenColumns);
+ settings->setValue("routeView_moved_cols", rv.movedColumns);
+ settings->setValue("routeView_state", rv.state);
+ settings->endGroup();
+
+
  settings->setValue("currCity", currentCityId);
  settings->setValue("showDebugMessages", bDisplayWebDebug);
  settings->setValue("runInBrowser", bRunInBrowser);
@@ -384,8 +392,14 @@ void Configuration::getSettings()
  q.b_sql_execute_after_loading = settings.value("sql_execute_after_loading").toBool();
  q.s_query_path = settings.value("queryPath", QDir::homePath()+"/Resources/sql/").toString();
  q.geometry = settings.value("geometry").toByteArray();
-
  settings.endGroup();
+
+ settings.beginGroup("routeView");
+ rv.hiddenColumns = settings .value("routeView_hidden_cols").toList();
+ rv.movedColumns = settings.value("routeView_moved_cols").toList();
+ rv.state = settings.value("routeView_state").toByteArray();
+ settings.endGroup();
+
 
  for(Overlay* ov : Overlay::overlayList)
  {

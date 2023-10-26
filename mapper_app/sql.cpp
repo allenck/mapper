@@ -2377,10 +2377,10 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
 /// <param name="routeName"></param>
 /// <param name="date"></param>
 /// <returns></returns>
-QList<SegmentData> SQL::getIntersectingRouteSegmentsAtPoint(int ignoreThis, double lat, double lon, double radius, qint32 route,
+QList<SegmentData*> SQL::getIntersectingRouteSegmentsAtPoint(int ignoreThis, double lat, double lon, double radius, qint32 route,
                                                             QString routeName, QString date)
 {
- QList<SegmentData> myArray = QList<SegmentData>();
+ QList<SegmentData*> myArray = QList<SegmentData*>();
 // double startLat = 0, startLon = 0, endLat = 0, endLon = 0;
 // double lastStartLat = 0, lastStartLon = 0;ign
 // qint32 segmentId = 0;
@@ -2392,7 +2392,7 @@ QList<SegmentData> SQL::getIntersectingRouteSegmentsAtPoint(int ignoreThis, doub
 
  QSqlDatabase db = QSqlDatabase::database();
  QString commandText = "select b.segmentId, b.startLat, b.startLon, b.endLat, b.EndLon,"
-                       " c.direction, b.description, b.oneWay,  c.next, c.prev,"
+                       " c.direction, b.description, c.oneWay,  c.next, c.prev,"
                        " c.normalEnter, c.normalLeave, c.reverseEnter, c.reverseLeave,"
                        " b.pointArray, b.tracks, c.startDate,"
                        " c.endDate, b.location, b.type, b.street"
@@ -2413,49 +2413,49 @@ QList<SegmentData> SQL::getIntersectingRouteSegmentsAtPoint(int ignoreThis, doub
 
  while(query.next())
  {
-  SegmentData sd = SegmentData();
+  SegmentData* sd = new SegmentData();
 
-  sd._segmentId = query.value(0).toInt();
-  sd._startLat = query.value(1).toDouble();
-  sd._startLon = query.value(2).toDouble();
-  sd._endLat = query.value(3).toDouble();
-  sd._endLon = query.value(4).toDouble();
-  sd._direction = query.value(5).toString();
-  sd._description = query.value(6).toString();
-  sd._oneWay = query.value(7).toString();
-  sd._next = query.value(8).toInt();
-  sd._prev = query.value(9).toInt();
-  sd._normalEnter = query.value(10).toInt();
-  sd._normalLeave = query.value(11).toInt();
-  sd._reverseEnter = query.value(12).toInt();
-  sd._reverseLeave = query.value(13).toInt();
-  sd.setPoints(query.value(14).toString());
-  sd._tracks = query.value(15).toInt();
-  sd._startDate = query.value(16).toDate();
-  sd._endDate = query.value(17).toDate();
-  sd._location = query.value(18).toString();
-  sd._routeType = (RouteType)query.value(19).toInt();
-  sd._streetName = query.value(20).toString();
-  if(sd._pointList.count() >=2)
+  sd->_segmentId = query.value(0).toInt();
+  sd->_startLat = query.value(1).toDouble();
+  sd->_startLon = query.value(2).toDouble();
+  sd->_endLat = query.value(3).toDouble();
+  sd->_endLon = query.value(4).toDouble();
+  sd->_direction = query.value(5).toString();
+  sd->_description = query.value(6).toString();
+  sd->_oneWay = query.value(7).toString();
+  sd->_next = query.value(8).toInt();
+  sd->_prev = query.value(9).toInt();
+  sd->_normalEnter = query.value(10).toInt();
+  sd->_normalLeave = query.value(11).toInt();
+  sd->_reverseEnter = query.value(12).toInt();
+  sd->_reverseLeave = query.value(13).toInt();
+  sd->setPoints(query.value(14).toString());
+  sd->_tracks = query.value(15).toInt();
+  sd->_startDate = query.value(16).toDate();
+  sd->_endDate = query.value(17).toDate();
+  sd->_location = query.value(18).toString();
+  sd->_routeType = (RouteType)query.value(19).toInt();
+  sd->_streetName = query.value(20).toString();
+  if(sd->_pointList.count() >=2)
   {
-   sd._bearingStart = Bearing(sd._startLat, sd._startLon, sd._pointList.at(1).lat(), sd._pointList.at(1).lon());
-   sd._bearingEnd = Bearing(sd._pointList.at(sd._points-2).lat(), sd._pointList.at(sd._points-2).lon(), sd._endLat, sd._endLon);
-   sd._bearing = Bearing(sd._startLat, sd._startLon, sd._endLat, sd._endLon);
-   sd._direction = sd._bearing.strDirection();
+   sd->_bearingStart = Bearing(sd->_startLat, sd->_startLon, sd->_pointList.at(1).lat(), sd->_pointList.at(1).lon());
+   sd->_bearingEnd = Bearing(sd->_pointList.at(sd->_points-2).lat(), sd->_pointList.at(sd->_points-2).lon(), sd->_endLat, sd->_endLon);
+   sd->_bearing = Bearing(sd->_startLat, sd->_startLon, sd->_endLat, sd->_endLon);
+   sd->_direction = sd->_bearing.strDirection();
   }
-  distanceToEnd = Distance(lat, lon, sd._endLat, sd._endLon);
-  distanceToStart = Distance(lat, lon, sd._startLat, sd._startLon);
+  distanceToEnd = Distance(lat, lon, sd->_endLat, sd->_endLon);
+  distanceToStart = Distance(lat, lon, sd->_startLat, sd->_startLon);
   if (distanceToEnd < distanceToStart)
-      sd._whichEnd = "E";
+      sd->_whichEnd = "E";
   else
-      sd._whichEnd = "S";
-  sd._route = route;
-  sd._routeName = routeName;
+      sd->_whichEnd = "S";
+  sd->_route = route;
+  sd->_routeName = routeName;
 
-  if((sd.tracks() == 1 && sd.oneWay() == "Y" && sd.whichEnd() == "E")
-     || (sd.tracks() == 2 && sd.oneWay()=="Y"
-         &&((sd.whichEnd() == "E" && sd.trackUsage() == "R")
-         || (sd.whichEnd() == "S" && sd.trackUsage() == "L"))))
+  if((sd->tracks() == 1 && sd->oneWay() == "Y" && sd->whichEnd() == "E")
+     || (sd->tracks() == 2 && sd->oneWay()=="Y"
+         &&((sd->whichEnd() == "E" && sd->trackUsage() == "R")
+         || (sd->whichEnd() == "S" && sd->trackUsage() == "L"))))
    continue;
 
 
@@ -2469,21 +2469,21 @@ QList<SegmentData> SQL::getIntersectingRouteSegmentsAtPoint(int ignoreThis, doub
 // original function
 int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList, qint32 route, QString name, QString date, QString whichEnd)
 {
- QList<SegmentData> intersects;
+ QList<SegmentData*> intersects;
  qint32 endSegment = -1;
  double dToBegin = 0, dToEnd=0;
- double diff;
+ double diff, diff2;
  qint32 matchedSegment=-1;
+ qint32 startingSegment = segmentId;
  qint32 currSegment = segmentId;
- SegmentData sdx = SegmentData();
- sdx._segmentId = -1;
- SegmentData* sd = &sdx;
+ SegmentData* sd = nullptr;
  qint32 sequence = 0, reverseSeq = 0;
- bool bForward = true;
+ //bool bForward = true;
  double nextLat = 0, nextLon = 0;
  bool bOutbound = true;
  double a1 = 0, a2 = 0;
- bool bfirstSegment = true;
+ QMap<int, SegmentData*> segMap;
+ QVariantList objArray;
 
  if(!dbOpen())
   throw Exception(tr("database not open: %1").arg(__LINE__));
@@ -2496,204 +2496,207 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList,
   sd0->_returnSeq = -1;
   sd0->_next = -1;
   sd0->_prev = -1;
+  segMap.insert(sd0->segmentId(), sd0);
+ }
+
+ sd = segMap.value(currSegment);
+ sd->_whichEnd = whichEnd;
+ if(sd->oneWay()== "Y")
+ {
+  if(sd->tracks() ==1 || (sd->trackUsage()=="R"))
+  {
+   nextLat = sd->endLat();
+   nextLon = sd->endLon();
+   sd->_whichEnd = "E";
+  }
+  else
+  {
+   nextLat = sd->startLat();
+   nextLon = sd->startLon();
+   sd->_whichEnd = "s";
+  }
+ }
+ else
+ if(sd->whichEnd()=="S")
+ {
+  nextLat = sd->startLat();
+  nextLon = sd->startLon();
+ }
+ else
+ {
+  nextLat = sd->endLat();
+  nextLon = sd->endLon();
  }
 
  while (currSegment >= 0 )//&& sequence < segmentList.Count && reverseSeq < segmentList.Count)
  {
-  for(int i = 0; i < segmentList.count(); i ++)
+  sd = segMap.value(currSegment);
+  if(currSegment == 1568 )
+   qDebug() << "break";
+  if(sd->sequence() != -1)
+   bOutbound = ! bOutbound;
+  if (bOutbound)
   {
-   SegmentData* sdi = (SegmentData*)&segmentList.at(i);
-   if(sdi->_segmentId == currSegment)
+   //outbound
+   if (sd->_sequence != -1)
    {
-    sd = sdi;
-    if(sd->_segmentId == 454)
-     qDebug() << "break";
-
-    if (bOutbound)
-    {
-     //outbound
-     if (sd->_sequence != -1)
-     {
-      //currSegment = -1;
-      //Console.WriteLine("Possible endless loop at segment: " + si->SegmentId + " and segment: " + sii->SegmentId);
-      //break;
-      bOutbound = !bOutbound;
-      sd->_returnSeq = reverseSeq++;
-     }
-     else
-      sd->_sequence = sequence++;
-     sd->_bNeedsUpdate=true;
-    }
-    else
-    {
-     //inbound
-     if (sd->_returnSeq != -1)
-     {
-      currSegment = -1;
-      qDebug() <<"Possible endless loop at segment: " + QString("%1").arg(sd->_segmentId) + " and segment: " + QString("%1").arg(sdi->_segmentId);
-      break;
-     }
-     sd->_returnSeq = reverseSeq++;
-    }
-
-    break;
-   }
-  }
-  if (currSegment == -1)
-   break;
-
-  if (bfirstSegment && sd->_oneWay != "Y")
-  {
-   intersects = getIntersectingRouteSegmentsAtPoint(0, sd->startLat(), sd->startLon(), .020, route, name, date);
-   if ( intersects.count() <= 1)
-   {
-    bForward = true;
-    nextLat = sd->_endLat;
-    nextLon = sd->_endLon;
-    sd->_whichEnd = "E";
+    //currSegment = -1;
+    //Console.WriteLine("Possible endless loop at segment: " + si->SegmentId + " and segment: " + sii->SegmentId);
+    //break;
+    bOutbound = !bOutbound;
+    sd->_returnSeq = reverseSeq++;
    }
    else
-   {
-    bForward = false;
-    nextLat = sd->_startLat;
-    nextLon = sd->_startLon;
-    sd->_whichEnd = "S";
-   }
+    sd->_sequence = sequence++;
+   sd->_bNeedsUpdate=true;
   }
   else
   {
-   if (bForward)
+   //inbound
+   if (sd->_returnSeq != -1)
    {
-    nextLat = sd->_endLat;
-    nextLon = sd->_endLon;
-    sd->_whichEnd = "E";
+    currSegment = -1;
+    qDebug() <<"Possible endless loop at segment: " + QString("%1").arg(sd->_segmentId)
+               + " and segment: " + QString("%1").arg(sd->_segmentId);
+    break;
    }
-   else
-   {
-    nextLat = sd->_startLat;
-    nextLon = sd->_startLon;
-    sd->_whichEnd = "S";
-   }
+   sd->_returnSeq = reverseSeq++;
   }
-  bfirstSegment = false;
 
-//  if (si->segmentId == 8)
-//  {
-//  }
-  intersects = getIntersectingRouteSegmentsAtPoint(0, nextLat, nextLon, .020, route, name, date);
+  if (currSegment == -1)
+   break;
+  intersects = getIntersectingRouteSegmentsAtPoint(sd->_segmentId, nextLat, nextLon,
+                                                   .020, route, name, date);
+  double distanceToEnd = Distance(nextLat, nextLon, sd->_endLat, sd->_endLon);
+  double distanceToStart = Distance(nextLat, nextLon, sd->_startLat, sd->_startLon);
+  if (distanceToEnd < distanceToStart)
+      sd->_whichEnd = "E";
+  else
+      sd->_whichEnd = "S";
+
+  // Delete any impossible matches
+  for(int i=intersects.count()-1; i >= 0; i--)
+  {
+   SegmentData* sdj = intersects.at(i);
+   if((sdj->tracks() == 1 && sdj->whichEnd()=="E") || (sdj->tracks() == 2 && sdj->oneWay()=="Y"
+       && ((sdj->whichEnd()== "S" && sdj->trackUsage() == "L")
+           || (sdj->whichEnd() == "E" && sdj->trackUsage() == "R") ) ))
+   {
+    intersects.removeAt(i); // can't connect!
+    continue;
+   }
+
+   if(sdj->segmentId() == startingSegment)
+    return sd->segmentId(); // Done!
+
+   SegmentData* sd0 = segMap.value(sdj->segmentId());
+   if(sd0->tracks()== 1 && sd0->sequence() != -1)
+   {
+    intersects.removeAt(i); // already used
+    continue;
+   }
+   if(sd0->tracks()==2 && sd0->sequence() != -1 && sd0->returnSeq() != -1)
+    intersects.removeAt(i); // already used
+  }
+#if 0
+  // now check turn hints
+  bool bypassChecks = intersects.count() < 2;
+  for(int i=intersects.count()-1; i >= 0; i--)
+  {
+   SegmentData* sdj = intersects.at(i);
+
+   // in the interest of getting errors when only one intersect is present, only chec when there are
+   // more than 1.
+   if(bypassChecks)
+    continue;
+   double a1=0,a2=0;
+   if(sd->whichEnd()== "E")
+    a1 = sd->bearingEnd().getBearing();
+   else
+    a1 = -sd->bearingEnd().getBearing();
+   if(sdj->whichEnd()== "S")
+    a2 = sdj->bearingStart().getBearing();
+   else
+    a2 = -sdj->bearingStart().getBearing();
+   diff = angleDiff(a1, a2);
+   if(!bForward)
+    diff = -diff;
+
+   qDebug() << "angle " << sd->segmentId() << " to intersecting " << sdj->segmentId() << " = " << diff;
+
+   bool canConnect = false;
+   if(bForward)
+   {
+    switch (sd->normalLeave())
+    {
+    case 0: // ahead
+     if(diff > -45 && diff < 45)
+       canConnect = true;
+     break;
+    case 1: // left
+     if(diff > -135 && diff < -45 )
+      canConnect = true;
+     break;
+    case 2:
+     if(diff > 45 && diff < 135)
+      canConnect =true;
+     break;
+    default:
+     break;
+    }
+   }
+   if(!canConnect)
+    intersects.removeAt(i);
+  }
+#endif
+  if(intersects.count() == 0)
+  {
+   QMessageBox::critical(nullptr, tr("Error"), tr("No connecting segment can be found for\n"
+                         "segment%1 %2 to connect to ").arg(sd->segmentId()).arg(sd->description()));
+   return -1;
+  }
+
   for(int i = 0; i < intersects.count(); i ++)
   {
-   SegmentData* sdj = (SegmentData*)&intersects.at(i);
-   if (sdj->_segmentId == sd->_segmentId)
-    continue; // Ignore myself
-   if (sdj->_oneWay == "Y" && sdj->_whichEnd == "E")
-    continue;
+   SegmentData* sdj = intersects.at(i);
 
-   dToBegin = Distance(nextLat, nextLon, sdj->_startLat, sdj->_startLon);
-   dToEnd = Distance(nextLat, nextLon, sdj->_endLat, sdj->_endLon);
-   if (dToBegin > .020 && dToEnd > .020)
-    continue;   // only match to a begin points
    matchedSegment = -1;
-   if (sdj->_whichEnd != sd->_whichEnd)
+   if(intersects.count() == 1)
    {
-    // meeting start to end
-    if (sd->_whichEnd == "S")
-     a1 = sd->_bearingStart.getBearing();
-    else
-     a1 = sd->_bearingEnd.getBearing();
-    if (sdj->_whichEnd == "S")
-     a2 = sdj->_bearingStart.getBearing();
-    else
-     a2 = sdj->_bearingEnd.getBearing();
-
-
-    diff = angleDiff(a1, a2);
-    //diff = angleDiff(si->bearingEnd.getBearing, sij->bearingStart.getBearing);
-    //if (bOutbound)
+    matchedSegment = sdj->segmentId();
+    currSegment = matchedSegment;
+    if(sdj->sequence()!= -1 && sdj->returnSeq() == -1)
+     bOutbound = !bOutbound;
+    //segMap.value(matchedSegment)->setWhichEnd(sdj->whichEnd());
+    if(sdj->whichEnd() == "S")
     {
-     switch (bForward ? sd->_normalLeave : sd->_reverseLeave)
-     {
-     case 1:     // leave to left
-      if (diff >= -135 && diff <= -45)
-       //sii.next = sij->SegmentId;
-       matchedSegment = sdj->_segmentId;
-      break;
-     case 0:     // leave ahead
-      if (diff >= -45 && diff <= +45)
-       //sii.next = sij.SegmentId;
-       matchedSegment = sdj->_segmentId;
-      // if (diff >= -225 && diff <= -135)
-      //    matchedSegment = sij.SegmentId;
-      break;
-     case 2: // leave to right
-      if (diff >= 45 && diff <= 135)
-       //sii.next = sij.SegmentId;
-       matchedSegment = sdj->_segmentId;
-      break;
-     }
+     nextLat = sdj->endLat();
+     nextLon = sdj->endLon();
+     whichEnd ="E";
     }
-   }
-   else
-   {
-    if (sd->_whichEnd == "S")
-     a1 = sd->_bearingStart.getBearing();
     else
-     a1 = sd->_bearingEnd.getBearing();
-    if (sdj->_whichEnd == "S")
-     a2 = sdj->_bearingStart.getBearing();
-    else
-     a2 = sdj->_bearingEnd.getBearing();
-    diff = angleDiff(a1, a2);
-
-    //if (si->whichEnd == "E")
-    //    diff = -diff;
-    //diff = angleDiff(si->bearingEnd.getBearing, sij.bearingStart.getBearing);
-    //if (bOutbound)
     {
-     switch (bForward ? sd->_normalLeave : sd->_reverseLeave)
-     {
-     case 2:     // leave to left
-      if (diff >= -135 && diff <= -45)
-       //sii.next = sij.SegmentId;
-       matchedSegment = sdj->_segmentId;
-      break;
-     case 0:     // leave ahead
-      if (diff >= -45 && diff <= +45)
-       //sii.next = sij.SegmentId;
-       matchedSegment = sdj->_segmentId;
-      if(diff >= -225 && diff <= -135)
-       matchedSegment = sdj->_segmentId;
-      if(diff >= 125 && diff <= 225)
-       matchedSegment = sdj->_segmentId;
-      break;
-     case 1: // leave to right
-      if (diff >= 45 && diff <= 135)
-       //sii.next = sij.SegmentId;
-       matchedSegment = sdj->_segmentId;
-      break;
-     }
+     nextLat = sdj->startLat();
+     nextLon = sdj->startLon();
+     whichEnd = "S";
     }
+    //break;
+//    MainWindow::instance()->m_bridge->processScript("clearMarker");
+//     objArray << 0 << nextLat<<nextLon<<1<<"pointO"<<sd->_segmentId;
+//    MainWindow::instance()->m_bridge->processScript("addMarker",objArray);
 
-    if (matchedSegment >= 0)
-     bForward = !bForward;
-    //else
-    //    if(intersects.Count == 2)
-    //        matchedSegment = matchedSegment;
+    intersectingAngle(*sd, *sdj);
    }
-
    if (matchedSegment >= 0)
    {
     if (bOutbound)
-    {
-     //if (Distance(si->startLat, si->startLon, si->endLat, si->endLon) < .020)
-     //    si->next = -1;
-     //else
      sd->_next = matchedSegment;
-    }
     else
      sd->_prev = matchedSegment;
     currSegment = matchedSegment;
-    if (currSegment == segmentId)
+
+
+    if (currSegment == startingSegment)
     {
      // Back at the beginning.
      for(int i = 0; i < segmentList.count(); i ++)
@@ -2701,6 +2704,8 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList,
       SegmentData* sdi = (SegmentData*)&segmentList.at(i);
       if (sdi->segmentId() == currSegment)
       {
+       sdi->_next = sd->_next;
+       sdi->_prev = sd->_prev;
        sd = sdi;
 
        if (bOutbound)
@@ -2752,29 +2757,37 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList,
     if (sdk->_whichEnd != sd->_whichEnd)
     {
      if (sd->_whichEnd == "S")
-      a1 = sd->_bearingStart.getBearing();
+      a1 = -sd->_bearingStart.angle();
      else
-      a1 = sd->_bearingEnd.getBearing();
+      a1 = sd->_bearingEnd.angle();
      if (sdk->_whichEnd == "S")
-      a2 = sdk->_bearingStart.getBearing();
+      a2 = -sdk->_bearingStart.angle();
      else
-      a2 = sdk->_bearingEnd.getBearing();
+      a2 = sdk->_bearingEnd.angle();
 
      diff = angleDiff(a1, a2);
+     diff2 = intersectingAngle(*sd, *sdk);
     }
     else
     {
      if (sd->_whichEnd == "S")
-      a1 = sd->_bearingStart.getBearing();
+      a1 = sd->_bearingStart.angle();
      else
-      a1 = sd->_bearingEnd.getBearing();
+      a1 = sd->_bearingEnd.angle();
      if (sdk->_whichEnd == "S")
-      a2 = sdk->_bearingStart.getBearing();
+      a2 = sdk->_bearingStart.angle();
      else
-      a2 = sdk->_bearingEnd.getBearing();
-     diff = angleDiff(a1, a2);
+      a2 = sdk->_bearingEnd.angle();
+     diff = angleDiff(a2, a1);
+     diff2 = intersectingAngle(*sd, *sdk);
     }
-    text = text + "\n possible choices were segment " + QString("%1").arg(sdk->_segmentId)
+    if((sdk->tracks() == 1 && sdk->whichEnd()=="E") || (sdk->tracks() == 2
+        && ((sdk->whichEnd()== "S" && sdk->trackUsage() == "L")
+            || (sdk->whichEnd() == "E" && sdk->trackUsage() == "R") ) ))
+     text = text + "no possible match with segment " + QString("%1").arg(sdk->_segmentId)
+       + " angle: " + QString("%1").arg(diff) + "° " + sdk->_description;
+    if(intersects.count() > 1)
+     text = text + "\n possible choices were segment " + QString("%1").arg(sdk->_segmentId)
       + " angle: " + QString("%1").arg(diff) + "° " + sdk->_description;
    }
    if(text != "")
@@ -2788,7 +2801,8 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList,
      objArray << 0 << sd->endLat()<<sd->endLon()<<7<<"pointO"<<sd->_segmentId;
     MainWindow::instance()->m_bridge->processScript("addMarker",objArray);
     qDebug() << text;
-    QMessageBox* box = new QMessageBox(QMessageBox::Information, tr("Segment connection error"),
+    QMessageBox* box = new QMessageBox(QMessageBox::Information,
+                                       tr("Segment connection error"),
                                        tr("The following segment has an error connecting to the next segment"));
     box->setInformativeText(text);
     box->exec();
@@ -2817,13 +2831,15 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList,
     sd->_returnSeq = reverseSeq++;
    }
   }
+  if(matchedSegment > 0)
+   continue;
   if (bOutbound)
   {
-   if (sd->_next == -1  || (intersects.count() == 1 && intersects.at(0).segmentId() == sd->_segmentId))
+   if (sd->_next == -1  || (intersects.count() == 1 && intersects.at(0)->segmentId() == sd->_segmentId))
    {
     bOutbound = !bOutbound;
-    bForward = !bForward;
-    bfirstSegment = true;
+    //bForward = !bForward;
+    //bfirstSegment = true;
    }
   }
   else
@@ -3120,48 +3136,6 @@ int SQL::sequenceRouteSegments(qint32 startSegment, QList<SegmentData> segmentLi
  return currSegment;
 }
 #endif
-/// <summary>
-/// return the number of points in a segment.
-/// </summary>
-/// <param name="segmentId"></param>
-/// <returns></returns>
-//qint32 SQL::getNbrPoints(qint32 segmentId)
-//{
-//    int points=0;
-//    try
-//    {
-//        if(!dbOpen())
-//            throw Exception(tr("database not open: %1").arg(__LINE__));
-//        QSqlDatabase db = QSqlDatabase::database();
-
-//        QString commandText = "select points from Segments where segmentid = " + QString("%1").arg(segmentId);
-//        QSqlQuery query = QSqlQuery(db);
-//        bool bQuery = query.exec(commandText);
-//        if(!bQuery)
-//        {
-//            QSqlError err = query.lastError();
-//            qDebug() << err.text() + "\n";
-//            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-//            db.close();
-//            exit(EXIT_FAILURE);
-//        }
-//        if (!query.isActive())
-//        {
-//            return 0;
-//        }
-//        //                myArray = new LatLng[myReader.RecordsAffected];
-
-//        while (query.next())
-//        {
-//            points= query.value(0).toInt();
-//        }
-//    }
-//    catch (Exception e)
-//    {
-//        //myExceptionHandler(e);
-//    }
-//    return points;
-//}
 #if 0
 #region routes
 public ArrayList updateLikeRoutes(int segmentid, int route, string name, string date)
@@ -3255,16 +3229,31 @@ double SQL::angleDiff(double A1, double A2)
     return difference;
 }
 
-double SQL::connectingAngle(SegmentData sd, SegmentData sd2)
+double SQL::intersectingAngle(SegmentData sd1, SegmentData sd2)
 {
- double diff = -180.0;
- double a1 = sd.whichEnd()=="S"? sd.bearingStart().getBearing()-180 : sd.bearingEnd().getBearing();
- double a2 = sd2.whichEnd()=="S"? sd2.bearingStart().getBearing()-180 : sd2.bearingEnd().getBearing();
+ double angle = -180.0;
+ double m1=0, m2=0;
+ if(sd1.whichEnd() == "S")
+  m1 = (sd1.pointList().at(0).lat() - sd1.pointList().at(1).lat())/
+    (sd1.pointList().at(0).lon() - sd1.pointList().at(1).lon());
+ else
+  m1 = (sd1.pointList().at(sd1._points-2).lat() - sd1.pointList().at(sd1._points-1).lat())/
+    (sd1.pointList().at(sd1._points-2).lon() - sd1.pointList().at(sd1._points-1).lon());
 
- qDebug() << "segment " <<sd.segmentId()<<sd.whichEnd() << " angle " << a1 << "segment " << sd2.segmentId()<<sd2.whichEnd() << " angle " << a2;
-  diff = angleDiff(a1,a2);
+ if(sd2.whichEnd() == "S")
+  m2 = (sd2.pointList().at(0).lat() - sd2.pointList().at(1).lat())/
+    (sd2.pointList().at(0).lon() - sd2.pointList().at(1).lon());
+ else
+  m2 = (sd2.pointList().at(sd2._points-2).lat() - sd2.pointList().at(sd2._points-1).lat())/
+    (sd2.pointList().at(sd2._points-2).lon() - sd2.pointList().at(sd2._points-1).lon());
 
- return diff;
+ double rad  = qAtan((m1-m2)/(1+(m1*m2)));
+ angle = qRadiansToDegrees(rad);
+
+ qDebug() << "segment " <<sd1.segmentId()<<sd1.whichEnd() <<  "segment "
+          << sd2.segmentId()<<sd2.whichEnd() << " angle: " << angle;
+
+ return angle;
 }
 
 double /*static*/ SQL::distance(LatLng latlng1, LatLng latlng2)
@@ -6795,7 +6784,7 @@ try
   // Now change the SegmentId and sequence for the remaining line segments
   oldSd = getSegmentInfo(SegmentId);
   SegmentInfo newSd = getSegmentInfo(newSegmentId);
-  double diff = angleDiff(oldSd._bearing.getBearing(), newSd._bearing.getBearing());
+  double diff = angleDiff(oldSd._bearing.angle(), newSd._bearing.angle());
   int normalEnter = 0, normalLeave = 0, reverseEnter = 0, reverseLeave = 0;
   if (diff < -45)
   {
@@ -10361,7 +10350,7 @@ bool SQL::replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegmen
     SegmentData newRd = SegmentData(sd);
     //newRd.sd = SegmentInfo(SQL::getSegmentInfo(segment.toInt(&ok)));
     newRd._segmentId = segment.toInt(&ok);
-    double diffBearing = sd._bearing.getBearing() - newRd._bearing.getBearing();
+    double diffBearing = sd._bearing.angle() - newRd._bearing.angle();
 //    if(newRd._tracks == 2)
 //    {
 //     newRd.oneWay = "Y";

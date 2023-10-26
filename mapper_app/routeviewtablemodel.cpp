@@ -163,6 +163,10 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
        return sd.endDate().toString("yyyy/MM/dd");
    case DISTANCE:
        return sd.length();
+   case ANGLES:
+    return sd.bearingStart().angle();
+   case ANGLEE:
+    return sd.bearingEnd().angle();
   }
  }
  return QVariant();
@@ -233,7 +237,10 @@ QVariant RouteViewTableModel::headerData(int section, Qt::Orientation orientatio
             return tr("EndDate");
         case DISTANCE:
          return tr("Distance");
-
+        case ANGLES:
+         return tr("Start Angle");
+        case ANGLEE:
+         return tr("End Angle");
         default:
             return QVariant();
     }
@@ -416,6 +423,8 @@ Qt::ItemFlags RouteViewTableModel::flags(const QModelIndex &index) const
     {
     case SEGMENTID:
     case NAME:
+    case ANGLES:
+    case ANGLEE:
      return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
     case TYPE:
     case ONEWAY: // 1Way

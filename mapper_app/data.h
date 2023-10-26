@@ -88,7 +88,7 @@ public:
  {
      return reverseDirection[direction];
  }
- double getBearing()
+ double angle()
  {
   return brng;
  }

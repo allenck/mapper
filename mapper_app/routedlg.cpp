@@ -241,7 +241,7 @@ void RouteDlg::setSegmentData(SegmentData sd)
 // for(int i=0; i < _segmentDataList.count(); i++)
 // {
 //  SegmentData sd1 = _segmentDataList.at(i);
-//  if(sd1.startDate()== sd.startDate() && sd1.endDate() == sd.endDate())
+//  if(sd1->startDate()== sd.startDate() && sd1->endDate() == sd.endDate())
 //  {
 //   cbSegments_SelectedIndexChanged(i);
 //   checkUpdate(__FUNCTION__);
@@ -1104,7 +1104,7 @@ void RouteDlg::setDefaultTurnInfo()
   return;
  // get the segments that intersect with the start of this segment (Normal Enter and Reverse Leave)
  //sql->OpenConnection();
- QList<SegmentData> intersects = sql->getIntersectingRouteSegmentsAtPoint(sd.segmentId(), sd.startLat(), sd.startLon(), .020, _routeNbr, ui->cbRouteName->currentText(), ui->dateEnd->text());
+ QList<SegmentData*> intersects = sql->getIntersectingRouteSegmentsAtPoint(sd.segmentId(), sd.startLat(), sd.startLon(), .020, _routeNbr, ui->cbRouteName->currentText(), ui->dateEnd->text());
  //foreach (segmentInfo si1 in intersects)
 // ui->rbNFromBack->setEnabled(false);
 // ui->rbNFromLeft->setEnabled(false);
@@ -1114,8 +1114,8 @@ void RouteDlg::setDefaultTurnInfo()
 // ui->rbRAhead->setEnabled(false);
  for(int i = 0; i < intersects.count(); i++)
  {
-  SegmentData sd1 = intersects.at(i);
-  if (sd.segmentId() == sd1.segmentId())
+  SegmentData* sd1 = intersects.at(i);
+  if (sd.segmentId() == sd1->segmentId())
    continue;
 //  if (si.oneWay == "Y")
 //  {
@@ -1124,20 +1124,20 @@ void RouteDlg::setDefaultTurnInfo()
 //  }
 //  if (si1.oneWay == "Y" && si1.whichEnd == "S")
 //      continue;
-  dToBegin = sql->Distance(sd.startLat(), sd.startLon(), sd1.startLat(), sd1.startLon());
-  dToEnd = sql->Distance(sd.startLat(), sd.startLon(), sd1.endLat(), sd1.endLon());
+  dToBegin = sql->Distance(sd.startLat(), sd.startLon(), sd1->startLat(), sd1->startLon());
+  dToEnd = sql->Distance(sd.startLat(), sd.startLon(), sd1->endLat(), sd1->endLon());
   if (dToBegin > .020 && dToEnd > .020)
       continue;   // only match to a begin points
 
-  a1 = sd.bearingStart().getBearing();
+  a1 = sd.bearingStart().angle();
   // meeting start to end
-  if (sd1.whichEnd() == "S")
-      a2 = sd1.bearingStart().getBearing()+180;
+  if (sd1->whichEnd() == "S")
+      a2 = sd1->bearingStart().angle()+180;
   else
-      a2 = sd1.bearingEnd().getBearing();
+      a2 = sd1->bearingEnd().angle();
 
   diff = sql->angleDiff(a1, a2);
-  if((/*si.oneWay == "N" &&*/ sd1.oneWay() == "N") ||(sd1.oneWay()== "Y" && sd1.whichEnd()=="E"))
+  if((/*si.oneWay == "N" &&*/ sd1->oneWay() == "N") ||(sd1->oneWay()== "Y" && sd1->whichEnd()=="E"))
   {
    if (diff > 45)
    {
@@ -1160,7 +1160,7 @@ void RouteDlg::setDefaultTurnInfo()
   }
   if (sd.oneWay() == "N")
   {
-   if (sd1.oneWay() == "Y" && sd1.whichEnd() == "E")
+   if (sd1->oneWay() == "Y" && sd1->whichEnd() == "E")
     continue;
    if (diff < -45)
    {
@@ -1194,8 +1194,8 @@ void RouteDlg::setDefaultTurnInfo()
 
  for(int i = 0; i < intersects.count(); i++)
  {
-  SegmentData sd1 = intersects.at(i);
-  if (sd.segmentId() == sd1.segmentId())
+  SegmentData* sd1 = intersects.at(i);
+  if (sd.segmentId() == sd1->segmentId())
       continue;
 //  if (si.oneWay == "Y")
 //  {
@@ -1204,20 +1204,20 @@ void RouteDlg::setDefaultTurnInfo()
 //  }
 //  if(si1.oneWay == "Y" && si1.whichEnd == "S")
 //      continue;
-  dToBegin = sql->Distance(sd.endLat(), sd.endLon(), sd1.startLat(), sd1.startLon());
-  dToEnd = sql->Distance(sd.endLat(), sd.endLon(), sd1.endLat(), sd1.endLon());
+  dToBegin = sql->Distance(sd.endLat(), sd.endLon(), sd1->startLat(), sd1->startLon());
+  dToEnd = sql->Distance(sd.endLat(), sd.endLon(), sd1->endLat(), sd1->endLon());
   if (dToBegin > .020 && dToEnd > .020)
       continue;   // only match to a begin points
-  a1 = sd.bearingEnd().getBearing();
+  a1 = sd.bearingEnd().angle();
 
   // meeting end to start
-  if (sd1.whichEnd() == "S")
-      a2 = sd1.bearingStart().getBearing();
+  if (sd1->whichEnd() == "S")
+      a2 = sd1->bearingStart().angle();
   else
-      a2 = sd1.bearingEnd().getBearing()+180;
+      a2 = sd1->bearingEnd().angle()+180;
 
   diff = sql->angleDiff(a1, a2);
-  if((/*si.oneWay == "N" &&*/ sd1.oneWay() == "N") ||(sd1.oneWay()== "Y" && sd1.whichEnd()=="S"))
+  if((/*si.oneWay == "N" &&*/ sd1->oneWay() == "N") ||(sd1->oneWay()== "Y" && sd1->whichEnd()=="S"))
   {
    if (diff < -45)
    {
@@ -1240,7 +1240,7 @@ void RouteDlg::setDefaultTurnInfo()
   }
   if (sd.oneWay() == "N")
   {
-   if (sd1.oneWay() == "Y" && sd1.whichEnd() == "S")
+   if (sd1->oneWay() == "Y" && sd1->whichEnd() == "S")
            continue;
    if (diff > 45)
    {

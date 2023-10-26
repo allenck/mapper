@@ -20,7 +20,6 @@ RouteView::RouteView(QObject* parent )
     myParent = qobject_cast<MainWindow*>(m_parent);
     ui = myParent->ui->tblRouteView;
     connect(ui->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
-    myParent->ui->tab->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(myParent->ui->tab, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tab1CustomContextMenu(QPoint)));
     if(auto cornerButton = ui->findChild<QAbstractButton*>(QString(), Qt::FindDirectChildrenOnly)) {
         //this button is not a normal button, it doesn't paint text or icon
@@ -41,6 +40,14 @@ RouteView::RouteView(QObject* parent )
     connect(ui->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tablev_customContextMenu(QPoint)));
 
     ui->setAlternatingRowColors(true);
+    ui->horizontalHeader()->setSectionsMovable(true);
+    connect(ui->horizontalHeader(), &QHeaderView::sectionMoved, [=](int logicalIndex, int oldVisualIndex, int newVisualIndex){
+     config->rv.movedColumns.clear();
+     for(int i = 0; i < ui->model()->columnCount(); i++)
+     {
+      config->rv.movedColumns.append(ui->horizontalHeader()->visualIndex(i));
+     }
+    });
 
     //m_myParent = myParent;
     ui->setSelectionBehavior(QAbstractItemView::SelectRows );
@@ -103,11 +110,6 @@ RouteView::RouteView(QObject* parent )
     ui->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
     sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"), QDate::fromString(endDate, "yyyy/MM/dd"), segmentDataList);
-    ui->hideColumn(sourceModel->NAME);
-//    connect(ui->horizontalHeader(), &QHeaderView::sectionClicked, [=](int section)
-//    {
-//     qDebug() << "section " << section;
-//    });
 
     saveChangesAct = new QAction(tr("Commit changes"),this);
     saveChangesAct->setStatusTip(tr("Save any uncommitted changes"));
@@ -133,15 +135,27 @@ RouteView::RouteView(QObject* parent )
     connect(ui, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tablev_customContextMenu(QPoint)));
 
 
-    showColumnsAct = new QAction(tr("Hide extra columns"),this);
-    showColumnsAct->setCheckable(true);
-    connect(showColumnsAct, &QAction::toggled, [=]{
-     bool b = showColumnsAct->isChecked();
-     ui->setColumnHidden(RouteViewTableModel::NEXT, b);
-     ui->setColumnHidden(RouteViewTableModel::PREV, b);
-     ui->setColumnHidden(RouteViewTableModel::SEQ, b);
-     ui->setColumnHidden(RouteViewTableModel::RSEQ, b);
+//    showColumnsAct = new QAction(tr("Hide extra columns"),this);
+//    showColumnsAct->setCheckable(true);
+//    connect(showColumnsAct, &QAction::toggled, [=]{
+//     bool b = showColumnsAct->isChecked();
+//     ui->setColumnHidden(RouteViewTableModel::NEXT, b);
+//     ui->setColumnHidden(RouteViewTableModel::PREV, b);
+//     ui->setColumnHidden(RouteViewTableModel::SEQ, b);
+//     ui->setColumnHidden(RouteViewTableModel::RSEQ, b);
+//    });
+
+    hideColumnAct = new QAction(tr("Hide Column"),this);
+    connect(hideColumnAct, &QAction::triggered, [=]{
+     QItemSelectionModel * model = ui->selectionModel();
+     QModelIndex ci = proxymodel->mapToSource( model->currentIndex());
+     int logicalIndex = ui->horizontalHeader()->logicalIndex(ci.column());
+     ui->hideColumn(logicalIndex);
+     if(!config->rv.hiddenColumns.contains(logicalIndex))
+      config->rv.hiddenColumns.append(logicalIndex);
+     config->rv.state = ui->horizontalHeader()->saveState();
     });
+
 
     updateRouteAct = new QAction(tr("Update route"),this);
     connect(updateRouteAct, &QAction::triggered, [=]{
@@ -209,6 +223,12 @@ RouteView::RouteView(QObject* parent )
     ui->setColumnWidth(RouteViewTableModel::TYPE, 20);
     ui->setColumnWidth(RouteViewTableModel::DISTANCE, 29);
     ui->setColumnWidth(RouteViewTableModel::TRACKS, 5);
+    ui->hideColumn(sourceModel->NAME);
+    ui->horizontalHeader()->restoreState(config->rv.state);
+    for(int i=0; i < config->rv.hiddenColumns.size(); i++)
+     ui->hideColumn(config->rv.hiddenColumns.at(i).toInt());
+    for(int i=0; i < config->rv.movedColumns.size(); i++)
+     ui->horizontalHeader()->moveSection(i,config->rv.movedColumns.at(i).toInt() );
 
     connect(WebViewBridge::instance(), SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(on_segmentSelected(int,int)));
 
@@ -301,7 +321,7 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
 //        }     menu.addAction(saveChangesAct);
 
      menu.addAction(editSegmentAct);
-     menu.addAction(showColumnsAct);
+     //menu.addAction(showColumnsAct);
      menu.addAction(updateRouteAct);
      menu.addAction(splitSegmentAct);
 
@@ -321,8 +341,23 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
          menu.addAction(discardChangesAct);
          menu.addAction(sortNameAct);
      }
+     menu.addSeparator();
+     menu.addAction(hideColumnAct);
+     if(config->rv.hiddenColumns.count()>0)
+     {
+      QMenu* m = new QMenu(tr("Show column"));
+      menu.addMenu(m);
+      foreach(QVariant col, config->rv.hiddenColumns)
+      {
+       QAction* a = new QAction(sourceModel->headerData(col.toInt(),Qt::Horizontal, Qt::DisplayRole).toString(),this);
+       m->addAction(a);
+       connect(a, &QAction::triggered, [=]{
+        ui->showColumn(col.toInt());
+        config->rv.hiddenColumns.removeOne(col.toInt());
+       });
+      }
+     }
      menu.exec(QCursor::pos());
-
  }
 }
 

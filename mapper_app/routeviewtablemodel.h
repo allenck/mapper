@@ -39,6 +39,8 @@ public:
      USAGE,
      TRACTIONTYPE,
      DISTANCE,
+     ANGLES,
+     ANGLEE,
      NE,
      NL,
      NEXT,
@@ -79,7 +81,6 @@ private:
      QMap<int, QString> turnMap = {{0, "back"}, {1,"Left"},{2,"Right"}};
      QMap<int, QString> turnMap2 = {{0, "ahead"}, {1,"Left"},{2,"Right"}};
      bool bChangesMade = false; // set when changes need to be comitted.
-
      friend class RouteView;
 };
 

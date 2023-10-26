@@ -67,7 +67,7 @@ void EditSegmentDialog::common()
  ui->txtPoints->setText(QString::number(si.pointList().count()));
  ui->txtKm->setText(QString::number(si.length()));
  ui->txtMiles->setText(QString::number(si.length()* 0.621371192));
- ui->txtBearing->setText(QString("%1°").arg(si.bearing().getBearing()));
+ ui->txtBearing->setText(QString("%1°").arg(si.bearing().angle()));
  ui->buttonBox->button(QDialogButtonBox::Save)->setEnabled(false);
  ui->txtDirection->setText(si.direction());
  ui->chkOneWay->setVisible(sd);
@@ -181,7 +181,7 @@ void EditSegmentDialog::segmentSelected(SegmentInfo si)
  ui->txtKm->setText(QString::number(si.length(),'g', 3));
  ui->txtMiles->setText(QString::number(si.length()*0.621371192,'g',3));
  ui->txtDirection->setText(si.direction());
- ui->txtBearing->setText(QString::number(si.bearing().getBearing(),'g',4));
+ ui->txtBearing->setText(QString::number(si.bearing().angle(),'g',4));
 
 // sql->getSegmentDates(si);
 // if(sd.bNeedsUpdate)
