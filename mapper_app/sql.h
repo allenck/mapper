@@ -119,7 +119,11 @@ public:
     QList<SegmentData> getRouteSegmentsForRouteNbr(QString route);
     QList<RouteData> getRouteDataForRouteName(qint32 route, QString name);
     double Distance(double Lat1, double Lon1, double Lat2, double Lon2);
-    QList<SegmentData *> getIntersectingRouteSegmentsAtPoint(int ignore, double lat, double lon, double radius, qint32 route, QString routeName, QString date);
+    QT_DEPRECATED QList<SegmentData *> getIntersectingRouteSegmentsAtPoint(int ignore, double lat, double lon, double radius, qint32 route, QString routeName, QString date);
+    QList<SegmentData*> getIntersectingRouteSegmentsAtPoint(SegmentData* sd, double radius,
+                                                            QString date,
+                                                            QMap<int, SegmentData *> segMap,
+                                                            bool bOutbound);
     QDate getRoutesEarliestDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
     QDate getRoutesLatestDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
     QDate getRoutesNextDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);

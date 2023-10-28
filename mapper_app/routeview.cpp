@@ -45,8 +45,9 @@ RouteView::RouteView(QObject* parent )
      config->rv.movedColumns.clear();
      for(int i = 0; i < ui->model()->columnCount(); i++)
      {
-      config->rv.movedColumns.append(ui->horizontalHeader()->visualIndex(i));
+      config->rv.movedColumns.append(ui->horizontalHeader()->logicalIndex(i));
      }
+     config->rv.state = ui->horizontalHeader()->saveState();
     });
 
     //m_myParent = myParent;
@@ -225,10 +226,10 @@ RouteView::RouteView(QObject* parent )
     ui->setColumnWidth(RouteViewTableModel::TRACKS, 5);
     ui->hideColumn(sourceModel->NAME);
     ui->horizontalHeader()->restoreState(config->rv.state);
-    for(int i=0; i < config->rv.hiddenColumns.size(); i++)
-     ui->hideColumn(config->rv.hiddenColumns.at(i).toInt());
-    for(int i=0; i < config->rv.movedColumns.size(); i++)
-     ui->horizontalHeader()->moveSection(i,config->rv.movedColumns.at(i).toInt() );
+//    for(int i=0; i < config->rv.hiddenColumns.size(); i++)
+//     ui->hideColumn(config->rv.hiddenColumns.at(i).toInt());
+//    for(int i=0; i < config->rv.movedColumns.size(); i++)
+//     ui->horizontalHeader()->moveSection(i,config->rv.movedColumns.at(i).toInt() );
 
     connect(WebViewBridge::instance(), SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(on_segmentSelected(int,int)));
 

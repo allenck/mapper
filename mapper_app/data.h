@@ -230,14 +230,14 @@ public:
     QString pointsString();
     int segmentId() const {return _segmentId;}
     void setSegmentId(int segmentId){_segmentId = segmentId;}
-    LatLng startLatLng() { return LatLng(_startLat, _startLon);}
-    void setStartLatLng(LatLng latLng) {_startLat = latLng.lat();
-                                        _startLon = latLng.lon();
-                                       }
-    LatLng endLatLng() { return LatLng(_endLat, _endLon);}
-    void setEndLatLng(LatLng latLng) {_endLat = latLng.lat();
-                                      _endLon = latLng.lon();
-                                     }
+    LatLng startLatLng() { return _pointList.at(0);}
+//    void setStartLatLng(LatLng latLng) {_startLat = latLng.lat();
+//                                        _startLon = latLng.lon();
+//                                       }
+    LatLng endLatLng() {return _pointList.at(_points-1);}
+//    void setEndLatLng(LatLng latLng) {_endLat = latLng.lat();
+//                                      _endLon = latLng.lon();
+//                                     }
     QString streetName() { return _streetName;}
     QString description() const {return _description;}
     int tracks() {return _tracks;}
