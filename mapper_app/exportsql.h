@@ -59,6 +59,7 @@ public:
     bool createParametersTable(QSqlDatabase db, QString dbType);
     bool createCompaniesTable(QSqlDatabase db, QString dbType);
     bool createIntersectionsTable(QSqlDatabase db, QString dbType);
+    bool createRouteSequenceTable(QSqlDatabase db, QString dbType);
     bool createCommentsTable(QSqlDatabase db, QString dbType);
     bool createTractionTypesTable(QSqlDatabase db, QString dbType);
     bool dropRoutes();

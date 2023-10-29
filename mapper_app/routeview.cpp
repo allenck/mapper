@@ -605,8 +605,7 @@ void RouteView::reSequenceRoute(QString whichEnd)
   //bool bOk=false;
   qint32 segmentId = this->model()->getList().at(srcIndex.row()).segmentId();
   qint32 endSegment = -1;
-  endSegment = SQL::instance()->sequenceRouteSegments(segmentId, segmentDataList, route, name,
-                                                      endDate, whichEnd);
+  endSegment = SQL::instance()->sequenceRouteSegments(segmentId, segmentDataList, &rd, whichEnd);
   sourceModel->bChangesMade = true;
 #if 0
   QList<SegmentData> old = segmentDataList;

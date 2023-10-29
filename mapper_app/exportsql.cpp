@@ -3260,7 +3260,8 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
  dropTable("Routes", db, dbType);
 
  if(dbType == "Sqlite")
-  commandText = "CREATE TABLE `Routes` (  `Route` int(11) NOT NULL,"
+  commandText = "CREATE TABLE `Routes` ( "
+                " `Route` int(11) NOT NULL,"
                 " `Name` varchar(125) NOT NULL,"
                 " `StartDate` date NOT NULL, "
                 " `EndDate` date NOT NULL, "
@@ -3278,7 +3279,12 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
                 " `reverseLeave` int(11) NOT NULL DEFAULT 0,"
                 " `Sequence` int(11) NOT NULL DEFAULT -1,"
                 " `ReverseSeq` int(11) NOT NULL DEFAULT -1,"
-                " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,  constraint pk PRIMARY key (`Route`,`Name`,`StartDate`,`EndDate`,`LineKey`),  CONSTRAINT `Routes_ibfk_1` FOREIGN KEY (`LineKey`) REFERENCES `Segments` (`SegmentId`),  CONSTRAINT `Routes_ibfk_3` FOREIGN KEY (`CompanyKey`) REFERENCES `Companies` (`key`),  CONSTRAINT `Routes_ibfk_4` FOREIGN KEY (`tractionType`) REFERENCES `TractionTypes` (`tractionType`),  CONSTRAINT `Routes_ibfk_5` FOREIGN KEY (`Route`) REFERENCES `altRoute` (`route`))";
+                " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                " constraint pk PRIMARY key (`Route`,`Name`,`StartDate`,`EndDate`,`LineKey`),"
+                " CONSTRAINT `Routes_ibfk_1` FOREIGN KEY (`LineKey`) REFERENCES `Segments` (`SegmentId`),"
+                " CONSTRAINT `Routes_ibfk_3` FOREIGN KEY (`CompanyKey`) REFERENCES `Companies` (`key`),"
+                " CONSTRAINT `Routes_ibfk_4` FOREIGN KEY (`tractionType`) REFERENCES `TractionTypes` (`tractionType`),"
+                " CONSTRAINT `Routes_ibfk_5` FOREIGN KEY (`Route`) REFERENCES `altRoute` (`route`))";
  else if(dbType == "MySql")
   commandText = "CREATE TABLE `Routes` ("\
                 "`Route` int(11) NOT NULL,"\
@@ -3860,6 +3866,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
  }
  return true;
 }
+
 bool ExportSql::createIntersectionsTable(QSqlDatabase db, QString dbType)
 {
  QSqlQuery query = QSqlQuery(db);
@@ -3914,6 +3921,67 @@ bool ExportSql::createIntersectionsTable(QSqlDatabase db, QString dbType)
  }
  return true;
 }
+
+bool ExportSql::createRouteSequenceTable(QSqlDatabase db, QString dbType)
+{
+ QSqlQuery query = QSqlQuery(db);
+ QString commandText;
+ bool bQuery;
+ dropTable("Intersections", db, dbType);
+
+ if(dbType == "Sqlite")
+  commandText = "CREATE TABLE if not exists `RouteSeq` ("\
+                " `Route` int(11) NOT NULL,"\
+                " `Name` varchar(125) NOT NULL,"
+                " `StartDate` date NOT NULL, "
+                " `EndDate` date NOT NULL, "
+                " `segmentList` text"
+                "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, "\
+                " constraint pk PRIMARY key (`Route`,`Name`,`StartDate`,`EndDate`)"
+        ");";
+ else if(dbType == "MySql")
+  commandText = "CREATE TABLE `RouteSeq` ("\
+    "`route` int(11) NOT NULL ,"\
+    "`name` varchar(125) NOT NULL,"\
+    "`startDate` date NOT NULL,"\
+    "`endDate` date NOT NULL,"\
+    "`segmentList` varchar(500) NOT NULL,"\
+    "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"\
+    ") ENGINE=InnoDB AUTO_INCREMENT=507 DEFAULT CHARSET=latin1";
+ else if(dbType == "MsSql")
+ {
+  commandText = "SET ANSI_NULLS ON;"\
+  "SET QUOTED_IDENTIFIER ON;" \
+  "SET ANSI_PADDING ON;"\
+  "CREATE TABLE [dbo].[RouteSeq]("\
+        "[route] [int]  NOT NULL,"\
+        "[name] [varchar](125) NOT NULL,"\
+        "[startDate] [date] NOT NULL,"\
+        "[endDate] [date] NOT NULL,"\
+        "[segmentList] [varchar](500) NOT NULL,"\
+        "[lastUpdate] [datetime] NOT NULL,"\
+     "CONSTRAINT [PK_RouteSeq] PRIMARY KEY CLUSTERED"\
+    "("\
+        "[route] ASC,"\
+        "[name] ASC," \
+        "[startDate] ASC," \
+        "[endDate] ASC," \
+    ")WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]"\
+    ") ON [PRIMARY];" \
+    "SET ANSI_PADDING OFF;"\
+    "ALTER TABLE [dbo].[Intersections] ADD  CONSTRAINT [DF_Intersections_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];";
+ }
+ query.prepare(commandText);
+ bQuery = query.exec();
+ if(!bQuery)
+ {
+  SQLERROR_E(query);
+  throw Exception(tr("SQL Error creating RouteSeq: %1").arg(query.lastError().text()));
+
+ }
+ return true;
+}
+
 bool ExportSql::createCommentsTable(QSqlDatabase db, QString dbType)
 {
  QSqlQuery query = QSqlQuery(db);

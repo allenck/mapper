@@ -119,6 +119,7 @@ RouteData::RouteData(const RouteData& o)
  _prev= o._prev;
  _trackUsage = o._trackUsage;
  _tracks = o._tracks;
+ _seqList = o._seqList;
 }
 
 

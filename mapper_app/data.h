@@ -421,7 +421,8 @@ public:
     int next() {return _next;}
     int prev() {return _prev;}
     int tracks() {return _tracks;}
-
+    QList<QPair<int, QString>> seqList() {return _seqList;}
+    void addSequence(QPair<int, QString> pair) {_seqList.append(pair);}
  private:
     qint32 _route = -1;
     QString _alphaRoute;
@@ -449,7 +450,7 @@ public:
 //    Bearing* bearing = nullptr;
     bool bNeedsUpdate = false;
     RouteType _routeType;
-
+    QList<QPair<int, QString>> _seqList;
 signals:
 
 public slots:

@@ -55,7 +55,7 @@ public:
 //    Q_DECL_DEPRECATED QList<LatLng>  GetSegmentPoints(qint32 SegmentId);
     bool canConnect(SegmentData sd1, QString matchedTo, SegmentData sd2);
     qint32 sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList,
-                                 qint32 route, QString name, QString date, QString whichEnd);
+                                 RouteData* rd, QString whichEnd);
     double angleDiff(double A1, double A2);
     double intersectingAngle(SegmentData sd, SegmentData sd2);
 //    Q_DECL_DEPRECATED bool addPoint( qint32 pt, qint32 SegmentId, double BeginLat, double BeginLon,  double EndLat, double EndLon,  QString StreetName);
