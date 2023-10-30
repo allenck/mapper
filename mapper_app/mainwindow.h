@@ -325,7 +325,7 @@ private:
     QAction *updateRouteAct;
     QAction *replaceSegments;
     QAction *updateTerminalsAct;
-    //QAction *displaySegmentAct;
+    QAction *describeRouteAct;
     QAction* addSegmentToRouteAct;
     QAction* addSegmentToNewRouteAct;
     QAction *deleteSegmentAct;
@@ -449,7 +449,7 @@ private slots:
     void on_runInBrowser(bool);
     void onWebSocketClosed();
     void loadOverlayData();
-//    void refreshSegmentCB();
+    void describeRoute();
     void modifyRouteTractionType();
     void on_updateRoute();
 protected:

@@ -600,10 +600,11 @@ void RouteView::reSequenceRoute(QString whichEnd)
  //qint32 col =model->currentIndex().column();
  QModelIndex proxyIndex = indexes.at(0);
  QModelIndex srcIndex = proxymodel->mapToSource(proxyIndex);
+ qint32 segmentId;
  //if(col==0)
  {
   //bool bOk=false;
-  qint32 segmentId = this->model()->getList().at(srcIndex.row()).segmentId();
+  segmentId = this->model()->getList().at(srcIndex.row()).segmentId();
   qint32 endSegment = -1;
   endSegment = SQL::instance()->sequenceRouteSegments(segmentId, segmentDataList, &rd, whichEnd);
   sourceModel->bChangesMade = true;
@@ -652,6 +653,7 @@ void RouteView::reSequenceRoute(QString whichEnd)
   }
   emit sendRows (startRow, endRow);
  }
+ SQL::instance()->saveRouteSequence(rd, segmentId, whichEnd);
  sourceModel->reset();
  myParent->setCursor(Qt::ArrowCursor);
 }

@@ -86,6 +86,7 @@ public:
     QT_DEPRECATED QList<RouteData> getRouteDatasForDate(qint32 route, QString name, QString date);
     QList<SegmentData> getRouteDatasForDate(int segmentId, QDate date);
     QT_DEPRECATED QList<SegmentData> getRouteDatasForDate(qint32 segmentId, QString date);
+    bool saveRouteSequence(RouteData rd, int firstSegment, QString whichEnd);
     bool doesAltRouteExist(int route, QString alphaRoute);
     qint32 addAltRoute(QString routeAlpha, QString routePrefix);
     bool addAltRoute(int routeNum, QString routeAlpha);
@@ -108,6 +109,7 @@ public:
     bool updateTerminals(TerminalInfo ti);
     bool updateTerminals(qint32 route, QString name, QString startDate, QString endDate, qint32 startSegment, QString startWhichEnd, qint32 endSegment, QString endWhichEnd);
     QList<RouteData> getRouteInfo(qint32 route);
+    RouteSeq getRouteSeq(RouteData rd);
     bool updateCompany(qint32 companyKey, qint32 route);
     Q_DECL_DEPRECATED void setConfig(Configuration *config);
     QList<QString> getRouteNames(qint32 route);

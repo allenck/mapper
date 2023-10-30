@@ -3927,7 +3927,7 @@ bool ExportSql::createRouteSequenceTable(QSqlDatabase db, QString dbType)
  QSqlQuery query = QSqlQuery(db);
  QString commandText;
  bool bQuery;
- dropTable("Intersections", db, dbType);
+ dropTable("RouteSeq", db, dbType);
 
  if(dbType == "Sqlite")
   commandText = "CREATE TABLE if not exists `RouteSeq` ("\
@@ -3935,8 +3935,10 @@ bool ExportSql::createRouteSequenceTable(QSqlDatabase db, QString dbType)
                 " `Name` varchar(125) NOT NULL,"
                 " `StartDate` date NOT NULL, "
                 " `EndDate` date NOT NULL, "
-                " `segmentList` text"
-                "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, "\
+                " `segmentList` text,"
+                " `firstSegment` int(11) NOT NULL,"
+                " `whichEnd` text,"
+                " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, "\
                 " constraint pk PRIMARY key (`Route`,`Name`,`StartDate`,`EndDate`)"
         ");";
  else if(dbType == "MySql")
@@ -3946,6 +3948,8 @@ bool ExportSql::createRouteSequenceTable(QSqlDatabase db, QString dbType)
     "`startDate` date NOT NULL,"\
     "`endDate` date NOT NULL,"\
     "`segmentList` varchar(500) NOT NULL,"\
+    " `firstSegment` int(11) NOT NULL,"
+    " `whichEnd` text,"
     "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"\
     ") ENGINE=InnoDB AUTO_INCREMENT=507 DEFAULT CHARSET=latin1";
  else if(dbType == "MsSql")
@@ -3959,6 +3963,8 @@ bool ExportSql::createRouteSequenceTable(QSqlDatabase db, QString dbType)
         "[startDate] [date] NOT NULL,"\
         "[endDate] [date] NOT NULL,"\
         "[segmentList] [varchar](500) NOT NULL,"\
+        "[firstSegment] [int] NOT NULL,"
+        "[whichEnd] [varchar](1),"
         "[lastUpdate] [datetime] NOT NULL,"\
      "CONSTRAINT [PK_RouteSeq] PRIMARY KEY CLUSTERED"\
     "("\

@@ -423,6 +423,8 @@ public:
     int tracks() {return _tracks;}
     QList<QPair<int, QString>> seqList() {return _seqList;}
     void addSequence(QPair<int, QString> pair) {_seqList.append(pair);}
+    QList<QPair<int, QString>> setSeqList(QString);
+    QString seqToString();
  private:
     qint32 _route = -1;
     QString _alphaRoute;
@@ -457,6 +459,23 @@ public slots:
  friend class SQL;
 };
 Q_DECLARE_METATYPE(RouteData)
+
+class RouteSeq
+{
+ public:
+  RouteSeq() {}
+  ~RouteSeq() {}
+  RouteSeq(const RouteSeq&);
+  QList<QPair<int, QString>> seqList() {return _seqList;}
+
+ private:
+  QList<QPair<int, QString>> _seqList;
+  int _firstSegment;
+  QString _whichEnd;
+  RouteData _rd;
+  QDateTime _lastUpdate;
+  friend class SQL;
+};
 
 
 class segmentGroup

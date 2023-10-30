@@ -437,6 +437,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui->cbRoute->addAction(splitRouteAct);
   ui->cbRoute->addAction(updateRouteAct);
   ui->cbRoute->addAction(updateTerminalsAct);
+  ui->cbRoute->addAction(describeRouteAct);
 
   ui->ssw->cbSegments()->setContextMenuPolicy(Qt::ActionsContextMenu);
   ui->ssw->cbSegments()->addAction(addSegmentToRouteAct);
@@ -972,9 +973,9 @@ void MainWindow::createActions()
  updateTerminalsAct->setStatusTip(tr("Update start and end terminal segements"));
  connect(updateTerminalsAct, SIGNAL(triggered()), this, SLOT(updateTerminals()));
 
-//    displaySegmentAct = new QAction(tr("Display"),this);
-//    displaySegmentAct->setStatusTip(tr("Display this segment"));
-//    connect(displaySegmentAct,SIGNAL(triggered()), this, SLOT());
+ describeRouteAct = new QAction(tr("Describe route"),this);
+ describeRouteAct->setStatusTip(tr("Display the route"));
+ connect(describeRouteAct,SIGNAL(triggered()), this, SLOT(describeRoute()));
 
  deleteSegmentAct= new QAction(tr("DeleteSegment"),this);
  deleteSegmentAct->setStatusTip(tr("Delete this segment if no longer used"));
@@ -1420,6 +1421,7 @@ void MainWindow::cbRoute_customContextMenu( const QPoint& )
     cbRouteMenu.addAction(replaceSegments);
     cbRouteMenu.addAction(exportRouteAct);
     cbRouteMenu.addAction(updateTerminalsAct);
+    cbRouteMenu.addAction(describeRouteAct);
     //cbRouteMenu.addAction(changeRouteNumberAct);
     updateTerminalsAct->setEnabled(routeView->isSequenced());
     cbRouteMenu.exec(QCursor::pos());
@@ -4654,4 +4656,62 @@ void MainWindow::enableControls( bool b)
     ui->txtSegment->setEnabled(b);
     ui->sbTracks->setEnabled(b);
     ui->chkAddPt->setEnabled(b);
+}
+
+void MainWindow::describeRoute()
+{
+ RouteData rd = ui->cbRoute->currentData().value<RouteData>();
+ //QList<QPair<int, QString>> seqList = sql->getRouteSeq(rd);
+ RouteSeq rs = sql->getRouteSeq(rd);
+ if(rs.seqList().isEmpty())
+  return;
+ QString text;
+ setCursor(Qt::WaitCursor);
+ bool bFirst = true;
+
+ for(QPair p : rs.seqList())
+ {
+  SegmentInfo si = sql->getSegmentInfo(p.first);
+  QString from;
+  QString to;
+  QString street = si.streetName();
+  if(si._description.contains(","))
+  {
+    to = si.description().mid(si.description().indexOf(" to ")+4);
+    int i1 = si.description().indexOf(",");
+    int i2 = si.description().indexOf(" to ");
+    from = si.description().mid(i1+1, i2-i1);
+  }
+  else
+  street = si.description();
+  if(!text.isEmpty())
+   text.append(", ");
+  text.append("<B>"+si.streetName()+"</B>");
+  if(bFirst)
+  {
+   if(p.second == "F")
+   text.append(si.description().mid(si._description.indexOf(",")));
+   else
+    text.append(to + " to"+ from);
+   bFirst=false;
+  }
+  else
+  if(si.description().contains(" to "))
+  {
+   text.append(" to ");
+
+   if(p.second == "F")
+    text.append(to);
+   else {
+     text.append(to);
+   }
+  }
+ }
+ QMessageBox box = QMessageBox(QMessageBox::Information,tr("Route description"),
+                               tr(" %1-%2 from %3 to %4").arg(rd.alphaRoute(), rd.routeName(),
+                                  rd.startDate().toString("yyyy/MM/dd"), rd.endDate().toString("yyyy/MM/dd")));
+ box.setInformativeText(text);
+ box.exec();
+
+ setCursor(Qt::ArrowCursor);
 }

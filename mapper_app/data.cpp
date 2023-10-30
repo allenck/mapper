@@ -3,6 +3,7 @@
 #include <QString>
 #include "webviewbridge.h"
 #include "sql.h"
+#include <QPair>
 
 //routeData::routeData(QObject *parent = 0)
 //{
@@ -122,6 +123,32 @@ RouteData::RouteData(const RouteData& o)
  _seqList = o._seqList;
 }
 
+QList<QPair<int, QString> > RouteData::setSeqList(QString txt)
+{
+ _seqList.clear();
+ QStringList sl = txt.split(",");
+ for(int i=0; i< sl.count(); i+=2)
+ {
+  QPair<int, QString> pair(sl.at(i).toInt(), sl.at(i+1));
+  _seqList.append(pair);
+ }
+ return _seqList;
+}
+
+QString RouteData::seqToString()
+{
+ QString text;
+ for(QPair<int,QString> pair : _seqList)
+ {
+  if(!text.isEmpty())
+   text.append(",");
+  text.append(QString::number(pair.first));
+  text.append(",");
+  text.append(pair.second);
+ }
+
+ return text;
+}
 
 QString RouteData::toString()
 {
@@ -838,4 +865,12 @@ void SegmentData::displaySegment(QString date, QString color, QString trackUsage
  objArray.clear();
  objArray << _segmentId << routeNames<<_description<<_oneWay<<color<< _tracks << dash << _routeType << trackUsage << _pointList.count()*2 << points;
  WebViewBridge::instance()->processScript("createSegment", objArray);
+}
+
+RouteSeq::RouteSeq(const RouteSeq& o){
+ _seqList= o._seqList;
+ _firstSegment = o._firstSegment;
+ _whichEnd = o._whichEnd;
+ _rd = o._rd;
+ _lastUpdate = o._lastUpdate;
 }
