@@ -110,6 +110,8 @@ public:
     bool updateTerminals(qint32 route, QString name, QString startDate, QString endDate, qint32 startSegment, QString startWhichEnd, qint32 endSegment, QString endWhichEnd);
     QList<RouteData> getRouteInfo(qint32 route);
     RouteSeq getRouteSeq(RouteData rd);
+    bool deleteRouteSeq(RouteSeq rs);
+    bool addRouteSeq(RouteSeq rs);
     bool updateCompany(qint32 companyKey, qint32 route);
     Q_DECL_DEPRECATED void setConfig(Configuration *config);
     QList<QString> getRouteNames(qint32 route);
@@ -243,6 +245,8 @@ public:
     QList<SegmentData> segmentDataFromView(QString where);
     QStringList listColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase());
     QStringList listPkColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase());
+    bool getForeignKeyCheck();
+    void setForeignKeyCheck(bool b);
 
 signals:
     void details(QString);
@@ -256,6 +260,7 @@ private:
 //    QT_DEPRECATED void populatePointList(SegmentData sd);
     bool insertRouteSegment(SegmentData sd);
     bool insertRouteSegment(RouteData sd);
+    bool processFile(QTextStream* in, QSqlDatabase db, bool bIsInclude);
 
 };
 

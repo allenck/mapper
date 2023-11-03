@@ -474,12 +474,20 @@ class RouteSeq
   ~RouteSeq() {}
   RouteSeq(const RouteSeq&);
   QList<QPair<int, QString>> seqList() {return _seqList;}
+  QString routeName() {return _rd.routeName();}
+  void setRouteName(QString name) {_rd.setRouteName(name);}
+  int route() {return _rd.route();}
+  QDate startDate() {return _rd.startDate();}
+  QDate endDate() {return _rd.endDate();}
+  QString whichEnd() {return _whichEnd;}
+  int firstSegment() {return _firstSegment;}
+  QString listString();
 
  private:
   QList<QPair<int, QString>> _seqList;
   int _firstSegment;
   QString _whichEnd;
-  RouteData _rd;
+  RouteData _rd =RouteData();
   QDateTime _lastUpdate;
   friend class SQL;
 };

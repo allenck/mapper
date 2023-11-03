@@ -13,12 +13,13 @@ EditSegmentDialog::EditSegmentDialog(QWidget *parent) :
  common();
 }
 
-EditSegmentDialog::EditSegmentDialog(SegmentInfo sd, QWidget *parent) :
+EditSegmentDialog::EditSegmentDialog(SegmentInfo si, QWidget *parent) :
   QDialog(parent),
   ui(new Ui::EditSegmentDialog)
 {
+ this->si = si;
  common();
- segmentSelected(sd);
+ segmentSelected(si);
 
  //ui->ssw->initialize();
  //connect(ui->ssw, SIGNAL(segmentSelected(SegmentData)), this, SLOT(segmentSelected(SegmentData)));

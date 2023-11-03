@@ -3304,11 +3304,11 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
                 " `Sequence` int(11) NOT NULL DEFAULT -1,"
                 " `ReverseSeq` int(11) NOT NULL DEFAULT -1,"
                 " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, "
-                " constraint pk PRIMARY key (`Route`,`Name`,`StartDate`,`EndDate`,`LineKey`),"
+                " constraint pk PRIMARY key (`Route`,`Name`,`CompanyKey`,`StartDate`,`EndDate`,`LineKey`),"
                 " CONSTRAINT `Routes_ibfk_1` FOREIGN KEY (`LineKey`) REFERENCES `Segments` (`SegmentId`),"
                 " CONSTRAINT `Routes_ibfk_3` FOREIGN KEY (`CompanyKey`) REFERENCES `Companies` (`key`),"
-                " CONSTRAINT `Routes_ibfk_4` FOREIGN KEY (`tractionType`) REFERENCES `TractionTypes` (`tractionType`),"
-                " CONSTRAINT `Routes_ibfk_5` FOREIGN KEY (`Route`) REFERENCES `altRoute` (`route`))";
+                " CONSTRAINT `Routes_ibfk_4` FOREIGN KEY (`TractionType`) REFERENCES `TractionTypes` (`tractionType`),"
+                " CONSTRAINT `Routes_ibfk_5` FOREIGN KEY (`Route`) REFERENCES `AltRoute` (`route`))";
  else if(dbType == "MySql")
   commandText = "CREATE TABLE `Routes` ("\
                 "`Route` int(11) NOT NULL,"\
@@ -3332,14 +3332,14 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
                 "`Sequence` int(11) NOT NULL,"\
                 "`ReverseSeq` int(11) NOT NULL,"\
                 "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"\
-                "PRIMARY KEY (`Route`,`Name`,`StartDate`,`EndDate`,`LineKey`),"\
+                "PRIMARY KEY (`Route`,`Name`,`CompanyKey`,`StartDate`,`EndDate`,`LineKey`),"\
                 "KEY `LineKey` (`LineKey`),"\
                 "KEY `companyKey` (`CompanyKey`),"\
                 "KEY `tractionType` (`tractionType`),"\
                 "CONSTRAINT `Routes_ibfk_1` FOREIGN KEY (`LineKey`) REFERENCES `Segments` (`SegmentId`),"\
                 "CONSTRAINT `Routes_ibfk_3` FOREIGN KEY (`CompanyKey`) REFERENCES `Companies` (`key`),"\
                 "CONSTRAINT `Routes_ibfk_4` FOREIGN KEY (`tractionType`) REFERENCES `TractionTypes` (`tractionType`),"
-                "CONSTRAINT `Routes_ibfk_5` FOREIGN KEY (`Route`) REFERENCES `altRoute` (`route`)"\
+                "CONSTRAINT `Routes_ibfk_5` FOREIGN KEY (`Route`) REFERENCES `AltRoute` (`route`)"\
                 ") ENGINE=InnoDB DEFAULT CHARSET=latin1";
  else if(dbType == "MsSql")
  {
@@ -3369,10 +3369,11 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
                   "CONSTRAINT [PK_Routes] PRIMARY KEY CLUSTERED"\
                  "("\
                      "[Route] ASC,"\
+                     "[name] ASC"\
+                     "[CompanyKey] ASC,"\
                      "[StartDate] ASC,"\
                      "[EndDate] ASC,"\
                      "[LineKey] ASC,"\
-                     "[name] ASC"\
                     ")WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]"\
                    ") ON [PRIMARY];");
                    commandText.append("SET ANSI_PADDING OFF;");
@@ -3950,7 +3951,7 @@ bool ExportSql::createIntersectionsTable(QSqlDatabase db, QString dbType)
  return true;
 }
 
-bool ExportSql::createRouteSequenceTable(QSqlDatabase db, QString dbType)
+bool ExportSql::createRouteSeqTable(QSqlDatabase db, QString dbType)
 {
  QSqlQuery query = QSqlQuery(db);
  QString commandText;
@@ -4179,9 +4180,9 @@ bool ExportSql::exportTable(QString table)
   if(table.compare("Parameters", Qt::CaseInsensitive)==0)
    if(!createParametersTable(_targetDb, tgtConn->servertype())) return false;
   if(table.compare("RouteComments", Qt::CaseInsensitive)==0)
-   if(!createAltRouteTable(_targetDb, tgtConn->servertype())) return false;
+   if(!createRouteCommentsTable(_targetDb, tgtConn->servertype())) return false;
   if(table.compare("RouteSeq", Qt::CaseInsensitive)==0)
-   if(!createRouteSequenceTable(_targetDb, tgtConn->servertype())) return false;
+   if(!createRouteSeqTable(_targetDb, tgtConn->servertype())) return false;
   if(table.compare("Segments", Qt::CaseInsensitive)==0)
    if(!createSegmentsTable(_targetDb, tgtConn->servertype())) return false;
   if(table.compare("Stations", Qt::CaseInsensitive)==0)
@@ -4386,7 +4387,7 @@ bool ExportSql::areTableDefsEqual(QString table, Connection* c1, Connection* c2,
 {
  QStringList columns1 = SQL::instance()->listColumns(table, c1->servertype(), db1);
  QStringList columns2 = SQL::instance()->listColumns(table, c2->servertype(), db2);
- if(columns1.count() != columns1.count())
+ if(columns1.count() != columns2.count())
  {
   qDebug() << table << " column counts differ";
   return false;

@@ -103,17 +103,17 @@ void ExportDlg::btnGo_clicked()
  }
  exprt->setNoDelete(ui->chkNoDelete->checkState());
  timer->start();
-// for(int i=0; i<config->currCity->connections.count(); i++)
-// {
-//  Connection* c = config->currCity->connections.at(i);
-//  if( c->description() == ui->cbConnections->currentText())
-//  {
-//   config->currCity->curExportConnId = c->id();
-//   config->saveSettings();
-//   currConnection = c;
-//   break;
-//  }
-// }
+ for(int i=0; i<config->currCity->connections.count(); i++)
+ {
+  Connection* c = config->currCity->connections.at(i);
+  if( c->description() == ui->cbConnections->currentText())
+  {
+   config->currCity->curExportConnId = c->id();
+   config->saveSettings();
+   currConnection = c;
+   break;
+  }
+ }
  currConnection = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
  if(!currConnection)
   return;
@@ -399,7 +399,7 @@ void ExportDlg::on_chkTractionTypes_toggled(bool bChecked)
  {
   if(!ui->chkRoutes->isChecked())
   {
-   // foreign key refereces this table
+   // foreign key references this table
    ui->chkRoutes->setChecked(true);
   }
  }
@@ -411,7 +411,7 @@ void ExportDlg::on_chkAltRoute_toggled(bool bChecked)
  {
   if(!ui->chkRoutes->isChecked())
   {
-   // foreign key refereces this table
+   // foreign key references this table
    ui->chkRoutes->setChecked(true);
   }
  }

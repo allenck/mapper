@@ -58,6 +58,8 @@ public:
  QMap<QString, Bounds> cityBounds;
  bool loggingOn() {return bLoggingOn;}
  void setLoggingOn(bool b) {bLoggingOn = b;}
+ bool foreignKeyCheck() {return bForeignKeyCheck;}
+ void setForeignKeyCheck(bool b) {bForeignKeyCheck = b;}
 
 private:
  static Configuration* _instance;
@@ -65,6 +67,7 @@ private:
  void createDefaultSettings();
  bool bLoggingOn = false;
  QUuid _connectionUniqueId;
+ bool bForeignKeyCheck = false;
 
 signals:
   void newCityCreated(City*);

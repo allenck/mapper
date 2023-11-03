@@ -32,6 +32,7 @@ public:
     ExportSql(Configuration* cfg, bool bDropTables, QObject *parent = 0);
     void setOverride(QDateTime strOvr);
     void setNoDelete(bool bFlag);
+    ExportSql* instance() {return this;}
 
     //bool exportAltRoute();
     bool exportAll();
@@ -59,7 +60,7 @@ public:
     bool createParametersTable(QSqlDatabase db, QString dbType);
     bool createCompaniesTable(QSqlDatabase db, QString dbType);
     bool createIntersectionsTable(QSqlDatabase db, QString dbType);
-    bool createRouteSequenceTable(QSqlDatabase db, QString dbType);
+    bool createRouteSeqTable(QSqlDatabase db, QString dbType);
     bool createCommentsTable(QSqlDatabase db, QString dbType);
     bool createTractionTypesTable(QSqlDatabase db, QString dbType);
     bool dropRoutes();

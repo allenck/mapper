@@ -1263,6 +1263,14 @@ void MainWindow::createActions()
  showGoogleMapFeaturesAct->setCheckable(true);
  showGoogleMapFeaturesAct->setChecked(true);
  connect(showGoogleMapFeaturesAct, SIGNAL(toggled(bool)), this, SLOT(showGoogleMapFeatures(bool)));
+
+ foreignKeyCheckAct = new QAction(tr("Foreign key check"),this);
+ foreignKeyCheckAct->setStatusTip(tr("Enable foreign key checking <I>Sqlite only!</I"));
+ foreignKeyCheckAct->setCheckable(true);
+ foreignKeyCheckAct->setChecked(config->foreignKeyCheck());
+ connect(foreignKeyCheckAct, &QAction::toggled, [=](bool b){
+  SQL::instance()->setForeignKeyCheck(b);
+ });
 }
 
 void MainWindow::createMenus()
@@ -1349,6 +1357,13 @@ void MainWindow::createMenus()
     sortMenu->addAction(sortTypeAct);
     optionsMenu->addAction(showGoogleMapFeaturesAct);
 
+    connect(optionsMenu, &Menu::aboutToShow, [=]{
+     if(config->currConnection->servertype()== "Sqlite")
+     {
+      optionsMenu->addAction(foreignKeyCheckAct);
+      foreignKeyCheckAct->setChecked(SQL::instance()->getForeignKeyCheck());
+     }
+    });
     menuBar()->addMenu(optionsMenu);
     menuBar()->addMenu(toolsMenu);
 

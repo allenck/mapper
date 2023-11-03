@@ -376,6 +376,7 @@ private:
     QAction* checkSegmentsAct;
     QAction* saveSettingsAct;
     QAction* showGoogleMapFeaturesAct;
+    QAction* foreignKeyCheckAct;
 
     //QSignalMapper *overlaySignalMapper;
     QActionGroup  *overlayActionGroup;

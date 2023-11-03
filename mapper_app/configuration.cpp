@@ -164,6 +164,7 @@ void Configuration::saveSettings()
  settings->setValue("runInBrowser", bRunInBrowser);
  settings->setValue("saveImageDir", saveImageDir);
  settings->setValue("showGMFeatures", bShowGMFeatures);
+ settings->setValue("foreignKeyCheck", bForeignKeyCheck);
 }
 
 void Configuration::getSettings()
@@ -385,6 +386,7 @@ void Configuration::getSettings()
  bRunInBrowser = settings.value("runInBrowser", false).toBool();
  saveImageDir = settings.value("saveImageDir", "").toString();
  bShowGMFeatures = settings.value("showGMFeatures", true).toBool();
+ bForeignKeyCheck = settings.value("foreignKeyCheck", true).toBool();
  //settings.endGroup();
 
  settings.beginGroup("query");

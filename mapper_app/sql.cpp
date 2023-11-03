@@ -87,7 +87,8 @@ bool SQL::dbOpen()
       }
      }
     }
-
+    if(config->currConnection->servertype() == "Sqlite")
+     SQL::instance()->setForeignKeyCheck(config->foreignKeyCheck());
     return ok;
 }
 
@@ -108,6 +109,7 @@ bool SQL::isTransactionActive()
  }
  return false;
 }
+
 
 
 int SQL::sqlErrorMessage(QSqlQuery query, QMessageBox::StandardButtons buttons)
@@ -486,6 +488,25 @@ RouteSeq SQL::getRouteSeq(RouteData rd)
  return rs;
 }
 
+bool SQL::deleteRouteSeq(RouteSeq rs)
+{
+ if(!dbOpen())
+      throw Exception(tr("database not open: %1").arg(__LINE__));
+ QSqlDatabase db = QSqlDatabase::database();
+ QSqlQuery query = QSqlQuery(db);
+ QString commandText = QString("delete RouteSeq "
+                       " where route = %1 and name = '%2' and "
+                       " startDate = '%3' and endDate = '%4'")
+         .arg(rs._rd.route()).arg(rs._rd.routeName(), rs._rd.startDate().toString("yyyy/MM/dd"),
+                              rs._rd.endDate().toString("yyyy/MM/dd"));
+ bool bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+  SQLERROR(query);
+  return  false;
+ }
+ return true;
+}
 #if 0
 RouteInfo SQL::getRoutePoints(qint32 route, QString name, QString date)
 {
@@ -1617,7 +1638,7 @@ QList<RouteData> SQL::getRouteDatasForDate(qint32 route, QString name, QString d
  QList<RouteData> myArray;
  QSqlDatabase db = QSqlDatabase::database();
 
- QString commandText = "SELECT r.Route,Name,r.StartDate,r.EndDate,LineKey,companyKey,"
+ QString commandText = "SELECT r.Route,r.Name,r.StartDate,r.EndDate,LineKey,companyKey,"
                        " tractionType,s.direction, normalEnter, normalLeave,"
                        " reverseEnter, reverseLeave, routeAlpha, r.oneWay, r.trackUsage,"
                        " s.tracks, seq.segmentList"
@@ -1628,7 +1649,7 @@ QList<RouteData> SQL::getRouteDatasForDate(qint32 route, QString name, QString d
                        "  and r.startDate = seq.startDate and r.endDate = seq.endDate"
                        " where r.Route = " + QString("%1").arg(route) + ""
                        " and '" + date + "' between r.startDate and r.endDate"
-                       " and TRIM(name) = '" + name + "'";
+                       " and TRIM(r.name) = '" + name + "'";
 
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
@@ -1826,7 +1847,7 @@ bool SQL::saveRouteSequence(RouteData rd, int firstSegment, QString whichEnd)
      .arg(rd._route).arg(rd._name)
      .arg(rd._startDate.toString("yyyy/MM/dd"),rd._endDate.toString("yyyy/MM/dd"),
           rd.seqToString()).arg(firstSegment).arg(whichEnd);
-   }
+  }
   bQuery = query.exec(commandText);
   if(!bQuery)
   {
@@ -1834,6 +1855,28 @@ bool SQL::saveRouteSequence(RouteData rd, int firstSegment, QString whichEnd)
       return false;
   }
   return true;
+}
+bool SQL::addRouteSeq(RouteSeq rs)
+{
+ if(!dbOpen())
+     throw Exception(tr("database not open: %1").arg(__LINE__));
+ QSqlDatabase db = QSqlDatabase::database();
+
+ QString commandText = QString("insert into RouteSeq (route, name, startDate, endDate, segmentList,"
+                       "firstSegment, whichEnd)"
+                       " values (%1, '%2', '%3', '%4', '%5', %6, '%7')")
+   .arg(rs.route()).arg(rs.routeName())
+   .arg(rs.startDate().toString("yyyy/MM/dd"),rs.endDate().toString("yyyy/MM/dd"),
+        rs._rd.seqToString()).arg(rs.firstSegment()).arg(rs.whichEnd());
+
+ QSqlQuery query;
+ bool bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+     SQLERROR(query);
+     return false;
+ }
+ return true;
 }
 
 /// <summary>
@@ -10209,7 +10252,7 @@ void SQL::checkTables(QSqlDatabase db)
   if(!tableList.contains("RouteSeq", Qt::CaseInsensitive))
   {
    ExportSql* esql = new ExportSql(config,false);
-   esql->createRouteSequenceTable(db, config->currConnection->servertype());
+   esql->createRouteSeqTable(db, config->currConnection->servertype());
   }
   if(!doesColumnExist("Segments", "pointArray"))
   {
@@ -10296,7 +10339,7 @@ void SQL::checkTables(QSqlDatabase db)
     addColumn("Routes", "TrackUsage", "ENUM('N', 'B', 'R')");
    }
    // TODO: add Sql Server syntax
-   executeScript(":/sql/recreate_routes.sql");
+   //executeScript(":/sql/recreate_routes.sql");
   }
 
   if(!doesColumnExist("Routes", "Sequence"))
@@ -10328,6 +10371,19 @@ void SQL::checkTables(QSqlDatabase db)
    //executeScript(":/sql/recreate_routes.sql");
   }
 
+  QStringList routesPk = listPkColumns("Routes", config->currConnection->servertype(), db);
+  if(routesPk.contains("CompanyKey", Qt::CaseInsensitive)!=0)
+  {
+   if(config->currConnection->servertype() == "Sqlite")
+    executeScript(":/sql/sqlite_recreate_routes.sql");
+   else if(config->currConnection->servertype() == "MySql")
+    executeScript(":/sql/mysql_recreate_routes.sql");
+   else
+   {
+    // TODO: MsSql query
+   }
+  }
+
   if(!doesColumnExist("RouteComments", "latitude"))
    executeScript(":/sql/recreateRouteComments.sql", db);
 
@@ -10343,7 +10399,9 @@ void SQL::checkTables(QSqlDatabase db)
   }
   if(!found)
    executeScript(":/recreateRouteComments.sql");
-
+ }
+ if(config->foreignKeyCheck())
+ {
 
  }
 }
@@ -10357,12 +10415,21 @@ bool SQL::executeScript(QString path, QSqlDatabase db)
   //ui->lblHelp->setText(file.errorString() + " '" + file.fileName()+"'");
   return true;
  }
+ QTextStream* in = new QTextStream(&file);
+ processFile(in, db, false);
+ return true;
+}
 
- QTextStream in(&file);
+bool SQL::processFile(QTextStream* in, QSqlDatabase db, bool bIsInclude)
+{
  QString sqltext;
- while(!in.atEnd())
+ while(!in->atEnd())
  {
-  sqltext = sqltext +  in.readLine();
+  sqltext = sqltext +  in->readLine();
+  if(sqltext.startsWith("#"))
+  {
+   continue;
+  }
   if(sqltext.contains(";"))
   {
    QSqlQuery query = QSqlQuery(db);
@@ -11385,6 +11452,70 @@ QList<SegmentData>  SQL::segmentDataFromView(QString where)
   list.append(sd);
  }
  return list;
+}
+
+bool SQL::getForeignKeyCheck()
+{
+ bool ret = false;
+ int count = 0;
+ try
+ {
+     if(!dbOpen())
+         throw Exception(tr("database not open: %1").arg(__LINE__));
+     QSqlDatabase db = QSqlDatabase::database();
+
+     QString commandText = "PRAGMA foreign_keys";
+     QSqlQuery query = QSqlQuery(db);
+     bool bQuery = query.exec(commandText);
+     if(!bQuery)
+     {
+         QSqlError err = query.lastError();
+         qDebug() << err.text() + "\n";
+         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+         return false;
+     }
+     if (!query.isActive())
+     {
+         return false;
+     }
+     while (query.next())
+     {
+         count = query.value(0).toInt();
+     }
+     if (count > 0)
+         ret = true;
+ }
+ catch (Exception e)
+ {
+     myExceptionHandler(e);
+ }
+ return ret;
+}
+
+void SQL::setForeignKeyCheck(bool b)
+{
+ try
+ {
+     if(!dbOpen())
+         throw Exception(tr("database not open: %1").arg(__LINE__));
+     QSqlDatabase db = QSqlDatabase::database();
+
+     QString commandText = "PRAGMA foreign_keys="+ QString(b?"1":"0");
+     QSqlQuery query = QSqlQuery(db);
+     bool bQuery = query.exec(commandText);
+     if(!bQuery)
+     {
+         QSqlError err = query.lastError();
+         qDebug() << err.text() + "\n";
+         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+         return;
+     }
+ }
+ catch (Exception e)
+ {
+     myExceptionHandler(e);
+ }
+ return;
 }
 
 
