@@ -192,8 +192,8 @@ void Configuration::getSettings()
    cityMap.insert(nc->name(), nc);
   }
   LatLng pt;
-  qDebug() << "lat: " << settings.value("lat",35).toString();
-  qDebug() << "lon: " << settings.value("lon",-90).toString();
+//  qDebug() << "lat: " << settings.value("lat",35).toString();
+//  qDebug() << "lon: " << settings.value("lon",-90).toString();
   pt.setLat(settings.value("lat",35).toDouble());
   pt.setLon(settings.value("lon",-90).toDouble());
   nc->center = pt;

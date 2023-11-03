@@ -45,7 +45,7 @@ CREATE TABLE if not exists `Intersections` (
   `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE if not exists  `altRoute` ( 
+CREATE TABLE if not exists  `AltRoute` (
   `route` NOT NULL INTEGER PRIMARY KEY AUTOINCREMENT, 
   `routePrefix` varchar(10) default '', 
   `routeAlpha` varchar(8) NOT NULL, 
@@ -107,6 +107,8 @@ CREATE TABLE if not exists `Routes` (
   `normalLeave` int(11) NOT NULL DEFAULT 0,
   `reverseEnter` int(11) NOT NULL DEFAULT 0,
   `reverseLeave` int(11) NOT NULL DEFAULT 0,
+  `nextR` int(11) NOT NULL DEFAULT -1,
+  `prevR` int(11) NOT NULL DEFAULT -1,
   `sequence` int(11) NOT NULL DEFAULT -1,
   `reverseSeq` int(11) NOT NULL DEFAULT -1,
   `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

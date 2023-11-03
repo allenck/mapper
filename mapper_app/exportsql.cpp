@@ -84,7 +84,8 @@ bool ExportSql::openDb()
       while(query.next())
       {
        QString dbName = query.value(0).toString();
-       if(dbName != tgtConn->useDatabase())
+       //if(dbName != tgtConn->useDatabase())
+       if(dbName != tgtConn->defaultSqlDatabase())
         return false;
       }
      }
@@ -118,22 +119,22 @@ bool ExportSql::openDb()
 }
 bool ExportSql::exportAll()
 {
- exportParameters();
- exportCompanies();
- exportTractionTypes();
- exportAltRoute();
- exportComments();
- exportIntersections();
- exportStations();
+ exportTable("Parameters");
+ exportTable("Companies");
+ exportTable("TractionTypes");
+ exportTable("AltRoute");
+ exportTable("Comments");
+ exportTable("Intersections");
+ exportTable("Stations");
  exportLineSegments();
- exportSegments();
- exportRoutes();
-
- exportTerminals();
- exportRouteComments();
+ exportTable("Segments");
+ exportTable("Routes");
+ exportTable("Terminals");
+ exportTable("RouteComments");
+ exportTable("RouteSeq");
  return true;
 }
-
+#if 0
 bool ExportSql::exportAltRoute()
 {
     srcDb = QSqlDatabase::database();
@@ -854,7 +855,10 @@ bool ExportSql::exportTractionTypes()
 
      if(!bDropTables)
      {
-        commandText = "select tractionType, description, displayColor, routeType, icon from TractionTypes where tractionType="+QString("%1").arg(tractionType);
+        commandText = "select tractionType, description, displayColor, "
+                      "routeType, icon "
+                      "from TractionTypes"
+                      " where tractionType="+QString("%1").arg(tractionType);
         QSqlQuery query2 = QSqlQuery(_targetDb);
         bQuery = query2.exec(commandText);
         if(!bQuery)
@@ -875,7 +879,7 @@ bool ExportSql::exportTractionTypes()
             icon2=query2.value(4).toString();
             bFound = true;
         }
-        }
+     }
         if(tractionType== tractionType2 && description == description2 && displayColor == displayColor2 && routeType==routeType2 && icon==icon2)
         {
             notUpdated++;
@@ -896,8 +900,6 @@ bool ExportSql::exportTractionTypes()
                 QSqlError err = query2.lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-                //db.close();
-                //exit(EXIT_FAILURE);
                 errors++;
             }
             else
@@ -1091,6 +1093,7 @@ bool ExportSql::exportParameters()
 
     return true;
 }
+#endif
 
 
 bool ExportSql::exportLineSegments()
@@ -1384,7 +1387,7 @@ bool ExportSql::exportLineSegments()
 
     return true;
 }
-
+#if 0
 bool ExportSql::exportSegments()
 {
   QSqlDatabase srcDb = QSqlDatabase::database();
@@ -1734,7 +1737,8 @@ bool ExportSql::exportSegments()
  bool ExportSql::exportRoutes()
  {
   srcDb = QSqlDatabase::database();
-      if(!openDb()) return false;
+  if(!openDb())
+   return false;
 
   updateTimestamp("Routes");
 
@@ -1743,7 +1747,6 @@ bool ExportSql::exportSegments()
   deleted=0;
   errors=0;
   notUpdated=0;
-
   getCount("Routes", bDropTables);
   if(bDropTables)
   {
@@ -1755,23 +1758,25 @@ bool ExportSql::exportSegments()
   {
    if(srcConn->servertype() == "MsSql")
     commandText = "select route, LTRIM(RTRIM(name)), startDate, endDate, lineKey, OneWay, TrackUsage, "
-                  "companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, "
-                  "reverseEnter, ReverseLeave, Sequence, ReverseSeq, lastUpdate from Routes  order by lastUpdate";
+                  "companyKey,tractionType, Direction, next, prevR, nextR, prev, normalEnter, normalLeave, "
+                  "reverseEnter, ReverseLeave, Sequence, ReverseSeq, lastUpdate"
+                  " from Routes  order by lastUpdate";
    else
     commandText = "select route, TRIM(name), startDate, endDate, lineKey, OneWay, TrackUsage, "
-                  "companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, "
-                  "reverseEnter, ReverseLeave, Sequence, ReverseSeq, lastUpdate from Routes order by lastUpdate";
+                  "companyKey,tractionType, Direction, next, prev, nextR, prevR, normalEnter, normalLeave, "
+                  "reverseEnter, ReverseLeave, Sequence, ReverseSeq, lastUpdate"
+                  " from Routes order by lastUpdate";
   }
   else
   {
    if(srcConn->servertype() == "MsSql")
     commandText = "select route, LTRIM(RTRIM(name)), startDate, endDate, lineKey, OneWay, TrackUsage, "
-                  "companyKey, tractionType, Direction, next, prev, normalEnter, normalLeave, "
+                  "companyKey, tractionType, Direction, next, prev, nextR, prevR, normalEnter, normalLeave, "
                   "reverseEnter, ReverseLeave, Sequence, ReverseSeq, lastUpdate from Routes "
                   "where lastUpdate > :lastUpdated  order by lastUpdate";
    else
     commandText = "select route, TRIM(name), startDate, endDate, lineKey, OneWay, TrackUsage, "
-                  "companyKey, tractionType, Direction, next, prev, normalEnter, normalLeave, "
+                  "companyKey, tractionType, Direction, next, prev, nextR, prevR,normalEnter, normalLeave, "
                   "reverseEnter, ReverseLeave, Sequence, ReverseSeq, lastUpdate from Routes "
                   "where lastUpdate > :lastUpdated  order by lastUpdate";
   }
@@ -1796,7 +1801,8 @@ bool ExportSql::exportSegments()
   qint32 route=0, route2=0, lineKey=0, lineKey2=0, companyKey, companyKey2,
     tractionType, tractionType2, next=0, next2=0, prev=0, prev2=0, normalEnter=0, normalEnter2=0,
     normalLeave=0, normalLeave2=0, reverseEnter=0, reverseEnter2=0, reverseLeave=0, reverseLeave2 =0,
-    sequence = -1, sequence2 = -1, reverseSeq = -1, reverseSeq2 = -1;
+    sequence = -1, sequence2 = -1, reverseSeq = -1, reverseSeq2 = -1,
+    nextR =-1, nextR2 =-1, prevR =-1, prevR2 =-1;
   QString name="", name2="", direction="", direction2="", oneWay="", oneWay2="", trackUsage="", trackUsage2="";
   QDateTime lastUpdate, lastUpdate2;
   QDateTime startDate, startDate2, endDate, endDate2;
@@ -1820,7 +1826,9 @@ bool ExportSql::exportSegments()
    reverseLeave = query.value(15).toInt();
    sequence = query.value(16).toInt();
    reverseSeq = query.value(17).toInt();
-   lastUpdate = query.value(18).toDateTime();
+   nextR = query.value(18).toInt();
+   prevR = query.value(19).toInt();
+   lastUpdate = query.value(20).toDateTime();
 
 
    route2 = -1;
@@ -1833,7 +1841,8 @@ bool ExportSql::exportSegments()
    {
     commandText = "select route, name, startDate, endDate, lineKey, companyKey, oneWay, trackUsage, "
                   "tractionType, Direction, next, prev, normalEnter, normalLeave, reverseEnter, "
-                  "ReverseLeave, Sequence, ReverseSeq, lastUpdate from Routes "
+                  "ReverseLeave, Sequence, ReverseSeq, lastUpdate, nextR, prevR"
+                  " from Routes "
                   "where route = "+QString("%1").arg(route)
                   + " and name='" + name+ "' and startDate='" + startDate.toString("yyyy/MM/dd")
                   + "' and endDate='" + endDate.toString("yyyy/MM/dd") + "' and lineKey="
@@ -1872,7 +1881,9 @@ bool ExportSql::exportSegments()
         reverseLeave2 = query2.value(15).toInt();
         sequence2 = query.value(16).toInt();
         reverseSeq2 = query.value(17).toInt();
-        lastUpdate2 = query.value(16).toDateTime();
+        nextR2 = query2.value(18).toInt();
+        prevR2 = query2.value(19).toInt();
+        lastUpdate2 = query.value(20).toDateTime();
     }
    }
    if( bFound && route== route2 && name == name2 && startDate.date() == startDate2.date()
@@ -1880,7 +1891,8 @@ bool ExportSql::exportSegments()
        && tractionType == tractionType2 && direction == direction2 && next == next2 && prev==prev2
        && normalEnter == normalEnter2 && normalLeave == normalLeave2 && reverseEnter == reverseEnter2
        && reverseLeave == reverseLeave2 && oneWay == oneWay2 && trackUsage == trackUsage2
-       && sequence == sequence2 && reverseSeq== reverseSeq2 && lastUpdate == lastUpdate2)
+       && sequence == sequence2 && reverseSeq== reverseSeq2 && lastUpdate == lastUpdate2
+       && nextR == nextR2 && prevR == prevR2)
    {
        notUpdated++;
        sendProgress();
@@ -1898,6 +1910,7 @@ bool ExportSql::exportSegments()
         commandText = "update Routes set companyKey=" + QString("%1").arg(companyKey)
           + ",tractionType=" + QString("%1").arg(tractionType) + ", direction='"+direction
           + "',next=" + QString("%1").arg(next) + ",prev=" + QString("%1").arg(prev)
+          + "',nextR=" + QString("%1").arg(nextR) + ",prevR=" + QString("%1").arg(prevR)
           + "',oneWay= + '" + oneWay + "',trackUsage='" + trackUsage
           + "',normalEnter=" + QString("%1").arg(normalEnter) +",normalLeave="
           + QString("%1").arg(normalLeave) +",reverseEnter="+ QString("%1").arg(reverseEnter )
@@ -1913,6 +1926,8 @@ bool ExportSql::exportSegments()
           + ",tractionType=" + QString("%1").arg(tractionType)
           + ", direction='"+direction + "',next=" + QString("%1").arg(next)
           + ",prev=" + QString("%1").arg(prev)
+          + ",nextR=" + QString("%1").arg(nextR)
+          + ",prevR=" + QString("%1").arg(prevR)
           + ",normalEnter=" + QString("%1").arg(normalEnter)
           +",normalLeave=" + QString("%1").arg(normalLeave)
           +",reverseEnter="+ QString("%1").arg(reverseEnter )
@@ -1946,27 +1961,33 @@ bool ExportSql::exportSegments()
    {
     if(tgtConn->servertype() != "MsSql")
         commandText = "insert into Routes (route, name, startDate, endDate, lineKey, OneWay, trackUsage, "
-                      "companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, "
+                      "companyKey,tractionType, Direction, next, prev, nextR, prevR, normalEnter, normalLeave, "
                       "reverseEnter, ReverseLeave, sequence, reverseSeq, lastUpdate)"
                       " values("+QString("%1").arg(route)
                       + ",'"+name+ "','"+startDate.toString("yyyy/MM/dd")
                       + "','" +endDate.toString("yyyy/MM/dd")+"',"+QString("%1").arg(lineKey)
                       + ",'" + oneWay + "','" +trackUsage
                       +"',"+QString("%1").arg(companyKey)+","+QString("%1").arg(tractionType)
-                      +",'"+direction+"',"+QString("%1").arg(next)+","+QString("%1").arg(prev)
+                      +",'"+direction+"',"
+                      +QString("%1").arg(next)+","+QString("%1").arg(prev)
+                      +QString("%1").arg(nextR)+","+QString("%1").arg(prevR)
                       +","+QString("%1").arg(normalEnter)+","+QString("%1").arg(normalLeave)
                       +","+QString("%1").arg(reverseEnter)+","+QString("%1").arg(reverseLeave)
                       +","+QString("%1").arg(sequence)+","+QString("%1").arg(reverseSeq)
                       + ",:lastUpdate)";
     else
         commandText = "insert into Routes (route, name, startDate, endDate, lineKey, OneWay, trackUsage, "
-                      "companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, "
+                      "companyKey,tractionType, Direction, next, prev, nextR, prevR, normalEnter, normalLeave, "
                       "reverseEnter, ReverseLeave, sequence, reverseSeq, lastUpdate) "
 "                     values("+QString("%1").arg(route) + ",'"+name+ "','"+startDate.toString("yyyy/MM/dd")
                       + "','"+endDate.toString("yyyy/MM/dd")+"',"+QString("%1").arg(lineKey)
                       +",'" +oneWay + "','" + trackUsage + "'," + QString("%1").arg(companyKey)+","
-                      +QString("%1").arg(tractionType)+",'"+direction+"',"+QString("%1").arg(next)+","
-                      +QString("%1").arg(prev)+","+QString("%1").arg(normalEnter)+","+QString("%1").arg(normalLeave)
+                      +QString("%1").arg(tractionType)+",'"+direction+"',"
+                      +QString("%1").arg(next)+","
+                      +QString("%1").arg(prev)+","
+                      +QString("%1").arg(nextR)+","
+                      +QString("%1").arg(prevR)+","
+                      +QString("%1").arg(normalEnter)+","+QString("%1").arg(normalLeave)
                       +","+QString("%1").arg(reverseEnter)+","+QString("%1").arg(reverseLeave)
                       +","+QString("%1").arg(sequence)+","+QString("%1").arg(reverseSeq)
                       + ",:lastUpdate)";
@@ -2083,7 +2104,7 @@ bool ExportSql::exportSegments()
 
   return true;
  }
-
+#endif
  bool ExportSql::exportRoutes(RouteData rd)
  {
   SQL* sql = SQL::instance();
@@ -2409,7 +2430,7 @@ qlQuery query2 = QSqlQuery(targetDb);
  return true;
 
 }
-
+#if 0
 bool ExportSql::exportStations()
 {
     srcDb = QSqlDatabase::database();
@@ -2700,7 +2721,7 @@ bool ExportSql::exportTerminals()
 
     return true;
 }
-
+#endif
 bool ExportSql::getCount(QString table, bool bDropTable)
 {
  emit(progressMsg("Processing "+ table + " inserts/updates"));
@@ -2813,6 +2834,7 @@ void ExportSql::sendProgress()
 //        qDebug() << commandText;
 //    }
 //}
+#if 0
 bool ExportSql::exportRouteComments()
 {
     srcDb = QSqlDatabase::database();
@@ -2983,7 +3005,7 @@ bool ExportSql::exportRouteComments()
 
     return true;
 }
-
+#endif
 void ExportSql::updateTimestamp(QString table)
 {
     if(srcConn->servertype() != "MySql")
@@ -3277,6 +3299,8 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
                 " `normalLeave` int(11) NOT NULL DEFAULT 0, "
                 " `reverseEnter` int(11) NOT NULL DEFAULT 0,"
                 " `reverseLeave` int(11) NOT NULL DEFAULT 0,"
+                " `nextR` int(11) NOT NULL DEFAULT -1,"
+                " `prevR` int(11) NOT NULL DEFAULT -1, "
                 " `Sequence` int(11) NOT NULL DEFAULT -1,"
                 " `ReverseSeq` int(11) NOT NULL DEFAULT -1,"
                 " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, "
@@ -3303,6 +3327,8 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
                 "`normalLeave` int(11) NOT NULL,"\
                 "`reverseEnter` int(11) NOT NULL,"\
                 "`reverseLeave` int(11) NOT NULL,"\
+                "`nextR` int(11) NOT NULL,"\
+                "`prevR` int(11) NOT NULL,"\
                 "`Sequence` int(11) NOT NULL,"\
                 "`ReverseSeq` int(11) NOT NULL,"\
                 "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"\
@@ -3331,6 +3357,8 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
                      "[Direction] [varchar](6) NOT NULL,"\
                      "[next] [int] NOT NULL,"\
                      "[prev] [int] NOT NULL,"\
+                     "[nextR] [int] NOT NULL,"\
+                     "[prevR] [int] NOT NULL,"\
                      "[normalEnter] [int] NOT NULL,"\
                      "[normalLeave] [int] NOT NULL,"\
                      "[reverseEnter] [int] NOT NULL,"\
@@ -3622,17 +3650,17 @@ bool ExportSql::createAltRouteTable(QSqlDatabase db, QString dbType)
  QSqlQuery query = QSqlQuery(db);
  QString commandText;
  bool bQuery;
- dropTable("altRoute", db, dbType);
+ dropTable("AltRoute", db, dbType);
 
  if(dbType == "Sqlite")
-  commandText = "CREATE TABLE `altRoute` (" \
+  commandText = "CREATE TABLE `AltRoute` (" \
     "`route` integer NOT NULL primary key AUTOINCREMENT, "\
     "`routePrefix` varchar(10) default '', " \
     "`routeAlpha` varchar(10) NOT NULL, "\
     "`baseRoute` int(11) NOT NULL DEFAULT 0, " \
     "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,  CONSTRAINT `index` unique ( routePrefix, routeAlpha) )";
  else if(dbType == "MySql")
-  commandText = "CREATE TABLE `altRoute` (" \
+  commandText = "CREATE TABLE `AltRoute` (" \
     "`route` int(11) NOT NULL AUTO_INCREMENT, " \
     "`routePrefix` varchar(10) NOT NULL DEFAULT '', "\
     "`routeAlpha` varchar(10) NOT NULL, "\
@@ -3820,7 +3848,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
           "`endDate` date DEFAULT NULL," \
           "`firstRoute` int(11) DEFAULT NULL," \
           "`lastRoute` int(11) DEFAULT NULL," \
-          "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP" \
+          "`lastUpdate` timestamp DEFAULT CURRENT_TIMESTAMP" \
     ");";
  else if(dbType == "MySql")
   commandText = "CREATE TABLE `Companies` ("\
@@ -3831,7 +3859,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
     "`endDate` date DEFAULT NULL,"\
     "`firstRoute` int(11) DEFAULT NULL,"\
     "`lastRoute` int(11) DEFAULT NULL,"\
-    "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"\
+    "`lastUpdate` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"\
     "UNIQUE KEY `key` (`key`)"\
   ") ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=latin1";
  else if(dbType == "MsSql")
@@ -3951,6 +3979,7 @@ bool ExportSql::createRouteSequenceTable(QSqlDatabase db, QString dbType)
     " `firstSegment` int(11) NOT NULL,"
     " `whichEnd` text,"
     "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"\
+    "PRIMARY KEY (`Route`,`Name`,`StartDate`,`EndDate`)"\
     ") ENGINE=InnoDB AUTO_INCREMENT=507 DEFAULT CHARSET=latin1";
  else if(dbType == "MsSql")
  {
@@ -4113,4 +4142,277 @@ int ExportSql::errSqlMessage(QSqlQuery query)
  return QMessageBox::critical(nullptr, tr("Sql Error"), tr("An SqL error has occurred.<br>"
                                  "Sql error:%1<br><B>query:</B> %2").arg(query.lastError().text()).arg(query.lastQuery()),
                                  QMessageBox::Ignore|QMessageBox::Abort);
+}
+
+bool ExportSql::exportTable(QString table)
+{
+ bool bDropTables = this->bDropTables;
+ srcDb = QSqlDatabase::database();
+ QString srcServerType = config->currConnection->servertype();
+ if(!openDb()) return false;
+
+ QStringList tables = targetDb().tables();
+ if(tables.contains(table))
+  updateTimestamp(table);
+ QStringList columns = SQL::instance()->listColumns(table, srcServerType, srcDb);
+// QStringList tgtColumns = SQL::instance()->listColumns(table, tgtDbType, _targetDb);
+// if(columns.count() != tgtColumns.count())
+ if(!areTableDefsEqual(table, config->currConnection, tgtConn, srcDb, _targetDb))
+  bDropTables = true;
+
+ added=0;
+ updated=0;
+ deleted=0;
+ errors=0;
+ notUpdated=0;
+
+ if(tables.contains(table))
+  getCount(table, bDropTables);
+ if(bDropTables)
+ {
+  if(table.compare("altRoute", Qt::CaseInsensitive)==0)
+   if(!createAltRouteTable(_targetDb, tgtConn->servertype())) return false;
+  if(table.compare("Comments", Qt::CaseInsensitive)==0)
+   if(!createCommentsTable(_targetDb, tgtConn->servertype())) return false;
+  if(table.compare("Intersections", Qt::CaseInsensitive)==0)
+   if(!createIntersectionsTable(_targetDb, tgtConn->servertype())) return false;
+  if(table.compare("Parameters", Qt::CaseInsensitive)==0)
+   if(!createParametersTable(_targetDb, tgtConn->servertype())) return false;
+  if(table.compare("RouteComments", Qt::CaseInsensitive)==0)
+   if(!createAltRouteTable(_targetDb, tgtConn->servertype())) return false;
+  if(table.compare("RouteSeq", Qt::CaseInsensitive)==0)
+   if(!createRouteSequenceTable(_targetDb, tgtConn->servertype())) return false;
+  if(table.compare("Segments", Qt::CaseInsensitive)==0)
+   if(!createSegmentsTable(_targetDb, tgtConn->servertype())) return false;
+  if(table.compare("Stations", Qt::CaseInsensitive)==0)
+   if(!createStationsTable(_targetDb, tgtConn->servertype())) return false;
+  if(table.compare("Segments", Qt::CaseInsensitive)==0)
+   if(!createSegmentsTable(_targetDb, tgtConn->servertype())) return false;
+  if(table.compare("Terminals", Qt::CaseInsensitive)==0)
+   if(!createTerminalsTable(_targetDb, tgtConn->servertype())) return false;
+  if(table.compare("TractionTypes", Qt::CaseInsensitive)==0)
+   if(!createTractionTypesTable(_targetDb, tgtConn->servertype())) return false;
+  if(table.compare("Routes", Qt::CaseInsensitive)==0)
+   if(!createRouteTable(_targetDb, tgtConn->servertype())) return false;
+ }
+ QString commandText;
+ QString selectText = "Select ";
+ for(int i=0; i< columns.count(); i++)
+ {
+  QString col = columns.at(i);
+   selectText.append("`"+col+"`");
+   if(i < columns.count()-1)
+    selectText.append(",");
+ }
+ selectText.append(" from ");
+ selectText.append(table);
+
+ if(bDropTables)
+  commandText = selectText + " order by lastUpdate";
+ else
+  commandText = selectText + " where lastUpdate > :lastUpdated  order by lastUpdate";
+ QSqlQuery query = QSqlQuery(srcDb);
+ QSqlQuery query2 = QSqlQuery(_targetDb);
+
+ bool bPrepare =query.prepare(commandText);
+ if(!bDropTables)
+  query.bindValue(":lastUpdated", lastUpdated);
+ bool bQuery = query.exec();
+ if(!bQuery)
+ {
+  SQLERROR_E(query);
+     QSqlError err = query.lastError();
+     qDebug() << err.text() + "\n";
+     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+     //db.close();
+     return false;
+ }
+ QStringList keys = SQL::instance()->listPkColumns(table, tgtDbType, _targetDb);
+ while(query.next())
+ {
+  bool bFound = false;
+  if(!bDropTables)
+  {
+   commandText = selectText + " where ";
+   for(int i=0; i< keys.count(); i++)
+   {
+    QString col = keys.at(i);
+    commandText.append(QString("%1=:%1").arg(col));
+     if(i < keys.count()-1)
+       commandText.append(" and ");
+   }
+   query2.prepare(commandText);
+   for(int i=0; i< keys.count(); i++)
+   {
+    QString col = keys.at(i);
+    query2.bindValue(":"+ col, query.value(i) );
+   }
+
+   bQuery = query2.exec();
+   if(!bQuery)
+   {
+    SQLERROR_E(query2);
+       QSqlError err = query2.lastError();
+       qDebug() << err.text() + "\n";
+       qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+       return false;
+   }
+   bFound = query2.next();
+  }
+  if(bFound)
+  {
+   bool bEqual = true;
+
+   if(query.record() == query2.record())
+   {
+    for(int i=0; i < query.record().count(); i++)
+    {
+     if(query.value(i) != query2.value(i))
+     {
+      bEqual = false;
+      break;
+     }
+    }
+   }
+   if(bEqual)
+   {
+    notUpdated++;
+    sendProgress();
+    continue;
+   }
+
+   QStringList pkList = SQL::instance()->listPkColumns(table, tgtDbType, _targetDb);
+
+   QString commandString = "update " + table + " set ";
+   for(int i=0; i< columns.count(); i++)
+   {
+    QString col = columns.at(i);
+    if(!pkList.contains(col))
+    {
+     commandString.append(QString("`%1`=:%1"));
+      if(i < columns.count()-1)
+       commandString.append(",");
+    }
+   }
+   commandString.append(" where ");
+   for(int i=0; i< pkList.count(); i++)
+   {
+    QString col = pkList.at(i);
+    commandString.append(QString("`%1`=:%1"));
+     if(i < pkList.count()-1)
+       commandString.append(",");
+   }
+
+   query2.prepare(commandString);
+   for(int i=0; i< columns.count(); i++)
+   {
+    QString col = columns.at(i);
+    query2.bindValue(":"+ col, query.value(i) );
+   }
+   bQuery = query2.exec();
+   if(!bQuery)
+   {
+    SQLERROR_E(query2);
+    QSqlError err = query2.lastError();
+    qDebug() << err.text() + "\n";
+    qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+    errors++;
+   }
+   else
+    updated++;
+  }
+  else
+  {
+   QString commandString = "insert into " + table + " (";
+   for(int i=0; i< columns.count(); i++)
+   {
+    QString col = columns.at(i);
+    commandString.append("`" + col + "`");
+     if(i < columns.count()-1)
+      commandString.append(",");
+   }
+   commandString.append(") values (");
+   for(int i=0; i< columns.count(); i++)
+   {
+    QString col = columns.at(i);
+    commandString.append(":"+col);
+     if(i < columns.count()-1)
+      commandString.append(",");
+   }
+   commandString.append(")");
+
+   query2.prepare(commandString);
+   for(int i=0; i< columns.count(); i++)
+   {
+    QString col = columns.at(i);
+    if(col.compare("lastUpdate",Qt::CaseInsensitive)==0)
+    {
+     QDateTime dt = query.value(i).toDateTime();
+     if(!dt.isValid())
+      qDebug() << "date is invalid '" <<query.value(i).toString() << "'";
+     if(dt.date().month()==1 && dt.date().day()>28)
+     {
+      //dt.date().setDate(dt.date().year(), 1, 28);
+      dt = QDateTime(QDate(dt.date().year(), 1, 28), dt.time());
+     }
+     query2.bindValue(":"+ col, dt);
+    }
+    else
+     query2.bindValue(":"+ col, query.value(i) );
+
+   }
+   bQuery = query2.exec();
+   if(!bQuery)
+   {
+    SQLERROR_E(query2);
+    QSqlError err = query2.lastError();
+    qDebug() << "error code:" << err.nativeErrorCode() << " " << err.text() + "\n";
+    qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+    errors++;
+   }
+   else
+    added++;
+  }
+  sendProgress();
+ }
+
+ qDebug()<<"Comments: "+ QString("%1").arg(added)+ " added, "+ QString("%1").arg(updated) + " updated, "+ QString("%1").arg(deleted)+ " deleted, "+ QString("%1").arg(notUpdated)+ " not updated, "+QString("%1").arg(errors)+ " errors\n";
+ emit uncheck("chk"+table);
+
+ return true;
+}
+
+bool ExportSql::areTableDefsEqual(QString table, Connection* c1, Connection* c2, QSqlDatabase db1, QSqlDatabase db2)
+{
+ QStringList columns1 = SQL::instance()->listColumns(table, c1->servertype(), db1);
+ QStringList columns2 = SQL::instance()->listColumns(table, c2->servertype(), db2);
+ if(columns1.count() != columns1.count())
+ {
+  qDebug() << table << " column counts differ";
+  return false;
+ }
+ for(int i=0; i < columns1.count(); i++)
+ {
+  if(columns1.at(i).compare(columns2.at(i),Qt::CaseInsensitive)!=0)
+  {
+   qDebug() << table << " column names or sequence differ differ";
+   return false;
+  }
+ }
+ QStringList pk1 = SQL::instance()->listPkColumns(table, c1->servertype(), db1);
+ QStringList pk2 = SQL::instance()->listPkColumns(table, c2->servertype(), db2);
+ if(pk1.count() != pk2.count())
+ {
+  qDebug() << table << " primary key counts differ";
+  return false;
+ }
+
+ QList<FKInfo> info1 = SQL::instance()->getForeignKeyInfo(srcDb,config->currConnection, table);
+ QList<FKInfo> info2 = SQL::instance()->getForeignKeyInfo(_targetDb,tgtConn, table);
+ if(info1.count() != info2.count())
+ {
+  qDebug() << table << " foreign key counts differ";
+  return false;
+ }
+ return true;
 }

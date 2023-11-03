@@ -125,7 +125,7 @@ public:
     QList<SegmentData*> getIntersectingRouteSegmentsAtPoint(SegmentData* sd, double radius,
                                                             QString date,
                                                             QMap<int, SegmentData *> segMap,
-                                                            bool bOutbound);
+                                                            int firstSegment, bool enableTurnCheck=true);
     QDate getRoutesEarliestDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
     QDate getRoutesLatestDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
     QDate getRoutesNextDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
@@ -221,7 +221,7 @@ public:
     bool updateSegmentDates(); // Global
     void updateSegmentDates(int segmentId);
     QPair<QDate,QDate> getStartAndEndDates(int segmentId);
-    QList<FKInfo> getForeignKeyInfo();
+    QList<FKInfo> getForeignKeyInfo(QSqlDatabase db, Connection *c, QString table="");
     QMap<int, RouteName*> *routeNameList();
     bool createSqlDatabase(QString dbName, QSqlDatabase db, QString dbType);
     bool useDatabase(QString dbName, QSqlDatabase db);
@@ -241,6 +241,8 @@ public:
     bool doesFunctionExist(QString name, QSqlDatabase db);
     QStringList listViews();
     QList<SegmentData> segmentDataFromView(QString where);
+    QStringList listColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase());
+    QStringList listPkColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase());
 
 signals:
     void details(QString);

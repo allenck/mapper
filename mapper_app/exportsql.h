@@ -33,19 +33,19 @@ public:
     void setOverride(QDateTime strOvr);
     void setNoDelete(bool bFlag);
 
-    bool exportAltRoute();
+    //bool exportAltRoute();
     bool exportAll();
-    bool exportComments();
-    bool exportCompanies();
-    bool exportIntersections();
-    bool exportTractionTypes();
-    bool exportParameters();
+    //bool exportComments();
+    //bool exportCompanies();
+    //bool exportIntersections();
+    //bool exportTractionTypes();
+    //bool exportParameters();
     bool exportLineSegments();
-    bool exportSegments();
-    bool exportRoutes();
-    bool exportStations();
-    bool exportTerminals();
-    bool exportRouteComments();
+    //bool exportSegments();
+    //bool exportRoutes();
+//    bool exportStations();
+//    bool exportTerminals();
+//    bool exportRouteComments();
     //bool export_geodb_geometry();
 
     bool exportRoutes(RouteData rd);
@@ -66,6 +66,8 @@ public:
     bool createMySqlFunctions(QSqlDatabase db = QSqlDatabase());
     bool createMsSqlFunctions(QSqlDatabase db);
     QSqlDatabase targetDb() {return _targetDb;}
+    bool exportTable(QString table);
+    bool areTableDefsEqual(QString table, Connection* c1, Connection* c2, QSqlDatabase db1, QSqlDatabase db2);
 
 signals:
     void progress(int value);

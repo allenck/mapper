@@ -118,6 +118,8 @@ RouteData::RouteData(const RouteData& o)
  _oneWay = o._oneWay;
  _next= o._next;
  _prev= o._prev;
+ _nextR= o._nextR;
+ _prevR= o._prevR;
  _trackUsage = o._trackUsage;
  _tracks = o._tracks;
  _seqList = o._seqList;
@@ -212,6 +214,9 @@ SegmentData::SegmentData(const SegmentData& o)
   _points = pointList().count();
  _next = o._next;
  _prev = o._prev;
+ _nextR = o._nextR;
+ _prevR = o._prevR;
+
  _sequence = o._sequence;
  _returnSeq = o._returnSeq;
  _reverseEnter = o._reverseEnter;

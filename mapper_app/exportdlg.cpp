@@ -36,20 +36,21 @@ ExportDlg::ExportDlg(Configuration *cfg, QWidget *parent) :
  for(int i=0; i<config->currCity->connections.count(); i++)
  {
      Connection* c = config->currCity->connections.at(i);
-     if(c->id() == config->currConnection->id())
+     if(c->id() == config->currConnection->id()) // omit the source connectuion
          continue;
      ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
  }
+ ui->cbConnections->setCurrentIndex(0);
 
- for(int i=0; i<config->currCity->connections.count(); i++)
- {
-     Connection* c = config->currCity->connections.at(i);
-     if(c->id() != config->currCity->curConnectionId)
-     {
-         ui->cbConnections->setCurrentIndex(i);
-         break;
-     }
- }
+// for(int i=0; i<config->currCity->connections.count(); i++)
+// {
+//     Connection* c = config->currCity->connections.at(i);
+//     if(c->id() != config->currCity->curConnectionId)
+//     {
+//         ui->cbConnections->setCurrentIndex(i);
+//         break;
+//     }
+// }
 // connect(ui->cbConnections, &QComboBox::currentTextChanged, [=]{
 //     Connection* c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
 //     c->configure();
@@ -102,18 +103,20 @@ void ExportDlg::btnGo_clicked()
  }
  exprt->setNoDelete(ui->chkNoDelete->checkState());
  timer->start();
- for(int i=0; i<config->currCity->connections.count(); i++)
- {
-  Connection* c = config->currCity->connections.at(i);
-  if( c->description() == ui->cbConnections->currentText())
-  {
-   config->currCity->curExportConnId = c->id();
-   config->saveSettings();
-   currConnection = c;
-   break;
-  }
- }
-
+// for(int i=0; i<config->currCity->connections.count(); i++)
+// {
+//  Connection* c = config->currCity->connections.at(i);
+//  if( c->description() == ui->cbConnections->currentText())
+//  {
+//   config->currCity->curExportConnId = c->id();
+//   config->saveSettings();
+//   currConnection = c;
+//   break;
+//  }
+// }
+ currConnection = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
+ if(!currConnection)
+  return;
  connect(exprt, SIGNAL(progress(int)), ui->progressBar, SLOT(setValue(int)));
  connect(exprt,SIGNAL(progressMsg(QString)), this, SLOT(newProgressMsg(QString)));
  connect(exprt, SIGNAL(uncheck(QString)),  this, SLOT(uncheckControl(QString)));
@@ -135,7 +138,7 @@ void ExportDlg::btnGo_clicked()
       ui->lblHelp->setText(tr("Parameters"));
       qApp->processEvents();
       ui->progressBar->setValue(0);
-      if(!exprt->exportParameters())
+      if(!exprt->exportTable("Parameters"))
       {
        ui->lblHelp->setText("Export of Parameters has errors");
        ui->btnGo->setEnabled(true);
@@ -151,7 +154,7 @@ void ExportDlg::btnGo_clicked()
       ui->progressBar->setValue(0);
       if(!exprt->dropRoutes())
         ui->lblHelp->setText("Drop table Routes failed");
-      if(!exprt->exportCompanies())
+      if(!exprt->exportTable("Companies"))
       {
        ui->lblHelp->setText("Export of Companies has errors");
        ui->btnGo->setEnabled(true);
@@ -167,7 +170,7 @@ void ExportDlg::btnGo_clicked()
       ui->progressBar->setValue(0);
       if(!exprt->dropRoutes())
         ui->lblHelp->setText("Drop table Routes failed");
-      if(!exprt->exportTractionTypes())
+      if(!exprt->exportTable("TractionTypes"))
       {
        ui->lblHelp->setText("Export of TractionTypes has errors");
        ui->btnGo->setEnabled(true);
@@ -183,7 +186,7 @@ void ExportDlg::btnGo_clicked()
       ui->progressBar->setValue(0);
       if(!exprt->dropRoutes())
         ui->lblHelp->setText("Drop table Routes failed");
-      if(!exprt->exportAltRoute())
+      if(!exprt->exportTable("AltRoute"))
       {
        ui->lblHelp->setText("Export of altRoute has errors");
        ui->btnGo->setEnabled(true);
@@ -197,7 +200,7 @@ void ExportDlg::btnGo_clicked()
       ui->lblHelp->setText(tr("Comments"));
       qApp->processEvents();
       ui->progressBar->setValue(0);
-      if(!exprt->exportComments())
+      if(!exprt->exportTable("Comments"))
       {
        ui->lblHelp->setText("Export of Comments has errors");
        ui->btnGo->setEnabled(true);
@@ -211,7 +214,7 @@ void ExportDlg::btnGo_clicked()
       ui->lblHelp->setText(tr("Intersections"));
       qApp->processEvents();
       ui->progressBar->setValue(0);
-      if(!exprt->exportIntersections())
+      if(!exprt->exportTable("Intersections"))
       {
        ui->lblHelp->setText("Export of Intersections has errors");
        ui->btnGo->setEnabled(true);
@@ -236,7 +239,7 @@ void ExportDlg::btnGo_clicked()
       ui->progressBar->setValue(0);
       if(!exprt->dropRoutes())
        ui->lblHelp->setText("Drop Route failed");
-      if(!exprt->exportSegments())
+      if(!exprt->exportTable("Segments"))
       {
        ui->lblHelp->setText("Export of Segments has errors");
        ui->btnGo->setEnabled(true);
@@ -250,7 +253,8 @@ void ExportDlg::btnGo_clicked()
       ui->lblHelp->setText(tr("Routes"));
       qApp->processEvents();
       ui->progressBar->setValue(0);
-      if(!exprt->exportRoutes())
+      //if(!exprt->exportRoutes())
+      if(!exprt->exportTable("Routes"))
       {
        ui->lblHelp->setText("Export of Routes has errors");
        ui->btnGo->setEnabled(true);
@@ -264,7 +268,7 @@ void ExportDlg::btnGo_clicked()
       ui->lblHelp->setText(tr("Stations"));
       qApp->processEvents();
       ui->progressBar->setValue(0);
-      if(!exprt->exportStations())
+      if(!exprt->exportTable("Stations"))
       {
        ui->lblHelp->setText("Export of Stations has errors");
        ui->btnGo->setEnabled(true);
@@ -278,7 +282,7 @@ void ExportDlg::btnGo_clicked()
       ui->lblHelp->setText(tr("Terminals"));
       qApp->processEvents();
       ui->progressBar->setValue(0);
-      if(!exprt->exportTerminals())
+      if(!exprt->exportTable("Terminals"))
       {
        ui->lblHelp->setText("Export of Terminals has errors");
        ui->btnGo->setEnabled(true);
@@ -292,7 +296,7 @@ void ExportDlg::btnGo_clicked()
    ui->lblHelp->setText(tr("RouteComments"));
    qApp->processEvents();
    ui->progressBar->setValue(0);
-   if(!exprt->exportRouteComments())
+   if(!exprt->exportTable("RouteComments"))
    {
     ui->lblHelp->setText("Export of RouteComments has errors");
     ui->btnGo->setEnabled(true);
@@ -301,7 +305,21 @@ void ExportDlg::btnGo_clicked()
    ui->chkRouteComments->setChecked(false);
    qApp->processEvents();
   }
-  ui->lblHelp->setText(tr("Done"));
+  if(ui->chkRouteSeq->isChecked())
+  {
+   ui->lblHelp->setText(tr("RouteSeq"));
+   qApp->processEvents();
+   ui->progressBar->setValue(0);
+   bool bOk = exprt->exportTable("RouteSeq");
+   if(!bOk)
+   {
+    ui->lblHelp->setText("Export of RouteSeq has errors");
+    ui->btnGo->setEnabled(true);
+    return;
+   }
+   ui->chkRouteSeq->setChecked(false);
+   qApp->processEvents();
+  }ui->lblHelp->setText(tr("Done"));
 
   //exprt->export_geodb_geometry();
   if(stopEnabled)

@@ -271,6 +271,10 @@ public:
     void setNext(int next){_next = next;}
     int prev() {return _prev;}
     void setPrev(int prev){_prev = prev;}
+    int nextR() const {return _nextR;}
+    void setNextR(int next){_nextR = next;}
+    int prevR() {return _prevR;}
+    void setPrevR(int prev){_prevR = prev;}
     Bearing bearing() {
 //     _bearing = Bearing(_startLat, _startLon, _endLat, _endLon);
 //     _direction = _bearing.strDirection();
@@ -361,7 +365,8 @@ public:
     QList<LatLng> _pointList;
     QString _whichEnd;     //Not in db, used for sequencing
     QString _oneWay = " ";       //Not in db, used for sequencing
-    qint32 _next=-1, _prev=-1;      //Not in db, used for sequencing
+    qint32 _next=-1, _prev=-1;
+    qint32 _nextR=-1, _prevR=-1;
     qint32 _sequence=-1, _returnSeq=-1;
     qint32 _normalEnter=0, _normalLeave=0, _reverseEnter=0, _reverseLeave=0;
     bool _bNeedsUpdate = false;
@@ -388,7 +393,6 @@ Q_DECLARE_METATYPE(SegmentData)
 
 class RouteData
 {
-
 public:
     //explicit routeData(QObject *parent = 0);
     RouteData();
@@ -420,6 +424,8 @@ public:
     QString trackUsage() {return _trackUsage;}
     int next() {return _next;}
     int prev() {return _prev;}
+    int nextR() {return _nextR;}
+    int prevR() {return _prevR;}
     int tracks() {return _tracks;}
     QList<QPair<int, QString>> seqList() {return _seqList;}
     void addSequence(QPair<int, QString> pair) {_seqList.append(pair);}
@@ -445,6 +451,7 @@ public:
     QString _oneWay;
     QString _trackUsage;
     int _next =-1, _prev=-1;
+    int _nextR =-1, _prevR=-1;
     int _tracks;
 //    LatLng startLatLng;
 //    LatLng endLatLng;
@@ -852,8 +859,8 @@ public:
 struct FKInfo
 {
   QString name;
-  int id;
-  int seq;
+  int id = 0;
+  int seq = 0;
   QString table;
   QString from;
   QString to;

@@ -1104,7 +1104,10 @@ void RouteDlg::setDefaultTurnInfo()
   return;
  // get the segments that intersect with the start of this segment (Normal Enter and Reverse Leave)
  //sql->OpenConnection();
- QList<SegmentData*> intersects = sql->getIntersectingRouteSegmentsAtPoint(sd.segmentId(), sd.startLat(), sd.startLon(), .020, _routeNbr, ui->cbRouteName->currentText(), ui->dateEnd->text());
+ QList<SegmentData*> intersects = sql->getIntersectingRouteSegmentsAtPoint(sd.segmentId(), sd.startLat(),
+                                                                           sd.startLon(), .020, _routeNbr,
+                                                                           ui->cbRouteName->currentText(),
+                                                                           ui->dateEnd->text());
  //foreach (segmentInfo si1 in intersects)
 // ui->rbNFromBack->setEnabled(false);
 // ui->rbNFromLeft->setEnabled(false);
@@ -1184,7 +1187,9 @@ void RouteDlg::setDefaultTurnInfo()
  }
 
  // get the segments that intersect with the end of this segment (Normal Leave and Reverse enter)
- intersects = sql->getIntersectingRouteSegmentsAtPoint(sd.segmentId(), sd.endLat(), sd.endLon(), .020, _routeNbr, ui->cbRouteName->currentText(), ui->dateEnd->text());
+ intersects = sql->getIntersectingRouteSegmentsAtPoint(sd.segmentId(), sd.endLat(), sd.endLon(),
+                                                       .020, _routeNbr, ui->cbRouteName->currentText(),
+                                                       ui->dateEnd->text());
 // ui->rbNToLeft->setEnabled(false);
 // ui->rbNToRight->setEnabled(false);
 // ui->rbNAhead->setEnabled(false);

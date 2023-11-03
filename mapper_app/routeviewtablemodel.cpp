@@ -13,7 +13,9 @@ RouteViewTableModel::RouteViewTableModel(QObject *parent) :
  tractionTypes = SQL::instance()->getTractionTypes();
 }
 
-RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtStart, QDate dtEnd, QList<SegmentData> segmentDataList, QObject *parent)
+RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtStart,
+                                         QDate dtEnd, QList<SegmentData> segmentDataList,
+                                         QObject *parent)
      : QAbstractTableModel(parent)
 {
  this->route = route;
@@ -89,6 +91,14 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
    if(sd.prev() == -1)
     background = QColor(Qt::yellow);
    break;
+  case NEXTR:
+   if(sd.nextR() == -1)
+    background = QColor(Qt::yellow);
+   break;
+  case PREVR:
+   if(sd.prevR() == -1)
+    background = QColor(Qt::yellow);
+   break;
   case SEQ:
    if(sd.sequence() == -1)
     background = QColor(Qt::yellow);
@@ -141,6 +151,10 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
        return sd.next();
    case PREV:
        return sd.prev();
+   case NEXTR:
+       return sd.nextR();
+   case PREVR:
+       return sd.prevR();
    case DIR:
        return sd.direction();
    case SEQ:
@@ -214,9 +228,13 @@ QVariant RouteViewTableModel::headerData(int section, Qt::Orientation orientatio
         case TYPE:
             return tr("Rt Type");
         case NEXT:
-            return tr("Next");
+            return tr("Next->");
         case PREV:
-            return tr("Prev");
+            return tr("Prev->");
+        case NEXTR:
+            return tr("Next<-");
+        case PREVR:
+            return tr("Prev<-");
         case DIR:
             return tr("Dir");
         case SEQ:
@@ -318,6 +336,12 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
    break;
   case PREV:
    sd.setPrev(value.toInt());
+   break;
+  case NEXTR:
+   sd.setNextR(value.toInt());
+   break;
+  case PREVR:
+   sd.setPrevR(value.toInt());
    break;
   case SEQ:
    sd.setSequence(value.toInt());
@@ -435,6 +459,8 @@ Qt::ItemFlags RouteViewTableModel::flags(const QModelIndex &index) const
      return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
     case NEXT: // next
     case PREV: // prev
+    case NEXTR: // next reverse direction
+    case PREVR: // prev
     case SEQ: // seq
     case RSEQ: // rSeq
         if(! bIsSequenced)
@@ -457,6 +483,15 @@ Qt::ItemFlags RouteViewTableModel::flags(const QModelIndex &index) const
 QList< SegmentData > RouteViewTableModel::getList()
 {
     return listOfSegments;
+}
+
+void RouteViewTableModel::setList(QList< SegmentData > segmentDataList)
+{
+ beginResetModel();
+ this->listOfSegments = saveSegmentDataList = segmentDataList;
+ bChangesMade = false;
+ reset();
+ endResetModel();
 }
 
 void RouteViewTableModel::setSequenced(bool b)

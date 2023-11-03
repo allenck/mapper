@@ -11,7 +11,7 @@ class RouteViewTableModel : public QAbstractTableModel
     Q_OBJECT
 public:
     RouteViewTableModel(QObject *parent = 0);
-    RouteViewTableModel(qint32 route, QString name, QDate dtStart, QDate dtEnd, QList<SegmentData> segmentInfoList, QObject *parent=0);
+    RouteViewTableModel(qint32 route, QString name, QDate dtStart, QDate dtEnd, QList<SegmentData> segmentDataList, QObject *parent=0);
 
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
@@ -22,6 +22,7 @@ public:
     bool insertRows(int position, int rows, const QModelIndex &index=QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index=QModelIndex());
     QList<SegmentData> getList();
+    void setList(QList< SegmentData > segmentDataList);
     void reset();
     void setSequenced(bool b);
 
@@ -45,6 +46,8 @@ public:
      NL,
      NEXT,
      PREV,
+     NEXTR,
+     PREVR,
      RE,
      RL,
      DIR,
