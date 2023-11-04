@@ -51,7 +51,7 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
    ui->cbDbType->setCurrentText(connection->servertype());
 
    QString dbType =  ui->cbDbType->currentText();
-   setupComboBoxes();
+   setupComboBoxes(dbType);
    cbConnectionsSelectionChanged(index);
 
     connect(ui->cbDriverType, SIGNAL(currentIndexChanged(int)), this, SLOT(cbDriverTypeSelectionChanged(int)));
@@ -62,7 +62,7 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
         setControls(ui->cbConnect->currentText());
     });
 
-    connect(ui->cbDbType,SIGNAL(currentIndexChanged()), this,  SLOT(setupComboBoxes()));
+    connect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this,  SLOT(setupComboBoxes(QString)));
 
     connect(ui->cbCities, SIGNAL(currentIndexChanged(int)),this, SLOT(cbCitiesSelectionChanged(int)));
     connect(ui->cbCities, SIGNAL(editTextChanged(QString)), this, SLOT(cbCitiesTextChanged(QString)));
@@ -170,7 +170,7 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
    connect(timer, SIGNAL(timeout()), this, SLOT(quickProcess()));
 }
 
-void EditConnectionsDlg::setupComboBoxes()
+void EditConnectionsDlg::setupComboBoxes(QString txt)
 {
  if(ui->cbDbType->currentText()=="Sqlite")
  {
@@ -193,7 +193,7 @@ void EditConnectionsDlg::setupComboBoxes()
   ui->cbDriverType->addItem("QODBC3");
   ui->cbDriverType->setCurrentText(connection->driver());
  }
- else // MsSql
+ else if(txt == "MsSql")// MsSql
  {
   ui->cbConnect->clear();
   ui->cbConnect->addItem("ODBC");
@@ -203,6 +203,8 @@ void EditConnectionsDlg::setupComboBoxes()
   ui->cbDriverType->addItem("QODBC3");
   ui->cbDriverType->setCurrentText(connection->driver());
  }
+ else
+  return;
 
    setControls(ui->cbConnect->currentText());
 
@@ -488,7 +490,7 @@ void EditConnectionsDlg::setControls(QString txt)
   ui->label_12->setVisible(true);
   ui->cbODBCDsn->setVisible(true);
   ui->cbODBCDsn->clear();
-  //ui->cbODBCDsn->addItems(databases);
+  ui->cbODBCDsn->addItems(databases);
   QStringList sources;
   QMapIterator<QString, QString> iter(odbcMap);
   while(iter.hasNext())

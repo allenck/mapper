@@ -469,7 +469,8 @@ RouteSeq SQL::getRouteSeq(RouteData rd)
                        " from RouteSeq"
                        " where route = %1 and name = '%2' and "
                        " startDate = '%3' and endDate = '%4'")
-         .arg(rd.route()).arg(rd.routeName(), rd.startDate().toString("yyyy/MM/dd"),
+                       .arg(rd.route()).arg(rd.routeName(),
+                              rd.startDate().toString("yyyy/MM/dd"),
                               rd.endDate().toString("yyyy/MM/dd"));
  query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
@@ -10425,10 +10426,28 @@ bool SQL::processFile(QTextStream* in, QSqlDatabase db, bool bIsInclude)
  QString sqltext;
  while(!in->atEnd())
  {
-  sqltext = sqltext +  in->readLine();
-  if(sqltext.startsWith("#"))
+  QString line = in->readLine();
+  if(line.startsWith("#"))
   {
-   continue;
+   if(line.startsWith("#include", Qt::CaseInsensitive))
+   {
+    line.remove("\n");
+    QString fn = line.mid(8).trimmed();
+    QFile this_file(config->q.s_query_path+"/"+fn);
+    if (!this_file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+     QMessageBox::critical(nullptr,tr("Error"), "Could not load sql query text file");
+     return false;
+     QTextStream* in = new QTextStream(&this_file);
+     if(!processFile(in, db, true))
+        return false;
+    }
+   }
+   else
+    continue;
+  }
+  else {
+   sqltext.append(line);
   }
   if(sqltext.contains(";"))
   {

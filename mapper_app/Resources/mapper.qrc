@@ -44,10 +44,9 @@
         <file>sql/CreateMsSqlFunction.sql</file>
         <file>sql/CreateMySqlFunction.sql</file>
         <file>sql/mySql_createDatabase.sql</file>
-        <file>sql/recreateAltRoute.sql</file>
+        <file>sql/sqlite3_recreateAltRoute.sql</file>
         <file>sql/recreateCompanies.sql</file>
         <file>sql/recreateRouteComments.sql</file>
-        <file>sql/recreate_routes.sql</file>
         <file>sql/sqlite3_recreateSegmentsTable.sql</file>
         <file>sql/recreateStationTable.sql</file>
         <file>sql/recreateTractionTypes.sql</file>

@@ -7,6 +7,7 @@
 #include <QTableView>
 #include <QMenu>
 #include <QMenuBar>
+#include <QTextLine>
 
 namespace Ui {
 class QueryDialog;
@@ -52,10 +53,20 @@ private:
  QString s_Search; //=tab_search->objectName();
  QMenuBar* menuBar;
  QMenu* toolsMenu;
- QString currentQuery;
+ //QString currentQuery;
  void saveFile(QString s_File_Name);
  QAction* saveFileAct;
  QAction* saveAsFileAct;
+ bool processStream(QTextStream *in);
+ int linesRead=0, recordsProcessed=0, errors=0;
+ bool loadStream(QTextStream* in);
+ bool handleComment(QString line);
+ int handleOutFile(QStringList sl, int i);
+ QTextLine currentTextLine(const QTextCursor &cursor);
+ QAction* clearAct;
+ QAction* makeSelectedIncludeAct;
+ QAction* replaceWithIncludeAct;
+
 
 private slots:
  void on_go_QueryButton_clicked();
@@ -77,6 +88,10 @@ private slots:
 // void onResizeToData();
  void On_cbConnections_CurrentIndexChanged(int);
  bool processALine(QString txt, QString tabName = "");
+ void textChanged();
+ void showContextMenu(const QPoint &pt);
+ void replaceWithInclude();
+ void makeSelectedInclude();
 
 };
 

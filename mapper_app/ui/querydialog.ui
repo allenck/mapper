@@ -127,7 +127,10 @@
      </property>
      <widget class="QTextEdit" name="editQuery">
       <property name="toolTip">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter an SQL query. if more than one query is to be perfored terminate each with a semicolon. To execute only one query, higlight it. Then click on the execute utton.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter an SQL query. if more than one query is to be performed terminate each with a semicolon. To execute only one query, higlight it. Then click on the execute utton.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="placeholderText">
+       <string>Enter or Load SQL text</string>
       </property>
      </widget>
      <widget class="QTabWidget" name="widget_query_view">

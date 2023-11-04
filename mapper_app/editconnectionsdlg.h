@@ -67,7 +67,7 @@ private slots:
  void txtDsnTextChanged(QString text);
  void on_tbBrowse_clicked();
  void ontxtDbOrDsn_editingFinished();
- void setupComboBoxes();
+ void setupComboBoxes(QString);
 
 };
 

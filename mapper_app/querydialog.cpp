@@ -24,6 +24,23 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   tgtConn = config->currCity->connections.at(config->currCity->curConnectionId);
   db = QSqlDatabase::database();
   tgtConn->setConnectionName(db.connectionName());
+  connect(ui->editQuery, SIGNAL(textChanged()), this, SLOT(textChanged()));
+
+  ui->editQuery->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(ui->editQuery,SIGNAL(customContextMenuRequested(QPoint)),
+          this,SLOT(showContextMenu(QPoint)));
+  clearAct = new QAction("clear", this);
+  connect(clearAct, &QAction::triggered, [=]{
+   ui->editQuery->clear();
+  });
+  makeSelectedIncludeAct = new QAction(tr("Make include file of selection"), this);
+  connect(makeSelectedIncludeAct, &QAction::triggered, [=]{
+   makeSelectedInclude();
+  });
+  replaceWithIncludeAct = new QAction(tr("Replace selection with included file"),this);
+  connect(replaceWithIncludeAct, &QAction::triggered, [=]{
+   replaceWithInclude();
+  });
 
   menuBar = new QMenuBar();
   toolsMenu = new QMenu(tr("Tools"));
@@ -166,6 +183,23 @@ QueryDialog::~QueryDialog()
  delete ui;
 }
 
+void QueryDialog::showContextMenu(const QPoint &pt)
+{
+    QMenu *menu = ui->editQuery->createStandardContextMenu();
+    menu->addSeparator();
+    menu->addAction(clearAct);
+    QString selected;
+    QTextCursor cur = ui->editQuery->textCursor();
+    if (cur.hasSelection())
+    {
+     selected = cur.selectedText();
+     menu->addAction(makeSelectedIncludeAct);
+     menu->addAction(replaceWithIncludeAct);
+    }
+    menu->exec(ui->editQuery->mapToGlobal(pt));
+    delete menu;
+}
+
 void QueryDialog::resizeEvent(QResizeEvent *e)
 {
  Q_UNUSED(e)
@@ -230,7 +264,10 @@ void QueryDialog::on_load_QueryButton_clicked()
   // large file
   QMessageBox msgBox;
   msgBox.setText(tr("The query is very large"));
-  msgBox.setInformativeText(tr("The query is too large to display. Select 'No' to load it anyway, 'Yes' to process in the background or 'Cancel'.\nDo you wish to process the queries in the background?"));
+  msgBox.setInformativeText(tr("The query is too large to display.\n"
+                               "Select 'No' to load it anyway, 'Yes' to process "
+                               "in the background or 'Cancel'.\n"
+                               "Do you wish to process the queries in the background?"));
   msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
   msgBox.setDefaultButton(QMessageBox::Yes);
   msgBox.setIcon(QMessageBox::Warning);
@@ -248,56 +285,133 @@ void QueryDialog::on_load_QueryButton_clicked()
   ui->queryResultText->clear();
 
   //DbConnection *dbc = this_dblist->getDbConnection(this_dblist->current_index);
-  QTextStream in(&this_file);
-  int linesRead=0, recordsProcessed=0, errors=0;
+  QTextStream* in = new QTextStream(&this_file);
   this->setCursor(Qt::WaitCursor);
   qApp->processEvents();
 
-  while(!in.atEnd())
-  {
-   QString queryStr;
-   do
-   {
-    QString line = in.readLine();
-    linesRead++;
-    //qDebug()<<line;
-    queryStr += line;
-   } while (!queryStr.endsWith(";"));
-   //qDebug()<<queryStr;
-   QSqlQuery query = QSqlQuery(queryStr, db);
-   //QStringList sa_Message_Text;
-   if (query.lastError().isValid())
-   {
-    errors++;
-    ui->queryResultText->append(QString("<FONT COLOR=\"#FF0000\">%1<BR>%2<FONT COLOR=\"#000000\"><BR>")
-                                .arg(query.lastError().driverText(),query.lastError().databaseText())+"<BR>");
-    ui->queryResultText->append(QString(tr("Line %1 ")).arg(linesRead--)+" " +query.lastQuery()+"<BR>");
-    if(ui->cb_stop_query_on_error->isChecked())
-    {
-     ui->queryResultText->append(tr("Query stopped because of errors<BR>"));
-     this->setCursor(Qt::ArrowCursor);
-     return;
-    }
-   }
-   recordsProcessed++;
-   if(recordsProcessed%1000 == 0)
-    ui->queryResultText->append(QString(tr("Records processed: %1<BR>")).arg(recordsProcessed));
+//  while(!in->atEnd())
+//  {
+//   QString queryStr;
+//   do
+//   {
+//    QString line = in.readLine();
+//    linesRead++;
+//    //qDebug()<<line;
+//    queryStr += line;
+//   } while (!queryStr.endsWith(";"));
+//   //qDebug()<<queryStr;
+//   QSqlQuery query = QSqlQuery(queryStr, db);
+//   //QStringList sa_Message_Text;
+//   if (query.lastError().isValid())
+//   {
+//    errors++;
+//    ui->queryResultText->append(QString("<FONT COLOR=\"#FF0000\">%1<BR>%2<FONT COLOR=\"#000000\"><BR>")
+//                                .arg(query.lastError().driverText(),query.lastError().databaseText())+"<BR>");
+//    ui->queryResultText->append(QString(tr("Line %1 ")).arg(linesRead--)+" " +query.lastQuery()+"<BR>");
+//    if(ui->cb_stop_query_on_error->isChecked())
+//    {
+//     ui->queryResultText->append(tr("Query stopped because of errors<BR>"));
+//     this->setCursor(Qt::ArrowCursor);
+//     return;
+//    }
+//   }
+//   recordsProcessed++;
+//   if(recordsProcessed%1000 == 0)
+//    ui->queryResultText->append(QString(tr("Records processed: %1<BR>")).arg(recordsProcessed));
 
-   qApp->processEvents();
-  } // !while.atEnd()
+//   qApp->processEvents();
+   if(!processStream(in))
+    return;
+//  } // !while.atEnd()
   this->setCursor(Qt::ArrowCursor);
   ui->queryResultText->append(QString(tr("Records processed: %1<BR>")).arg(recordsProcessed));
   ui->queryResultText->append(QString(tr("There were errors: %1<BR>")).arg(errors));
   return;
  }
 loadIt:
- QTextStream in(&this_file);
- ui->editQuery->setPlainText(in.readAll());
+ QTextStream* in = new QTextStream(&this_file);
+ //ui->editQuery->setPlainText(in.readAll());
+ if(!loadStream(in))
+  return;
  if (ui->cb_sql_execute_after_loading->checkState() == Qt::Checked)
  {
   ui->cb_sql_execute_after_loading->setChecked(false);
   on_go_QueryButton_clicked();
  }
+}
+
+bool QueryDialog::loadStream(QTextStream* in)
+{
+ while(!in->atEnd())
+ {
+  QString line = in->readLine();
+  if(line.startsWith("#"))
+   handleComment(line);
+  else
+   ui->editQuery->append(line);
+ }
+ return true;
+}
+
+bool QueryDialog::handleComment(QString line)
+{
+ ui->editQuery->append(QString("<FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\">").arg(line));
+ if(line.startsWith("#include",Qt::CaseInsensitive))
+ {
+  QString fn = line.mid(8).trimmed();
+  QFile this_file(config->q.s_query_path+"/"+fn);
+  if (!this_file.open(QIODevice::ReadOnly | QIODevice::Text))
+  {
+   QMessageBox::critical(this,tr("Error"), "Could not load sql query text file");
+   return false;
+  }
+  else
+  {
+   QTextStream* in = new QTextStream(&this_file);
+   if(!loadStream(in))
+    return false;
+   ui->editQuery->append(QString("<FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\">")
+                         .arg("#end" + fn ));
+  }
+ }
+ return true;
+}
+
+bool QueryDialog::processStream(QTextStream* in)
+{
+ while(!in->atEnd())
+ {
+  QString queryStr;
+  do
+  {
+   QString line = in->readLine();
+   linesRead++;
+   //qDebug()<<line;
+   queryStr += line;
+  } while (!queryStr.endsWith(";"));
+  //qDebug()<<queryStr;
+  QSqlQuery query = QSqlQuery(queryStr, db);
+  //QStringList sa_Message_Text;
+  if (query.lastError().isValid())
+  {
+   errors++;
+   ui->queryResultText->append(QString("<FONT COLOR=\"#FF0000\">%1<BR>%2<FONT COLOR=\"#000000\"><BR>")
+                               .arg(query.lastError().driverText(),query.lastError().databaseText())+"<BR>");
+   ui->queryResultText->append(QString(tr("Line %1 ")).arg(linesRead--)+" " +query.lastQuery()+"<BR>");
+   if(ui->cb_stop_query_on_error->isChecked())
+   {
+    ui->queryResultText->append(tr("Query stopped because of errors<BR>"));
+    this->setCursor(Qt::ArrowCursor);
+    return false;
+   }
+  }
+  recordsProcessed++;
+  if(recordsProcessed%1000 == 0)
+   ui->queryResultText->append(QString(tr("Records processed: %1<BR>")).arg(recordsProcessed));
+
+  qApp->processEvents();
+ }
+ return true;
 }
 
 void QueryDialog::on_go_QueryButton_clicked()
@@ -333,7 +447,11 @@ void QueryDialog::on_go_QueryButton_clicked()
  QStringList lines = text.split("\n");
  QString combined;
  foreach(QString line, lines)
+ {
+  if(line.startsWith("#"))
+   continue;
   combined.append(line + " ");
+ }
  QStringList statements = combined.split(";");
  QStringList viewList = SQL::instance()->listViews();
  foreach(QString txt, statements)
@@ -609,7 +727,47 @@ void QueryDialog::saveFile(QString s_File_Name)
 
  config->q.s_query_path = this_fi.dir().absolutePath();
  QTextStream out(&this_file);
- out << ui->editQuery->toPlainText();
+ //out << ui->editQuery->toPlainText();
+ QString text = ui->editQuery->toPlainText();
+ QStringList sl = text.split("\n");
+ for(int i=0; i < sl.count(); i++)
+ {
+  QString s = sl.at(i);
+  if(s.startsWith("#include", Qt::CaseInsensitive))
+  {
+   out<< s << "\n";
+   i = handleOutFile(sl,i);
+   continue;
+  }
+  out << s<< "\n";
+ }
+}
+
+int QueryDialog::handleOutFile(QStringList sl, int i)
+{
+ QString line = sl.at(i);
+ if(line.startsWith("#include",Qt::CaseInsensitive))
+ {
+  QString fn = line.mid(8);
+  QFile this_file(config->q.s_query_path+"/"+fn);
+  if (!this_file.open(QIODevice::WriteOnly | QIODevice::Text))
+  {
+   QMessageBox::critical(this,tr("Error"), "Could not open sql query text file");
+   return false;
+  }
+  else
+  {
+   QTextStream out(&this_file);
+   for(int j=i+1; j < sl.count(); j++)
+   {
+    QString line = sl.at(j);
+    if(line.startsWith("#end"))
+     return j;
+    out << line<< "\n";
+   }
+  }
+ }
+ throw Exception();
 }
 
 void QueryDialog::slot_QueryView_horizontalHeader_sectionDoubleClicked(int logicalIndex)
@@ -868,4 +1026,84 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   ui->editQuery->clear();
   ui->editQuery->setText(commandText);
   on_go_QueryButton_clicked();
+ }
+
+ QTextLine QueryDialog::currentTextLine(const QTextCursor &cursor)
+ {
+     const QTextBlock block = cursor.block();
+     if (!block.isValid())
+         return QTextLine();
+
+     const QTextLayout *layout = block.layout();
+     if (!layout)
+         return QTextLine();
+
+     const int relativePos = cursor.position() - block.position();
+     return layout->lineForTextPosition(relativePos);
+ }
+
+ void QueryDialog::textChanged()
+ {
+  QTextCursor cursor = ui->editQuery->textCursor();
+  QTextBlock block = cursor.block();
+  QString text = block.text();
+  QTextLine textLine = currentTextLine(cursor);
+ }
+
+ void QueryDialog::replaceWithInclude()
+ {
+  setCursor(Qt::WaitCursor);
+  QString s_File_Name = QFileDialog::getOpenFileName(this, "Choose a SQL text file",
+                        config->q.s_query_path, "SQL text files (*.sql *.txt);;All Files (*.*)");
+  // QFileDialog take a long time to close, this should tak care of this - but does not.
+  QCoreApplication::processEvents();
+  setCursor(Qt::ArrowCursor);
+  if (s_File_Name.isEmpty()) return;
+  QFile this_file(s_File_Name);
+  QFileInfo this_fi(s_File_Name);
+  if (!this_file.open(QIODevice::ReadOnly | QIODevice::Text))
+  {
+   QMessageBox::critical(this,tr("Error"), "Could not load sql query text file");
+   return;
+  }
+
+  QTextCursor cur = ui->editQuery->textCursor();
+  QTextStream in(&this_file);
+  QString newText = in.readAll();
+  cur.removeSelectedText();
+  cur.insertHtml(QString("<FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\"><BR>")
+                 .arg("#include " + s_File_Name ));
+  cur.insertText(newText);
+  cur.insertHtml(QString("<FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\">")
+                 .arg("#end" + s_File_Name ));
+ }
+
+ void QueryDialog::makeSelectedInclude()
+ {
+  QTextCursor cur = ui->editQuery->textCursor();
+  QString text = cur.selectedText();
+  QString s_File_Name = QFileDialog::getSaveFileName(this, "Choose the name of a SQL text file to save to",
+                        config->q.s_query_path,"SQL text files (*.sql *.txt);;All Files (*.*)");
+  if (s_File_Name.isEmpty()) return;
+
+  QFileInfo this_fi(s_File_Name);
+  if (this_fi.completeSuffix() == "")
+   s_File_Name+=".sql";
+  QFile this_file(s_File_Name);
+  if (!this_file.open(QIODevice::WriteOnly | QIODevice::Text))
+  {
+   QMessageBox::critical(this,qApp->applicationName(), "Could not save sql query text file");
+   return;
+  }
+
+  //config->q.s_query_path = this_fi.dir().absolutePath();
+  QTextStream out(&this_file);
+  out << text;
+  cur.removeSelectedText();
+  cur.removeSelectedText();
+  cur.insertHtml(QString("<FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\"><BR>")
+                 .arg("#include " + s_File_Name ));
+  cur.insertText(text);
+  cur.insertHtml(QString("<BR><FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\">")
+                 .arg("#end" + s_File_Name ));
  }
