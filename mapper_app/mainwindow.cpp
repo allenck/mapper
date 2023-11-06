@@ -1954,7 +1954,7 @@ void MainWindow::On_displayRoute(RouteData rd)
 
  //RouteInfo ri = sql->getRoutePoints(rd.route,rd.name, ui->dateEdit->text());
  //RouteInfo ri = RouteInfo(rd.route,rd.name, ui->dateEdit->text());
- QList<SegmentData> segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(), ui->dateEdit->text());
+ QList<SegmentData*> segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(), ui->dateEdit->text());
 // LatLng startPt =  LatLng();
 // LatLng endPt =  LatLng();
 // LatLng swPt = LatLng(90,180);
@@ -1989,48 +1989,48 @@ void MainWindow::On_displayRoute(RouteData rd)
  //foreach (segmentGroup sg in ri.segments)
  for(int i = 0; i< segmentDataList.count(); i++)
  {
-  SegmentData sd = segmentDataList.at(i);
-  if(sd.segmentId() == 367)
+  SegmentData* sd = segmentDataList.at(i);
+  if(sd->segmentId() == 367)
    qDebug() << "halt";
   objArray.clear();
-  objArray << sd.segmentId();
+  objArray << sd->segmentId();
   m_bridge->processScript("clearPolyline", objArray);
-  QString color = getColor(sd.tractionType());
+  QString color = getColor(sd->tractionType());
 
   QVariantList points;
-  for(int i=0; i < sd.pointList().count(); i++)
+  for(int i=0; i < sd->pointList().count(); i++)
   {
-   LatLng pt = sd.pointList().at(i);
+   LatLng pt = sd->pointList().at(i);
    points.append(pt.lat());
    points.append(pt.lon());
   }
-  bBoundsValid = bounds.updateBounds(sd.bounds());
+  bBoundsValid = bounds.updateBounds(sd->bounds());
 
   int dash = 0;
-  if(sd.routeType() == Incline)
+  if(sd->routeType() == Incline)
    dash = 1;
-  else if(sd.routeType() == SurfacePRW)
+  else if(sd->routeType() == SurfacePRW)
    dash = 2;
-  else if(sd.routeType() == Subway)
+  else if(sd->routeType() == Subway)
    dash = 3;
-  if(sd.trackUsage().isEmpty()) // fix for MySql not storing field correctly
-   sd.setTrackUsage(" ");
+  if(sd->trackUsage().isEmpty()) // fix for MySql not storing field correctly
+   sd->setTrackUsage(" ");
   objArray.clear();
-  objArray <<   sd.segmentId() << rd.routeName() <<  sd.description() << sd.oneWay() << color << sd.tracks()
-             << dash << sd.routeType() << sd.trackUsage() << points.count();
+  objArray <<   sd->segmentId() << rd.routeName() <<  sd->description() << sd->oneWay() << color << sd->tracks()
+             << dash << sd->routeType() << sd->trackUsage() << points.count();
   objArray.append(points);
   m_bridge->processScript("createSegment",objArray);
 
   //statusBar()->showMessage(tr("route length = %1 km, %2 miles").arg(sd.length()).arg(sd.length()*0.621371192));
-  if(sd.tracks() == 2)
+  if(sd->tracks() == 2)
   {
-   if(sd.oneWay() == "Y")
-    length += sd.length();
+   if(sd->oneWay() == "Y")
+    length += sd->length();
    else
-    length += sd.length()*2;
+    length += sd->length()*2;
   }
   else
-   length += sd.length();
+   length += sd->length();
  }
  statusBar()->showMessage(tr("route length = %1 km, %2 miles").arg(length).arg(length*0.621371192));
 
@@ -3680,30 +3680,30 @@ void MainWindow::addSegment()
 
         ui->lblSegment->setText(tr("Segment %1:").arg(m_SegmentId));
         //        ui->chkOneWay->setChecked("Y"== sql->getSegmentOneWay(m_SegmentId));
-        SegmentData sd = sql->getSegmentData(rd.route(), m_SegmentId, rd.startDate().toString("yyyy/MM/dd"),
+        SegmentData* sd = sql->getSegmentData(rd.route(), m_SegmentId, rd.startDate().toString("yyyy/MM/dd"),
                                              rd.endDate().toString("yyyy/MM/dd"));
-        updateSegmentInfoDisplay(sd);
+        updateSegmentInfoDisplay(*sd);
 
         int dash = 0;
-        if(sd.routeType() == Incline)
+        if(sd->routeType() == Incline)
          dash = 1;
-        else if(sd.routeType() == SurfacePRW)
+        else if(sd->routeType() == SurfacePRW)
          dash = 2;
-        else if(sd.routeType() == Subway)
+        else if(sd->routeType() == Subway)
          dash = 3;
 
         QVariantList objArray;
         objArray << m_SegmentId << segmentDlg.routeName()<<ui->txtSegment->text()
-                 <<sd.oneWay()<<getColor(segmentDlg.tractionType())<<sd.tracks() << dash
-                << sd.routeType() << sd.trackUsage() << 0;
+                 <<sd->oneWay()<<getColor(segmentDlg.tractionType())<<sd->tracks() << dash
+                << sd->routeType() << sd->trackUsage() << 0;
         m_bridge->processScript("createSegment",objArray);
 
         //webBrowser1.Document.InvokeScript("addModeOn");
         m_bridge->processScript("addModeOn");
         m_bAddMode = true;
 
-        sd = sql->getSegmentInfo(m_SegmentId);
-        lookupStreetName(sd);
+        SegmentInfo si = sql->getSegmentInfo(m_SegmentId);
+        lookupStreetName(si);
         //refreshRoutes();
         //refreshSegmentCB();
     }
@@ -3732,12 +3732,12 @@ void MainWindow::deleteRoute()
 
 void MainWindow::on_updateRoute()
 {
-  SegmentData sd = sql->getSegmentData(m_routeNbr, m_SegmentId, _rd.startDate().toString("yyyy/MM/dd"),
+  SegmentData* sd = sql->getSegmentData(m_routeNbr, m_SegmentId, _rd.startDate().toString("yyyy/MM/dd"),
                                        _rd.endDate().toString("yyyy/MM/dd"));
-  sd.setRouteName(_rd.routeName());
-  sd.setCompanyKey(_rd.companyKey());
-  sd.setTractionType(_rd.tractionType());
-  updateRoute(&sd);
+  sd->setRouteName(_rd.routeName());
+  sd->setCompanyKey(_rd.companyKey());
+  sd->setTractionType(_rd.tractionType());
+  updateRoute(sd);
 }
 
 void MainWindow::updateRoute(SegmentData* sd )
@@ -3762,7 +3762,7 @@ void MainWindow::updateRoute(SegmentData* sd )
       //routeDlg->setSegmentId( sd->segmentId());
       if(sd->alphaRoute().isEmpty())
        sd->setAlphaRoute(_rd.alphaRoute());
-      routeDlg->setSegmentData(*sd);
+      routeDlg->setSegmentData(sd);
       routeDlg->show();
       routeDlg->raise();
       routeDlg->activateWindow();
@@ -4350,11 +4350,11 @@ void MainWindow::updateSegmentInfoDisplay(SegmentInfo sd)
 void MainWindow::On_editSegment_triggered()
 {
  SegmentInfo si = sql->getSegmentInfo(ui->ssw->cbSegments()->currentData().toInt());
- SegmentData sd = sql->getSegmentData(m_routeNbr,si.segmentId(),m_currRouteStartDate, m_currRouteEndDate);
+ SegmentData* sd = sql->getSegmentData(m_routeNbr,si.segmentId(),m_currRouteStartDate, m_currRouteEndDate);
 
  EditSegmentDialog* dlg;
- if(sd.route() >= 0)
-  dlg = new EditSegmentDialog(&sd, si,this);
+ if(sd->route() >= 0)
+  dlg = new EditSegmentDialog(sd, si,this);
  else
   dlg = new EditSegmentDialog(si,this);
  int ret = dlg->exec();

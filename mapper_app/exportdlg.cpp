@@ -111,6 +111,7 @@ void ExportDlg::btnGo_clicked()
    config->currCity->curExportConnId = c->id();
    config->saveSettings();
    currConnection = c;
+   exprt->setTargetConn(c);
    break;
   }
  }
@@ -128,6 +129,7 @@ void ExportDlg::btnGo_clicked()
 // if(ui->chkAll->isChecked())
 //     exprt.exportAll();
 // else
+
  stopEnabled = true;
  if(currConnection->servertype() == "MsSql")
      SQL::instance()->useDatabase(currConnection->defaultSqlDatabase(), exprt->targetDb());

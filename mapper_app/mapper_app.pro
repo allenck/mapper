@@ -111,6 +111,8 @@ DISTFILES += \
     README.txt \
     Resources/scripts/createMsSqlDistance.sql \
     Resources/sql/addBiDirectionalToRoutes.sql \
+    Resources/sql/create_stations.sql \
+    Resources/sql/mssql_create_stations.sql \
     Resources/sql/mysql_recreate_routes.sql \
     Resources/sql/recreateRouteComments.sql \
     Resources/sql/recreateSegmentsTable.sql \

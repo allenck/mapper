@@ -21,6 +21,7 @@ CREATE TABLE if not exists `TractionTypes` (
 CREATE TABLE if not exists `Companies` (
   `key` integer NOT NULL primary key AUTOINCREMENT,
   `Description` varchar(50) NOT NULL,
+  `info` varchar(50),
   `routePrefix` varchar(10) default '',
   `startDate` date DEFAULT NULL,
   `endDate` date DEFAULT NULL,

@@ -66,6 +66,7 @@ private:
  QAction* clearAct;
  QAction* makeSelectedIncludeAct;
  QAction* replaceWithIncludeAct;
+ void setTitle();
 
 
 private slots:

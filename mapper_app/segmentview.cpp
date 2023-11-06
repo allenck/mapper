@@ -215,7 +215,8 @@ void SegmentView::addToRoute()
 // if(parent->selectedSegment() == segmentId)
 //  return; // already selected
 
- SegmentData sd = sourceModel->selectedSegment(proxymodel->mapToSource(indexes.at(0)).row());
+ SegmentInfo si = sourceModel->selectedSegment(proxymodel->mapToSource(indexes.at(0)).row());
+ SegmentData sd = SegmentData(si);
  if(parent->m_segmentStatus == "Y")
    parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
  else
@@ -234,7 +235,7 @@ void SegmentView::addToRoute()
   sd.setStartDate(rd.startDate());
   sd.setEndDate(rd.endDate());
   sd.setCompanyKey(rd.companyKey());
-  parent->routeDlg->setSegmentData(sd);
+  parent->routeDlg->setSegmentData(&sd);
  }
  parent->routeDlg->show();
  parent->routeDlg->raise();

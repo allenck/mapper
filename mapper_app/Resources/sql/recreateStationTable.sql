@@ -12,7 +12,7 @@ CREATE TABLE `Stations` (
   `endDate` date DEFAULT NULL,
   `segmentId` int(11) NOT NULL,
   `point` int(11) NOT NULL DEFAULT 0,
-  `infoKey` int(11) DEFAULT NOT NULL DEFAULT -1,
+  `infoKey` int(11) NOT NULL DEFAULT -1,
   `geodb_loc_id` varchar(15) DEFAULT NULL,
   `routeType` int(11) NOT NULL DEFAULT -1,
   `markerType` varchar(15) default '',

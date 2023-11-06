@@ -230,7 +230,7 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
      return listOfSegments;
  }
 
- SegmentData SegmentViewTableModel::selectedSegment(int row)
+ SegmentInfo SegmentViewTableModel::selectedSegment(int row)
  {
   return listOfSegments.at(row);
  }

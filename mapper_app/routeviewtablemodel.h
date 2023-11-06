@@ -11,7 +11,7 @@ class RouteViewTableModel : public QAbstractTableModel
     Q_OBJECT
 public:
     RouteViewTableModel(QObject *parent = 0);
-    RouteViewTableModel(qint32 route, QString name, QDate dtStart, QDate dtEnd, QList<SegmentData> segmentDataList, QObject *parent=0);
+    RouteViewTableModel(qint32 route, QString name, QDate dtStart, QDate dtEnd, QList<SegmentData*> segmentDataList, QObject *parent=0);
 
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
@@ -21,8 +21,8 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role=Qt::EditRole);
     bool insertRows(int position, int rows, const QModelIndex &index=QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index=QModelIndex());
-    QList<SegmentData> getList();
-    void setList(QList< SegmentData > segmentDataList);
+    QList<SegmentData *> getList();
+    void setList(QList<SegmentData *> segmentDataList);
     void reset();
     void setSequenced(bool b);
 
@@ -57,7 +57,7 @@ public:
      ENDDATE
     };
     int getRow(int segmentId);
-    SegmentData segmentData(int row);
+    SegmentData *segmentData(int row);
 
 signals:
     void rowChange(qint32 row, qint32 segmentid, bool bDeleted, bool bChanged);
@@ -69,7 +69,7 @@ public slots:
     void discardChanges();
 
 private:
-     QList<SegmentData> listOfSegments;
+     QList<SegmentData*> listOfSegments;
      bool bIsSequenced;
      qint32 selectedRow;
      bool bSelectedRowChanged;

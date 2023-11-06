@@ -20,6 +20,7 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   ui->setupUi(this);
   config = cfg;
   currQueryFilename = "";
+  setTitle();
   bChanging = false;
   tgtConn = config->currCity->connections.at(config->currCity->curConnectionId);
   db = QSqlDatabase::database();
@@ -226,6 +227,7 @@ void QueryDialog::on_clear_QueryButton_clicked()
 {
  ui->editQuery->clear();
  currQueryFilename = "";
+ setTitle();
 
  for (int ix =ui->widget_query_view->count()-1; ix > 0; ix--)
   ui->widget_query_view->removeTab(ix);
@@ -233,9 +235,7 @@ void QueryDialog::on_clear_QueryButton_clicked()
  sa_Message_Text.clear();
  s_Search="";
 
- currQueryFilename = "";
  saveFileAct->setEnabled(false);
-
 }
 
 void QueryDialog::on_load_QueryButton_clicked()
@@ -249,7 +249,7 @@ void QueryDialog::on_load_QueryButton_clicked()
  if (s_File_Name.isEmpty()) return;
  QFile this_file(s_File_Name);
  QFileInfo this_fi(s_File_Name);
- currQueryFilename = s_File_Name;
+
  if (!this_file.open(QIODevice::ReadOnly | QIODevice::Text))
  {
   QMessageBox::critical(this,tr("Error"), "Could not load sql query text file");
@@ -257,6 +257,7 @@ void QueryDialog::on_load_QueryButton_clicked()
  }
  config->q.s_query_path = this_fi.dir().absolutePath();
  currQueryFilename = s_File_Name;
+ setTitle();
  saveFileAct->setEnabled(true);
 
  if(this_fi.size() > 1000000)
@@ -545,7 +546,7 @@ bool QueryDialog::processALine(QString txt, QString tabName)
   i_Message_Error++;
   if(ui->cb_stop_query_on_error->isChecked())
   {
-   sa_Message_Text.append(tr("Query stopped because of errors<BR>"));
+   sa_Message_Text.append(tr("<BR>Query stopped because of errors<BR>"));
    for (int i=0; i<sa_Message_Text.count(); i++)
     s_Search+=sa_Message_Text[i];
    ui->queryResultText->setText(s_Search);
@@ -706,6 +707,7 @@ void QueryDialog::on_saveAs_QueryButton_clicked()
  if (s_File_Name.isEmpty()) return;
  saveFile(s_File_Name);
  currQueryFilename = s_File_Name;
+ setTitle();
 }
 
 void QueryDialog::on_save_QueryButton_clicked(QString s_File_Name)
@@ -748,7 +750,7 @@ int QueryDialog::handleOutFile(QStringList sl, int i)
  QString line = sl.at(i);
  if(line.startsWith("#include",Qt::CaseInsensitive))
  {
-  QString fn = line.mid(8);
+  QString fn = line.mid(8).trimmed();
   QFile this_file(config->q.s_query_path+"/"+fn);
   if (!this_file.open(QIODevice::WriteOnly | QIODevice::Text))
   {
@@ -1017,8 +1019,18 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    }
   }
 #endif
-  QWidget::setWindowTitle(tr("Manual Sql Query (%1)").arg(ui->cbConnections->currentText()));
- }
+   setTitle();
+  }
+}
+
+void QueryDialog::setTitle()
+{
+ if(currQueryFilename.isEmpty())
+  QWidget::setWindowTitle(tr("Manual Sql Query (%1)")
+                          .arg(ui->cbConnections->currentText()));
+ else
+  QWidget::setWindowTitle(tr("Manual Sql Query (%1) - %2")
+                          .arg(ui->cbConnections->currentText(),currQueryFilename));
 }
 
  void QueryDialog::executeQuery(QString commandText)

@@ -49,12 +49,12 @@ public:
     QStringList getLocations();
     //QT_DEPRECATED SegmentInfo getSegmentInfo(qint32 segmentId);
     SegmentInfo getSegmentInfo(qint32 SegmentId);
-    QList<SegmentData> getRouteSegmentsInOrder(qint32 route, QString name, QString date);
+    QList<SegmentData *> getRouteSegmentsInOrder(qint32 route, QString name, QString date);
     //QT_DEPRECATED QList<SegmentInfo> getRouteSegmentsInOrder2(qint32 route, QString name, QString date);
     QList<RouteData> getRoutes(qint32 segmentid, QString date );
 //    Q_DECL_DEPRECATED QList<LatLng>  GetSegmentPoints(qint32 SegmentId);
     bool canConnect(SegmentData sd1, QString matchedTo, SegmentData sd2);
-    qint32 sequenceRouteSegments(qint32 segmentId, QList<SegmentData> segmentList,
+    qint32 sequenceRouteSegments(qint32 segmentId, QList<SegmentData*> segmentList,
                                  RouteData* rd, QString whichEnd);
     double angleDiff(double A1, double A2);
     double intersectingAngle(SegmentData sd, SegmentData sd2);
@@ -84,7 +84,7 @@ public:
     QList<CompanyData *> getCompanies();
     CompanyData *getCompany(qint32 companyKey);
     QT_DEPRECATED QList<RouteData> getRouteDatasForDate(qint32 route, QString name, QString date);
-    QList<SegmentData> getRouteDatasForDate(int segmentId, QDate date);
+    QList<SegmentData *> getRouteDatasForDate(int segmentId, QDate date);
     QT_DEPRECATED QList<SegmentData> getRouteDatasForDate(qint32 segmentId, QString date);
     bool saveRouteSequence(RouteData rd, int firstSegment, QString whichEnd);
     bool doesAltRouteExist(int route, QString alphaRoute);
@@ -141,15 +141,15 @@ public:
     qint32 addSegment(QString Description, QString OneWay, int tracks, RouteType routeType, const QList<LatLng> pointList, QString Location, bool * bAlreadyExists, bool forceInsert= false);
     qint32 addSegment(SegmentData sd, bool *bAlreadyExists, bool forceInsert);
     qint32 splitSegment(qint32 pt, qint32 SegmentId, QString oldDesc, QString oldOneWay, QString newDesc, QString newOneWay, RouteType routeType, RouteType newRouteType, int oldTracks, int newTracks, QString oldStreet, QString newStreet);
-    SegmentData getSegmentData(qint32 route, qint32 SegmentId, QString startDate, QString endDate);
-    QList<SegmentData> getSegmentDataList(RouteData rd);
+    SegmentData *getSegmentData(qint32 route, qint32 SegmentId, QString startDate, QString endDate);
+    QList<SegmentData *> getSegmentDataList(RouteData rd);
     bool updateSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId, qint32 companyKey, qint32 tractionType, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString biDirectional);
-    SegmentData getSegmentDataForRouteDates(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate);
+    SegmentData* getSegmentDataForRouteDates(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate);
     RouteData getRouteDataForRouteDates(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate);
     bool deleteRoute(qint32 route, QString name, QString startDate, QString endDate);
     bool modifyRouteDate(RouteData *rd, bool bStartDate, QDate dt, QString name1, QString name2);
     bool modifyCurrentRoute(RouteData *rd, bool bStartDate, QDate dt, QString name1, QString name2);
-    QList<SegmentData> getConflictingRouteSegments(qint32 route, QString name,
+    QList<SegmentData *> getConflictingRouteSegments(qint32 route, QString name,
                                                    QString startDate, QString endDate,
                                                    qint32 segmentId);
     QList<SegmentData> getRoutes(qint32 segmentid);
@@ -242,7 +242,7 @@ public:
     QString currentTransaction;
     bool doesFunctionExist(QString name, QSqlDatabase db);
     QStringList listViews();
-    QList<SegmentData> segmentDataFromView(QString where);
+    QList<SegmentData *> segmentDataFromView(QString where);
     QStringList listColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase());
     QStringList listPkColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase());
     bool getForeignKeyCheck();

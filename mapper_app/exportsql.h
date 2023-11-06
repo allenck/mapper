@@ -33,6 +33,7 @@ public:
     void setOverride(QDateTime strOvr);
     void setNoDelete(bool bFlag);
     ExportSql* instance() {return this;}
+    void setTargetConn(Connection* tgtConn);
 
     //bool exportAltRoute();
     bool exportAll();
@@ -84,8 +85,8 @@ private:
     QSqlDatabase _targetDb;
     Configuration *config;
     qint32 added, updated, deleted, errors, notUpdated;
-    Connection* srcConn;
-    Connection* tgtConn;
+    Connection* srcConn = nullptr;
+    Connection* tgtConn = nullptr;
     qint32 rowCount;
     qint32 rowsCompleted;
     QDateTime lastUpdated;

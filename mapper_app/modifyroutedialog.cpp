@@ -68,7 +68,7 @@ void ModifyRouteDialog::btnOK_Click()
     RouteData rd = (RouteData)routeDataList.at(ui->cbRoutes->currentIndex());
 
     //QList<RouteData> myArray = sql->getRouteDatasForDate(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
-    QList<SegmentData> myArray = sql->getSegmentDataList(rd);
+    QList<SegmentData*> myArray = sql->getSegmentDataList(rd);
     if (myArray.count()==0)
     {
         ui->lblHelp->setText(tr("Delete failed"));
@@ -100,8 +100,8 @@ void ModifyRouteDialog::btnOK_Click()
 //            //System.Media.SystemSounds.Asterisk.Play();
 //            return;
 //        }
-     SegmentData sd = myArray.at(i);
-     SegmentData sdNew = SegmentData(sd);
+     SegmentData* sd = myArray.at(i);
+     SegmentData sdNew = SegmentData(*sd);
      sdNew.setRouteName(newName().trimmed());
      if(!sql->addSegmentToRoute(sdNew))
      {
@@ -136,7 +136,7 @@ void ModifyRouteDialog::btnOK_Click()
        this->setResult(QDialog::Rejected);
 
       }
-      sql->deleteRouteSegment(sd);
+      sql->deleteRouteSegment(*sd);
      }
     }
     sql->commitTransaction("RenameRoute");

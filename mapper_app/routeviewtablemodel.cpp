@@ -14,7 +14,7 @@ RouteViewTableModel::RouteViewTableModel(QObject *parent) :
 }
 
 RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtStart,
-                                         QDate dtEnd, QList<SegmentData> segmentDataList,
+                                         QDate dtEnd, QList<SegmentData *> segmentDataList,
                                          QObject *parent)
      : QAbstractTableModel(parent)
 {
@@ -24,7 +24,10 @@ RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtSta
  bSelectedRowChanged = false;
  bIsSequenced = false;
  listOfSegments = segmentDataList;
- saveSegmentDataList = QList<SegmentData>(segmentDataList);
+ //saveSegmentDataList = QList<SegmentData>(segmentDataList);
+ saveSegmentDataList = QList<SegmentData>();
+ for(SegmentData* sd : segmentDataList)
+  saveSegmentDataList.append(SegmentData(*sd));
  this->dtEnd = dtEnd;
  this->dtStart = dtStart;
  startDate = dtStart;
@@ -34,10 +37,10 @@ RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtSta
  TerminalInfo ti = SQL::instance()->getTerminalInfo(route,name, endDate.toString("yyyy/MM/dd"));
  for(int i =0; i < listOfSegments.count(); i++)
  {
-  SegmentData sd = listOfSegments.at(i);
-  if(ti.startSegment == sd.segmentId())
+  SegmentData* sd = listOfSegments.at(i);
+  if(ti.startSegment == sd->segmentId())
    startRow = i;
-  if(ti.endSegment == sd.segmentId())
+  if(ti.endSegment == sd->segmentId())
    endRow = i;
  }
 
@@ -64,9 +67,9 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
 
  if (index.row() >= listOfSegments.size() || index.row() < 0)
      return QVariant();
- SegmentData sd = listOfSegments.at(index.row());
- if(sd.tractionType() < 0)
-  qDebug() << tr("invalid tractionType") << sd.tractionType();
+ SegmentData* sd = listOfSegments.at(index.row());
+ if(sd->tractionType() < 0)
+  qDebug() << tr("invalid tractionType") << sd->tractionType();
 
  if(role == Qt::BackgroundRole)
  {
@@ -84,27 +87,27 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
   switch(index.column())
   {
   case NEXT:
-   if(sd.next() == -1)
+   if(sd->next() == -1)
     background = QColor(Qt::yellow);
    break;
   case PREV:
-   if(sd.prev() == -1)
+   if(sd->prev() == -1)
     background = QColor(Qt::yellow);
    break;
   case NEXTR:
-   if(sd.nextR() == -1)
+   if(sd->nextR() == -1)
     background = QColor(Qt::yellow);
    break;
   case PREVR:
-   if(sd.prevR() == -1)
+   if(sd->prevR() == -1)
     background = QColor(Qt::yellow);
    break;
   case SEQ:
-   if(sd.sequence() == -1)
+   if(sd->sequence() == -1)
     background = QColor(Qt::yellow);
    break;
   case RSEQ:
-   if(sd.returnSeq() == -1 && sd.oneWay() != "Y")
+   if(sd->returnSeq() == -1 && sd->oneWay() != "Y")
     background = QColor(Qt::yellow);
    break;
   }
@@ -123,64 +126,62 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
 //     if(index.row() == changedMap.values().at(i)->row)
 //     {
 //      if(changedMap.values().at(i)->bDeleted)
-//         return QString("%1").arg(sd.segmentId())+" !";
+//         return QString("%1").arg(sd->segmentId())+" !";
 
 //      if(changedMap.values().at(i)->bChanged)
-//         return QString("%1").arg(sd.segmentId())+" *";
+//         return QString("%1").arg(sd->segmentId())+" *";
 //     }
-    if(sd.markedForDelete())
-     return QString("%1").arg(sd.segmentId())+" !";
-    if(sd.needsUpdate())
-     return QString("%1").arg(sd.segmentId())+" *";
+    if(sd->markedForDelete())
+     return QString("%1").arg(sd->segmentId())+" !";
+    if(sd->needsUpdate())
+     return QString("%1").arg(sd->segmentId())+" *";
 //    }
-    return sd.segmentId();
+    return sd->segmentId();
    case NAME:
-       return sd.description();
+       return sd->description();
    case ONEWAY:
-       return sd.oneWay();
+       return sd->oneWay();
    case USAGE:
-       return sd.trackUsage();
+       return sd->trackUsage();
    case TRACTIONTYPE:
-       //return sd.tractionType();
-       return tractionTypes.value(sd.tractionType()).description;
+       //return sd->tractionType();
+       return tractionTypes.value(sd->tractionType()).description;
    case TRACKS:
-       return sd.tracks();
+       return sd->tracks();
    case TYPE:
-       return SegmentData::ROUTETYPES.at(sd.routeType());
+       return SegmentData::ROUTETYPES.at(sd->routeType());
    case NEXT:
-       return sd.next();
+       return sd->next();
    case PREV:
-       return sd.prev();
+       return sd->prev();
    case NEXTR:
-       return sd.nextR();
+       return sd->nextR();
    case PREVR:
-       return sd.prevR();
+       return sd->prevR();
    case DIR:
-       return sd.direction();
+       return sd->direction();
    case SEQ:
-       return sd.sequence();
+       return sd->sequence();
    case RSEQ:
-//    if(sd.oneWay() == "Y")
-//     return tr("na");
-    return sd.returnSeq();
+    return sd->returnSeq();
    case NE:
-    return turnMap.value(sd.normalEnter());
+    return turnMap.value(sd->normalEnter());
    case NL:
-    return turnMap2.value(sd.normalLeave());
+    return turnMap2.value(sd->normalLeave());
    case RE:
-    return turnMap.value(sd.reverseEnter());
+    return turnMap.value(sd->reverseEnter());
    case RL:
-    return turnMap2.value(sd.reverseLeave());
+    return turnMap2.value(sd->reverseLeave());
    case STARTDATE:
-       return sd.startDate().toString("yyyy/MM/dd");
+       return sd->startDate().toString("yyyy/MM/dd");
    case ENDDATE:
-       return sd.endDate().toString("yyyy/MM/dd");
+       return sd->endDate().toString("yyyy/MM/dd");
    case DISTANCE:
-       return sd.length();
+       return sd->length();
    case ANGLES:
-    return sd.bearingStart().angle();
+    return sd->bearingStart().angle();
    case ANGLEE:
-    return sd.bearingEnd().angle();
+    return sd->bearingEnd().angle();
   }
  }
  return QVariant();
@@ -192,8 +193,8 @@ QVariant RouteViewTableModel::headerData(int section, Qt::Orientation orientatio
     return QVariant();
  if(orientation == Qt::Vertical && role == Qt::DisplayRole)
  {
-  SegmentData sd = listOfSegments.at(section);
-  return sd.description();
+  SegmentData* sd = listOfSegments.at(section);
+  return sd->description();
  }
  if(orientation == Qt::Vertical && role == Qt::BackgroundRole)
  {
@@ -242,7 +243,7 @@ QVariant RouteViewTableModel::headerData(int section, Qt::Orientation orientatio
         case RSEQ:
             return tr("RSeq");
         case NE:
-         return tr(" from");
+         return tr(" From");
         case NL:
          return tr("Leave ");
         case RE:
@@ -273,7 +274,7 @@ bool RouteViewTableModel::insertRows(int position, int rows, const QModelIndex &
 
  for (int row=0; row < rows; row++) {
      //QPair<QString, QString> pair(" ", " ");
-     SegmentData sd;
+     SegmentData* sd = nullptr;
      listOfSegments.insert(position, sd);
  }
 
@@ -301,7 +302,7 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
  {
   int row = index.row();
 
-  SegmentData sd = listOfSegments.value(row);
+  SegmentData* sd = listOfSegments.value(row);
 
   QDate dt;
 //  int tracks;
@@ -311,10 +312,10 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
    {
     QString s = value.toString().toUpper();
     if(s == "N" || s== "Y" || s == " ")
-     sd.setOneWay(s);
+     sd->setOneWay(s);
     if(s == "N")
     {
-     sd.setTrackUsage(" ");
+     sd->setTrackUsage(" ");
     }
    }
    break;
@@ -322,64 +323,64 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
   {
    QString s = value.toString().toUpper();
    if(s == "B" || s=="L" || s == "R" || s == " ")
-    sd.setTrackUsage(s);
+    sd->setTrackUsage(s);
    break;
   }
   case TRACTIONTYPE:
-   sd.setTractionType(value.toInt());
+   sd->setTractionType(value.toInt());
    break;
   case TYPE:
-   sd.setRouteType((RouteType)value.toInt());
+   sd->setRouteType((RouteType)value.toInt());
    break;
   case NEXT:
-   sd.setNext(value.toInt());
+   sd->setNext(value.toInt());
    break;
   case PREV:
-   sd.setPrev(value.toInt());
+   sd->setPrev(value.toInt());
    break;
   case NEXTR:
-   sd.setNextR(value.toInt());
+   sd->setNextR(value.toInt());
    break;
   case PREVR:
-   sd.setPrevR(value.toInt());
+   sd->setPrevR(value.toInt());
    break;
   case SEQ:
-   sd.setSequence(value.toInt());
+   sd->setSequence(value.toInt());
    break;
   case RSEQ:
-   sd.setReturnSeq(value.toInt());
+   sd->setReturnSeq(value.toInt());
    break;
   case NE:
-   sd.setNormalEnter(value.toInt());
+   sd->setNormalEnter(value.toInt());
    break;
   case NL:
-   sd.setNormalLeave(value.toInt());
+   sd->setNormalLeave(value.toInt());
    break;
   case RE:
-   sd.setReverseEnter(value.toInt());
+   sd->setReverseEnter(value.toInt());
    break;
   case RL:
-   sd.setReverseLeave(value.toInt());
+   sd->setReverseLeave(value.toInt());
    break;
    case STARTDATE:
       dt = value.toDate();
       if(dt.isValid())
       {
 
-      sd.setStartDate(value.toDate());
+      sd->setStartDate(value.toDate());
       }
       break;
    case ENDDATE:
       dt = value.toDate();
       if(dt.isValid())
       {
-//       if(dt >= sd.startDate())
-//        sd.setEndDate(value.toDate());
-       sd.setEndDate(value.toDate());
+//       if(dt >= sd->startDate())
+//        sd->setEndDate(value.toDate());
+       sd->setEndDate(value.toDate());
       }
       break;
   }
-  sd.setNeedsUpdate(true);
+  sd->setNeedsUpdate(true);
   bChangesMade = true;
 
   listOfSegments.replace(row, sd);
@@ -420,7 +421,7 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
 //   changeEntry->index = index;
 //   changeEntry->bChanged=true;
 //   changeEntry->bDeleted = false;
-//   changeEntry->segmentId = sd.segmentId();
+//   changeEntry->segmentId = sd->segmentId();
 //   changedMap.values().append(changeEntry);
 //  }
 //  changeEntry->sd = sd;
@@ -480,15 +481,18 @@ Qt::ItemFlags RouteViewTableModel::flags(const QModelIndex &index) const
     return QAbstractTableModel::flags(index);
 }
 
-QList< SegmentData > RouteViewTableModel::getList()
+QList< SegmentData* > RouteViewTableModel::getList()
 {
     return listOfSegments;
 }
 
-void RouteViewTableModel::setList(QList< SegmentData > segmentDataList)
+void RouteViewTableModel::setList(QList< SegmentData* > segmentDataList)
 {
  beginResetModel();
- this->listOfSegments = saveSegmentDataList = segmentDataList;
+ this->listOfSegments = segmentDataList;
+ saveSegmentDataList = QList<SegmentData>();
+ for(SegmentData* sd : segmentDataList)
+  saveSegmentDataList.append(SegmentData(*sd));
  bChangesMade = false;
  reset();
  endResetModel();
@@ -510,7 +514,7 @@ bool RouteViewTableModel::commitChanges()
 
  // sort rows in descending sequence.
  //qSort(*changedMap.values().begin(),*changedMap.values().end(), sortbyrow );
-#if o
+#if 0
  for(int i=0; i < changedMap.values().count(); i++)
  {
   RowChanged* rc = changedMap.values().at(i);
@@ -518,9 +522,9 @@ bool RouteViewTableModel::commitChanges()
 
   SQL::instance()->beginTransaction("updateRoute");
 
-  if( SQL::instance()->doesRouteSegmentExist(rc->osd.route(), rc->osd.routeName(),
-                                             rc->osd.segmentId(), rc->osd.startDate(),
-                                             rc->osd.endDate()))
+  if( SQL::instance()->doesRouteSegmentExist(rc->osd->route(), rc->osd->routeName(),
+                                             rc->osd->segmentId(), rc->osd->startDate(),
+                                             rc->osd->endDate()))
   {
     if(rc->bChanged )
     {
@@ -538,9 +542,9 @@ bool RouteViewTableModel::commitChanges()
 
     if(rc->bDeleted)
     {
-     if(!SQL::instance()->deleteRouteSegment(rc->osd.route(), rc->osd.routeName(),
-                                            rc->osd.segmentId(), rc->osd.startDate().toString("yyyy/MM/dd"),
-                                            rc->osd.endDate().toString("yyyy/MM/dd")))
+     if(!SQL::instance()->deleteRouteSegment(rc->osd->route(), rc->osd->routeName(),
+                                            rc->osd->segmentId(), rc->osd->startDate().toString("yyyy/MM/dd"),
+                                            rc->osd->endDate().toString("yyyy/MM/dd")))
      {
       SQL::instance()->rollbackTransaction("updateRoute");
       return false;
@@ -554,20 +558,19 @@ bool RouteViewTableModel::commitChanges()
 #else
  for(int i= listOfSegments.count()-1; i >= 0; i--)
  {
-  SegmentData sd = listOfSegments.at(i);
-  if(sd.markedForDelete())
+  SegmentData* sd = (SegmentData*)listOfSegments.at(i);
+  if(sd->markedForDelete())
   {
-   SQL::instance()->deleteRoute(sd);
+   SQL::instance()->deleteRoute(*sd);
    listOfSegments.removeAt(i);
    continue;
   }
-  if(sd.needsUpdate())
+  if(sd->needsUpdate())
   {
-   if(SQL::instance()->updateRoute(saveSegmentDataList.at(i), sd))
-    sd.setNeedsUpdate(false);
+   if(SQL::instance()->updateRoute(saveSegmentDataList.at(i), *sd))
+    sd->setNeedsUpdate(false);
   }
  }
-
 #endif
  bChangesMade = false;
  MainWindow::instance()->refreshRoutes();
@@ -579,7 +582,10 @@ bool RouteViewTableModel::commitChanges()
 
 void RouteViewTableModel::discardChanges()
 {
- listOfSegments = saveSegmentDataList;
+ //listOfSegments = saveSegmentDataList;
+ listOfSegments.clear();
+ for(SegmentData sd : saveSegmentDataList)
+  listOfSegments.append(&sd);
  //changedMap.clear();
  bChangesMade = false;
  reset();
@@ -602,7 +608,7 @@ void RouteViewTableModel::deleteRow(qint32 segmentId, const QModelIndex &index)
 // for(int i = 0; i < listOfSegments.count(); i++)
 // {
 //  SegmentData osd = listOfSegments.at(i);
-//  if(osd.segmentId() == segmentId )
+//  if(osd->segmentId() == segmentId )
 //  {
 //   rc->row= i;
 //   rc->osd = SegmentData(osd);
@@ -617,11 +623,11 @@ void RouteViewTableModel::deleteRow(qint32 segmentId, const QModelIndex &index)
 // rc->segmentId = segmentId;
 // changedMap.insert(index.row(), rc);
 // emit rowChange(rc->row, segmentId,  true, false);
- if(segmentId == listOfSegments.at(index.row()).segmentId())
+ if(segmentId == listOfSegments.at(index.row())->segmentId())
  {
   //listOfSegments.at(index.row()).markForDelete(true);
-  SegmentData sd = listOfSegments.at(index.row());
-  sd.markForDelete(true);
+  SegmentData* sd = listOfSegments.at(index.row());
+  sd->markForDelete(true);
   listOfSegments.replace(index.row(), sd);
  }
 }
@@ -642,11 +648,11 @@ void RouteViewTableModel::unDeleteRow(qint32 segmentId, const QModelIndex &index
 //   return;
 //  }
 // }
- if(segmentId == listOfSegments.at(index.row()).segmentId())
+ if(segmentId == listOfSegments.at(index.row())->segmentId())
  {
   //listOfSegments.at(index.row()).markForDelete(true);
-  SegmentData sd = listOfSegments.at(index.row());
-  sd.markForDelete(false);
+  SegmentData* sd = listOfSegments.at(index.row());
+  sd->markForDelete(false);
   listOfSegments.replace(index.row(), sd);
  }
 }
@@ -668,7 +674,7 @@ int RouteViewTableModel::getRow(int segmentId)
   return row;
  for (row = 0; row < listOfSegments.count(); row++)
  {
-  if(listOfSegments.at(row).segmentId() == segmentId)
+  if(listOfSegments.at(row)->segmentId() == segmentId)
   {
    break;
   }
@@ -684,7 +690,7 @@ void RouteViewTableModel::getRows(qint32 start, qint32 end)
  endResetModel();
 }
 
-SegmentData RouteViewTableModel::segmentData(int row)
+SegmentData* RouteViewTableModel::segmentData(int row)
 {
  return listOfSegments.at(row);
 }

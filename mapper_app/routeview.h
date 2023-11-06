@@ -33,7 +33,7 @@ public:
     bool bUncomittedChanges();
     void checkChanges();
     RouteViewTableModel* model();
-    void setList(QList<SegmentData> segmentDataList);
+    void setList(QList<SegmentData *> segmentDataList);
 
 signals:
     void sendRows(int, int);

@@ -24,7 +24,7 @@ public:
     void reset();
     enum COLUMNS {SEGMENTID, DESCRIPTION, TRACKS, STREETNAME, DIRECTION, LAT, LON};
     int getRow(int segmentId);
-    SegmentData selectedSegment(int row);
+    SegmentInfo selectedSegment(int row);
 
 signals:
 

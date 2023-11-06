@@ -27,7 +27,7 @@ public:
     qint32 SegmentId();
     //enum TypeOfChange{Add,Delete,Update};
     void setSegmentData(RouteData value);
-    void setSegmentData(SegmentData sd);
+    void setSegmentData(SegmentData *sd);
     void fillCompanies();
 
 
@@ -50,7 +50,7 @@ private:
     Configuration* config;
     qint32 _routeNbr;
     QString _alphaRoute;
-    QList<SegmentData> _segmentDataList;
+    QList<SegmentData*> _segmentDataList;
     QList<CompanyData*> _companyList;
     QMap<int,TractionTypeInfo> _tractionList;
     QList<QString> _routeNamesList;
@@ -61,8 +61,8 @@ private:
     bool bRouteChanged;
     //public event routeChangedEventHandler routeChanged;
     //public EventHandler segmentChanged;
-    SegmentData sd;
-    SegmentData oldSd;
+    SegmentData* sd = nullptr;
+    SegmentData* oldSd = nullptr;
     SegmentInfo si;
     RouteData _rd;
     //bool bIgnoreDirection = false;

@@ -98,20 +98,20 @@ void RouteDlg::setSegmentId(qint32 segmentid)
  }
  bSegmentChanging = false;
 
- if (sd.segmentId() < 1)
+ if (sd->segmentId() < 1)
      return;
  //lblSegment.Text = sql->getSegmentDescription(_SegmentId);
- ui->lblSegmentText->setText(sd.toString());
+ ui->lblSegmentText->setText(sd->toString());
  //fillCompanies();
  fillSegmentsComboBox(); // list of routes using this segment
  //fillTractionTypes();
- if (sd.route() >0)
+ if (sd->route() >0)
  {
   //foreach (tractionTypeInfo tti in cbTractionType.Items)
   for(int i = 0; i < _tractionList.count(); i++ )
   {
    TractionTypeInfo tti = (TractionTypeInfo)_tractionList.values().at(i);
-   if (tti.tractionType == sd.tractionType())
+   if (tti.tractionType == sd->tractionType())
    {
        ui->cbTractionType->setCurrentIndex(i);
        break;
@@ -119,44 +119,44 @@ void RouteDlg::setSegmentId(qint32 segmentid)
   }
  }
  //ui->cbSegments->setFocus();
- ui->cbOneWay->setChecked(sd.oneWay() == "Y");
- ui->gbUsage->setVisible(si.tracks()==2 && sd.oneWay() == "Y");
- if (sd.oneWay() == "Y" && sd.tracks() == 1)
+ ui->cbOneWay->setChecked(sd->oneWay() == "Y");
+ ui->gbUsage->setVisible(si.tracks()==2 && sd->oneWay() == "Y");
+ if (sd->oneWay() == "Y" && sd->tracks() == 1)
  {
      ui->gbDirection->setVisible(true);
      ui->gbReverseEnter->setVisible(false);
      ui->gbReverseLeave->setVisible(false);
-     ui->rbNormal->setText(sd.bearing().strDirection());
-     ui->rbReverse->setText( sd.bearing().strReverseDirection());
+     ui->rbNormal->setText(sd->bearing().strDirection());
+     ui->rbReverse->setText( sd->bearing().strReverseDirection());
      ui->rbNormal->setChecked(true);
  }
- if(sd.oneWay() != "Y" && sd.tracks() == 1)
+ if(sd->oneWay() != "Y" && sd->tracks() == 1)
  {
   ui->gbDirection->setVisible(false);
   ui->gbReverseEnter->setVisible(true);
   ui->gbReverseLeave->setVisible(true);
  }
- if(sd.oneWay() == "Y" && sd.tracks() == 2)
+ if(sd->oneWay() == "Y" && sd->tracks() == 2)
  {
   ui->gbUsage->setVisible(true);
-  ui->rbLeft->setChecked(sd.trackUsage() == "L");
-  ui->rbRight->setChecked(sd.trackUsage() == "R");
+  ui->rbLeft->setChecked(sd->trackUsage() == "L");
+  ui->rbRight->setChecked(sd->trackUsage() == "R");
  }
  else
  {
   ui->gbUsage->setVisible(false);
  }
 
- SegmentData sd = sql->getSegmentData(_routeNbr, segmentid, ui->dateStart->date().toString("yyyy/MM/dd"), ui->dateEnd->date().toString("yyyy/MM/dd"));
- if(sd.segmentId() < 0)
+ SegmentData* sd = sql->getSegmentData(_routeNbr, segmentid, ui->dateStart->date().toString("yyyy/MM/dd"), ui->dateEnd->date().toString("yyyy/MM/dd"));
+ if(! sd || sd->segmentId() < 0)
  {
   ui->btnAdd->setText(tr("Add"));
   ui->btnAdd->setEnabled(true);
  }
  else
  {
-  ui->dateStart->setDate(sd.startDate());
-  ui->dateEnd->setDate(sd.endDate());
+  ui->dateStart->setDate(sd->startDate());
+  ui->dateEnd->setDate(sd->endDate());
   bSegmentChanging = false;
   //ui->txtRouteNbr->setFocus();
  }
@@ -181,12 +181,12 @@ void RouteDlg::setRouteNbr(qint32 rt)
         QString str = (QString)_routeNamesList.at(i);
         ui->cbRouteName->addItem(str);
     }
-    if (sd.route() >0  && sd.route() == _routeNbr)
+    if (sd->route() >0  && sd->route() == _routeNbr)
     {
-        companyKey = sd.companyKey();
+        companyKey = sd->companyKey();
         for(int j=0; j < _routeNamesList.count(); j++)
         {
-            if(_routeNamesList.at(j)== sd.routeName())
+            if(_routeNamesList.at(j)== sd->routeName())
             {
                 ui->cbRouteName->setCurrentIndex(j+1);
                 break;
@@ -209,39 +209,39 @@ void RouteDlg::setRouteNbr(qint32 rt)
     bRouteChanging = false;
 }
 
-void RouteDlg::setSegmentData(SegmentData sd)
+void RouteDlg::setSegmentData(SegmentData* sd)
 {
  bRouteChanging = true;
  this->sd = sd;
- this->oldSd = SegmentData(sd);
- _routeNbr = sd.route();
- _alphaRoute = sd.alphaRoute();
- _segmentId = sd.segmentId();
+ this->oldSd = new SegmentData(*sd);
+ _routeNbr = sd->route();
+ _alphaRoute = sd->alphaRoute();
+ _segmentId = sd->segmentId();
  //int count = 0;
  //bool bFound = false;
  ui->btnAdd->setEnabled(false);
- ui->txtRouteNbr->setText(sd.alphaRoute());
+ ui->txtRouteNbr->setText(sd->alphaRoute());
  ui->cbRouteName->clear();
  ui->cbRouteName->addItem(strNoRoute);
- ui->cbRouteName->setCurrentText(sd.routeName());
- cbOneWay_checkedChanged(sd.oneWay()=="Y");
- ui->cbOneWay->setChecked(sd.oneWay()=="Y");
- ui->gbUsage->setVisible(sd.tracks()==2 && sd.oneWay() == "Y");
- //_segmentDataList = sql->getRouteSegmentsBySegment(sd.route(), sd.segmentId());
+ ui->cbRouteName->setCurrentText(sd->routeName());
+ cbOneWay_checkedChanged(sd->oneWay()=="Y");
+ ui->cbOneWay->setChecked(sd->oneWay()=="Y");
+ ui->gbUsage->setVisible(sd->tracks()==2 && sd->oneWay() == "Y");
+ //_segmentDataList = sql->getRouteSegmentsBySegment(sd->route(), sd->segmentId());
  //_segmentDataList = ((MainWindow*)parent())->segmentDataList;
  fillSegmentsComboBox();
  if(!_segmentDataList.contains(sd))
  {
   _segmentDataList.append(sd);
-  ui->cbSegments->addItem(sd.toString(), QVariant::fromValue(sd));
+  ui->cbSegments->addItem(sd->toString(), QVariant::fromValue(*sd));
  }
- ui->cbSegments->setCurrentIndex(ui->cbSegments->findText(sd.toString()));
- ui->lblSegmentText->setText(sd.toString2());
+ ui->cbSegments->setCurrentIndex(ui->cbSegments->findText(sd->toString()));
+ ui->lblSegmentText->setText(sd->toString2());
 
 // for(int i=0; i < _segmentDataList.count(); i++)
 // {
 //  SegmentData sd1 = _segmentDataList.at(i);
-//  if(sd1->startDate()== sd.startDate() && sd1->endDate() == sd.endDate())
+//  if(sd1->startDate()== sd->startDate() && sd1->endDate() == sd->endDate())
 //  {
 //   cbSegments_SelectedIndexChanged(i);
 //   checkUpdate(__FUNCTION__);
@@ -253,29 +253,29 @@ void RouteDlg::setSegmentData(SegmentData sd)
  {
   QString name = (QString)_routeNamesList.at(i);
   ui->cbRouteName->addItem(name);
-  if(name == sd.routeName())
+  if(name == sd->routeName())
   {
    ui->cbRouteName->setCurrentIndex(i+1);
   }
  }
- if(sd.companyKey()>0)
-  ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(sd.companyKey()));
+ if(sd->companyKey()>0)
+  ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(sd->companyKey()));
 
  ui->dateStart->clearMaximumDateTime();
  ui->dateStart->clearMinimumDateTime();
  ui->dateEnd->clearMaximumDateTime();
  ui->dateEnd->clearMinimumDateTime();
- ui->dateStart->setDate(sd.startDate());
- ui->dateEnd->setDate(sd.endDate());
+ ui->dateStart->setDate(sd->startDate());
+ ui->dateEnd->setDate(sd->endDate());
  displayDates(__FUNCTION__);
 
- ui->gbUsage->setVisible(sd.oneWay() == "Y" && sd.tracks() == 2);
+ ui->gbUsage->setVisible(sd->oneWay() == "Y" && sd->tracks() == 2);
 
  //foreach (tractionTypeInfo tti in cbTractionType.Items)
  for(int i=0; i < _tractionList.count(); i++)
  {
   TractionTypeInfo tti = (TractionTypeInfo)_tractionList.values().at(i);
-  if (tti.tractionType == sd.tractionType())
+  if (tti.tractionType == sd->tractionType())
   {
    ui->cbTractionType->setCurrentIndex(i);
    break;
@@ -299,7 +299,7 @@ void RouteDlg::setSegmentData(RouteData rd)
  //_segmentId = _rd.lineKey;;
  //int count = 0;
  //bool bFound = false;
- ui->txtRouteNbr->setText(sd.alphaRoute());
+ ui->txtRouteNbr->setText(rd.alphaRoute());
  ui->cbRouteName->clear();
  ui->cbRouteName->addItem(strNoRoute);
  _routeNamesList = sql->getRouteNames(_routeNbr);
@@ -441,8 +441,8 @@ void RouteDlg::txtRouteNbr_Leave()
      bAddMode = false;
 
     _routeNbr = newRoute;
-    sd.setRoute(newRoute);
-    sd.setAlphaRoute(ui->txtRouteNbr->text());
+    sd->setRoute(newRoute);
+    sd->setAlphaRoute(ui->txtRouteNbr->text());
     if (!config->currCity->bAlphaRoutes && bAlphaRoute)
     {
         ui->lblHelpText->setText(tr( "Must be a number!"));
@@ -508,9 +508,9 @@ void RouteDlg::txtRouteName_Leave()
         //System.Media.SystemSounds.Beep.Play();
         return;
     }
-    sd.setRouteName(ui->cbRouteName->currentText());
+    sd->setRouteName(ui->cbRouteName->currentText());
 
-    QList<RouteData> rdList = sql->getRouteDataForRouteName(sd.route(), ui->cbRouteName->currentText());
+    QList<RouteData> rdList = sql->getRouteDataForRouteName(sd->route(), ui->cbRouteName->currentText());
     if (rdList.count()>0)
     {
         //foreach (routeData rd in rdList)
@@ -530,7 +530,7 @@ void RouteDlg::txtRouteName_Leave()
                 for( int j=0; j < _tractionList.count(); j++)
                 {
                     TractionTypeInfo tt = (TractionTypeInfo)_tractionList.values().at(j);
-                    if(tt.tractionType == sd.tractionType())
+                    if(tt.tractionType == sd->tractionType())
                     {
                         ui->cbTractionType->setCurrentIndex(j);
                         break;
@@ -540,7 +540,7 @@ void RouteDlg::txtRouteName_Leave()
                 for( int j=0; j < _companyList.count(); j++)
                 {
                     CompanyData* cd = (CompanyData*)_companyList.at(j);
-                    if(cd->companyKey == sd.companyKey())
+                    if(cd->companyKey == sd->companyKey())
                     {
                         ui->cbCompany->setCurrentIndex(j);
                         break;
@@ -582,18 +582,18 @@ void RouteDlg::fillSegmentsComboBox()
     int selection = -1;
     for(int i=0; i < _segmentDataList.count(); i++)
     {
-        SegmentData sd = _segmentDataList.at(i);
-        if(_routeNbr == sd.route())
+        SegmentData* sd = _segmentDataList.at(i);
+        if(_routeNbr == sd->route())
         {
-         if(_rd.route() == sd.route() && _rd.routeName() == sd.routeName() && _rd.endDate() == sd.endDate())
+         if(_rd.route() == sd->route() && _rd.routeName() == sd->routeName() && _rd.endDate() == sd->endDate())
              selection = i;
-         ui->cbSegments->addItem(sd.toString(), QVariant::fromValue(sd));
+         ui->cbSegments->addItem(sd->toString(), QVariant::fromValue(*sd));
          if (i == 0)
          {
              for(int j=0; j < _tractionList.count(); j++)
              {
                  TractionTypeInfo tti = _tractionList.values().at(j);
-                 if(tti.tractionType == sd.tractionType())
+                 if(tti.tractionType == sd->tractionType())
                  {
                      ui->cbTractionType->setCurrentIndex(j);
                      break;
@@ -656,50 +656,50 @@ void RouteDlg::cbSegments_SelectedIndexChanged(int row)
     if (ix < 0)
         return;
     sd = _segmentDataList.at(ix);
-    ui->lblSegmentText->setText(sd.toString2());
-    ui->cbRouteName->setCurrentIndex(ui->cbRouteName->findText(sd.routeName()));
-    _routeNbr = sd.route();
+    ui->lblSegmentText->setText(sd->toString2());
+    ui->cbRouteName->setCurrentIndex(ui->cbRouteName->findText(sd->routeName()));
+    _routeNbr = sd->route();
     //txtRouteNbr.Text = rd.route.ToString();
-    ui->txtRouteNbr->setText( sd.alphaRoute());
-    ui->cbOneWay->setChecked(sd.oneWay() == "Y");
-    ui->gbUsage->setVisible(sd.tracks()==2 && sd.oneWay() == "Y");
-    ui->dateStart->setDate(sd.startDate());
-    ui->dateEnd->setDate(sd.endDate());
+    ui->txtRouteNbr->setText( sd->alphaRoute());
+    ui->cbOneWay->setChecked(sd->oneWay() == "Y");
+    ui->gbUsage->setVisible(sd->tracks()==2 && sd->oneWay() == "Y");
+    ui->dateStart->setDate(sd->startDate());
+    ui->dateEnd->setDate(sd->endDate());
     //cbTractionType.SelectedIndex = rd.tractionType-1;
 //    int i = cbTractionType.FindString(rd.tractionType.ToString(), -1);
 //    cbTractionType.SelectedIndex = i;
     for(int i = 0; i < _tractionList.count(); i++)
     {
      TractionTypeInfo tti = _tractionList.values().at(i);
-     if(tti.tractionType == sd.tractionType())
+     if(tti.tractionType == sd->tractionType())
      {
       ui->cbTractionType->setCurrentIndex(i);
       break;
      }
     }
-    if (sd.companyKey() == -1)
+    if (sd->companyKey() == -1)
     {
      //cbCompany.Text = "";
      ui->cbCompany->setCurrentIndex(-1);
     }
     else
     {
-     setCompany(sd.companyKey());
+     setCompany(sd->companyKey());
     }
 
     checkUpdate(__FUNCTION__);
     ui->dateStart->setFocus();
   #if 1
-    if(sd.oneWay() == "Y")
+    if(sd->oneWay() == "Y")
     {
-        if (sd.direction() != "" && sd.direction() != "  ")
+        if (sd->direction() != "" && sd->direction() != "  ")
         {
             Bearing b = Bearing();
-            b.DirectionString( sd.direction());
+            b.DirectionString( sd->direction());
             QString str = b.ReverseDirectionString();
             if (str != "")
             {
-                ui->rbNormal->setText( sd.direction());
+                ui->rbNormal->setText( sd->direction());
                 ui->rbNormal->setChecked(true);
                 ui->rbReverse->setText(str);
                 ui->gbDirection->setVisible(true);
@@ -709,8 +709,8 @@ void RouteDlg::cbSegments_SelectedIndexChanged(int row)
         }
         else
         {
-            ui->rbNormal->setText( sd.bearing().strDirection());
-            ui->rbReverse->setText( sd.bearing().strReverseDirection());
+            ui->rbNormal->setText( sd->bearing().strDirection());
+            ui->rbReverse->setText( sd->bearing().strReverseDirection());
             ui->gbDirection->setVisible(true);
         }
         ui->rbNormal->setChecked(true);
@@ -743,7 +743,7 @@ void RouteDlg::dateStart_Leave()
     ui->lblHelpText->setText("");
     if(_rd.route() < 0)
         return;
-    if(ui->dateStart->date() < sd.startDate())
+    if(ui->dateStart->date() < sd->startDate())
     {
         ui->lblHelpText->setText((tr("Warning: date is prior to previous date for this segment.")));
     }
@@ -780,7 +780,7 @@ void RouteDlg::dateEnd_Leave()
      checkUpdate(__FUNCTION__);
      return;
     }
-    if(ui->dateEnd->date() > sd.endDate())
+    if(ui->dateEnd->date() > sd->endDate())
     {
         ui->lblHelpText->setText((tr("Warning: date is after previous date for this segment.")));
     }
@@ -995,7 +995,7 @@ void RouteDlg::checkUpdate(QString func)
 //            ui->btnDelete->setEnabled(true);
 //        }
 //    }
-    if (sql->doesRouteSegmentExist(sd.route(), ui->cbRouteName->currentText(), sd.segmentId(), ui->dateStart->date(),
+    if (sql->doesRouteSegmentExist(sd->route(), ui->cbRouteName->currentText(), sd->segmentId(), ui->dateStart->date(),
                                    ui->dateEnd->date()))
     {
         ui->btnAdd->setText(tr("Update"));
@@ -1060,7 +1060,7 @@ void RouteDlg::checkUpdate(QString func)
         ui->lblHelpText->setText(tr("check radio button settings"));
         return;
     }
-    if(sd.oneWay() == "N")
+    if(sd->oneWay() == "N")
     {
         if(!(ui->rbRFromBack->isChecked() || ui->rbRFromLeft->isChecked() || ui->rbRFromRight->isChecked()))
         {
@@ -1100,12 +1100,12 @@ void RouteDlg::setDefaultTurnInfo()
  ui->rbRAhead->setEnabled(true);
 
  double dToBegin = 0, dToEnd =0, a1=0,a2=0,diff=0;
- if (sd.segmentId() < 1)
+ if (sd->segmentId() < 1)
   return;
  // get the segments that intersect with the start of this segment (Normal Enter and Reverse Leave)
  //sql->OpenConnection();
- QList<SegmentData*> intersects = sql->getIntersectingRouteSegmentsAtPoint(sd.segmentId(), sd.startLat(),
-                                                                           sd.startLon(), .020, _routeNbr,
+ QList<SegmentData*> intersects = sql->getIntersectingRouteSegmentsAtPoint(sd->segmentId(), sd->startLat(),
+                                                                           sd->startLon(), .020, _routeNbr,
                                                                            ui->cbRouteName->currentText(),
                                                                            ui->dateEnd->text());
  //foreach (segmentInfo si1 in intersects)
@@ -1118,7 +1118,7 @@ void RouteDlg::setDefaultTurnInfo()
  for(int i = 0; i < intersects.count(); i++)
  {
   SegmentData* sd1 = intersects.at(i);
-  if (sd.segmentId() == sd1->segmentId())
+  if (sd->segmentId() == sd1->segmentId())
    continue;
 //  if (si.oneWay == "Y")
 //  {
@@ -1127,12 +1127,12 @@ void RouteDlg::setDefaultTurnInfo()
 //  }
 //  if (si1.oneWay == "Y" && si1.whichEnd == "S")
 //      continue;
-  dToBegin = sql->Distance(sd.startLat(), sd.startLon(), sd1->startLat(), sd1->startLon());
-  dToEnd = sql->Distance(sd.startLat(), sd.startLon(), sd1->endLat(), sd1->endLon());
+  dToBegin = sql->Distance(sd->startLat(), sd->startLon(), sd1->startLat(), sd1->startLon());
+  dToEnd = sql->Distance(sd->startLat(), sd->startLon(), sd1->endLat(), sd1->endLon());
   if (dToBegin > .020 && dToEnd > .020)
       continue;   // only match to a begin points
 
-  a1 = sd.bearingStart().angle();
+  a1 = sd->bearingStart().angle();
   // meeting start to end
   if (sd1->whichEnd() == "S")
       a2 = sd1->bearingStart().angle()+180;
@@ -1146,22 +1146,22 @@ void RouteDlg::setDefaultTurnInfo()
    {
        //rbNFromLeft.Checked = true;
 //    ui->rbNFromLeft->setEnabled(true);
-    sd.setNormalEnter(1);
+    sd->setNormalEnter(1);
    }
    if (diff < -45)
    {
        //rbNFromRight.Checked = true;
 //    ui->rbNFromRight->setEnabled(true);
-    sd.setNormalEnter(2);
+    sd->setNormalEnter(2);
    }
    if(qAbs(diff) <= 45)
    {
        //rbNFromBack.Checked = true;
 //    ui->rbNFromBack->setEnabled(true);
-    sd.setNormalEnter(0);
+    sd->setNormalEnter(0);
    }
   }
-  if (sd.oneWay() == "N")
+  if (sd->oneWay() == "N")
   {
    if (sd1->oneWay() == "Y" && sd1->whichEnd() == "E")
     continue;
@@ -1169,25 +1169,25 @@ void RouteDlg::setDefaultTurnInfo()
    {
     //rbRToLeft.Checked = true;
 //    ui->rbRToLeft->setEnabled(true);
-    sd.setReverseLeave(1);
+    sd->setReverseLeave(1);
    }
    if (diff > 45)
    {
        //rbRToRight.Checked = true;
 //    ui->rbRToRight->setEnabled(true);
-     sd.setReverseLeave(2);
+     sd->setReverseLeave(2);
    }
    if(qAbs(diff) <= 45)
    {
        //rbRAhead.Checked = true;
     ui->rbRAhead->setEnabled(true);
-    sd.setReverseLeave(0);
+    sd->setReverseLeave(0);
    }
   }
  }
 
  // get the segments that intersect with the end of this segment (Normal Leave and Reverse enter)
- intersects = sql->getIntersectingRouteSegmentsAtPoint(sd.segmentId(), sd.endLat(), sd.endLon(),
+ intersects = sql->getIntersectingRouteSegmentsAtPoint(sd->segmentId(), sd->endLat(), sd->endLon(),
                                                        .020, _routeNbr, ui->cbRouteName->currentText(),
                                                        ui->dateEnd->text());
 // ui->rbNToLeft->setEnabled(false);
@@ -1200,7 +1200,7 @@ void RouteDlg::setDefaultTurnInfo()
  for(int i = 0; i < intersects.count(); i++)
  {
   SegmentData* sd1 = intersects.at(i);
-  if (sd.segmentId() == sd1->segmentId())
+  if (sd->segmentId() == sd1->segmentId())
       continue;
 //  if (si.oneWay == "Y")
 //  {
@@ -1209,11 +1209,11 @@ void RouteDlg::setDefaultTurnInfo()
 //  }
 //  if(si1.oneWay == "Y" && si1.whichEnd == "S")
 //      continue;
-  dToBegin = sql->Distance(sd.endLat(), sd.endLon(), sd1->startLat(), sd1->startLon());
-  dToEnd = sql->Distance(sd.endLat(), sd.endLon(), sd1->endLat(), sd1->endLon());
+  dToBegin = sql->Distance(sd->endLat(), sd->endLon(), sd1->startLat(), sd1->startLon());
+  dToEnd = sql->Distance(sd->endLat(), sd->endLon(), sd1->endLat(), sd1->endLon());
   if (dToBegin > .020 && dToEnd > .020)
       continue;   // only match to a begin points
-  a1 = sd.bearingEnd().angle();
+  a1 = sd->bearingEnd().angle();
 
   // meeting end to start
   if (sd1->whichEnd() == "S")
@@ -1228,22 +1228,22 @@ void RouteDlg::setDefaultTurnInfo()
    {
        //rbNToLeft.Checked = true;
     ui->rbNToLeft->setEnabled(true);
-    sd.setNormalLeave(1);
+    sd->setNormalLeave(1);
    }
    if (diff > 45)
    {
        //rbNToRight.Checked = true;
     ui->rbNToRight->setEnabled(true);
-    sd.setNormalLeave(2);
+    sd->setNormalLeave(2);
    }
    if(qAbs(diff < 45))
    {
        //rbNAhead.Checked = true;
     ui->rbNAhead->setEnabled(true);
-    sd.setNormalLeave(0);
+    sd->setNormalLeave(0);
    }
   }
-  if (sd.oneWay() == "N")
+  if (sd->oneWay() == "N")
   {
    if (sd1->oneWay() == "Y" && sd1->whichEnd() == "S")
            continue;
@@ -1251,19 +1251,19 @@ void RouteDlg::setDefaultTurnInfo()
    {
     //rbRFromLeft.Checked = true;
     ui->rbRFromLeft->setEnabled(true);
-    sd.setReverseEnter(1);
+    sd->setReverseEnter(1);
    }
    if (diff < -45)
    {
        //rbRFromRight.Checked = true;
     ui->rbRFromRight->setEnabled(true);
-    sd.setReverseEnter(2);
+    sd->setReverseEnter(2);
    }
    if(qAbs(diff) < 45)
    {
        //rbRFromBack.Checked = true;
     ui->rbRFromBack->setEnabled(true);
-    sd.setReverseEnter(0);
+    sd->setReverseEnter(0);
    }
   }
  }
@@ -1278,12 +1278,12 @@ void RouteDlg::checkTurnInfo()
  QString redSS = "color: red";
  QString blackSS = "color: black";
 
- if(sd.segmentId()<1)
+ if(sd->segmentId()<1)
      return;
  ui->rbNFromBack->setStyleSheet(blackSS);
  ui->rbNFromLeft->setStyleSheet(blackSS);
  ui->rbNFromRight->setStyleSheet(blackSS);
-// switch (sd.normalEnter())
+// switch (sd->normalEnter())
 // {
 //  case 0:
 //   if (!ui->rbNFromBack->isChecked())
@@ -1301,7 +1301,7 @@ void RouteDlg::checkTurnInfo()
  ui->rbNAhead->setStyleSheet(blackSS);
  ui->rbNToLeft->setStyleSheet(blackSS);
  ui->rbNToRight->setStyleSheet(blackSS);
-// switch (sd.normalLeave())
+// switch (sd->normalLeave())
 // {
 //  case 0:
 //   if (!ui->rbNAhead->isChecked())
@@ -1316,12 +1316,12 @@ void RouteDlg::checkTurnInfo()
 //    ui->rbNToRight->setStyleSheet(redSS);
 //   break;
 // }
- if (sd.oneWay() != "Y")
+ if (sd->oneWay() != "Y")
  {
   ui-> rbRFromBack->setStyleSheet(blackSS);
   ui-> rbRFromLeft->setStyleSheet(blackSS);
   ui->rbRFromRight->setStyleSheet(blackSS);
-//  switch (sd.reverseEnter())
+//  switch (sd->reverseEnter())
 //  {
 //   case 0:
 //    if (!ui->rbRFromBack->isChecked())
@@ -1339,7 +1339,7 @@ void RouteDlg::checkTurnInfo()
   ui->rbRAhead->setStyleSheet(blackSS);
   ui->rbRToLeft->setStyleSheet(blackSS);
   ui->rbRToRight->setStyleSheet(blackSS);
-//  switch (sd.reverseLeave())
+//  switch (sd->reverseLeave())
 //  {
 //   case 0:
 //       if (!ui->rbRAhead->isChecked())
@@ -1438,9 +1438,9 @@ void RouteDlg::btnDelete_Click()              // SLOT
  {
   int tractionType = _tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType;
   if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->date(),
-                              sd.startDate().addDays(-1), sd.segmentId(), sd.companyKey(), sd.tractionType(),
-                              sd.direction(), sd.next(), sd.prev(), sd.normalEnter(), sd.normalLeave(),
-                              sd.reverseEnter(), sd.reverseLeave(), ui->cbOneWay->isChecked()?"Y":"N", sd.trackUsage()))
+                              sd->startDate().addDays(-1), sd->segmentId(), sd->companyKey(), sd->tractionType(),
+                              sd->direction(), sd->next(), sd->prev(), sd->normalEnter(), sd->normalLeave(),
+                              sd->reverseEnter(), sd->reverseLeave(), ui->cbOneWay->isChecked()?"Y":"N", sd->trackUsage()))
   {
       ui->lblHelpText->setText(tr("deleteRoute failed!"));
       //System.Media.SystemSounds.Beep.Play();
@@ -1455,12 +1455,12 @@ void RouteDlg::btnDelete_Click()              // SLOT
 //     if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), _rd.endDate.addDays(1),
 //                                 ui->dateEnd->date(), _segmentId, companyKey, /*cbTractionType.SelectedIndex + 1*/tractionType,
 //                                 direction, _rd.next, _rd.prev, _normalEnter, _normalLeave, _reverseEnter, _reverseLeave, ui->cbOneWay->isChecked()?"Y":"N", trackUsage))
-     sd.setRouteName(ui->cbRouteName->currentText());
-     sd.setStartDate(_rd.endDate().addDays(1));
-     sd.setEndDate(ui->dateEnd->date());
-     sd.setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
-     sd.setTrackUsage(trackUsage);
-     if (!sql->addSegmentToRoute(sd))
+     sd->setRouteName(ui->cbRouteName->currentText());
+     sd->setStartDate(_rd.endDate().addDays(1));
+     sd->setEndDate(ui->dateEnd->date());
+     sd->setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
+     sd->setTrackUsage(trackUsage);
+     if (!sql->addSegmentToRoute(*sd))
      {
          ui->lblHelpText->setText(tr("deleteRoute failed!"));
          //System.Media.SystemSounds.Beep.Play();
@@ -1490,7 +1490,7 @@ void RouteDlg::btnUpdateTurn_Click()      // SLOT
     QString redSS = "color: red";
     QString blackSS = "color: black";
 
-    switch (sd.normalEnter())
+    switch (sd->normalEnter())
     {
         case 0:
             ui->rbNFromBack->setChecked(true);
@@ -1506,7 +1506,7 @@ void RouteDlg::btnUpdateTurn_Click()      // SLOT
             break;
     }
 
-    switch (sd.normalLeave())
+    switch (sd->normalLeave())
     {
         case 0:
             ui->rbNAhead->setChecked(true);
@@ -1521,10 +1521,10 @@ void RouteDlg::btnUpdateTurn_Click()      // SLOT
             ui->rbNToRight->setStyleSheet(blackSS);
             break;
     }
-    if (sd.oneWay() != "Y")
+    if (sd->oneWay() != "Y")
     {
         ui->rbRFromBack->setStyleSheet(blackSS);
-        switch (sd.reverseEnter())
+        switch (sd->reverseEnter())
         {
             case 0:
                 ui->rbRFromBack->setChecked(true);
@@ -1540,7 +1540,7 @@ void RouteDlg::btnUpdateTurn_Click()      // SLOT
                 break;
         }
         ui->rbRAhead->setStyleSheet(blackSS);
-        switch (sd.reverseLeave())
+        switch (sd->reverseLeave())
         {
             case 0:
                 ui->rbRAhead->setChecked(true);
@@ -1613,16 +1613,16 @@ void RouteDlg::btnAdd_Click()         // SLOT
   checkDirection(ui->rbNormal->isChecked() ? ui->rbNormal->text() : ui->rbReverse->text());
 
   // Check for conflicting segments
-  QList<SegmentData> myArray = sql->getConflictingRouteSegments(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(), ui->dateEnd->text(), _segmentId);
+  QList<SegmentData*> myArray = sql->getConflictingRouteSegments(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(), ui->dateEnd->text(), _segmentId);
   if (myArray.count() > 0)
   {
    //foreach (routeData rd in myArray)
    for(int i = 0; i > myArray.count(); i++)
    {
-    SegmentData csd = myArray.at(i);
-    if (csd.startDate() == oldSd.startDate() && csd.endDate() == oldSd.endDate())
+    SegmentData* csd = myArray.at(i);
+    if (csd->startDate() == oldSd->startDate() && csd->endDate() == oldSd->endDate())
         continue;
-    if (csd.endDate() >= ui->dateStart->date() && csd.endDate() < ui->dateEnd->date())
+    if (csd->endDate() >= ui->dateStart->date() && csd->endDate() < ui->dateEnd->date())
     {
  //                DialogResult rslt = MessageBox.Show("This item conflicts with:\n" +
  //                    rd.name + " " + sql->formatDate(rd.startDate) + " to " + sql->formatDate(rd.endDate) +
@@ -1631,14 +1631,14 @@ void RouteDlg::btnAdd_Click()         // SLOT
  //                    "Date conflict", MessageBoxButtons.YesNoCancel);
         QMessageBox::StandardButtons rslt;
         rslt = QMessageBox::warning(this,tr("Date conflict"), tr("This item conflicts with:\n")
-                                    + csd.routeName() + " " + csd.startDate().toString("yyyy/MM/dd")
-                                    + " to " + csd.endDate().toString("yyyy/MM/dd") +                                                                                 " Enter Yes to change it's end date to " + ui->dateStart->date().addDays(1).toString("yyyy/MM/dd"), QMessageBox::Yes | QMessageBox::No|QMessageBox::Cancel);
+                                    + csd->routeName() + " " + csd->startDate().toString("yyyy/MM/dd")
+                                    + " to " + csd->endDate().toString("yyyy/MM/dd") +                                                                                 " Enter Yes to change it's end date to " + ui->dateStart->date().addDays(1).toString("yyyy/MM/dd"), QMessageBox::Yes | QMessageBox::No|QMessageBox::Cancel);
         switch (rslt)
         {
             case QMessageBox::Yes:
-                if(!sql->deleteRouteSegment(csd.route(), csd.routeName(), csd.segmentId()
-                                            ,oldSd.startDate().toString("yyyy/MM/dd"),
-                                            oldSd.endDate().toString("yyyy/MM/dd")))
+                if(!sql->deleteRouteSegment(csd->route(), csd->routeName(), csd->segmentId()
+                                            ,oldSd->startDate().toString("yyyy/MM/dd"),
+                                            oldSd->endDate().toString("yyyy/MM/dd")))
                 {
                  ui->lblHelpText->setText(tr("delete failed"));
                  throw  Exception("add/update failed");
@@ -1647,7 +1647,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
  //                                       ui->dateStart->date().addDays(-1), rd.lineKey,
  //                                       rd.companyKey, rd.tractionType, rd.direction, 0,0,
  //                                       rd.normalEnter, rd.normalLeave, rd.reverseEnter, rd.reverseLeave, ui->cbOneWay->isChecked()?"Y":"N", rd.trackUsage);
-                if(!sql->addSegmentToRoute(csd))
+                if(!sql->addSegmentToRoute(*csd))
                 {
                  ui->lblHelpText->setText(tr("add failed"));
                  throw  Exception("add/update failed");
@@ -1660,7 +1660,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
 
         }
     }
-    if (csd.startDate() <= ui->dateEnd->date())
+    if (csd->startDate() <= ui->dateEnd->date())
     {
  //                DialogResult rslt = MessageBox.Show("This item conflicts with:\n" +
  //                    rd.name + " " + sql->formatDate(rd.startDate) + " to " + sql->formatDate(rd.endDate) +
@@ -1669,11 +1669,11 @@ void RouteDlg::btnAdd_Click()         // SLOT
  //                    "Date conflict", MessageBoxButtons.YesNoCancel);
      QMessageBox::StandardButtons rslt;
      rslt = QMessageBox::warning(this, tr("Date conflict"), tr("This item conflicts with:\n" )
-                                 + csd.routeName() + " " + csd.startDate().toString("yyyy/MM/dd") + " to "
-                                 + csd.endDate().toString("yyyy/MM/dd")
+                                 + csd->routeName() + " " + csd->startDate().toString("yyyy/MM/dd") + " to "
+                                 + csd->endDate().toString("yyyy/MM/dd")
                                  + tr(" Enter Yes to change it's start date to ") +                                            ui->dateEnd->dateTime().addDays(1).toString("yyyy/MM/dd"), QMessageBox::Yes | QMessageBox::No|QMessageBox::Cancel);
      QString trackUsage = " ";
-     if(ui->cbOneWay->isChecked() && csd.tracks() ==2)
+     if(ui->cbOneWay->isChecked() && csd->tracks() ==2)
      {
       if(ui->rbLeft)
        trackUsage = "L";
@@ -1683,8 +1683,8 @@ void RouteDlg::btnAdd_Click()         // SLOT
      switch (rslt)
      {
       case QMessageBox::Yes:
-      if(!sql->deleteRouteSegment(csd.route(), csd.routeName(), csd.segmentId(), csd.startDate().toString("yyyy/MM/dd"),
-                              csd.endDate().toString("yyyy/MM/dd")))
+      if(!sql->deleteRouteSegment(csd->route(), csd->routeName(), csd->segmentId(), csd->startDate().toString("yyyy/MM/dd"),
+                              csd->endDate().toString("yyyy/MM/dd")))
       {
        ui->lblHelpText->setText(tr("delete failed"));
        throw  Exception("add/update failed");
@@ -1694,9 +1694,9 @@ void RouteDlg::btnAdd_Click()         // SLOT
  //                            rd.companyKey, rd.tractionType, rd.direction, rd.next, rd.prev,
  //                            rd.normalEnter, rd.normalLeave, rd.reverseEnter, rd.reverseLeave,
  //                            ui->cbOneWay->isChecked()?"Y":"N",trackUsage);
-      csd.setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
-      csd.setTrackUsage(trackUsage);
-      sql->addSegmentToRoute(csd);
+      csd->setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
+      csd->setTrackUsage(trackUsage);
+      sql->addSegmentToRoute(*csd);
           break;
       case QMessageBox::No:
           break;
@@ -1709,9 +1709,9 @@ void RouteDlg::btnAdd_Click()         // SLOT
 
   QString direction="";
   //sd = sql->getSegmentInfo(_segmentId);
-  if (sd.segmentId() < 1)
+  if (sd->segmentId() < 1)
   {
-   if (sd.oneWay() == "Y")
+   if (sd->oneWay() == "Y")
    {
     if (ui->rbNormal->isChecked())
         direction = ui->rbNormal->text();
@@ -1719,18 +1719,18 @@ void RouteDlg::btnAdd_Click()         // SLOT
         direction = ui->rbReverse->text();
    }
    else
-    direction = sd.bearing().strDirection() + "-" + sd.bearing().strReverseDirection();
+    direction = sd->bearing().strDirection() + "-" + sd->bearing().strReverseDirection();
   }
   if (ui->btnAdd->text() == "Add")
   {
    CompanyData* cd = sql->getCompany(companyKey);
       //if (_routeNbr == -1 && _alphaRoute != "")
 //   _routeNbr = sql->addAltRoute(ui->txtRouteNbr->text(), cd->routePrefix);
-//   sd.setRoute(_routeNbr);
+//   sd->setRoute(_routeNbr);
    sql->beginTransaction("addRouteSegment");
-   if(!sql->doesAltRouteExist(sd.route(), sd.alphaRoute()))
+   if(!sql->doesAltRouteExist(sd->route(), sd->alphaRoute()))
    {
-    if(!sql->addAltRoute(sd.route(), sd.alphaRoute()))
+    if(!sql->addAltRoute(sd->route(), sd->alphaRoute()))
     {
      sql->rollbackTransaction("addRouteSegment");
      return;
@@ -1738,24 +1738,24 @@ void RouteDlg::btnAdd_Click()         // SLOT
    }
    QString trackUsage = " ";
    //SegmentData sd = sql->getSegmentInfo(_segmentId);
-   if(ui->cbOneWay->isChecked() && sd.tracks() ==2)
+   if(ui->cbOneWay->isChecked() && sd->tracks() ==2)
    {
     if(ui->rbLeft->isChecked()) trackUsage = "L";
     if(ui->rbRight->isChecked()) trackUsage = "R";
    }
-   if (!sql->doesRouteSegmentExist(sd.route(), ui->cbRouteName->currentText(), _segmentId,
+   if (!sql->doesRouteSegmentExist(sd->route(), ui->cbRouteName->currentText(), _segmentId,
                                    ui->dateStart->date(), ui->dateEnd->date()))
    {
  //      if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->date(), ui->dateEnd->date(),
  //                                  _segmentId, companyKey, /*cbTractionType.SelectedIndex+1*/tractionType, direction, 0, 0,
  //                                  _normalEnter, _normalLeave, _reverseEnter, _reverseLeave, ui->cbOneWay->isChecked()?"Y":"N", trackUsage))
-       sd.setRouteName(ui->cbRouteName->currentText());
-       sd.setStartDate(ui->dateStart->date());
-       sd.setEndDate(ui->dateEnd->date());
-       sd.setOneWay( ui->cbOneWay->isChecked()?"Y":"N");
-       sd.setTractionType(_tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType);
-       sd.setTrackUsage(trackUsage);
-       if (!sql->addSegmentToRoute(sd))
+       sd->setRouteName(ui->cbRouteName->currentText());
+       sd->setStartDate(ui->dateStart->date());
+       sd->setEndDate(ui->dateEnd->date());
+       sd->setOneWay( ui->cbOneWay->isChecked()?"Y":"N");
+       sd->setTractionType(_tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType);
+       sd->setTrackUsage(trackUsage);
+       if (!sql->addSegmentToRoute(*sd))
        {
            ui->lblHelpText->setText(tr( "Add Error"));
            //System.Media.SystemSounds.Beep.Play();
@@ -1776,13 +1776,13 @@ void RouteDlg::btnAdd_Click()         // SLOT
  //  int ix = ui->cbSegments->currentIndex();
  //  if (ix >= 0)
  //  {
- //  if(ui->cbRouteName->currentText() != sd.routeName() || ui->dateStart->date() != sd.startDate()
- //      || ui->dateEnd->date() != sd.endDate())
+ //  if(ui->cbRouteName->currentText() != sd->routeName() || ui->dateStart->date() != sd->startDate()
+ //      || ui->dateEnd->date() != sd->endDate())
  //  {
  //   //RouteData rd = (RouteData)_segmentInfoList[ix];
  ////   if (sql->deleteRouteSegment(_routeNbr, ui->cbRouteName->currentText(), _SegmentId, _rd.startDate.toString("yyyy/MM/dd"), _rd.endDate.toString("yyyy/MM/dd")) != true)
  //   if (sql->deleteRouteSegment(_routeNbr, ui->cbRouteName->currentText(), _segmentId,
- //                               sd.startDate().toString("yyyy/MM/dd"), sd.endDate().toString("yyyy/MM/dd")) != true)
+ //                               sd->startDate().toString("yyyy/MM/dd"), sd->endDate().toString("yyyy/MM/dd")) != true)
  //   {
  //    ui->lblHelpText->setText(tr( "Delete Error"));
  //    //System.Media.SystemSounds.Beep.Play();
@@ -1800,7 +1800,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
  //   }
  //   QString trackUsage = " ";
  //   SegmentData sd = sql->getSegmentInfo(_segmentId);
- //   if(ui->cbOneWay->isChecked() && sd.tracks() == 2)
+ //   if(ui->cbOneWay->isChecked() && sd->tracks() == 2)
  //   {
  //    if(ui->rbLeft->isChecked()) trackUsage = "L";
  //    if(ui->rbRight->isChecked()) trackUsage = "R";
@@ -1817,18 +1817,18 @@ void RouteDlg::btnAdd_Click()         // SLOT
  //    sql->RollbackTransaction("UpdateRoute");
  //    return;
  //   }
- //   sd.setStartDate(ui->dateEnd->date());
- //   sd.setEndDate(ui->dateEnd->date());
- //   sd.setRouteName(ui->cbRouteName->currentText());
+ //   sd->setStartDate(ui->dateEnd->date());
+ //   sd->setEndDate(ui->dateEnd->date());
+ //   sd->setRouteName(ui->cbRouteName->currentText());
  //  }
  //  else
    {
-    sd.setRouteName(ui->cbRouteName->currentText());
-    sd.setCompanyKey(ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt());
-    sd.setTractionType(_tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType);
-    sd.setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
-//    sd.setRoute(ui->txtRouteNbr->text().toInt());
-    if(!sql->updateRoute(oldSd, sd))
+    sd->setRouteName(ui->cbRouteName->currentText());
+    sd->setCompanyKey(ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt());
+    sd->setTractionType(_tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType);
+    sd->setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
+//    sd->setRoute(ui->txtRouteNbr->text().toInt());
+    if(!sql->updateRoute(*oldSd, *sd))
     {
      ui->lblHelpText->setText(tr( "Update Error"));
      //System.Media.SystemSounds.Beep.Play();
@@ -1844,8 +1844,8 @@ void RouteDlg::btnAdd_Click()         // SLOT
       for(int i=0; i < likeRoutes.count(); i++)
       {
           RouteIntersects ri = likeRoutes.at(i);
-          if (ri.sd.normalEnter() != sd.normalEnter() || ri.sd.normalLeave() != sd.normalLeave() ||
-              (sd.oneWay() != "Y" && (ri.sd.reverseEnter() != sd.reverseEnter() || ri.sd.reverseLeave() != sd.reverseLeave())))
+          if (ri.sd.normalEnter() != sd->normalEnter() || ri.sd.normalLeave() != sd->normalLeave() ||
+              (sd->oneWay() != "Y" && (ri.sd.reverseEnter() != sd->reverseEnter() || ri.sd.reverseLeave() != sd->reverseLeave())))
           {
               //if (MessageBox.Show("Update route " + ri.rd.alphaRoute + " " + ri.rd.name + " " + sql->formatDate(ri.rd.startDate) + " " + sql->formatDate(ri.rd.endDate) +
                   //" with the same data?", "Action required", MessageBoxButtons.YesNo) == DialogResult.Yes)
@@ -1859,8 +1859,8 @@ void RouteDlg::btnAdd_Click()         // SLOT
                   case QMessageBox::Yes:
                       sql->updateSegmentToRoute(ri.sd.route(), ri.sd.routeName(), ri.sd.startDate().toString("yyyy/MM/dd"),
                                                 ri.sd.endDate().toString("yyyy/MM/dd"), ri.sd.segmentId(), ri.sd.companyKey(),
-                                                ri.sd.tractionType(), sd.normalEnter(), sd.normalLeave(), sd.reverseEnter(),
-                                                sd.reverseLeave(), ri.sd.oneWay());
+                                                ri.sd.tractionType(), sd->normalEnter(), sd->normalLeave(), sd->reverseEnter(),
+                                                sd->reverseLeave(), ri.sd.oneWay());
                       break;
                   default:
                       break;
@@ -1898,7 +1898,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
   return;
  }
  //sql->CommitTransaction("add/Update");
- RouteChangedEventArgs args = RouteChangedEventArgs(_rd, sd.segmentId(), ui->btnAdd->text() == "Add" ? "Add" : "Update");
+ RouteChangedEventArgs args = RouteChangedEventArgs(_rd, sd->segmentId(), ui->btnAdd->text() == "Add" ? "Add" : "Update");
  emit routeChangedEvent(args);
 
   myParent->refreshRoutes();
@@ -1908,13 +1908,13 @@ void RouteDlg::btnAdd_Click()         // SLOT
 
 void RouteDlg::checkDirection(QString routeDirection)
 {
-    //if (sd.oneWay() != "Y")
+    //if (sd->oneWay() != "Y")
     if(!ui->cbOneWay->isChecked())
         return;
-    if (routeDirection == sd.bearing().strDirection())
+    if (routeDirection == sd->bearing().strDirection())
         return;
 
-    SegmentData sdReverse = sql->getSegmentInOppositeDirection(sd);
+    SegmentData sdReverse = sql->getSegmentInOppositeDirection(*sd);
     int seq = 0;
     int companyKey = -1;
     companyKey = -1;
@@ -1938,8 +1938,8 @@ void RouteDlg::checkDirection(QString routeDirection)
       case QMessageBox::Yes:
       {
           // Create a new segment in the opposite direction
-          sdReverse =  SegmentData(sd);
-//          sdReverse.setStartLat(sd.endLat());
+          sdReverse =  SegmentData(*sd);
+//          sdReverse.setStartLat(sd->endLat());
 //          sdReverse.startLon = si.endLon;
 //          sdReverse.endLat = si.startLat;
 //          sdReverse.endLon = si.startLon;
@@ -1952,27 +1952,27 @@ void RouteDlg::checkDirection(QString routeDirection)
 //          sdReverse.routeType = si.routeType;
 //          sdReverse.lineSegments = si.pointList.count();
           for(int i = sdReverse.pointList().count()-1; i >= 0; i --)
-           sdReverse.pointList().append(sd.pointList().at(i));
+           sdReverse.pointList().append(sd->pointList().at(i));
           // Parse out the description
-          sdReverse.setDescription(SegmentDescription(sd.description()).ReverseDescription() + " (1 way) "
+          sdReverse.setDescription(SegmentDescription(sd->description()).ReverseDescription() + " (1 way) "
                                     +  sdReverse.bearing().strDirection());
 
           bool bAlreadyExists = false;
           seq =0;
-          sdReverse.setSegmentId(sql->addSegment(sdReverse.description(), "Y", sd.tracks(), sdReverse.routeType(), sdReverse.pointList(), sd.location(), & bAlreadyExists));
+          sdReverse.setSegmentId(sql->addSegment(sdReverse.description(), "Y", sd->tracks(), sdReverse.routeType(), sdReverse.pointList(), sd->location(), & bAlreadyExists));
 //          if (sdReverse.segmentId != -1 && !bAlreadyExists)
 //          {
 //              SegmentData sd = sql->getSegmentData(si.segmentId);
-//              //sql->addPoint(seq, sdReverse.segmentId, sd.endLat, sd.endLon, sd.startLat, sd.startLon, sd.streetName);
-//              sql->addPoint(seq, sdReverse.segmentId,sd.getEndLatLng().lat(), sd.getEndLatLng().lon(), sd.getStartLatLng().lat(), sd.getStartLatLng().lon(), sd.getStreetName());
+//              //sql->addPoint(seq, sdReverse.segmentId, sd->endLat, sd->endLon, sd->startLat, sd->startLon, sd->streetName);
+//              sql->addPoint(seq, sdReverse.segmentId,sd->getEndLatLng().lat(), sd->getEndLatLng().lon(), sd->getStartLatLng().lat(), sd->getStartLatLng().lon(), sd->getStreetName());
 //          }
           int ix = ui->cbSegments->currentIndex();
           if (ix >= 0)
           {
            sd = _segmentDataList.at(ix);
-           if (sql->doesRouteSegmentExist(_routeNbr, ui->cbRouteName->currentText(), _segmentId, sd.startDate(), sd.endDate()))
+           if (sql->doesRouteSegmentExist(_routeNbr, ui->cbRouteName->currentText(), _segmentId, sd->startDate(), sd->endDate()))
            {
-            if (sql->deleteRouteSegment(_routeNbr, ui->cbRouteName->currentText(), _segmentId,  sd.startDate().toString("yyyy/MM/dd"), sd.endDate().toString("yyyy/MM/dd")) != true)
+            if (sql->deleteRouteSegment(_routeNbr, ui->cbRouteName->currentText(), _segmentId,  sd->startDate().toString("yyyy/MM/dd"), sd->endDate().toString("yyyy/MM/dd")) != true)
             {
                 ui->lblHelpText->setText(tr("Delete Error"));
                 //System.Media.SystemSounds.Beep.Play();
@@ -1990,17 +1990,17 @@ void RouteDlg::checkDirection(QString routeDirection)
 //                                        sdReverse.direction(), sdReverse.next(), sdReverse.prev(), _normalEnter, _normalLeave,
 //                                        _reverseEnter, _reverseLeave,
 //                                        ui->cbOneWay->isChecked()?"Y":"N", trackUsage))
-            sd.setRouteName(ui->cbRouteName->currentText());
-            sd.setStartDate(ui->dateStart->date());
-            sd.setEndDate(ui->dateEnd->date());
-            sd.setSegmentId(sdReverse.segmentId());
-            sd.setDirection(sdReverse.direction());
-            sd.setNext(sdReverse.next());
-            sd.setPrev(sdReverse.prev());
-            sd.setTractionType(tractionType);
-            sd.setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
-            sd.setTrackUsage(trackUsage);
-            if (!sql->addSegmentToRoute(sd))
+            sd->setRouteName(ui->cbRouteName->currentText());
+            sd->setStartDate(ui->dateStart->date());
+            sd->setEndDate(ui->dateEnd->date());
+            sd->setSegmentId(sdReverse.segmentId());
+            sd->setDirection(sdReverse.direction());
+            sd->setNext(sdReverse.next());
+            sd->setPrev(sdReverse.prev());
+            sd->setTractionType(tractionType);
+            sd->setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
+            sd->setTrackUsage(trackUsage);
+            if (!sql->addSegmentToRoute(*sd))
             {
                 ui->lblHelpText->setText(tr( "Update Error"));
                 //System.Media.SystemSounds.Beep.Play();
@@ -2015,7 +2015,7 @@ void RouteDlg::checkDirection(QString routeDirection)
 //                if (SegmentChanged != null)
 //                    SegmentChanged(this, new segmentChangedEventArgs(si.SegmentId, sdReverse.SegmentId));
           //segmentChangedEventArgs args = segmentChangedEventArgs(si.SegmentId, sdReverse.SegmentId);
-          emit SegmentChangedEvent(sd.segmentId(), sdReverse.segmentId());
+          emit SegmentChangedEvent(sd->segmentId(), sdReverse.segmentId());
       }
           break;
 
@@ -2023,7 +2023,7 @@ void RouteDlg::checkDirection(QString routeDirection)
       case QMessageBox::No:
       {
           // Reverse the segment and all it's points
-          sdReverse = SegmentData(sd);
+          sdReverse = SegmentData(*sd);
 //          sdReverse.startLat = si.endLat;
 //          sdReverse.startLon = si.endLon;
 //          sdReverse.endLat = si.startLat;
@@ -2034,14 +2034,14 @@ void RouteDlg::checkDirection(QString routeDirection)
 //          sdReverse.startDate = si.startDate;
 //          sdReverse.endDate = si.endDate;
           // Parse out the description
-          sdReverse.setDescription(SegmentDescription(sd.description()).ReverseDescription() + " (1 way) " + sdReverse.direction());
+          sdReverse.setDescription(SegmentDescription(sd->description()).ReverseDescription() + " (1 way) " + sdReverse.direction());
 //          sdReverse.lineSegments = si.pointList.count();
 
           sdReverse.pointList().clear();
-          for(int i = sd.pointList().count()-1; i >= 0; i --)
-           sdReverse.pointList().append(sd.pointList().at(i));
+          for(int i = sd->pointList().count()-1; i >= 0; i --)
+           sdReverse.pointList().append(sd->pointList().at(i));
       // Change the segment's description and then delete all the existing segments.
-          ui->lblSegmentText->setText( sd.description());
+          ui->lblSegmentText->setText( sd->description());
 //                if (sql->updateSegmentDescription(si.SegmentId, si.description, si.oneWay) != true)
 //                {
 //                    ui->lblHelpText->setText(tr( "update description failed."));
@@ -2059,7 +2059,7 @@ void RouteDlg::checkDirection(QString routeDirection)
 //                for(int i=0; i < myArray.count(); i++)
 //                {
 //                    segmentData sd = myArray.at(i);
-//                    if (sql->deletePoint(sd.sequence, si.SegmentId, nbrPoints) != true)
+//                    if (sql->deletePoint(sd->sequence, si.SegmentId, nbrPoints) != true)
 //                    {
 //                        ui->lblHelpText->setText(tr( "delete point failed"));
 //                        //System.Media.SystemSounds.Beep.Play();
@@ -2073,13 +2073,13 @@ void RouteDlg::checkDirection(QString routeDirection)
 //                for(int i=0; i < myArray.count(); i++)
 //                {
 //                    segmentData sd = myArray.at(i);
-//                    sql->addPoint(seq, si.SegmentId, sd.endLat, sd.endLon, sd.startLat, sd.startLon, sd.streetName);
+//                    sql->addPoint(seq, si.SegmentId, sd->endLat, sd->endLon, sd->startLat, sd->startLon, sd->streetName);
 //                    seq++;
 //                }
           // Notify whoever is interested that a segment has changed.
 //                if (SegmentChanged != null)
 //                    SegmentChanged(this, new segmentChangedEventArgs(si.SegmentId, -1));
-          emit SegmentChangedEvent(sd.segmentId(), -1);
+          emit SegmentChangedEvent(sd->segmentId(), -1);
       }
           break;
       default:    // cancel
@@ -2099,11 +2099,11 @@ void RouteDlg::checkDirection(QString routeDirection)
          {
              sd = _segmentDataList[ix];
              if (sql->doesRouteSegmentExist(_routeNbr, ui->cbRouteName->currentText(),
-                                            _segmentId, sd.startDate(), sd.endDate()))
+                                            _segmentId, sd->startDate(), sd->endDate()))
              {
                  if (sql->deleteRouteSegment(_routeNbr, ui->cbRouteName->currentText(),
-                                             _segmentId, sd.startDate().toString("yyyy/MM/dd"),
-                                             sd.endDate().toString("yyyy/MM/dd")) == false)
+                                             _segmentId, sd->startDate().toString("yyyy/MM/dd"),
+                                             sd->endDate().toString("yyyy/MM/dd")) == false)
                  {
                      ui->lblHelpText->setText(tr( "route not deleted"));
                      //System.Media.SystemSounds.Beep.Play();
@@ -2116,7 +2116,7 @@ void RouteDlg::checkDirection(QString routeDirection)
          ui->rbNormal->setChecked(true);
 
 
-         QString direction = sd.bearing().strDirection();
+         QString direction = sd->bearing().strDirection();
          int tractionType = _tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType;
          QString trackUsage = " ";
          if(ui->cbOneWay->isChecked())
@@ -2124,22 +2124,22 @@ void RouteDlg::checkDirection(QString routeDirection)
           if(ui->rbLeft->isChecked()) trackUsage = "L";
           if(ui->rbRight->isChecked()) trackUsage = "R";
          }
-//         if (sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), sd.startDate(),
-//                                    sd.endDate(), sdReverse.segmentId(), companyKey,
+//         if (sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), sd->startDate(),
+//                                    sd->endDate(), sdReverse.segmentId(), companyKey,
 //                                    /*cbTractionType.SelectedIndex+1*/tractionType, direction, 0,0,
 //                                    _normalEnter, _normalLeave, _reverseEnter, _reverseLeave, ui->cbOneWay->isChecked()?"Y":"N", trackUsage))
-         sd.setRouteName(ui->cbRouteName->currentText());
-         sd.setSegmentId(sdReverse.segmentId());
-         sd.setTractionType(tractionType);
-         sd.setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
-         sd.setTrackUsage(trackUsage);
-         if (sql->addSegmentToRoute(sd))
+         sd->setRouteName(ui->cbRouteName->currentText());
+         sd->setSegmentId(sdReverse.segmentId());
+         sd->setTractionType(tractionType);
+         sd->setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
+         sd->setTrackUsage(trackUsage);
+         if (sql->addSegmentToRoute(*sd))
          {
          fillSegmentsComboBox();
          checkUpdate(__FUNCTION__);
 //            if(SegmentChanged != null)
 //                SegmentChanged(this, new segmentChangedEventArgs(si.SegmentId,sdReverse.SegmentId));
-         emit SegmentChangedEvent(sd.segmentId(),sdReverse.segmentId());
+         emit SegmentChangedEvent(sd->segmentId(),sdReverse.segmentId());
          _segmentId = sdReverse.segmentId();
          ui->lblSegmentText->setText(sdReverse.description());
 
@@ -2158,83 +2158,83 @@ void RouteDlg::checkDirection(QString routeDirection)
 void RouteDlg::rbNFromLeft_CheckedChanged(bool bChecked)
 {
     if(bChecked)
-        sd.setNormalEnter(1);
+        sd->setNormalEnter(1);
     checkUpdate(__FUNCTION__);
 }
 void RouteDlg::rbNFromBack_CheckedChanged(bool bChecked)
 {
     if(bChecked)
-      sd.setNormalEnter(0);
+      sd->setNormalEnter(0);
     checkUpdate(__FUNCTION__);
 }
 
 void RouteDlg::rbNFromRight_CheckedChanged(bool bChecked)
 {
     if(bChecked)
-     sd.setNormalEnter(2);
+     sd->setNormalEnter(2);
     checkUpdate(__FUNCTION__);
 }
 
 void RouteDlg::rbNToLeft_CheckedChanged(bool bChecked)
 {
     if(bChecked)
-     sd.setNormalLeave(1);
+     sd->setNormalLeave(1);
     checkUpdate(__FUNCTION__);
 }
 
 void RouteDlg::rbNAhead_CheckedChanged(bool bChecked)
 {
     if(bChecked)
-     sd.setNormalLeave(0);
+     sd->setNormalLeave(0);
     checkUpdate(__FUNCTION__);
 }
 
 void RouteDlg::rbNToRight_CheckedChanged(bool bChecked)
 {
     if(bChecked)
-     sd.setNormalLeave(2);
+     sd->setNormalLeave(2);
     checkUpdate(__FUNCTION__);
 }
 
 void RouteDlg::rbRFromLeft_CheckedChanged(bool bChecked)
 {
     if(bChecked)
-     sd.setReverseEnter(1);
+     sd->setReverseEnter(1);
     checkUpdate(__FUNCTION__);
 }
 
 void RouteDlg::rbRFromBack_CheckedChanged(bool bChecked)
 {
     if(bChecked)
-     sd.setReverseEnter(0);
+     sd->setReverseEnter(0);
     checkUpdate(__FUNCTION__);
 }
 
 void RouteDlg::rbRFromRight_CheckedChanged(bool bChecked)
 {
     if(bChecked)
-      sd.setReverseEnter(2);
+      sd->setReverseEnter(2);
     checkUpdate(__FUNCTION__);
 }
 
 void RouteDlg::rbRToLeft_CheckedChanged(bool bChecked)
 {
     if(bChecked)
-     sd.setReverseLeave(1);
+     sd->setReverseLeave(1);
     checkUpdate(__FUNCTION__);
 }
 
 void RouteDlg::rbRAhead_CheckedChanged(bool bChecked)
 {
     if(bChecked)
-     sd.setReverseLeave(0);
+     sd->setReverseLeave(0);
     checkUpdate(__FUNCTION__);
 }
 
 void RouteDlg::rbRToRight_CheckedChanged(bool bChecked)
 {
     if(bChecked)
-     sd.setReverseLeave(2);
+     sd->setReverseLeave(2);
     checkUpdate(__FUNCTION__);
 }
 void RouteDlg::displayDates(QString str)
@@ -2251,12 +2251,13 @@ void RouteDlg::cbCompany_SelectedIndexChanged(int i)
      ui->lblHelpText->setText(tr("Select a company"));
      return;
  }
-
- if(sd.startDate() >= cd->startDate)
+ if(!sd )
+  return;
+ if(sd->startDate() >= cd->startDate)
  {
-    ui->dateStart->setDate(sd.startDate());
+    ui->dateStart->setDate(sd->startDate());
  }
- if(sd.endDate() <= cd->endDate)
+ if(sd->endDate() <= cd->endDate)
  {
   ui->dateEnd->setDate(cd->endDate);
  }
@@ -2341,10 +2342,10 @@ void RouteDlg::cbOneWay_checkedChanged(bool oneWay)
      ui->gbDirection->setVisible(true);
      ui->gbReverseEnter->setVisible(false);
      ui->gbReverseLeave->setVisible(false);
-     ui->rbNormal->setText(sd.bearing().strDirection());
-     ui->rbReverse->setText( sd.bearing().strReverseDirection());
+     ui->rbNormal->setText(sd->bearing().strDirection());
+     ui->rbReverse->setText( sd->bearing().strReverseDirection());
      ui->rbNormal->setChecked(true);
-     ui->gbUsage->setVisible(sd.tracks() == 2);
+     ui->gbUsage->setVisible(sd->tracks() == 2);
  }
  else
  {
@@ -2356,7 +2357,7 @@ void RouteDlg::cbOneWay_checkedChanged(bool oneWay)
   ui->gbUsage->setVisible(false);
   ui->rbLeft->setChecked(false);
   ui->rbRight->setChecked(false);
-  ui->gbUsage->setVisible(sd.tracks() == 2);
+  ui->gbUsage->setVisible(sd->tracks() == 2);
  }
 
 }

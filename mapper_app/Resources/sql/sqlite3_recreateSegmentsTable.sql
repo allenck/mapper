@@ -1,5 +1,6 @@
-BEGIN TRANSACTION;
 PRAGMA foreign_keys = 0;
+BEGIN TRANSACTION;
+update Segments set tracks=1 where tracks not in(1,2);
 CREATE TEMPORARY TABLE `t1_backup` (SegmentId, Description, OneWay, Tracks, `Type`, StartLat, StartLon, EndLat, EndLon,
                        Length, Points, StartDate, endDate, Direction, lastUpdate, pointArray, street, location);
 insert into t1_backup SELECT SegmentId, Description, OneWay, Tracks, `Type`, StartLat, StartLon, EndLat, EndLon,

@@ -1,0 +1,20 @@
+CREATE TABLE `Stations` (
+  `stationKey` integer NOT NULL primary key AUTO_INCREMENT,
+  `route` int(11) NOT NULL DEFAULT 0,
+  `name` varchar(75) NOT NULL,
+  `suffix` varchar(4) NOT NULL DEFAULT '',
+  `latitude` decimal(15,13) NOT NULL DEFAULT 0.0,
+  `longitude` decimal(15,13) NOT NULL DEFAULT 0.0,
+  `startDate` date DEFAULT NULL,
+  `endDate` date DEFAULT NULL,
+  `segmentId` int(11) NOT NULL,
+  `point` int(11) NOT NULL DEFAULT 0,
+  `infoKey` int(11) NOT NULL DEFAULT -1,
+  `geodb_loc_id` varchar(15) DEFAULT NULL,
+  `routeType` int(11) NOT NULL DEFAULT -1,
+  `markerType` varchar(15) default '',
+  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  constraint main unique (`segmentId`,`name`,`startDate`,`endDate`),
+  constraint `stationKey` UNIQUE (`stationKey`),
+  CONSTRAINT `SegmentId_ibfk_1` FOREIGN KEY (`segmentId`) REFERENCES `Segments` (`SegmentId`)
+);

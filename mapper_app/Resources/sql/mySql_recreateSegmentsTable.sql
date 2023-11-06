@@ -1,8 +1,9 @@
 BEGIN;
-CREATE TEMPORARY TABLE `t1_backup` like Segments;
+CREATE TEMPORARY TABLE  `t1_backup`SELECT * FROM Segments;
 ALTER TABLE `Routes` DROP FOREIGN Key `Routes_ibfk_1`;
+ALTER TABLE `Stations` DROP FOREIGN Key `SegmentId_ibfk_1`;
 DROP TABLE `Segments`;
-CREATE TABLE `Segments` ( `SegmentId` integer  primary key AUTOINCREMENT NOT NULL,
+CREATE TABLE `Segments` ( `SegmentId` integer  primary key AUTO_INCREMENT NOT NULL,
                           `Description` varchar(100) NOT NULL,
                           `Tracks` int(11) NOT NULL DEFAULT 0,
                           `Street` text not null default '',
@@ -20,7 +21,8 @@ CREATE TABLE `Segments` ( `SegmentId` integer  primary key AUTOINCREMENT NOT NUL
                           `Points` int(11) NOT NULL default 0,
                           `PointArray` text,
                           `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP);
-ALTER TABLE `Routes` ADD CONSTRAINT `Routes_ibfk_1` FOREIGN KEY (`LineKey`) REFERENCES `Segments` (`SegmentId`)
+ALTER TABLE `Routes` ADD CONSTRAINT `Routes_ibfk_1` FOREIGN KEY (`LineKey`) REFERENCES `Segments` (`SegmentId`);
+ALTER TABLE `Stations` ADD CONSTRAINT `SegmentId_ibfk_1` FOREIGN KEY (`segmentId`) REFERENCES `Segments` (`SegmentId`);
 INSERT INTO `Segments` (SegmentId, Description, OneWay, Tracks,Street, Location, `Type`, StartLat, StartLon,EndLat, EndLon,
                         Length, Points, StartDate, endDate, Direction, lastUpdate, pointArray)
                         select SegmentId, Description, OneWay, Tracks,Street, Location, `Type`, StartLat, StartLon,EndLat, EndLon,

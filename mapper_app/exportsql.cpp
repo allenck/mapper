@@ -10,8 +10,15 @@ ExportSql::ExportSql(Configuration *cfg, bool bDropTable, QObject *parent) :
  bOverride = false;
  m_parent = parent;
  this->bDropTables = bDropTable;
+ srcConn = cfg->currConnection;
  tgtConn = NULL;
 }
+
+void ExportSql::setTargetConn(Connection* tgtConn)
+{
+ this->tgtConn = tgtConn;
+}
+
 
 void ExportSql::setOverride(QDateTime ovrTs)
 {
@@ -2729,55 +2736,58 @@ bool ExportSql::getCount(QString table, bool bDropTable)
  QString commandText;
  QSqlQuery query2 = QSqlQuery(_targetDb);
 
- if(tgtConn->servertype() == "MsSql")
+ if(!bDropTable)
  {
-  commandText = "SELECT 1 "
-          "FROM INFORMATION_SCHEMA.TABLES "
-          "WHERE TABLE_TYPE='BASE TABLE' "
-          "AND TABLE_NAME='" +table +"'";
-  if(!query2.exec(commandText))
-  {
-      SQLERROR_E(query2);
-  }
-  if(!query2.isValid())
-  {
-     rowsCompleted = 0;
-     return false;
-  }
+  // we aren't going to drop the table and it exist's
+   if(tgtConn->servertype() == "MsSql")
+   {
+//    commandText = "SELECT 1 "
+//            "FROM INFORMATION_SCHEMA.TABLES "
+//            "WHERE TABLE_TYPE='BASE TABLE' "
+//            "AND TABLE_NAME='" +table +"'";
+//    if(!query2.exec(commandText))
+//    {
+//        SQLERROR_E(query2);
+//    }
+//    if(!query2.isValid())
+//    {
+//       rowsCompleted = 0;
+//       return false;
+//    }
 
-  commandText ="select max(lastUpdate) from [dbo].[" + table + "]";
- }
- else
-  commandText ="select max(lastUpdate) from " + table;
- bool bQuery = query2.exec(commandText);
- if(!bQuery)
- {
-  SQLERROR_E(query2);
-  //db.close();
-  //if(!Retry(&targetDb, &query2, commandText))
-   //exit(EXIT_FAILURE);
-   //return;
- }
- while(query2.next())
- {
-  lastUpdated = query2.value(0).toDateTime();
-  strLastUpdated = "'" + lastUpdated.toString("yyyy/MM/dd hh:mm:ss") +"'";
-  //strLastUpdated = "'" + query2.value(0).toString() +"'";
-  if(!lastUpdated.isValid())
-  {
-   lastUpdated = QDateTime::fromString("1800/01/01 00:00:01", "yyyy/MM/dd hh:mm:ss");
-   qDebug() << QString("lastUpdated read = %1").arg(lastUpdated.toString("yyyy/MM/dd hh:mm:ss"));
-   strLastUpdated = "'1800/01/01 00:00:01'";
-  }
- }
- if(bOverride)
- {
-  strLastUpdated = strOverrideTs;
-  lastUpdated = overrideTs;
- }
+    commandText ="select max(lastUpdate) from [dbo].[" + table + "]";
+   }
+   else
+    commandText ="select max(lastUpdate) from " + table;
+   bool bQuery = query2.exec(commandText);
+   if(!bQuery)
+   {
+    SQLERROR_E(query2);
+    //db.close();
+    //if(!Retry(&targetDb, &query2, commandText))
+     //exit(EXIT_FAILURE);
+     //return;
+   }
+   while(query2.next())
+   {
+    lastUpdated = query2.value(0).toDateTime();
+    strLastUpdated = "'" + lastUpdated.toString("yyyy/MM/dd hh:mm:ss") +"'";
+    //strLastUpdated = "'" + query2.value(0).toString() +"'";
+    if(!lastUpdated.isValid())
+    {
+     lastUpdated = QDateTime::fromString("1800/01/01 00:00:01", "yyyy/MM/dd hh:mm:ss");
+     qDebug() << QString("lastUpdated read = %1").arg(lastUpdated.toString("yyyy/MM/dd hh:mm:ss"));
+     strLastUpdated = "'1800/01/01 00:00:01'";
+    }
+   }
+   if(bOverride)
+   {
+    strLastUpdated = strOverrideTs;
+    lastUpdated = overrideTs;
+   }
 
- qDebug()<< "Table: " + table + " lastUpdate =" + strLastUpdated;
-
+   qDebug()<< "Table: " + table + " lastUpdate =" + strLastUpdated;
+ }
  // get count of rows in source table that have been updated.
  if(bDropTable)
   commandText = "select count(*) from " + table;
@@ -2787,7 +2797,7 @@ bool ExportSql::getCount(QString table, bool bDropTable)
  query.prepare(commandText);
  if(!bDropTable)
   query.bindValue(":lastUpdated", lastUpdated);
- bQuery = query.exec();
+ bool bQuery = query.exec();
  if(!bQuery)
  {
   QSqlError err = query.lastError();
@@ -3273,7 +3283,7 @@ bool ExportSql::dropRoutes()
 
  return dropTable("Routes", _targetDb, tgtConn->servertype());
 }
-
+#if 0
 bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
 {
  QSqlQuery query = QSqlQuery(db);
@@ -3414,7 +3424,18 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
  }
  return true;
 }
-
+#else
+bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
+{
+ if(dbType == "Sqlite")
+  return SQL::instance()->executeScript(":/sql/sqlite3_create_routes.sql", db);
+ if(dbType == "MySql")
+  return SQL::instance()->executeScript(":/sql/mysql_create_routes.sql", db);
+ if(dbType == "mssql")
+  return SQL::instance()->executeScript(":/sql/mssql_create_routes.sql", db);
+ return false;
+}
+#endif
 bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
 {
  QSqlQuery query = QSqlQuery(db);
@@ -3469,6 +3490,7 @@ bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
  return true;
 }
 
+#if 0
 bool ExportSql::createStationsTable(QSqlDatabase db, QString dbType)
 {
  QSqlQuery query = QSqlQuery(db);
@@ -3564,7 +3586,20 @@ bool ExportSql::createStationsTable(QSqlDatabase db, QString dbType)
  }
  return true;
 }
-
+#else
+bool ExportSql::createStationsTable(QSqlDatabase db, QString dbType)
+{
+ if(dbType == "MsSql")
+ {
+  return SQL::instance()->executeScript(":/sql/mssql_create_stations.sql",db);
+ }
+ else
+ {
+  return SQL::instance()->executeScript(":/sql/create_stations.sql",db);
+ }
+ return false;
+}
+#endif
 bool ExportSql::createTerminalsTable(QSqlDatabase db, QString dbType)
 {
  QSqlQuery query = QSqlQuery(db);
@@ -3845,6 +3880,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
           "`key` integer NOT NULL primary key AUTOINCREMENT,"\
           "`Description` varchar(50) NOT NULL, "\
           "`routePrefix` varchar(10) default '', "\
+          "`info` varchar(50),"
           "`startDate` date DEFAULT NULL," \
           "`endDate` date DEFAULT NULL," \
           "`firstRoute` int(11) DEFAULT NULL," \
@@ -3856,6 +3892,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
     "`key` int(11) NOT NULL AUTO_INCREMENT,"\
     "`Description` varchar(50) NOT NULL,"\
     "`routePrefix` varchar(10) DEFAULT '',"\
+    "`info` varchar(50),"
     "`startDate` date DEFAULT NULL,"\
     "`endDate` date DEFAULT NULL,"\
     "`firstRoute` int(11) DEFAULT NULL,"\
@@ -3870,6 +3907,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
   "CREATE TABLE [dbo].[Companies]("\
         "[key] [int] IDENTITY(1,1) NOT NULL,"\
         "[Description] [varchar](50) NOT NULL,"\
+        "[info] varchar(50),"
         "[routePrefix] [varchar](10) NOT NULL,"\
         "[startDate] [date] NULL,"\
         "[endDate] [date] NULL,"\
@@ -4149,11 +4187,14 @@ bool ExportSql::exportTable(QString table)
 {
  bool bDropTables = this->bDropTables;
  srcDb = QSqlDatabase::database();
- QString srcServerType = config->currConnection->servertype();
- if(!openDb()) return false;
+ QString srcServerType = srcConn->servertype();
+ if(!openDb())
+  return false;
+
+ //SQL::instance()->useDatabase(tgtConn->defaultSqlDatabase(), _targetDb);
 
  QStringList tables = targetDb().tables();
- if(tables.contains(table))
+ if(tables.contains(table,Qt::CaseInsensitive))
   updateTimestamp(table);
  QStringList columns = SQL::instance()->listColumns(table, srcServerType, srcDb);
 // QStringList tgtColumns = SQL::instance()->listColumns(table, tgtDbType, _targetDb);
@@ -4167,20 +4208,29 @@ bool ExportSql::exportTable(QString table)
  errors=0;
  notUpdated=0;
 
- if(tables.contains(table))
-  getCount(table, bDropTables);
- if(bDropTables)
+ getCount(table, bDropTables || !tables.contains(table,Qt::CaseInsensitive));
+ if(tables.contains(table,Qt::CaseInsensitive) && bDropTables)
+ {
+  if(!dropTable(table, targetDb(),tgtConn->servertype()))
+     return false;
+ }
+ tables = targetDb().tables();
+ if(bDropTables || !tables.contains(table,Qt::CaseInsensitive))
  {
   if(table.compare("altRoute", Qt::CaseInsensitive)==0)
    if(!createAltRouteTable(_targetDb, tgtConn->servertype())) return false;
   if(table.compare("Comments", Qt::CaseInsensitive)==0)
    if(!createCommentsTable(_targetDb, tgtConn->servertype())) return false;
+  if(table.compare("Companies", Qt::CaseInsensitive)==0)
+   if(!createCompaniesTable(_targetDb, tgtConn->servertype())) return false;
   if(table.compare("Intersections", Qt::CaseInsensitive)==0)
    if(!createIntersectionsTable(_targetDb, tgtConn->servertype())) return false;
   if(table.compare("Parameters", Qt::CaseInsensitive)==0)
    if(!createParametersTable(_targetDb, tgtConn->servertype())) return false;
   if(table.compare("RouteComments", Qt::CaseInsensitive)==0)
    if(!createRouteCommentsTable(_targetDb, tgtConn->servertype())) return false;
+  if(table.compare("Routes", Qt::CaseInsensitive)==0)
+   if(!createRouteTable(_targetDb, tgtConn->servertype())) return false;
   if(table.compare("RouteSeq", Qt::CaseInsensitive)==0)
    if(!createRouteSeqTable(_targetDb, tgtConn->servertype())) return false;
   if(table.compare("Segments", Qt::CaseInsensitive)==0)
@@ -4193,8 +4243,6 @@ bool ExportSql::exportTable(QString table)
    if(!createTerminalsTable(_targetDb, tgtConn->servertype())) return false;
   if(table.compare("TractionTypes", Qt::CaseInsensitive)==0)
    if(!createTractionTypesTable(_targetDb, tgtConn->servertype())) return false;
-  if(table.compare("Routes", Qt::CaseInsensitive)==0)
-   if(!createRouteTable(_targetDb, tgtConn->servertype())) return false;
  }
  QString commandText;
  QString selectText = "Select ";
