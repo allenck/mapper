@@ -979,31 +979,34 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    }
   }
 
-
-//  if(db.isOpen() && db.connectionName() == "testConnection")
-//   db.close();
-
-//   db=QSqlDatabase::addDatabase(tgtConn->driver(), "query");
-
-   //tgtConn = config->currCity->connections.at(config->currCity->curExportConnId);
-  //tgtConn = config->currCity->connections.at(ui->cbConnections->itemData(ix).toInt());
 #if 1
   //if(tgtConn->connectionName().isEmpty())
   {
    db = QSqlDatabase::addDatabase(tgtConn->driver(), QString("query%1").arg(ix));
    tgtConn->setConnectionName(db.connectionName());
-   Connection::configureDb(&db, tgtConn);
-  if(!db.open())
-  {
-   ui->go_QueryButton->setEnabled(false);
-   qDebug() << "Database not open: " + ui->cbConnections->currentText() + ", current databasename: " + db.databaseName() + " " + db.lastError().text();
-   qDebug() << "current dir: " + QDir::currentPath();
-  }
-  else
-  {
-   ui->go_QueryButton->setEnabled(true);
-   if(tgtDbType == "MsSql")
+//   if(tgtConn->servertype() == "Sqlite")
+//   {
+//    if(!tgtConn->isSqliteUserFunctionLoaded())
+//     tgtConn->setSqliteUserFunctionLoaded(SQL::instance()->
+//             loadSqlite3Functions(db));
+//   }
+   Connection::configureDb(db, tgtConn);
+   if(!db.open())
    {
+    ui->go_QueryButton->setEnabled(false);
+    qDebug() << "Database not open: " + ui->cbConnections->currentText() + ", current databasename: " + db.databaseName() + " " + db.lastError().text();
+    qDebug() << "current dir: " + QDir::currentPath();
+   }
+   else
+   {
+    ui->go_QueryButton->setEnabled(true);
+    if(tgtConn->servertype() == "Sqlite")
+    {
+     if(!tgtConn->isSqliteUserFunctionLoaded())
+      tgtConn->setSqliteUserFunctionLoaded( SQL::instance()->loadSqlite3Functions(db));
+    }
+    else if(tgtDbType == "MsSql")
+    {
 #if 0
     if(tgtConn->useDatabase() != "default" || tgtConn->useDatabase() != "")
     {
@@ -1016,8 +1019,8 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
      }
     }
 #endif
+    }
    }
-  }
 #endif
    setTitle();
   }
@@ -1026,11 +1029,15 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 void QueryDialog::setTitle()
 {
  if(currQueryFilename.isEmpty())
+
   QWidget::setWindowTitle(tr("Manual Sql Query (%1)")
                           .arg(ui->cbConnections->currentText()));
  else
+ {
+  QFileInfo info(currQueryFilename);
   QWidget::setWindowTitle(tr("Manual Sql Query (%1) - %2")
-                          .arg(ui->cbConnections->currentText(),currQueryFilename));
+                          .arg(ui->cbConnections->currentText(),info.fileName()));
+ }
 }
 
  void QueryDialog::executeQuery(QString commandText)

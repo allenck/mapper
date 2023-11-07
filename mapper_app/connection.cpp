@@ -66,8 +66,8 @@ QSqlDatabase Connection::configure(const QString cName)
  qDebug() << "Connection: CWD = " << QDir::currentPath();
  config = Configuration::instance();
  sql = SQL::instance();
-  db = QSqlDatabase::addDatabase(config->currConnection->driver(),cName);
- configureDb(&db, this);
+ db = QSqlDatabase::addDatabase(config->currConnection->driver(),cName);
+ configureDb(db, this);
  // check for presence of Parameters table.
  QStringList tableList;
  QStringList sysTableList;
@@ -78,8 +78,8 @@ QSqlDatabase Connection::configure(const QString cName)
  {
   if(config->currConnection->servertype() != "Sqlite")
   {
-      sql->checkTables(db);
-      //return db;
+   if(!config->currConnection->_sqlite_user_function_loaded)
+    config->currConnection->_sqlite_user_function_loaded =sql->loadSqlite3Functions(db);
   }
   if(config->currConnection->defaultSqlDatabase()  != "")
   {
@@ -155,10 +155,10 @@ QSqlDatabase Connection::configure(const QString cName)
         if(!eSql->createRouteTable(db, config->currConnection->servertype()))
           throw Exception();
        }
-       if(!SQL::instance()->doesFunctionExist("distance", db))
+       if(!SQL::instance()->doesFunctionExist("distance", config->currConnection->servertype(), db))
        {
-//           if(!eSql->createMsSqlFunctions(db))
-//               throw Exception("distance function error");
+        //           if(!eSql->createMsSqlFunctions(db))
+        //               throw Exception("distance function error");
        }
    }
    catch (Exception ex)
@@ -183,10 +183,12 @@ QSqlDatabase Connection::configure(const QString cName)
     }
     QMessageBox::warning(NULL, "Warning", msg);
    }
-  }
-  if(sql->loadSqlite3Functions() && config->currConnection->servertype() == "Sqlite")
-  {
    sql->checkTables(db);
+  }
+
+  if(config->currConnection->servertype() == "Sqlite" && sql->loadSqlite3Functions(db) )
+  {
+   config->currConnection->_sqlite_user_function_loaded = true;
   }
  }
  else
@@ -201,9 +203,9 @@ QSqlDatabase Connection::configure(const QString cName)
   return db;
 }
 
-void Connection::configureDb(QSqlDatabase* db, Connection* currConnection)
+void Connection::configureDb(QSqlDatabase db, Connection* currConnection)
 {
-    QString driver = db->driverName();
+    QString driver = db.driverName();
     if(currConnection->connectionType() == "Local" )
     {
         QString dbName = currConnection->sqlite_fileName();
@@ -216,21 +218,21 @@ void Connection::configureDb(QSqlDatabase* db, Connection* currConnection)
           dbName.append(".sqlite3");
          //dbName = QDir(config->path + QDir::separator() + QDir::separator()+ dbName).path();
         }
-        db->setDatabaseName(dbName);
+        db.setDatabaseName(dbName);
     }
     else if(currConnection->connectionType() == "Direct")
     {
         if(currConnection->host() != "")
-         db->setHostName(currConnection->host());
+         db.setHostName(currConnection->host());
         if(currConnection->port() > 0)
-         db->setPort(currConnection->port());
-        db->setUserName(currConnection->userId());
-        db->setPassword(currConnection->pwd());
-        db->setDatabaseName(currConnection->defaultSqlDatabase());
+         db.setPort(currConnection->port());
+        db.setUserName(currConnection->userId());
+        db.setPassword(currConnection->pwd());
+        db.setDatabaseName(currConnection->defaultSqlDatabase());
     }
     else if(currConnection->connectionType() == "ODBC")
     {
-        db->setDatabaseName(currConnection->odbc_connectorName());
+        db.setDatabaseName(currConnection->odbc_connectorName());
     }
     else
     {
@@ -238,9 +240,9 @@ void Connection::configureDb(QSqlDatabase* db, Connection* currConnection)
     }
     if(currConnection->connectionType() != "Local" )
     {
-      if(db->open() && !currConnection->defaultSqlDatabase().isEmpty())
+      if(db.open() && !currConnection->defaultSqlDatabase().isEmpty())
       {
-        QSqlQuery query = QSqlQuery(*db);
+        QSqlQuery query = QSqlQuery(db);
         if(!query.exec(QString("use %1").arg(currConnection->defaultSqlDatabase())))
         {
             QMessageBox::critical(nullptr, tr("Sql error"), tr("An sql error has occured! \n")

@@ -36,6 +36,7 @@ class Connection : public QObject
  QUuid   _uuid;
  bool _dirty;
  bool _connectionValid = false;
+ bool _sqlite_user_function_loaded = false; // true for Sqlite only!
 
 public:
  Connection(QObject* parent = nullptr);
@@ -78,7 +79,7 @@ public:
  void setOdbcConnectorName(QString fn){_odbc_connectorName = fn;}
  QString defaultSqlDatabase() {return _defaultSqlDatabase;}
  void setDefaultSqlDatabase(QString defaultSqlDatabase) {_defaultSqlDatabase = defaultSqlDatabase;}
- static void configureDb(QSqlDatabase *db, Connection *currConnection);
+ static void configureDb(QSqlDatabase db, Connection *currConnection);
  //QString mySqlDatabase(){return _mySqlDatabase;}
  //void setMySqlDatabase(QString name){_mySqlDatabase =name;}
  QString connectionType(){return _connectionType;}
@@ -90,6 +91,8 @@ public:
  void setDirty(bool dirty){_dirty = dirty;}
  bool isValid() {return _connectionValid;}
  void setValid(bool b){_connectionValid = b;}
+ bool isSqliteUserFunctionLoaded() {return _sqlite_user_function_loaded;}
+ void setSqliteUserFunctionLoaded(bool b) {_sqlite_user_function_loaded = b;}
 };
 
 #endif // CONNECTION_H

@@ -2459,27 +2459,27 @@ void MainWindow::segmentSelected(qint32 pt, qint32 SegmentId)
  m_bAddMode = false;
  addPointModeAct->setChecked(false);
  m_SegmentId = SegmentId;
- SegmentInfo sd = sql->getSegmentInfo(m_SegmentId);
- if (sd.segmentId() == -1)
+ SegmentInfo si = sql->getSegmentInfo(m_SegmentId);
+ if (si.segmentId() == -1)
  {
   qDebug() <<"segment " + QString("%1").arg(SegmentId) + " not found";
   return;
  }
  if(routeDlg)
  {
-  routeDlg->setSegmentId(m_SegmentId);
+  //routeDlg->setSegmentId(m_SegmentId);
   if (ui->cbRoute->currentIndex() != -1)
    routeDlg->setSegmentData ( (RouteData)routeList.at(        ui->cbRoute->currentIndex()));
  }
  //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
- lookupStreetName(sd);
+ lookupStreetName(si);
  //txtSegment.Text = si.description;
- ui->txtSegment->setText(sd.description());
- ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(sd.pointList().count()));
+ ui->txtSegment->setText(si.description());
+ ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(si.pointList().count()));
  //ui->cbSegments->findText(si.toString(), Qt::MatchExactly);
 // int ix = ui->cbSegments->findData(SegmentId);
 // ui->cbSegments->setCurrentIndex(ix);
- m_points = sd.pointList();
+ m_points = si.pointList();
  m_nbrPoints = m_points.size();
 
  if (m_nbrPoints <= 0)

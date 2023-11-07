@@ -49,7 +49,7 @@ bool ExportSql::openDb()
   {
 #if 1
    _targetDb = QSqlDatabase::addDatabase(tgtConn->driver(), "export");
-   tgtConn->configureDb(&_targetDb, tgtConn );
+   tgtConn->configureDb(_targetDb, tgtConn );
    tgtDbType = tgtConn->servertype();
 
    if(! _targetDb.open())

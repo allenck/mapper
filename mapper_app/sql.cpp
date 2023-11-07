@@ -50,7 +50,8 @@ bool SQL::dbOpen()
              + "Connection name: " + db.connectionName() + "\n"
              + "DSN:" + db.databaseName() + "\n"
       + "driver: " + config->currConnection->driver() + "\n";
-    if(config->currConnection->driver()=="QSQLITE")
+    if(config->currConnection->driver()=="QSQLITE"
+       || config->currConnection->driver()=="QSQLITE3")
     {
      QFileInfo info(db.hostName());
      msg.append(info.absoluteFilePath());
@@ -9817,10 +9818,10 @@ QStringList SQL::showDatabases(QString connection, QString servertype)
 }
 
 
-bool SQL::loadSqlite3Functions()
+bool SQL::loadSqlite3Functions(QSqlDatabase db)
 {
  bool ret=false;
-  QSqlDatabase db = QSqlDatabase::database();
+  //QSqlDatabase db = QSqlDatabase::database();
   QVariant v = db.driver()->handle();
   sqlite3 *handle = NULL;
   if (v.isValid() && strcmp(v.typeName(), "sqlite3*") == 0)
@@ -9895,20 +9896,8 @@ bool SQL::loadSqlite3Functions()
        bLoadExtensionEnabled = true;
       }
      }
-
 #endif
     }
-    if(!query.exec("PRAGMA foreign_keys"))
-    {
-     SQLERROR(query);
-     return false;
-     int foreign_key=0;
-     if(query.isActive())
-      foreign_key = query.value(0).toInt();
-     if(foreign_key != 1)
-      qWarning() << "foreign_keys not enabled";
-    }
-
    }
    else
    {
@@ -9920,7 +9909,7 @@ bool SQL::loadSqlite3Functions()
    qDebug() << "handle variant returned typename " <<  v.typeName();
   }
 #if 1
-  if(db.driverName() == "QSQLITE")
+  if(db.driverName() == "QSQLITE" || db.driverName() == "QSQLITE3")
   {
 // TODO: parameterize these path names
 #ifdef WIN32
@@ -9959,6 +9948,18 @@ bool SQL::loadSqlite3Functions()
     return ret;
    }
    ret=true;
+
+   if(!query.exec("PRAGMA foreign_keys"))
+   {
+    SQLERROR(query);
+    return false;
+    int foreign_key=0;
+    if(query.isActive())
+     foreign_key = query.value(0).toInt();
+    if(foreign_key != 1)
+     qWarning() << "foreign_keys not enabled";
+   }
+
   }
 #endif
  return ret;
@@ -10418,6 +10419,8 @@ void SQL::checkTables(QSqlDatabase db)
 
 bool SQL::executeScript(QString path, QSqlDatabase db)
 {
+ QFileInfo info(path);
+
  QFile file(path);
  if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
  {
@@ -10425,9 +10428,11 @@ bool SQL::executeScript(QString path, QSqlDatabase db)
   //ui->lblHelp->setText(file.errorString() + " '" + file.fileName()+"'");
   return true;
  }
+ scriptName = info.fileName();
  QTextStream* in = new QTextStream(&file);
- processFile(in, db, false);
- return true;
+ bool ret =processFile(in, db, false);
+ scriptName = "";
+ return ret;
 }
 
 bool SQL::processFile(QTextStream* in, QSqlDatabase db, bool bIsInclude)
@@ -11289,14 +11294,22 @@ bool SQL::deleteTerminalInfo(int route)
 
 }
 
-bool SQL::doesFunctionExist(QString name, QSqlDatabase db)
+bool SQL::doesFunctionExist(QString name, QString serverType, QSqlDatabase db)
 {
     //QSqlDatabase db = QSqlDatabase::database();
-    QString commandText =QString("SELECT name,type "
+    QString commandText;
+    if(serverType == "MsSql")
+    commandText = QString("SELECT name,type "
                                  "FROM   sys.objects "
                                  "WHERE  object_id = OBJECT_ID(N'[master].[dbo].[%1]') "
                                         "AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT')")
             .arg(name);
+    else if(serverType == "MySql")
+     commandText = "show function status + name";
+    else if(serverType == "SqLite")
+     commandText = "select exists(select 1 from pragma_function_list where name='" + name +"')";
+    else
+     return false;
     QSqlQuery query = QSqlQuery(db);
     bool bQuery = query.exec(commandText);
     if(!bQuery)
@@ -11308,13 +11321,32 @@ bool SQL::doesFunctionExist(QString name, QSqlDatabase db)
     }
     QString fName;
     QString type;
-    while(query.next())
+    if(serverType == "MsSql")
     {
-        fName = query.value(0).toString();
-        type = query.value(1).toString();
-        if(fName == name)
-            return true;
+     while(query.next())
+     {
+         fName = query.value(0).toString();
+         type = query.value(1).toString();
+         if(fName == name)
+             return true;
+     }
     }
+    else if(serverType == "MySql")
+    {
+     while(query.next())
+     {
+      if(query.value("Name").toString() == name)
+       return true;
+     }
+    }
+    else if(serverType == "Sqlite")
+    {
+     while(query.next())
+     {
+      return query.value(0).toBool();
+     }
+    }
+
     return false;
 }
 
@@ -11546,4 +11578,15 @@ void SQL::setForeignKeyCheck(bool b)
  return;
 }
 
-
+int SQL::displaySqlError(QSqlQuery query, QMessageBox::StandardButtons buttons, QString func, QString file, int line)
+{
+ QSqlError err = query.lastError();
+ QString msg = "An SQL error has occurred:\n";
+ if(!scriptName.isEmpty())
+  msg.append(tr("The error occured processing Sql script: '%1'\n").arg(scriptName));
+ msg = msg.append(tr("reported in %1 at %2 line %3")).arg(func, file).arg(line);
+ QString details = QString("%1\n%2").arg(err.text(), query.lastQuery());
+ QMessageBox box(QMessageBox::Critical, tr("Sql Error"),msg,buttons );
+ box.setInformativeText(details);
+ return box.exec();
+}

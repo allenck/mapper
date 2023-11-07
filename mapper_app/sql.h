@@ -23,8 +23,17 @@ do \
  QSqlError err = query.lastError(); \
  qCritical() << "Sql error:" << err.text(); \
  qCritical() << query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n"; \
- QMessageBox::critical(nullptr, tr("Sql Error"), tr("An SQL error has occurred:\n%1\n%2").arg(err.text(), query.lastQuery()));\
- } while (0)
+ SQL::instance()->displaySqlError(query, QMessageBox::NoButton,__FUNCTION__, __FILE__, __LINE__); \
+} while (0)
+
+#define SQLERROR1(query, buttons) \
+do \
+{ \
+ QSqlError err = query.lastError(); \
+ qCritical() << "Sql error:" << err.text(); \
+ qCritical() << query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n"; \
+ SQL::instance()->displaySqlError(query, buttons, __FUNCTION__, __FILE__, __LINE__); \
+} while (0)
 
 
 class SQL : public QObject
@@ -194,7 +203,7 @@ public:
     QStringList showDatabases(QString Connection, QString servertype);
     QStringList getAlphaRoutes(QString text);
     bool deleteAlphaRoute(QString routeAlpha);
-    bool loadSqlite3Functions();
+    bool loadSqlite3Functions(QSqlDatabase db);
     bool checkConnectingSegments(QList<SegmentData> segmentDataList);
 
 //    QStringList getTableList(QSqlDatabase db, QString dbType);
@@ -240,13 +249,14 @@ public:
     bool deleteRoute(SegmentData rd);
     bool deleteRoute(RouteData rd);
     QString currentTransaction;
-    bool doesFunctionExist(QString name, QSqlDatabase db);
+    bool doesFunctionExist(QString name, QString serverType, QSqlDatabase db);
     QStringList listViews();
     QList<SegmentData *> segmentDataFromView(QString where);
     QStringList listColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase());
     QStringList listPkColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase());
     bool getForeignKeyCheck();
     void setForeignKeyCheck(bool b);
+    int displaySqlError(QSqlQuery query, QMessageBox::StandardButtons buttons, QString func, QString file, int line);
 
 signals:
     void details(QString);
@@ -261,6 +271,7 @@ private:
     bool insertRouteSegment(SegmentData sd);
     bool insertRouteSegment(RouteData sd);
     bool processFile(QTextStream* in, QSqlDatabase db, bool bIsInclude);
+    QString scriptName;
 
 };
 
