@@ -4,7 +4,7 @@
 #include <QDialog>
 #include "configuration.h"
 #include <QTcpSocket>
-
+#include <QComboBox>
 
 namespace Ui {
     class editConnectionsDlg;
@@ -47,6 +47,8 @@ private:
   City* currCity = nullptr;
   Connection* connection;
   void newConnection();
+  void setComboBoxItemEnabled(QComboBox * comboBox, int index, bool enabled);
+  bool connectionChanging = false;
 
 private slots:
  void cbCitiesSelectionChanged(int sel);
@@ -68,7 +70,7 @@ private slots:
  void on_tbBrowse_clicked();
  void ontxtDbOrDsn_editingFinished();
  void setupComboBoxes(QString);
-
+ void onDbTypeChanged(QString);
 };
 
 #endif // EDITCONNECTIONSDLG_H

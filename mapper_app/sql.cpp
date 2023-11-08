@@ -2869,7 +2869,7 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData*> segmentList
 //  nextLat = sd->endLat();
 //  nextLon = sd->endLon();
  }
- rd->addSequence(QPair(sd->segmentId(), whichEnd=="E"?"F":"R"));
+ rd->addSequence(QPair<int, QString>(sd->segmentId(), whichEnd=="E"?"F":"R"));
  while (currSegment >= 0 )//&& sequence < segmentList.Count && reverseSeq < segmentList.Count)
  {
   sd = segMap.value(currSegment);
@@ -2935,7 +2935,7 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData*> segmentList
      return sd->segmentId();
     matchedSegment = sdj->segmentId();
     nextSd = segMap.value(matchedSegment);
-    QPair<int, QString> pair = QPair(matchedSegment, sdj->whichEnd()=="S"?"F":"R");
+    QPair<int, QString> pair = QPair<int, QString>(matchedSegment, sdj->whichEnd()=="S"?"F":"R");
     nextSd->setWhichEnd(sdj->whichEnd());
     rd->addSequence(pair);
     if(sdj->sequence()!= -1 && sdj->returnSeq() == -1)
@@ -10810,13 +10810,33 @@ QList<FKInfo> SQL::getForeignKeyInfo(QSqlDatabase db, Connection* c, QString tab
  }
  else
  {
-  // TODO MsSql
+  // MsSql
+     commandText = "SELECT  obj.name AS FK_NAME, "
+        "     sch.name AS [schema_name], "
+        "     tab1.name AS [table], "
+        "     col1.name AS [column], "
+        "     tab2.name AS [referenced_table], "
+        "     col2.name AS [referenced_column]"
+        " FROM sys.foreign_key_columns fkc "
+        " INNER JOIN sys.objects obj "
+        "     ON obj.object_id = fkc.constraint_object_id"
+        " INNER JOIN sys.tables tab1"
+        "     ON tab1.object_id = fkc.parent_object_id"
+        " INNER JOIN sys.schemas sch"
+        "     ON tab1.schema_id = sch.schema_id"
+        " INNER JOIN sys.columns col1"
+        "     ON col1.column_id = parent_column_id AND col1.object_id = tab1.object_id"
+        " INNER JOIN sys.tables tab2"
+        "     ON tab2.object_id = fkc.referenced_object_id"
+        " INNER JOIN sys.columns col2"
+        "     ON col2.column_id = referenced_column_id AND col2.object_id = tab2.object_id";
  }
  if(!query.exec(commandText))
  {
   SQLERROR(query);
   return list;
  }
+ int seq = 0;
  while(query.next())
  {
   FKInfo info;
@@ -10840,6 +10860,19 @@ QList<FKInfo> SQL::getForeignKeyInfo(QSqlDatabase db, Connection* c, QString tab
    info.to = query.value("REFERENCED_COLUMN_NAME").toString();
    QString cn = query.value("CONSTRAINT_NAME").toString();
    info.id = cn.mid(cn.indexOf("ibfk_")+5).toInt();
+  }
+  else if(c->servertype() == "MsSql")
+  {
+   info.name = query.value("table").toString();
+   info.table = query.value("referenced_table").toString();
+   info.from = query.value("column").toString();
+   info.to = query.value("referenced_column").toString();
+   info.seq = seq++;
+   if(!table.isEmpty())
+   {
+    if(info.name != table)
+     continue;
+   }
   }
   list.append(info);
  }
@@ -10868,6 +10901,28 @@ QMap<int,RouteName*>* SQL::routeNameList()
   list->insert(rn->route(), rn);
  }
  return list;
+}
+
+QString SQL::getDatabase()
+{
+ QSqlDatabase db = QSqlDatabase();
+
+ QSqlQuery query = QSqlQuery(db);
+ QString dbName ="";
+
+ if(!query.exec("SELECT DB_NAME() "))
+ {
+  SQLERROR(query);
+ }
+ else
+ {
+  while(query.next())
+  {
+   if(!query.value(0).isNull())
+   dbName = query.value(0).toString();
+  }
+ }
+ return dbName;
 }
 
 bool SQL::useDatabase(QString dbName, QSqlDatabase db)
@@ -11590,3 +11645,4 @@ int SQL::displaySqlError(QSqlQuery query, QMessageBox::StandardButtons buttons, 
  box.setInformativeText(details);
  return box.exec();
 }
+

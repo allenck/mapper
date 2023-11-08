@@ -112,6 +112,7 @@ DISTFILES += \
     Resources/scripts/createMsSqlDistance.sql \
     Resources/sql/addBiDirectionalToRoutes.sql \
     Resources/sql/create_stations.sql \
+    Resources/sql/mssql_create_routeseq.sql \
     Resources/sql/mssql_create_stations.sql \
     Resources/sql/mysql_recreate_routes.sql \
     Resources/sql/recreateRouteComments.sql \

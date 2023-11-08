@@ -3,6 +3,7 @@
 #include <QMessageBox>
 #include "sql.h"
 
+
 ExportSql::ExportSql(Configuration *cfg, bool bDropTable, QObject *parent) :
     QObject(parent)
 {
@@ -13,6 +14,7 @@ ExportSql::ExportSql(Configuration *cfg, bool bDropTable, QObject *parent) :
  srcConn = cfg->currConnection;
  tgtConn = NULL;
 }
+
 
 void ExportSql::setTargetConn(Connection* tgtConn)
 {
@@ -4039,7 +4041,7 @@ bool ExportSql::createRouteSeqTable(QSqlDatabase db, QString dbType)
         "[route] ASC,"\
         "[name] ASC," \
         "[startDate] ASC," \
-        "[endDate] ASC," \
+        "[endDate] ASC" \
     ")WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]"\
     ") ON [PRIMARY];" \
     "SET ANSI_PADDING OFF;"\

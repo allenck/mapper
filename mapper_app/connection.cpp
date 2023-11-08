@@ -47,19 +47,19 @@ Connection::Connection(const Connection& o){
 
 QSqlDatabase Connection::getDb() { return db;}
 
-QString Connection::dbType(QString name)
-{
- if(name == "QSQLITE") return "Sqlite";
- if(name == "QMARIADB") return "MySql";
- if(name == "QMYSQL") return "MySql";
- if(name == "QMYSQL3") return "MySql";
- if(name == "QODBC") return "MsSql";
- if(name == "QODBC3") return "MsSql";
- if(name == "QPSQL") return "PGres";
- if(name == "QPSQL7") return "PGres";
- if(name == "QOCI") return "Oracle";
- return "";
-}
+//QString Connection::dbType(QString name)
+//{
+// if(name == "QSQLITE") return "Sqlite";
+// if(name == "QMARIADB") return "MySql";
+// if(name == "QMYSQL") return "MySql";
+// if(name == "QMYSQL3") return "MySql";
+// if(name == "QODBC") return "MsSql";
+// if(name == "QODBC3") return "MsSql";
+// if(name == "QPSQL") return "PGres";
+// if(name == "QPSQL7") return "PGres";
+// if(name == "QOCI") return "Oracle";
+// return "";
+//}
 
 QSqlDatabase Connection::configure(const QString cName)
 {
@@ -81,11 +81,11 @@ QSqlDatabase Connection::configure(const QString cName)
    if(!config->currConnection->_sqlite_user_function_loaded)
     config->currConnection->_sqlite_user_function_loaded =sql->loadSqlite3Functions(db);
   }
-  if(config->currConnection->defaultSqlDatabase()  != "")
+  if(config->currConnection->database()  != "")
   {
    QSqlQuery query = QSqlQuery(db);
    //QString cmd = QString("use [%1]").arg(config->currConnection->mySqlDatabase());
-   QString cmd = QString("use %1").arg(config->currConnection->defaultSqlDatabase());
+   QString cmd = QString("use %1").arg(config->currConnection->database());
    if(!query.exec(cmd))
    {
     SQLERROR(query);

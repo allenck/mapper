@@ -11,7 +11,7 @@ class Connection : public QObject
 {
  Q_OBJECT
  qint32 _id =-1;
- QString _driver;
+ QString _driver = "QSQLITE";
  QString _description;
  QString _DSN;
  QString _userId;
@@ -19,10 +19,10 @@ class Connection : public QObject
  QString _database;
  QString _hostName;
  qint32  _port =0;
- QString _useDatabase;
+ QString _useDatabase; // MySql or MsSql
  QSqlDatabase db;
  SQL* sql;
- QString _servertype; // "MsSql (default), "MySql"
+ QString _servertype = "Sqlite"; // "MsSql (default), "MySql"
  Configuration* config;
  bool bOpen = false;
  QString _cityName;
@@ -32,7 +32,7 @@ class Connection : public QObject
  QString _odbc_connectorName;
  QString _defaultSqlDatabase; // MySql or MsSql
  //QString _mySqlDatabase;
- QString _connectionType;
+ QString _connectionType="Local";
  QUuid   _uuid;
  bool _dirty;
  bool _connectionValid = false;
@@ -70,7 +70,7 @@ public:
  void setUseDatabase(QString u) {_useDatabase = u;}
  QString cityName() {return _cityName;}
  void setCityName(QString name) {_cityName = name;}
- static QString dbType(QString name);
+ //static QString dbType(QString name);
  QString connectionName(){return _connectionName;}
  void setConnectionName(QString name) {_connectionName =name; }
  QString sqlite_fileName() {return _sqlite_fileName;}

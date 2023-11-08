@@ -4684,7 +4684,7 @@ void MainWindow::describeRoute()
  setCursor(Qt::WaitCursor);
  bool bFirst = true;
 
- for(QPair p : rs.seqList())
+ for(QPair<int,QString> p : rs.seqList())
  {
   SegmentInfo si = sql->getSegmentInfo(p.first);
   QString from;
@@ -4722,7 +4722,7 @@ void MainWindow::describeRoute()
    }
   }
  }
- QMessageBox box = QMessageBox(QMessageBox::Information,tr("Route description"),
+ QMessageBox box(QMessageBox::Information,tr("Route description"),
                                tr(" %1-%2 from %3 to %4").arg(rd.alphaRoute(), rd.routeName(),
                                   rd.startDate().toString("yyyy/MM/dd"), rd.endDate().toString("yyyy/MM/dd")));
  box.setInformativeText(text);

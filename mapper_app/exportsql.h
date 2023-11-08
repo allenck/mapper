@@ -32,7 +32,6 @@ public:
     ExportSql(Configuration* cfg, bool bDropTables, QObject *parent = 0);
     void setOverride(QDateTime strOvr);
     void setNoDelete(bool bFlag);
-    ExportSql* instance() {return this;}
     void setTargetConn(Connection* tgtConn);
 
     //bool exportAltRoute();

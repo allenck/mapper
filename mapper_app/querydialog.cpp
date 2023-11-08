@@ -931,29 +931,6 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 
   }
  }
-// void QueryDialog::onMoveOrRezize_columns()
-// {
-//  QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
-//  myHeaderView* hv = (myHeaderView*)view->horizontalHeader();
-//  hv->bAllowSortColumns = !hv->bAllowSortColumns;
-// }
-
-// void QueryDialog::onResizeToData()
-// {
-//  QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
-//  myHeaderView* hv =(myHeaderView*) view->horizontalHeader();
-//  hv->resizeSections(QHeaderView::ResizeToContents);
-//  QVariantList colList;
-//  QVariantList mapList;
-//  for(int i=0; i < view->model()->columnCount(); i++)
-//  {
-//   if(view->isColumnHidden(i))
-//    colList << -(view->columnWidth(i));
-//   else
-//    colList << view->columnWidth(i);
-//   mapList << hv->logicalIndex(i);
-//  }
-// }
 
  void QueryDialog::On_cbConnections_CurrentIndexChanged(int ix)
  {
@@ -1028,15 +1005,17 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 
 void QueryDialog::setTitle()
 {
+ QString database = SQL::instance()->getDatabase();
+
  if(currQueryFilename.isEmpty())
 
-  QWidget::setWindowTitle(tr("Manual Sql Query (%1)")
-                          .arg(ui->cbConnections->currentText()));
+  QWidget::setWindowTitle(tr("Manual Sql Query (%1) <B>%3</B>")
+                          .arg(ui->cbConnections->currentText(),database));
  else
  {
   QFileInfo info(currQueryFilename);
-  QWidget::setWindowTitle(tr("Manual Sql Query (%1) - %2")
-                          .arg(ui->cbConnections->currentText(),info.fileName()));
+  QWidget::setWindowTitle(tr("Manual Sql Query (%1) - %2 <B>%3</B>")
+                          .arg(ui->cbConnections->currentText(),info.fileName(),database));
  }
 }
 
