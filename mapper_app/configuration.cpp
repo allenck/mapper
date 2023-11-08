@@ -370,7 +370,7 @@ void Configuration::getSettings()
     if(ov->isSelected)
     {
      city->city_overlayMap->insert(ov->name, ov);
-     qDebug() << "add overlay " << ov->name << " for city:" << city->name();
+     qInfo() << "add overlay " << ov->name << " for city:" << city->name();
     }
    }
   }

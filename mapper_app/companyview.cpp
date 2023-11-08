@@ -16,7 +16,7 @@ CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
 #endif
 
     QSqlDatabase db = QSqlDatabase::database();
-    qDebug()<<db.databaseName();
+    //qDebug()<<db.databaseName();
     tableView->setAlternatingRowColors(true);
     connect(tableView->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
 

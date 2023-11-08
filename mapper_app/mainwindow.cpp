@@ -224,7 +224,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  }
  else // run in browser
  {
-  qDebug() << "preparing to run in browser";
+  qInfo() << "preparing to run in browser";
   webView = NULL;
   ui->groupBox_2->setHidden(true);
   openWebWindow();
@@ -253,7 +253,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   qDebug()  << "server closed";
  });
  if(m_server->isListening())
-  qDebug() << "listening on localhost:12345";
+  qInfo() << "listening on localhost:12345";
 
  // wrap WebSocket clients in QWebChannelAbstractTransport objects
  m_clientWrapper = new WebSocketClientWrapper (m_server);
@@ -748,7 +748,7 @@ void MainWindow::processTileMapResource()
      if(maxZoom > 0)
       ov->maxZoom = maxZoom;
     }
-    qDebug() <<"xml processed: " << ov->name << "descr: " << ov->description << " bounds: " << ov->bounds().toString() << " minZoom: " << ov->minZoom << " maxZoom: " << ov->maxZoom;
+    //qDebug() <<"xml processed: " << ov->name << "descr: " << ov->description << " bounds: " << ov->bounds().toString() << " minZoom: " << ov->minZoom << " maxZoom: " << ov->maxZoom;
    }
   }
  }

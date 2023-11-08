@@ -58,6 +58,9 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
     QByteArray formattedTimeMsg = formattedTime.toLocal8Bit();
     QString logLevelName = msgLevelHash[type];
     QByteArray logLevelMsg = logLevelName.toLocal8Bit();
+    QFileInfo info(context.file);
+    QString fn = info.fileName();
+    QByteArray formattedFn = fn.toLocal8Bit();
 
     ConsoleInterface::instance()->sendMessage(logLevelName + ": "+ msg);
     logToFile = Configuration::instance()->loggingOn();
@@ -75,7 +78,10 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
         ts << txt << '\n';
         outFile.close();
     } else {
-        fprintf(stdout, "%s %s: %s (%s:%u, %s)\n", formattedTimeMsg.constData(), logLevelMsg.constData(), localMsg.constData(), context.file, context.line, context.function);
+       fprintf(stdout, "%s %s: %s     (%s:%u, %s)\n",
+               formattedTimeMsg.constData(), logLevelMsg.constData(),
+               localMsg.constData(), /*context.file*/formattedFn.constData(),
+               context.line, context.function);
         fflush(stdout);
     }
 

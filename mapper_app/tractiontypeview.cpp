@@ -14,7 +14,7 @@ TractionTypeView::TractionTypeView(Configuration *cfg, QObject *parent) :
     tableView->verticalHeader()->resize(2,20);
 
     QSqlDatabase db = QSqlDatabase::database();
-    qDebug()<<db.databaseName();
+    //qDebug()<<db.databaseName();
     connect(tableView->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
     tableView->setAlternatingRowColors(true);
 
