@@ -648,3 +648,14 @@ void Configuration::createDefaultSettings()
 
 } // end default configuration
 
+void Configuration::changeFonts(QWidget* obj,QFont f)
+{
+    QList<QWidget*> objlistChildren = obj->findChildren<QWidget*>();
+    int iCount = objlistChildren.count();
+
+    for(int iIndex = 0; iIndex < iCount; iIndex++)
+    {
+        QWidget *temp = objlistChildren[iIndex];
+        temp->setFont(f);
+    }
+}

@@ -313,7 +313,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  b_cbRoutes_TextChanged=false;
  bStreetChanged=false;
  bSegmentChanged=false;
- m_SegmentId = -1;
+ m_segmentId = -1;
 
  routeDlg=0;
  queryDlg = 0;
@@ -365,7 +365,6 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   dupSegmentView = new DupSegmentView(config, this);
   connect(routeView, SIGNAL(selectSegment(int)), this, SLOT(selectSegment(int)));
   connect(dupSegmentView, SIGNAL(selectSegment(int)), this, SLOT(selectSegment(int)));
-  //ui->tabWidget->removeTab(6);
 
   // setup routeDlg
   routeDlg = new RouteDlg(config, this);
@@ -404,30 +403,6 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   connect(ui->sbRoute, SIGNAL(actionTriggered(int)), this,  SLOT(sbRouteTriggered(int)));
   connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbrLeave()) );
   connect(ui->sbTracks, SIGNAL(valueChanged(int)), this, SLOT(sbTracks_valueChanged(int)));
-//  connect(ui->rbSingle, &QRadioButton::clicked, [=]{
-//   saveStreet = ui->cbStreets->currentText();
-//   refreshSegmentCB();
-//  });
-//  connect(ui->rbDouble, &QRadioButton::clicked, [=]{
-//   saveStreet = ui->cbStreets->currentText();
-//   refreshSegmentCB();
-//  });
-//  connect(ui->rbBoth, &QRadioButton::clicked, [=]{
-//   saveStreet = ui->cbStreets->currentText();
-//   refreshSegmentCB();
-//  });
-
-//  QSortFilterProxyModel* proxy = new QSortFilterProxyModel(ui->cbStreets);
-//  proxy->setSourceModel(ui->cbStreets->model());
-//  // combo's current model must be reparented,
-//  // otherwise QComboBox::setModel() will delete it
-//  ui->cbStreets->model()->setParent(proxy);
-//  ui->cbStreets->setModel(proxy);
-//  connect(ui->cbStreets, &QComboBox::editTextChanged, [=]{
-//   bCbStreets_text_changed = true;
-//  });
-//  connect(ui->cbStreets, SIGNAL(editingFinished()), this, SLOT(cbStreets_editingFinished()));
-//  connect(ui->cbStreets, SIGNAL(currentIndexChanged(int)), this, SLOT(cbStreets_currentIndexChanged(int)));
   connect(ui->ssw, SIGNAL(segmentSelected(SegmentInfo)), this, SLOT(cbSegmentsSelectedValueChanged(SegmentInfo)));
   // Context menus
   ui->cbRoute->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -515,17 +490,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   }
   else
    ui->chkShowOverlay->setEnabled(false);
-
-//  ui->btnFirst->setEnabled(false);
-//  ui->btnNext->setEnabled(false);
-//  ui->btnPrev->setEnabled(false);
-//  ui->btnLast->setEnabled(false);
-//  ui->btnSplit->setEnabled(false);
-
-//  qApp->processEvents();
-//  showGoogleMapFeaturesAct->setChecked(config->bShowGMFeatures);
-//  showGoogleMapFeatures(config->bShowGMFeatures);
-config->saveSettings();
+  ui->tabWidget->setTabVisible(0, true);
+  config->saveSettings();
 }
 
 /*static*/ MainWindow* MainWindow::_instance = nullptr;
@@ -1094,7 +1060,7 @@ void MainWindow::createActions()
  splitSegmentAct = new QAction(tr("Split segment at a date"),this);
  splitSegmentAct->setStatusTip(tr("Split a segment at a date."));
  connect(splitSegmentAct, &QAction::triggered, [=]{
-  SplitSegmentDlg* splitSegment = new SplitSegmentDlg(m_SegmentId);
+  SplitSegmentDlg* splitSegment = new SplitSegmentDlg(m_segmentId);
   int ret = splitSegment->exec();
   if(ret == QDialog::Accepted)
    //refreshSegmentCB();
@@ -2484,8 +2450,8 @@ void MainWindow::segmentSelected(qint32 pt, qint32 SegmentId)
  //m_bridge->processScript("addModeOff");
  m_bAddMode = false;
  addPointModeAct->setChecked(false);
- m_SegmentId = SegmentId;
- SegmentInfo si = sql->getSegmentInfo(m_SegmentId);
+ m_segmentId = SegmentId;
+ SegmentInfo si = sql->getSegmentInfo(m_segmentId);
  if (si.segmentId() == -1)
  {
   qDebug() <<"segment " + QString("%1").arg(SegmentId) + " not found";
@@ -2501,7 +2467,7 @@ void MainWindow::segmentSelected(qint32 pt, qint32 SegmentId)
  lookupStreetName(si);
  //txtSegment.Text = si.description;
  ui->txtSegment->setText(si.description());
- ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(si.pointList().count()));
+ ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(si.pointList().count()));
  //ui->cbSegments->findText(si.toString(), Qt::MatchExactly);
 // int ix = ui->cbSegments->findData(SegmentId);
 // ui->cbSegments->setCurrentIndex(ix);
@@ -2673,15 +2639,15 @@ void MainWindow::btnFirstClicked()
         return;
     //m_bridge->processScript("addMarker","0,"+QString("%1").arg(((LatLng)m_points.at(0)).lat(),0,'f',8)+","+QString("%1").arg(((LatLng)m_points.at(0)).lon(),0,'f',8)  +",1,'point0'," + QString("%1").arg(m_SegmentId));
     QVariantList objArray;
-    objArray << 0 << ((LatLng)m_points.at(0)).lat()<<((LatLng)m_points.at(0)).lon()<<1<<"pointO"<<m_SegmentId;
+    objArray << 0 << ((LatLng)m_points.at(0)).lat()<<((LatLng)m_points.at(0)).lon()<<1<<"pointO"<<m_segmentId;
      m_bridge->processScript("addMarker",objArray);
 
     ui->btnNext->setEnabled(true);
     ui->btnPrev->setEnabled(false);
     //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
-    SegmentInfo sd = sql->getSegmentInfo(m_SegmentId);
+    SegmentInfo sd = sql->getSegmentInfo(m_segmentId);
     lookupStreetName(sd);
-    segmentView->showSegmentsAtPoint(((LatLng)m_points.at(0)).lat(), ((LatLng)m_points.at(0)).lon(),m_SegmentId);
+    segmentView->showSegmentsAtPoint(((LatLng)m_points.at(0)).lat(), ((LatLng)m_points.at(0)).lon(),m_segmentId);
     if(!ui->chkNoPan->isChecked())
     {
         objArray.clear();
@@ -2725,17 +2691,17 @@ void MainWindow::btnNextClicked()
     if(m_points.isEmpty())
         return;
     QVariantList objArray;
-    m_bridge->processScript("addMarker",QString("%1").arg(m_currPoint)+","+QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)+","+QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8 ) +","+marker+",'point"+ QString("%1").arg(m_currPoint)+"',"+ QString("%1").arg(m_SegmentId));
+    m_bridge->processScript("addMarker",QString("%1").arg(m_currPoint)+","+QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)+","+QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8 ) +","+marker+",'point"+ QString("%1").arg(m_currPoint)+"',"+ QString("%1").arg(m_segmentId));
     if(!ui->chkNoPan->isChecked())
     {
         objArray.clear();
         objArray<<((LatLng)m_points.at(m_currPoint)).lat()<<((LatLng)m_points.at(m_currPoint)).lon();
         m_bridge->processScript("setCenter", objArray);
     }
-    segmentView->showSegmentsAtPoint(((LatLng)m_points.at(m_currPoint)).lat(), ((LatLng)m_points.at(m_currPoint)).lon(),m_SegmentId);
+    segmentView->showSegmentsAtPoint(((LatLng)m_points.at(m_currPoint)).lat(), ((LatLng)m_points.at(m_currPoint)).lon(),m_segmentId);
 
     //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
-    SegmentInfo sd = sql->getSegmentInfo(m_SegmentId);
+    SegmentInfo sd = sql->getSegmentInfo(m_segmentId);
     lookupStreetName(sd);
 }
 
@@ -2806,7 +2772,7 @@ void MainWindow::btnLastClicked()
     if(m_points.isEmpty())
         return;
     QVariantList objArray;
-    m_bridge->processScript("addMarker",QString("%1").arg(m_currPoint)+","+QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)+","+QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8 ) +","+marker+",'point"+ QString("%1").arg(m_currPoint)+"',"+ QString("%1").arg(m_SegmentId));
+    m_bridge->processScript("addMarker",QString("%1").arg(m_currPoint)+","+QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)+","+QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8 ) +","+marker+",'point"+ QString("%1").arg(m_currPoint)+"',"+ QString("%1").arg(m_segmentId));
 
     if(!ui->chkNoPan->isChecked())
     {
@@ -2815,7 +2781,7 @@ void MainWindow::btnLastClicked()
         m_bridge->processScript("setCenter", objArray);
     }
     //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
-    segmentView->showSegmentsAtPoint(((LatLng)m_points.at(m_currPoint)).lat(), ((LatLng)m_points.at(m_currPoint)).lon(),m_SegmentId);
+    segmentView->showSegmentsAtPoint(((LatLng)m_points.at(m_currPoint)).lat(), ((LatLng)m_points.at(m_currPoint)).lon(),m_segmentId);
 //TODO            lookupStreetName(sd);
     ////if (sd != null)
     ////{
@@ -2864,16 +2830,16 @@ void MainWindow::btnPrevClicked()
     if(m_currPoint < 0)
      m_currPoint = 0;
     QVariantList objArray;
-    m_bridge->processScript("addMarker",QString("%1").arg(m_currPoint)+","+QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)+","+QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8 ) +","+marker+",'point"+ QString("%1").arg(m_currPoint)+"',"+ QString("%1").arg(m_SegmentId));
+    m_bridge->processScript("addMarker",QString("%1").arg(m_currPoint)+","+QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)+","+QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8 ) +","+marker+",'point"+ QString("%1").arg(m_currPoint)+"',"+ QString("%1").arg(m_segmentId));
     if(!ui->chkNoPan->isChecked())
     {
         objArray.clear();
         objArray<<((LatLng)m_points.at(m_currPoint)).lat()<<((LatLng)m_points.at(m_currPoint)).lon();
         m_bridge->processScript("setCenter", objArray);
     }
-    segmentView->showSegmentsAtPoint(((LatLng)m_points.at(m_currPoint)).lat(), ((LatLng)m_points.at(m_currPoint)).lon(),m_SegmentId);
+    segmentView->showSegmentsAtPoint(((LatLng)m_points.at(m_currPoint)).lat(), ((LatLng)m_points.at(m_currPoint)).lon(),m_segmentId);
     //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
-    SegmentInfo sd = sql->getSegmentInfo(m_SegmentId) ;
+    SegmentInfo sd = sql->getSegmentInfo(m_segmentId) ;
     lookupStreetName(sd);
     //if (sd != null)
     //{
@@ -2968,7 +2934,7 @@ void MainWindow::btnSplit_Clicked()    // SLOT
  //SQL sql;
  SegmentDlg segmentDlg(config, this);
  //segmentDlg.setConfiguration(config);
- segmentDlg.setSegmentId( m_SegmentId);
+ segmentDlg.setSegmentId( m_segmentId);
  segmentDlg.setPt(m_currPoint);
  if(ui->cbRoute->currentIndex() >=0)
   segmentDlg.setRouteData( routeList.at(ui->cbRoute->currentIndex()));
@@ -2977,12 +2943,12 @@ void MainWindow::btnSplit_Clicked()    // SLOT
 
  if (segmentDlg.exec() == QDialog::Accepted)
  {
-  m_SegmentId = segmentDlg.newSegmentId();
+  m_segmentId = segmentDlg.newSegmentId();
 
   if(routeDlg)
-   routeDlg->setSegmentId( m_SegmentId);
+   routeDlg->setSegmentId( m_segmentId);
 
-  ui->txtSegment->setText( sql->getSegmentDescription(m_SegmentId));
+  ui->txtSegment->setText( sql->getSegmentDescription(m_segmentId));
   //ui->chkOneWay->setChecked(sql->getSegmentOneWay(m_SegmentId) == "Y");
 
 
@@ -3059,16 +3025,16 @@ void MainWindow::displaySegment(qint32 segmentId, QString segmentName, /*QString
 // cbSegmentsSelectedValueChanged(ui->cbSegments->currentData().toInt());
 //}
 
-void MainWindow::cbSegmentsSelectedValueChanged(SegmentInfo sd)
+void MainWindow::cbSegmentsSelectedValueChanged(SegmentInfo si)
 {
-    if(sd.segmentId() < 0)
+    if(si.segmentId() < 0)
         return;
-    m_SegmentId = sd.segmentId();
-    updateSegmentInfoDisplay(sd);
+    m_segmentId = si.segmentId();
+    updateSegmentInfoDisplay(si);
 
-    routeDlg->setSegmentId( m_SegmentId);
+    routeDlg->setSegmentId( m_segmentId);
     //webBrowser1.Document.InvokeScript("addModeOn");
-    if(sd.startLat() == 0)
+    if(si.startLat() == 0)
     {
      m_bridge->processScript("addModeOn");
      m_bAddMode = true;
@@ -3083,12 +3049,12 @@ void MainWindow::cbSegmentsSelectedValueChanged(SegmentInfo sd)
     if(!ui->chkNoPan->isChecked())
     {
         QVariantList objArray;
-        objArray << sd.startLat() << sd.startLon();
+        objArray << si.startLat() << si.startLon();
         m_bridge->processScript("setCenter", objArray);
     }
 
 
-    displaySegment(m_SegmentId, ui->txtSegment->text(), /*sd.oneWay(),*/ /*sd.oneWay()=="Y" ? "#00FF00" :*/ "#045fb4", " ", true);
+    displaySegment(m_segmentId, ui->txtSegment->text(), /*sd.oneWay(),*/ /*sd.oneWay()=="Y" ? "#00FF00" :*/ "#045fb4", " ", true);
 
 #if 0
     // Display Start and end markers
@@ -3120,10 +3086,10 @@ void MainWindow::txtSegment_Leave( )
  //SQL sql;
  if (bSegmentChanged)
  {
-  SegmentInfo sd = sql->getSegmentInfo(m_SegmentId);
-  sql->updateSegmentDetails(m_SegmentId, ui->txtSegment->text(), /*sd.oneWay(),*/ ui->sbTracks->value(), sd.length(), sd.routeType());
+  SegmentInfo sd = sql->getSegmentInfo(m_segmentId);
+  sql->updateSegmentDetails(m_segmentId, ui->txtSegment->text(), /*sd.oneWay(),*/ ui->sbTracks->value(), sd.length(), sd.routeType());
   bSegmentChanged = false;
-  int segmentId = m_SegmentId;
+  int segmentId = m_segmentId;
 //  refreshSegmentCB();
 //  for(int i=0; i < cbSegmentInfoList.count(); i++)
 //  {
@@ -3286,7 +3252,7 @@ void MainWindow::addPoint(int pt, double lat, double lon)
 {
     //SQL sql;
     //getArray(); // get points from display.
-    SegmentInfo sd = sql->getSegmentInfo(m_SegmentId);
+    SegmentInfo sd = sql->getSegmentInfo(m_segmentId);
     m_points = sd.pointList();
     m_points.append(LatLng(lat, lon));
     m_nbrPoints = m_points.size();
@@ -3298,7 +3264,7 @@ void MainWindow::addPoint(int pt, double lat, double lon)
      sd.setStartLat(m_points.at(0).lat());
      sd.setStartLon(m_points.at(1).lon());
     }
-    if(sd.segmentId() == m_SegmentId && m_nbrPoints > 0)
+    if(sd.segmentId() == m_segmentId && m_nbrPoints > 0)
     {
      sd.addPoint(m_points.at(m_nbrPoints-1 ));
     }
@@ -3306,7 +3272,7 @@ void MainWindow::addPoint(int pt, double lat, double lon)
     {
      sd.addPoint(m_points.at(0));
     }
-    ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(sd.pointList().count()));
+    ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(sd.pointList().count()));
 }
 
 /// <summary>
@@ -3317,15 +3283,15 @@ void MainWindow::addPoint(int pt, double lat, double lon)
 /// <param name="newLon"></param>
 void MainWindow::movePoint(qint32 segmentId, qint32 i, double newLat, double newLon)
 {
- m_SegmentId = segmentId;
- SegmentInfo sd = sql->getSegmentInfo(m_SegmentId);
+ m_segmentId = segmentId;
+ SegmentInfo sd = sql->getSegmentInfo(m_segmentId);
 
- if(sd.segmentId() == m_SegmentId)
+ if(sd.segmentId() == m_segmentId)
  {
   sd.movePoint(i, LatLng(newLat, newLon));
  }
  //SQL sql;
- LatLng oldPoint = sql->getPointOnSegment((int)i, m_SegmentId);
+ LatLng oldPoint = sql->getPointOnSegment((int)i, m_segmentId);
  //TODO what about multiple station records?
  StationInfo sti = sql->getStationAtPoint(oldPoint);
  if (sti.stationKey > 0)
@@ -3372,28 +3338,28 @@ void MainWindow::updateIntersection(qint32 i, double newLat, double newLon)
 {
  Q_UNUSED(i)
  //SQL sql;
- SegmentInfo sd = sql->getSegmentInfo(m_SegmentId);
+ SegmentInfo sd = sql->getSegmentInfo(m_segmentId);
  // get all the points within 100 meters
  //QList<segmentData> myArray = sql->getIntersectingSegments(newLat, newLon, .020, si.routeType);
  QList<SegmentInfo> myArray = sql->getIntersectingSegments(newLat, newLon, .020, sd.routeType());
- int currSegment = m_SegmentId;
+ int currSegment = m_segmentId;
  //foreach (segmentData sd in myArray)
  for(int i=0; i< myArray.count(); i++)
  {
   //segmentData sd= (segmentData)myArray.at(i);
   SegmentData sd = myArray.at(i);
   //QString oneWay = sql->getSegmentOneWay(sd.SegmentId);
-  m_SegmentId = sd.segmentId();
+  m_segmentId = sd.segmentId();
   //m_nbrPoints = sql->getNbrPoints(m_SegmentId);
   m_nbrPoints = sd.pointList().count();
   if(sd.whichEnd() == "S")
-   movePoint(m_SegmentId, 0, newLat, newLon);
+   movePoint(m_segmentId, 0, newLat, newLon);
   else
-   movePoint(m_SegmentId, m_nbrPoints -1, newLat, newLon);
+   movePoint(m_segmentId, m_nbrPoints -1, newLat, newLon);
   //displaySegment(sd.SegmentId, sql->getSegmentDescription(si.SegmentId), oneWay, oneWay == "N" ? "#00FF00" : "#045fb4", true);
   displaySegment(sd.segmentId(), sd.description(), /*sd.oneWay(),*/ /*sd.oneWay() == "N" ? "#00FF00" : */"#045fb4", " ",  true);
  }
- m_SegmentId = currSegment;
+ m_segmentId = currSegment;
 }
 
 
@@ -3414,9 +3380,9 @@ void MainWindow::insertPoint(int SegmentId, qint32 i, double newLat, double newL
     m_currPoint++;
 #endif
     //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
-    sd = sql->getSegmentInfo(m_SegmentId);
+    sd = sql->getSegmentInfo(m_segmentId);
     lookupStreetName(sd);
-    ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(sd._pointList.count()));
+    ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(sd._pointList.count()));
     ui->btnSplit->setEnabled(true);
 }
 
@@ -3429,9 +3395,9 @@ void MainWindow::btnDeletePtClicked()
 {
  if(!bFirstSegmentDisplayed)
   return;
- SegmentInfo sd = sql->getSegmentInfo(m_SegmentId);
+ SegmentInfo sd = sql->getSegmentInfo(m_segmentId);
 
- if(sd.segmentId() == m_SegmentId)
+ if(sd.segmentId() == m_segmentId)
  {
   if(m_nbrPoints < 3)
   {
@@ -3460,9 +3426,9 @@ void MainWindow::btnDeletePtClicked()
           //objArray[3] = "0"; // intermediate marker
           marker = "0";
   }
-  ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(sd.pointList().count()));
+  ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(sd.pointList().count()));
   //webBrowser1.Document.InvokeScript("addMarker", objArray);
-  m_bridge->processScript("addMarker", QString("%1").arg(m_currPoint)+ ","+ QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8) + "," + QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8)+ ","+marker+",'',"+QString("%1").arg(m_SegmentId));
+  m_bridge->processScript("addMarker", QString("%1").arg(m_currPoint)+ ","+ QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8) + "," + QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8)+ ","+marker+",'',"+QString("%1").arg(m_segmentId));
   QVariantList objArray;
   if(!ui->chkNoPan->isChecked())
   {
@@ -3488,10 +3454,10 @@ void MainWindow::sbTracks_valueChanged(int)
 
 void MainWindow::txtStreetName_Leave()
 {
- if (bStreetChanged && (m_currPoint < m_nbrPoints) && m_SegmentId > -1)
+ if (bStreetChanged && (m_currPoint < m_nbrPoints) && m_segmentId > -1)
  {
   //segmentData sd = segmentData(m_currPoint, m_SegmentId);
-  SegmentInfo sd = sql->getSegmentInfo(m_SegmentId);
+  SegmentInfo sd = sql->getSegmentInfo(m_segmentId);
   if(sd.pointList().count()<2) return;
   sd.setStartLat(sd.pointList().at(0).lat());
   sd.setStartLon(sd.pointList().at(0).lon());
@@ -3699,14 +3665,14 @@ void MainWindow::addSegment()
     {
         //refreshSegmentCB();
        ui->ssw->refresh();
-       m_SegmentId = segmentDlg.newSegmentId();
+       m_segmentId = segmentDlg.newSegmentId();
         m_nbrPoints = 0;
         //??routeDlg.SegmentId = m_SegmentId;
         //        ui->txtSegment->setText(sql->getSegmentDescription(m_SegmentId));
 
-        ui->lblSegment->setText(tr("Segment %1:").arg(m_SegmentId));
+        ui->lblSegment->setText(tr("Segment %1:").arg(m_segmentId));
         //        ui->chkOneWay->setChecked("Y"== sql->getSegmentOneWay(m_SegmentId));
-        SegmentData* sd = sql->getSegmentData(rd.route(), m_SegmentId, rd.startDate().toString("yyyy/MM/dd"),
+        SegmentData* sd = sql->getSegmentData(rd.route(), m_segmentId, rd.startDate().toString("yyyy/MM/dd"),
                                              rd.endDate().toString("yyyy/MM/dd"));
         updateSegmentInfoDisplay(*sd);
 
@@ -3719,7 +3685,7 @@ void MainWindow::addSegment()
          dash = 3;
 
         QVariantList objArray;
-        objArray << m_SegmentId << segmentDlg.routeName()<<ui->txtSegment->text()
+        objArray << m_segmentId << segmentDlg.routeName()<<ui->txtSegment->text()
                  <<sd->oneWay()<<getColor(segmentDlg.tractionType())<<sd->tracks() << dash
                 << sd->routeType() << sd->trackUsage() << 0;
         m_bridge->processScript("createSegment",objArray);
@@ -3728,7 +3694,7 @@ void MainWindow::addSegment()
         m_bridge->processScript("addModeOn");
         m_bAddMode = true;
 
-        SegmentInfo si = sql->getSegmentInfo(m_SegmentId);
+        SegmentInfo si = sql->getSegmentInfo(m_segmentId);
         lookupStreetName(si);
         //refreshRoutes();
         //refreshSegmentCB();
@@ -3758,8 +3724,10 @@ void MainWindow::deleteRoute()
 
 void MainWindow::on_updateRoute()
 {
-  SegmentData* sd = sql->getSegmentData(m_routeNbr, m_SegmentId, _rd.startDate().toString("yyyy/MM/dd"),
+  SegmentData* sd = sql->getSegmentData(m_routeNbr, m_segmentId, _rd.startDate().toString("yyyy/MM/dd"),
                                        _rd.endDate().toString("yyyy/MM/dd"));
+  if(!sd)
+   return;
   sd->setRouteName(_rd.routeName());
   sd->setCompanyKey(_rd.companyKey());
   sd->setTractionType(_rd.tractionType());
@@ -3784,10 +3752,10 @@ void MainWindow::updateRoute(SegmentData* sd )
     if(sd)
     {
      try{
-      routeDlg->setRouteNbr( sd->route());
-      //routeDlg->setSegmentId( sd->segmentId());
-      if(sd->alphaRoute().isEmpty())
-       sd->setAlphaRoute(_rd.alphaRoute());
+//      routeDlg->setRouteNbr( sd->route());
+//      //routeDlg->setSegmentId( sd->segmentId());
+//      if(sd->alphaRoute().isEmpty())
+//       sd->setAlphaRoute(_rd.alphaRoute());
       routeDlg->setSegmentData(sd);
       routeDlg->show();
       routeDlg->raise();
@@ -3800,10 +3768,10 @@ void MainWindow::updateRoute(SegmentData* sd )
      }
     }
 
-    if(m_SegmentId >= 0)
+    if(m_segmentId >= 0)
     {
      routeDlg->setRouteNbr( m_routeNbr);
-     routeDlg->setSegmentId( m_SegmentId);
+     routeDlg->setSegmentId( m_segmentId);
      routeDlg->setSegmentData(_rd);
      //routeDlg.segmentInfoList = segmentInfoList;
      routeDlg->show();
@@ -4153,7 +4121,7 @@ void MainWindow::moveRouteComment(int route, QString date, double latitude, doub
 
 void MainWindow::chkOneWay_toggled(bool bChecked)
 {
- SegmentInfo sd = sql->getSegmentInfo(m_SegmentId);
+ SegmentInfo sd = sql->getSegmentInfo(m_segmentId);
  if(bChecked)
  {
   //ui->sbTracks->setEnabled(false);
@@ -4370,7 +4338,7 @@ void MainWindow::updateSegmentInfoDisplay(SegmentInfo sd)
   //  }
   //txtOneWay.Text = sI.oneWay;
  }
- ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_SegmentId).arg(sd.pointList().count()));
+ ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(sd.pointList().count()));
 }
 
 void MainWindow::On_editSegment_triggered()

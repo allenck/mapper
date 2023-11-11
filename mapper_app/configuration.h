@@ -63,6 +63,7 @@ public:
  bool foreignKeyCheck() {return bForeignKeyCheck;}
  void setForeignKeyCheck(bool b) {bForeignKeyCheck = b;}
  QFont font = QApplication::font();
+ void changeFonts(QWidget *obj, QFont f );
 
 private:
  static Configuration* _instance;

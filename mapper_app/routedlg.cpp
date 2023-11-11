@@ -10,6 +10,7 @@ RouteDlg::RouteDlg(Configuration *cfg, QWidget *parent) :
 {
     ui->setupUi(this);
     config = Configuration::instance();
+    config->changeFonts(this, config->font);
     //sql->setConfig(config);
     sql = SQL::instance();
     this->setWindowTitle(tr("Update Route"));
@@ -93,7 +94,7 @@ void RouteDlg::setSegmentId(qint32 segmentid)
  if(qobject_cast<MainWindow*>(parent()))
  {
     MainWindow* main = qobject_cast<MainWindow*>(parent());
-    sd = sql->getSegmentDataForRouteDates(main->m_routeNbr, main->m_routeName, _segmentId,
+    this->sd = sql->getSegmentDataForRouteDates(main->m_routeNbr, main->m_routeName, _segmentId,
                                           main->m_currRouteStartDate, main->m_currRouteEndDate);
  }
  bSegmentChanging = false;
@@ -160,6 +161,8 @@ void RouteDlg::setSegmentId(qint32 segmentid)
   bSegmentChanging = false;
   //ui->txtRouteNbr->setFocus();
  }
+ btnUpdateTurn_Click();
+
  CalculateDates();
 }
 
@@ -281,6 +284,7 @@ void RouteDlg::setSegmentData(SegmentData* sd)
    break;
   }
  }
+ btnUpdateTurn_Click();
  bRouteChanging = false;
  bAddMode = false;
  checkUpdate(__FUNCTION__);

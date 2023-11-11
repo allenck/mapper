@@ -19,6 +19,7 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
 {
   ui->setupUi(this);
   config = cfg;
+  config->changeFonts(this, config->font);
   currQueryFilename = "";
   setTitle();
   bChanging = false;

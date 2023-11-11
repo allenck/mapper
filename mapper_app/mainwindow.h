@@ -185,7 +185,7 @@ public:
     QWebSocketServer* m_OverlayServer;
     WebSocketClientWrapper* m_overlayWrapper;
 #endif
-    int selectedSegment() {return m_SegmentId;}
+    int selectedSegment() {return m_segmentId;}
     QDir htmlDir;
     static MainWindow* _instance;
     static MainWindow* instance();
@@ -414,7 +414,7 @@ private:
     FileDownloader *m_tilemapresource;
     Configuration* config;
     MyWebEnginePage* myWebEnginePage = nullptr;
-    qint32 m_SegmentId;
+    qint32 m_segmentId;
     //QT_DEPRECATED QList<SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
     QMap<int, SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
 

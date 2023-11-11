@@ -203,7 +203,6 @@ SegmentData::SegmentData()
  _streetName = "";
  _bearing = _bearingStart = _bearingEnd =Bearing();
  _route = -1;
-
 }
 
 SegmentData::SegmentData(const SegmentData& o)
