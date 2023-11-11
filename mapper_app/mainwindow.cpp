@@ -1281,8 +1281,8 @@ void MainWindow::createActions()
  fontSizeChangeAct = new QAction(tr("Change font"), this);
  fontSizeChangeAct->setStatusTip(tr("Open a dialog to change the application's font."));
  connect(fontSizeChangeAct, &QAction::triggered, [=]{
-    this->setFont(QFontDialog::getFont(0, this->font()));
-
+    this->changeFonts(QFontDialog::getFont(0, this->font()));
+    config->font = this->font();
  });
 }
 void MainWindow::changeFonts(QFont f)

@@ -168,7 +168,7 @@ void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
 
     sourceModel = new SegmentViewTableModel(myArray, lat, lon, myParent->m_routeNbr, myParent->m_currRouteEndDate, this);
     proxymodel->setSourceModel(sourceModel);
-    myParent->ui->intersectingLabel->setText(tr("Segments connectint to %1").arg(sdIn.toString()));
+    myParent->ui->intersectingLabel->setText(tr("Segments connecting to %1").arg(sdIn.toString()));
 
     // get the row of the start segment and the end segment
     int numRows = proxymodel->rowCount();
