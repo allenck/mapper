@@ -104,7 +104,7 @@ void OtherRouteView::tablev_customContextMenu( const QPoint& pt)
         QModelIndex sourceModelIndex = ((QSortFilterProxyModel*)ui->model())->mapToSource(modelIndex);
         qint32 row = sourceModelIndex.row();
         QList<SegmentData> list = sourceModel->getList();
-        rd = list.at(row);
+        sd = list.at(row);
 
         menu.addAction(displayRouteAct);
         menu.exec(QCursor::pos());
@@ -128,7 +128,8 @@ bool OtherRouteView::boolGetItemTableView(QTableView *table)
 
 void OtherRouteView::On_displayRouteAct_triggered(bool)
 {
- emit displayRoute(rd);
+ RouteData rd = RouteData(sd);
+ emit displayRoute(sd);
 }
 
 otherRouteViewSortProxyModel::otherRouteViewSortProxyModel(QObject *parent) :

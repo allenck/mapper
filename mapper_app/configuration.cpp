@@ -165,6 +165,7 @@ void Configuration::saveSettings()
  settings->setValue("saveImageDir", saveImageDir);
  settings->setValue("showGMFeatures", bShowGMFeatures);
  settings->setValue("foreignKeyCheck", bForeignKeyCheck);
+ settings->setValue("font",font);
 }
 
 void Configuration::getSettings()
@@ -388,6 +389,7 @@ void Configuration::getSettings()
  saveImageDir = settings.value("saveImageDir", "").toString();
  bShowGMFeatures = settings.value("showGMFeatures", true).toBool();
  bForeignKeyCheck = settings.value("foreignKeyCheck", true).toBool();
+ font = settings.value("font").value<QFont>();
  //settings.endGroup();
 
  settings.beginGroup("query");

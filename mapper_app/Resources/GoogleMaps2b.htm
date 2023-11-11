@@ -5,7 +5,7 @@
   <style type="text/css">
     html { height: 100% }
     body { height: 100%; margin: 0; padding: 0 }
-    #map_canvas { height: 100%}
+    #map { height: 100%}
 
     .menu {
         width: 170px;
@@ -27,7 +27,8 @@
    </style>
   <title>Mapper</title>
 
-  <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+  <!--script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script-->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
   <script type="text/javascript" src="qwebchannel.js"> </script>
   <!-- API key 4 when using browser -->
   <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?v=weekly&key=MYAPIKEY"></script>
@@ -53,7 +54,7 @@
  </head>
  <body style="font-family: Arial; border: 0 none;">
   <!--The div element for the map -->
-      <div id="map-canvas" style="width:100%; height:100%;"></div>
+      <div id="map" style="width:100%; height:100%;"></div>
 
   <div class="menu" id="menu">
       <div class="menu-item"><i class="glyphicon glyphicon-file"></i>Manage files</div>

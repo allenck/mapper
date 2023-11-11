@@ -2,7 +2,6 @@
 //#include "webviewbridge.h"
 #include "mainwindow.h"
 #include <QMessageBox>
-#include "systemconsole.h"
 #include "consoleinterface.h"
 #include <QString>
 #include "myapplication.h"
@@ -96,9 +95,16 @@ int main(int argc, char *argv[])
 
     if (envVar.isEmpty())
         logToFile = true;
+
+#ifndef Q_OS_WIN
     ConsoleInterface::instance(); // create singleton class.
     qInstallMessageHandler(customMessageOutput); // custom message handler for debugging
-
+#else
+# ifndef QT_DEBUG
+    ConsoleInterface::instance(); // create singleton class.
+    qInstallMessageHandler(customMessageOutput); // custom message handler for debugging
+# endif
+#endif
  QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
  //QApplication a(argc, argv);

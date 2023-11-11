@@ -125,6 +125,22 @@ RouteData::RouteData(const RouteData& o)
  _seqList = o._seqList;
 }
 
+RouteData::RouteData(const SegmentData& o)
+{
+ _route = o.route();
+ _alphaRoute = o.alphaRoute();
+ //baseRoute = o.baseRoute;
+ _name = o.routeName();
+ //defaultDate = o.defaultDate;
+ _startDate = o.startDate();
+ _endDate = o.endDate();
+ _companyKey = o.companyKey();
+ _lineKey = o.segmentId();
+ _tractionType = o.tractionType();
+
+}
+
+
 QList<QPair<int, QString> > RouteData::setSeqList(QString txt)
 {
  _seqList.clear();

@@ -66,7 +66,7 @@ public:
 
 
 signals:
- void displayRoute(SegmentData rd);
+ void displayRoute(RouteData rd);
 
 public slots:
  void On_displayRouteAct_triggered(bool);
@@ -83,7 +83,7 @@ private:
     static OtherRouteView* _instance;
     QMenu menu;
     QAction* displayRouteAct;
-    SegmentData rd;
+    SegmentData sd;
     int curRow, curCol;
     bool boolGetItemTableView(QTableView *table);
     QModelIndex currentIndex;

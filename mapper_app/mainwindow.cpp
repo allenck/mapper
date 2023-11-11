@@ -23,7 +23,6 @@
 #include "modifyroutedatedlg.h"
 //#include "exportdlg.h"
 #include "editconnectionsdlg.h"
-#include "locatestreetdlg.h"
 #include "combineroutesdlg.h"
 #include "reroutingdlg.h"
 #include "createsqlitedatabasedialog.h"
@@ -69,6 +68,8 @@
 #include "modifyroutetractiontypedlg.h"
 #include "dialogchangeroute.h"
 #include "systemconsole.h"
+#include <QWebEngineSettings>
+#include <QFontDialog>
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -83,6 +84,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  QCoreApplication::setApplicationName("Mapper");
  config = Configuration::instance();
  config->getSettings();
+ changeFonts(config->font);
+
  QString cwd = QDir::currentPath();
  wikiRoot = cwd+ QDir::separator()+ "wiki";
  QIcon icon(":/tram-icon.ico");
@@ -163,6 +166,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 //  webView->setUrl(QUrl(QStringLiteral("qrc:/GoogleMaps.htm")));
 //#else
   webView = new QWebEngineView(ui->groupBox_2);
+  QWebEngineSettings *settings = webView->page()->settings();
+  settings->setAttribute(QWebEngineSettings::JavascriptEnabled, true);
   webView->setObjectName(QStringLiteral("webEngineView"));
   webView->setContextMenuPolicy(Qt::CustomContextMenu);
   webView->setPage(myWebEnginePage = new MyWebEnginePage());
@@ -262,13 +267,14 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  channel = new QWebChannel();
  QObject::connect(m_clientWrapper, &WebSocketClientWrapper::clientConnected,
                   channel, &QWebChannel::connectTo);
- qDebug() << "registering webViewBridge";
+ qInfo() << "registering webViewBridge";
  channel->registerObject("webViewBridge", m_bridge);
 
 
  if(!config->bRunInBrowser)
   webView->page()->setWebChannel(channel);
- connect(m_clientWrapper, &WebSocketClientWrapper::clientClosed, this, &MainWindow::onWebSocketClosed);
+ else
+  connect(m_clientWrapper, &WebSocketClientWrapper::clientClosed, this, &MainWindow::onWebSocketClosed);
 
 #endif
 
@@ -352,7 +358,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   segmentView = new SegmentView(config, this);
   connect(segmentView, SIGNAL(selectSegment(int)), this, SLOT(on_selectSegment(int)));
   otherRouteView =  OtherRouteView::instance(this);
-  connect(otherRouteView, SIGNAL(displayRoute(displayRoute)), this, SLOT(On_displayRoute(displayRoute)));
+  connect(otherRouteView, SIGNAL(displayRoute(RouteData)), this, SLOT(On_displayRoute(RouteData)));
   stationView = new StationView(config, this);
   companyView = new CompanyView(config, this);
   tractionTypeView = new TractionTypeView(config, this);
@@ -1271,6 +1277,25 @@ void MainWindow::createActions()
  connect(foreignKeyCheckAct, &QAction::toggled, [=](bool b){
   SQL::instance()->setForeignKeyCheck(b);
  });
+
+ fontSizeChangeAct = new QAction(tr("Change font"), this);
+ fontSizeChangeAct->setStatusTip(tr("Open a dialog to change the application's font."));
+ connect(fontSizeChangeAct, &QAction::triggered, [=]{
+    this->setFont(QFontDialog::getFont(0, this->font()));
+
+ });
+}
+void MainWindow::changeFonts(QFont f)
+{
+    QObject *obj = this;
+    QList<QWidget*> objlistChildren = obj->findChildren<QWidget*>();
+    int iCount = objlistChildren.count();
+
+    for(int iIndex = 0; iIndex < iCount; iIndex++)
+    {
+        QWidget *temp = objlistChildren[iIndex];
+        temp->setFont(f);
+    }
 }
 
 void MainWindow::createMenus()
@@ -1364,6 +1389,7 @@ void MainWindow::createMenus()
       foreignKeyCheckAct->setChecked(SQL::instance()->getForeignKeyCheck());
      }
     });
+    optionsMenu->addAction(fontSizeChangeAct);
     menuBar()->addMenu(optionsMenu);
     menuBar()->addMenu(toolsMenu);
 
@@ -1527,7 +1553,7 @@ void MainWindow::newCity(QAction* act )
     config->currCity->curConnectionId =connection->id();
     config->currConnection = connection;
 
-    qDebug() << city->name() + "/" + connection->description();
+    qInfo() << city->name() + "/" + connection->description();
     // close the current database and open the new one
     db.close();
 #if 0
@@ -4445,10 +4471,10 @@ QString loadPath = tempDir;
     fileUrl = QUrl::fromLocalFile(tempDir  + QDir::separator() + startFn);
 #endif
 
-    qDebug() << "open " << fileUrl.toString();
+    qInfo() << "open " << fileUrl.toString();
    if(!QDesktopServices::openUrl(fileUrl))
    {
-    qDebug() << "open webbrowser failed " << fileUrl.toDisplayString();
+    qCritical() << "open webbrowser failed " << fileUrl.toDisplayString();
     QMessageBox::critical(nullptr, tr("Error"), "open webbrowser failed ");
    }
    return true;
@@ -4647,8 +4673,9 @@ void MainWindow::showGoogleMapFeatures( bool bShow)
 MyWebEnginePage::MyWebEnginePage(QObject* parent) : QWebEnginePage(parent){
 // connect(this, SIGNAL(QWebEnginePage::loadProgress(int)), this,
 //                      SLOT(loadProgress(int)));
+
  connect(this, &QWebEnginePage::loadProgress, [=](int progress){
-  qDebug() << "progress "<< progress;
+  qInfo() << "progress "<< progress;
   //setVisible(true);
  });
 }

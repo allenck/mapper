@@ -8,6 +8,8 @@
 #include <QDebug>
 #include "city.h"
 #include "connection.h"
+#include "qapplication.h"
+#include <QFont>
 
 class Configuration;
 class SQL;
@@ -60,6 +62,7 @@ public:
  void setLoggingOn(bool b) {bLoggingOn = b;}
  bool foreignKeyCheck() {return bForeignKeyCheck;}
  void setForeignKeyCheck(bool b) {bForeignKeyCheck = b;}
+ QFont font = QApplication::font();
 
 private:
  static Configuration* _instance;

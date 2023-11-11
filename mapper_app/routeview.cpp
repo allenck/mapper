@@ -32,9 +32,9 @@ RouteView::RouteView(QObject* parent )
         connect(cornerButton, &QAbstractButton::clicked, [=]{
          sortNameAct->trigger();
         });
-        connect(cornerButton, &QAbstractButton::setText, [=](QString txt){
-         cornerButton->setText("Sort");
-        });
+//        connect(cornerButton, &QAbstractButton::setText, [=](QString txt){
+//         cornerButton->setText("Sort");
+//        });
     }
     ui->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tablev_customContextMenu(QPoint)));

@@ -33,7 +33,6 @@
 #include <QToolTip>
 #include <QPair>
 
-
 class RouteView;
 class SQL;
 class QWidgetAction;
@@ -377,6 +376,7 @@ private:
     QAction* saveSettingsAct;
     QAction* showGoogleMapFeaturesAct;
     QAction* foreignKeyCheckAct;
+    QAction* fontSizeChangeAct;
 
     //QSignalMapper *overlaySignalMapper;
     QActionGroup  *overlayActionGroup;
@@ -453,6 +453,8 @@ private slots:
     void describeRoute();
     void modifyRouteTractionType();
     void on_updateRoute();
+    void changeFonts(QFont f);
+
 protected:
     //void resizeEvent(QResizeEvent *event);
 signals:

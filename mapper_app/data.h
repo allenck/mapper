@@ -315,7 +315,7 @@ public:
     int returnSeq() const {return _returnSeq;}
     QString trackUsage() {return _trackUsage;}
     void setTrackUsage(QString s) {_trackUsage = s;}
-    int tractionType() {return _tractionType;}
+    int tractionType() const {return _tractionType;}
     void setTractionType(int t) {_tractionType = t;}
     int reverseEnter() {return _reverseEnter;}
     void setReverseEnter(int reverseEnter) {_reverseEnter = reverseEnter;}
@@ -323,7 +323,7 @@ public:
     void setReverseLeave(int reverseLeave) {_reverseLeave = reverseLeave;}
     int route() const {return _route;}
     void setRoute(int route){_route = route;}
-    int companyKey() {return _companyKey;}
+    int companyKey() const {return _companyKey;}
     void setCompanyKey(int key) {_companyKey = key;}
     QString routeName() const {return _routeName;}
     void setRouteName(QString name) {_routeName = name;}
@@ -336,7 +336,7 @@ public:
     QString location() {return _location;}
     void setLocation(QString loc) {_location = loc;}
     void setAlphaRoute(QString alphaRoute) {_alphaRoute = alphaRoute;}
-    QString alphaRoute() {return _alphaRoute;}
+    QString alphaRoute() const {return _alphaRoute;}
     bool operator==(const SegmentData o)
     {
      return _route == o._route && _alphaRoute == o._alphaRoute && _routeName == o._routeName
@@ -398,6 +398,7 @@ public:
     RouteData();
     ~RouteData();
     RouteData(const RouteData&);
+    RouteData(const SegmentData&);
     QString toString();
     int route() {return _route;}
     void setRoute(int route) {_route = route;}

@@ -10909,8 +10909,15 @@ QString SQL::getDatabase()
 
  QSqlQuery query = QSqlQuery(db);
  QString dbName ="";
+ QString commandText;
+ if(config->currConnection->servertype() == "MsSql")
+  commandText = "SELECT DB_NAME() ";
+ else if(config->currConnection->servertype() == "MySql")
+  commandText = "SELECT DATABASE()";
+ else
+  return dbName;
 
- if(!query.exec("SELECT DB_NAME() "))
+ if(!query.exec(commandText))
  {
   SQLERROR(query);
  }
@@ -11643,6 +11650,16 @@ int SQL::displaySqlError(QSqlQuery query, QMessageBox::StandardButtons buttons, 
  QString details = QString("%1\n%2").arg(err.text(), query.lastQuery());
  QMessageBox box(QMessageBox::Critical, tr("Sql Error"),msg,buttons );
  box.setInformativeText(details);
- return box.exec();
+ if(buttons == QMessageBox::NoButton)
+ {
+     box.addButton(QMessageBox::Abort);
+     box.addButton(QMessageBox::Ok);
+ }
+ int b = box.exec();
+ if(buttons)
+     return b;
+ if(b == QMessageBox::Abort)
+     exit(EXIT_FAILURE);
+ return b;
 }
 

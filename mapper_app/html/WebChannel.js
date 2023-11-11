@@ -1,5 +1,3 @@
-//alert("Loading WebChannel.js");
-
 var webViewBridge = null;
 var channel = null;
 var wsUri = "ws://localhost:12345";
@@ -28,15 +26,15 @@ socket.onerror = function(error)
 };
 socket.onopen = function()
 {
- //output("WebSocket connected, setting up QWebChannel.");
- console.log("WebSocket connected, setting up QWebChannel.");
- channel = new QWebChannel(socket, function(channel)  {
+  //output("WebSocket connected, setting up QWebChannel.");
+  console.log("WebSocket connected, setting up QWebChannel.");
+  channel = new QWebChannel(socket, function(channel)  {
   console.log("enter QWebChannel" + channel.objects);
   webViewBridge = channel.objects.webViewBridge;
-     if(webViewBridge == null)
-     {
-      console.error("webViewBridge is NULL!")
-     }
+  if(webViewBridge === null)
+  {
+   console.error("webViewBridge is NULL!")
+  }
 
   console.log("connect to signals", webViewBridge);
   //connect to a signal

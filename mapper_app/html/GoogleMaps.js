@@ -11,6 +11,7 @@ var defaultOptions;
 var options;
 var txt;
 var stationArray = new google.maps.MVCArray();
+var fRslt;
 
 var newSegment, segmentId, arrow,lat=0,lon=0;
 console.log("Loading GoogleMaps.js");
@@ -111,7 +112,7 @@ function processScript(func, parms)
        if("fRslt" in window)
         webViewBridge.scriptResult( fRslt);
        else
-           console.trace("bad return" + call + fRslt);
+        console.trace("bad return: '" + call + fRslt + "'");
    }
   }
   catch (err)
@@ -825,10 +826,11 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
 //function initialize()
 function initMap()
 {
- console.log("begin GoogleMaps.js initialize()");
+ console.log("begin GoogleMaps.js initMap()");
+    webViewBridge.debug("initMap started");
  connectSlots();
  geocoder  = new google.maps.Geocoder();
- var mapDiv = document.getElementById("map-canvas");
+ var mapDiv = document.getElementById("map");
 
  //var Lat = 52.0;
  var Lat = webViewBridge.lat;
@@ -974,7 +976,7 @@ const styles = {
   ],
 };
 
-function initialize()
+window.initialize = function()
 {
     initMap();
 
@@ -990,7 +992,7 @@ function initialize()
 function resizeMap()
 {
 //google.maps.event.trigger(map, 'resize');
-var mapDiv = document.getElementById("map-canvas");
+var mapDiv = document.getElementById("map");
 }
 
 var arrowSymbol  = {

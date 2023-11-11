@@ -23,7 +23,7 @@ do \
  QSqlError err = query.lastError(); \
  qCritical() << "Sql error:" << err.text(); \
  qCritical() << query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n"; \
- SQL::instance()->displaySqlError(query, QMessageBox::NoButton,__FUNCTION__, __FILE__, __LINE__); \
+ (QMessageBox::StandardButton)SQL::instance()->displaySqlError(query, QMessageBox::NoButton,__FUNCTION__, __FILE__, __LINE__); \
 } while (0)
 
 #define SQLERROR1(query, buttons) \
