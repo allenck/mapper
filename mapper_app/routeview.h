@@ -34,6 +34,7 @@ public:
     void checkChanges();
     RouteViewTableModel* model();
     void setList(QList<SegmentData *> segmentDataList);
+    void clear();
 
 signals:
     void sendRows(int, int);

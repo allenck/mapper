@@ -47,7 +47,7 @@ CREATE TABLE if not exists `Intersections` (
 );
 
 CREATE TABLE if not exists  `AltRoute` (
-  `route` NOT NULL INTEGER PRIMARY KEY AUTOINCREMENT, 
+  `route` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   `routePrefix` varchar(10) default '', 
   `routeAlpha` varchar(8) NOT NULL, 
   `baseRoute` int(11) NOT NULL DEFAULT 0, 
@@ -61,7 +61,8 @@ CREATE TABLE if not exists `Segments` (
   `Description` varchar(100) NOT NULL,
   `OneWay` char(1) NOT NULL DEFAULT 'N',
   `Tracks` int(2) check(`tracks` in (1,2)) NOT NULL DEFAULT 1,
-  `street` text,
+  `street` textNOT NULL DEFAULT '',
+  `Location` 'text' NOT NULL DEFAULT '',
   `Type` int(11) NOT NULL DEFAULT 0,
   `StartLat` decimal(15,13) NOT NULL DEFAULT 0.0,
   `StartLon` decimal(15,13) NOT NULL DEFAULT 0.0,

@@ -58,6 +58,7 @@ public:
     };
     int getRow(int segmentId);
     SegmentData *segmentData(int row);
+    void clear();
 
 signals:
     void rowChange(qint32 row, qint32 segmentid, bool bDeleted, bool bChanged);

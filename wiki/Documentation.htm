@@ -141,14 +141,11 @@ Mapper), select Cities- &gt; Edit Connections... You then will see this
 dialog:<br>
 <br>
 <img style="width: 30%; height: 30%;" alt="Edit connections" title="Edit connections" src="images/edit_city_1.png"><br>
-Although the following example uses a Sqlite3 database, Mapper also
-provides for accessing databases on MySql or SQL Server databases. See <a href="Using_MySql_or_SQL_Server_databases.html">Using MySql or SQL
-Server</a> for more information.<br>
-<br>
+
 To view the Berlin connection. <br>
 Select from the City combo Box "Berlin, Germany"<br>
 You should see something like this: <br>
-<img style="width: 30%; height: 30%;" alt="Edit Berlin" title="Dialog to add a new connection" src="images/edit_city_2.png"><br>
+<img style="width: 30%; height: 30%;" alt="Edit Berlin" title="Dialog for a Berlin connection" src="images/edit_city_2.png"><br>
 <br>
 Now, you can click on the "Test" button to test whether the database
 can be opened. Finally, the "Update" button (which will have the text
@@ -157,9 +154,34 @@ connection to the Cities menu. <br>
 <br>
 </p>
 <h4>Adding a connection</h4>
-<p>Before adding a City, a new connection must be created. Press the "New" button to create an empty dialog.
-<a href="addConnection.png">New connection</a>
+A city always has at least one connection to a database. However it may be desired to have additional connections,
+ say for backup. Another possibility is storing data into a database such as MySql or Microsoft Sql Server. 
+This would make it possible to access the database from a web server. Mapper has an <b>Export</b> option which can 
+be used to transfer data from one database to another.
+<P>
+Although the following example uses a Sqlite3 database, Mapper also
+provides for accessing databases on MySql or SQL Server databases. See <a href="Using_MySql_or_SQL_Server_databases.html">Using MySql or SQL
+Server</a> for more information.<br>
+<br><p>To create a new connection, press the "New" button to create an empty dialog.<br>
+<img style="width: 30%; height: 30%;" alt="Edit Berlin" title="Dialog for a new connection" 
+src="images/addConnection.png"><br></p>
+<p>
+To configure a new connection:<br>
+<ol>
+<li> In the <i>Connection:V</i> field enter a unique description that describes this connection. It is 
+recommenced that the city, type of database, method of connection and database location be mentioned. For example, 
+"St Louis Sqlite3 test" might be specified.
+<li>For a Sqlite database, the Driver Type must be <b>QSQLITE</b> or <b>QSQLITE</b>. Connect must be <b>Local</b>.
+<li>In the DSN field enter the name of the database file. If the file extension is not specified or is not 
+"sqlite3", ".sqlite3" will be appended. If the filename entered does not exist, an empty database will be created
+ when the connection is saved. The new database can then be exported to. If your intention is to create a 
+ new database for a new city, see <a href="Creating_a_new_database.html">Creating a new
+database.</a><br>
+</li>
+<li>Next, click on the <b>Test</b> button.<br> <img style="width: 30%; height: 30%;" alt="Edit Berlin" title="Dialog for a new connection" 
+src="images/addConnection2.png"><br></p></li>
+</ol>
 </p>
 </div>
-
-</body></html>
+</body>
+</html>

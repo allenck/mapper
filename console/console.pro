@@ -20,7 +20,7 @@ SOURCES += \
     jtogglebutton.cpp
 
 HEADERS +=\
-        console_global.h \
+    console_global.h \
     consoleinterface.h \
     systemconsole.h \
     systemconsoleaction.h \

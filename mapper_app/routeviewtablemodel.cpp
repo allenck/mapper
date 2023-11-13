@@ -694,3 +694,9 @@ SegmentData* RouteViewTableModel::segmentData(int row)
 {
  return listOfSegments.at(row);
 }
+
+void RouteViewTableModel::clear()
+{
+    listOfSegments.clear();
+    reset();
+}

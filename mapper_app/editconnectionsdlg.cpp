@@ -272,6 +272,8 @@ void EditConnectionsDlg::cbCitiesSelectionChanged(int sel)
 //  if(c->name() == name)
 //  {
    currCity = VPtr<City>::asPtr(ui->cbCities->currentData());
+   if(currCity == nullptr)
+       return;
    ui->cbConnections->clear();
    //ui->cbConnections->addItem(tr("Add new connection"));
    foreach(Connection* cn, currCity->connections)
@@ -616,16 +618,39 @@ void EditConnectionsDlg::findODBCDsn(QString iniFile, QStringList* dsnList)
 
 void EditConnectionsDlg::btnTestClicked()
 {
- ui->lblHelp->setText("");
- ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
- qApp->processEvents();
- connection->setValid(testConnection());
+   removeEmptyFiles();
+   ui->lblHelp->setText("");
+   ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
+   qApp->processEvents();
+   connection->setValid(testConnection());
 }
 
 void EditConnectionsDlg::btnCancelClicked()
 {
+ if(ui->cbConnect->currentText() == "Local")
+ {
+    removeEmptyFiles();
+ }
  this->rejected();
  this->close();
+}
+
+void EditConnectionsDlg::removeEmptyFiles()
+{
+    QDir dbDir(basePath);
+    QStringList filters;
+    filters << "*.sqlite3" ;
+    dbDir.setNameFilters(filters);
+    dbDir.setFilter(QDir::Files);
+    QFileInfoList list = dbDir.entryInfoList();
+    for(QFileInfo fi : list)
+    {
+        if(fi.size() == 0 && fi.exists())
+        {
+          QFile f(fi.absoluteFilePath());
+          f.remove();
+        }
+    }
 }
 
 void EditConnectionsDlg::btnSaveClicked()
@@ -767,45 +792,56 @@ void EditConnectionsDlg::btnSaveClicked()
 
 void EditConnectionsDlg::btnDeleteClicked()
 {
+ bool deleted = false;
  for(int j=0; j< config->cityList.count(); j++)
  {
   City * currCity = config->cityList.at(j);
   if(ui->cbCities->currentText() == currCity->name())
   {
+      if(QMessageBox::warning(this, tr("Confirm delete"),
+                              tr("Are you sure that you want to delete city '%1'?")
+                              .arg(currCity->name()),
+                              QMessageBox::Yes |QMessageBox::No) == QMessageBox::No)
+        return;
    for(int i =0; i< currCity->connections.count(); i++)
    {
     Connection* c = config->currCity->connections.at(i);
-    if(ui->cbConnections->currentText() == c->description())
+    if(c->servertype() == "Sqlite")
     {
-     //currCity->connections.remove(c->description());
-        currCity->connections.removeOne(c);
-        //currCity->connectionNames.removeOne(c->description());
-        currCity->connectionMap.remove(c->uniqueId().toString());
-     ui->cbConnections->clear();
-     //ui->cbConnections->addItem(tr("Add new connection"));
-     for(i=0; i < currCity->connections.count(); i++)
-     {
-      Connection* c = (Connection*)&(currCity->connections.at(i));
-      ui->cbConnections->addItem(c->description(),VPtr<Connection>::asQVariant(c));
-      c->setId(i);
-      //currCity->connections.replace(i,c);
-     }
+      QFile f("Resources/databases/"+c->sqlite_fileName());
+      if(f.exists())
+          f.remove();
     }
-    break;
+//    if(ui->cbConnections->currentText() == c->description())
+//    {
+//     //currCity->connections.remove(c->description());
+//        currCity->connections.removeOne(c);
+//        //currCity->connectionNames.removeOne(c->description());
+//        currCity->connectionMap.remove(c->uniqueId().toString());
+//     ui->cbConnections->clear();
+//     //ui->cbConnections->addItem(tr("Add new connection"));
+//     for(i=0; i < currCity->connections.count(); i++)
+//     {
+//      Connection* c = (Connection*)&(currCity->connections.at(i));
+//      ui->cbConnections->addItem(c->description(),VPtr<Connection>::asQVariant(c));
+//      c->setId(i);
+//      //currCity->connections.replace(i,c);
+//     }
+//    }
+//    break;
    }
-   if(config->currCity->id == currCity->id)
-    config->currCity->connections = currCity->connections;
+//   if(config->currCity->id == currCity->id)
+//    config->currCity->connections = currCity->connections;
+      if(currCity)
+      config->cityList.removeAt(j);
+      deleted = true;
+      continue;
   }
-  config->saveSettings();
+  if(deleted)
+   currCity->id--; // adjust id of remaining cities.
  }
- for(int i= config->cityList.count()-1; i >=0; i--)
- {
-  City* currCity = config->cityList.at(i);
-  if(currCity->connections.count()==0)
-  {
-   config->cityList.removeAt(i);
-  }
- }
+ config->saveSettings();
+ refreshCities();
 }
 
 void EditConnectionsDlg::cbConnectionsTextChanged(QString text)
@@ -1262,8 +1298,6 @@ void EditConnectionsDlg::txtPwdLeave()
 
 void EditConnectionsDlg::txtDsnTextChanged(QString text)
 {
-//    if(ui->cbDriverType->currentText() == "QODBC" || ui->cbDriverType->currentText() == "QODBC3")
-//        return;
  QCompleter *completer = new QCompleter(databases, this);
  completer->setCaseSensitivity(Qt::CaseInsensitive);
  ui->txtDbOrDSN->setCompleter(completer);
@@ -1271,7 +1305,7 @@ void EditConnectionsDlg::txtDsnTextChanged(QString text)
 
 void EditConnectionsDlg::on_tbBrowse_clicked()
 {
- QString basePath = MainWindow::pwd + QDir::separator() + "Resources" + QDir::separator() +"databases" + QDir::separator();
+   basePath = MainWindow::pwd + QDir::separator() + "Resources" + QDir::separator() +"databases" + QDir::separator();
 // QFileInfo info(ui->txtDbOrDSN->text());
 // if(info.exists())
 //  basePath=info.canonicalPath();
@@ -1333,9 +1367,16 @@ void EditConnectionsDlg::ontxtDbOrDsn_editingFinished()
    ui->txtDbOrDSN->setText(ui->txtDbOrDSN->text().append(".sqlite3"));
   info.setFile(ui->txtDbOrDSN->text());
   if(info.isAbsolute())
-  ui->txtDbOrDSN->setText(info.absoluteFilePath());
+   ui->txtDbOrDSN->setText(info.absoluteFilePath());
   else
    ui->txtDbOrDSN->setText(info.fileName());
+  if(!info.exists())
+  {
+      QMessageBox::warning(this, "New file", tr("The file entered does not exist. If you coninue "
+                                                " a new, empty, database will be created. "
+                                                "If this is not what you wish, enter the name of "
+                                                "an existing sqlite3 file!"));
+  }
  }
  else if (ui->cbDbType->currentText() == "Msql")
  {

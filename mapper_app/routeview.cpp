@@ -963,3 +963,8 @@ void RouteView::checkChanges()
  }
 }
 
+void RouteView::clear()
+{
+    sourceModel->clear();
+}
+

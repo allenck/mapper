@@ -165,102 +165,102 @@ void Configuration::saveSettings()
  settings->setValue("saveImageDir", saveImageDir);
  settings->setValue("showGMFeatures", bShowGMFeatures);
  settings->setValue("foreignKeyCheck", bForeignKeyCheck);
- settings->setValue("font",font);
+ settings->setValue("font",font.toString());
 }
 
 void Configuration::getSettings()
 {
-  QSettings settings;
-  qDebug() << settings.fileName();
-  //settingsDb settings;
-  int size = settings.beginReadArray("cities");
-  if( size == 0)
-  {
-     createDefaultSettings();
-  }
-
- bool ok = Overlay::importXml("./overlays.xml");
-
- // load cities
- for(int i= 0; i < size; i++)
- {
-  settings.setArrayIndex(i);
-  City* nc = new City();
-  nc->id = settings.value("id").toInt();
-  nc->setName(settings.value("name").toString());
-  if(!cityList.contains(nc))
-  {
-   cityList.append(nc);
-   cityMap.insert(nc->name(), nc);
-  }
-  LatLng pt;
-//  qDebug() << "lat: " << settings.value("lat",35).toString();
-//  qDebug() << "lon: " << settings.value("lon",-90).toString();
-  pt.setLat(settings.value("lat",35).toDouble());
-  pt.setLon(settings.value("lon",-90).toDouble());
-  nc->center = pt;
-  nc->setBounds(Bounds(settings.value("bounds").toString()));
-  if(!nc->bounds().isValid())
-  {
-   nc->setBounds(Bounds(LatLng(pt.lat()-.1, pt.lon()-.1), LatLng(pt.lat()+.1, pt.lon()+.1)));
-  }
-  if(nc->bounds().isValid()){
-   cityBounds.insert(nc->name(), nc->bounds());
-   nc->center = nc->bounds().center();
-  }
-  nc->mapType = settings.value("maptype","roadmap").toString();
-  nc->zoom = settings.value("zoom",12).toInt();
-  nc->curConnectionId = settings.value("currConnection",0).toInt();
-  nc->curExportConnId = settings.value("currExportConnId",0).toInt();
-  nc->bAlphaRoutes = settings.value("AlphaRoutes").toBool();
-  nc->bNoPanOpt = settings.value("noPanOpt").toBool();
-  nc->bGeocoderRequest = settings.value("GeocoderRequest").toBool();
-  nc->lastRoute = settings.value("lastRoute",0).toInt();
-  nc->lastRouteName = settings.value("lastRouteName").toString();
-  nc->lastRouteEndDate = settings.value("lastRouteEndDate").toString();
-  nc->bDisplayStationMarkers = settings.value("displayStationMarkers",false).toBool();
-  nc->bDisplayRouteComments = settings.value("displayRouteComments",false).toBool();
-  nc->bDisplayTerminalMarkers = settings.value("displayTerminalMarkers",false).toBool();
-  nc->bShowOverlay = settings.value("showOverlay").toBool();
-  nc->companyKey = settings.value("companyKey").toInt();
-  nc->routeSortType = settings.value("routeSortType").toInt();
-  nc->savedClipboard = settings.value("savedClipboard").toString();
-  nc->curOverlayId = settings.value("currOverlay", -1).toInt();
-  nc->bUserMap = settings.value("userMap", false).toBool();
-  nc->setConnectionUniqueId(QUuid::fromString(settings.value("currConnectionUuid").toString()));
-  QString baseAddr = QDir::currentPath() +QDir::separator() + "Resources" + QDir::separator()+"databases" + QDir::separator();
-  int sizec = settings.beginReadArray("connections");
-
-  // connections
-  for(int j = 0; j < sizec; j++)
-  {
-   settings.setArrayIndex(j);
-   QString uuid_string = settings.value("uniqueId").toString();
-   QUuid uuid;
-   if(uuid_string.isEmpty())
-       uuid = QUuid::createUuid();
-   else
-       uuid = QUuid::fromString(uuid_string);
-   Connection* ncn = new Connection(uuid);
-   ncn->setId(settings.value("id", -1).toInt());
-   ncn->setDescription(settings.value("description").toString());
-   ncn->setDriver(settings.value("driver").toString());
-   ncn->setServerType(settings.value("serverType").toString());
-   ncn->setCityName(settings.value("cityName", nc->name()).toString());
-   ncn->setConnectionType(settings.value("connectionType", "Direct").toString());
-   //ncn->setUniqueId(QUuid::fromString(settings.value("uniqueId", QUuid::createUuid().toString()).toString()));
-   if(ncn->id() == nc->curConnectionId)
-       nc->setConnectionUniqueId(uuid);
-   if(ncn->connectionType() == "Local")
+   QSettings settings;
+   qDebug() << settings.fileName();
+   //settingsDb settings;
+   int size = settings.beginReadArray("cities");
+   if( size == 0)
    {
-    ncn->setConnectionType("Local");
-    QString fileName;
-     fileName = settings.value("sqliteFileName").toString();
-     if(fileName.isEmpty())
-         fileName = settings.value("database").toString();
-     QFileInfo info(baseAddr + fileName);
-     if(!info.exists())
-         qDebug() << fileName << " not found";
+      createDefaultSettings();
+   }
+
+   bool ok = Overlay::importXml("./overlays.xml");
+
+   // load cities
+   for(int i= 0; i < size; i++)
+   {
+      settings.setArrayIndex(i);
+      City* nc = new City();
+      nc->id = settings.value("id").toInt();
+      nc->setName(settings.value("name").toString());
+      if(!cityList.contains(nc))
+      {
+         cityList.append(nc);
+         cityMap.insert(nc->name(), nc);
+      }
+      LatLng pt;
+      //  qDebug() << "lat: " << settings.value("lat",35).toString();
+      //  qDebug() << "lon: " << settings.value("lon",-90).toString();
+      pt.setLat(settings.value("lat",35).toDouble());
+      pt.setLon(settings.value("lon",-90).toDouble());
+      nc->center = pt;
+      nc->setBounds(Bounds(settings.value("bounds").toString()));
+      if(!nc->bounds().isValid())
+      {
+         nc->setBounds(Bounds(LatLng(pt.lat()-.1, pt.lon()-.1), LatLng(pt.lat()+.1, pt.lon()+.1)));
+      }
+      if(nc->bounds().isValid()){
+         cityBounds.insert(nc->name(), nc->bounds());
+         nc->center = nc->bounds().center();
+      }
+      nc->mapType = settings.value("maptype","roadmap").toString();
+      nc->zoom = settings.value("zoom",12).toInt();
+      nc->curConnectionId = settings.value("currConnection",0).toInt();
+      nc->curExportConnId = settings.value("currExportConnId",0).toInt();
+      nc->bAlphaRoutes = settings.value("AlphaRoutes").toBool();
+      nc->bNoPanOpt = settings.value("noPanOpt").toBool();
+      nc->bGeocoderRequest = settings.value("GeocoderRequest").toBool();
+      nc->lastRoute = settings.value("lastRoute",0).toInt();
+      nc->lastRouteName = settings.value("lastRouteName").toString();
+      nc->lastRouteEndDate = settings.value("lastRouteEndDate").toString();
+      nc->bDisplayStationMarkers = settings.value("displayStationMarkers",false).toBool();
+      nc->bDisplayRouteComments = settings.value("displayRouteComments",false).toBool();
+      nc->bDisplayTerminalMarkers = settings.value("displayTerminalMarkers",false).toBool();
+      nc->bShowOverlay = settings.value("showOverlay").toBool();
+      nc->companyKey = settings.value("companyKey").toInt();
+      nc->routeSortType = settings.value("routeSortType").toInt();
+      nc->savedClipboard = settings.value("savedClipboard").toString();
+      nc->curOverlayId = settings.value("currOverlay", -1).toInt();
+      nc->bUserMap = settings.value("userMap", false).toBool();
+      nc->setConnectionUniqueId(QUuid::fromString(settings.value("currConnectionUuid").toString()));
+      QString baseAddr = QDir::currentPath() +QDir::separator() + "Resources" + QDir::separator()+"databases" + QDir::separator();
+      int sizec = settings.beginReadArray("connections");
+
+      // connections
+      for(int j = 0; j < sizec; j++)
+      {
+         settings.setArrayIndex(j);
+         QString uuid_string = settings.value("uniqueId").toString();
+         QUuid uuid;
+         if(uuid_string.isEmpty())
+            uuid = QUuid::createUuid();
+         else
+            uuid = QUuid::fromString(uuid_string);
+         Connection* ncn = new Connection(uuid);
+         ncn->setId(settings.value("id", -1).toInt());
+         ncn->setDescription(settings.value("description").toString());
+         ncn->setDriver(settings.value("driver").toString());
+         ncn->setServerType(settings.value("serverType").toString());
+         ncn->setCityName(settings.value("cityName", nc->name()).toString());
+         ncn->setConnectionType(settings.value("connectionType", "Direct").toString());
+        //ncn->setUniqueId(QUuid::fromString(settings.value("uniqueId", QUuid::createUuid().toString()).toString()));
+        if(ncn->id() == nc->curConnectionId)
+           nc->setConnectionUniqueId(uuid);
+        if(ncn->connectionType() == "Local")
+        {
+          ncn->setConnectionType("Local");
+          QString fileName;
+          fileName = settings.value("sqliteFileName").toString();
+          if(fileName.isEmpty())
+             fileName = settings.value("database").toString();
+          QFileInfo info(baseAddr + fileName);
+          if(!info.exists())
+             qDebug() << fileName << " not found";
 //#ifdef WIN32
 //     QString ext = fileName.mid(ncn->database().lastIndexOf("."));
 //     if(fileName.toLower().endsWith(".sqlite3") && ext != ".sqlite3")
@@ -268,46 +268,46 @@ void Configuration::getSettings()
 //      fileName.replace(ext, ".sqlite3");
 //     }
 //#endif
-     ncn->setSqliteFileName(info.fileName());
-   }
-   else if(ncn->connectionType() == "Direct") {
-       ncn->setDSN(settings.value("DSN").toString());
-       ncn->setPWD(settings.value("PWD").toString());
-       ncn->setUserId(settings.value("UID").toString());
-       ncn->setHost(settings.value("hostname").toString());
-       ncn->setPort(settings.value("port").toInt());
-       ncn->setDefaultSqlDatabase(settings.value("defaultSqlDatabase").toString());
-       ncn->setDatabase(settings.value("useSqlDatabase").toString());
-       //ncn->setMySqlDatabase(settings.value("mySqlDatabase").toString());
-   }
-   else if(ncn->connectionType() == "ODBC") {
-    ncn->setOdbcConnectorName(settings.value("odbcConnector").toString());
-    ncn->setDefaultSqlDatabase(settings.value("defaultSqlDatabase").toString());
-    ncn->setDatabase(settings.value("useSqlDatabase").toString());
-   }
+         ncn->setSqliteFileName(info.fileName());
+        }
+        else if(ncn->connectionType() == "Direct") {
+           ncn->setDSN(settings.value("DSN").toString());
+           ncn->setPWD(settings.value("PWD").toString());
+           ncn->setUserId(settings.value("UID").toString());
+           ncn->setHost(settings.value("hostname").toString());
+           ncn->setPort(settings.value("port").toInt());
+           ncn->setDefaultSqlDatabase(settings.value("defaultSqlDatabase").toString());
+           ncn->setDatabase(settings.value("useSqlDatabase").toString());
+           //ncn->setMySqlDatabase(settings.value("mySqlDatabase").toString());
+        }
+        else if(ncn->connectionType() == "ODBC") {
+           ncn->setOdbcConnectorName(settings.value("odbcConnector").toString());
+           ncn->setDefaultSqlDatabase(settings.value("defaultSqlDatabase").toString());
+           ncn->setDatabase(settings.value("useSqlDatabase").toString());
+        }
 
-   if(!nc->connections.contains(ncn))
-   {
+        if(!nc->connections.contains(ncn))
+        {
 //    nc->connections.append( ncn);
 //    nc->connectionNames.append(ncn->description());
 //    nc->connectionMap.insert(ncn->uniqueId().toString(), ncn);
-       nc->addConnection(ncn);
-   }
-  }
-  settings.endArray();
+           nc->addConnection(ncn);
+        }
+      }
+      settings.endArray();
 
-  if(currentCityId < 0)
-  {
-   currCity = cityList.at(0);
-  }
+      if(currentCityId < 0)
+      {
+         currCity = cityList.at(0);
+      }
 
-  //qDebug() << "city bounds:" << cityBounds;
-  if(nc->city_overlayMap->isEmpty())
-   nc->bShowOverlay = false;
-  nc->curOverlayId = settings.value("currOverlay").toInt();
-  if(nc->city_overlayMap->count()== 0)
-   nc->curOverlayId = -1;
- } // end cities
+      //qDebug() << "city bounds:" << cityBounds;
+      if(nc->city_overlayMap->isEmpty())
+         nc->bShowOverlay = false;
+      nc->curOverlayId = settings.value("currOverlay").toInt();
+      if(nc->city_overlayMap->count()== 0)
+         nc->curOverlayId = -1;
+    } // end cities
 
 #if 0 // for testing purposes, create a MySql connection
   City* currCity = cityList.at(3);
@@ -345,7 +345,7 @@ void Configuration::getSettings()
   //currConnection = nc;
 #endif
 
- settings.endArray();
+   settings.endArray();
 
 // for(Overlay* ov : overlayMap->values())
 // {
@@ -355,67 +355,69 @@ void Configuration::getSettings()
 //  else
 //   qDebug() << "invalid city " << ov->cityName << ov->name;
 // }
- if(Overlay::importXml("./overlays.xml"))
- {
-  for(Overlay* ov : Overlay::overlayList)
-  {
-   QString cityName = ov->cityName;
-   City* city = cityMap.value(ov->cityName);
-   if(city && !ov->bounds().isValid())
+   if(Overlay::importXml("./overlays.xml"))
    {
-    ov->setBounds(Bounds(LatLng(city->center.lat()-.3, city->center.lon()-.3), LatLng(city->center.lat()+.3, city->center.lon()+.3)));
+      for(Overlay* ov : Overlay::overlayList)
+      {
+        QString cityName = ov->cityName;
+        City* city = cityMap.value(ov->cityName);
+        if(city && !ov->bounds().isValid())
+        {
+          ov->setBounds(Bounds(LatLng(city->center.lat()-.3, city->center.lon()-.3), LatLng(city->center.lat()+.3, city->center.lon()+.3)));
+        }
+        overlayMap->insert(ov->cityName+"|"+ov->name, ov);
+        if(city && city->name() == ov->cityName)
+        {
+           if(ov->isSelected)
+           {
+              city->city_overlayMap->insert(ov->name, ov);
+              qInfo() << "add overlay " << ov->name << " for city:" << city->name();
+           }
+        }
+
+      }
    }
-   overlayMap->insert(ov->cityName+"|"+ov->name, ov);
-   if(city && city->name() == ov->cityName)
+   //settings.beginGroup("General");
+   currentCityId = settings.value("currCity",0).toInt();
+   if(currentCityId < 0 || currentCityId >= cityList.count())
+      currentCityId = 0;
+   currCity = cityList.at(currentCityId);
+   if(currCity->curConnectionId < 0 && currCity->connections.size() == 1)
+      currCity->curConnectionId =0;
+   currConnection =   currCity->connections.at(currCity->curConnectionId);
+   bDisplayWebDebug = settings.value("showDebugMessages", false).toBool();
+   bRunInBrowser = settings.value("runInBrowser", false).toBool();
+   saveImageDir = settings.value("saveImageDir", "").toString();
+   bShowGMFeatures = settings.value("showGMFeatures", true).toBool();
+   bForeignKeyCheck = settings.value("foreignKeyCheck", true).toBool();
+   QFont f;
+   f.fromString(settings.value("font").toString());
+   font =f;
+   //settings.endGroup();
+
+   settings.beginGroup("query");
+   q.b_stop_query_on_error = settings.value("stop_query_on_error").toBool();
+   q.b_sql_execute_after_loading = settings.value("sql_execute_after_loading").toBool();
+   q.s_query_path = settings.value("queryPath", QDir::homePath()+"/Resources/sql/").toString();
+   q.geometry = settings.value("geometry").toByteArray();
+   settings.endGroup();
+
+   settings.beginGroup("routeView");
+   rv.hiddenColumns = settings .value("routeView_hidden_cols").toList();
+   rv.movedColumns = settings.value("routeView_moved_cols").toList();
+   rv.state = settings.value("routeView_state").toByteArray();
+   settings.endGroup();
+
+
+   for(Overlay* ov : Overlay::overlayList)
    {
-    if(ov->isSelected)
-    {
-     city->city_overlayMap->insert(ov->name, ov);
-     qInfo() << "add overlay " << ov->name << " for city:" << city->name();
-    }
+      overlayMap->insert(ov->cityName+"|"+ov->name, ov);
+      City* city = cityMap.value(ov->cityName);
+      if(city)
+      {
+         city->city_overlayMap->insert(ov->name, ov);
+      }
    }
-  }
- }
- //settings.beginGroup("General");
- currentCityId = settings.value("currCity",0).toInt();
- if(currentCityId < 0 || currentCityId >= cityList.count())
-  currentCityId = 0;
- currCity = cityList.at(currentCityId);
- if(currCity->curConnectionId < 0 && currCity->connections.size() == 1)
-  currCity->curConnectionId =0;
- currConnection =   currCity->connections.at(currCity->curConnectionId);
- bDisplayWebDebug = settings.value("showDebugMessages", false).toBool();
- bRunInBrowser = settings.value("runInBrowser", false).toBool();
- saveImageDir = settings.value("saveImageDir", "").toString();
- bShowGMFeatures = settings.value("showGMFeatures", true).toBool();
- bForeignKeyCheck = settings.value("foreignKeyCheck", true).toBool();
- font = settings.value("font").value<QFont>();
- //settings.endGroup();
-
- settings.beginGroup("query");
- q.b_stop_query_on_error = settings.value("stop_query_on_error").toBool();
- q.b_sql_execute_after_loading = settings.value("sql_execute_after_loading").toBool();
- q.s_query_path = settings.value("queryPath", QDir::homePath()+"/Resources/sql/").toString();
- q.geometry = settings.value("geometry").toByteArray();
- settings.endGroup();
-
- settings.beginGroup("routeView");
- rv.hiddenColumns = settings .value("routeView_hidden_cols").toList();
- rv.movedColumns = settings.value("routeView_moved_cols").toList();
- rv.state = settings.value("routeView_state").toByteArray();
- settings.endGroup();
-
-
- for(Overlay* ov : Overlay::overlayList)
- {
-  overlayMap->insert(ov->cityName+"|"+ov->name, ov);
-  City* city = cityMap.value(ov->cityName);
-  if(city)
-  {
-   city->city_overlayMap->insert(ov->name, ov);
-  }
- }
-
 }
 
 void Configuration::setOverlay(Overlay* ov)

@@ -49,6 +49,8 @@ private:
   void newConnection();
   void setComboBoxItemEnabled(QComboBox * comboBox, int index, bool enabled);
   bool connectionChanging = false;
+  QString basePath;
+  void removeEmptyFiles();
 
 private slots:
  void cbCitiesSelectionChanged(int sel);

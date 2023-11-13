@@ -10,7 +10,7 @@ CONFIG += ordered
 
 QT += xml
 
-SUBDIRS =  functions sqlfun \
+SUBDIRS =  functions sqlfun  \
     #mapper_app/WebView
     mapper_app
 

@@ -14,10 +14,12 @@ CreateSqliteDatabaseDialog::CreateSqliteDatabaseDialog(LatLng* latLng, QWidget *
  config=Configuration::instance();
  this->setWindowTitle(tr("Create new Sqlite database"));
  strNew = tr("New city");
+ ui->txtPath->setText("Resources/databases");
  this->latLng = latLng;
+ ui->txtLatLng->setText(QString("%1,%2").arg(latLng->lat(),8, 'g').arg(latLng->lon(), 8,'g'));
  ui->lblHelp->setText("");
- ui->btnOk->setEnabled(false);
- ui->btnBrowse->setEnabled(false);
+ ui->btnOk->setEnabled(true);
+ ui->btnBrowse->setEnabled(true);
  ui->cbCities->clear();
  ui->cbCities->addItem(strNew);
  foreach(City* c, config->cityList)
@@ -27,17 +29,24 @@ CreateSqliteDatabaseDialog::CreateSqliteDatabaseDialog(LatLng* latLng, QWidget *
  ui->dtCompanyStart->setDate(QDate(1856,1,1));
  ui->dtCompanyEnd->setDate(QDate(2050,12,31));
  ui->chkCreateConnection->setChecked(true);
+
+ connect(ui->txtLatLng, SIGNAL(editingFinished()), this, SLOT(txtLatLngChanged()));
 }
 
 CreateSqliteDatabaseDialog::~CreateSqliteDatabaseDialog()
 {
  delete ui;
 }
+
 void CreateSqliteDatabaseDialog::on_txtDbName_editingFinished()
 {
  if(!ui->txtDbName->text().isEmpty())
   ui->btnBrowse->setEnabled(true);
+ QString txt = ui->txtDbName->text();
+ if(!txt.endsWith(".sqlite3"))
+    ui->txtDbName->setText(txt + ".sqlite3");
 }
+
 void CreateSqliteDatabaseDialog::on_btnBrowse_clicked()
 {
  ui->btnOk->setEnabled(false);
@@ -56,6 +65,30 @@ void CreateSqliteDatabaseDialog::on_btnBrowse_clicked()
    ui->txtPath->setText(list.at(0));
   }
  }
+}
+
+void CreateSqliteDatabaseDialog::txtLatLngChanged()
+{
+    QString text = ui->txtLatLng->text();
+    QStringList sl = text.split(",");
+    bool ok;
+    double lat, lng;
+    if(sl.count() == 2)
+    {
+       lat = sl.at(0).toDouble(&ok);
+       if(ok && (lat < 90.0 && lat > -90.0))
+       {
+         lng =  sl.at(1).toDouble(&ok);
+         if(ok && (lng < 180.0 && lng > -180 ))
+         {
+             latLng->setLat(lat);
+             latLng->setLon(lng);
+             ui->btnOk->setEnabled(true);
+             return;
+         }
+       }
+    }
+    QMessageBox::critical(this, tr("Invalid LatLng"), tr("The latitude,longitude entered is invalid!"));
 }
 
 void CreateSqliteDatabaseDialog::on_btnCancel_clicked()
@@ -89,38 +122,16 @@ void CreateSqliteDatabaseDialog::on_btnOk_clicked()
   ui->lblHelp->setText(db.lastError().text());
   return;
  }
- QFile file(":/sqlite3_create_tables.sql");
- if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
- {
-  qDebug()<<file.errorString() + " '" + file.fileName()+"'";
-  ui->lblHelp->setText(file.errorString() + " '" + file.fileName()+"'");
-  //return;
- }
 
- QTextStream in(&file);
- QString sqltext;
- while(!in.atEnd())
- {
-  sqltext = sqltext +  in.readLine();
-  if(sqltext.contains(";"))
-  {
-   QSqlQuery query = QSqlQuery(db);
-   if(!query.exec(sqltext))
-   {
-    QSqlError err = query.lastError();
-    ui->lblHelp->setText(err.text());
-    return;
-   }
-   sqltext="";
-  }
- }
-
+ if(!sql->executeScript(":/sql/sqlite3_create_tables.sql",db))
+     return;
 
  bool bSuccess = true;
  QString commandString;
  sql->beginTransaction("setup");
  // Populate the Parameters table
-  commandString = "insert into Parameters  (lat, lon, title, city, minDate, maxDate, alphaRoutes) values(:lat, :lon, :title, :city, :minDate,:maxDate, :alphaRoute)";
+  commandString = "insert into Parameters  (lat, lon, title, city, minDate, maxDate, alphaRoutes) "
+                  "values(:lat, :lon, :title, :city, :minDate,:maxDate, :alphaRoutes)";
  QSqlQuery query = QSqlQuery(db);
  query.prepare(commandString);
  query.bindValue(":lat", latLng->lat());
@@ -129,11 +140,12 @@ void CreateSqliteDatabaseDialog::on_btnOk_clicked()
  query.bindValue(":city", ui->cbCities->currentText());
  query.bindValue(":minDate", "1856/01/01");
  query.bindValue(":maxDate", "2000/01/01");
- query.bindValue("alphaRoutes", "Y");
+ query.bindValue(":alphaRoutes", 'Y');
  if(!query.exec())
  {
   SQLERROR(query);
   bSuccess = false;
+  return;
  }
 
  if(!sql->updateTractionType(1, "Electric", "#FF0000", 0, db))
@@ -178,7 +190,7 @@ void CreateSqliteDatabaseDialog::on_btnOk_clicked()
    Connection* cn = new Connection();
    cn->setServerType("Sqlite");
    cn->setDriver("QSQLITE");
-   cn->setDatabase(newFile);
+   cn->setSqliteFileName(newFile);
    QFileInfo info(newFile);
    cn->setDescription ("Sqlite " + ui->cbCities->currentText());
    cn->setId(c->connections.count());

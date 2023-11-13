@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>608</width>
-    <height>490</height>
+    <width>651</width>
+    <height>513</height>
    </rect>
   </property>
   <property name="font">
@@ -26,29 +26,46 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Route:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="1">
-    <widget class="QLineEdit" name="txtRouteNbr">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter an existing route number, e.g. '20' or 'M1'. Enter a range, eg. '200,299' to create a new numeric number in that range.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="maxLength">
-      <number>8</number>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="2">
-    <widget class="QLabel" name="label_6">
-     <property name="text">
-      <string>Name:</string>
-     </property>
-    </widget>
+   <item row="2" column="0" colspan="3">
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Route:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="txtRouteNbr">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter an existing route number, e.g. '20' or 'M1'. Enter a range, eg. '200,299' to create a new numeric number in that range.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="maxLength">
+        <number>8</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Name:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="CComboBox" name="cbRouteName">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <horstretch>1</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item row="3" column="0">
     <widget class="QLabel" name="label_3">
@@ -57,10 +74,10 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="3">
+   <item row="3" column="1">
     <widget class="QComboBox" name="cbTractionType"/>
    </item>
-   <item row="3" column="4">
+   <item row="3" column="2">
     <widget class="QCheckBox" name="chkOtherRoutes">
      <property name="text">
       <string>Check other routes</string>
@@ -112,10 +129,13 @@
      </property>
     </widget>
    </item>
-   <item row="6" column="1" colspan="2">
+   <item row="6" column="1">
     <widget class="QGroupBox" name="gbUsage">
      <property name="toolTip">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If the direction of travel is the same as the definition of the segement, select &amp;quot;Right&amp;quot; else select &amp;quot;L&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="whatsThis">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When a route uses only one track of two, which track must be specified.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="title">
       <string>Usage</string>
@@ -138,7 +158,7 @@
      </layout>
     </widget>
    </item>
-   <item row="6" column="4">
+   <item row="6" column="2">
     <widget class="QGroupBox" name="gbDirection">
      <property name="font">
       <font>
@@ -176,7 +196,7 @@
      </property>
     </widget>
    </item>
-   <item row="8" column="0" colspan="5">
+   <item row="8" column="0" colspan="3">
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <widget class="QGroupBox" name="gbNormalEnter">
@@ -376,7 +396,7 @@
      </property>
     </widget>
    </item>
-   <item row="10" column="0" colspan="4">
+   <item row="10" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <widget class="QPushButton" name="btnAdd">
@@ -414,21 +434,14 @@
      </item>
     </layout>
    </item>
-   <item row="2" column="3" colspan="2">
-    <widget class="CComboBox" name="cbRouteName">
-     <property name="editable">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="1" colspan="4">
+   <item row="1" column="1" colspan="2">
     <widget class="QComboBox" name="cbCompany">
      <property name="editable">
       <bool>false</bool>
      </property>
     </widget>
    </item>
-   <item row="0" column="0" colspan="5">
+   <item row="0" column="0" colspan="3">
     <widget class="QComboBox" name="cbSegments">
      <property name="toolTip">
       <string>Select an existing route segment to update</string>
@@ -449,7 +462,6 @@
   <tabstop>cbCompany</tabstop>
   <tabstop>txtRouteNbr</tabstop>
   <tabstop>cbRouteName</tabstop>
-  <tabstop>cbTractionType</tabstop>
   <tabstop>rbNormal</tabstop>
   <tabstop>rbNFromLeft</tabstop>
   <tabstop>rbNFromBack</tabstop>

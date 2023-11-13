@@ -490,7 +490,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   }
   else
    ui->chkShowOverlay->setEnabled(false);
-  ui->tabWidget->setTabVisible(0, true);
+  ui->tabWidget->setCurrentIndex(0);
   config->saveSettings();
 }
 
@@ -1244,12 +1244,15 @@ void MainWindow::createActions()
   SQL::instance()->setForeignKeyCheck(b);
  });
 
- fontSizeChangeAct = new QAction(tr("Change font"), this);
- fontSizeChangeAct->setStatusTip(tr("Open a dialog to change the application's font."));
- connect(fontSizeChangeAct, &QAction::triggered, [=]{
-    this->changeFonts(QFontDialog::getFont(0, this->font()));
-    config->font = this->font();
- });
+  fontSizeChangeAct = new QAction(tr("Change font"), this);
+  fontSizeChangeAct->setStatusTip(tr("Open a dialog to change the application's font."));
+  connect(fontSizeChangeAct, &QAction::triggered, [=]{
+     bool ok;
+     QFont f = QFontDialog::getFont(&ok, config->font,this,tr("Select new font"));
+     config->font = f;
+     this->changeFonts(f);
+     qDebug() << "new font " << this->font().toString();
+  });
 }
 void MainWindow::changeFonts(QFont f)
 {
@@ -1580,6 +1583,7 @@ void MainWindow::newCity(QAction* act )
     }
 #endif
     db = config->currConnection->configure();
+    SQL::instance()->checkTables(db);
     emit newCitySelected();
 
     this->setWindowTitle("Mapper - "+ config->currCity->name() + " ("+config->currConnection->description()+")");
@@ -1633,6 +1637,7 @@ void MainWindow::newCity(QAction* act )
     tractionTypeView = new TractionTypeView(config, this);
     this->setCursor(QCursor(Qt::ArrowCursor));
     enableControls(true);
+    routeView->clear();
 }
 
 void MainWindow::newOverlay(QAction* act)
@@ -3911,6 +3916,7 @@ void MainWindow::RouteChanged(RouteChangedEventArgs args)
   displaySegment(args.routeSegment, rd.routeName(), /*rd.oneWay,*/ /*ttColors[e.tractionType]*/getColor(args.tractionType), " ", true);
  }
  routeView->updateRouteView();
+ ui->tabWidget->setCurrentIndex(0);
 }
 
 //// Show Overview window in GoogleMaps
