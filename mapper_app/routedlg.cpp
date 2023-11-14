@@ -364,10 +364,10 @@ void RouteDlg::setAddMode (bool value)
 {
     bAddMode = value;
     Parameters parms = sql->getParameters();
-    ui->dateStart->setMinimumDateTime( parms.minDate);
-    ui->dateStart->setMaximumDateTime( parms.maxDate);
-    ui->dateEnd->setMaximumDateTime( parms.maxDate);
-    ui->dateEnd->setMinimumDateTime(parms.minDate);
+    ui->dateStart->setMinimumDate( parms.minDate);
+    ui->dateStart->setMaximumDate( parms.maxDate);
+    ui->dateEnd->setMaximumDate( parms.maxDate);
+    ui->dateEnd->setMinimumDate(parms.minDate);
     displayDates(__FUNCTION__);
 
 }
@@ -554,10 +554,10 @@ void RouteDlg::txtRouteName_Leave()
             else
             {
                 Parameters parms = sql->getParameters();
-                ui->dateStart->setMinimumDateTime(parms.minDate);
-                ui->dateStart->setMaximumDateTime(parms.maxDate);
-                ui->dateEnd->setMaximumDateTime(parms.maxDate);
-                ui->dateEnd->setMinimumDateTime(parms.minDate);
+                ui->dateStart->setMinimumDate(parms.minDate);
+                ui->dateStart->setMaximumDate(parms.maxDate);
+                ui->dateEnd->setMaximumDate(parms.maxDate);
+                ui->dateEnd->setMinimumDate(parms.minDate);
                 displayDates(__FUNCTION__);
 
             }

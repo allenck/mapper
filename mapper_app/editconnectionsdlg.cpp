@@ -731,13 +731,9 @@ void EditConnectionsDlg::btnSaveClicked()
        if(!info.exists())
        {
 
-          SQL::instance()->executeScript(":/sqlite3_createTables.sql", db);
-          Parameters p;
-          p.lat = currCity->center.lat();
-          p.lon = currCity->center.lon();
-          p.city = currCity->name();
-          p.bAlphaRoutes = true;
-          SQL::instance()->insertParameters(p, db);
+          SQL::instance()->executeScript(":/sql/sqlite3_createTables.sql", db);
+
+          SQL::instance()->insertParameters(parms, db);
        }
   }
   else // MySql
@@ -755,7 +751,8 @@ void EditConnectionsDlg::btnSaveClicked()
    }
   }
 
-  if(ui->cbCities->currentText() == config->currCity->name() && connection->uniqueId() == config->currConnection->uniqueId())
+  if(ui->cbCities->currentText() == config->currCity->name()
+     && connection->uniqueId() == config->currConnection->uniqueId())
    config->currConnection = connection;
   config->currentCityId = config->currCity->id;
   if(ui->cbConnections->currentIndex() < 1)
@@ -812,23 +809,6 @@ void EditConnectionsDlg::btnDeleteClicked()
       if(f.exists())
           f.remove();
     }
-//    if(ui->cbConnections->currentText() == c->description())
-//    {
-//     //currCity->connections.remove(c->description());
-//        currCity->connections.removeOne(c);
-//        //currCity->connectionNames.removeOne(c->description());
-//        currCity->connectionMap.remove(c->uniqueId().toString());
-//     ui->cbConnections->clear();
-//     //ui->cbConnections->addItem(tr("Add new connection"));
-//     for(i=0; i < currCity->connections.count(); i++)
-//     {
-//      Connection* c = (Connection*)&(currCity->connections.at(i));
-//      ui->cbConnections->addItem(c->description(),VPtr<Connection>::asQVariant(c));
-//      c->setId(i);
-//      //currCity->connections.replace(i,c);
-//     }
-//    }
-//    break;
    }
 //   if(config->currCity->id == currCity->id)
 //    config->currCity->connections = currCity->connections;
@@ -973,13 +953,8 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
     if(db.open())
     {
      createSqliteTables(db);
-     SQL::instance()->executeScript(":/CreateMySqlFunctions.sql");
-     Parameters p;
-     p.lat = currCity->center.lat();
-     p.lon = currCity->center.lon();
-     p.city = currCity->name();
-     p.bAlphaRoutes = true;
-     SQL::instance()->insertParameters(p, db);
+     //SQL::instance()->executeScript(":/sql/CreateMySqlFunctions.sql");
+     SQL::instance()->insertParameters(parms, db);
     }
    }
    else
@@ -1121,7 +1096,7 @@ bool EditConnectionsDlg::populateDatabases()
             if(SQL::instance()->createSqlDatabase(currDatabase, db, "MsSql"))
             {
 //          SQL::instance()->createSqlDatabase(currDatabase, db, ui->cbDbType->currentText());
-             SQL::instance()->executeScript(":/CreateMySqlFunctions.sql");
+             SQL::instance()->executeScript(":/sql/CreateMySqlFunctions.sql");
             }
           }
         }
@@ -1168,7 +1143,7 @@ bool EditConnectionsDlg::populateDatabases()
                   if(rslt == QMessageBox::Yes)
                   {
                     SQL::instance()->createSqlDatabase(database, db, ui->cbDbType->currentText());
-                    SQL::instance()->executeScript(":/CreateMySqlFunctions.sql");
+                    SQL::instance()->executeScript(":/sql/CreateMySqlFunctions.sql");
                   }
                   else if(rslt == QMessageBox::No)
                   {
@@ -1327,7 +1302,7 @@ bool EditConnectionsDlg::createSqliteTables(QSqlDatabase db)
 {
  if(!db.open())
   return false;
- QFile file(":/sqlite3_create_tables.sql");
+ QFile file(":/sql/sqlite3_create_tables.sql");
  if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
  {
   qDebug()<<file.errorString() + " '" + file.fileName()+"'";
@@ -1461,4 +1436,10 @@ void EditConnectionsDlg::setComboBoxItemEnabled(QComboBox * comboBox, int index,
     assert(item);
     if(!item) return;
     item->setEnabled(enabled);
+}
+
+// Parameters for new database;
+void EditConnectionsDlg::setParameter(Parameters p)
+{
+ parms = p;
 }

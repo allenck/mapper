@@ -5914,8 +5914,8 @@ Parameters SQL::getParameters()
             parms.lon = query.value(1).toDouble();
             parms.title = query.value(2).toString();
             parms.city = query.value(3).toString();
-            parms.minDate = query.value(4).toDateTime();
-            parms.maxDate = query.value(5).toDateTime();
+            parms.minDate = query.value(4).toDate();
+            parms.maxDate = query.value(5).toDate();
             alphaRoutes = query.value(6).toString();
             if (alphaRoutes == "Y")
                 parms.bAlphaRoutes = true;
@@ -5936,26 +5936,24 @@ bool SQL::insertParameters(Parameters parms, QSqlDatabase db)
             throw Exception(tr("database not open: %1").arg(__LINE__));
         //QSqlDatabase db = QSqlDatabase::database();
 
-        QString commandText = "insert into Parameters lat, lon, title, city, minDate, maxDate, alphaRoutes "
-                              " values (:lat, :lon, :title, :city, :minDate, :maxDate, :alphaRoutes, :lastUpdate)";
+        QString commandText = "insert into Parameters (lat, lon, title, city, minDate, maxDate, alphaRoutes) "
+                              " values (:lat, :lon, :title, :city, :minDate, :maxDate, :alphaRoutes)";
         QSqlQuery query = QSqlQuery(db);
         query.prepare(commandText);
         query.bindValue(":lat", parms.lat);
         query.bindValue(":lon", parms.lon);
-        query.bindValue("title", parms.title);
-        query.bindValue("city", parms.city);
-        query.bindValue("minDate", parms.minDate);
-        query.bindValue("maxDate", parms.maxDate);
-        query.bindValue("alphaRoutes", parms.bAlphaRoutes);
-        query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
+        query.bindValue(":title", parms.title);
+        query.bindValue(":city", parms.city);
+        query.bindValue(":minDate", parms.minDate);
+        query.bindValue(":maxDate", parms.maxDate);
+        query.bindValue(":alphaRoutes", (parms.bAlphaRoutes?'Y':'N'));
         bool bQuery = query.exec();
         if(!bQuery)
         {
             QSqlError err = query.lastError();
             qDebug() << err.text() + "\n";
             qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            return false;
         }
     }
     catch (Exception e)

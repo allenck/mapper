@@ -755,7 +755,7 @@ public:
     QString title;
     QString city;
     double lat, lon;
-    QDateTime minDate, maxDate;
+    QDate minDate, maxDate;
     bool bAlphaRoutes;
 };
 

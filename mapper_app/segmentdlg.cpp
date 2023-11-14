@@ -85,10 +85,10 @@ SegmentDlg::SegmentDlg(Configuration *cfg, QWidget *parent) :
   bNewChanged = false;
  }
  Parameters parms = sql->getParameters();
- ui->dateStart->setMinimumDateTime( parms.minDate);
- ui->dateStart->setMaximumDateTime( parms.maxDate);
- ui->dateEnd->setMinimumDateTime( parms.minDate);
- ui->dateEnd->setMaximumDateTime( parms.maxDate);
+ ui->dateStart->setMinimumDate( parms.minDate);
+ ui->dateStart->setMaximumDate( parms.maxDate);
+ ui->dateEnd->setMinimumDate( parms.minDate);
+ ui->dateEnd->setMaximumDate( parms.maxDate);
  ui->dateStart->setDate( _rd.startDate());
  ui->dateEnd->setDate( _rd.endDate());
 
@@ -232,10 +232,10 @@ void SegmentDlg::setRouteData(RouteData value)
     }
 
     Parameters parms = sql->getParameters();
-    ui->dateStart->setMinimumDateTime( parms.minDate);
-    ui->dateStart->setMaximumDateTime( parms.maxDate);
-    ui->dateEnd->setMinimumDateTime( parms.minDate);
-    ui->dateEnd->setMaximumDateTime( parms.maxDate);
+    ui->dateStart->setMinimumDate( parms.minDate);
+    ui->dateStart->setMaximumDate( parms.maxDate);
+    ui->dateEnd->setMinimumDate( parms.minDate);
+    ui->dateEnd->setMaximumDate( parms.maxDate);
     ui->dateStart->setDate( _rd.startDate());
     ui->dateEnd->setDate( _rd.endDate());
 

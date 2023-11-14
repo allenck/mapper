@@ -18,6 +18,7 @@ public:
  EditConnectionsDlg(QWidget *parent = 0);
  void setCity(City* city);
  void refreshCities();
+ void setParameter(Parameters p);
 
  ~EditConnectionsDlg();
  enum DBTYPE {MySql, MsSql,Sqlite};
@@ -51,6 +52,7 @@ private:
   bool connectionChanging = false;
   QString basePath;
   void removeEmptyFiles();
+  Parameters parms;
 
 private slots:
  void cbCitiesSelectionChanged(int sel);

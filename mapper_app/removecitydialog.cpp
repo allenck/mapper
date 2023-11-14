@@ -27,12 +27,16 @@ RemoveCityDialog::RemoveCityDialog(QWidget *parent) :
        foreach (Connection* connection, city->connections) {
           if(connection->connectionType()=="Local" && ui->checkBox->isChecked())
           {
-              QFileInfo info(connection->sqlite_fileName());
-              if(info.exists())
-              {
-                QFile f(info.absoluteFilePath());
-                f.moveToTrash();
-              }
+           QFileInfo info;
+           if(connection->sqlite_fileName().startsWith("/"))
+            info.setFile(connection->sqlite_fileName());
+           else
+            info.setFile("Resources/databases/" +connection->sqlite_fileName());
+           if(info.exists())
+           {
+             QFile f(info.absoluteFilePath());
+             f.moveToTrash();
+           }
           }
        }
        config->cityNames().removeOne(city->name());
