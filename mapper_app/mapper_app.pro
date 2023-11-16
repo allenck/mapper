@@ -175,3 +175,12 @@ DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3390400
 INCLUDEPATH += $$PWD/debug
 DEPENDPATH += $$PWD/debug
 
+FORMS += \
+  routenamewidget.ui
+
+HEADERS += \
+  routenamewidget.h
+
+SOURCES += \
+  routenamewidget.cpp
+

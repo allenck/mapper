@@ -173,7 +173,6 @@ void WebViewBridge::setLen(qint32 len)
 }
 void WebViewBridge::setCenter(double lat, double lon, int zoom, QString maptype)
 {
-
     m_parent->m_latitude = lat;
     m_parent->m_longitude = lon;
     m_parent->m_zoom = zoom;

@@ -192,8 +192,9 @@ void SQL::rollbackTransaction (QString name)
  {
   QSqlError err = QSqlError();
   qWarning() <<tr("Rollback transaction %1 failed %2").arg(currentTransaction).arg(err.driverText());
-  db.close();
-  exit(EXIT_FAILURE);
+//  db.close();
+//  exit(EXIT_FAILURE);
+  return;
  }
  currentTransaction = "";
 }
@@ -3761,8 +3762,9 @@ bool SQL::updateSegment(SegmentData* sd)
       QSqlError err = query.lastError();
       qDebug() << err.text() + "\n";
       qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-      db.close();
-      exit(EXIT_FAILURE);
+//      db.close();
+//      exit(EXIT_FAILURE);
+      return false;
  }
  rows = query.numRowsAffected();
  if (rows == 0)
@@ -7689,7 +7691,7 @@ bool SQL::deleteRoute(RouteData rd)
  return ret;
 }
 
-bool SQL::modifyRouteDate(RouteData* rd, bool bStartDate, QDate dt, QString name1, QString name2)
+bool SQL::modifyRouteDate(RouteData* rd, bool bStartDate, QDate dt/*, QString name1, QString name2*/)
 {
  bool ret = true;
  int rows = 0;
@@ -7712,7 +7714,7 @@ bool SQL::modifyRouteDate(RouteData* rd, bool bStartDate, QDate dt, QString name
 //   }
 //  }
 
-  if(!modifyCurrentRoute(rd, bStartDate, dt, name1, name2))
+  if(!modifyCurrentRoute(rd, bStartDate, dt/*, name1, name2*/))
    ret = false;
 
   if(ret)
@@ -7722,17 +7724,23 @@ bool SQL::modifyRouteDate(RouteData* rd, bool bStartDate, QDate dt, QString name
  return ret;
 }
 
-#if 0
-bool SQL::modifyCurrentRoute(routeData* rd, bool bStartDate, QDate dt)
+#if 1
+bool SQL::modifyCurrentRoute(RouteData* rd, bool bStartDate, QDate dt)
 {
  bool ret = false;
  QSqlDatabase db = QSqlDatabase::database();
  QString commandText;
  int rows;
  if (bStartDate)
-  commandText = "update Routes set startDate = '" + dt.toString("yyyy/MM/dd") + "',lastUpdate=:lastUpdate where startDate = '" + rd->startDate.toString("yyyy/MM/dd") + "' and route = " + QString("%1").arg(rd->route);
+  commandText = "update Routes set startDate = '" + dt.toString("yyyy/MM/dd")
+                + "',lastUpdate=:lastUpdate where startDate = '"
+                + rd->startDate().toString("yyyy/MM/dd") + "' and route = "
+                + QString("%1").arg(rd->route());
   else
-  commandText = "update Routes set endDate = '" + dt.toString("yyyy/MM/dd") + "',lastUpdate=:lastUpdate where endDate = '" + rd->endDate.toString("yyyy/MM/dd") + "' and route = " + QString("%1").arg(rd->route);
+  commandText = "update Routes set endDate = '" + dt.toString("yyyy/MM/dd")
+                + "',lastUpdate=:lastUpdate where endDate = '"
+                + rd->endDate().toString("yyyy/MM/dd") + "' and route = "
+                + QString("%1").arg(rd->route());
   QSqlQuery query = QSqlQuery(db);
   query.prepare(commandText);
   query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
@@ -7750,9 +7758,15 @@ bool SQL::modifyCurrentRoute(routeData* rd, bool bStartDate, QDate dt)
       ret = true;
   // modify any routes that begin the day after or end the day before.
   if (bStartDate)
-   commandText = "update Routes set endDate = '" + dt.addDays(1).toString("yyyy/MM/dd") + "',lastUpdate=:lastUpdate where endDate = '" + rd->startDate.addDays(1).toString("yyyy/MM/dd") + "' and route = " + QString("%1").arg(rd->route);
+   commandText = "update Routes set endDate = '" + dt.addDays(1).toString("yyyy/MM/dd")
+                 + "',lastUpdate=:lastUpdate where endDate = '"
+                 + rd->startDate().addDays(1).toString("yyyy/MM/dd")
+                 + "' and route = " + QString("%1").arg(rd->route());
   else
-   commandText = "update Routes set startDate = '" + dt.addDays(1).toString("yyyy/MM/dd") + "',lastUpdate=:lastUpdate where startDate = '" + rd->endDate.addDays(1).toString("yyyy/MM/dd") + "' and route = " + QString("%1").arg(rd->route);
+   commandText = "update Routes set startDate = '" + dt.addDays(1).toString("yyyy/MM/dd")
+                 + "',lastUpdate=:lastUpdate where startDate = '"
+                 + rd->endDate().addDays(1).toString("yyyy/MM/dd")
+                 + "' and route = " + QString("%1").arg(rd->route());
   query.prepare(commandText);
   query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
   bQuery = query.exec();
@@ -7938,7 +7952,7 @@ bool SQL::modifyCurrentRoute(RouteData* crd, bool bStartDate, QDate dt, QString 
  }
  return ret;
 }
-
+#endif
 // helper routines for Routes
 QString SQL::getPrevRouteName(QDate dt)
 {
@@ -8013,7 +8027,7 @@ bool SQL::insertRouteSegment(SegmentData sd)
  }
  return true;
 }
-#endif
+
 bool SQL::insertRouteSegment(RouteData rd)
 {
  QSqlDatabase db = QSqlDatabase::database();
@@ -9673,10 +9687,10 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd)
  bool ret = false;
  int rows = 0;
  QSqlDatabase db = QSqlDatabase::database();
- // changes to route and lineKey not possible!
- if(osd.route() != sd.route() || osd.segmentId() != sd.segmentId())
+ // changes to lineKey not possible!
+ if(sd.route() < 1 || osd.segmentId() != sd.segmentId())
  {
-  qDebug() << " illegal change to routenbr or segmentId";
+  qDebug() << " illegal change to route orsegmentId";
   return false;
  }
  if( sd.startDate() > sd.endDate())
@@ -9712,15 +9726,16 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd)
              + ", reverseLeave = " + QString::number(sd.reverseLeave())
              + ", Sequence = " + QString::number(sd._sequence)
              + ", ReverseSeq = " + QString::number(sd._returnSeq)
+             + ", Route = " + QString::number(sd._route)
              + ", name = '" + sd.routeName() + "'"
              + ", startDate = '" + sd.startDate().toString("yyyy/MM/dd")+ "'"
              + ", endDate = '" + sd.endDate().toString("yyyy/MM/dd")+ "'"
              + ", lastUpdate=:lastUpdate"
-             " where route =" + QString("%1").arg(sd.route())
+             " where route =" + QString("%1").arg(osd.route())
              + " and name ='" + osd.routeName() + "'"
              + " and startDate ='" + osd.startDate().toString("yyyy/MM/dd")+ "'"
              + " and endDate='" + osd.endDate().toString("yyyy/MM/dd")+ "'"
-             + " and lineKey=" + QString("%1").arg(sd.segmentId());
+             + " and lineKey=" + QString("%1").arg(osd.segmentId());
  QSqlQuery query = QSqlQuery(db);
  query.prepare(commandText);
  query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());

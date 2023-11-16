@@ -1,18 +1,20 @@
 #include "modifyroutedialog.h"
-#include "ui_dialogrenameroute.h"
+#include "ui_modifyroutedialog.h"
+#include "routenamewidget.h"
 
-ModifyRouteDialog::ModifyRouteDialog(Configuration* cfg,QWidget *parent) :
+ModifyRouteDialog::ModifyRouteDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::DialogRenameRoute)
 {
     ui->setupUi(this);
-    config = cfg;
+    config = Configuration::instance();
     //sql->setConfig(config);
     sql = SQL::instance();
     ui->lblHelp->setText("");
     refreshRoutes();
     connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(btnOK_Click()));
     connect(ui->buttonBox,SIGNAL(rejected()),this, SLOT(close()));
+    //connect((ui->txtNewRouteNbr, SIGNAL(editingFinished()),this, SLOT()))
 }
 
 ModifyRouteDialog::~ModifyRouteDialog()
@@ -20,10 +22,10 @@ ModifyRouteDialog::~ModifyRouteDialog()
     delete ui;
 }
 
-void ModifyRouteDialog::setConfig(Configuration * cfg)
-{
-    config = cfg;
-}
+//void ModifyRouteDialog::setConfig(Configuration * cfg)
+//{
+//    config = cfg;
+//}
 
 /// <summary>
 /// Sets a reference to the current configuration
@@ -36,8 +38,10 @@ void ModifyRouteDialog::routeData(RouteData value)
 //        return;
     _rd = value;
 
-    ui->txtNewRouteNbr->setText( _rd.alphaRoute());
-    ui->txtNewRouteName->setText(_rd.routeName());
+//    ui->txtNewRouteNbr->setText( _rd.alphaRoute());
+//    ui->txtNewRouteName->setText(_rd.routeName());
+    ui->rnw->configure(&_rd,  ui->lblHelp);
+
     if (routeDataList.count()==0)
         refreshRoutes();
     //foreach (routeData rd in routeDataList)
@@ -48,7 +52,7 @@ void ModifyRouteDialog::routeData(RouteData value)
         {
             //cbRoutes.SelectedItem = rd;
             ui->cbRoutes->setCurrentIndex(i);
-            ui->txtNewRouteName->setFocus();
+            //ui->rnw->newRouteName->setFocus();
             break;
         }
     }
@@ -61,24 +65,35 @@ qint32 ModifyRouteDialog::newRoute()
 {
     return _routeNbr;
 }
-QString ModifyRouteDialog::newName (){ return ui->txtNewRouteName->text(); }
+QString ModifyRouteDialog::newName (){ return ui->rnw->newRouteName(); }
 
 void ModifyRouteDialog::btnOK_Click()
 {
     RouteData rd = (RouteData)routeDataList.at(ui->cbRoutes->currentIndex());
+    if(ui->rnw->newRoute()<=0)
+    {
+     ui->lblHelp->setText(tr("route number invalid"));
+     return;
+    }
+    if(ui->rnw->newRouteName().isEmpty())
+    {
+     ui->lblHelp->setText(tr("route name invalid"));
+     return;
+    }
 
     //QList<RouteData> myArray = sql->getRouteDatasForDate(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
     QList<SegmentData*> myArray = sql->getSegmentDataList(rd);
     if (myArray.count()==0)
     {
-        ui->lblHelp->setText(tr("Delete failed"));
+        ui->lblHelp->setText(tr("No routes"));
         //System.Media.SystemSounds.Asterisk.Play();
         return;
     }
     sql->beginTransaction("RenameRoute");
     CompanyData* cd = sql->getCompany(rd.companyKey());
 
-    _routeNbr = sql->addAltRoute(ui->txtNewRouteNbr->text(), cd->routePrefix);
+    if(ui->rnw->newRouteNbr())
+     _routeNbr = sql->addAltRoute(ui->rnw->alphaRoute(), cd->routePrefix);
 
     //foreach (routeData rd1 in myArray)
     for(int i=0; i < myArray.count(); i++)
@@ -101,9 +116,12 @@ void ModifyRouteDialog::btnOK_Click()
 //            return;
 //        }
      SegmentData* sd = myArray.at(i);
-     SegmentData sdNew = SegmentData(*sd);
-     sdNew.setRouteName(newName().trimmed());
-     if(!sql->addSegmentToRoute(sdNew))
+     SegmentData* sdNew = new SegmentData(*sd);
+     //sdNew.setRouteName(newName().trimmed());
+     sdNew->setRoute(ui->rnw->newRoute());
+     sdNew->setRouteName(ui->rnw->newRouteName());
+     sdNew->setAlphaRoute(ui->rnw->alphaRoute());
+     if(!sql->updateRoute(*sd, *sdNew))
      {
       sql->rollbackTransaction("RenameRoute");
       this->setResult(QDialog::Rejected);
@@ -114,7 +132,7 @@ void ModifyRouteDialog::btnOK_Click()
      {
          //if(!sql->deleteTerminalInfo(rd.route, rd.name, sql->formatDate(rd.endDate)))
          //    throw (new ApplicationException("delete terminal info failed"));
-         if (!sql->updateTerminals(_routeNbr, ui->txtNewRouteName->text(), ti.startDate.toString("yyyy/MM/dd"), ti.endDate.toString("yyyy/MM/dd"), ti.startSegment, ti.startWhichEnd, ti.endSegment, ti.endWhichEnd))
+         if (!sql->updateTerminals(_routeNbr, ui->rnw->newRouteName(), ti.startDate.toString("yyyy/MM/dd"), ti.endDate.toString("yyyy/MM/dd"), ti.startSegment, ti.startWhichEnd, ti.endSegment, ti.endWhichEnd))
              //throw (new ApplicationException("update terminal failed!"));
              ui->lblHelp->setText(tr("Update terminal failed"));
      }
@@ -143,7 +161,7 @@ void ModifyRouteDialog::btnOK_Click()
     //sql->myConnection.Close();
 
     _rd.setAlphaRoute(_alphaRoute);
-    _rd.setRouteName(ui->txtNewRouteName->text());
+    _rd.setRouteName(ui->rnw->newRouteName());
     _rd.setRoute(_routeNbr);
 
 //    this.DialogResult = DialogResult.OK;
@@ -186,79 +204,9 @@ void ModifyRouteDialog::refreshRoutes()
 
 void ModifyRouteDialog::cbRoutes_SelectedIndexChanged()
 {
-    if (ui->txtNewRouteName->text() == "")
-        ui->txtNewRouteName->setText (ui->cbRoutes->currentText());
+    if (ui->rnw->newRouteName() == "")
+        //ui->txtNewRouteName->setText (ui->cbRoutes->currentText());
+     ui->rnw->setRouteName(ui->cbRoutes->currentText());
 }
 
-void ModifyRouteDialog::txtNewRouteNbr_TextChanged()
-{
-    bRouteChanged = true;
-}
 
-void ModifyRouteDialog::txtNewRouteName_Leave()
-{
-    if (ui->txtNewRouteNbr->text() == "")
-    {
-        ui->lblHelp->setText(tr("Enter a route number!"));
-        //System.Media.SystemSounds.Asterisk.Play();
-        ui->txtNewRouteNbr->setFocus();
-        return;
-    }
-    if (ui->txtNewRouteName->text() == "")
-    {
-        ui->lblHelp->setText(tr( "Enter a route name!"));
-        //System.Media.SystemSounds.Asterisk.Play();
-        ui->txtNewRouteName->setFocus();
-        return;
-    }
-    bool bAlphaRoute = false;
-    //bRouteChanging = false;
-    QString AlphaRoute;
-    int newRoute = sql->getNumericRoute(ui->txtNewRouteNbr->text(), & AlphaRoute, & bAlphaRoute, _rd.companyKey());
-
-    _routeNbr = newRoute;
-    if (!config->currCity->bAlphaRoutes && bAlphaRoute)
-    {
-        ui->lblHelp->setText(tr( "Must be a number!"));
-        //System.Media.SystemSounds.Asterisk.Play();
-        ui->txtNewRouteNbr->setFocus();
-        return;
-    }
-    ui->lblHelp->setText("");
-    //           fillComboBox();
-    QList<RouteData> myArray = sql->getRouteInfo(_routeNbr);
-    if (myArray.count() == 0)
-    {
-        ui->txtNewRouteName->setText( " ");
-        ui->txtNewRouteName->setFocus();
-    }
-    //else
-    //{
-    //    int count = 0;
-    //    foreach (routeData rd in myArray)
-    //    {
-    //       // txtNewRouteName.Text = rd.name;
-    //        //if (bRouteChanged)
-    //        //{
-    //        //    dateStart.Value = rd.startDate;
-    //        //    dateEnd.Value = rd.endDate;
-    //        //    cbTractionType.SelectedIndex = rd.tractionType;
-    //        //    int companyKey = sql->getRouteCompany(_routeNbr);
-    //        //    foreach (companyData cd in _companyList)
-    //        //    {
-    //        //        if (companyKey == cd.companyKey)
-    //        //        {
-    //        //            cbCompany.SelectedIndex = count;
-    //        //            //cbCompany.SelectedText = cd.ToString();
-    //        //            break;
-    //        //        }
-    //        //        count++;
-    //        //    }
-    //        //}
-    //        bRouteChanged = false;
-    //        break;
-    //    }
-    //}
-       // }
-    //}
-}

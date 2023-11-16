@@ -15,29 +15,27 @@ class ModifyRouteDialog : public QDialog
     Q_OBJECT
 
 public:
-    ModifyRouteDialog(Configuration * cfg, QWidget *parent = 0);
+    ModifyRouteDialog(QWidget *parent = 0);
     ~ModifyRouteDialog();
     qint32 newRoute();
     void routeData(RouteData value);
     RouteData getRouteData();
     QString newName();
-    void setConfig(Configuration *cfg);
+    //void setConfig(Configuration *cfg);
 
 private:
     Ui::DialogRenameRoute *ui;
     SQL* sql;
     RouteData _rd;
     Configuration *config;
-    bool bRouteChanged;
-    int _routeNbr;
+    bool bRouteChanged = false;
+    int _routeNbr = -1;
     QString _alphaRoute;
     void refreshRoutes();
     QList<RouteData> routeDataList;
 
 private slots:
     void cbRoutes_SelectedIndexChanged();
-    void txtNewRouteNbr_TextChanged();
-    void txtNewRouteName_Leave();
     void btnOK_Click();
 
 };

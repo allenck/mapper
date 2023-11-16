@@ -2896,6 +2896,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
      }
  }
  m_bridge->processScript("getCurrBounds");
+ m_bridge->processScript("getCenter");
 
  QSettings settings;
  //settingsDb settings;
@@ -3571,9 +3572,9 @@ void MainWindow::rerouteRoute()
 
 void MainWindow::renameRoute_Click()
 {
-    ModifyRouteDialog renameRouteDlg(config, this);
+    ModifyRouteDialog renameRouteDlg(this);
     //renameRouteDlg.setConfig(config);
-    renameRouteDlg.routeData ( (RouteData)routeList.at(ui->cbRoute->currentIndex()));
+    renameRouteDlg.routeData((RouteData)routeList.at(ui->cbRoute->currentIndex()));
     int rslt = renameRouteDlg.exec();
     if (rslt == QDialog::Accepted)
     {

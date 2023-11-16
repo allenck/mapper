@@ -13,6 +13,7 @@ ModifyRouteDateDlg::ModifyRouteDateDlg(QWidget *parent) :
  connect(ui->buttonBox, SIGNAL(rejected()), this, SLOT(btnCancel_Click()));
  connect(ui->rbStart, SIGNAL(toggled(bool)), this, SLOT(rbStartToggled(bool)));
  connect(ui->dateTimePicker1, SIGNAL(dateChanged(QDate)), this, SLOT(dateTimePicker1_ValueChanged(QDate)));
+
  _rd = NULL;
  _otherRd = NULL;
  routeList = QList<RouteData>();
@@ -139,8 +140,8 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
  else
   _otherRd = NULL;
 
- if (sql->modifyRouteDate(_rd, ui->rbStart->isChecked(), ui->dateTimePicker1->date(),
-                          ui->txtName1->text(), ui->txtName2->text()))
+ if (sql->modifyRouteDate(_rd, ui->rbStart->isChecked(), ui->dateTimePicker1->date()/*,
+                          ui->txtName1->text(), ui->txtName2->text()*/))
  {
   if (ui->rbStart->isChecked())
    _rd->startDate() = ui->dateTimePicker1->date();

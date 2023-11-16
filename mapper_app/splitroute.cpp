@@ -58,7 +58,9 @@ void SplitRoute::setRouteData(RouteData rd)
     for(int i = 0; i < routeDataList.count(); i++)
     {
         RouteData rd = routeDataList.at(i);
-        if (rd.route() == _rd.route() && rd.routeName() == _rd.routeName() && rd.endDate() == _rd.endDate())
+        if (rd.route() == _rd.route()
+            && rd.routeName() == _rd.routeName()
+            && rd.endDate() == _rd.endDate())
         {
             ui->cbRoutes->setCurrentIndex(i);
             ui->txtNewRouteName1->setFocus();
@@ -450,7 +452,8 @@ void SplitRoute::btnOK_Click()
       if (sql->addSegmentToRoute(_routeNbr1, ui->txtNewRouteName1->text(),
                                  ui->dateTo2->date(), rd1.endDate(),
                                  rd1.segmentId(), _companyList.at(ui->cbCompany1->currentIndex())->companyKey,
-                                 rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(), rd1.normalEnter(), rd1.normalLeave(),
+                                 rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
+                                 rd1.normalEnter(), rd1.normalLeave(),
                                  rd1.reverseEnter(), rd1.reverseLeave(), rd1.oneWay(), rd1.trackUsage()) == false)
       {
        ui->lblHelp->setText (tr("add failed"));
@@ -465,7 +468,8 @@ void SplitRoute::btnOK_Click()
      if (sql->addSegmentToRoute(_routeNbr1, ui->txtNewRouteName1->text(),
                                 ui->dateFrom1->date(), ui->dateTo1->date(),
                                 rd1.segmentId(), _companyList.at(ui->cbCompany1->currentIndex())->companyKey,
-                                rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(), rd1.normalEnter(), rd1.normalLeave(),
+                                rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
+                                rd1.normalEnter(), rd1.normalLeave(),
                                 rd1.reverseEnter(), rd1.reverseLeave(), rd1.oneWay(), rd1.trackUsage()) == false)
      {
       ui->lblHelp->setText (tr("add failed"));
@@ -476,9 +480,10 @@ void SplitRoute::btnOK_Click()
      }
 
      if (sql->addSegmentToRoute(_routeNbr2, ui->txtNewRouteName2->text(),
-                                ui->dateFrom2->date(), ui->dateTo2->date(),
+                                ui->dateFrom2->date().addDays(1), ui->dateTo2->date(),
                                 rd1.segmentId(), _companyList.at(ui->cbCompany2->currentIndex())->companyKey,
-                                rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(), rd1.normalEnter(), rd1.normalLeave(),
+                                rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
+                                rd1.normalEnter(), rd1.normalLeave(),
                                 rd1.reverseEnter(), rd1.reverseLeave(), rd1.oneWay(), rd1.trackUsage()) == false)
      {
       ui->lblHelp->setText (tr("add failed"));
@@ -489,13 +494,36 @@ void SplitRoute::btnOK_Click()
      }
      _newRoute.setRoute(_routeNbr2);
      _newRoute.setRouteName(ui->txtNewRouteName2->text());
-     _newRoute.setStartDate(ui->dateFrom2->date());
+     _newRoute.setStartDate(ui->dateFrom2->date().addDays(1));
      _newRoute.setEndDate(ui->dateTo2->date());
      _newRoute.setCompanyKey(_companyList.at(ui->cbCompany2->currentIndex())->companyKey);
      _newRoute.setTractionType(rd1.tractionType());
 
     }
     sql->commitTransaction("SplitRoute");
+
+    if(ui->cbKeepOpen->isChecked())
+    {
+     int ix = ui->cbRoutes->currentIndex();
+     if(ix == ui->cbRoutes->count()-1)
+     {
+      ui->cbKeepOpen->setChecked(false);
+      return;
+     }
+     ui->cbRoutes->setCurrentIndex(++ix);
+     _rd = routeDataList.at(ix);
+
+     disconnect(ui->txtNewRouteNbr1, SIGNAL(textChanged(QString)), this, SLOT(txtNewRouteNbr1_TextChanged(QString)));
+     disconnect(ui->txtNewRouteNbr1, SIGNAL(textEdited(QString)), this, SLOT(txtNewRouteNbr1_Leave()));
+     disconnect(ui->txtNewRouteNbr2, SIGNAL(textChanged(QString)), this, SLOT(txtNewRouteNbr2_TextChanged(QString)));
+     disconnect(ui->txtNewRouteNbr2, SIGNAL(textEdited(QString)), this, SLOT(txtNewRouteNbr2_Leave()));
+     ui->txtNewRouteNbr1->setText( _rd.alphaRoute());
+     ui->txtNewRouteNbr2->setText(_rd.alphaRoute());
+     ui->txtNewRouteName1->setText( _rd.routeName());
+     ui->txtNewRouteName2->setText( _rd.routeName());
+     setCursor(Qt::ArrowCursor);
+     return;
+    }
 
     this->accept();
     setCursor(Qt::ArrowCursor);

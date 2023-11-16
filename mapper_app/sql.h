@@ -156,8 +156,9 @@ public:
     SegmentData* getSegmentDataForRouteDates(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate);
     RouteData getRouteDataForRouteDates(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate);
     bool deleteRoute(qint32 route, QString name, QString startDate, QString endDate);
-    bool modifyRouteDate(RouteData *rd, bool bStartDate, QDate dt, QString name1, QString name2);
-    bool modifyCurrentRoute(RouteData *rd, bool bStartDate, QDate dt, QString name1, QString name2);
+    bool modifyRouteDate(RouteData *rd, bool bStartDate, QDate dt);
+    //bool modifyCurrentRoute(RouteData *rd, bool bStartDate, QDate dt, QString name1, QString name2);
+    bool modifyCurrentRoute(RouteData* rd, bool bStartDate, QDate dt);
     QList<SegmentData *> getConflictingRouteSegments(qint32 route, QString name,
                                                    QString startDate, QString endDate,
                                                    qint32 segmentId);

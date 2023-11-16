@@ -1,0 +1,248 @@
+#include "routenamewidget.h"
+#include "ui_routenamewidget.h"
+
+RouteNameWidget::RouteNameWidget(QWidget *parent) :
+  QWidget(parent),
+  ui(new Ui::RouteNameWidget)
+{
+ ui->setupUi(this);
+ sql = SQL::instance();
+ config = Configuration::instance();
+ connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbr_Leave()));
+ connect(ui->cbRouteName->lineEdit(), SIGNAL(editingFinished()),this, SLOT(txtRouteName_Leave()));
+}
+
+RouteNameWidget::~RouteNameWidget()
+{
+ delete ui;
+}
+
+void RouteNameWidget::setCompanyKey(int companyKey)
+{
+ this->companyKey = companyKey;
+}
+
+void RouteNameWidget::setSegmentData(SegmentData* sd)
+{
+ this->sd = sd;
+}
+
+void RouteNameWidget::setRouteData(RouteData* rd)
+{
+ this->rd = rd;
+}
+
+void RouteNameWidget::setRouteName(QString name)
+{
+ ui->cbRouteName->setCurrentText(name);
+}
+
+void RouteNameWidget::configure(SegmentData* sd, QLabel *lblHelpText)
+{
+ this->sd = sd;
+ this->lblHelpText = lblHelpText;
+ ui->txtRouteNbr->setText(QString::number(sd->route()));
+ ui->cbRouteName->setCurrentText(sd->routeName());
+}
+
+void RouteNameWidget::configure(RouteData* rd, QLabel *lblHelpText)
+{
+ this->companyKey = rd->companyKey();
+ this->rd = rd;
+ this->lblHelpText = lblHelpText;
+ ui->txtRouteNbr->setText(QString::number(rd->route()));
+ ui->cbRouteName->setCurrentText(rd->routeName());
+}
+
+QString RouteNameWidget::newRouteName()
+{
+ return ui->cbRouteName->currentText();
+}
+
+void RouteNameWidget::txtRouteNbr_Leave()
+{
+    bool bAlphaRoute = false;
+    bNewRouteNbr = false;
+    bool isNumeric = false;
+    if(ui->txtRouteNbr->text().contains(","))
+    {
+     int nxt = sql->findNextRouteInRange(ui->txtRouteNbr->text());
+     if(nxt >= 0)
+     {
+      ui->txtRouteNbr->setText(QString::number(nxt));
+     }
+    }
+    ui->txtRouteNbr->text().toInt(&isNumeric);
+    int newRoute = sql->getNumericRoute(ui->txtRouteNbr->text(), & _alphaRoute, & bAlphaRoute, companyKey);
+    if(newRoute < 0)
+    {
+        QMessageBox::StandardButtons rslt;
+        rslt = QMessageBox::warning(this,tr("Route number not found"),
+                                    tr( "The route number was not found. Enter Yes to add it"),
+                                    QMessageBox::Yes | QMessageBox::No);
+        switch (rslt)
+        {
+            case QMessageBox::Yes:
+                bNewRouteNbr = true;
+                bool bok;
+                _routeNbr = ui->txtRouteNbr->text().toInt(&bok);
+                if(!bok)
+                 _routeNbr = sql->findNextRouteInRange("1000,1099");
+                break;
+            case QMessageBox::No:
+                break;
+            default:
+                bRouteChanging=false;
+                return;
+        }
+    }
+    else
+     _routeNbr = newRoute;
+
+    if (!config->currCity->bAlphaRoutes && !isNumeric)
+    {
+        lblHelpText->setText(tr( "Alpha route not allowed; must be a number!"));
+        //System.Media.SystemSounds.Exclamation.Play();
+        ui->txtRouteNbr->setFocus();
+        return;
+    }
+
+    if(sd)
+    {
+     sd->setRoute(_routeNbr);
+     sd->setAlphaRoute(ui->txtRouteNbr->text());
+    }
+    else if(rd)
+    {
+     rd->setRoute(_routeNbr);
+     rd->setAlphaRoute(ui->txtRouteNbr->text());
+    }
+    else
+     throw IllegalArgumentException("configure error");
+
+    QList<QString> _routeNamesList = sql->getRouteNames(_routeNbr);
+    ui->cbRouteName->clear();
+    ui->cbRouteName->addItem("");
+    ui->cbRouteName->lineEdit()->setPlaceholderText(tr("new route name"));
+    if (_routeNamesList.count()>0)
+    {
+        //foreach (string str in myArray)
+        for (int i=0; i < _routeNamesList.count(); i++)
+        {
+            QString str = (QString)_routeNamesList.at(i);
+            ui->cbRouteName->addItem(str);
+        }
+        ui->cbRouteName->setCurrentIndex(1);
+    }
+    else
+    {
+        _rd = RouteData();
+        ui->cbRouteName->setCurrentIndex(0);
+        ui->cbRouteName->setFocus();
+        Parameters parms = sql->getParameters();
+//        dateStart.MinDate = parms.minDate;
+//        dateStart.MaxDate = parms.maxDate;
+//        dateEnd.MaxDate = parms.maxDate;
+//        dateEnd.MinDate = parms.minDate;
+    }
+    if (_rd.route() > 0 && _routeNbr == _rd.route())
+    {
+        //ui->cbRouteName->setCurrentIndex(0);
+        for(int i=0; i < _routeNamesList.count(); i++)
+        {
+            if(_rd.route() > 0 && _rd.routeName() == _routeNamesList.at(i))
+            {
+                ui->cbRouteName->setCurrentIndex(i+1);
+                break;
+            }
+        }
+    }
+    //ui->cbTractionType->setCurrentIndex(0);
+    bRouteChanging = false;
+    //checkUpdate(__FUNCTION__);
+}
+
+void RouteNameWidget::txtRouteName_Leave()
+{
+//    if(ui->cbRouteName->currentIndex() == 0)
+//        ui->btnAdd->setText(tr("Add"));
+    if (ui->cbRouteName->currentText().length() == 0)
+    {
+        ui->txtRouteNbr->setFocus();
+        //System.Media.SystemSounds.Beep.Play();
+        return;
+    }
+    if (ui->cbRouteName->currentText().length() > 75)
+    {
+        ui->txtRouteNbr->setFocus();
+        lblHelpText->setText(tr("name > 75 characters!"));
+        //System.Media.SystemSounds.Beep.Play();
+        return;
+    }
+    if(sd)
+     sd->setRouteName(ui->cbRouteName->currentText());
+    else if(rd)
+     rd->setRouteName(ui->cbRouteName->currentText());
+
+    QList<RouteData> rdList = sql->getRouteDataForRouteName(sd->route(), ui->cbRouteName->currentText());
+    if (rdList.count()>0)
+    {
+        //foreach (routeData rd in rdList)
+        for(int i = 0; i < rdList.count(); i++)
+        {
+            RouteData rd = rdList.at(i);
+            if (rd.route() > 0)
+            {
+//             ui->dateStart->setDate( rd.startDate());
+//             ui->dateEnd->setDate(rd.endDate());
+//             displayDates(__FUNCTION__);
+
+                //cbTractionType.SelectedIndex = rd.tractionType - 1;
+
+                //int i = cbTractionType.FindString(rd.tractionType.ToString(), -1);
+                //ui->cbTractionType->setCurrentIndex(ix);
+#if 0
+                for( int j=0; j < _tractionList.count(); j++)
+                {
+                    TractionTypeInfo tt = (TractionTypeInfo)_tractionList.values().at(j);
+                    if(tt.tractionType == sd->tractionType())
+                    {
+//                        ui->cbTractionType->setCurrentIndex(j);
+                        break;
+                    }
+                }
+                //i = cbCompany.FindString(rd.companyKey.ToString(), -1);
+                for( int j=0; j < _companyList.count(); j++)
+                {
+                    CompanyData* cd = (CompanyData*)_companyList.at(j);
+                    if(cd->companyKey == sd->companyKey())
+                    {
+                        ui->cbCompany->setCurrentIndex(j);
+                        break;
+                    }
+                }
+#endif
+            }
+            else
+            {
+//                Parameters parms = sql->getParameters();
+//                ui->dateStart->setMinimumDate(parms.minDate);
+//                ui->dateStart->setMaximumDate(parms.maxDate);
+//                ui->dateEnd->setMaximumDate(parms.maxDate);
+//                ui->dateEnd->setMinimumDate(parms.minDate);
+//                displayDates(__FUNCTION__);
+              emit routeNameChange();
+            }
+        }
+    }
+    else
+    {
+//        _rd = routeData();  // new route
+//        _rd.route = _routeNbr;
+//        _rd.name = ui->cbRouteName->currentText();
+
+    }
+
+    //checkUpdate(__FUNCTION__);
+
+}
