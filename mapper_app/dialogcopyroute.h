@@ -37,6 +37,8 @@ private:
     void refreshRoutes();
     void fillCompanies();
     void fillTractionTypes();
+    bool bNewRouteNbr;
+    bool bAddMode;
 
 private slots:
     void btnCancel_Click();

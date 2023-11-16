@@ -29,7 +29,7 @@ public:
     void setRouteData(RouteData value);
     bool oneWay();
     int tracks();
-
+    SegmentData segment() {return sd;}
 private:
     Ui::SegmentDlg *ui;
     QWidget *myParent;

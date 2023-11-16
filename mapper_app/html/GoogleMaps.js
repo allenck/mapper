@@ -2665,6 +2665,7 @@ function createCenterControl(map) {
 
   return controlButton;
 }
+
 function addCityBoundsButton()
 {
     // Create the DIV to hold the control.
@@ -2681,6 +2682,15 @@ function closeCityBoundsButton()
 {
     if(map.controls[google.maps.ControlPosition.BOTTOM_CENTER].length>0)
         map.controls[google.maps.ControlPosition.BOTTOM_CENTER].removeAt(0);
+}
+
+function getCurrBounds()
+{
+    var bounds =  map.getBounds();
+    var ne = bounds.getNorthEast();
+    var sw = bounds.getSouthWest();
+    webViewBridge.cityBounds( ne.lat(), ne.lng(), sw.lat(), sw.lng());
+
 }
 
 function downloadFile(url, fileName) {

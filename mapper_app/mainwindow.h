@@ -462,6 +462,7 @@ signals:
     void newCitySelected();
     friend class RouteView;
     friend class WebViewBridge;
+    friend class SegmentView;
 };
 
 class Menu : public QMenu

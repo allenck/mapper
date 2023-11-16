@@ -199,7 +199,7 @@ void EditSegmentDialog::On_cbRouteType_currentIndexChanged(int i)
 void EditSegmentDialog::On_sbTracks_valueChanged(int v)
 {
  si.setTracks(v);
- if(rd->route() > 0 )
+ if(rd )
  {
   ui->chkOneWay->setChecked(v==1);
   ui->trackUsage->setVisible(v==2);

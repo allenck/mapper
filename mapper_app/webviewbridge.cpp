@@ -247,20 +247,16 @@ void WebViewBridge::initialized()
 
 void WebViewBridge::opacityChanged(QString name, qint32 opacity)
 {
-
     m_parent->opacityChanged(name, opacity);
-
 }
 
 void WebViewBridge::getGeocoderResults(QString text)
 {
-
     m_parent->getGeocoderResults(text);
 }
 
 void WebViewBridge::setStation(double lat, double lon, qint32 SegmentId, qint32 i)
 {
-
     m_parent->setStation(lat, lon, SegmentId, i);
 }
 void WebViewBridge::updateStation(qint32 stationKey, qint32 segmentId)

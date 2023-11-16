@@ -256,6 +256,14 @@ void EditConnectionsDlg::setCity(City* city)
     ui->cbCities->setCurrentIndex(ix);
     currCity = city;
     connection = city->connections.at(0);
+
+    ui->cbConnections->clear();
+    for(int i=0; i < city->connections.count(); i++)
+    {
+     Connection* connection = city->connections.at(i);
+     setControls(connection->connectionType());
+     ui->cbConnections->addItem(connection->description(),VPtr<Connection>::asQVariant(connection));
+    }
 }
 
 EditConnectionsDlg::~EditConnectionsDlg()
@@ -734,6 +742,15 @@ void EditConnectionsDlg::btnSaveClicked()
           SQL::instance()->executeScript(":/sql/sqlite3_createTables.sql", db);
 
           SQL::instance()->insertParameters(parms, db);
+
+          SQL::instance()->addCompany("New Company", -1, "1870/01/01", "1950/12/31");
+
+          SQL::instance()->executeScript("/sql/create_routeView.sql");
+
+          SQL::instance()->updateTractionType(1, "Electric", "#FF0000", 0, db);
+
+          SQL::instance()->updateTractionType(2, "Horse/Mule", "#61380b",0, db);
+
        }
   }
   else // MySql

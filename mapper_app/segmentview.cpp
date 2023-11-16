@@ -217,6 +217,13 @@ void SegmentView::addToRoute()
 
  SegmentInfo si = sourceModel->selectedSegment(proxymodel->mapToSource(indexes.at(0)).row());
  SegmentData sd = SegmentData(si);
+ sd.setRoute(parent->_rd.route());
+ sd.setAlphaRoute(parent->_rd.alphaRoute());
+ sd.setRouteName(parent->_rd.routeName());
+ sd.setStartDate(parent->_rd.startDate());
+ sd.setEndDate(parent->_rd.endDate());
+ sd.setTractionType(parent->_rd.tractionType());
+
  if(parent->m_segmentStatus == "Y")
    parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
  else
@@ -224,7 +231,7 @@ void SegmentView::addToRoute()
   //SegmentInfo sd = sql->getSegmentInfo(segmentId);
   parent->displaySegment(segmentId, sd.description(), /*sd.oneWay(),*/ /*sd.oneWay() == "N" ? "#00FF00" :*/ "#045fb4", " ", true);
  }
- parent->routeDlg->setSegmentId(segmentId); // do before setting route!
+ parent->routeDlg->setSegmentData(sd); // do before setting route!
  int ix = parent->ui->cbRoute->currentIndex();
  if(ix >= 0)
  {
@@ -234,7 +241,9 @@ void SegmentView::addToRoute()
   sd.setRouteName(rd.routeName());
   sd.setStartDate(rd.startDate());
   sd.setEndDate(rd.endDate());
+  sd.setTractionType(rd.tractionType());
   sd.setCompanyKey(rd.companyKey());
+
   parent->routeDlg->setSegmentData(&sd);
  }
  parent->routeDlg->show();

@@ -84,12 +84,19 @@ void CompanyView::clear()
 
 void CompanyView::newRecord()
 {
- QSqlRecord record = model->record();
- record.setValue(1,QVariant(tr("new description")));
- record.setValue(2,QVariant("1890/01/01"));
- record.setValue(3,QVariant(tr("1950/12/31")));
- record.setValue(6, QVariant(""));
- model->insertRecord(-1,record);
+// QSqlRecord record = model->record();
+// record.setValue(1, QVariant(tr("new description")));
+// record.setValue(2, QVariant("")); // info
+// record.setValue(3, QVariant("")); // prefix
+// record.setValue(4, QVariant("1870/01/01"));
+// record.setValue(5, QVariant("1950/12/31"));
+ bool rslt = SQL::instance()->addCompany("new company", -1, "1870/01/01", "1950/12/31");
+ if(!rslt)
+ {
+  QSqlDatabase db = QSqlDatabase::database();
+  QSqlError err = db.lastError();
+  QMessageBox::warning(nullptr, tr("Warning"), tr("no record was inserted.\n ")+err.text());
+ }
  currentIndex = model->index(model->rowCount()-1,0);
  refresh();
 }

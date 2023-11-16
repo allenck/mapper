@@ -3880,9 +3880,9 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
  if(dbType == "Sqlite")
   commandText = "CREATE TABLE if not exists `Companies` ( "\
           "`key` integer NOT NULL primary key AUTOINCREMENT,"\
-          "`Description` varchar(50) NOT NULL, "\
-          "`routePrefix` varchar(10) default '', "\
-          "`info` varchar(50),"
+          "`Description` varchar(50) NOT NULL default '', "\
+          "`routePrefix` varchar(10) not null default '', "\
+          "`info` varchar(50) not null default '',"
           "`startDate` date DEFAULT NULL," \
           "`endDate` date DEFAULT NULL," \
           "`firstRoute` int(11) DEFAULT NULL," \

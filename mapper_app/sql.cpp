@@ -1643,23 +1643,23 @@ QList<RouteData> SQL::getRouteDatasForDate(qint32 route, QString name, QString d
  QString commandText = "SELECT r.Route,r.Name,r.StartDate,r.EndDate,LineKey,companyKey,"
                        " tractionType,s.direction, normalEnter, normalLeave,"
                        " reverseEnter, reverseLeave, routeAlpha, r.oneWay, r.trackUsage,"
-                       " s.tracks, seq.segmentList"
+                       " s.tracks"
                        " from Routes r"
                        " join AltRoute c on r.route = c.route"
                        " join Segments s on r.lineKey = s.segmentId"
-                       " join RouteSeq seq on r.route = seq.route and r.name = seq.name "
-                       "  and r.startDate = seq.startDate and r.endDate = seq.endDate"
                        " where r.Route = " + QString("%1").arg(route) + ""
                        " and '" + date + "' between r.startDate and r.endDate"
                        " and TRIM(r.name) = '" + name + "'";
 
  QSqlQuery query = QSqlQuery(db);
+ qDebug() << commandText;
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
   SQLERROR(query);
-  db.close();
-  exit(EXIT_FAILURE);
+//  db.close();
+//  exit(EXIT_FAILURE);
+  return myArray;
  }
  if (!query.isActive())
  {
@@ -1686,7 +1686,7 @@ QList<RouteData> SQL::getRouteDatasForDate(qint32 route, QString name, QString d
   rd._oneWay = query.value(13).toString();
   rd._trackUsage = query.value(14).toString();
   rd._tracks = query.value(15).toInt();
-  rd.setSeqList(query.value(16).toString());
+  //rd.setSeqList(query.value(16).toString());
   myArray.append(rd);
  }
 
@@ -3056,7 +3056,7 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData*> segmentList
     if(extra)
      box->layout()->addWidget(extra);
     box->exec();
-    if(bg->checkedId() >0)
+    if(bg && bg->checkedId() >0)
      selected =bg->checkedId();
    }
    if(segmentList.count()==1 || selected >0)
@@ -10410,7 +10410,7 @@ void SQL::checkTables(QSqlDatabase db)
     found = true;
   }
   if(!found)
-   executeScript(":/recreateRouteComments.sql");
+   executeScript(":/sql/recreateRouteComments.sql");
  }
  setForeignKeyCheck(config->foreignKeyCheck());
 }

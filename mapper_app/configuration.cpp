@@ -14,22 +14,6 @@ Configuration::Configuration(QObject *parent) :
 
 void Configuration::saveSettings()
 {
-// if(currConnection->id() != currCity->curConnectionId)
-// {
-//  qDebug() << "connection id mismatch: currConnection->id = " +QString("%1").arg(currConnection->id()) + " vs. currCity->curConnectionId = " + QString("%1").arg(currCity->curConnectionId)+"\n";
-//  exit(EXIT_FAILURE);
-// }
-// if(!currCity->connections.contains(currConnection))
-// {
-//  currCity->connections.append(currConnection);
-//  currCity->connectionNames.append(currConnection->description());
-// }
- // Save any changes to currentCity
-// if(currentCityId >= 0)
-// {
-//  cityList.replace(currentCityId, currCity);
-
-// }
 
  QSettings* settings = new QSettings();
  //settingsDb settings;
@@ -72,6 +56,8 @@ void Configuration::saveSettings()
    Connection* cn = c->connections.at(j);
    if(cn->uniqueId().isNull())
        qDebug() << "invalid unique id " << cn->description() << " ";
+   if(cn->cityName() != c->name())
+    qDebug() << cn->cityName() << " not = " << c->name();
    settings->setArrayIndex(j);
    settings->remove("");
    settings->setValue("id", cn->id());

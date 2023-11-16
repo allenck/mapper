@@ -984,6 +984,7 @@ void MainWindow::createActions()
 //     int ix = ui->cbSegments->currentIndex();
      SegmentData sd = ui->ssw->segmentSelected();
      sd.setRoute(_rd.route());
+     sd.setAlphaRoute(_rd.alphaRoute());
      sd.setRouteName(_rd.routeName());
      sd.setStartDate(_rd.startDate());
      sd.setEndDate(_rd.endDate());
@@ -1007,6 +1008,7 @@ void MainWindow::createActions()
  connect(addSegmentToNewRouteAct, &QAction::triggered, [=]{
   SegmentData sd = ui->ssw->segmentSelected();
   sd.setRoute(m_routeNbr);
+  sd.setAlphaRoute((_rd.alphaRoute()));
   sd.setRouteName(_rd.routeName());
   sd.setCompanyKey(ui->cbCompany->currentData().toInt());
   sd.setTractionType(_rd.tractionType());
@@ -1278,6 +1280,8 @@ void MainWindow::createMenus()
     connect(saveSettingsAct, &QAction::triggered, [=]{
      QSettings settings;
      //settingsDb settings;
+
+     m_bridge->processScript("getCurrBounds");
      settings.setValue("geometry", saveGeometry());
      settings.setValue("windowState", saveState());
      settings.setValue("splitter", ui->splitter->saveState());
@@ -2891,6 +2895,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
          config->setOverlay(ov);
      }
  }
+ m_bridge->processScript("getCurrBounds");
 
  QSettings settings;
  //settingsDb settings;
@@ -3037,7 +3042,18 @@ void MainWindow::cbSegmentsSelectedValueChanged(SegmentInfo si)
     m_segmentId = si.segmentId();
     updateSegmentInfoDisplay(si);
 
-    routeDlg->setSegmentId( m_segmentId);
+    //routeDlg->setSegmentId( m_segmentId);
+    SegmentData sd = SegmentData(si);
+    sd.setRoute(_rd.route());
+    sd.setAlphaRoute(_rd.alphaRoute());
+    sd.setRouteName(_rd.routeName());
+    sd.setStartDate(_rd.startDate());
+    sd.setEndDate(_rd.endDate());
+    sd.setTractionType(_rd.tractionType());
+    sd.setCompanyKey(_rd.companyKey());
+
+    routeDlg->setSegmentData(sd);
+
     //webBrowser1.Document.InvokeScript("addModeOn");
     if(si.startLat() == 0)
     {
@@ -3677,22 +3693,23 @@ void MainWindow::addSegment()
 
         ui->lblSegment->setText(tr("Segment %1:").arg(m_segmentId));
         //        ui->chkOneWay->setChecked("Y"== sql->getSegmentOneWay(m_SegmentId));
-        SegmentData* sd = sql->getSegmentData(rd.route(), m_segmentId, rd.startDate().toString("yyyy/MM/dd"),
-                                             rd.endDate().toString("yyyy/MM/dd"));
-        updateSegmentInfoDisplay(*sd);
+//        SegmentData* sd = sql->getSegmentData(rd.route(), m_segmentId, rd.startDate().toString("yyyy/MM/dd"),
+//                                             rd.endDate().toString("yyyy/MM/dd"));
+        SegmentData sd = segmentDlg.segment();
+        updateSegmentInfoDisplay(sd);
 
         int dash = 0;
-        if(sd->routeType() == Incline)
+        if(sd.routeType() == Incline)
          dash = 1;
-        else if(sd->routeType() == SurfacePRW)
+        else if(sd.routeType() == SurfacePRW)
          dash = 2;
-        else if(sd->routeType() == Subway)
+        else if(sd.routeType() == Subway)
          dash = 3;
 
         QVariantList objArray;
         objArray << m_segmentId << segmentDlg.routeName()<<ui->txtSegment->text()
-                 <<sd->oneWay()<<getColor(segmentDlg.tractionType())<<sd->tracks() << dash
-                << sd->routeType() << sd->trackUsage() << 0;
+                 <<sd.oneWay()<<getColor(segmentDlg.tractionType())<<sd.tracks()
+                 << dash << sd.routeType() << sd.trackUsage() << 0;
         m_bridge->processScript("createSegment",objArray);
 
         //webBrowser1.Document.InvokeScript("addModeOn");
@@ -4353,7 +4370,7 @@ void MainWindow::On_editSegment_triggered()
  SegmentData* sd = sql->getSegmentData(m_routeNbr,si.segmentId(),m_currRouteStartDate, m_currRouteEndDate);
 
  EditSegmentDialog* dlg;
- if(sd->route() >= 0)
+ if(sd)
   dlg = new EditSegmentDialog(sd, si,this);
  else
   dlg = new EditSegmentDialog(si,this);

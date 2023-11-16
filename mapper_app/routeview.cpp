@@ -869,6 +869,7 @@ void RouteView::deleteSegment()
     qint32 segmentId = ix.data().toInt();
 
     sourceModel->deleteRow(segmentId, ix);
+    sourceModel->bChangesMade = true;
 
 }
 

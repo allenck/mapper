@@ -3,6 +3,7 @@
 #include "segmentdescription.h"
 #include <QMessageBox>
 #include "mainwindow.h"
+#include "vptr.h"
 
 RouteDlg::RouteDlg(Configuration *cfg, QWidget *parent) :
     QDialog(parent),
@@ -26,7 +27,7 @@ RouteDlg::RouteDlg(Configuration *cfg, QWidget *parent) :
     bNewRouteNbr=false;
     strNoRoute = tr("New Route Name");
     connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbr_Leave()) );
-    connect(ui->cbRouteName, SIGNAL(signalFocusOut()), this, SLOT(txtRouteName_Leave()));
+    //connect(ui->cbRouteName, SIGNAL(signalFocusOut()), this, SLOT(txtRouteName_Leave()));
     connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSegments_SelectedIndexChanged(int)));
     connect(ui->gbNormalEnter, SIGNAL(toggled(bool)), this, SLOT(gbNormalEnter_Leave()));
     connect(ui->gbNormalLeave, SIGNAL(toggled(bool)), this, SLOT(gbNormalLeave_Leave()));
@@ -99,7 +100,7 @@ void RouteDlg::setSegmentId(qint32 segmentid)
  }
  bSegmentChanging = false;
 
- if (sd->segmentId() < 1)
+ if (sd==nullptr)
      return;
  //lblSegment.Text = sql->getSegmentDescription(_SegmentId);
  ui->lblSegmentText->setText(sd->toString());
@@ -236,7 +237,7 @@ void RouteDlg::setSegmentData(SegmentData* sd)
  if(!_segmentDataList.contains(sd))
  {
   _segmentDataList.append(sd);
-  ui->cbSegments->addItem(sd->toString(), QVariant::fromValue(*sd));
+  ui->cbSegments->addItem(sd->toString(), VPtr<SegmentData>::asQVariant(sd));
  }
  ui->cbSegments->setCurrentIndex(ui->cbSegments->findText(sd->toString()));
  ui->lblSegmentText->setText(sd->toString2());
@@ -407,7 +408,6 @@ void RouteDlg::txtRouteNbr_Leave()
 {
     bool bAlphaRoute = false;
     bNewRouteNbr = false;
-    //bRouteChanging = false;
     int companyKey = ui->cbCompany->currentData().toInt();
     if(ui->txtRouteNbr->text().contains(","))
     {
@@ -422,7 +422,8 @@ void RouteDlg::txtRouteNbr_Leave()
     {
         QMessageBox::StandardButtons rslt;
         rslt = QMessageBox::warning(this,tr("Route number not found"),
-                                    tr( "The route number was not found. Enter Yes to add it"), QMessageBox::Yes | QMessageBox::No);
+                                    tr( "The route number was not found. Enter Yes to add it"),
+                                    QMessageBox::Yes | QMessageBox::No);
         switch (rslt)
         {
             case QMessageBox::Yes:
@@ -435,6 +436,7 @@ void RouteDlg::txtRouteNbr_Leave()
             case QMessageBox::No:
                 break;
             default:
+                bRouteChanging=false;
                 return;
         }
     }
@@ -442,7 +444,6 @@ void RouteDlg::txtRouteNbr_Leave()
     {
         ui->cbSegments->setCurrentIndex(-1);
     }
-     bAddMode = false;
 
     _routeNbr = newRoute;
     sd->setRoute(newRoute);
@@ -965,7 +966,6 @@ void RouteDlg::checkUpdate(QString func)
     if(bRouteChanging || bSegmentChanging)
         return;
 
-
     if(ui->txtRouteNbr->text() == "")
     {
         ui->btnAdd->setEnabled(false);
@@ -999,7 +999,7 @@ void RouteDlg::checkUpdate(QString func)
 //            ui->btnDelete->setEnabled(true);
 //        }
 //    }
-    if (sql->doesRouteSegmentExist(sd->route(), ui->cbRouteName->currentText(), sd->segmentId(), ui->dateStart->date(),
+    if (sql->doesRouteSegmentExist(_routeNbr, ui->cbRouteName->currentText(), _segmentId, ui->dateStart->date(),
                                    ui->dateEnd->date()))
     {
         ui->btnAdd->setText(tr("Update"));

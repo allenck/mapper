@@ -352,6 +352,14 @@ void SegmentDlg::txtRouteNbr_Leave()    // SLOT
  }
  ui->lblErrorText->setText("");
  int companyKey = ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt();
+ if(ui->txtRouteNbr->text().contains(","))
+ {
+  int nxt = sql->findNextRouteInRange(ui->txtRouteNbr->text());
+  if(nxt >= 0)
+  {
+   ui->txtRouteNbr->setText(QString::number(nxt));
+  }
+ }
  _routeNbr = sql->getNumericRoute(ui->txtRouteNbr->text(), & _alphaRoute, & bAlphaRoute, companyKey);
  if(_routeNbr < 0)
  {
@@ -610,7 +618,7 @@ void SegmentDlg::chkNewOneWay_Changed(bool bChecked)
         ui->groupBox5->setVisible( true);
         ui->groupBox6->setVisible( true);
        // ui->btnOK->setEnabled(true);
-        ui->sbTracks->setValue(2);
+        ui->sbTracks->setValue(sd.tracks());
         ui->sbTracks->setEnabled(false);
     }
     checkUpdate();
@@ -689,7 +697,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
   if (ui->chkNewOneWay->isChecked())
    newName += " (1 way)";
   QString strOneWay = ui->chkNewOneWay->isChecked()?"Y":"N";
-  QString strBiDirectional = ui->chkNewOneWay->isChecked()?"N":"Y";
+  QString strBiDirectional = ui->chkNewOneWay->isChecked()?"Y":"Y";
   RouteType rt = (RouteType)ui->cbRouteType->currentIndex();
   QList<LatLng> pointList = QList<LatLng>();
   _newSegmentId = sql->addSegment(newName, strOneWay, ui->sbTracks->value(), rt, pointList, ui->cbLocation->currentText(), &bAlreadyExists);
@@ -777,7 +785,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
     // TODO: add logic to support trackUsage!
     if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->date(), ui->dateEnd->date(), routeSegment,
                                 companyKey, /*cbTractionType.SelectedIndex*/tractionType, direction, 0,0,
-                                normalEnter, normalLeave, reverseEnter, reverseLeave, ui->chkNewOneWay?"Y":"N", trackUsage))
+                                normalEnter, normalLeave, reverseEnter, reverseLeave, (ui->chkNewOneWay->isChecked()?"Y":"N"), trackUsage))
      ui->lblErrorText->setText(tr( "Add Error"));
     streetName = ui->txtOriginalName->text();
     //if (routeChanged != null)

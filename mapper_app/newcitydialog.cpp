@@ -47,7 +47,7 @@ NewCityDialog::NewCityDialog(QWidget *parent) :
        parms.lon = city->center.lon();
        parms.city = city->name();
        parms.maxDate = QDate::fromString("1850/01/01","yyyy/MM/dd");
-       parms.minDate = QDate::fromString("1850/01/01","yyyy/MM/dd");
+       parms.minDate = QDate::fromString("1950/12/31","yyyy/MM/dd");
        parms.bAlphaRoutes = true;
        dlg->setParameter(parms);
        dlg->setCity(city);

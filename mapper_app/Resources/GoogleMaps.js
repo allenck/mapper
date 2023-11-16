@@ -2683,6 +2683,15 @@ function closeCityBoundsButton()
         map.controls[google.maps.ControlPosition.BOTTOM_CENTER].removeAt(0);
 }
 
+function getCurrBounds()
+{
+    var bounds =  map.getBounds();
+    var ne = bounds.getNorthEast();
+    var sw = bounds.getSouthWest();
+    webViewBridge.cityBounds( ne.lat(), ne.lng(), sw.lat(), sw.lng());
+
+}
+
 function downloadFile(url, fileName) {
   fetch(url, { method: 'get', mode: 'no-cors', referrerPolicy: 'no-referrer' })
     .then(res => res.blob())
