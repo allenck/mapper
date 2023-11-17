@@ -2956,7 +2956,7 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData*> segmentList
      nextSd->_prevR = sd->segmentId();
     nextSd->_bNeedsUpdate = true;
     sd->_bNeedsUpdate=true;
-
+    updateRoute(*sd,*sd);
 
     if (!bFirst && currSegment == startingSegment)
     {
@@ -2967,6 +2967,7 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData*> segmentList
        sdi->_nextR = sd->_nextR;
        sdi->_prevR = sd->_prevR;
        sd->_bNeedsUpdate = true;
+       updateRoute(*sdi,*sdi);
        sd = sdi;
        whichEnd = intersects.at(0)->whichEnd()=="S"?"E":"S";
        if (bOutbound)
@@ -5008,6 +5009,9 @@ bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 SegmentId,
             //exit(EXIT_FAILURE);
             return false;
         }
+        SegmentData sd(route, name, SegmentId, QDate::fromString(startDate,"yyyy/MM/dd"),
+                                               QDate::fromString(endDate,"yyyy/MM/dd"));
+        emit routeChange(DELETE, sd);
 
         // Scan the remaining routes to find a new start and end date
         commandText = "select min(startDate), max(endDate) from Routes where lineKey = " + QString("%1").arg(SegmentId);
@@ -5996,7 +6000,7 @@ QList<SegmentData> SQL::getRouteSegmentsBySegment(qint32 segmentId)
         {
             SegmentData sd =  SegmentData();
             sd._route = query.value(0).toInt();
-            sd.routeName() = query.value(1).toString();
+            sd._routeName = query.value(1).toString();
             sd._startDate =query.value(2).toDate();
             sd._endDate = query.value(3).toDate();
             sd._segmentId = query.value(4).toInt();
@@ -7212,11 +7216,12 @@ try
      {
          return -1;
      }
+     emit routeChange(MODIFY, sd1);
+
      qDebug()<< "assume update was successful:" + commandText + "\n";
     }
    }
   }
-
 
   updateSegmentDates(SegmentId);
   updateSegmentDates(newSegmentId);
@@ -7755,7 +7760,15 @@ bool SQL::modifyCurrentRoute(RouteData* rd, bool bStartDate, QDate dt)
   }
   rows = query.numRowsAffected();
   if (rows > 0)
+  {
+   SegmentData sd(*rd);
+   if(bStartDate)
+    sd.setStartDate(dt);
+   else
+    sd.setEndDate(dt);
+   routeChange(MODIFY, sd);
       ret = true;
+  }
   // modify any routes that begin the day after or end the day before.
   if (bStartDate)
    commandText = "update Routes set endDate = '" + dt.addDays(1).toString("yyyy/MM/dd")
@@ -8025,6 +8038,7 @@ bool SQL::insertRouteSegment(SegmentData sd)
   SQLERROR(query);
   return false;
  }
+ emit routeChange(ADD, sd);
  return true;
 }
 
@@ -9750,7 +9764,10 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd)
   qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
  rows = query.numRowsAffected();
  if (rows > 0)
-     ret = true;
+ {
+  emit routeChange(MODIFY, sd);
+  ret = true;
+ }
  else
   qDebug() << "update failed: " << commandText;
  return ret;

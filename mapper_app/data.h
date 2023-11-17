@@ -211,14 +211,18 @@ Q_DECLARE_METATYPE(Bounds)
 
 //    return in;
 //}
+class RouteData;
 class SegmentData
 {
 public:
     //explicit segmentData(QObject *parent = 0);
     SegmentData();
+    SegmentData(int route, QString name, int segmentId, QDate startDate, QDate endDate);
     ~SegmentData() {}
     SegmentData(const SegmentData&);
     SegmentData(const SegmentInfo&);
+    SegmentData(const RouteData&);
+
     void addPoint(LatLng pt);
     void insertPoint(int ptNum, LatLng pt);
     void movePoint(int ptNum, LatLng pt);
@@ -465,6 +469,7 @@ signals:
 
 public slots:
  friend class SQL;
+ friend class SegmentData;
 };
 Q_DECLARE_METATYPE(RouteData)
 

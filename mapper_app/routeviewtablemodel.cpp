@@ -1,6 +1,5 @@
 #include "routeviewtablemodel.h"
 #include <QDebug>
-#include "sql.h"
 #include "webviewbridge.h"
 #include "mainwindow.h"
 
@@ -11,6 +10,8 @@ RouteViewTableModel::RouteViewTableModel(QObject *parent) :
  bSelectedRowChanged = false;
  bIsSequenced = false;
  tractionTypes = SQL::instance()->getTractionTypes();
+ connect(SQL::instance(), SIGNAL(routeChange(SQL::ROUTECHANGETYPE, SegmentData)),
+         SLOT(routeChange(SQL::ROUTECHANGETYPE, SegmentData)));
 }
 
 RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtStart,
@@ -34,6 +35,9 @@ RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtSta
  endDate = dtEnd;
  startRow = -1;
  endRow = -1;
+ connect(SQL::instance(), SIGNAL(routeChange(SQL::ROUTECHANGETYPE, SegmentData)),
+         SLOT(routeChange(SQL::ROUTECHANGETYPE, SegmentData)));
+
  TerminalInfo ti = SQL::instance()->getTerminalInfo(route,name, endDate.toString("yyyy/MM/dd"));
  for(int i =0; i < listOfSegments.count(); i++)
  {
@@ -46,6 +50,37 @@ RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtSta
 
  tractionTypes = SQL::instance()->getTractionTypes();
 
+}
+
+void RouteViewTableModel::routeChange(SQL::ROUTECHANGETYPE type, SegmentData sd)
+{
+ int row = -1;
+ for(int i=0; i < listOfSegments.count(); i++)
+ {
+  SegmentData* sd1 = listOfSegments.at(i);
+  if(sd.route() == sd1->route() && sd.routeName()==sd1->routeName() && sd.segmentId()==sd1->segmentId()
+     && sd.startDate()==sd1->startDate() && sd.endDate()==sd1->endDate())
+   row = i;
+  break;
+ }
+ if(row == -1 && type != SQL::ADD)
+  return;
+ if(type == SQL::DELETE)
+ {
+  beginRemoveRows(QModelIndex(), row, row);
+  listOfSegments.removeAt(row);
+  endRemoveRows();
+ }
+ else if(type == SQL::ADD)
+ {
+  beginInsertRows(QModelIndex(), listOfSegments.count(), listOfSegments.count());
+  listOfSegments.append(&sd);
+  endInsertRows();
+ }
+ else
+ {
+  listOfSegments.replace(row,&sd);
+ }
 }
 
 int RouteViewTableModel::rowCount(const QModelIndex &parent) const
@@ -303,6 +338,7 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
   int row = index.row();
 
   SegmentData* sd = listOfSegments.value(row);
+  SegmentData oldSd = SegmentData(*sd);
 
   QDate dt;
 //  int tracks;
@@ -384,10 +420,11 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
   bChangesMade = true;
 
   listOfSegments.replace(row, sd);
+  SQL::instance()->updateRoute(oldSd,*sd);
 
   selectedRow = row;
   bSelectedRowChanged =true;
-  RowChanged* changeEntry = nullptr;
+//  RowChanged* changeEntry = nullptr;
 //  changeEntry->row = row;
 //  changeEntry->index = index;
 //  changeEntry->bChanged=true;
@@ -507,7 +544,7 @@ bool sortbyrow( const RowChanged & s1 , const RowChanged & s2 )
 {
     return s1.row > s2.row;
 }
-
+#if 0
 bool RouteViewTableModel::commitChanges()
 {
  //mainWindow * myParent = qobject_cast<mainWindow*>(m_parent);
@@ -590,7 +627,7 @@ void RouteViewTableModel::discardChanges()
  bChangesMade = false;
  reset();
 }
-
+#endif
 // Called by RouteView to mark segment be deleted.
 void RouteViewTableModel::deleteRow(qint32 segmentId, const QModelIndex &index)
 {
@@ -631,7 +668,7 @@ void RouteViewTableModel::deleteRow(qint32 segmentId, const QModelIndex &index)
   listOfSegments.replace(index.row(), sd);
  }
 }
-
+#if 0
 void RouteViewTableModel::unDeleteRow(qint32 segmentId, const QModelIndex &index)
 {
 // Q_UNUSED(segmentId)
@@ -652,8 +689,12 @@ void RouteViewTableModel::unDeleteRow(qint32 segmentId, const QModelIndex &index
  {
   //listOfSegments.at(index.row()).markForDelete(true);
   SegmentData* sd = listOfSegments.at(index.row());
-  sd->markForDelete(false);
-  listOfSegments.replace(index.row(), sd);
+//  sd->markForDelete(false);
+//  listOfSegments.replace(index.row(), sd);
+  beginRemoveRows(QModelIndex(), index.row(), index.row());
+  listOfSegments.removeAt(index.row());
+  SQL::instance()->deleteRoute(*sd);
+  endRemoveRows();
  }
 }
 //bool RouteViewTableModel::isSegmentMarkedForDelete(qint32 segmentId)
@@ -666,7 +707,7 @@ void RouteViewTableModel::unDeleteRow(qint32 segmentId, const QModelIndex &index
 // }
 // return false;
 //}
-
+#endif
 int RouteViewTableModel::getRow(int segmentId)
 {
  int row = -1;

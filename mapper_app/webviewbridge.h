@@ -102,6 +102,7 @@ public slots:
     void rightClicked(QString text);
     void screenshot(QString base64image);
     void initialized();
+    void addPointMode(bool);
 
 private slots:
 

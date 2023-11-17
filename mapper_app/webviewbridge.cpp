@@ -63,9 +63,9 @@ void WebViewBridge::processScript(QString func, QString parms)
 }
 void WebViewBridge::processScript(QString func)
 {
- //qDebug() << "processScript " << func;
+ qDebug() << "processScript " << func;
  bResultReceived = false;
- myRslt = QVariant();
+ //myRslt = QVariant();
  myList = QVariantList();
  emit executeScript( func, "");
 }
@@ -112,8 +112,8 @@ void WebViewBridge::scriptResult(QVariant value)
    //value = QVariant();
    return;
   qDebug() << "scriptResult" << value;
-  if(value.isNull())
-   return;
+//  if(value.isNull())
+//   return;
   myRslt = value;
   bResultReceived = true;
   emit on_scriptResult(value);
@@ -186,6 +186,12 @@ void WebViewBridge::addPoint(int pt, double lat, double lon)
 //    m_parent->addPoint();
  emit addPointSignal(pt, lat, lon);
 }
+
+void WebViewBridge::addPointMode(bool bOn)
+{
+ m_parent->m_bAddMode = bOn;
+}
+
 //TODO
 void WebViewBridge::moveRouteStartMarker(double lat, double lon, qint32 segmentId, qint32 i)
 {

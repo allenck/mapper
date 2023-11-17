@@ -31,7 +31,7 @@ public:
     void updateTerminals();
     bool isSequenced();
     bool bUncomittedChanges();
-    void checkChanges();
+//    void checkChanges();
     RouteViewTableModel* model();
     void setList(QList<SegmentData *> segmentDataList);
     void clear();
@@ -44,7 +44,7 @@ signals:
 public slots:
 //      void itemChanged(QTableWidgetItem* item);
       //void itemSelectionChanged(QTableWidgetItem * item );
-    void commitChanges();
+//    void commitChanges();
     void editSegment();
     void on_segmentSelected(int,int);
 
@@ -76,9 +76,9 @@ private:
     QAction *endTerminalStartAct;
     QAction *endTerminalEndAct;
     QAction *deleteSegmentAct;
-    QAction *unDeleteSegmentAct;
-    QAction *saveChangesAct;
-    QAction *discardChangesAct;
+    //QAction *unDeleteSegmentAct;
+    //QAction *saveChangesAct;
+    //QAction *discardChangesAct;
     QAction* selectSegmentAct;
     QAction *editSegmentAct;
     //QAction* showColumnsAct;
@@ -120,7 +120,7 @@ private slots:
     bool dataChanged(QModelIndex,QModelIndex);
     void Resize (int oldcount,int newcount);
     void deleteSegment();
-    void unDeleteSegment();
+    //void unDeleteSegment();
     void on_selectSegment_triggered();
 
 };

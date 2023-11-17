@@ -10,9 +10,6 @@
 #include <QList>
 #include "data.h"
 
-
-
-
 class otherRouteViewSortProxyModel : public QSortFilterProxyModel
 {
 public:
@@ -43,7 +40,6 @@ public:
     bool removeRows(int position, int rows, const QModelIndex &index=QModelIndex());
     QList<SegmentData> getList();
     void reset();
-
 signals:
 
 public slots:
@@ -61,7 +57,7 @@ class OtherRouteView : public QObject
 {
     Q_OBJECT
 public:
- static OtherRouteView* instance(QObject* parent);
+ static OtherRouteView* instance();
     void showRoutesUsingSegment(qint32 segmentId);
 
 

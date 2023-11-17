@@ -451,7 +451,7 @@ void SplitRoute::btnOK_Click()
      {
       if (sql->addSegmentToRoute(_routeNbr1, ui->txtNewRouteName1->text(),
                                  ui->dateTo2->date(), rd1.endDate(),
-                                 rd1.segmentId(), _companyList.at(ui->cbCompany1->currentIndex())->companyKey,
+                                 rd1.segmentId(), _companyList.at(ui->cbCompany2->currentIndex())->companyKey,
                                  rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
                                  rd1.normalEnter(), rd1.normalLeave(),
                                  rd1.reverseEnter(), rd1.reverseLeave(), rd1.oneWay(), rd1.trackUsage()) == false)
@@ -481,7 +481,7 @@ void SplitRoute::btnOK_Click()
 
      if (sql->addSegmentToRoute(_routeNbr2, ui->txtNewRouteName2->text(),
                                 ui->dateFrom2->date().addDays(1), ui->dateTo2->date(),
-                                rd1.segmentId(), _companyList.at(ui->cbCompany2->currentIndex())->companyKey,
+                                rd1.segmentId(), rd1.companyKey(),
                                 rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
                                 rd1.normalEnter(), rd1.normalLeave(),
                                 rd1.reverseEnter(), rd1.reverseLeave(), rd1.oneWay(), rd1.trackUsage()) == false)

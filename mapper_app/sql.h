@@ -42,8 +42,12 @@ class SQL : public QObject
 public:
  static SQL* instance();
     bool dbOpen();
-    //QSqlDatabase db;
-    // http://doc.qt.nokia.com/4.7/qlist.html
+    enum ROUTECHANGETYPE
+    {
+     ADD,
+     DELETE,
+     MODIFY
+    };
     bool isTransactionActive();
     QList<RouteData> routeList;
     QList<RouteData> getRoutesByEndDate();
@@ -263,6 +267,8 @@ public:
 signals:
     void details(QString);
     void segmentsChanged(int segmentId);
+    void routeChange(ROUTECHANGETYPE, SegmentData sd);
+
 private:
     SQL();
     static SQL* _instance;

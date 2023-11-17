@@ -700,7 +700,8 @@ void SegmentDlg::btnOK_Click()  // SLOT
   QString strBiDirectional = ui->chkNewOneWay->isChecked()?"Y":"Y";
   RouteType rt = (RouteType)ui->cbRouteType->currentIndex();
   QList<LatLng> pointList = QList<LatLng>();
-  _newSegmentId = sql->addSegment(newName, strOneWay, ui->sbTracks->value(), rt, pointList, ui->cbLocation->currentText(), &bAlreadyExists);
+  _newSegmentId = sql->addSegment(newName, strOneWay, ui->sbTracks->value(), rt, pointList,
+                                  ui->cbLocation->currentText(), &bAlreadyExists);
   if (_newSegmentId < 0)
   {
    ui->lblErrorText->setText(tr( "add segment failed!"));
@@ -784,7 +785,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
     QString trackUsage = " ";
     // TODO: add logic to support trackUsage!
     if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->date(), ui->dateEnd->date(), routeSegment,
-                                companyKey, /*cbTractionType.SelectedIndex*/tractionType, direction, 0,0,
+                                companyKey, /*cbTractionType.SelectedIndex*/tractionType, direction, -1,-1,
                                 normalEnter, normalLeave, reverseEnter, reverseLeave, (ui->chkNewOneWay->isChecked()?"Y":"N"), trackUsage))
      ui->lblErrorText->setText(tr( "Add Error"));
     streetName = ui->txtOriginalName->text();

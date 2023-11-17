@@ -357,7 +357,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   //connect(routeView->model(), SIGNAL(refreshRoutes()), this, SLOT(refreshRoutes()));
   segmentView = new SegmentView(config, this);
   connect(segmentView, SIGNAL(selectSegment(int)), this, SLOT(on_selectSegment(int)));
-  otherRouteView =  OtherRouteView::instance(this);
+  otherRouteView =  OtherRouteView::instance();
   connect(otherRouteView, SIGNAL(displayRoute(RouteData)), this, SLOT(On_displayRoute(RouteData)));
   stationView = new StationView(config, this);
   companyView = new CompanyView(config, this);
@@ -1337,32 +1337,37 @@ void MainWindow::createMenus()
     toolsMenu->addAction(setCityBoundsAct);
     toolsMenu->addAction(setLoggingAct);
     //toolsMenu->addAction(setInspectedPageAct);
+    connect(toolsMenu, &QMenu::aboutToShow, [=]{
+     addPointModeAct->setChecked(m_bAddMode);
+    });
 
     optionsMenu = new Menu(tr("Options"));
     overlayMenu = new Menu(tr("Overlays"));
-    optionsMenu->addMenu(overlayMenu);
-    connect(overlayMenu, SIGNAL(aboutToShow()), this, SLOT(fillOverlayMenu()));
-    optionsMenu->addAction(displayRouteCommentsAct);
-    optionsMenu->addAction(displayStationMarkersAct);
-    optionsMenu->addAction(displayTerminalMarkersAct);
-    optionsMenu->addAction(showDebugMessages);
-    optionsMenu->addAction(geocoderRequestAct);
-#ifdef USE_WEBENGINE
-    optionsMenu->addAction(runInBrowserAct);
-#endif
     sortMenu = new Menu(tr("Route Sort option"));
-    optionsMenu->addMenu(sortMenu);
     sortMenu->addAction(sortTypeAct);
-    optionsMenu->addAction(showGoogleMapFeaturesAct);
 
     connect(optionsMenu, &Menu::aboutToShow, [=]{
      if(config->currConnection->servertype()== "Sqlite")
      {
+      optionsMenu->clear();
+      optionsMenu->addMenu(overlayMenu);
+      connect(overlayMenu, SIGNAL(aboutToShow()), this, SLOT(fillOverlayMenu()));
+      optionsMenu->addAction(displayRouteCommentsAct);
+      optionsMenu->addAction(displayStationMarkersAct);
+      optionsMenu->addAction(displayTerminalMarkersAct);
+      optionsMenu->addAction(showDebugMessages);
+      optionsMenu->addAction(geocoderRequestAct);
+  #ifdef USE_WEBENGINE
+      optionsMenu->addAction(runInBrowserAct);
+  #endif
+      sortMenu = new Menu(tr("Route Sort option"));
+      optionsMenu->addMenu(sortMenu);
+      optionsMenu->addAction(showGoogleMapFeaturesAct);
       optionsMenu->addAction(foreignKeyCheckAct);
       foreignKeyCheckAct->setChecked(SQL::instance()->getForeignKeyCheck());
+      optionsMenu->addAction(fontSizeChangeAct);
      }
     });
-    optionsMenu->addAction(fontSizeChangeAct);
     menuBar()->addMenu(optionsMenu);
     menuBar()->addMenu(toolsMenu);
 
@@ -2229,11 +2234,11 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
 
 void MainWindow::onCbRouteIndexChanged(int row)
 {
- routeView->checkChanges();
- if(routeView->bUncomittedChanges())
- {
-  return;
- }
+ //routeView->checkChanges();
+// if(routeView->bUncomittedChanges())
+// {
+//  return;
+// }
  //SQL sql;
  if(row<0)
      return;
@@ -2457,8 +2462,8 @@ void MainWindow::segmentSelected(qint32 pt, qint32 SegmentId)
  //SQL sql;
  //webBrowser1.Document.InvokeScript("addModeOff");
  //m_bridge->processScript("addModeOff");
- m_bAddMode = false;
- addPointModeAct->setChecked(false);
+ //m_bAddMode = false;
+ //addPointModeAct->setChecked(false);
  m_segmentId = SegmentId;
  SegmentInfo si = sql->getSegmentInfo(m_segmentId);
  if (si.segmentId() == -1)

@@ -193,6 +193,15 @@ segmentGroup::~segmentGroup()
 
 //segmentData::segmentData(QObject *parent)
 //{
+ SegmentData::SegmentData(int route, QString name, int segmentId,
+                            QDate startDate, QDate endDate)
+{
+ _route = route;
+ _routeName = name;
+ _segmentId = segmentId;
+ _startDate = startDate;
+ _endDate = endDate;
+}
 
 //}
 SegmentData::SegmentData()
@@ -250,6 +259,53 @@ SegmentData::SegmentData(const SegmentData& o)
  _location = o._location;
  _alphaRoute = o._alphaRoute;
  _whichEnd = o._whichEnd;
+}
+
+SegmentData::SegmentData(const RouteData& o)
+{
+ _segmentId = o._lineKey;
+ _tracks = o._tracks;
+ _routeType = o._routeType;
+// _startLat = o._startLat;
+// _startLon = o._startLon;
+// _endLat = o._endLat;
+// _endLon = o._endLon;
+// _length = o._length;;
+// _points = o._points;
+// _streetName = o._streetName;
+ _description = o._name;
+ _startDate = o._startDate;
+ _endDate = o._endDate;
+ _direction  = o._direction;
+// _bearing = o._bearing;
+// _bearingStart = o._bearingStart;
+// _bearingEnd = o._bearingEnd;
+// _pointList = o._pointList;
+ if(_points == 0 && pointList().count() > 0 )
+  _points = pointList().count();
+ _next = o._next;
+ _prev = o._prev;
+ _nextR = o._nextR;
+ _prevR = o._prevR;
+
+ _sequence = o._sequence;
+ _returnSeq = o._returnSeq;
+ _reverseEnter = o._reverseEnter;
+ _reverseLeave = o._reverseLeave;
+ _normalEnter = o._normalEnter;
+ _normalLeave = o._normalLeave;
+ _trackUsage = o._trackUsage;
+ _tractionType = o._tractionType;
+ //_bNeedsUpdate = o._bNeedsUpdate;
+ _oneWay = o._oneWay;
+ _direction = o._direction;
+ //_bounds = o._bounds;
+ _route = o._route;
+ _companyKey = o._companyKey;
+ _routeName = o._name;
+ //_location = o._location;
+ _alphaRoute = o._alphaRoute;
+ //_whichEnd = o._whichEnd;
 }
 
 // create a new SegmentData from a SegmentInfo

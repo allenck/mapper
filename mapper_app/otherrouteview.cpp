@@ -10,7 +10,7 @@ OtherRouteView::OtherRouteView( QObject *parent) :
     config = Configuration::instance();
     //sql->setConfig(config);
     sql = SQL::instance();
-    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
+    MainWindow* myParent = MainWindow::instance();
     ui = myParent->ui->tblOtherRouteView;
 
     ui->setAlternatingRowColors(true);
@@ -34,11 +34,11 @@ OtherRouteView::OtherRouteView( QObject *parent) :
     connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
 }
 
-OtherRouteView* OtherRouteView::instance( QObject* parent)
+OtherRouteView* OtherRouteView::instance(/* QObject* parent*/)
 {
  if(_instance == NULL)
  {
-  _instance = new OtherRouteView(parent);
+  _instance = new OtherRouteView(/*parent*/);
  }
  return _instance;
 }
@@ -55,7 +55,7 @@ void OtherRouteView::Resize (int oldcount,int newcount)
 void OtherRouteView::showRoutesUsingSegment(qint32 segmentId)
 {
     //SQL sql;
-    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
+    MainWindow* myParent = MainWindow::instance();
     //sql->setConfig(myParent->getConfiguration());
     QList<SegmentData> likeRoutes =   sql->getRoutes(segmentId);
     if(likeRoutes.isEmpty())

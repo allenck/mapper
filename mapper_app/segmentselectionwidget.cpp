@@ -1,6 +1,7 @@
 #include "segmentselectionwidget.h"
 #include "ui_segmentselectionwidget.h"
 #include "webviewbridge.h"
+#include "otherrouteview.h"
 
 SegmentSelectionWidget::SegmentSelectionWidget(QWidget *parent) :
   QWidget(parent),
@@ -361,6 +362,7 @@ QComboBox* SegmentSelectionWidget::cbSegments()
 SegmentData SegmentSelectionWidget::segmentSelected()
 {
  int m_SegmentId = ui->cbSegments->currentData().toInt();
+ OtherRouteView::instance()->showRoutesUsingSegment(m_SegmentId);
  currSd = sql->getSegmentInfo(m_SegmentId);
  return currSd;
 }

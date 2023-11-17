@@ -5,6 +5,7 @@
 //#include <QPair>
 #include <QList>
 #include "data.h"
+#include "sql.h"
 
 class RouteViewTableModel : public QAbstractTableModel
 {
@@ -28,7 +29,7 @@ public:
 
     //QMap<int, RowChanged*> changedMap;
     void deleteRow(qint32 segmentId, const QModelIndex &index);
-    void unDeleteRow(qint32 segmentId, const QModelIndex &index);
+    //void unDeleteRow(qint32 segmentId, const QModelIndex &index);
     //bool isSegmentMarkedForDelete(qint32 segmentId);
     enum COLUMNS
     {
@@ -66,8 +67,9 @@ signals:
 
 public slots:
     void getRows(int, int); // to get the row numbers that need to be highlighted
-    bool commitChanges();
-    void discardChanges();
+    //bool commitChanges();
+    //void discardChanges();
+    void routeChange(SQL::ROUTECHANGETYPE type, SegmentData sd);
 
 private:
      QList<SegmentData*> listOfSegments;

@@ -1166,13 +1166,23 @@ function addModeOn()
 {
  bAdding = true;
  map.setOptions({draggableCursor:'Crosshair'});
-    return null;
+ webViewBridge.addPointMode(bAdding);
+ return null;
 }
 function addModeOff()
 {
  bAdding = false;
  map.setOptions({draggableCursor:'Hand'});
+ webViewBridge.addPointMode(bAdding);
  return null;
+}
+
+function isAddModeOn()
+{
+ if(bAdding)
+  return "true"
+ else
+  return "false";
 }
 
 function addNewPoint(e)

@@ -96,9 +96,9 @@ RouteView::RouteView(QObject* parent )
     deleteSegmentAct->setStatusTip(tr("Delete the segment from the route"));
     connect(deleteSegmentAct, SIGNAL(triggered()), this, SLOT(deleteSegment()));
 
-    unDeleteSegmentAct = new QAction(tr("Undo delete of segment"), this);
-    unDeleteSegmentAct->setStatusTip(tr("Don't delete the segment from the route"));
-    connect(unDeleteSegmentAct, SIGNAL(triggered()), this, SLOT(unDeleteSegment()));
+//    unDeleteSegmentAct = new QAction(tr("Undo delete of segment"), this);
+//    unDeleteSegmentAct->setStatusTip(tr("Don't delete the segment from the route"));
+//    connect(unDeleteSegmentAct, SIGNAL(triggered()), this, SLOT(unDeleteSegment()));
 
     selectSegmentAct = new QAction(tr("Select segment"),this);
     selectSegmentAct->setToolTip(tr("Select segment on map."));
@@ -113,10 +113,10 @@ RouteView::RouteView(QObject* parent )
     sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"),
                                           QDate::fromString(endDate, "yyyy/MM/dd"), QList<SegmentData*>());
 
-    saveChangesAct = new QAction(tr("Commit changes"),this);
-    saveChangesAct->setStatusTip(tr("Save any uncommitted changes"));
-    discardChangesAct = new QAction(tr("Abandon changes"),this);
-    discardChangesAct->setStatusTip(tr("Discard any changes"));
+//    saveChangesAct = new QAction(tr("Commit changes"),this);
+//    saveChangesAct->setStatusTip(tr("Save any uncommitted changes"));
+//    discardChangesAct = new QAction(tr("Abandon changes"),this);
+//    discardChangesAct->setStatusTip(tr("Discard any changes"));
     sortNameAct = new QAction(tr("Sort Description"),this);
     sortNameAct->setStatusTip(tr("Sort table by description"));
     connect(sortNameAct, &QAction::triggered, [=]{
@@ -191,11 +191,11 @@ RouteView::RouteView(QObject* parent )
      }
     });
     //connect(saveChangesAct, SIGNAL(triggered()), sourceModel, SLOT(commitChanges()));
-    connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(commitChanges()));
-    connect(discardChangesAct, &QAction::triggered, [=]{
+//    connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(commitChanges()));
+//    connect(discardChangesAct, &QAction::triggered, [=]{
     // segmentDataList = saveSegmentDataList;
-     sourceModel->reset();
-    });
+//     sourceModel->reset();
+//    });
     splitSegmentAct = new QAction(tr("Split segment at a date"),this);
     splitSegmentAct->setStatusTip(tr("Split segment into two separate route segments on a date"));
     connect(splitSegmentAct, &QAction::triggered, [=]{
@@ -282,9 +282,9 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
      qint32 segmentId = txtSegmentId.toInt();
      SegmentData* sd = sourceModel->segmentData(proxymodel->mapToSource(Index).row());
      //if(sourceModel->isSegmentMarkedForDelete(segmentId))
-     if(sd->markedForDelete())
-         menu.addAction(unDeleteSegmentAct);
-     else
+//     if(sd->markedForDelete())
+//         menu.addAction(unDeleteSegmentAct);
+//     else
          menu.addAction(deleteSegmentAct);
      //if(curRow == 0)
      //menu.addAction(saveChangesAct);
@@ -345,8 +345,8 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
      if(sourceModel->bChangesMade)
      {
          menu.addSeparator();
-         menu.addAction(saveChangesAct);
-         menu.addAction(discardChangesAct);
+//         menu.addAction(saveChangesAct);
+//         menu.addAction(discardChangesAct);
          menu.addAction(sortNameAct);
      }
      menu.addSeparator();
@@ -372,19 +372,19 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
 void RouteView::tab1CustomContextMenu(const QPoint &)
 {
  QMenu tab1Menu;
-    tab1Menu.addAction(saveChangesAct);
-    tab1Menu.addAction(discardChangesAct);
+//    tab1Menu.addAction(saveChangesAct);
+//    tab1Menu.addAction(discardChangesAct);
     tab1Menu.addAction(sortNameAct);
-    if(!bUncomittedChanges())
-    {
-       saveChangesAct->setEnabled(false);
-       discardChangesAct->setEnabled(false);
-    }
-    else
-    {
-       saveChangesAct->setEnabled(true);
-       discardChangesAct->setEnabled(true);
-    }
+//    if(!bUncomittedChanges())
+//    {
+//       saveChangesAct->setEnabled(false);
+//       discardChangesAct->setEnabled(false);
+//    }
+//    else
+//    {
+//       saveChangesAct->setEnabled(true);
+//       discardChangesAct->setEnabled(true);
+//    }
     tab1Menu.exec(QCursor::pos());
 }
 
@@ -424,7 +424,7 @@ void RouteView::updateRouteView()
     startSegment = ti.startSegment;
     endSegment = ti.endSegment;
     // Check for uncomitted changes
-    checkChanges();
+//    checkChanges();
     route = myParent->m_routeNbr;
     name = myParent->m_routeName;
     startDate = myParent->m_currRouteStartDate;
@@ -524,7 +524,7 @@ void RouteView::updateRouteView()
      sourceModel->setList(SQL::instance()->getRouteSegmentsInOrder(route, name, endDate));
     //saveSegmentInfoList = segmentInfoList;  // added 5/6/2012 ack
     //connect(saveChangesAct, SIGNAL(triggered()), sourceModel, SLOT(commitChanges()));
-    connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(commitChanges()));
+//    connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(commitChanges()));
 
 //    saveSegmentDataList.clear();
 //    foreach(SegmentData sd, segmentDataList)
@@ -690,7 +690,7 @@ void RouteView::itemSelectionChanged(QModelIndex index )
   parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
   parent->setCursor(QCursor(Qt::ArrowCursor));
 
-  OtherRouteView::instance(NULL)->showRoutesUsingSegment(segmentId);
+  OtherRouteView::instance()->showRoutesUsingSegment(segmentId);
 }
 
 void RouteView::StartRoute_S()         //SLOT
@@ -872,13 +872,14 @@ void RouteView::deleteSegment()
     sourceModel->bChangesMade = true;
 
 }
-
+#if 0
 void RouteView::unDeleteSegment()
 {
     //mainWindow * myParent = qobject_cast<mainWindow*>(m_parent);
     QItemSelectionModel * model = ui->selectionModel();
     QModelIndexList indexes = model->selectedIndexes();
     QModelIndex ix = indexes.at(RouteViewTableModel::SEGMENTID);
+    QModelIndex sx = proxymodel->mapToSource(ix);
     qint32 segmentId = ix.data().toInt();
 
     sourceModel->unDeleteRow(segmentId, ix);
@@ -903,7 +904,7 @@ bool RouteView::bUncomittedChanges()
  else
   return false;
 }
-
+#endif
 void RouteView::on_selectSegment_triggered()
 {
  QItemSelectionModel * model = ui->selectionModel();
@@ -937,6 +938,7 @@ void RouteView::on_segmentSelected(int, int segmentId)
  }
 }
 
+#if 0
 void RouteView::checkChanges()
 {
  //if(sourceModel->changedMap.values().count() > 0)
@@ -963,6 +965,7 @@ void RouteView::checkChanges()
   }
  }
 }
+#endif
 
 void RouteView::clear()
 {
