@@ -18,7 +18,7 @@ class RouteDlg : public QDialog
     Q_OBJECT
 
 public:
-    RouteDlg(Configuration *cfg, QWidget *parent = 0);
+    RouteDlg(QWidget *parent = 0);
     ~RouteDlg();
     //void configuration(Configuration* cfg);
     void setRouteNbr(qint32 rt);

@@ -60,6 +60,13 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   saveAsFileAct = new QAction(tr("Save query as ..."), this);
   fileMenu->addAction(saveAsFileAct);
   connect(saveAsFileAct, &QAction::triggered, [=]{on_saveAs_QueryButton_clicked();});
+  refreshRoutesAct = new QAction(tr("Refresh routes"),this);
+  refreshRoutesAct->setCheckable(true);
+  connect(refreshRoutesAct, &QAction::triggered, [=]{
+   MainWindow::instance()->refreshRoutes();
+   if(refreshRoutesAct->isChecked())
+    MainWindow::instance()->btnDisplayRouteClicked();
+  });
 
   menuBar->addMenu(toolsMenu);
   //QMenu* tablesMenu = new QMenu(tr("Tables"));
@@ -69,6 +76,8 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
    QStringList tableList = db.tables(QSql::Tables);
    QStringList sysTableList = db.tables(QSql::SystemTables);
    toolsMenu->clear();
+   toolsMenu->addAction(refreshRoutesAct);
+
    QMenu* tablesMenu = new QMenu(tr("Tables"));
    toolsMenu->addMenu(tablesMenu);
    foreach(QString tableName, tableList)
@@ -825,16 +834,24 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    //menu = QMenu(m_parent*);
    QAction * copyAction = new QAction("Copy cell text", this);
    connect(copyAction,SIGNAL(triggered()),this,SLOT(on_copyCellText()));
-//   QAction * pasteAction = new QAction("Paste",this);
-//   connect(pasteAction,SIGNAL(triggered()),this,SLOT(queryViewPaste()));
+   QAction * pasteAction = new QAction("Paste",this);
+   connect(pasteAction,SIGNAL(triggered()),this,SLOT(queryViewPaste()));
 //   QAction *copyBlobAct = new QAction(tr("Copy blob to clipboard"),this);
 //   connect(copyBlobAct, SIGNAL(triggered()),this,SLOT(on_copyBlob()));
+   QAction* insertAction = new QAction(tr("insert row"),this);
+   connect(insertAction, &QAction::triggered, [=]{
+    on_insertRow();
+
+   });
+   QAction* deleteAction = new QAction(tr("delete row"),this);
+   connect(deleteAction, &QAction::triggered, [=]{
+    on_deleteRow();
+   });
 
    //QClipboard *clip = QApplication::clipboard();
    QMenu menu;
 
    menu.addAction(copyAction);
-//   menu.addAction(pasteAction);
    // more actions can be added here
 //   QSqlRecord this_record = model->record(currentIndexQueryView.row());
 //   s_currBlobType = model->table_blobs->on_check_blob_list(model->rowCount(),&this_record,currentIndexQueryView.row(),currentIndexQueryView.column());
@@ -843,6 +860,18 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 //    qDebug()<<"Is blob "+ s_currBlobType;
 //    menu.addAction(copyBlobAct);
 //   }
+   QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
+   QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel *>(view->model());
+   if(qobject_cast<QueryEditModel*>(proxyModel->sourceModel()))
+   {
+    QueryEditModel * model = qobject_cast<QueryEditModel*>(proxyModel->sourceModel());
+    if(model)
+    {
+     menu.addAction(pasteAction);
+     menu.addAction(insertAction);
+     menu.addAction(deleteAction);
+    }
+   }
    menu.exec(QCursor::pos());
   }
  }//get QTableView selected item
@@ -860,53 +889,6 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    return (false);
  }
 
-// void QueryDialog::queryViewHeaderContextMenuRequested(const QPoint &pt)
-// {
-//  QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
-
-//  QAction *hideColumn = new QAction(tr("Hide Column"),this);
-//  QAction *showHiddenColumns = new QAction(tr("Show Hidden Columns"),this);
-//  myHeaderView* hv = (myHeaderView*)view->horizontalHeader();
-//  QAction *moveOrResize = new QAction(hv->bAllowSortColumns?tr("Allow resize columns"):tr("Allow sort/drag/move columns"),this);
-//  QAction *resizeToData = new QAction(tr("Resize to data"), this);
-//  connect(hideColumn, SIGNAL(triggered()),this,SLOT(on_queryView_hide_column()));
-//  connect(showHiddenColumns,SIGNAL(triggered()),this,SLOT(on_queryView_show_columns()));
-//  connect(moveOrResize, SIGNAL(triggered()),this,SLOT(onMoveOrRezize_columns()));
-//  connect(resizeToData, SIGNAL(triggered()),this,SLOT(onResizeToData()));
-
-//  QMenu menu;
-//  queryViewCurrColumn = view->columnAt(pt.x());
-//  menu.addAction(moveOrResize);
-//  menu.addAction(resizeToData);
-//  menu.addAction(hideColumn);
-//  for(int i=0; i < view->model()->columnCount(); i++)
-//  {
-//   if(view->isColumnHidden(i))
-//   {
-//    menu.addAction(showHiddenColumns);
-//    break;
-//   }
-//  }
-//  menu.exec(QCursor::pos());
-// }
-
-// void QueryDialog::on_queryView_hide_column()
-// {
-//  QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
-//  view->hideColumn(queryViewCurrColumn);
-// }
-
-// void QueryDialog::on_queryView_show_columns()
-// {
-//  QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
-//  for(int i=0; i < view->model()->columnCount(); i++)
-//  {
-//   if(view->isColumnHidden(i))
-//   {
-//    view->showColumn(i);
-//   }
-//  }
-// }
 
  void QueryDialog::on_copyCellText()
  {
@@ -930,6 +912,30 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    QClipboard *clip = QApplication::clipboard();
    clip->setText(model->data(currentIndexQueryView,Qt::DisplayRole).toString());
 
+  }
+ }
+
+ void QueryDialog::on_deleteRow()
+ {
+  QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
+  QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel *>(view->model());
+  if(qobject_cast<QueryEditModel*>(proxyModel->sourceModel()))
+  {
+   QueryEditModel * model = qobject_cast<QueryEditModel*>(proxyModel->sourceModel());
+   int row = proxyModel->mapToSource(currentIndexQueryView).row();
+   model->removeRow(row);
+  }
+ }
+
+ void QueryDialog::on_insertRow()
+ {
+  QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
+  QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel *>(view->model());
+  if(qobject_cast<QueryEditModel*>(proxyModel->sourceModel()))
+  {
+   QueryEditModel * model = qobject_cast<QueryEditModel*>(proxyModel->sourceModel());
+   int row = currentIndexQueryView.row();
+   model->insertRow(row);
   }
  }
 

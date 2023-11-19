@@ -436,6 +436,8 @@ public:
     void addSequence(QPair<int, QString> pair) {_seqList.append(pair);}
     QList<QPair<int, QString>> setSeqList(QString);
     QString seqToString();
+    qint32 sequence() {return _sequence;}
+    qint32 returnSeq() {return _returnSeq;}
  private:
     qint32 _route = -1;
     QString _alphaRoute;

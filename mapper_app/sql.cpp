@@ -5070,126 +5070,25 @@ bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 SegmentId,
     }
     return ret;
 }
+
+// TODO: add next, prev, seq,... etc
 bool SQL::addSegmentToRoute(SegmentData sd)
 {
-  return addSegmentToRoute( sd.route(), sd.routeName(), sd.startDate(),
+  if(addSegmentToRoute( sd.route(), sd.routeName(), sd.startDate(),
                             sd.endDate(), sd.segmentId(), sd.companyKey(),
-                            sd.tractionType(), sd.direction(), sd.next(), sd.prev(), sd.normalEnter(), sd.normalLeave(),
-                            sd.reverseEnter(), sd.reverseLeave(), sd.oneWay(), sd.trackUsage());
+                            sd.tractionType(), sd.direction(), sd.next(), sd.prev(),
+                            sd.normalEnter(), sd.normalLeave(),
+                            sd.reverseEnter(), sd.reverseLeave(), sd.sequence(), sd.returnSeq(),
+                            sd.oneWay(), sd.trackUsage()))
+     emit routeChange(ADD, sd);
+     return true;
 }
 
-//bool SQL::addSegmentToRoute(RouteData rd)
-//{
-//  return addSegmentToRoute( rd.route, rd.name, rd.startDate,
-//                            rd.endDate, rd.lineKey, rd.companyKey,
-//                            rd.tractionType, rd.direction, rd.next, rd.prev, rd.normalEnter, rd.normalLeave,
-//                            rd.reverseEnter, rd.reverseLeave, rd.oneWay, rd.trackUsage);
-//}
-#if 0
-/// <summary>
-/// Adds a new route segment
-/// </summary>
-/// <param name="routeNbr"></param>
-/// <param name="routeName"></param>
-/// <param name="startDate"></param>
-/// <param name="endDate"></param>
-/// <param name="SegmentId"></param>
-/// <returns></returns>
-bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate,
-                            qint32 SegmentId, qint32 companyKey, qint32 tractionType,
-                            QString direction, qint32 normalEnter, qint32 normalLeave,
-                            qint32 reverseEnter, qint32 reverseLeave, QString oneWay,
-                            QString trackUsage) //14
-{
-    bool ret = false;
-    int rows = 0;
-    if (routeNbr < 1)
-    {
-        qDebug()<<"Invalid route number";
-        throw Exception(tr("route number invalid!"));
-    }
-    if (routeName == "" || routeName.length() > 100)
-    {
-        qDebug()<<"invalid route name";
-        throw Exception(tr("invalid route name '%1'").arg(routeName));
-    }
-    QDateTime dtStart = QDateTime::fromString(startDate, "yyyy/MM/dd");
-    QDateTime dtEnd = QDateTime::fromString(endDate, "yyyy/MM/dd");
-
-    if (dtEnd.date() < dtStart.date())
-    //    throw (new ApplicationException("Invalid end date" + endDate));
-    {
-        qDebug()<<"end date ("+ endDate +") before start date("+ startDate+")!";
-        throw Exception("end date ("+ endDate +") before start date("+ startDate+")!");
-    }
-    //if (SegmentId <= 0)
-    //    throw (new ApplicationException("invalid segmentid:" + SegmentId));
-    if (companyKey < 1)
-    {
-        qDebug()<<"invalid company key: " + QString("%1").arg(companyKey);
-        throw Exception("invalid company key: " + QString("%1").arg(companyKey));
-    }
-    CompanyData* cd = getCompany(companyKey);
-    if(routeNbr != 9998 && routeNbr != 9999)
-        updateCompany(companyKey, routeNbr);
-
-    try
-    {
-        if(!dbOpen())
-            throw Exception(tr("database not open: %1").arg(__LINE__));
-        QSqlDatabase db = QSqlDatabase::database();
-
-        BeginTransaction("addSegmentToRoute");
-
-        QString commandText = "INSERT INTO Routes(Route, Name, StartDate, EndDate, LineKey,"
-           " companyKey, tractionType, direction, normalEnter, normalleave,"
-           " reverseEnter, reverseLeave, OneWay, trackUsage) VALUES("
-           + QString("%1").arg(routeNbr) + ", '"
-           + routeName.trimmed() + "', '"
-           + startDate + "', '"
-           + endDate + "', " + QString("%1").arg(SegmentId) + ", "
-           + QString("%1").arg(companyKey) +","
-           + QString("%1").arg(tractionType) +",'"
-           + QString("%1").arg(direction) +"', "
-           + QString("%1").arg(normalEnter) + ","
-           + QString("%1").arg(normalLeave) + ","
-           + QString("%1").arg(reverseEnter) + ", "
-           + QString("%1").arg(reverseLeave) + ", '"
-           + QString("%1").arg(oneWay) + "', '"
-           + trackUsage
-           + "')";
-        qDebug() << commandText;
-        QSqlQuery query = QSqlQuery(db);
-        bool bQuery = query.exec(commandText);
-        if(!bQuery)
-        {
-            SQLERROR(query);
-            //exit(EXIT_FAILURE);
-            return false;
-        }
-        rows = query.numRowsAffected();
-//        if (rows == 0)
-//        {
-//            //                    RollbackTransaction("deletePoint");
-//            return ret;
-//        }
-
-        updateSegmentDates(SegmentId);
-
-        CommitTransaction("addSegmentToRoute");
-        ret = true;
-    }
-    catch (Exception e)
-    {
-        myExceptionHandler(e);
-    }
-    return ret;
-}
-#endif
 bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate, QDate endDate,
                             qint32 SegmentId, qint32 companyKey, qint32 tractionType,
                             QString direction, qint32 next, qint32 prev, qint32 normalEnter,
                             qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave,
+                            qint32 sequence, qint32 reverseSeq,
                             QString oneWay, QString trackUsage) //16
 {
     if(startDate.isNull() || endDate.isNull() || !startDate.isValid() || !endDate.isValid() || endDate < startDate)
@@ -5236,7 +5135,7 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate,
 
         QString commandText = "INSERT INTO Routes(Route, Name, StartDate, EndDate, LineKey, "
                 "companyKey, tractionType, direction, next, prev, normalEnter, normalleave,"
-                " reverseEnter, reverseLeave, oneWay, trackUsage) "
+                " reverseEnter, reverseLeave, sequence, ReverseSeq, oneWay, trackUsage) "
                 "VALUES(" + QString("%1").arg(routeNbr) + ", '"
                 + routeName.trimmed() + "', '"
                 + startDate.toString("yyyy/MM/dd") + "', '"
@@ -5250,7 +5149,9 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate,
                 + QString("%1").arg(normalEnter) + ","
                 + QString("%1").arg(normalLeave) + ","
                 + QString("%1").arg(reverseEnter) + ", "
-                + QString("%1").arg(reverseLeave) + ", '"
+                + QString("%1").arg(reverseLeave) + ", "
+                + QString("%1").arg(sequence) + ", "
+                + QString("%1").arg(reverseSeq) + ", '"
                 + QString("%1").arg(oneWay)  + "', '"
                 + trackUsage + "')";
         QSqlQuery query = QSqlQuery(db);
@@ -5280,6 +5181,101 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate,
     return ret;
 }
 
+#if 0
+bool SQL::addSegmentToRoute(RouteData rd) //16
+{
+    if(rd._startDate.isNull() || rd._endDate.isNull() || !rd._startDate.isValid()
+       || !rd._endDate.isValid() || rd._endDate < rd._startDate)
+     throw IllegalArgumentException(tr("invalid dates"));
+    bool ret = false;
+    int rows = 0;
+    if (rd._route < 1)
+    {
+        qDebug()<<"Invalid route number";
+        return ret;
+    }
+    if (rd._name == "" || rd._name.length() > 100)
+    {
+        qDebug()<<"invalid route name";
+        return ret;
+    }
+//    QDateTime dtStart = QDateTime::fromString(startDate, "yyyy/MM/dd");
+//    QDateTime dtEnd = QDateTime::fromString(endDate, "yyyy/MM/dd");
+
+    if (rd._endDate < rd._startDate)
+    //    throw (new ApplicationException("Invalid end date" + endDate));
+    {
+        qDebug()<<"end date ("+ rd._endDate.toString("yyyy/MM/DD") +") before start date("
+         + rd._startDate.toString("yyyy/MM/DD")+")!";
+        return ret;
+    }
+    if (rd._lineKey <= 0)
+        throw (new ApplicationException("invalid segmentid:" + QString::number(rd._lineKey)));
+    if (rd._companyKey < 1)
+    {
+        qDebug()<<"invalid company key: " + QString("%1").arg(rd._companyKey);
+        return ret;
+    }
+    CompanyData* cd = getCompany(rd._companyKey);
+    if(rd._route != 9998 && rd._route != 9999)
+        updateCompany(rd._companyKey, rd._route);
+
+    try
+    {
+        if(!dbOpen())
+            throw Exception(tr("database not open: %1").arg(__LINE__));
+        QSqlDatabase db = QSqlDatabase::database();
+
+        //BeginTransaction("addSegmentToRoute");
+
+        QString commandText = "INSERT INTO Routes(Route, Name, StartDate, EndDate, LineKey, "
+                "companyKey, tractionType, direction, next, prev, normalEnter, normalleave,"
+                " reverseEnter, reverseLeave, sequence, reverseSeq, oneWay, trackUsage) "
+                "VALUES(" + QString("%1").arg(rd._route) + ", '"
+                + rd._name.trimmed() + "', '"
+                + rd._startDate.toString("yyyy/MM/dd") + "', '"
+                + rd._endDate.toString("yyyy/MM/dd") + "',"
+                + QString("%1").arg(rd._lineKey) + ", "
+                + QString("%1").arg(rd._companyKey)+","
+                + QString("%1").arg(rd._tractionType)+",'"
+                + rd._direction +"', "
+                + QString("%1").arg(rd._next) +", "
+                + QString("%1").arg(rd._prev) +", "
+                + QString("%1").arg(rd._normalEnter) + ","
+                + QString("%1").arg(rd._normalLeave) + ","
+                + QString("%1").arg(rd._reverseEnter) + ", "
+                + QString("%1").arg(rd._reverseLeave) + ", '"
+                + QString("%1").arg(rd._sequence) + ", '"
+                + QString("%1").arg(rd._returnSeq) + ", '"
+                + QString("%1").arg(rd._oneWay)  + "', '"
+                + rd._trackUsage + "')";
+        QSqlQuery query = QSqlQuery(db);
+        bool bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+         SQLERROR(query);
+         //db.close();
+         return ret;
+        }
+        rows = query.numRowsAffected();
+//        if (rows == 0)
+//        {
+//            //                    RollbackTransaction("deletePoint");
+//            return ret;
+//        }
+
+        updateSegmentDates(rd._lineKey);
+
+        //CommitTransaction("addSegmentToRoute");
+        ret = true;
+    }
+    catch (Exception e)
+    {
+        myExceptionHandler(e);
+    }
+    return ret;
+}
+#endif
 bool SQL::updateTerminals(TerminalInfo ti)
 {
  return  updateTerminals(ti.route, ti.name, ti.startDate.toString("yyyy/MM/dd"), ti.endDate.toString("yyyy/MM/dd"), ti.startSegment, ti.startWhichEnd,
@@ -8100,8 +8096,18 @@ QList<SegmentData*> SQL::getConflictingRouteSegments(qint32 route, QString name,
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
-        QString commandText = "Select a.route, name, startDate, endDate, lineKey, tractionType, companyKey, direction, normalEnter, normalLeave, reverseEnter, reverseLeave, routeAlpha, OneWay"
-            " from Routes a join AltRoute b on a.route = b.route where (startDate between '" + startDate + "' and '" + endDate + "' or endDate between '" + startDate + "' and '" + endDate + "') and a.route = " + QString("%1").arg(route) + " and name = '" + name + "' and endDate <> '" + endDate + "' and lineKey = " + QString("%1").arg(segmentId);
+        QString commandText = "Select a.route, name, startDate, endDate, "
+                              "lineKey, tractionType, companyKey, direction,"
+                              " normalEnter, normalLeave, reverseEnter, reverseLeave,"
+                              " routeAlpha, OneWay"
+                              " from Routes a"
+                              " join AltRoute b on a.route = b.route"
+                              " where ((startDate between '" + startDate + "'"
+                              " and '" + endDate + "') or (endDate between '" + startDate + "'"
+                              " and '" + endDate + "'))"
+                              " and a.route = " + QString("%1").arg(route) + ""
+                              " and name = '" + name + "' and endDate <> '" + endDate + "'"
+                              " and lineKey = " + QString("%1").arg(segmentId);
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)

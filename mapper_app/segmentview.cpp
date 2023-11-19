@@ -207,7 +207,7 @@ void SegmentView::addToRoute()
  MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
  if(parent->routeDlg == 0)
  {
-  parent->routeDlg = new RouteDlg(config, parent);
+  parent->routeDlg = new RouteDlg(parent);
   //parent->routeDlg->Configuration ( config);
   //routeDlg->SegmentChanged += new segmentChangedEventHandler(segmentChanged);
   connect(parent->routeDlg, SIGNAL(SegmentChangedEvent(qint32, qint32)),parent, SLOT(segmentChanged(qint32,qint32)));

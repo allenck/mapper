@@ -57,6 +57,7 @@ private:
  void saveFile(QString s_File_Name);
  QAction* saveFileAct;
  QAction* saveAsFileAct;
+ QAction* refreshRoutesAct;
  bool processStream(QTextStream *in);
  int linesRead=0, recordsProcessed=0, errors=0;
  bool loadStream(QTextStream* in);
@@ -79,9 +80,8 @@ private slots:
  void slot_queryView_row_DoubleClicked(QModelIndex index);
  void slot_QueryView_horizontalHeader_sectionDoubleClicked(int logicalIndex);
  void tablev_customContextMenu( const QPoint& pt); //query view
-// void queryViewHeaderContextMenuRequested(const QPoint &pt);
-// void on_queryView_hide_column();
-// void on_queryView_show_columns();
+ void on_deleteRow();
+ void on_insertRow();
  void on_copyCellText();
  void on_cb_stop_query_on_error_toggled(bool b_checked);
  void on_cb_sql_execute_after_loading_toggled(bool b_checked);

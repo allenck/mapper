@@ -107,15 +107,13 @@ public:
     bool deleteRouteSegment(SegmentData sd);
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate, QString routeStartDate, QString routeEndDate);
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate);
-    bool addSegmentToRoute(SegmentData rd);
-//    QT_DEPRECATED bool addSegmentToRoute(RouteData rd);
-//                           qint32 SegmentId, qint32 companyKey, qint32 tractionType, QString direction,
-//                           qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave,
-//                           QString oneWay, QString trackUsage);
-    bool addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate, QDate endDate,
+    bool addSegmentToRoute(SegmentData sd);
+    //bool addSegmentToRoute(RouteData rd);
+    QT_DEPRECATED bool addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate, QDate endDate,
                            qint32 SegmentId, qint32 companyKey, qint32 tractionType, QString direction,
                            qint32 next, qint32 prev,
                            qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave,
+                           qint32 sequence, qint32 reverseSeq,
                            QString oneWay, QString trackUsage);
     qint32 getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * bAlphaRoute, int companyKey);
     int findNextRouteInRange(QString txt);

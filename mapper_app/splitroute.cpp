@@ -415,7 +415,7 @@ void SplitRoute::btnOK_Click()
     //sql->BeginTransaction("SplitRoute");
     for(int i = 0; i <myArray.count(); i ++)
     {
-     RouteData rd1 = myArray.at(i);
+     SegmentData rd1 = myArray.at(i);
      if(ui->chkDeleteOriginal->isChecked())
      {
       if(!sql->deleteRouteSegment(rd1.route(), rd1.routeName(), rd1.segmentId(), rd1.startDate().toString("yyyy/MM/dd"),
@@ -436,7 +436,7 @@ void SplitRoute::btnOK_Click()
                                  rd1.startDate(), ui->dateTo1->date(),
                                  rd1.segmentId(), _companyList.at(ui->cbCompany1->currentIndex())->companyKey,
                                  rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(), rd1.normalEnter(), rd1.normalLeave(),
-                                 rd1.reverseEnter(), rd1.reverseLeave(), rd1.oneWay(), rd1.trackUsage()) == false)
+                                 rd1.reverseEnter(), rd1.reverseLeave(), rd1.sequence(), rd1.returnSeq(), rd1.oneWay(), rd1.trackUsage()) == false)
       {
        ui->lblHelp->setText (tr("add failed"));
        QApplication::beep();
@@ -454,7 +454,9 @@ void SplitRoute::btnOK_Click()
                                  rd1.segmentId(), _companyList.at(ui->cbCompany2->currentIndex())->companyKey,
                                  rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
                                  rd1.normalEnter(), rd1.normalLeave(),
-                                 rd1.reverseEnter(), rd1.reverseLeave(), rd1.oneWay(), rd1.trackUsage()) == false)
+                                 rd1.reverseEnter(), rd1.reverseLeave(),
+                                 rd1.sequence(), rd1.returnSeq(),
+                                 rd1.oneWay(), rd1.trackUsage()) == false)
       {
        ui->lblHelp->setText (tr("add failed"));
        QApplication::beep();
@@ -470,7 +472,9 @@ void SplitRoute::btnOK_Click()
                                 rd1.segmentId(), _companyList.at(ui->cbCompany1->currentIndex())->companyKey,
                                 rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
                                 rd1.normalEnter(), rd1.normalLeave(),
-                                rd1.reverseEnter(), rd1.reverseLeave(), rd1.oneWay(), rd1.trackUsage()) == false)
+                                rd1.reverseEnter(), rd1.reverseLeave(),
+                                rd1.sequence(), rd1.returnSeq(),
+                                rd1.oneWay(), rd1.trackUsage()) == false)
      {
       ui->lblHelp->setText (tr("add failed"));
       QApplication::beep();
@@ -484,7 +488,9 @@ void SplitRoute::btnOK_Click()
                                 rd1.segmentId(), rd1.companyKey(),
                                 rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
                                 rd1.normalEnter(), rd1.normalLeave(),
-                                rd1.reverseEnter(), rd1.reverseLeave(), rd1.oneWay(), rd1.trackUsage()) == false)
+                                rd1.reverseEnter(), rd1.reverseLeave(),
+                                rd1.sequence(), rd1.returnSeq(),
+                                rd1.oneWay(), rd1.trackUsage()) == false)
      {
       ui->lblHelp->setText (tr("add failed"));
       QApplication::beep();

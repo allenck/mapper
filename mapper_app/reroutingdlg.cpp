@@ -87,6 +87,7 @@ void ReroutingDlg::on_btnOk_clicked()
                                    ui->fromDate->date().addDays(-1), rd.segmentId(), rd.companyKey(),
                                    rd.tractionType(), rd.direction(), rd.next(), rd.prev(),
                                    rd.normalEnter(), rd.normalLeave(), rd.reverseEnter(), rd.reverseLeave(),
+                                   rd.sequence(), rd.returnSeq(),
                                    rd.oneWay(), rd.trackUsage()) == false)
         {
             ui->lblHelp->setText(tr("add failed"));
@@ -99,7 +100,9 @@ void ReroutingDlg::on_btnOk_clicked()
         if (sql->addSegmentToRoute(rd.route(), ui->txtRoute->text(), ui->fromDate->date(),
                                    ui->toDate->date().addDays(-1), rd.segmentId(), rd.companyKey(),
                                    rd.tractionType(), rd.direction(), rd.next(), rd.prev(), rd.normalEnter(),
-                                   rd.normalLeave(), rd.reverseEnter(), rd.reverseLeave(), rd.oneWay(), rd.trackUsage()) == false)
+                                   rd.normalLeave(), rd.reverseEnter(), rd.reverseLeave(),
+                                   rd.sequence(), rd.returnSeq(),
+                                   rd.oneWay(), rd.trackUsage()) == false)
         {
             ui->lblHelp->setText(tr("add failed"));
             //System.Media.SystemSounds.Asterisk.Play();
@@ -110,8 +113,11 @@ void ReroutingDlg::on_btnOk_clicked()
         }
         // copy old route back after toDate
         if (sql->addSegmentToRoute(rd.route(), rd.routeName(),  ui->toDate->date(), rd.endDate(),
-                                   rd.segmentId(), rd.companyKey(), rd.tractionType(), rd.direction(), rd.next(), rd.prev(),
-                                   rd.normalEnter(), rd.normalLeave(), rd.reverseEnter(), rd.reverseLeave(), rd.oneWay(), rd.trackUsage()) == false)
+                                   rd.segmentId(), rd.companyKey(), rd.tractionType(), rd.direction(),
+                                   rd.next(), rd.prev(),
+                                   rd.normalEnter(), rd.normalLeave(), rd.reverseEnter(), rd.reverseLeave(),
+                                   rd.sequence(), rd.returnSeq(),
+                                   rd.oneWay(), rd.trackUsage()) == false)
         {
             ui->lblHelp->setText(tr("add failed"));
             //System.Media.SystemSounds.Asterisk.Play();

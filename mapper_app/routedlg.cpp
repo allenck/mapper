@@ -5,7 +5,7 @@
 #include "mainwindow.h"
 #include "vptr.h"
 
-RouteDlg::RouteDlg(Configuration *cfg, QWidget *parent) :
+RouteDlg::RouteDlg(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RouteDlg)
 {
@@ -231,7 +231,7 @@ void RouteDlg::setSegmentData(SegmentData* sd)
  cbOneWay_checkedChanged(sd->oneWay()=="Y");
  ui->cbOneWay->setChecked(sd->oneWay()=="Y");
  ui->gbUsage->setVisible(sd->tracks()==2 && sd->oneWay() == "Y");
- //_segmentDataList = sql->getRouteSegmentsBySegment(sd->route(), sd->segmentId());
+ if(sd->trackUsage() == "L") ui->rbLeft->setChecked(true);
  //_segmentDataList = ((MainWindow*)parent())->segmentDataList;
  fillSegmentsComboBox();
  if(!_segmentDataList.contains(sd))
@@ -1444,7 +1444,9 @@ void RouteDlg::btnDelete_Click()              // SLOT
   if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->date(),
                               sd->startDate().addDays(-1), sd->segmentId(), sd->companyKey(), sd->tractionType(),
                               sd->direction(), sd->next(), sd->prev(), sd->normalEnter(), sd->normalLeave(),
-                              sd->reverseEnter(), sd->reverseLeave(), ui->cbOneWay->isChecked()?"Y":"N", sd->trackUsage()))
+                              sd->reverseEnter(), sd->reverseLeave(),
+                              sd->sequence(), sd->returnSeq(),
+                              ui->cbOneWay->isChecked()?"Y":"N", sd->trackUsage()))
   {
       ui->lblHelpText->setText(tr("deleteRoute failed!"));
       //System.Media.SystemSounds.Beep.Play();
@@ -1463,6 +1465,7 @@ void RouteDlg::btnDelete_Click()              // SLOT
      sd->setStartDate(_rd.endDate().addDays(1));
      sd->setEndDate(ui->dateEnd->date());
      sd->setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
+     sd->setTractionType(tractionType);
      sd->setTrackUsage(trackUsage);
      if (!sql->addSegmentToRoute(*sd))
      {
@@ -1578,9 +1581,9 @@ void RouteDlg::btnAdd_Click()         // SLOT
  {
   //sql->BeginTransaction("add/update");
 
-  int ixo = ui->cbSegments->currentIndex();
-  if(ixo >= 0)
-      oldSd = _segmentDataList.at(ixo);
+//  int ixo = ui->cbSegments->currentIndex();
+//  if(ixo >= 0)
+//      oldSd = new SegmentData(*_segmentDataList.at(ixo));
   ui->lblHelpText->setText("");
   if (ui->dateStart->dateTime() > ui->dateEnd->dateTime())
   {
@@ -1831,6 +1834,13 @@ void RouteDlg::btnAdd_Click()         // SLOT
     sd->setCompanyKey(ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt());
     sd->setTractionType(_tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType);
     sd->setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
+    QString trackUsage = " ";
+    //SegmentData sd = sql->getSegmentInfo(_segmentId);
+    if(ui->cbOneWay->isChecked() && sd->tracks() ==2)
+    {
+     if(ui->rbLeft->isChecked()) trackUsage = "L"; // running head to tail
+     if(ui->rbRight->isChecked()) trackUsage = "R"; // running tail to head (normal direction)
+    }
 //    sd->setRoute(ui->txtRouteNbr->text().toInt());
     if(!sql->updateRoute(*oldSd, *sd))
     {

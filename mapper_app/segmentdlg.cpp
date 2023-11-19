@@ -708,6 +708,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
    setCursor(Qt::ArrowCursor);
    return;
   }
+  sd = sql->getSegmentInfo(_newSegmentId);
   if(!ui->cbLocation->currentText().isEmpty())
   {
    QString saveLoc = ui->cbLocation->currentText();
@@ -786,7 +787,9 @@ void SegmentDlg::btnOK_Click()  // SLOT
     // TODO: add logic to support trackUsage!
     if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->date(), ui->dateEnd->date(), routeSegment,
                                 companyKey, /*cbTractionType.SelectedIndex*/tractionType, direction, -1,-1,
-                                normalEnter, normalLeave, reverseEnter, reverseLeave, (ui->chkNewOneWay->isChecked()?"Y":"N"), trackUsage))
+                                normalEnter, normalLeave, reverseEnter, reverseLeave,
+                                -1, -1,
+                                (ui->chkNewOneWay->isChecked()?"Y":"N"), trackUsage))
      ui->lblErrorText->setText(tr( "Add Error"));
     streetName = ui->txtOriginalName->text();
     //if (routeChanged != null)

@@ -631,41 +631,15 @@ void RouteViewTableModel::discardChanges()
 // Called by RouteView to mark segment be deleted.
 void RouteViewTableModel::deleteRow(qint32 segmentId, const QModelIndex &index)
 {
-// if(segmentId == 0)
-//  return;
-
-// for(int i = 0; i < changedMap.values().count(); i++)
-// {
-//  RowChanged* rc = changedMap.values().at(i);
-//  if(rc->segmentId == segmentId)
-//   return; // already posted
-// }
-
-// RowChanged* rc = new RowChanged();
-// for(int i = 0; i < listOfSegments.count(); i++)
-// {
-//  SegmentData osd = listOfSegments.at(i);
-//  if(osd->segmentId() == segmentId )
-//  {
-//   rc->row= i;
-//   rc->osd = SegmentData(osd);
-//   rc->bDeleted = true;
-//   break;
-//  }
-// }
-// //rc.row = index.row();
-// rc->index = index;
-// rc->bChanged =false;
-// rc->bDeleted = true;
-// rc->segmentId = segmentId;
-// changedMap.insert(index.row(), rc);
-// emit rowChange(rc->row, segmentId,  true, false);
  if(segmentId == listOfSegments.at(index.row())->segmentId())
  {
+  QModelIndex parent = QModelIndex();
+  beginRemoveRows(parent, index.row(), index.row());
   //listOfSegments.at(index.row()).markForDelete(true);
   SegmentData* sd = listOfSegments.at(index.row());
-  sd->markForDelete(true);
-  listOfSegments.replace(index.row(), sd);
+  listOfSegments.removeAt(index.row());
+  SQL::instance()->deleteRouteSegment(*sd);
+  endRemoveRows();
  }
 }
 #if 0

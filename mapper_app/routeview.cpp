@@ -186,7 +186,9 @@ RouteView::RouteView(QObject* parent )
       qDebug() << "old segment deleted " << sd->segmentId() << ok;
       ok = SQL::instance()->addSegmentToRoute(sd->route(),sd->routeName(), sd->startDate(),sd->endDate(),
                                               si.segmentId(),sd->companyKey(),
-                                         sd->tractionType(),sd->direction(), -1, -1, 0,0,0,0,"N", " ");
+                                         sd->tractionType(),sd->direction(), -1, -1, 0,0,0,0,
+                                              sd->sequence(), sd->returnSeq(),
+                                              "N", " ");
       qDebug() << "new segment added " << si.segmentId() << ok;
      }
     });
@@ -285,7 +287,7 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
 //     if(sd->markedForDelete())
 //         menu.addAction(unDeleteSegmentAct);
 //     else
-         menu.addAction(deleteSegmentAct);
+     menu.addAction(deleteSegmentAct);
      //if(curRow == 0)
      //menu.addAction(saveChangesAct);
      //menu.addAction(discardChangesAct);
@@ -867,10 +869,10 @@ void RouteView::deleteSegment()
     QModelIndexList indexes = model->selectedIndexes();
     QModelIndex ix = indexes.at(RouteViewTableModel::SEGMENTID);
     qint32 segmentId = ix.data().toInt();
-
-    sourceModel->deleteRow(segmentId, ix);
+    //int row = proxymodel->mapToSource(ix).row();
+    sourceModel->deleteRow(segmentId, proxymodel->mapToSource(ix));
     sourceModel->bChangesMade = true;
-
+    MainWindow::instance()->segmentChanged(segmentId, 0);
 }
 #if 0
 void RouteView::unDeleteSegment()

@@ -367,7 +367,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   connect(dupSegmentView, SIGNAL(selectSegment(int)), this, SLOT(selectSegment(int)));
 
   // setup routeDlg
-  routeDlg = new RouteDlg(config, this);
+  routeDlg = new RouteDlg(this);
   //routeDlg->Configuration ( config);
   //routeDlg->SegmentChanged += new segmentChangedEventHandler(segmentChanged);
   connect(routeDlg, SIGNAL(SegmentChangedEvent(qint32, qint32)),this, SLOT(segmentChanged(qint32,qint32)));
@@ -990,6 +990,18 @@ void MainWindow::createActions()
      sd.setEndDate(_rd.endDate());
      sd.setTractionType(_rd.tractionType());
      sd.setCompanyKey(ui->cbCompany->currentData().toInt());
+     QList<SegmentData*> conflicts
+             = sql->getConflictingRouteSegments(_rd.route(), _rd.routeName(),
+                                                _rd.startDate().toString("yyyy/MM/dd"),
+                                                _rd.endDate().toString("yyyy/MM/dd"),
+                                                sd.segmentId());
+     if(conflicts.count())
+     {
+         QMessageBox::critical(this, tr("Conflict"), tr("The segment is already present"
+                               " or conflicts with the start or end date of an"
+                               " existing segment. The segment will not be added!"));
+         return;
+     }
      if(!sql->addSegmentToRoute(sd))
      {
       updateRoute(&sd);
@@ -1019,6 +1031,11 @@ void MainWindow::createActions()
    sd.setStartDate(cd->startDate);
   if(sd.endDate() > cd->endDate)
    sd.setEndDate(cd->endDate);
+//  if(!sql->addSegmentToRoute(sd))
+//  {
+//   updateRoute(&sd);
+//   return;
+//  }
 
   updateRoute(&sd);
  });
@@ -1762,11 +1779,14 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
                         if (sql->doesRouteSegmentExist(rd.route(), rd.routeName(), sdDup.segmentId(),
                                                        rd.startDate(), rd.endDate()))
                                 continue;
-                            if (!sql->addSegmentToRoute(rd.route(), rd.routeName(), rd.startDate(), rd.endDate(), sdDup.segmentId(),
-                                                        rd.companyKey(),
-                                                        rd.tractionType(), rd.direction(), rd.next(), rd.prev(), rd.normalEnter(),
-                                                        rd.normalLeave(), rd.reverseEnter(), rd.reverseLeave(), rd.oneWay(), rd.trackUsage()))
-                            {
+//                            if (!sql->addSegmentToRoute(rd.route(), rd.routeName(), rd.startDate(), rd.endDate(), sdDup.segmentId(),
+//                                                        rd.companyKey(),
+//                                                        rd.tractionType(), rd.direction(), rd.next(), rd.prev(), rd.normalEnter(),
+//                                                        rd.normalLeave(), rd.reverseEnter(), rd.reverseLeave(), rd.oneWay(), rd.trackUsage()))
+                        SegmentData sd1 = SegmentData(sd);
+                        sd1.setSegmentId(sdDup.segmentId());
+                        if (!sql->addSegmentToRoute(sd))
+                        {
                                 //infoPanel.Text = "Update Error";
                                 statusBar()->showMessage(tr("Update failed"));
                                 //infoPanel.ForeColor = Color.Red;
@@ -2562,7 +2582,7 @@ void MainWindow::getArray()
     m_bridge->processScript("getPointArray");
     while(!m_bridge->isResultReceived())
     {
-     qApp->processEvents(QEventLoop::AllEvents, 5);
+     qApp->processEvents(QEventLoop::AllEvents, 100);
     }
     QVariantList points;
     points = m_bridge->myList;
@@ -3439,6 +3459,11 @@ void MainWindow::btnDeletePtClicked()
 
   QString marker;
   getArray();
+  if(m_nbrPoints == 0)
+  {
+   m_points = sd._pointList;
+   m_currPoint = sd._pointList.size()-1;
+  }
   if (m_currPoint == 0)
   {
       //objArray[3] = "1"; // start marker
@@ -3455,7 +3480,10 @@ void MainWindow::btnDeletePtClicked()
   }
   ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(sd.pointList().count()));
   //webBrowser1.Document.InvokeScript("addMarker", objArray);
-  m_bridge->processScript("addMarker", QString("%1").arg(m_currPoint)+ ","+ QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8) + "," + QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8)+ ","+marker+",'',"+QString("%1").arg(m_segmentId));
+  m_bridge->processScript("addMarker", QString("%1").arg(m_currPoint)+ ","
+                          + QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)
+                          + "," + QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8)
+                          + ","+marker+",'',"+QString("%1").arg(m_segmentId));
   QVariantList objArray;
   if(!ui->chkNoPan->isChecked())
   {
@@ -3769,7 +3797,7 @@ void MainWindow::updateRoute(SegmentData* sd )
 
     if (!routeDlg)
     {
-        routeDlg = new RouteDlg(config, this);
+        routeDlg = new RouteDlg(this);
         //routeDlg->Configuration ( config);
         //routeDlg->SegmentChanged += new segmentChangedEventHandler(segmentChanged);
         connect(routeDlg, SIGNAL(SegmentChangedEvent(qint32, qint32)),this, SLOT(segmentChanged(qint32,qint32)));
@@ -3977,7 +4005,7 @@ void MainWindow::moveRouteEndMarker(double lat, double lon, qint32 segmentId, qi
 void MainWindow::addRoute()
 {
     if(routeDlg == 0)
-        routeDlg = new RouteDlg(config, this);
+        routeDlg = new RouteDlg(this);
     routeDlg->setAddMode(true);
     routeDlg->show();
     routeDlg->raise();
