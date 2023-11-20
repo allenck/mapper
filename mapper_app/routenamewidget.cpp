@@ -61,6 +61,7 @@ QString RouteNameWidget::newRouteName()
 
 void RouteNameWidget::txtRouteNbr_Leave()
 {
+    lblHelpText->clear();
     bool bAlphaRoute = false;
     bNewRouteNbr = false;
     bool isNumeric = false;
@@ -87,7 +88,7 @@ void RouteNameWidget::txtRouteNbr_Leave()
                 bool bok;
                 _routeNbr = ui->txtRouteNbr->text().toInt(&bok);
                 if(!bok)
-                 _routeNbr = sql->findNextRouteInRange("1000,1099");
+                 _routeNbr = sql->findNextRouteInRange("1000,1999");
                 break;
             case QMessageBox::No:
                 break;

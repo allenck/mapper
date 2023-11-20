@@ -1018,26 +1018,26 @@ void MainWindow::createActions()
  addSegmentToNewRouteAct = new QAction(tr("Add segment via UpdateRoute"),this);
  addSegmentToNewRouteAct->setStatusTip(tr("Add via UpdateRoute possibly creating new route."));
  connect(addSegmentToNewRouteAct, &QAction::triggered, [=]{
-  SegmentData sd = ui->ssw->segmentSelected();
-  sd.setRoute(m_routeNbr);
-  sd.setAlphaRoute((_rd.alphaRoute()));
-  sd.setRouteName(_rd.routeName());
-  sd.setCompanyKey(ui->cbCompany->currentData().toInt());
-  sd.setTractionType(_rd.tractionType());
-  CompanyData* cd = sql->getCompany(sd.companyKey());
-  sd.setStartDate(_rd.startDate());
-  sd.setEndDate(_rd.endDate());
-  if(sd.startDate() < cd->startDate)
-   sd.setStartDate(cd->startDate);
-  if(sd.endDate() > cd->endDate)
-   sd.setEndDate(cd->endDate);
+  SegmentData* sd = new SegmentData(ui->ssw->segmentSelected());
+  sd->setRoute(m_routeNbr);
+  sd->setAlphaRoute((_rd.alphaRoute()));
+  sd->setRouteName(_rd.routeName());
+  sd->setCompanyKey(ui->cbCompany->currentData().toInt());
+  sd->setTractionType(_rd.tractionType());
+  CompanyData* cd = sql->getCompany(sd->companyKey());
+  sd->setStartDate(_rd.startDate());
+  sd->setEndDate(_rd.endDate());
+  if(sd->startDate() < cd->startDate)
+   sd->setStartDate(cd->startDate);
+  if(sd->endDate() > cd->endDate)
+   sd->setEndDate(cd->endDate);
 //  if(!sql->addSegmentToRoute(sd))
 //  {
 //   updateRoute(&sd);
 //   return;
 //  }
 
-  updateRoute(&sd);
+  updateRoute(sd);
  });
 
  findDormantSegmentsAct = new QAction(tr("Find dormant segments"),this);
@@ -2999,13 +2999,17 @@ void MainWindow::btnSplit_Clicked()    // SLOT
   // redisplay the original altered segment
   ui->txtSegment->setText(sql->getSegmentDescription(segmentDlg.SegmentId()));
   //ui->chkOneWay->setChecked("Y"== sql->getSegmentOneWay(segmentDlg.SegmentId()));
-  displaySegment(segmentDlg.SegmentId(), ui->txtSegment->text(), /*sql->getSegmentOneWay(segmentDlg.newSegmentId()), */"#b45f04", " ", true);
+  displaySegment(segmentDlg.SegmentId(), ui->txtSegment->text(),
+                 /*sql->getSegmentOneWay(segmentDlg.newSegmentId()), */"#b45f04",
+                 " ", true);
 
   // display the new segment
   ui->txtSegment->setText(sql->getSegmentDescription(segmentDlg.newSegmentId()));
   //ui->chkOneWay->setChecked("Y" == sql->getSegmentOneWay(segmentDlg.newSegmentId()));
 
-  displaySegment(segmentDlg.newSegmentId(), ui->txtSegment->text(), /*sql->getSegmentOneWay(segmentDlg.newSegmentId()), */"#b45f04", " ", false);
+  displaySegment(segmentDlg.newSegmentId(), ui->txtSegment->text(),
+                 /*sql->getSegmentOneWay(segmentDlg.newSegmentId()), */"#b45f04",
+                 " ", false);
 
   ui->btnFirst->setEnabled(true);
   ui->btnNext->setEnabled(true);
@@ -3037,7 +3041,9 @@ void MainWindow::btnSplit_Clicked()    // SLOT
 /// <param name="oneWay"></param>
 /// <param name="color"></param>
 /// <param name="bClearFirst">true to clear the line first</param>
-void MainWindow::displaySegment(qint32 segmentId, QString segmentName, /*QString oneWay,*/ QString color, QString trackUsage, bool bClearFirst)
+void MainWindow::displaySegment(qint32 segmentId, QString segmentName,
+                                /*QString oneWay,*/ QString color, QString trackUsage,
+                                bool bClearFirst)
 {
     SegmentInfo sd = sql->getSegmentInfo(segmentId);
     sd.displaySegment(ui->dateEdit->text(),color, trackUsage, bClearFirst);
@@ -3069,14 +3075,14 @@ void MainWindow::cbSegmentsSelectedValueChanged(SegmentInfo si)
     updateSegmentInfoDisplay(si);
 
     //routeDlg->setSegmentId( m_segmentId);
-    SegmentData sd = SegmentData(si);
-    sd.setRoute(_rd.route());
-    sd.setAlphaRoute(_rd.alphaRoute());
-    sd.setRouteName(_rd.routeName());
-    sd.setStartDate(_rd.startDate());
-    sd.setEndDate(_rd.endDate());
-    sd.setTractionType(_rd.tractionType());
-    sd.setCompanyKey(_rd.companyKey());
+    SegmentData* sd = new SegmentData(ui->ssw->segmentSelected());
+    sd->setRoute(_rd.route());
+    sd->setAlphaRoute(_rd.alphaRoute());
+    sd->setRouteName(_rd.routeName());
+    sd->setStartDate(_rd.startDate());
+    sd->setEndDate(_rd.endDate());
+    sd->setTractionType(_rd.tractionType());
+    sd->setCompanyKey(_rd.companyKey());
 
     routeDlg->setSegmentData(sd);
 
@@ -3100,8 +3106,9 @@ void MainWindow::cbSegmentsSelectedValueChanged(SegmentInfo si)
         m_bridge->processScript("setCenter", objArray);
     }
 
-
-    displaySegment(m_segmentId, ui->txtSegment->text(), /*sd.oneWay(),*/ /*sd.oneWay()=="Y" ? "#00FF00" :*/ "#045fb4", " ", true);
+    displaySegment(m_segmentId, ui->txtSegment->text(),
+                   /*sd.oneWay(),*/ /*sd.oneWay()=="Y" ? "#00FF00" :*/
+                   "#045fb4", " ", true);
 
 #if 0
     // Display Start and end markers
@@ -3404,7 +3411,9 @@ void MainWindow::updateIntersection(qint32 i, double newLat, double newLon)
   else
    movePoint(m_segmentId, m_nbrPoints -1, newLat, newLon);
   //displaySegment(sd.SegmentId, sql->getSegmentDescription(si.SegmentId), oneWay, oneWay == "N" ? "#00FF00" : "#045fb4", true);
-  displaySegment(sd.segmentId(), sd.description(), /*sd.oneWay(),*/ /*sd.oneWay() == "N" ? "#00FF00" : */"#045fb4", " ",  true);
+  displaySegment(sd.segmentId(), sd.description(),
+                 /*sd.oneWay(),*/ /*sd.oneWay() == "N" ? "#00FF00" : */
+                 "#045fb4", " ",  true);
  }
  m_segmentId = currSegment;
 }
@@ -3896,7 +3905,8 @@ void MainWindow::segmentChanged(qint32 changedSegment, qint32 newSegment)
     {
      SegmentInfo sd = sql->getSegmentInfo(newSegment);
 
-     displaySegment(newSegment, sd.description(), /*sd.oneWay(),*/ m_segmentColor, " ", true);
+     displaySegment(newSegment, sd.description(), /*sd.oneWay(),*/
+                    m_segmentColor, " ", true);
     }
 }
 
@@ -3964,7 +3974,8 @@ void MainWindow::RouteChanged(RouteChangedEventArgs args)
 //        webBrowser1.Document.InvokeScript("clearPolyline", objArray); // clears the old line
   m_bridge->processScript("clearPolyline", QString("%1").arg(args.routeSegment));
   //SegmentInfo si = sql->getSegmentInfo(args.routeSegment);
-  displaySegment(args.routeSegment, rd.routeName(), /*rd.oneWay,*/ /*ttColors[e.tractionType]*/getColor(args.tractionType), " ", true);
+  displaySegment(args.routeSegment, rd.routeName(),
+                 /*rd.oneWay,*/ /*ttColors[e.tractionType]*/getColor(args.tractionType), " ", true);
  }
  routeView->updateRouteView();
  ui->tabWidget->setCurrentIndex(0);
@@ -4006,6 +4017,16 @@ void MainWindow::addRoute()
 {
     if(routeDlg == 0)
         routeDlg = new RouteDlg(this);
+    if(!ui->ssw->cbSegments()->currentIndex()>0)
+    {
+     QMessageBox::warning(this, tr("No Segment"), tr("In order to create a newRoute, an existing segment must be selected."));
+     return;
+    }
+    else
+    {
+     SegmentData* sd = new SegmentData(ui->ssw->segmentSelected());
+     routeDlg->setSegmentData(sd);
+    }
     routeDlg->setAddMode(true);
     routeDlg->show();
     routeDlg->raise();

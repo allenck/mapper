@@ -13,6 +13,7 @@ class MyTractionTypesTableModel : public QSqlTableModel
     Q_OBJECT
 public:
     MyTractionTypesTableModel(QObject *parent = 0, QSqlDatabase db = QSqlDatabase());
+    Qt::ItemFlags flags(const QModelIndex &index) const;
 
 protected:
     QVariant data(const QModelIndex &index, int role) const;

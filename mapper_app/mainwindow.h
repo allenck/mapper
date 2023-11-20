@@ -202,6 +202,7 @@ public slots:
     void addModeToggled(bool isChecked);
     void showGoogleMapFeatures(bool);
     void btnDisplayRouteClicked();
+    void segmentChanged(qint32 changedSegment, qint32 newSegment);
 
 private slots:
     void about();
@@ -240,7 +241,6 @@ private slots:
     void deleteRoute();
     void updateRoute(SegmentData* sd = nullptr);
     void updateTerminals();
-    void segmentChanged(qint32 changedSegment, qint32 newSegment);
     void segmentDlg_routeChanged(RouteChangedEventArgs);
     void RouteChanged(RouteChangedEventArgs args);
     void btnDeleteSegment_Click();

@@ -363,7 +363,7 @@ SegmentData SegmentSelectionWidget::segmentSelected()
 {
  int m_SegmentId = ui->cbSegments->currentData().toInt();
  OtherRouteView::instance()->showRoutesUsingSegment(m_SegmentId);
- currSd = sql->getSegmentInfo(m_SegmentId);
+ currSd = SegmentData(sql->getSegmentInfo(m_SegmentId));
  return currSd;
 }
 

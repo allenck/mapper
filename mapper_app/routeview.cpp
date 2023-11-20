@@ -136,17 +136,6 @@ RouteView::RouteView(QObject* parent )
     });
     connect(ui, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tablev_customContextMenu(QPoint)));
 
-
-//    showColumnsAct = new QAction(tr("Hide extra columns"),this);
-//    showColumnsAct->setCheckable(true);
-//    connect(showColumnsAct, &QAction::toggled, [=]{
-//     bool b = showColumnsAct->isChecked();
-//     ui->setColumnHidden(RouteViewTableModel::NEXT, b);
-//     ui->setColumnHidden(RouteViewTableModel::PREV, b);
-//     ui->setColumnHidden(RouteViewTableModel::SEQ, b);
-//     ui->setColumnHidden(RouteViewTableModel::RSEQ, b);
-//    });
-
     hideColumnAct = new QAction(tr("Hide Column"),this);
     connect(hideColumnAct, &QAction::triggered, [=]{
      QItemSelectionModel * model = ui->selectionModel();
@@ -228,10 +217,20 @@ RouteView::RouteView(QObject* parent )
     ui->setColumnWidth(RouteViewTableModel::TRACKS, 5);
     ui->hideColumn(sourceModel->NAME);
     ui->horizontalHeader()->restoreState(config->rv.state);
-//    for(int i=0; i < config->rv.hiddenColumns.size(); i++)
-//     ui->hideColumn(config->rv.hiddenColumns.at(i).toInt());
-//    for(int i=0; i < config->rv.movedColumns.size(); i++)
-//     ui->horizontalHeader()->moveSection(i,config->rv.movedColumns.at(i).toInt() );
+    config->rv.hiddenColumns.clear();
+    for(int i=0; i < sourceModel->columnCount(QModelIndex()); i++)
+    {
+     if(ui->horizontalHeader()->isSectionHidden(i))
+     {
+      if(!config->rv.hiddenColumns.contains(QVariant(i)))
+       config->rv.hiddenColumns.append(QVariant(i));
+     }
+     else
+     {
+      if(config->rv.hiddenColumns.contains(QVariant(i)))
+       config->rv.hiddenColumns.removeOne(QVariant(i));
+     }
+    }
 
     connect(WebViewBridge::instance(), SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(on_segmentSelected(int,int)));
 

@@ -76,10 +76,13 @@ void RouteViewTableModel::routeChange(SQL::ROUTECHANGETYPE type, SegmentData sd)
   beginInsertRows(QModelIndex(), listOfSegments.count(), listOfSegments.count());
   listOfSegments.append(&sd);
   endInsertRows();
+  MainWindow::instance()->segmentChanged(0, sd.segmentId());
  }
  else
  {
   listOfSegments.replace(row,&sd);
+  MainWindow::instance()->segmentChanged(sd.segmentId(), sd.segmentId());
+
  }
 }
 

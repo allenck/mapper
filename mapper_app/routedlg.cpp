@@ -974,7 +974,9 @@ void RouteDlg::checkUpdate(QString func)
         ui->lblHelpText->setText(tr("no route number"));
         return;
     }
-    if((ui->cbRouteName->currentIndex() < 1 && (ui->cbRouteName->currentText() == "" || ui->cbRouteName->currentText() == strNoRoute )) || ui->cbRouteName->currentIndex() < 0)
+    if((ui->cbRouteName->currentIndex() < 1 && (ui->cbRouteName->currentText() == ""
+                                            || ui->cbRouteName->currentText() == strNoRoute ))
+                                            || ui->cbRouteName->currentIndex() < 0)
     {
         ui->btnAdd->setEnabled(false);
         ui->btnDelete->setEnabled(false);
@@ -1901,7 +1903,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
 
   myParent->On_displayRoute(_rd);
   fillSegmentsComboBox();
-  //this->setVisible(false);
+  this->setVisible(false);
  }
  catch(Exception)
  {

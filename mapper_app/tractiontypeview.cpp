@@ -95,6 +95,11 @@ bool MyTractionTypesTableModel::setData(const QModelIndex &index, const QVariant
  return QSqlTableModel::setData( index, value, role );
 }
 
+Qt::ItemFlags MyTractionTypesTableModel::flags(const QModelIndex &index) const
+{
+ return Qt::ItemIsEnabled | Qt::ItemIsEditable;
+}
+
 void TractionTypeView::clear()
 {
  model->clear();

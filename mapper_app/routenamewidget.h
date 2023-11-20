@@ -20,7 +20,7 @@ class RouteNameWidget : public QWidget
   void setRouteData(RouteData *rd);
   int newRoute() {return _routeNbr;}
   QString newRouteName();
-  bool newRouteNbr() {return bNewRouteNbr;}
+  bool routeNbrMustBeAdded() {return bNewRouteNbr;} // true if entry to altRoute must be added
   void setHelpLabel(QLabel *lblHelpText ) {this->lblHelpText = lblHelpText;}
   void configure(SegmentData* sd,QLabel *lblHelpText);
   void configure(RouteData *rd, QLabel *lblHelpText);

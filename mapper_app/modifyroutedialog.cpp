@@ -92,9 +92,10 @@ void ModifyRouteDialog::btnOK_Click()
     sql->beginTransaction("RenameRoute");
     CompanyData* cd = sql->getCompany(rd.companyKey());
 
-    if(ui->rnw->newRouteNbr())
-     _routeNbr = sql->addAltRoute(ui->rnw->alphaRoute(), cd->routePrefix);
-
+    if(ui->rnw->routeNbrMustBeAdded())
+    {
+      sql->addAltRoute(ui->rnw->alphaRoute().toInt(), ui->rnw->alphaRoute());
+    }
     //foreach (routeData rd1 in myArray)
     for(int i=0; i < myArray.count(); i++)
     {
