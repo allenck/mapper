@@ -982,19 +982,19 @@ void MainWindow::createActions()
  addSegmentToRouteAct->setStatusTip(tr("Add segment to current route"));
  connect(addSegmentToRouteAct, &QAction::triggered, [=]{
 //     int ix = ui->cbSegments->currentIndex();
-     SegmentData sd = ui->ssw->segmentSelected();
-     sd.setRoute(_rd.route());
-     sd.setAlphaRoute(_rd.alphaRoute());
-     sd.setRouteName(_rd.routeName());
-     sd.setStartDate(_rd.startDate());
-     sd.setEndDate(_rd.endDate());
-     sd.setTractionType(_rd.tractionType());
-     sd.setCompanyKey(ui->cbCompany->currentData().toInt());
+     SegmentData *sd = new SegmentData(ui->ssw->segmentSelected());
+     sd->setRoute(_rd.route());
+     sd->setAlphaRoute(_rd.alphaRoute());
+     sd->setRouteName(_rd.routeName());
+     sd->setStartDate(_rd.startDate());
+     sd->setEndDate(_rd.endDate());
+     sd->setTractionType(_rd.tractionType());
+     sd->setCompanyKey(ui->cbCompany->currentData().toInt());
      QList<SegmentData*> conflicts
              = sql->getConflictingRouteSegments(_rd.route(), _rd.routeName(),
                                                 _rd.startDate().toString("yyyy/MM/dd"),
                                                 _rd.endDate().toString("yyyy/MM/dd"),
-                                                sd.segmentId());
+                                                sd->segmentId());
      if(conflicts.count())
      {
          QMessageBox::critical(this, tr("Conflict"), tr("The segment is already present"
@@ -1004,13 +1004,13 @@ void MainWindow::createActions()
      }
      if(!sql->addSegmentToRoute(sd))
      {
-      updateRoute(&sd);
+      updateRoute(sd);
       return;
      }
-        m_bridge->processScript("clearPolyline", QString("%1").arg(sd.segmentId()));
+        m_bridge->processScript("clearPolyline", QString("%1").arg(sd->segmentId()));
         //SegmentInfo si = sql->getSegmentInfo(segmentId);
-        displaySegment(sd.segmentId(), sd.description(),
-                       getColor(sd.tractionType()),
+        displaySegment(sd->segmentId(), sd->description(),
+                       getColor(sd->tractionType()),
                        " ", true);
 
  });
@@ -1741,13 +1741,13 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
         // Get all the segments intersecting both ends using the same point
         updateIntersection(0, sd.startLat(), sd.startLon());
         updateIntersection(0, sd.endLat(), sd.endLon());
-        SegmentData sdDup = sql->getSegmentInSameDirection(sd);
+        SegmentInfo siDup = sql->getSegmentInSameDirection(sd);
 
         // Get a list of all routes using this segment.
-        QList<SegmentData> segmentDataList = sql->getRouteSegmentsBySegment(sd.segmentId());
+        QList<SegmentData*> segmentDataList = sql->getRouteSegmentsBySegment(sd.segmentId());
         if ( segmentDataList.count() > 0)
         {
-            if ( sdDup.segmentId() >= 0)
+            if ( siDup.segmentId() >= 0)
             {
 //                DialogResult rslt = MessageBox.Show(segmentInfoList.Count + " routes are using this segment. A duplicate segment is defined.\n Move these routes to that segment?",
 //                    "Segment in use", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Hand);
@@ -1764,10 +1764,10 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
                         //foreach (routeData rd in segmentInfoList)
                     for(int i =0; i< segmentDataList.count(); i++)
                         {
-                        SegmentData rd = segmentDataList.at(i);
-                        if (sql->deleteRouteSegment(rd.route(), rd.routeName(), rd.segmentId(),
-                                                    rd.startDate().toString("yyyy/MM/dd"),
-                                                    rd.endDate().toString("yyyy/MM/dd")) != true)
+                        SegmentData *sd = new SegmentData(*segmentDataList.at(i));
+                        if (sql->deleteRouteSegment(sd->route(), sd->routeName(), sd->segmentId(),
+                                                    sd->startDate().toString("yyyy/MM/dd"),
+                                                    sd->endDate().toString("yyyy/MM/dd")) != true)
                             {
                                 //infoPanel.Text = "Delete Error";
                                 statusBar()->showMessage(tr("Delete failed"));
@@ -1776,15 +1776,15 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
                                 QApplication::beep();
                                 return;
                             }
-                        if (sql->doesRouteSegmentExist(rd.route(), rd.routeName(), sdDup.segmentId(),
-                                                       rd.startDate(), rd.endDate()))
+                        if (sql->doesRouteSegmentExist(sd->route(), sd->routeName(), siDup.segmentId(),
+                                                       sd->startDate(), sd->endDate()))
                                 continue;
 //                            if (!sql->addSegmentToRoute(rd.route(), rd.routeName(), rd.startDate(), rd.endDate(), sdDup.segmentId(),
 //                                                        rd.companyKey(),
 //                                                        rd.tractionType(), rd.direction(), rd.next(), rd.prev(), rd.normalEnter(),
 //                                                        rd.normalLeave(), rd.reverseEnter(), rd.reverseLeave(), rd.oneWay(), rd.trackUsage()))
-                        SegmentData sd1 = SegmentData(sd);
-                        sd1.setSegmentId(sdDup.segmentId());
+                        SegmentData *sd1 = new SegmentData(*sd);
+                        sd1->setSegmentId(siDup.segmentId());
                         if (!sql->addSegmentToRoute(sd))
                         {
                                 //infoPanel.Text = "Update Error";
@@ -4251,17 +4251,17 @@ void MainWindow::editConnections()
 
 void MainWindow::findDupSegments()
 {
-    QList<SegmentData> myArray;
+    QList<SegmentInfo> myArray;
     this->setCursor(QCursor(Qt::WaitCursor));
     //foreach(segmentInfo si in segmentInfoList)
-    foreach(SegmentData sd, cbSegmentInfoList)
+    foreach(SegmentInfo si, cbSegmentInfoList)
     {
 //        SegmentInfo si = cbSegmentInfoList.at(i);
-        SegmentData sdDup = sql->getSegmentInSameDirection(sd);
+        SegmentInfo siDup = sql->getSegmentInSameDirection(si);
 //        sdDup.next = si.segmentId;
 
-        if(sdDup.segmentId() > -1)
-            myArray.append(sdDup);
+        if(siDup.segmentId() > -1)
+            myArray.append(siDup);
         qApp->processEvents();
 
     }

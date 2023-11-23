@@ -10,8 +10,8 @@ RouteViewTableModel::RouteViewTableModel(QObject *parent) :
  bSelectedRowChanged = false;
  bIsSequenced = false;
  tractionTypes = SQL::instance()->getTractionTypes();
- connect(SQL::instance(), SIGNAL(routeChange(SQL::ROUTECHANGETYPE, SegmentData)),
-         SLOT(routeChange(SQL::ROUTECHANGETYPE, SegmentData)));
+ connect(SQL::instance(), SIGNAL(routeChange(NotifyRouteChange)),
+         SLOT(routeChange(NotifyRouteChange)));
 }
 
 RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtStart,
@@ -35,8 +35,8 @@ RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtSta
  endDate = dtEnd;
  startRow = -1;
  endRow = -1;
- connect(SQL::instance(), SIGNAL(routeChange(SQL::ROUTECHANGETYPE, SegmentData)),
-         SLOT(routeChange(SQL::ROUTECHANGETYPE, SegmentData)));
+ connect(SQL::instance(), SIGNAL(routeChange(NotifyRouteChange)),
+         SLOT(routeChange(NotifyRouteChange)));
 
  TerminalInfo ti = SQL::instance()->getTerminalInfo(route,name, endDate.toString("yyyy/MM/dd"));
  for(int i =0; i < listOfSegments.count(); i++)
@@ -52,37 +52,36 @@ RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtSta
 
 }
 
-void RouteViewTableModel::routeChange(SQL::ROUTECHANGETYPE type, SegmentData sd)
+void RouteViewTableModel::routeChange(NotifyRouteChange rc)
 {
  int row = -1;
  for(int i=0; i < listOfSegments.count(); i++)
  {
   SegmentData* sd1 = listOfSegments.at(i);
-  if(sd.route() == sd1->route() && sd.routeName()==sd1->routeName() && sd.segmentId()==sd1->segmentId()
-     && sd.startDate()==sd1->startDate() && sd.endDate()==sd1->endDate())
+  if(rc.sd()->route() == sd1->route() && rc.sd()->routeName()==sd1->routeName() && rc.sd()->segmentId()==sd1->segmentId()
+     && rc.sd()->startDate()==sd1->startDate() && rc.sd()->endDate()==sd1->endDate())
    row = i;
   break;
  }
- if(row == -1 && type != SQL::ADD)
+ if(row == -1 && rc.type() != SQL::ADD)
   return;
- if(type == SQL::DELETE)
+ if(rc.type() == SQL::DELETE)
  {
   beginRemoveRows(QModelIndex(), row, row);
   listOfSegments.removeAt(row);
   endRemoveRows();
  }
- else if(type == SQL::ADD)
+ else if(rc.type() == SQL::ADD)
  {
   beginInsertRows(QModelIndex(), listOfSegments.count(), listOfSegments.count());
-  listOfSegments.append(&sd);
+  listOfSegments.append(rc.sd());
   endInsertRows();
-  MainWindow::instance()->segmentChanged(0, sd.segmentId());
+  MainWindow::instance()->segmentChanged(0, rc.sd()->segmentId());
  }
  else
  {
-  listOfSegments.replace(row,&sd);
-  MainWindow::instance()->segmentChanged(sd.segmentId(), sd.segmentId());
-
+  listOfSegments.replace(row,rc.sd());
+  MainWindow::instance()->segmentChanged(rc.sd()->segmentId(), rc.sd()->segmentId());
  }
 }
 

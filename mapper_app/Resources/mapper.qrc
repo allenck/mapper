@@ -64,6 +64,5 @@
         <file>sql/create_stations.sql</file>
         <file>sql/mssql_create_stations.sql</file>
         <file>sql/mssql_recreateStationTable.sql</file>
-        <file>overlays.xml</file>
     </qresource>
 </RCC>

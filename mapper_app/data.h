@@ -609,7 +609,7 @@ class SegmentInfo
  bool _bNeedsUpdate;
  //int routeCount;
  //QString trackUsage;
-// int _next = -1; // needed for DupSegmentView
+ int _next = -1; // needed for DupSegmentView
 // int _prev = -1;
  QString _trackType = " ";
  QString _location;
@@ -693,6 +693,8 @@ class SegmentInfo
  }
  QString location() {return _location;}
  void setLocation(QString loc) {_location = loc;}
+ void setNext(int next){_next = next;}
+ int next() const {return _next;}
  friend class SegmentData;
 };
 

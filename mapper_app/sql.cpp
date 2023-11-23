@@ -5011,7 +5011,7 @@ bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 SegmentId,
         }
         SegmentData sd(route, name, SegmentId, QDate::fromString(startDate,"yyyy/MM/dd"),
                                                QDate::fromString(endDate,"yyyy/MM/dd"));
-        emit routeChange(DELETE, sd);
+        emit routeChange(NotifyRouteChange(DELETE, &sd));
 
         // Scan the remaining routes to find a new start and end date
         commandText = "select min(startDate), max(endDate) from Routes where lineKey = " + QString("%1").arg(SegmentId);
@@ -5072,15 +5072,15 @@ bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 SegmentId,
 }
 
 // TODO: add next, prev, seq,... etc
-bool SQL::addSegmentToRoute(SegmentData sd)
+bool SQL::addSegmentToRoute(SegmentData* sd)
 {
-  if(addSegmentToRoute( sd.route(), sd.routeName(), sd.startDate(),
-                            sd.endDate(), sd.segmentId(), sd.companyKey(),
-                            sd.tractionType(), sd.direction(), sd.next(), sd.prev(),
-                            sd.normalEnter(), sd.normalLeave(),
-                            sd.reverseEnter(), sd.reverseLeave(), sd.sequence(), sd.returnSeq(),
-                            sd.oneWay(), sd.trackUsage()))
-     emit routeChange(ADD, sd);
+  if(addSegmentToRoute( sd->route(), sd->routeName(), sd->startDate(),
+                            sd->endDate(), sd->segmentId(), sd->companyKey(),
+                            sd->tractionType(), sd->direction(), sd->next(), sd->prev(),
+                            sd->normalEnter(), sd->normalLeave(),
+                            sd->reverseEnter(), sd->reverseLeave(), sd->sequence(), sd->returnSeq(),
+                            sd->oneWay(), sd->trackUsage()))
+     emit routeChange(NotifyRouteChange(ADD, sd));
      return true;
 }
 
@@ -5970,9 +5970,9 @@ bool SQL::insertParameters(Parameters parms, QSqlDatabase db)
 /// </summary>
 /// <param name="route"></param>
 /// <returns></returns>
-QList<SegmentData> SQL::getRouteSegmentsBySegment(qint32 segmentId)
+QList<SegmentData*> SQL::getRouteSegmentsBySegment(qint32 segmentId)
 {
-    QList<SegmentData> myArray;
+    QList<SegmentData*> myArray;
 //    try
 //    {
         if(!dbOpen())
@@ -5994,22 +5994,22 @@ QList<SegmentData> SQL::getRouteSegmentsBySegment(qint32 segmentId)
         }
         while (query.next())
         {
-            SegmentData sd =  SegmentData();
-            sd._route = query.value(0).toInt();
-            sd._routeName = query.value(1).toString();
-            sd._startDate =query.value(2).toDate();
-            sd._endDate = query.value(3).toDate();
-            sd._segmentId = query.value(4).toInt();
-            sd._companyKey = query.value(5).toInt();
-            sd._tractionType = query.value(6).toInt();
-            sd._direction = query.value(7).toString();
-            sd._normalEnter = query.value(8).toInt();
-            sd._normalLeave = query.value(9).toInt();
-            sd._reverseEnter = query.value(10).toInt();
-            sd._reverseLeave = query.value(11).toInt();
-            sd._alphaRoute = query.value(12).toString();
-            QString rdStartDate= sd._startDate.toString("yyyy/MM/dd");
-            sd._oneWay = query.value(13).toString();
+            SegmentData *sd =  new SegmentData(SegmentData());
+            sd->_route = query.value(0).toInt();
+            sd->_routeName = query.value(1).toString();
+            sd->_startDate =query.value(2).toDate();
+            sd->_endDate = query.value(3).toDate();
+            sd->_segmentId = query.value(4).toInt();
+            sd->_companyKey = query.value(5).toInt();
+            sd->_tractionType = query.value(6).toInt();
+            sd->_direction = query.value(7).toString();
+            sd->_normalEnter = query.value(8).toInt();
+            sd->_normalLeave = query.value(9).toInt();
+            sd->_reverseEnter = query.value(10).toInt();
+            sd->_reverseLeave = query.value(11).toInt();
+            sd->_alphaRoute = query.value(12).toString();
+            QString rdStartDate= sd->_startDate.toString("yyyy/MM/dd");
+            sd->_oneWay = query.value(13).toString();
             myArray.append(sd);
         }
 //    }
@@ -6413,7 +6413,7 @@ bool SQL::doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QD
     return ret;
 }
 
-SegmentData SQL::getSegmentInSameDirection(SegmentData sdIn)
+SegmentInfo SQL::getSegmentInSameDirection(SegmentInfo sdIn)
 {
     sdIn._bearing = Bearing(sdIn._startLat, sdIn._startLon, sdIn._endLat, sdIn._endLon);
     SegmentInfo sd = SegmentInfo();
@@ -6429,13 +6429,13 @@ SegmentData SQL::getSegmentInSameDirection(SegmentData sdIn)
     //foreach (segmentData sdStart in startIntersects)
     for(int i= 0; i <startIntersects.count();i++)
     {
-        SegmentData sdStart = startIntersects.at(i);
+        SegmentInfo sdStart = startIntersects.at(i);
         if (sdStart._segmentId == sdIn._segmentId)
             continue;
         //foreach (segmentData sdEnd in endIntersects)
         for(int j=0; j <endIntersects.count(); j++)
         {
-            SegmentData sdEnd =endIntersects.at(j);
+            SegmentInfo sdEnd =endIntersects.at(j);
             if (sdEnd._segmentId == sdIn._segmentId)
                 continue;
             b = Bearing(sdEnd._startLat, sdEnd._startLon, sdEnd._endLat, sdEnd._endLon);
@@ -7212,7 +7212,7 @@ try
      {
          return -1;
      }
-     emit routeChange(MODIFY, sd1);
+     emit routeChange(NotifyRouteChange(MODIFY, &sd1));
 
      qDebug()<< "assume update was successful:" + commandText + "\n";
     }
@@ -7757,12 +7757,12 @@ bool SQL::modifyCurrentRoute(RouteData* rd, bool bStartDate, QDate dt)
   rows = query.numRowsAffected();
   if (rows > 0)
   {
-   SegmentData sd(*rd);
+   SegmentData* sd = new SegmentData(*rd);
    if(bStartDate)
-    sd.setStartDate(dt);
+    sd->setStartDate(dt);
    else
-    sd.setEndDate(dt);
-   routeChange(MODIFY, sd);
+    sd->setEndDate(dt);
+   routeChange(NotifyRouteChange(MODIFY, sd));
       ret = true;
   }
   // modify any routes that begin the day after or end the day before.
@@ -8034,7 +8034,7 @@ bool SQL::insertRouteSegment(SegmentData sd)
   SQLERROR(query);
   return false;
  }
- emit routeChange(ADD, sd);
+ emit routeChange(NotifyRouteChange(ADD, &sd));
  return true;
 }
 
@@ -8153,14 +8153,14 @@ bool compareSegmentInfo(const SegmentInfo & sd1, const SegmentInfo & sd2)
  return sd1.segmentId() < sd2.segmentId();
 }
 
-QList<SegmentData> SQL::getRoutes(qint32 segmentid)
+QList<SegmentData*> SQL::getRoutes(qint32 segmentid)
 {
-    SegmentInfo sd = getSegmentInfo(segmentid);  // get some info about the segment.
+    //SegmentInfo sd = getSegmentInfo(segmentid);  // get some info about the segment.
     //QList<SegmentData>  myArray;
     //compareSegmentDataClass compareSegments = new compareSegmentDataClass();
 
     // get a list of all the routes using this segment on this date
-    QList<SegmentData> segmentInfoList = getRouteSegmentsBySegment(segmentid);
+    QList<SegmentData*> segmentInfoList = getRouteSegmentsBySegment(segmentid);
 
     return segmentInfoList;
 }
@@ -8174,7 +8174,7 @@ QList<RouteIntersects> SQL::updateLikeRoutes(qint32 segmentid, qint32 route, QSt
     //compareSegmentDataClass compareSegments = new compareSegmentDataClass();
 
     // get a list of all the routes using this segment on this date
-    QList<SegmentData> segmentInfoList = getRouteSegmentsBySegment(segmentid);
+    QList<SegmentData*> segmentInfoList = getRouteSegmentsBySegment(segmentid);
 
     // get other segments intersecting with the start of this segment
     myArray = getIntersectingSegments(sd.startLat(), sd.startLon(), .020, sd.routeType());
@@ -8210,14 +8210,14 @@ QList<RouteIntersects> SQL::updateLikeRoutes(qint32 segmentid, qint32 route, QSt
     //foreach (routeData rdi in segmentInfoList)
     for(int i =0; i < segmentInfoList.count(); i++)
     {
-        SegmentData rdi = segmentInfoList.at(i);
+        SegmentData *sd1 = new SegmentData(*segmentInfoList.at(i));
         // Get my info
-        if (rdi.route() == route && rdi.routeName() == name && rdi.endDate().toString("yyyy/MM/dd") == date)
-            ri.sd = rdi;
+        if (sd1->route() == route && sd1->routeName() == name && sd1->endDate().toString("yyyy/MM/dd") == date)
+            ri.sd = *sd1;
         else
         {
             RouteIntersects ri2 =  RouteIntersects();
-            ri2.sd = rdi;
+            ri2.sd = *sd1;
             myArray = getIntersectingSegments(sd._startLat, sd._startLon, .020, sd._routeType);
             //foreach (segmentData sd1 in myArray)
             for(int i=0; i < myArray.count(); i++)
@@ -8230,7 +8230,7 @@ QList<RouteIntersects> SQL::updateLikeRoutes(qint32 segmentid, qint32 route, QSt
                     if (sd1._segmentId == mysd1._segmentId )
                     {
                         // select only those segments actually used.
-                        if (isRouteUsedOnDate(rdi.route(), sd1.segmentId(), rdi.endDate().toString("yyyy/MM/dd")))
+                        if (isRouteUsedOnDate(sd1.route(), sd1.segmentId(), sd1.endDate().toString("yyyy/MM/dd")))
                             ri2.startIntersectingSegments.append(sd1);
                     }
                 }
@@ -8247,7 +8247,7 @@ QList<RouteIntersects> SQL::updateLikeRoutes(qint32 segmentid, qint32 route, QSt
                     if (sd2._segmentId == mysd2._segmentId )
                     {
                         // select only those segments actually used
-                        if (isRouteUsedOnDate(rdi.route(), sd2.segmentId(), rdi.endDate().toString("yyyy/MM/dd")))
+                        if (isRouteUsedOnDate(sd1->route(), sd2.segmentId(), sd1->endDate().toString("yyyy/MM/dd")))
                             ri2.endIntersectingSegments.append(sd2);
                     }
                 }
@@ -9771,7 +9771,7 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd)
  rows = query.numRowsAffected();
  if (rows > 0)
  {
-  emit routeChange(MODIFY, sd);
+  emit routeChange(NotifyRouteChange(MODIFY, &sd));
   ret = true;
  }
  else
@@ -10024,19 +10024,19 @@ bool SQL::checkSegments()
   }
 
   // get list of routes using segment
-  QList<SegmentData> routeList = getRouteSegmentsBySegment(si.segmentId());
+  QList<SegmentData*> routeList = getRouteSegmentsBySegment(si.segmentId());
   if(!routeList.isEmpty())
   {
-   foreach(SegmentData sd, routeList)
+   foreach(SegmentData* sd, routeList)
    {
     bool bNeedsUpdate = false;
-    if(sd.direction() != si._direction)
+    if(sd->direction() != si._direction)
     {
-     sd.direction() = si._direction;
+     sd->direction() = si._direction;
       bNeedsUpdate = true;
     }
     if(bNeedsUpdate)
-       updateRoute(sd, sd);
+       updateRoute(*sd, *sd);
    }
   }
   else {

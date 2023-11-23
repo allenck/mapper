@@ -296,7 +296,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
          sd->setStartDate(ui->dateStart->date());
          sd->setEndDate(ui->dateEnd->date());
          sd->setTractionType(tractionType);
-         if(!sql->addSegmentToRoute(*sd))
+         if(!sql->addSegmentToRoute(sd))
             {
                 ui->lblHelp->setText(tr("add failed"));
                 //System.Media.SystemSounds.Asterisk.Play();
@@ -339,7 +339,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
             sd->setEndDate(ui->dateEnd->date());
             sd->setTractionType(tractionType);
             sd->setCompanyKey(((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey);
-            if(!sql->addSegmentToRoute(*sd))
+            if(!sql->addSegmentToRoute(sd))
             {
                 ui->lblHelp->setText(tr("add failed"));
                 //System.Media.SystemSounds.Asterisk.Play();
@@ -370,7 +370,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
              sd2->setRoute(_routeNbr);
              sd2->setRouteName(ui->txtRouteName->text());
              sd2->setEndDate(ui->dateStart->date().addDays(-1));
-             if(!sql->addSegmentToRoute(*sd2))
+             if(!sql->addSegmentToRoute(sd2))
                 {
                     ui->lblHelp->setText(tr("add failed"));
                     //System.Media.SystemSounds.Asterisk.Play();
@@ -387,7 +387,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
              sd2->setRoute(_routeNbr);
              sd2->setRouteName(ui->txtRouteName->text());
              sd2->setStartDate(ui->dateEnd->date().addDays(1));
-             if(!sql->addSegmentToRoute(*sd2))
+             if(!sql->addSegmentToRoute(sd2))
                 {
                     ui->lblHelp->setText(tr("add failed"));
                     //System.Media.SystemSounds.Asterisk.Play();
@@ -414,7 +414,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
             sd->setCompanyKey(((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey);
 
             sd->setTractionType(tractionType);
-            if(!sql->addSegmentToRoute(*sd))
+            if(!sql->addSegmentToRoute(sd))
             {
                 ui->lblHelp->setText(tr("add failed"));
                 //System.Media.SystemSounds.Asterisk.Play();

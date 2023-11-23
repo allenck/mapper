@@ -109,7 +109,6 @@ win32:{
 
 DISTFILES += \
     README.txt \
-    Resources/overlays.xml \
     Resources/scripts/createMsSqlDistance.sql \
     Resources/sql/addBiDirectionalToRoutes.sql \
     Resources/sql/create_stations.sql \

@@ -26,13 +26,15 @@ class RouteNameWidget : public QWidget
   void configure(RouteData *rd, QLabel *lblHelpText);
   QString alphaRoute() {return _alphaRoute;}
   void setRouteName(QString name);
+  void setAlphaRoute(QString);
 
  private slots:
   void txtRouteNbr_Leave();
   void txtRouteName_Leave();
 
  signals:
-  void routeNameChange();
+  void routeNameChanged(QString name);
+  void routeNumberChange(int route);
 
  private:
   Ui::RouteNameWidget *ui;

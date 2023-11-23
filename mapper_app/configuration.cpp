@@ -141,7 +141,7 @@ void Configuration::saveSettings()
  settings->beginGroup("routeView");
  settings->setValue("routeView_hidden_cols", rv.hiddenColumns);
  settings->setValue("routeView_moved_cols", rv.movedColumns);
- settings->setValue("routeView_state", rv.state);
+ //settings->setValue("routeView_state", rv.state);
  settings->endGroup();
 
 
@@ -391,7 +391,7 @@ void Configuration::getSettings()
    settings.beginGroup("routeView");
    rv.hiddenColumns = settings .value("routeView_hidden_cols").toList();
    rv.movedColumns = settings.value("routeView_moved_cols").toList();
-   rv.state = settings.value("routeView_state").toByteArray();
+   //rv.state = settings.value("routeView_state").toByteArray();
    settings.endGroup();
 
 

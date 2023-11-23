@@ -40,7 +40,7 @@ void DupSegmentView::Resize (int oldcount,int newcount)
     ui->resizeRowsToContents ();
 }
 
-void DupSegmentView::showDupSegments(QList<SegmentData> dupSegmentList)
+void DupSegmentView::showDupSegments(QList<SegmentInfo> dupSegmentList)
 {
     //SQL sql;
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
@@ -81,14 +81,14 @@ void DupSegmentView::showDupSegments(QList<SegmentData> dupSegmentList)
      msgBox.setDefaultButton(abortButton);
 
      QString detailedText;
-     QList<SegmentData> list = sql->getRouteSegmentsBySegment(dupSegmentId);
+     QList<SegmentData*> list = sql->getRouteSegmentsBySegment(dupSegmentId);
      if(list.count())
      {
       detailedText = detailedText + tr("segmentId %1 is used by routes:").arg(dupSegmentId);
-      foreach(SegmentData sd, list)
+      foreach(SegmentData* sd, list)
       {
-       detailedText = detailedText + tr("\n%1 %2 %3->%4").arg(sd.route()).arg(sd.routeName())
-         .arg(sd.startDate().toString("yyyy/MM/dd")).arg(sd.endDate().toString("yyyy/MM/dd"));
+       detailedText = detailedText + tr("\n%1 %2 %3->%4").arg(sd->route()).arg(sd->routeName())
+         .arg(sd->startDate().toString("yyyy/MM/dd")).arg(sd->endDate().toString("yyyy/MM/dd"));
       }
      }
      else
@@ -102,8 +102,8 @@ void DupSegmentView::showDupSegments(QList<SegmentData> dupSegmentList)
       detailedText = detailedText + tr("\n\nsegmentId %1 is used by routes:").arg(segmentId);
       for(int i=0; i < list.count(); i++)
       {
-       detailedText = detailedText + tr("\n%1 %2 %3->%4").arg(list.at(i).route()).arg(list.at(i).routeName()).
-         arg(list.at(i).startDate().toString("yyyy/MM/dd")).arg(list.at(i).endDate().toString("yyyy/MM/dd"));
+       detailedText = detailedText + tr("\n%1 %2 %3->%4").arg(list.at(i)->route()).arg(list.at(i)->routeName()).
+         arg(list.at(i)->startDate().toString("yyyy/MM/dd")).arg(list.at(i)->endDate().toString("yyyy/MM/dd"));
       }
      }
      else
@@ -153,7 +153,7 @@ void DupSegmentView::tablev_customContextMenu( const QPoint& pt)
         QModelIndex modelIndex = indexes.at(0);
         QModelIndex sourceModelIndex = ((QSortFilterProxyModel*)ui->model())->mapToSource(modelIndex);
         qint32 row = modelRow = sourceModelIndex.row();
-        QList<SegmentData> list = sourceModel->getList();
+        QList<SegmentInfo> list = sourceModel->getList();
         segmentId = list.at(row).segmentId();
         sd1 = list.at(row);
         dupSegmentId = list.at(row).next();
@@ -239,7 +239,7 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
 }
-dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentData> dupSegmentList, QObject *parent)
+dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentInfo> dupSegmentList, QObject *parent)
      : QAbstractTableModel(parent)
  {
      listOfSegments = dupSegmentList;
@@ -400,7 +400,7 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentData> dupSegment
      return QAbstractTableModel::flags(index);
  }
 
- QList< SegmentData > dupSegmentViewTableModel::getList()
+ QList< SegmentInfo > dupSegmentViewTableModel::getList()
  {
      return listOfSegments;
  }

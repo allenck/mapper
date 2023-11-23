@@ -83,7 +83,7 @@ void ModifyRouteTractionTypeDlg::btnOK_Click()      //SLOT
     }
     SegmentData sd1(sd);
     sd1.setEndDate(ui->dateEdit->date().addDays(-1));
-    if(!sql->addSegmentToRoute(sd1))
+    if(!sql->addSegmentToRoute(&sd1))
     {
      sql->rollbackTransaction("ModifyRouteTractionType");
      this->reject();
@@ -91,7 +91,7 @@ void ModifyRouteTractionTypeDlg::btnOK_Click()      //SLOT
     SegmentData sd2(sd);
     sd2.setStartDate(ui->dateEdit->date());
     sd2.setTractionType(ui->comboBox->currentData().toInt());
-    if(!sql->addSegmentToRoute(sd2))
+    if(!sql->addSegmentToRoute(&sd2))
     {
      sql->rollbackTransaction("ModifyRouteTractionType");
      this->reject();

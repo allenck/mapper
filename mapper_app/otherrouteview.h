@@ -29,7 +29,7 @@ class OtherRouteViewTableModel : public QAbstractTableModel
     Q_OBJECT
 public:
     explicit OtherRouteViewTableModel(QObject *parent = 0);
-    OtherRouteViewTableModel(QList<SegmentData> routeDataList, SegmentData sd, QObject *parent=0);
+    OtherRouteViewTableModel(QList<SegmentData*> routeDataList, SegmentData* sd, QObject *parent=0);
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
@@ -38,14 +38,14 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role=Qt::EditRole);
     bool insertRows(int position, int rows, const QModelIndex &index=QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index=QModelIndex());
-    QList<SegmentData> getList();
+    QList<SegmentData *> getList();
     void reset();
 signals:
 
 public slots:
 private:
-    QList<SegmentData> listOfRoutes;
-    SegmentData sd;
+    QList<SegmentData*> listOfRoutes;
+    SegmentData* sd;
     bool boolGetItemTableView(QTableView *table);
     QModelIndex currentIndex;
 
@@ -79,7 +79,7 @@ private:
     static OtherRouteView* _instance;
     QMenu menu;
     QAction* displayRouteAct;
-    SegmentData sd;
+    SegmentData* sd;
     int curRow, curCol;
     bool boolGetItemTableView(QTableView *table);
     QModelIndex currentIndex;

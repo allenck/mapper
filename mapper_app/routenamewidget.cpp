@@ -10,11 +10,17 @@ RouteNameWidget::RouteNameWidget(QWidget *parent) :
  config = Configuration::instance();
  connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbr_Leave()));
  connect(ui->cbRouteName->lineEdit(), SIGNAL(editingFinished()),this, SLOT(txtRouteName_Leave()));
+ connect(ui->cbRouteName, SIGNAL(currentTextChanged(QString)), this, SLOT(txtRouteName_Leave()));
 }
 
 RouteNameWidget::~RouteNameWidget()
 {
  delete ui;
+}
+
+void RouteNameWidget::setAlphaRoute(QString s)
+{
+ ui->txtRouteNbr->setText(s);
 }
 
 void RouteNameWidget::setCompanyKey(int companyKey)
@@ -25,11 +31,15 @@ void RouteNameWidget::setCompanyKey(int companyKey)
 void RouteNameWidget::setSegmentData(SegmentData* sd)
 {
  this->sd = sd;
+ ui->txtRouteNbr->setText(_alphaRoute = QString::number(sd->route()));
+ ui->cbRouteName->setCurrentText(sd->routeName());
 }
 
 void RouteNameWidget::setRouteData(RouteData* rd)
 {
  this->rd = rd;
+ ui->txtRouteNbr->setText(rd->alphaRoute());
+ ui->cbRouteName->setCurrentText(rd->routeName());
 }
 
 void RouteNameWidget::setRouteName(QString name)
@@ -41,7 +51,9 @@ void RouteNameWidget::configure(SegmentData* sd, QLabel *lblHelpText)
 {
  this->sd = sd;
  this->lblHelpText = lblHelpText;
- ui->txtRouteNbr->setText(QString::number(sd->route()));
+ if(sd == nullptr)
+  return;
+ ui->txtRouteNbr->setText(_alphaRoute = QString::number(sd->route()));
  ui->cbRouteName->setCurrentText(sd->routeName());
 }
 
@@ -50,7 +62,7 @@ void RouteNameWidget::configure(RouteData* rd, QLabel *lblHelpText)
  this->companyKey = rd->companyKey();
  this->rd = rd;
  this->lblHelpText = lblHelpText;
- ui->txtRouteNbr->setText(QString::number(rd->route()));
+ ui->txtRouteNbr->setText(_alphaRoute = QString::number(rd->route()));
  ui->cbRouteName->setCurrentText(rd->routeName());
 }
 
@@ -99,6 +111,7 @@ void RouteNameWidget::txtRouteNbr_Leave()
     }
     else
      _routeNbr = newRoute;
+    emit routeNumberChange(_routeNbr);
 
     if (!config->currCity->bAlphaRoutes && !isNumeric)
     {
@@ -118,8 +131,8 @@ void RouteNameWidget::txtRouteNbr_Leave()
      rd->setRoute(_routeNbr);
      rd->setAlphaRoute(ui->txtRouteNbr->text());
     }
-    else
-     throw IllegalArgumentException("configure error");
+//    else
+//     throw IllegalArgumentException("configure error");
 
     QList<QString> _routeNamesList = sql->getRouteNames(_routeNbr);
     ui->cbRouteName->clear();
@@ -185,6 +198,8 @@ void RouteNameWidget::txtRouteName_Leave()
     else if(rd)
      rd->setRouteName(ui->cbRouteName->currentText());
 
+    if(sd == nullptr)
+     return;
     QList<RouteData> rdList = sql->getRouteDataForRouteName(sd->route(), ui->cbRouteName->currentText());
     if (rdList.count()>0)
     {
@@ -232,7 +247,6 @@ void RouteNameWidget::txtRouteName_Leave()
 //                ui->dateEnd->setMaximumDate(parms.maxDate);
 //                ui->dateEnd->setMinimumDate(parms.minDate);
 //                displayDates(__FUNCTION__);
-              emit routeNameChange();
             }
         }
     }
@@ -241,9 +255,8 @@ void RouteNameWidget::txtRouteName_Leave()
 //        _rd = routeData();  // new route
 //        _rd.route = _routeNbr;
 //        _rd.name = ui->cbRouteName->currentText();
-
     }
 
     //checkUpdate(__FUNCTION__);
-
+    emit routeNameChanged(ui->cbRouteName->currentText());
 }

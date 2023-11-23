@@ -192,7 +192,7 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
      if (index.isValid() && role == Qt::EditRole) {
          int row = index.row();
 
-         SegmentData si = listOfSegments.value(row);
+         SegmentData sd = listOfSegments.value(row);
 
 //         switch (index.column())
 //             p.first = value.toString();
@@ -201,7 +201,7 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
 //         else
 //             return false;
 
-         listOfSegments.replace(row, si);
+         listOfSegments.replace(row, sd);
          emit(dataChanged(index, index));
 
          return true;

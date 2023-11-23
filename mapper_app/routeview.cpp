@@ -37,6 +37,7 @@ RouteView::RouteView(QObject* parent )
 //        });
     }
     ui->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+    //ui->horizontalHeader()->restoreState(config->rv.state);
     connect(ui->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tablev_customContextMenu(QPoint)));
 
     ui->setAlternatingRowColors(true);
@@ -47,7 +48,7 @@ RouteView::RouteView(QObject* parent )
      {
       config->rv.movedColumns.append(ui->horizontalHeader()->logicalIndex(i));
      }
-     config->rv.state = ui->horizontalHeader()->saveState();
+     //config->rv.state = ui->horizontalHeader()->saveState();
     });
 
     //m_myParent = myParent;
@@ -144,7 +145,7 @@ RouteView::RouteView(QObject* parent )
      ui->hideColumn(logicalIndex);
      if(!config->rv.hiddenColumns.contains(logicalIndex))
       config->rv.hiddenColumns.append(logicalIndex);
-     config->rv.state = ui->horizontalHeader()->saveState();
+     //config->rv.state = ui->horizontalHeader()->saveState();
     });
 
 
@@ -216,7 +217,7 @@ RouteView::RouteView(QObject* parent )
     ui->setColumnWidth(RouteViewTableModel::DISTANCE, 29);
     ui->setColumnWidth(RouteViewTableModel::TRACKS, 5);
     ui->hideColumn(sourceModel->NAME);
-    ui->horizontalHeader()->restoreState(config->rv.state);
+    //ui->horizontalHeader()->restoreState(config->rv.state);
     config->rv.hiddenColumns.clear();
     for(int i=0; i < sourceModel->columnCount(QModelIndex()); i++)
     {

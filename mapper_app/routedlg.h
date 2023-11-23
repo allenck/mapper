@@ -90,8 +90,8 @@ private:
 
 private slots:
     void Form_Load();
-    void txtRouteNbr_Leave();
-    void txtRouteName_Leave();
+//    void txtRouteNbr_Leave();
+//    void txtRouteName_Leave();
     void cbSegments_SelectedIndexChanged(int i);
     void btnClose_click();
     void gbNormalEnter_Leave();

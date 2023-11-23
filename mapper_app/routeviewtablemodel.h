@@ -69,7 +69,7 @@ public slots:
     void getRows(int, int); // to get the row numbers that need to be highlighted
     //bool commitChanges();
     //void discardChanges();
-    void routeChange(SQL::ROUTECHANGETYPE type, SegmentData sd);
+    void routeChange(NotifyRouteChange rc);
 
 private:
      QList<SegmentData*> listOfSegments;

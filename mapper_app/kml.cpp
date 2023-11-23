@@ -221,7 +221,7 @@ QDomElement Kml::createPlacemark(QString oneWay)
  doc.save(stream,2);
 }
 
-QDomElement Kml::createArrow(SegmentData si)
+QDomElement Kml::createArrow(SegmentData sd)
 {
  QDomElement placemark = doc.createElement("Placemark");
  QDomElement name = doc.createElement("name" );
