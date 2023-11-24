@@ -5011,7 +5011,7 @@ bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 SegmentId,
         }
         SegmentData sd(route, name, SegmentId, QDate::fromString(startDate,"yyyy/MM/dd"),
                                                QDate::fromString(endDate,"yyyy/MM/dd"));
-        emit routeChange(NotifyRouteChange(DELETE, &sd));
+        emit routeChange(NotifyRouteChange(DELETESEG, &sd));
 
         // Scan the remaining routes to find a new start and end date
         commandText = "select min(startDate), max(endDate) from Routes where lineKey = " + QString("%1").arg(SegmentId);
@@ -5080,7 +5080,7 @@ bool SQL::addSegmentToRoute(SegmentData* sd)
                             sd->normalEnter(), sd->normalLeave(),
                             sd->reverseEnter(), sd->reverseLeave(), sd->sequence(), sd->returnSeq(),
                             sd->oneWay(), sd->trackUsage()))
-     emit routeChange(NotifyRouteChange(ADD, sd));
+     emit routeChange(NotifyRouteChange(ADDSEG, sd));
      return true;
 }
 
@@ -5885,7 +5885,7 @@ qint32 SQL::getRouteCompany(qint32 route)
 /// Retrieve the parameters for the web site
 /// </summary>
 /// <returns></returns>
-Parameters SQL::getParameters()
+Parameters SQL::getParameters(QSqlDatabase db)
 {
     Parameters parms = Parameters();
     QString alphaRoutes;
@@ -5893,7 +5893,7 @@ Parameters SQL::getParameters()
     {
         if(!dbOpen())
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        QSqlDatabase db = QSqlDatabase::database();
+        //QSqlDatabase db = QSqlDatabase::database();
 
         QString commandText = "select lat, lon, title, city, minDate, maxDate, alphaRoutes from Parameters";
         QSqlQuery query = QSqlQuery(db);
@@ -5940,6 +5940,41 @@ bool SQL::insertParameters(Parameters parms, QSqlDatabase db)
 
         QString commandText = "insert into Parameters (lat, lon, title, city, minDate, maxDate, alphaRoutes) "
                               " values (:lat, :lon, :title, :city, :minDate, :maxDate, :alphaRoutes)";
+        QSqlQuery query = QSqlQuery(db);
+        query.prepare(commandText);
+        query.bindValue(":lat", parms.lat);
+        query.bindValue(":lon", parms.lon);
+        query.bindValue(":title", parms.title);
+        query.bindValue(":city", parms.city);
+        query.bindValue(":minDate", parms.minDate);
+        query.bindValue(":maxDate", parms.maxDate);
+        query.bindValue(":alphaRoutes", (parms.bAlphaRoutes?'Y':'N'));
+        bool bQuery = query.exec();
+        if(!bQuery)
+        {
+            QSqlError err = query.lastError();
+            qDebug() << err.text() + "\n";
+            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+            return false;
+        }
+    }
+    catch (Exception e)
+    {
+        myExceptionHandler(e);
+    }
+    return true;
+}
+
+bool SQL::updateParameters(Parameters parms, QSqlDatabase db)
+{
+    try
+    {
+        if(!db.isOpen())
+            throw Exception(tr("database not open: %1").arg(__LINE__));
+        //QSqlDatabase db = QSqlDatabase::database();
+
+        QString commandText = "update Parameters set lat = :lat, lon=:lon, title=:title, city=:city, "
+                              "minDate = :minDate, maxDate= :maxDate, alphaRoutes = :alphaRoutes";
         QSqlQuery query = QSqlQuery(db);
         query.prepare(commandText);
         query.bindValue(":lat", parms.lat);
@@ -7212,7 +7247,7 @@ try
      {
          return -1;
      }
-     emit routeChange(NotifyRouteChange(MODIFY, &sd1));
+     emit routeChange(NotifyRouteChange(MODIFYSEG, &sd1));
 
      qDebug()<< "assume update was successful:" + commandText + "\n";
     }
@@ -7762,7 +7797,7 @@ bool SQL::modifyCurrentRoute(RouteData* rd, bool bStartDate, QDate dt)
     sd->setStartDate(dt);
    else
     sd->setEndDate(dt);
-   routeChange(NotifyRouteChange(MODIFY, sd));
+   routeChange(NotifyRouteChange(MODIFYSEG, sd));
       ret = true;
   }
   // modify any routes that begin the day after or end the day before.
@@ -8034,7 +8069,7 @@ bool SQL::insertRouteSegment(SegmentData sd)
   SQLERROR(query);
   return false;
  }
- emit routeChange(NotifyRouteChange(ADD, &sd));
+ emit routeChange(NotifyRouteChange(ADDSEG, &sd));
  return true;
 }
 
@@ -9771,7 +9806,7 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd)
  rows = query.numRowsAffected();
  if (rows > 0)
  {
-  emit routeChange(NotifyRouteChange(MODIFY, &sd));
+  emit routeChange(NotifyRouteChange(MODIFYSEG, &sd));
   ret = true;
  }
  else

@@ -138,83 +138,51 @@ public:
 
 class Bounds : public QObject
 {
-  Q_OBJECT
+     Q_OBJECT
  public:
- Bounds();
- Bounds(LatLng sw, LatLng ne);
- Bounds(QString bnds);
- ~Bounds();
- Bounds(const Bounds& other);
- static Bounds fromPointList(QList<LatLng>);
- bool isValid();
- bool checkValid();
- bool updateBounds(LatLng pt);
- bool updateBounds(Bounds bnds);
- void setBottomLeft(LatLng pt) {_swPt = pt;}
- void setTopRight(LatLng pt){_nePt = pt;};
- void operator=(const Bounds& other){
-  _swPt = other._swPt;
-  _nePt = other._nePt;
-  _neLat = other._neLat;
-  _neLon = other._neLon;
-  _swLat = other._swLat;
-  _swLon = other._swLon;
-  bBoundsValid = other.bBoundsValid;
- }
+     Bounds();
+     Bounds(LatLng sw, LatLng ne);
+     Bounds(QString bnds);
+     ~Bounds();
+     Bounds(const Bounds& other);
+     static Bounds fromPointList(QList<LatLng>);
+     bool isValid();
+     bool checkValid();
+     bool updateBounds(LatLng pt);
+     bool updateBounds(Bounds bnds);
+     void setBottomLeft(LatLng pt) {_swPt = pt;}
+     void setTopRight(LatLng pt){_nePt = pt;};
+     void operator=(const Bounds& other){
+      _swPt = other._swPt;
+      _nePt = other._nePt;
+      _neLat = other._neLat;
+      _neLon = other._neLon;
+      _swLat = other._swLat;
+      _swLon = other._swLon;
+      bBoundsValid = other.bBoundsValid;
+     }
 
- LatLng swPt() const;
- LatLng nePt() const;
- QString toString();
- bool contains(const LatLng &p) const;
- bool contains(const Bounds &b) const;
-
- LatLng center();
-// QString swLat() {s_swLat = QString::number(_swLat); return s_swLat;}
-// QString swLon() {s_swLon = QString::number(_swLat); return s_swLon;}
-// QString neLat() {s_neLat = QString::number(_neLat); return s_neLat;}
-// QString neLon() {s_neLon = QString::number(_neLon); return s_neLon;}
-
-// void set_swLat(double val) {s_swLat = QString::number(val); _swLat = val; }
-// void set_swLon(double val) {s_swLon = QString::number(val); _swLon = val; }
-// void set_neLat(double val) {s_neLat = QString::number(val); _neLat = val; }
-// void set_neLon(double val) {s_neLon = QString::number(val); _neLon = val; }
-// QString  s_swLat, s_swLon, s_neLat, s_neLon;
-
+     LatLng swPt() const;
+     LatLng nePt() const;
+     QString toString();
+     bool contains(const LatLng &p) const;
+     bool contains(const Bounds &b) const;
+     LatLng center();
 
  private:
- LatLng _swPt;
- LatLng _nePt;
- bool bBoundsValid;
- //float _swLat, _swLon, _neLat, _neLon;
- double _neLat, _neLon, _swLat, _swLon;
- QStringList sl;
-// friend QDataStream& operator<<(QDataStream& out, const Bounds& v) {
-//     out << v.swLat() << v.swLon() << v.neLat() << v.neLon();
-//     return out;
-// }
-
-// friend QDataStream& operator>>(QDataStream& in, Bounds& v) {
-//     in >> v.s_swLat >> v.s_swLon >> v.s_neLat >> v.s_neLon;
-
-//     return in;
-// }
-
+     LatLng _swPt;
+     LatLng _nePt;
+     bool bBoundsValid;
+     //float _swLat, _swLon, _neLat, _neLon;
+     double _neLat, _neLon, _swLat, _swLon;
+     QStringList sl;
 };
 Q_DECLARE_METATYPE(Bounds)
-//inline QDataStream& operator<<(QDataStream& out, const Bounds& v) {
-//    out << v.swLat() << v.swLon() << v.neLat() << v.neLon();
-//    return out;
-//}
 
-//inline QDataStream& operator>>(QDataStream& in, Bounds& v) {
-//    in >> v.s_swLat >> v.s_swLon >> v.s_neLat >> v.s_neLon;
-
-//    return in;
-//}
 class RouteData;
 class SegmentData
 {
-public:
+ public:
     //explicit segmentData(QObject *parent = 0);
     SegmentData();
     SegmentData(int route, QString name, int segmentId, QDate startDate, QDate endDate);

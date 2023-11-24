@@ -547,6 +547,7 @@ SegmentInfo::SegmentInfo(const SegmentInfo& o)
  _trackType = o._trackType;
  _location = o._location;
 }
+
 SegmentInfo::SegmentInfo(const SegmentData& o)
 {
  _description = o._description;
@@ -891,8 +892,10 @@ bool Bounds::contains(const Bounds &b) const
 }
 
 LatLng Bounds::center() {
- //QRectF rect(_swPt.lon(),_nePt.lat(),(_nePt.lon() - _swPt.lon()),(_nePt.lat()-_swPt.lat()));
- QRectF rect(QPointF(_swPt.lon(),_nePt.lat()), QPointF(_swPt.lon(), _nePt.lat())); // top left pt, bottom right pt
+// QPoint topLeft(_swPt.lon(), _nePt.lat());
+// QPoint bottomRight(_nePt.lon(), _swPt.lat());
+ QRectF rect(QPointF(_swPt.lon(), _nePt.lat()),
+             QPointF(_nePt.lon(), _swPt.lat())); // top left pt, bottom right pt
  QPointF ctr(rect.center());
  return LatLng(ctr.y(), ctr.x());
 }

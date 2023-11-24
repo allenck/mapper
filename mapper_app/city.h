@@ -15,13 +15,13 @@ class City : public QObject
  Q_OBJECT
 public:
  explicit City(QObject *parent = nullptr);
-    qint32 id;
+    qint32 id =0;
  QList<Connection*> connections;
  QT_DEPRECATED QStringList connectionNames;
  QMap<QString, Connection*> connectionMap;
  qint32 curConnectionId = 0;
  qint32 curExportConnId =-1;
- qint32 curOverlayId;
+ qint32 curOverlayId =0;
  LatLng center;
  QString mapType = "roadmap";
  qint32 zoom =8;
@@ -53,6 +53,10 @@ public:
   _name = name;
   else
    throw IllegalArgumentException("city name is protected");
+ }
+ void setNameOverride(QString name)
+ {
+     _name = name;
  }
  QString name() {return _name;}
  void setCenter(LatLng center);

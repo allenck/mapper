@@ -590,6 +590,7 @@ bool QueryDialog::processALine(QString txt, QString tabName)
     sm->setSourceModel(query_view_model);
     query_view->setModel(sm);
     query_view->setSortingEnabled(true);
+    query_view->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
     sm->sort(-1,Qt::AscendingOrder);
     QString tabTitle;
     if(!tabName.isEmpty())
@@ -896,6 +897,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   if(currTabIndex<1)
    return;   // no results present
   QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
+  view->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
   QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel *>(view->model());
   if(qobject_cast<QueryModel*>(proxyModel->sourceModel()))
   {

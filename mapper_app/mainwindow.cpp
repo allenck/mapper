@@ -1208,7 +1208,10 @@ void MainWindow::createActions()
 
  setCityBoundsAct = new QAction(tr("Set City Bounds"),this);
  setCityBoundsAct->setStatusTip(tr("Set the display bounds for thiis city/region"));
- connect(setCityBoundsAct, &QAction::triggered, [=]{config->currCity->setCityBounds(m_bridge);});
+ connect(setCityBoundsAct, &QAction::triggered, [=]{
+     config->currCity->setCityBounds(m_bridge);
+
+  });
 
  setInspectedPageAct = new QAction(tr("Inspect page"),this);
  connect(setInspectedPageAct, &QAction::triggered, [=]{
@@ -1648,6 +1651,10 @@ void MainWindow::newCity(QAction* act )
     displayRouteCommentsAct->setChecked(bDisplayRouteComments);
     geocoderRequestAct->setChecked(config->currCity->bGeocoderRequest);
     m_bridge->processScript("setGeocoderRequest", config->currCity->bGeocoderRequest?"true":"false");
+
+    objArray.clear();
+    objArray << 0 << m_latitude<<m_longitude<<7<<"pointO"<<m_segmentId;
+     m_bridge->processScript("addMarker",objArray);
 
     for(int i=0; i< routeList.count(); i++)
     {

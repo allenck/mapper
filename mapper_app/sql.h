@@ -43,11 +43,10 @@ class SQL : public QObject
 public:
  static SQL* instance();
     bool dbOpen();
-    enum ROUTECHANGETYPE
-    {
-     ADD,
-     DELETE,
-     MODIFY
+    enum ROUTECHANGETYPE {
+     ADDSEG,
+     DELETESEG,
+     MODIFYSEG
     };
     bool isTransactionActive();
     QList<RouteData> routeList;
@@ -128,8 +127,9 @@ public:
     Q_DECL_DEPRECATED void setConfig(Configuration *config);
     QList<QString> getRouteNames(qint32 route);
     qint32 getRouteCompany(qint32 route);
-    Parameters getParameters();
+    Parameters getParameters(QSqlDatabase db = QSqlDatabase::database());
     bool insertParameters(Parameters, QSqlDatabase db);
+    bool updateParameters(Parameters parms, QSqlDatabase db= QSqlDatabase::database());
     QList<SegmentData *> getRouteSegmentsBySegment(qint32 segmentId);
     QList<SegmentData> getRouteSegmentsBySegment(int route, qint32 segmentId);
     QList<SegmentData> getRouteSegmentsForRouteNbr(QString route);

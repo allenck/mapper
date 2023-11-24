@@ -63,15 +63,15 @@ void RouteViewTableModel::routeChange(NotifyRouteChange rc)
    row = i;
   break;
  }
- if(row == -1 && rc.type() != SQL::ADD)
+ if(row == -1 && rc.type() != SQL::ADDSEG)
   return;
- if(rc.type() == SQL::DELETE)
+ if(rc.type() == SQL::DELETESEG)
  {
   beginRemoveRows(QModelIndex(), row, row);
   listOfSegments.removeAt(row);
   endRemoveRows();
  }
- else if(rc.type() == SQL::ADD)
+ else if(rc.type() == SQL::ADDSEG)
  {
   beginInsertRows(QModelIndex(), listOfSegments.count(), listOfSegments.count());
   listOfSegments.append(rc.sd());

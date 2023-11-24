@@ -300,6 +300,8 @@ void EditConnectionsDlg::cbCitiesSelectionChanged(int sel)
 void EditConnectionsDlg::cbCitiesTextChanged(QString text)
 {
     bCbCitiesTextChanged = true;
+    if(ui->cbCities->isEditable())
+        return;
     if(ui->cbCities->currentIndex() < ui->cbCities->count())
     {
         ui->cbCities->setCurrentIndex(ui->cbCities->count()-1);
@@ -710,7 +712,6 @@ void EditConnectionsDlg::btnSaveClicked()
    if(!config->cityList.contains(currCity))
        config->addCity(currCity);
 
-
    connection->setDescription(ui->cbConnections->currentText());
    connection->setDriver(ui->cbDriverType->currentText());
    connection->setServerType(ui->cbDbType->currentText());
@@ -899,7 +900,7 @@ void EditConnectionsDlg::cbConnectionsLeave()
 }
 
 void EditConnectionsDlg::newConnection(){
-    ui->btnNew->setEnabled(true);
+    ui->btnNew->setEnabled(false);
     ui->btnSave->setEnabled(false);
     ui->cbDriverType->setCurrentIndex(0); //QSQLITE
     ui->txtDbOrDSN->setText("");
@@ -910,8 +911,23 @@ void EditConnectionsDlg::newConnection(){
     ui->lblHelp->setText("");
     ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
     ui->cbDbType->setCurrentIndex(2); // Sqlite
+    ui->cbCities->setEditable(true);
+    ui->cbCities->setCurrentText("");
+    ui->cbCities->lineEdit()->setPlaceholderText(tr("enter a city name. e.g. 'St Louis, MO'"));
     connection = new Connection();
-    connection->setCityName(currCity->name());
+    //connection->setCityName(currCity->name());
+    connect(ui->cbCities->lineEdit(), &QLineEdit::editingFinished, [=] {
+        QString cityName = ui->cbCities->lineEdit()->text();
+        if(!config->cityMap.contains(cityName))
+        {
+          City* newCity = new City();
+          newCity->setName(cityName);
+          ui->cbCities->addItem(newCity->name(), VPtr<City>::asQVariant(newCity));
+          currCity = newCity;
+          connection->setCityName(cityName);
+        }
+    });
+    populateDatabases();
     connection->setConnectionName("");
     ui->cbConnections->addItem("",VPtr<Connection>::asQVariant(connection));
     ui->cbConnections->setCurrentIndex(ui->cbConnections->findData(VPtr<Connection>::asQVariant(connection)));
@@ -1008,11 +1024,23 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
      ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
      ui->lblHelp->setText(tr("Connection succeeded. %1 Has %2 tables!<br> %3").arg(currDb).arg(tableList.count()).arg(tableList.join(", ")));
      ui->txtDefaultDb->setText(currDb);
+     parms = SQL::instance()->getParameters(db);
+     currCity->setCenter(LatLng(parms.lat, parms.lon));
  }
  else
  {
      ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
      ui->lblHelp->setText(tr("Connection succeeded. %1 Has %2 tables!<br> %3").arg(currDb).arg(tableList.count()).arg(tableList.join(", ")));
+     currCity->setCenter(LatLng(parms.lat, parms.lon));
+     parms = SQL::instance()->getParameters(db);
+     if(parms.city == ui->cbCities->currentText())
+      currCity->setCenter(LatLng(parms.lat, parms.lon));
+     else
+         QMessageBox::warning(this, tr("City Name"), tr("The city name entered, '%1'; is not"
+                                                        " the same as in the database:'%2'\n"
+                                                        "The name in the database will be used.").arg(ui->cbCities->currentText(),parms.city));
+     currCity->setNameOverride(parms.city);
+     ui->cbCities->setCurrentText(parms.city);
  }
  timer->stop();
  this->setCursor(QCursor(Qt::ArrowCursor));
@@ -1130,7 +1158,7 @@ bool EditConnectionsDlg::populateDatabases()
     }
    }
   }
-  else
+  else if(connection->servertype() == "MySql")
   {
    // MySql
    QStringList list = SQL::instance()->showMySqlDatabases(db);
@@ -1183,6 +1211,18 @@ bool EditConnectionsDlg::populateDatabases()
           }
        }
    }
+  }
+  else {
+   // Sqlite
+      QDir dir("Resources/databases");
+      QStringList nameFilter = {"*.sqlite3"};
+      if(dir.exists())
+      {
+          QStringList databases = dir.entryList(nameFilter, QDir::Files);
+          QCompleter *completer = new QCompleter(databases, this);
+          completer->setCaseSensitivity(Qt::CaseInsensitive);
+          ui->txtDbOrDSN->setCompleter(completer);
+      }
   }
 
   // use desired db
@@ -1354,14 +1394,20 @@ void EditConnectionsDlg::ontxtDbOrDsn_editingFinished()
  QString dbName = ui->txtDbOrDSN->text();
  if(ui->cbDbType->currentText() == "Sqlite")
  {
+     if(ui->txtDbOrDSN->text().isEmpty())
+         return;
   QFileInfo info;
   if(!ui->txtDbOrDSN->text().toLower().endsWith("sqlite3"))
    ui->txtDbOrDSN->setText(ui->txtDbOrDSN->text().append(".sqlite3"));
-  info.setFile(ui->txtDbOrDSN->text());
-  if(info.isAbsolute())
-   ui->txtDbOrDSN->setText(info.absoluteFilePath());
+  if(ui->txtDbOrDSN->text().startsWith("/"))
+   info.setFile(ui->txtDbOrDSN->text());
   else
-   ui->txtDbOrDSN->setText(info.fileName());
+   info.setFile("Resources/databases/" + ui->txtDbOrDSN->text());
+
+//  if(info.isAbsolute())
+//   ui->txtDbOrDSN->setText(info.absoluteFilePath());
+//  else
+  ui->txtDbOrDSN->setText(info.fileName());
   if(!info.exists())
   {
       QMessageBox::warning(this, "New file", tr("The file entered does not exist. If you coninue "

@@ -27,6 +27,7 @@ WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString maptype, MainWindo
  this->maptype = maptype;
  m_parent = parent;
 
+
  _instance = this;
  config = Configuration::instance();
 }
@@ -302,6 +303,11 @@ void WebViewBridge::cityBounds(double neLat, double neLng, double swLat, double 
  config->saveSettings();
  processScript("closeCityBoundsButton");
  emit on_cityBounds(bounds);
+
+ Parameters parms = SQL::instance()->getParameters();
+ parms.lat = center.lat();
+ parms.lon = center.lon();
+ SQL::instance()->updateParameters(parms);
 }
 
 void WebViewBridge::rightClicked(QString text)
