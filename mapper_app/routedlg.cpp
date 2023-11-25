@@ -1767,7 +1767,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
  //      if (!sql->addSegmentToRoute(_routeNbr, ui->rnw->alphaRoute(), ui->dateStart->date(), ui->dateEnd->date(),
  //                                  _segmentId, companyKey, /*cbTractionType.SelectedIndex+1*/tractionType, direction, 0, 0,
  //                                  _normalEnter, _normalLeave, _reverseEnter, _reverseLeave, ui->cbOneWay->isChecked()?"Y":"N", trackUsage))
-       sd->setRouteName(ui->rnw->alphaRoute());
+       sd->setRouteName(ui->rnw->newRouteName());
        sd->setStartDate(ui->dateStart->date());
        sd->setEndDate(ui->dateEnd->date());
        sd->setOneWay( ui->cbOneWay->isChecked()?"Y":"N");

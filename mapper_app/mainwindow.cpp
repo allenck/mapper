@@ -2199,7 +2199,7 @@ default:
    }
   }
   setCursor(Qt::ArrowCursor);
-  bFirstSegmentDisplayed=true;
+  //bFirstSegmentDisplayed=true;
 }
 
 void MainWindow::getInfoWindowComments(double lat, double lon, int route, QString date, int func)
@@ -2659,8 +2659,8 @@ void MainWindow::setLen(qint32 len)
 }
 void MainWindow::btnFirstClicked()
 {
- if(!bFirstSegmentDisplayed)
-  return;
+// if(!bFirstSegmentDisplayed)
+//  return;
 
     //SQL sql;
     getArray();
@@ -2699,8 +2699,8 @@ void MainWindow::btnFirstClicked()
 
 void MainWindow::btnNextClicked()
 {
- if(!bFirstSegmentDisplayed)
-  return;
+// if(!bFirstSegmentDisplayed)
+//  return;
     //SQL sql;
     getArray();
     if(m_currPoint < 0 || m_nbrPoints <2)
@@ -2788,8 +2788,8 @@ void MainWindow::lookupStreetName(SegmentInfo sd)
 
 void MainWindow::btnLastClicked()
 {
- if(!bFirstSegmentDisplayed)
-  return;
+// if(!bFirstSegmentDisplayed)
+//  return;
     //SQL sql;
 
     getArray();
@@ -2838,8 +2838,8 @@ void MainWindow::btnLastClicked()
 
 void MainWindow::btnPrevClicked()
 {
- if(!bFirstSegmentDisplayed)
-  return;
+// if(!bFirstSegmentDisplayed)
+//  return;
     //SQL sql;
     getArray();
     if (m_currPoint > 0)
@@ -2972,8 +2972,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
 }
 void MainWindow::btnSplit_Clicked()    // SLOT
 {
- if(!bFirstSegmentDisplayed)
-  return;
+// if(!bFirstSegmentDisplayed)
+//  return;
  //SQL sql;
  SegmentDlg segmentDlg(config, this);
  //segmentDlg.setConfiguration(config);
@@ -3055,7 +3055,7 @@ void MainWindow::displaySegment(qint32 segmentId, QString segmentName,
     SegmentInfo sd = sql->getSegmentInfo(segmentId);
     sd.displaySegment(ui->dateEdit->text(),color, trackUsage, bClearFirst);
     m_currPoint = 0;
-    bFirstSegmentDisplayed = true;
+    //bFirstSegmentDisplayed = true;
     ui->lblPoint->setText(QString::number(m_currPoint));
 
 
@@ -3456,8 +3456,8 @@ void MainWindow::insertPoint(int SegmentId, qint32 i, double newLat, double newL
 /// <param name="e"></param>
 void MainWindow::btnDeletePtClicked()
 {
- if(!bFirstSegmentDisplayed)
-  return;
+// if(!bFirstSegmentDisplayed)
+//  return;
  SegmentInfo sd = sql->getSegmentInfo(m_segmentId);
 
  if(sd.segmentId() == m_segmentId)

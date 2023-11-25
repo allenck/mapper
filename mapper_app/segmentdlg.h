@@ -34,7 +34,7 @@ private:
     Ui::SegmentDlg *ui;
     QWidget *myParent;
     qint32 _pt;
-    qint32 _SegmentId;
+    qint32 _segmentId;
     qint32 _routeNbr;
     QString _alphaRoute;
     SQL* sql;

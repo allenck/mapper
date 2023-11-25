@@ -12,7 +12,7 @@ SegmentDlg::SegmentDlg(Configuration *cfg, QWidget *parent) :
  config = Configuration::instance();
  //sql->setConfig(config);
  sql = SQL::instance();
- _SegmentId = -1;
+ _segmentId = -1;
  _routeNbr = 0;
  _alphaRoute = "";
  _routeName = tr("No Route");
@@ -49,11 +49,11 @@ SegmentDlg::SegmentDlg(Configuration *cfg, QWidget *parent) :
  ui->cbRouteType->addItems(_routeTypeList);
  normalEnter = 0, normalLeave = 0, reverseEnter = 0, reverseLeave = 0;
  ui->btnOK->setEnabled(false);
- if (_SegmentId > 0)
+ if (_segmentId > 0)
  {
   ui->gbOriginal->setVisible(true);
-  ui->txtOriginalName->setText( sql->getSegmentDescription(_SegmentId));
-  ui->chkOriginalOneWay->setChecked( sql->getSegmentOneWay(_SegmentId)== "Y");
+  ui->txtOriginalName->setText( sql->getSegmentDescription(_segmentId));
+  ui->chkOriginalOneWay->setChecked( sql->getSegmentOneWay(_segmentId)== "Y");
 
   ui->txtNewName->setText( ui->txtOriginalName->text());
   ui->chkNewOneWay->setChecked(ui->chkOriginalOneWay->isChecked());
@@ -134,16 +134,16 @@ void SegmentDlg::setPt(int value)
 
 void SegmentDlg::setSegmentId(qint32 value)
 {
- _SegmentId = value;
+ _segmentId = value;
  sd = sql->getSegmentInfo(value);
- if(_SegmentId> 0)
+ if(_segmentId> 0)
  {
   bSplitting = true;
   this->setWindowTitle(tr("Split Segment"));
   ui->gbOriginal->setVisible(true);
   ui->gbOriginal->setTitle(tr("Original segment:"));
   ui->gbNew->setTitle(tr("New segment:"));
-  ui->txtOriginalName->setText( sql->getSegmentDescription(_SegmentId));
+  ui->txtOriginalName->setText( sql->getSegmentDescription(_segmentId));
   ui->cbLocation->setCurrentText(sd._location);
 
   ui->txtNewName->setText( ui->txtOriginalName->text());
@@ -152,7 +152,7 @@ void SegmentDlg::setSegmentId(qint32 value)
   bOriginalChanged = false;
   bNewChanged = false;
   ui->chkOriginalOneWay->setEnabled(true);
-  sd =sql->getSegmentInfo(_SegmentId);
+  sd =sql->getSegmentInfo(_segmentId);
   ui->cbRouteType->setCurrentIndex((qint32)sd.routeType());
   if(!ui->chkOriginalOneWay->isChecked())
    ui->groupBox2->setVisible(false);
@@ -180,7 +180,7 @@ void SegmentDlg::setSegmentId(qint32 value)
 }
 qint32 SegmentDlg::SegmentId()
 {
-    return _SegmentId;
+    return _segmentId;
 }
 qint32 SegmentDlg::newSegmentId()
 {
@@ -462,7 +462,7 @@ void SegmentDlg::rbUseOriginal_CheckedChanged()     // SLOT
     if (ui->chkOriginalOneWay->isChecked())
     {
         ui->groupBox2->setVisible(true);
-        pi = sql->getPointInfo(_pt, _SegmentId);
+        pi = sql->getPointInfo(_pt, _segmentId);
         bearing = Bearing(sd.startLat(), sd.startLon(), pi.lat(), pi.lon());
         ui->rbNormal->setText( bearing.strDirection());
         ui->rbReverse->setText( bearing.strReverseDirection());
@@ -495,7 +495,7 @@ void SegmentDlg::rbUseNew_CheckedChanged()      // SLOT
     if (ui->chkNewOneWay->isChecked())
     {
         ui->groupBox2->setVisible(true);
-        pi = sql->getPointInfo(_pt, _SegmentId);
+        pi = sql->getPointInfo(_pt, _segmentId);
         bearing = Bearing(pi.lat(), pi.lon(), sd.endLat(), sd.endLon());
         ui->rbNormal->setText( sd.bearing().strDirection());
         ui->rbReverse->setText( sd.bearing().strReverseDirection());
@@ -609,7 +609,7 @@ void SegmentDlg::chkNewOneWay_Changed(bool bChecked)
         ui->groupBox5->setVisible( false);
         ui->groupBox6->setVisible( false);
         //ui->btnOK->setEnabled(true);
-        ui->sbTracks->setValue(sd.tracks());
+        //ui->sbTracks->setValue(sd.tracks());
         ui->sbTracks->setEnabled(true);
     }
     else
@@ -618,7 +618,7 @@ void SegmentDlg::chkNewOneWay_Changed(bool bChecked)
         ui->groupBox5->setVisible( true);
         ui->groupBox6->setVisible( true);
        // ui->btnOK->setEnabled(true);
-        ui->sbTracks->setValue(sd.tracks());
+        //ui->sbTracks->setValue(sd.tracks());
         ui->sbTracks->setEnabled(false);
     }
     checkUpdate();
@@ -636,7 +636,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
    return;
   }
  }
- if (_SegmentId >= 0)
+ if (_segmentId >= 0)
  {
   if (ui->txtOriginalName->text().length() == 0)
   {
@@ -691,7 +691,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
  // Do the table update
  setCursor(Qt::WaitCursor);
 
- if (_SegmentId < 0)
+ if (_segmentId < 0)
  {
   newName = ui->txtNewName->text();
   if (ui->chkNewOneWay->isChecked())
@@ -729,7 +729,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
   originalName = ui->txtOriginalName->text();
   if (ui->chkOriginalOneWay->isChecked())
    originalName += " (1 way)";
-  _newSegmentId = sql->splitSegment(_pt, _SegmentId, originalName, ui->chkOriginalOneWay->isChecked()?"Y":"N",
+  _newSegmentId = sql->splitSegment(_pt, _segmentId, originalName, ui->chkOriginalOneWay->isChecked()?"Y":"N",
                                     newName, ui->chkNewOneWay->isChecked()?"Y":"N", sd.routeType(), (RouteType)ui->cbRouteType->currentIndex(),
                                     sd.tracks(),sd.tracks(), sd.streetName(), sd.streetName());
   if (_newSegmentId < 0)
@@ -739,7 +739,6 @@ void SegmentDlg::btnOK_Click()  // SLOT
    return;
   }
  }
-
 
  // Route Info
  int routeSegment;
@@ -761,7 +760,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
    direction = sd.bearing().strDirection() + "-" + sd.bearing().strReverseDirection();
 #endif
   if (ui->rbUseOriginal->isChecked())
-   routeSegment = _SegmentId;
+   routeSegment = _segmentId;
   else
    routeSegment = _newSegmentId;
   CompanyData* cd = sql->getCompany(ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt());

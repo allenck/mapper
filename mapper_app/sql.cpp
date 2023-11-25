@@ -6972,7 +6972,7 @@ qint32 SQL::addSegment(SegmentData sd, bool *bAlreadyExists, bool forceInsert)
 /// <param name="newDesc"></param>
 /// <param name="newOneWay"></param>
 /// <returns>new segment id</returns>
-qint32 SQL::splitSegment(qint32 pt, qint32 SegmentId, QString oldDesc, QString oldOneWay, QString newDesc,
+qint32 SQL::splitSegment(qint32 pt, qint32 segmentId, QString oldDesc, QString oldOneWay, QString newDesc,
                          QString newOneWay, RouteType routeType, RouteType newRouteType,int oldTracks, int newTracks,
                          QString oldStreet, QString newStreet)
 {
@@ -6987,23 +6987,23 @@ try
  bool bQuery;
  beginTransaction("splitSegment");
 
- SegmentInfo oldSd = getSegmentInfo(SegmentId); // Original segment before any changes.
+ SegmentInfo oldSi = getSegmentInfo(segmentId); // Original segment before any changes.
 
- LatLng p = oldSd._pointList.at(pt); // breaking at this point!
+ LatLng p = oldSi._pointList.at(pt); // breaking at this point!
  QString pointArray = "";
  double length = 0;
  for(int i =0; i <= pt; i++)
  {
-  LatLng pt = oldSd._pointList.at(i);
+  LatLng pt = oldSi._pointList.at(i);
   if(i > 0)
   {
    pointArray.append(",");
-   length += Distance(pt.lat(), pt.lon(), oldSd._pointList.at(i-1).lat(), oldSd._pointList.at(i-1).lon());
+   length += Distance(pt.lat(), pt.lon(), oldSi._pointList.at(i-1).lat(), oldSi._pointList.at(i-1).lon());
   }
   pointArray.append(pt.str());
  }
- Bearing b= Bearing(oldSd._startLat, oldSd._startLon, p.lat(), p.lon());
- QString direction = oldSd._direction;
+ Bearing b= Bearing(oldSi._startLat, oldSi._startLon, p.lat(), p.lon());
+ QString direction = oldSi._direction;
 // if(oldSd.oneWay == "Y")
 //  direction = b.strDirection();
 // else
@@ -7013,7 +7013,18 @@ try
  Q_ASSERT(p.lat() != 0);
  Q_ASSERT(p.lon() != 0);
 
- commandText = "update Segments set description = '" + oldDesc + "', OneWay='" + oldOneWay + "',endLat="+QString("%1").arg(p.lat(),0,'f',8)+",endLon="+ QString("%1").arg(p.lon(),0,'f',8)+",length="+QString("%1").arg(b.Distance(),0,'f',8)+",points="+QString("%1").arg(pt)+",direction = '"+ direction + "', pointArray='"+pointArray + "', tracks=" +QString::number(oldTracks)+ ",street='"+newStreet + "',lastUpdate=:lastUpdate where SegmentId = " + QString("%1").arg(SegmentId);
+ commandText = "update Segments set description = '" + oldDesc + "', "
+               //"OneWay='" + oldOneWay + "',"
+               "endLat="+QString("%1").arg(p.lat(),0,'f',8)+","
+               "endLon="+ QString("%1").arg(p.lon(),0,'f',8)+","
+               "length="+QString("%1").arg(b.Distance(),0,'f',8)+","
+               "points="+QString("%1").arg(pt+1)+","
+               "direction = '"+ direction + "',"
+               "pointArray='"+ pointArray + "', "
+               "tracks=" +QString::number(oldTracks)+ ","
+               "street='"+ oldStreet + "',"
+               "lastUpdate=:lastUpdate"
+               " where SegmentId = " + QString("%1").arg(segmentId);
  query.prepare(commandText);
  query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
  bQuery = query.exec();
@@ -7034,32 +7045,40 @@ try
  QString pointArray2 = "";
  LatLng endpt; // when loop finishes, this is the new end point.
  length = 0;
- for(int i =pt; i < oldSd._pointList.count(); i++)
+ for(int i =pt; i < oldSi._pointList.count(); i++)
  {
-  endpt = oldSd._pointList.at(i);
+  endpt = oldSi._pointList.at(i);
   if(i != pt)
   {
    pointArray2.append(",");
-   length += Distance(endpt.lat(), endpt.lon(), oldSd._pointList.at(i-1).lat(), oldSd._pointList.at(i-1).lon());
+   length += Distance(endpt.lat(), endpt.lon(),
+                      oldSi._pointList.at(i-1).lat(),
+                      oldSi._pointList.at(i-1).lon());
   }
   pointArray2.append(endpt.str());
  }
- b = Bearing(p.lat(), p.lon(), oldSd._endLat, oldSd._endLon);
+ b = Bearing(p.lat(), p.lon(), oldSi._endLat, oldSi._endLon);
  // if(oldSi.oneWay == "Y")
  //  direction = b.strDirection();
  // else
  //  direction = b.strDirection()+"-"+b.strReverseDirection();
- commandText = "Insert into Segments (Description, OneWay, type, startLat, startLon, endLat, "\
-     "endLon, length, startDate, endDate, points, direction, pointArray, tracks, street) values ('"
-     + newDesc + "', '"
-     + newOneWay + "',"
-     + QString("%1").arg((int)newRouteType)
-     + ","+QString("%1").arg(p.lat(),0,'f',8)+","+QString("%1").arg(p.lon(),0,'f',8)
-     + ","+QString("%1").arg(endpt.lat(),0,'f',8)+","+QString("%1").arg(endpt.lon(), 0, 'f', 8)+","
+ commandText = "Insert into Segments (Description, type, startLat, startLon, endLat, "\
+     "endLon, length, startDate, endDate, points, direction, pointArray, tracks, street) "
+     "values ("
+     "'" + newDesc + "', "
+     + QString("%1").arg((int)newRouteType) + ","
+     + QString("%1").arg(p.lat(),0,'f',8)+","
+     + QString("%1").arg(p.lon(),0,'f',8) + ","
+     + QString("%1").arg(endpt.lat(),0,'f',8) +","
+     + QString("%1").arg(endpt.lon(),0,'f',8)+","
      + QString("%1").arg(length,0,'f',8)+",'"
-     + oldSd._startDate.toString("yyyy/MM/dd")+"','"+oldSd._endDate.toString("yyyy/MM/dd")+"',"
-     + QString("%1").arg(pointArray2.count())+",'" + direction+"','" + pointArray2 + "', "
-     + QString::number(newTracks)+",'"+newStreet + "')";
+     + oldSi._startDate.toString("yyyy/MM/dd")+"',"
+     "'" + oldSi._endDate.toString("yyyy/MM/dd")+"',"
+     + QString("%1").arg(pointArray2.count())+","
+     "'" + direction+"',"
+     "'" + pointArray2 + "', "
+     + QString::number(newTracks)+","
+     "'" + newStreet + "')";
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
@@ -7102,9 +7121,9 @@ try
 
 
   // Now change the SegmentId and sequence for the remaining line segments
-  oldSd = getSegmentInfo(SegmentId);
+  oldSi = getSegmentInfo(segmentId);
   SegmentInfo newSd = getSegmentInfo(newSegmentId);
-  double diff = angleDiff(oldSd._bearing.angle(), newSd._bearing.angle());
+  double diff = angleDiff(oldSi._bearing.angle(), newSd._bearing.angle());
   int normalEnter = 0, normalLeave = 0, reverseEnter = 0, reverseLeave = 0;
   if (diff < -45)
   {
@@ -7131,7 +7150,7 @@ try
                 "from Routes a "
                 "join Segments b on LineKey = b.SegmentId "
                 "join AltRoute c on a.route = c.route"
-                " where SegmentId = " + QString("%1").arg(SegmentId);
+                " where SegmentId = " + QString("%1").arg(segmentId);
   bQuery = query.exec(commandText);
   if(!bQuery)
   {
@@ -7153,7 +7172,7 @@ try
    sd._normalLeave = query.value(8).toInt();
    sd._reverseEnter = query.value(9).toInt();
    sd._reverseLeave = query.value(10).toInt();
-   sd._segmentId = SegmentId;
+   sd._segmentId = segmentId;
    sd._oneWay = query.value(11).toString();
    sd._direction = query.value(12).toString();
    sd._trackUsage = query.value(13).toString();
@@ -7254,7 +7273,7 @@ try
    }
   }
 
-  updateSegmentDates(SegmentId);
+  updateSegmentDates(segmentId);
   updateSegmentDates(newSegmentId);
   commitTransaction("splitSegment");
 

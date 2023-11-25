@@ -402,7 +402,7 @@ private:
     bool bCbStreets_text_changed = false;
     QString saveStreet = "";
     bool bCbStreetsRefreshing = false;
-    bool bFirstSegmentDisplayed = false;
+    //bool bFirstSegmentDisplayed = false;
 
     void createActions();
     void createMenus();
