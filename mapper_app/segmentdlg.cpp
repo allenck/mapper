@@ -3,14 +3,13 @@
 #include "webviewbridge.h"
 #include "mainwindow.h"
 
-SegmentDlg::SegmentDlg(Configuration *cfg, QWidget *parent) :
+SegmentDlg::SegmentDlg(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SegmentDlg)
 {
  ui->setupUi(this);
  myParent = parent;
  config = Configuration::instance();
- //sql->setConfig(config);
  sql = SQL::instance();
  _segmentId = -1;
  _routeNbr = 0;
@@ -30,6 +29,7 @@ SegmentDlg::SegmentDlg(Configuration *cfg, QWidget *parent) :
  ((MainWindow*)myParent)->addModeToggled(false);
 // infoLat = m_latitude;
 // infoLon = m_longitude;
+ ui->gbUsage->setVisible(false);
 
 
  connect(ui->txtOriginalName, SIGNAL(textChanged(QString)), this, SLOT(txtOriginalName_TextChanged(QString)));
@@ -37,13 +37,25 @@ SegmentDlg::SegmentDlg(Configuration *cfg, QWidget *parent) :
  connect(ui->txtNewName, SIGNAL(textChanged(QString)), this, SLOT(txtNewName_TextChanged(QString)));
  connect(ui->txtNewName, SIGNAL(editingFinished()),this,SLOT(txtNewName_Leave()));
  //connect(ui->txtRouteNbr, SIGNAL(textChanged(QString)), this,SLOT(txtRouteName_TextChanged(QString)));
- connect(ui->txtRouteNbr, SIGNAL(editingFinished()),this, SLOT(txtRouteNbr_Leave()));
- connect(ui->cbRouteName, SIGNAL(signalFocusOut()),this, SLOT(cbRouteName_Leave()));
+// connect(ui->txtRouteNbr, SIGNAL(editingFinished()),this, SLOT(txtRouteNbr_Leave()));
+// connect(ui->cbRouteName, SIGNAL(signalFocusOut()),this, SLOT(cbRouteName_Leave()));
  connect(ui->btnCancel,SIGNAL(clicked()), this, SLOT(btnCancel_click()));
  connect(ui->btnOK, SIGNAL(clicked()), this, SLOT(btnOK_Click()));
  connect(ui->rbUseNew, SIGNAL(clicked()), this, SLOT(rbUseNew_CheckedChanged()));
  connect(ui->chkNewOneWay, SIGNAL(clicked(bool)), this, SLOT(chkNewOneWay_Changed(bool)));
  connect(ui->cbCompany, SIGNAL(currentIndexChanged(int)), this, SLOT(cbCompany_currentIndexChanged(int)));
+ connect(ui->rbUseL, &QRadioButton::clicked, [=]{
+  if(sd)
+   sd->setTrackUsage("L");
+ });
+ connect(ui->rbUseR, &QRadioButton::clicked, [=]{
+  if(sd)
+   sd->setTrackUsage("R");
+ });
+ connect(ui->sbTracks, &QSpinBox::textChanged, [=]()
+ {
+  ui->gbUsage->setVisible((ui->chkNewOneWay->isChecked() && ui->sbTracks->value()==2));
+ });
 
  _routeTypeList <<"0 - Surface in street"<< "1 - Surface PRW"<< "2 - Rapid Transit" << "3 - Subway/Metro/U-Bahn"<< "4 - Heavy Rail" <<  "5 - Incline" << "6 - Other";
  ui->cbRouteType->addItems(_routeTypeList);
@@ -93,23 +105,23 @@ SegmentDlg::SegmentDlg(Configuration *cfg, QWidget *parent) :
  ui->dateEnd->setDate( _rd.endDate());
 
  fillCompanies();
- ui->cbRouteName->clear();
- ui->cbRouteName->addItem(strNoRoute);
+// ui->cbRouteName->clear();
+// ui->cbRouteName->addItem(strNoRoute);
  if (_rd.route() > 0)
  {
      _routeNbr = _rd.route();
-     ui->txtRouteNbr->setText( _rd.alphaRoute());
+     ui->rnw->setAlphaRoute(_rd.alphaRoute());
      //cbRouteName.Text = _rd.name;
-     for(int i = 0; i < _routeNameList.count(); i++)
-     {
-         QString routeName = _routeNameList.at(i);
-         if(routeName == _rd.routeName())
-         {
-             ui->cbRouteName->setCurrentIndex(i+1);
-             break;
-         }
+//     for(int i = 0; i < _routeNameList.count(); i++)
+//     {
+//         QString routeName = _routeNameList.at(i);
+//         if(routeName == _rd.routeName())
+//         {
+//             ui->cbRouteName->setCurrentIndex(i+1);
+//             break;
+//         }
 
-     }
+//     }
  }
  fillTractionTypes();
 
@@ -122,11 +134,26 @@ SegmentDlg::~SegmentDlg()
     delete ui;
 }
 
-void SegmentDlg::setConfiguration(Configuration * value)
+void SegmentDlg::configure(RouteData rd, int segmentId, int point)
 {
-    config = value;
-    sql->setConfig(config);
+ setRouteData(rd);
+ setSegmentId(segmentId);
+ setPt(point);
+ if(segmentId >0)
+ {
+  if(sql->doesRouteSegmentExist(rd.route(), rd.routeName(),segmentId, rd.startDate(), rd.endDate()))
+  {
+   ui->rbNoAdd->setChecked(true);
+   //ui->groupBox7->setEnabled(false);
+  }
+ }
+ else
+ {
+  ui->rbUseOriginal->setVisible(false);
+  ui->groupBox7->setEnabled(true);
+ }
 }
+
 void SegmentDlg::setPt(int value)
 {
     _pt = value;
@@ -135,7 +162,8 @@ void SegmentDlg::setPt(int value)
 void SegmentDlg::setSegmentId(qint32 value)
 {
  _segmentId = value;
- sd = sql->getSegmentInfo(value);
+ si = sql->getSegmentInfo(value);
+ sd = new SegmentData(si);
  if(_segmentId> 0)
  {
   bSplitting = true;
@@ -144,7 +172,7 @@ void SegmentDlg::setSegmentId(qint32 value)
   ui->gbOriginal->setTitle(tr("Original segment:"));
   ui->gbNew->setTitle(tr("New segment:"));
   ui->txtOriginalName->setText( sql->getSegmentDescription(_segmentId));
-  ui->cbLocation->setCurrentText(sd._location);
+  ui->cbLocation->setCurrentText(si._location);
 
   ui->txtNewName->setText( ui->txtOriginalName->text());
   ui->chkNewOneWay->setChecked(ui->chkOriginalOneWay->isChecked());
@@ -152,14 +180,15 @@ void SegmentDlg::setSegmentId(qint32 value)
   bOriginalChanged = false;
   bNewChanged = false;
   ui->chkOriginalOneWay->setEnabled(true);
-  sd =sql->getSegmentInfo(_segmentId);
-  ui->cbRouteType->setCurrentIndex((qint32)sd.routeType());
+  si =sql->getSegmentInfo(_segmentId);
+  ui->cbRouteType->setCurrentIndex((qint32)si.routeType());
   if(!ui->chkOriginalOneWay->isChecked())
    ui->groupBox2->setVisible(false);
   ui->rbNfromBack->setChecked(true);
   ui->rbNAhead->setChecked(true);
   ui->rbRAhead->setChecked(true);
   ui->rbRFromBack->setChecked(true);
+  ui->rnw->configure(sd, ui->lblErrorText);
  }
  else
  {
@@ -176,12 +205,15 @@ void SegmentDlg::setSegmentId(qint32 value)
   ui->rbUseOriginal->setEnabled( false);
   bOriginalChanged = false;
   bNewChanged = false;
+  ui->rnw->configure((SegmentData*)nullptr, ui->lblErrorText);
  }
 }
+
 qint32 SegmentDlg::SegmentId()
 {
     return _segmentId;
 }
+
 qint32 SegmentDlg::newSegmentId()
 {
     return _newSegmentId;
@@ -204,7 +236,7 @@ qint32 SegmentDlg::tractionType()
     return tti.tractionType;
 }
 bool SegmentDlg::oneWay() { return ui->chkOriginalOneWay->isChecked(); }
-int SegmentDlg::tracks() { return sd.tracks(); }
+int SegmentDlg::tracks() { return si.tracks(); }
 
 void SegmentDlg::setRouteData(RouteData value)
 {
@@ -214,22 +246,27 @@ void SegmentDlg::setRouteData(RouteData value)
         return;
     _rd = value;
     _routeNbr = _rd.route();
-    ui->txtRouteNbr->setText( _rd.alphaRoute());
-    ui->cbRouteName->clear();
-    ui->cbRouteName->addItem(strNoRoute);
+//    ui->txtRouteNbr->setText( _rd.alphaRoute());
+//    ui->cbRouteName->clear();
+//    ui->cbRouteName->addItem(strNoRoute);
+    ui->rnw->configure(&value, ui->lblErrorText);
+    ui->groupBox7->setEnabled(true);
+    QThread::msleep(100);
+    ui->groupBox7->setEnabled(false);
+
     _routeNameList = sql->getRouteNames(_routeNbr);
-    for(int i=0; i < _routeNameList.count(); i++)
-        ui->cbRouteName->addItem(_routeNameList.at(i));
+//    for(int i=0; i < _routeNameList.count(); i++)
+//        ui->cbRouteName->addItem(_routeNameList.at(i));
 
 //    cbRouteName.Text = _rd.name;
-    for(int i=0; i < _routeNameList.count(); i++)
-    {
-        if(_rd.routeName() == _routeNameList.at(i))
-        {
-            ui->cbRouteName->setCurrentIndex(i + 1);
-            break;
-        }
-    }
+//    for(int i=0; i < _routeNameList.count(); i++)
+//    {
+//        if(_rd.routeName() == _routeNameList.at(i))
+//        {
+//            ui->cbRouteName->setCurrentIndex(i + 1);
+//            break;
+//        }
+//    }
 
     Parameters parms = sql->getParameters();
     ui->dateStart->setMinimumDate( parms.minDate);
@@ -315,15 +352,19 @@ void SegmentDlg::fillTractionTypes()
 
 void SegmentDlg::checkUpdate()
 {
- if(ui->txtRouteNbr->text() == "" || ui->txtRouteNbr->text().startsWith(" "))
+ ui->lblErrorText->clear();
+ //if(ui->txtRouteNbr->text() == "" || ui->txtRouteNbr->text().startsWith(" "))
+ if(!ui->rbNoAdd &&(ui->rnw->alphaRoute()=="" || ui->rnw->alphaRoute().startsWith(" ")))
  {
-     ui->txtRouteNbr->setFocus();
+     //ui->txtRouteNbr->setFocus();
+     ui->lblErrorText->setText(tr("route number?"));
      ui->btnOK->setEnabled(false);
      return;
  }
- if(ui->cbRouteName->currentIndex() < 0 || ui->cbRouteName->currentText() == "" ||ui->cbRouteName->currentText() ==  strNoRoute)
+ //if(ui->cbRouteName->currentIndex() < 0 || ui->cbRouteName->currentText() == "" ||ui->cbRouteName->currentText() ==  strNoRoute)
+ if(!ui->rbNoAdd && ui->rnw->newRouteName() == "")
  {
-     ui->cbRouteName->setFocus();
+     ui->lblErrorText->setText(tr("need Route name"));
      ui->btnOK->setEnabled(false);
      return;
  }
@@ -339,7 +380,7 @@ void SegmentDlg::checkUpdate()
  }
  ui->btnOK->setEnabled(true);
 }
-
+#if 0
 void SegmentDlg::txtRouteNbr_Leave()    // SLOT
 {
  bool bAlphaRoute = false;
@@ -447,14 +488,15 @@ void SegmentDlg::txtRouteNbr_Leave()    // SLOT
 
  checkUpdate();
 }
-
+#endif
 void SegmentDlg::rbUseOriginal_CheckedChanged()     // SLOT
 {
     if(!ui->rbUseOriginal->isChecked())
         return;
     //rbUseNew.Checked = false;
-    ui->cbRouteName->setEnabled(true);
-    ui->txtRouteNbr->setEnabled(true);
+//    ui->cbRouteName->setEnabled(true);
+//    ui->txtRouteNbr->setEnabled(true);
+    ui->rnw->setEnabled(true);
     ui->cbCompany->setEnabled(true);
     ui->cbTractionType->setEnabled(true);
     ui->dateStart->setEnabled(true);
@@ -463,7 +505,7 @@ void SegmentDlg::rbUseOriginal_CheckedChanged()     // SLOT
     {
         ui->groupBox2->setVisible(true);
         pi = sql->getPointInfo(_pt, _segmentId);
-        bearing = Bearing(sd.startLat(), sd.startLon(), pi.lat(), pi.lon());
+        bearing = Bearing(si.startLat(), si.startLon(), pi.lat(), pi.lon());
         ui->rbNormal->setText( bearing.strDirection());
         ui->rbReverse->setText( bearing.strReverseDirection());
 
@@ -485,8 +527,9 @@ void SegmentDlg::rbUseNew_CheckedChanged()      // SLOT
     if(!ui->rbUseNew->isChecked())
         return;
     //rbUseOriginal.Checked = false;
-    ui->cbRouteName->setEnabled(true);
-    ui->txtRouteNbr->setEnabled(true);
+//    ui->cbRouteName->setEnabled(true);
+//    ui->txtRouteNbr->setEnabled(true);
+    ui->rnw->setEnabled(true);
     ui->cbCompany->setEnabled(true);
     ui->cbTractionType->setEnabled(true);
     ui->dateStart->setEnabled(true);
@@ -496,9 +539,9 @@ void SegmentDlg::rbUseNew_CheckedChanged()      // SLOT
     {
         ui->groupBox2->setVisible(true);
         pi = sql->getPointInfo(_pt, _segmentId);
-        bearing = Bearing(pi.lat(), pi.lon(), sd.endLat(), sd.endLon());
-        ui->rbNormal->setText( sd.bearing().strDirection());
-        ui->rbReverse->setText( sd.bearing().strReverseDirection());
+        bearing = Bearing(pi.lat(), pi.lon(), si.endLat(), si.endLon());
+        ui->rbNormal->setText( si.bearing().strDirection());
+        ui->rbReverse->setText( si.bearing().strReverseDirection());
 
         ui->rbNormal->setChecked( true);
     }
@@ -506,6 +549,7 @@ void SegmentDlg::rbUseNew_CheckedChanged()      // SLOT
         ui->groupBox2->setVisible(false);
     checkUpdate();
 }
+#if 0
 void SegmentDlg::txtRouteName_TextChanged(QString text)  // SLOT
 {
     Q_UNUSED(text)
@@ -516,20 +560,21 @@ void SegmentDlg::txtRouteName_TextChanged(QString text)  // SLOT
     ui->dateEnd->setEnabled(true);
     checkUpdate();
 }
-
+#endif
 void SegmentDlg::rbNoAdd_CheckedChanged()   // SLOT
 {
     if(!ui->rbNoAdd->isChecked())
         return;
-    ui->cbRouteName->setEnabled(false);
-    ui->txtRouteNbr->setEnabled(false);
+//    ui->cbRouteName->setEnabled(false);
+//    ui->txtRouteNbr->setEnabled(false);
+    ui->rnw->setEnabled(false);
     ui->cbCompany->setEnabled(false);
     ui->dateStart->setEnabled(false);
     ui->dateEnd->setEnabled(false);
     ui->groupBox2->setVisible(false);
     checkUpdate();
 }
-
+#if 0
 void SegmentDlg::cbRouteName_Leave()        // SLOT
 {
     if (ui->cbRouteName->currentText().length() == 0)
@@ -559,7 +604,7 @@ void SegmentDlg::cbRouteName_Leave()        // SLOT
     }
     checkUpdate();
 }
-
+#endif
 void SegmentDlg::txtNewName_TextChanged(QString text)       // slot
 {
     Q_UNUSED(text)
@@ -609,8 +654,21 @@ void SegmentDlg::chkNewOneWay_Changed(bool bChecked)
         ui->groupBox5->setVisible( false);
         ui->groupBox6->setVisible( false);
         //ui->btnOK->setEnabled(true);
-        //ui->sbTracks->setValue(sd.tracks());
+        if(sd)
+         ui->sbTracks->setValue(sd->tracks());
         ui->sbTracks->setEnabled(true);
+        if(ui->sbTracks->value()==2)
+        {
+         ui->gbUsage->setVisible(true);
+         ui->rbBoth->setChecked(true);
+         if(sd)
+         {
+          if(sd->trackUsage()=="L")
+           ui->rbUseL->setChecked(true);
+          else if(sd->trackUsage()=="R")
+           ui->rbUseR->setChecked(true);
+         }
+        }
     }
     else
     {
@@ -620,6 +678,7 @@ void SegmentDlg::chkNewOneWay_Changed(bool bChecked)
        // ui->btnOK->setEnabled(true);
         //ui->sbTracks->setValue(sd.tracks());
         ui->sbTracks->setEnabled(false);
+        ui->gbUsage->setVisible(false);
     }
     checkUpdate();
 }
@@ -708,7 +767,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
    setCursor(Qt::ArrowCursor);
    return;
   }
-  sd = sql->getSegmentInfo(_newSegmentId);
+  si = sql->getSegmentInfo(_newSegmentId);
   if(!ui->cbLocation->currentText().isEmpty())
   {
    QString saveLoc = ui->cbLocation->currentText();
@@ -730,8 +789,8 @@ void SegmentDlg::btnOK_Click()  // SLOT
   if (ui->chkOriginalOneWay->isChecked())
    originalName += " (1 way)";
   _newSegmentId = sql->splitSegment(_pt, _segmentId, originalName, ui->chkOriginalOneWay->isChecked()?"Y":"N",
-                                    newName, ui->chkNewOneWay->isChecked()?"Y":"N", sd.routeType(), (RouteType)ui->cbRouteType->currentIndex(),
-                                    sd.tracks(),sd.tracks(), sd.streetName(), sd.streetName());
+                                    newName, ui->chkNewOneWay->isChecked()?"Y":"N", si.routeType(), (RouteType)ui->cbRouteType->currentIndex(),
+                                    si.tracks(),si.tracks(), si.streetName(), si.streetName());
   if (_newSegmentId < 0)
   {
    ui->lblErrorText->setText(tr( "split segment failed!"));
@@ -742,23 +801,15 @@ void SegmentDlg::btnOK_Click()  // SLOT
 
  // Route Info
  int routeSegment;
+ if(ui->rbNoAdd->isChecked())
+ {
+  this->accept();
+  setCursor(Qt::ArrowCursor);
+  this->close();
+ }
  if (!ui->rbNoAdd->isChecked())
  {
   QString direction;
-#if 0
-  if (sd.oneWay() == "Y")
-  {
-   if (ui->rbNormal->isChecked())
-    direction = ui->rbNormal->text();
-   else
-    direction = ui->rbReverse->text();
-  }
-  else
-   //            if (!si.bearing )
-   //                direction = "";
-   //            else
-   direction = sd.bearing().strDirection() + "-" + sd.bearing().strReverseDirection();
-#endif
   if (ui->rbUseOriginal->isChecked())
    routeSegment = _segmentId;
   else
@@ -770,22 +821,30 @@ void SegmentDlg::btnOK_Click()  // SLOT
   {
    int tractionType = _tractionTypeList.values().at(ui->cbTractionType->currentIndex()).tractionType;
 
-   SegmentData* sd = sql->getSegmentData(_routeNbr, routeSegment, ui->dateStart->text(), ui->dateEnd->text());
-   if (!sd || sd->route() < 0)
+   //SegmentData* sd = sql->getSegmentData(_routeNbr, routeSegment, ui->dateStart->text(), ui->dateEnd->text());
+   //if (!sd || sd->route() < 0)
+   sd->setRoute(_routeNbr);
+   sd->setRouteName(ui->rnw->newRouteName());
+   sd->setSegmentId(routeSegment);
+   sd->setStartDate(ui->dateStart->date());
+   sd->setEndDate(ui->dateEnd->date());
+   sd->setCompanyKey(ui->cbCompany->currentData().toUInt());
+   sd->setTractionType(ui->cbTractionType->currentData().toUInt());
+   if(!sql->doesRouteSegmentExist(*sd))
    {
     int companyKey= ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt();
 
     QString alpha = sql->getAlphaRoute(_routeNbr,companyKey);
     if (alpha == "")
     {
-     CompanyData* cd = sql->getCompany(ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt());
+     CompanyData* cd = sql->getCompany(companyKey);
 
      _routeNbr = sql->addAltRoute(_alphaRoute, cd->routePrefix);
     }
     QString trackUsage = " ";
     // TODO: add logic to support trackUsage!
-    if (!sql->addSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->date(), ui->dateEnd->date(), routeSegment,
-                                companyKey, /*cbTractionType.SelectedIndex*/tractionType, direction, -1,-1,
+    if (!sql->addSegmentToRoute(_routeNbr, ui->rnw->newRouteName(), ui->dateStart->date(), ui->dateEnd->date(), routeSegment,
+                                companyKey, tractionType, direction, -1,-1,
                                 normalEnter, normalLeave, reverseEnter, reverseLeave,
                                 -1, -1,
                                 (ui->chkNewOneWay->isChecked()?"Y":"N"), trackUsage))
@@ -793,7 +852,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
     streetName = ui->txtOriginalName->text();
     //if (routeChanged != null)
     //routeChanged(this, new routeChangedEventArgs(_routeNbr, cbRouteName.Text, routeSegment, tractionType, companyKey, dateEnd.Value, routeChangedType.Add));
-    RouteChangedEventArgs args = RouteChangedEventArgs(_routeNbr, ui->cbRouteName->currentText(), routeSegment, tractionType, companyKey, ui->dateEnd->date(), "Add");
+    RouteChangedEventArgs args = RouteChangedEventArgs(_routeNbr, ui->rnw->newRouteName(), routeSegment, tractionType, companyKey, ui->dateEnd->date(), "Add");
     // emit a routeChanged Signal
     emit routeChangedEvent(args);
    }
@@ -801,11 +860,11 @@ void SegmentDlg::btnOK_Click()  // SLOT
    {
     QString strBiDirectional = ui->chkNewOneWay->isChecked()?"N":"Y";
 
-    if (!sql->updateSegmentToRoute(_routeNbr, ui->cbRouteName->currentText(), ui->dateStart->text(), ui->dateEnd->text(), routeSegment, companyKey, /*cbTractionType.SelectedIndex*/tractionType,
+    if (!sql->updateSegmentToRoute(_routeNbr, ui->rnw->newRouteName(), ui->dateStart->text(), ui->dateEnd->text(), routeSegment, companyKey, /*cbTractionType.SelectedIndex*/tractionType,
                                    normalEnter, normalLeave, reverseEnter, reverseLeave, strBiDirectional))
      ui->lblErrorText->setText(tr( "Update Error"));
     //if (routeChanged != null)
-    RouteChangedEventArgs args =  RouteChangedEventArgs(_routeNbr, ui->cbRouteName->currentText(), routeSegment, tractionType, companyKey, ui->dateEnd->date(), "Update");
+    RouteChangedEventArgs args =  RouteChangedEventArgs(_routeNbr, ui->rnw->newRouteName(), routeSegment, tractionType, companyKey, ui->dateEnd->date(), "Update");
     emit routeChangedEvent(args);
    }
   }
@@ -818,8 +877,8 @@ void SegmentDlg::btnOK_Click()  // SLOT
   emit routeChangedEvent(args);
 
  }
- if(ui->cbRouteName->currentText().length() > 0)
-  _routeName = ui->cbRouteName->currentText();
+ if(ui->rnw->newRouteName().length() > 0)
+  _routeName = ui->rnw->newRouteName();
  //this.DialogResult = DialogResult.OK;
 
  this->accept();

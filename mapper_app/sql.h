@@ -265,7 +265,7 @@ public:
 
 signals:
     void details(QString);
-    void segmentsChanged(int segmentId);
+    void segmentChanged(int segmentId);
     void routeChange(NotifyRouteChange rc);
 
 private:

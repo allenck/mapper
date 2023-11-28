@@ -41,7 +41,7 @@ class RouteNameWidget : public QWidget
   bool bNewRouteNbr = false;
   SQL* sql;
   QString _alphaRoute;
-  int companyKey;
+  int companyKey=-1;
   bool bRouteChanging;
   int _routeNbr;
   SegmentData* sd = nullptr;

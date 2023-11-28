@@ -16,20 +16,18 @@ class SegmentDlg : public QDialog
     Q_OBJECT
 
 public:
-    SegmentDlg(Configuration *cfg, QWidget *parent = 0);
+    SegmentDlg(QWidget *parent = 0);
     ~SegmentDlg();
-    QT_DEPRECATED void setConfiguration(Configuration * value);
-    void setPt(int value);
-    void setSegmentId(qint32 value);
+    void configure(RouteData rd, int segmentId, int point=-1);
     qint32 SegmentId();
     qint32 newSegmentId();
     QString street();
     QString routeName();
     qint32 tractionType();
-    void setRouteData(RouteData value);
     bool oneWay();
     int tracks();
-    SegmentData segment() {return sd;}
+    SegmentData segment() {return si;}
+
 private:
     Ui::SegmentDlg *ui;
     QWidget *myParent;
@@ -48,7 +46,8 @@ private:
     QMap<int, TractionTypeInfo> _tractionTypeList;
     QList<QString> _routeNameList;
     QList<QString> _routeTypeList;
-    SegmentInfo sd;
+    SegmentInfo si;
+    SegmentData* sd = nullptr;
     LatLng pi;
     Bearing bearing;
     Configuration *config;
@@ -63,14 +62,17 @@ private:
     void checkUpdate();
     QString getColor(qint32 tractionType);
     QStringList _locations;
+    void setPt(int value);
+    void setSegmentId(qint32 value);
+    void setRouteData(RouteData value);
 
 private slots:
     void rbUseOriginal_CheckedChanged();
-    void txtRouteNbr_Leave();
+    //void txtRouteNbr_Leave();
     void rbUseNew_CheckedChanged();
-    void txtRouteName_TextChanged(QString text);
+    //void txtRouteName_TextChanged(QString text);
     void rbNoAdd_CheckedChanged();
-    void cbRouteName_Leave();
+    //void cbRouteName_Leave();
     void txtNewName_TextChanged(QString text);
     void txtNewName_Leave();
     void txtOriginalName_Leave();

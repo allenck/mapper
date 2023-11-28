@@ -12,6 +12,7 @@ RouteViewTableModel::RouteViewTableModel(QObject *parent) :
  tractionTypes = SQL::instance()->getTractionTypes();
  connect(SQL::instance(), SIGNAL(routeChange(NotifyRouteChange)),
          SLOT(routeChange(NotifyRouteChange)));
+ //connect(SQL::instance(), SIGNAL(segmentChanged(int)), this,SLOT(segmentChanged(int)));
 }
 
 RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtStart,
@@ -37,6 +38,7 @@ RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtSta
  endRow = -1;
  connect(SQL::instance(), SIGNAL(routeChange(NotifyRouteChange)),
          SLOT(routeChange(NotifyRouteChange)));
+ //connect(SQL::instance(), SIGNAL(segmentChanged(int)), this,SLOT(segmentChanged(int)));
 
  TerminalInfo ti = SQL::instance()->getTerminalInfo(route,name, endDate.toString("yyyy/MM/dd"));
  for(int i =0; i < listOfSegments.count(); i++)
@@ -60,8 +62,10 @@ void RouteViewTableModel::routeChange(NotifyRouteChange rc)
   SegmentData* sd1 = listOfSegments.at(i);
   if(rc.sd()->route() == sd1->route() && rc.sd()->routeName()==sd1->routeName() && rc.sd()->segmentId()==sd1->segmentId()
      && rc.sd()->startDate()==sd1->startDate() && rc.sd()->endDate()==sd1->endDate())
+  {
    row = i;
-  break;
+   break;
+  }
  }
  if(row == -1 && rc.type() != SQL::ADDSEG)
   return;
@@ -74,7 +78,7 @@ void RouteViewTableModel::routeChange(NotifyRouteChange rc)
  else if(rc.type() == SQL::ADDSEG)
  {
   beginInsertRows(QModelIndex(), listOfSegments.count(), listOfSegments.count());
-  listOfSegments.append(rc.sd());
+  listOfSegments.append(new SegmentData(*rc.sd()));
   endInsertRows();
   MainWindow::instance()->segmentChanged(0, rc.sd()->segmentId());
  }
@@ -82,6 +86,33 @@ void RouteViewTableModel::routeChange(NotifyRouteChange rc)
  {
   listOfSegments.replace(row,rc.sd());
   MainWindow::instance()->segmentChanged(rc.sd()->segmentId(), rc.sd()->segmentId());
+ }
+}
+
+void RouteViewTableModel::segmentChanged(int segmentId)
+{
+ // update SegmentData with segment changes.
+ int row = -1;
+ for(int i=0; i < listOfSegments.count(); i++)
+ {
+  SegmentData* sd1 = listOfSegments.at(i);
+  if(segmentId==sd1->segmentId())
+  {
+   row = i;
+   break;
+  }
+ }
+ if(row >=0)
+ {
+  SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId);
+  SegmentData* sd = listOfSegments.at(row);
+  sd->setTracks(si.tracks());
+  sd->setDescription(si.description());
+  sd->setDirection(si.direction());
+  sd->setStreetName(si.streetName());
+  QString color = MainWindow::instance()->getColor(sd->tractionType());
+  MainWindow::instance()->displaySegment(sd->segmentId(),sd->description(), color, sd->trackUsage(), true);
+
  }
 }
 
@@ -421,7 +452,7 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
   sd->setNeedsUpdate(true);
   bChangesMade = true;
 
-  listOfSegments.replace(row, sd);
+  //listOfSegments.replace(row, sd);
   SQL::instance()->updateRoute(oldSd,*sd);
 
   selectedRow = row;

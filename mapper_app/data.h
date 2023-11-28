@@ -321,7 +321,7 @@ class SegmentData
     qint32 _segmentId=-1;
     qint8 _tracks=0;
     int _route=-1;
-    RouteType _routeType;
+    RouteType _routeType = Surface;
     double _startLat, _startLon, _endLat, _endLon;
     double _length=0;
     qint32	_points=0;
@@ -342,7 +342,7 @@ class SegmentData
     qint32 _sequence=-1, _returnSeq=-1;
     qint32 _normalEnter=0, _normalLeave=0, _reverseEnter=0, _reverseLeave=0;
     bool _bNeedsUpdate = false;
-    int _tractionType;
+    int _tractionType=0;
     QString _trackUsage = " ";
     LatLng _sw;
     LatLng _ne;

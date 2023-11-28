@@ -35,12 +35,12 @@ private:
     void fillCompanies();
     SQL* sql;
 private slots:
-    void txtNewRouteNbr1_TextChanged(QString text);
-    void txtNewRouteNbr2_TextChanged(QString text);
-    void txtNewRouteNbr1_Leave();
-    void txtNewRouteNbr2_Leave();
-    void txtNewRouteName1_Leave();
-    void txtNewRouteName2_Leave();
+//    void txtNewRouteNbr1_TextChanged(QString text);
+//    void txtNewRouteNbr2_TextChanged(QString text);
+//    void txtNewRouteNbr1_Leave();
+//    void txtNewRouteNbr2_Leave();
+//    void txtNewRouteName1_Leave();
+//    void txtNewRouteName2_Leave();
     void dateFrom1_Leave();
     void dateTo1_ValueChanged();
     void dateTo1_Leave();

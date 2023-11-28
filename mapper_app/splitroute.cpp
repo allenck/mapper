@@ -14,12 +14,13 @@ SplitRoute::SplitRoute(Configuration *cfg, QWidget *parent) :
     fillCompanies();
     ui->lblHelp->setText("");
     ui->chkDeleteOriginal->setChecked(true);
-    connect(ui->txtNewRouteNbr1, SIGNAL(textChanged(QString)), this, SLOT(txtNewRouteNbr1_TextChanged(QString)));
-    connect(ui->txtNewRouteNbr1, SIGNAL(textEdited(QString)), this, SLOT(txtNewRouteNbr1_Leave()));
-    connect(ui->txtNewRouteNbr2, SIGNAL(textChanged(QString)), this, SLOT(txtNewRouteNbr2_TextChanged(QString)));
-    connect(ui->txtNewRouteNbr2, SIGNAL(textEdited(QString)), this, SLOT(txtNewRouteNbr2_Leave()));
-    connect(ui->txtNewRouteName1, SIGNAL(textEdited(QString)), this, SLOT(txtNewRouteName1_Leave()));
-    connect(ui->txtNewRouteName2, SIGNAL(textEdited(QString)), this, SLOT(txtNewRouteName2_Leave()));
+//    connect(ui->txtNewRouteNbr1, SIGNAL(textChanged(QString)), this, SLOT(txtNewRouteNbr1_TextChanged(QString)));
+//    connect(ui->txtNewRouteNbr1, SIGNAL(textEdited(QString)), this, SLOT(txtNewRouteNbr1_Leave()));
+//    connect(ui->txtNewRouteNbr2, SIGNAL(textChanged(QString)), this, SLOT(txtNewRouteNbr2_TextChanged(QString)));
+//    connect(ui->txtNewRouteNbr2, SIGNAL(textEdited(QString)), this, SLOT(txtNewRouteNbr2_Leave()));
+//    connect(ui->txtNewRouteName1, SIGNAL(textEdited(QString)), this, SLOT(txtNewRouteName1_Leave()));
+//    connect(ui->txtNewRouteName2, SIGNAL(textEdited(QString)), this, SLOT(txtNewRouteName2_Leave()));
+
     connect(ui->dateFrom1, SIGNAL(editingFinished()), this, SLOT(dateFrom1_Leave()));
     connect(ui->dateFrom2, SIGNAL(editingFinished()), this, SLOT(dateFrom2_ValueChanged()));
     connect(ui->dateFrom2, SIGNAL(editingFinished()),this, SLOT(dateFrom2_Leave()));
@@ -45,10 +46,15 @@ void SplitRoute::setRouteData(RouteData rd)
     _rd = rd;
     if (rd.route() < 1)
         return;
-    ui->txtNewRouteNbr1->setText( _rd.alphaRoute());
-    ui->txtNewRouteNbr2->setText(_rd.alphaRoute());
-    ui->txtNewRouteName1->setText( _rd.routeName());
-    ui->txtNewRouteName2->setText( _rd.routeName());
+//    ui->txtNewRouteNbr1->setText( _rd.alphaRoute());
+//    ui->txtNewRouteNbr2->setText(_rd.alphaRoute());
+//    ui->txtNewRouteName1->setText( _rd.routeName());
+//    ui->txtNewRouteName2->setText( _rd.routeName());
+    ui->rnw1->configure(&rd, ui->lblHelp);
+    ui->rnw1->setCompanyKey(ui->cbCompany1->currentData().toInt());
+    ui->rnw2->configure(&rd, ui->lblHelp);
+    ui->rnw2->setCompanyKey(ui->cbCompany2->currentData().toInt());
+
     bRoute1Changed = true;
     bRoute2Changed = true;
 
@@ -63,7 +69,7 @@ void SplitRoute::setRouteData(RouteData rd)
             && rd.endDate() == _rd.endDate())
         {
             ui->cbRoutes->setCurrentIndex(i);
-            ui->txtNewRouteName1->setFocus();
+            //ui->txtNewRouteName1->setFocus();
             ui->dateFrom1->setDate( rd.startDate());
             ui->dateTo1->setDate(rd.startDate().addDays(1));
             ui->dateFrom2->setDate(rd.startDate().addDays(2));
@@ -86,6 +92,13 @@ void SplitRoute::setRouteData(RouteData rd)
             }
         }
     }
+    connect(ui->cbCompany1, &QComboBox::currentTextChanged, [=](){
+     ui->rnw1->setCompanyKey(ui->cbCompany1->currentData().toInt());
+    });
+    connect(ui->cbCompany2, &QComboBox::currentTextChanged, [=](){
+     ui->rnw2->setCompanyKey(ui->cbCompany2->currentData().toInt());
+    });
+
 }
 void SplitRoute::refreshRoutes()
 {
@@ -125,7 +138,7 @@ void SplitRoute::fillCompanies()
         ui->cbCompany2->addItem(cd->toString(), cd->companyKey);
     }
 }
-
+#if 0
 void SplitRoute::txtNewRouteNbr1_TextChanged(QString text)
 {
     Q_UNUSED(text);
@@ -162,7 +175,7 @@ void SplitRoute::txtNewRouteNbr1_Leave()
 
 void SplitRoute::txtNewRouteName1_Leave()
 {
-    if (ui->txtNewRouteName1->text() == "")
+    if (ui->rnw1->newRouteName() == "")
     {
         ui->lblHelp->setText(tr("Enter a new Route name"));
         QApplication::beep();
@@ -199,13 +212,13 @@ void SplitRoute::txtNewRouteNbr2_Leave()
 
 void SplitRoute::txtNewRouteName2_Leave()
 {
-    if (ui->txtNewRouteName1->text() == "")
+    if (ui->rnw1->newRouteName() == "")
     {
         ui->lblHelp->setText (tr("Enter a new Route name"));
         ui->txtNewRouteName1->setFocus();;
     }
 }
-
+#endif
 void SplitRoute::dateFrom1_Leave()
 {
     if(ui->dateTo1->dateTime() < ui->dateFrom1->dateTime())
@@ -362,11 +375,21 @@ void SplitRoute::btnOK_Click()
      return;
     }
 
-    _routeNbr1 = sql->addAltRoute(ui->txtNewRouteNbr1->text(), cd->routePrefix);
+    //_routeNbr1 = sql->addAltRoute(ui->rnw1->alphaRoute(), cd->routePrefix);
+    if(ui->rnw1->routeNbrMustBeAdded())
+    {
+     if(!sql->addAltRoute(ui->rnw1->newRoute(), ui->rnw1->alphaRoute()))
+     {
+      QApplication::beep();
+      setCursor(Qt::ArrowCursor);
+      sql->rollbackTransaction("SplitRoute");
+      return;
+     }
+    }
     RouteData rd =  RouteData();
     rd = routeDataList.at(ui->cbRoutes->currentIndex());
 
-    routes = sql->getRouteDataForRouteName(_routeNbr1, ui->txtNewRouteName1->text());
+    routes = sql->getRouteDataForRouteName(_routeNbr1, ui->rnw1->newRouteName());
     if (!routes.isEmpty())
     {
      //foreach (routeData rd1 in routes)
@@ -388,8 +411,18 @@ void SplitRoute::btnOK_Click()
     }
     cd = sql->getCompany(ui->cbCompany2->itemData(ui->cbCompany2->currentIndex()).toInt());
 
-    _routeNbr2 = sql->addAltRoute(ui->txtNewRouteNbr2->text(),cd->routePrefix);
-    routes = sql->getRouteDataForRouteName(_routeNbr2, ui->txtNewRouteName2->text());
+    //_routeNbr2 = sql->addAltRoute(ui->rnw2->alphaRoute(),cd->routePrefix);
+    if(ui->rnw2->routeNbrMustBeAdded())
+    {
+     if(!sql->addAltRoute(ui->rnw2->newRoute(), ui->rnw2->alphaRoute()))
+     {
+      QApplication::beep();
+      setCursor(Qt::ArrowCursor);
+      sql->rollbackTransaction("SplitRoute");
+      return;
+     }
+    }
+    routes = sql->getRouteDataForRouteName(_routeNbr2, ui->rnw2->newRouteName());
     if (!routes.isEmpty())
     {
      //foreach (routeData rd2 in routes)
@@ -432,7 +465,7 @@ void SplitRoute::btnOK_Click()
      // add back if original has an earlier start date.
      if(rd1.startDate() < ui->dateFrom1->date()  && rd1.endDate() < ui->dateFrom2->date())
      {
-      if (sql->addSegmentToRoute(_routeNbr1, ui->txtNewRouteName1->text(),
+      if (sql->addSegmentToRoute(_routeNbr1, ui->rnw1->newRouteName(),
                                  rd1.startDate(), ui->dateTo1->date(),
                                  rd1.segmentId(), _companyList.at(ui->cbCompany1->currentIndex())->companyKey,
                                  rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(), rd1.normalEnter(), rd1.normalLeave(),
@@ -449,7 +482,7 @@ void SplitRoute::btnOK_Click()
      // add back any after end date
      if(rd1.endDate() > ui->dateTo2->date() )
      {
-      if (sql->addSegmentToRoute(_routeNbr1, ui->txtNewRouteName1->text(),
+      if (sql->addSegmentToRoute(_routeNbr1, ui->rnw1->newRouteName(),
                                  ui->dateTo2->date(), rd1.endDate(),
                                  rd1.segmentId(), _companyList.at(ui->cbCompany2->currentIndex())->companyKey,
                                  rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
@@ -467,7 +500,7 @@ void SplitRoute::btnOK_Click()
 
      }
 
-     if (sql->addSegmentToRoute(_routeNbr1, ui->txtNewRouteName1->text(),
+     if (sql->addSegmentToRoute(_routeNbr1, ui->rnw1->newRouteName(),
                                 ui->dateFrom1->date(), ui->dateTo1->date(),
                                 rd1.segmentId(), _companyList.at(ui->cbCompany1->currentIndex())->companyKey,
                                 rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
@@ -483,7 +516,7 @@ void SplitRoute::btnOK_Click()
       return;
      }
 
-     if (sql->addSegmentToRoute(_routeNbr2, ui->txtNewRouteName2->text(),
+     if (sql->addSegmentToRoute(_routeNbr2, ui->rnw2->newRouteName(),
                                 ui->dateFrom2->date().addDays(1), ui->dateTo2->date(),
                                 rd1.segmentId(), rd1.companyKey(),
                                 rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
@@ -499,7 +532,7 @@ void SplitRoute::btnOK_Click()
       return;
      }
      _newRoute.setRoute(_routeNbr2);
-     _newRoute.setRouteName(ui->txtNewRouteName2->text());
+     _newRoute.setRouteName(ui->rnw2->newRouteName());
      _newRoute.setStartDate(ui->dateFrom2->date().addDays(1));
      _newRoute.setEndDate(ui->dateTo2->date());
      _newRoute.setCompanyKey(_companyList.at(ui->cbCompany2->currentIndex())->companyKey);
@@ -519,14 +552,14 @@ void SplitRoute::btnOK_Click()
      ui->cbRoutes->setCurrentIndex(++ix);
      _rd = routeDataList.at(ix);
 
-     disconnect(ui->txtNewRouteNbr1, SIGNAL(textChanged(QString)), this, SLOT(txtNewRouteNbr1_TextChanged(QString)));
-     disconnect(ui->txtNewRouteNbr1, SIGNAL(textEdited(QString)), this, SLOT(txtNewRouteNbr1_Leave()));
-     disconnect(ui->txtNewRouteNbr2, SIGNAL(textChanged(QString)), this, SLOT(txtNewRouteNbr2_TextChanged(QString)));
-     disconnect(ui->txtNewRouteNbr2, SIGNAL(textEdited(QString)), this, SLOT(txtNewRouteNbr2_Leave()));
-     ui->txtNewRouteNbr1->setText( _rd.alphaRoute());
-     ui->txtNewRouteNbr2->setText(_rd.alphaRoute());
-     ui->txtNewRouteName1->setText( _rd.routeName());
-     ui->txtNewRouteName2->setText( _rd.routeName());
+//     disconnect(ui->txtNewRouteNbr1, SIGNAL(textChanged(QString)), this, SLOT(txtNewRouteNbr1_TextChanged(QString)));
+//     disconnect(ui->txtNewRouteNbr1, SIGNAL(textEdited(QString)), this, SLOT(txtNewRouteNbr1_Leave()));
+//     disconnect(ui->txtNewRouteNbr2, SIGNAL(textChanged(QString)), this, SLOT(txtNewRouteNbr2_TextChanged(QString)));
+//     disconnect(ui->txtNewRouteNbr2, SIGNAL(textEdited(QString)), this, SLOT(txtNewRouteNbr2_Leave()));
+//     ui->txtNewRouteNbr1->setText( _rd.alphaRoute());
+//     ui->txtNewRouteNbr2->setText(_rd.alphaRoute());
+//     ui->txtNewRouteName1->setText( _rd.routeName());
+//     ui->txtNewRouteName2->setText( _rd.routeName());
      setCursor(Qt::ArrowCursor);
      return;
     }
@@ -541,10 +574,11 @@ void SplitRoute::Cancel_Click()
     this->reject();
     this->close();
 }
-
+#if 0
 void SplitRoute::txtNewRouteNbr2_TextChanged(QString text)
 {
     Q_UNUSED(text)
     bRoute2Changed = true;
 
 }
+#endif

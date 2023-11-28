@@ -3695,7 +3695,7 @@ bool SQL::updateSegment(SegmentInfo* sd)
   return ret;
  }
  ret = true;
- emit segmentsChanged(sd->segmentId());
+ emit segmentChanged(sd->segmentId());
 
  return ret;
 }
@@ -3773,7 +3773,7 @@ bool SQL::updateSegment(SegmentData* sd)
   return ret;
  }
  ret = true;
- emit segmentsChanged(sd->segmentId());
+ emit segmentChanged(sd->segmentId());
 
  return ret;
 }
@@ -3877,7 +3877,7 @@ bool SQL::updateSegment(qint32 SegmentId)
  }
  ret = true;
  commitTransaction("UpdateSegment");
- emit segmentsChanged(SegmentId);
+ emit segmentChanged(SegmentId);
 
  return ret;
 }
@@ -6838,7 +6838,7 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
  }
  commitTransaction("addSegment");
 
- emit segmentsChanged(SegmentId);
+ emit segmentChanged(SegmentId);
  return SegmentId;
 }
 
@@ -6958,7 +6958,7 @@ qint32 SQL::addSegment(SegmentData sd, bool *bAlreadyExists, bool forceInsert)
  }
  commitTransaction("addSegment");
 
- emit segmentsChanged(SegmentId);
+ emit segmentChanged(SegmentId);
  return SegmentId;
 }
 
@@ -6972,8 +6972,10 @@ qint32 SQL::addSegment(SegmentData sd, bool *bAlreadyExists, bool forceInsert)
 /// <param name="newDesc"></param>
 /// <param name="newOneWay"></param>
 /// <returns>new segment id</returns>
-qint32 SQL::splitSegment(qint32 pt, qint32 segmentId, QString oldDesc, QString oldOneWay, QString newDesc,
-                         QString newOneWay, RouteType routeType, RouteType newRouteType,int oldTracks, int newTracks,
+qint32 SQL::splitSegment(qint32 pt, qint32 segmentId, QString oldDesc, QString oldOneWay,
+                         QString newDesc,
+                         QString newOneWay, RouteType routeType, RouteType newRouteType,
+                         int oldTracks, int newTracks,
                          QString oldStreet, QString newStreet)
 {
 int rows = 0, newSegmentId=-1;
@@ -6988,6 +6990,9 @@ try
  beginTransaction("splitSegment");
 
  SegmentInfo oldSi = getSegmentInfo(segmentId); // Original segment before any changes.
+ // Sanity check
+ if(pt < 1 || pt > oldSi.pointList().count()-2)
+  throw IllegalArgumentException("bad split point");
 
  LatLng p = oldSi._pointList.at(pt); // breaking at this point!
  QString pointArray = "";
@@ -9825,7 +9830,8 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd)
  rows = query.numRowsAffected();
  if (rows > 0)
  {
-  emit routeChange(NotifyRouteChange(MODIFYSEG, &sd));
+  SegmentData* sdNew = new SegmentData(sd);
+  emit routeChange(NotifyRouteChange(MODIFYSEG, sdNew));
   ret = true;
  }
  else

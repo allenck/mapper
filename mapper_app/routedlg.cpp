@@ -27,9 +27,9 @@ RouteDlg::RouteDlg(QWidget *parent) :
     bNewRouteNbr=false;
     strNoRoute = tr("New Route Name");
     //connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbr_Leave()) );
-    connect(ui->rnw, SIGNAL(routeNumberChange(int)), this, SLOT(txtRouteNbr_Leave()) );
+    //connect(ui->rnw, SIGNAL(routeNumberChange(int)), this, SLOT(txtRouteNbr_Leave()) );
     //connect(ui->cbRouteName, SIGNAL(signalFocusOut()), this, SLOT(txtRouteName_Leave()));
-    connect(ui->rnw, SIGNAL(routeNameChanged(QString)), this, SLOT(txtRouteName_Leave()));
+    //connect(ui->rnw, SIGNAL(routeNameChanged(QString)), this, SLOT(txtRouteName_Leave()));
     connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSegments_SelectedIndexChanged(int)));
     connect(ui->gbNormalEnter, SIGNAL(toggled(bool)), this, SLOT(gbNormalEnter_Leave()));
     connect(ui->gbNormalLeave, SIGNAL(toggled(bool)), this, SLOT(gbNormalLeave_Leave()));

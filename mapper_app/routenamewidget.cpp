@@ -32,18 +32,20 @@ void RouteNameWidget::setSegmentData(SegmentData* sd)
 {
  this->sd = sd;
  ui->txtRouteNbr->setText(_alphaRoute = QString::number(sd->route()));
- ui->cbRouteName->setCurrentText(sd->routeName());
+ setRouteName(sd->routeName());
 }
 
 void RouteNameWidget::setRouteData(RouteData* rd)
 {
  this->rd = rd;
  ui->txtRouteNbr->setText(rd->alphaRoute());
- ui->cbRouteName->setCurrentText(rd->routeName());
+ setRouteName(rd->routeName());
 }
 
 void RouteNameWidget::setRouteName(QString name)
 {
+ if(ui->cbRouteName->findText(name)==-1)
+  ui->cbRouteName->addItem(name);
  ui->cbRouteName->setCurrentText(name);
 }
 
@@ -54,16 +56,18 @@ void RouteNameWidget::configure(SegmentData* sd, QLabel *lblHelpText)
  if(sd == nullptr)
   return;
  ui->txtRouteNbr->setText(_alphaRoute = QString::number(sd->route()));
- ui->cbRouteName->setCurrentText(sd->routeName());
+ setRouteName(sd->routeName());
 }
 
 void RouteNameWidget::configure(RouteData* rd, QLabel *lblHelpText)
 {
  this->companyKey = rd->companyKey();
  this->rd = rd;
+ _routeNbr = rd->route();
+ _alphaRoute = rd->alphaRoute();
  this->lblHelpText = lblHelpText;
- ui->txtRouteNbr->setText(_alphaRoute = QString::number(rd->route()));
- ui->cbRouteName->setCurrentText(rd->routeName());
+ ui->txtRouteNbr->setText(rd->alphaRoute());
+ setRouteName(rd->routeName());
 }
 
 QString RouteNameWidget::newRouteName()
@@ -86,6 +90,8 @@ void RouteNameWidget::txtRouteNbr_Leave()
      }
     }
     ui->txtRouteNbr->text().toInt(&isNumeric);
+    if(companyKey == -1)
+     throw IllegalArgumentException("missing company key");
     int newRoute = sql->getNumericRoute(ui->txtRouteNbr->text(), & _alphaRoute, & bAlphaRoute, companyKey);
     if(newRoute < 0)
     {

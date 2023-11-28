@@ -189,6 +189,7 @@ public:
     QDir htmlDir;
     static MainWindow* _instance;
     static MainWindow* instance();
+    QString getColor(qint32 tractionType);
 
 public slots:
     void copyRouteInfo_Click();
@@ -325,8 +326,8 @@ private:
     QAction *replaceSegments;
     QAction *updateTerminalsAct;
     QAction *describeRouteAct;
-    QAction* addSegmentToRouteAct;
-    QAction* addSegmentToNewRouteAct;
+    QAction* addSegmentToRouteAct; // to current route
+    QAction* addSegmentToNewRouteAct; // using RouteDlg
     QAction *deleteSegmentAct;
     QAction *findDupSegmentsAct;
     QAction *queryRouteUsageAct;
@@ -407,7 +408,6 @@ private:
     void createActions();
     void createMenus();
     void lookupStreetName(SegmentInfo sd);
-    QString getColor(qint32 tractionType);
     void closeEvent(QCloseEvent *event);
     FileDownloader *m_dataCtrl;
     FileDownloader *m_overlays;

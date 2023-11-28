@@ -75,6 +75,7 @@ void ModifyRouteDialog::btnOK_Click()
      ui->lblHelp->setText(tr("route number invalid"));
      return;
     }
+    _routeNbr = ui->rnw->newRoute();
     if(ui->rnw->newRouteName().isEmpty())
     {
      ui->lblHelp->setText(tr("route name invalid"));
@@ -94,7 +95,8 @@ void ModifyRouteDialog::btnOK_Click()
 
     if(ui->rnw->routeNbrMustBeAdded())
     {
-      sql->addAltRoute(ui->rnw->alphaRoute().toInt(), ui->rnw->alphaRoute());
+      //sql->addAltRoute(ui->rnw->alphaRoute().toInt(), ui->rnw->alphaRoute());
+     _routeNbr = sql->addAltRoute(ui->rnw->alphaRoute(), cd->routePrefix);
     }
     //foreach (routeData rd1 in myArray)
     for(int i=0; i < myArray.count(); i++)
@@ -119,7 +121,7 @@ void ModifyRouteDialog::btnOK_Click()
      SegmentData* sd = myArray.at(i);
      SegmentData* sdNew = new SegmentData(*sd);
      //sdNew.setRouteName(newName().trimmed());
-     sdNew->setRoute(ui->rnw->newRoute());
+     sdNew->setRoute(_routeNbr);
      sdNew->setRouteName(ui->rnw->newRouteName());
      sdNew->setAlphaRoute(ui->rnw->alphaRoute());
      if(!sql->updateRoute(*sd, *sdNew))

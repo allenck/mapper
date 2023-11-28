@@ -24,7 +24,7 @@ void SegmentSelectionWidget::initialize()
 
  refreshSegmentCB();
 
- connect(SQL::instance(), &SQL::segmentsChanged, [=](int segmentId){
+ connect(SQL::instance(), &SQL::segmentChanged, [=](int segmentId){
   if(ui->cbSegments->findData(segmentId) >= 0)
   {
    SegmentInfo sd = sql->getSegmentInfo(segmentId);
@@ -113,13 +113,13 @@ void SegmentSelectionWidget::refreshSegmentCB()
  cbSegmentInfoMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
  //qSort(cbSegmentDataList.begin(), cbSegmentDataList.end(),compareSegmentDataByName);
  //foreach (segmentInfo sI in cbSegmentInfoList)
- foreach(SegmentData sd, cbSegmentInfoMap.values())
+ foreach(SegmentData si, cbSegmentInfoMap.values())
  {
-  description = sd.description();
-  if(!sd.location().isEmpty())
+  description = si.description();
+  if(!si.location().isEmpty())
   {
-   if(!_locations.contains(sd.location()))
-    _locations.append(sd.location());
+   if(!_locations.contains(si.location()))
+    _locations.append(si.location());
   }
   tokens = description.split(",");
   if(tokens.count() > 1)
@@ -137,16 +137,16 @@ void SegmentSelectionWidget::refreshSegmentCB()
     }
     street= street.mid(0, street.indexOf("("));
    }
-   if(street == selectedStreet && ui->cbLocation->currentText() == sd.location())
+   if(street == selectedStreet && ui->cbLocation->currentText() == si.location())
    {
     // populate streets
-    if((sd.tracks() == 2 && ui->rbDouble->isChecked() ) ||
-       (sd.tracks() == 1 && ui->rbSingle->isChecked() )  ||
+    if((si.tracks() == 2 && ui->rbDouble->isChecked() ) ||
+       (si.tracks() == 1 && ui->rbSingle->isChecked() )  ||
        ui->rbBoth->isChecked())
     {
-     if(!mapDescriptions.contains(sd.toString()))
+     if(!mapDescriptions.contains(si.toString()))
      {
-      mapDescriptions.insert(sd.toString(), sd.segmentId());
+      mapDescriptions.insert(si.toString(), si.segmentId());
       continue;
      }
     }
@@ -156,13 +156,13 @@ void SegmentSelectionWidget::refreshSegmentCB()
     if(selectedStreet.trimmed().isEmpty())
     {
      // populate streets
-     if((sd.tracks() == 2 && ui->rbDouble->isChecked() ) ||
-        (sd.tracks() == 1 && ui->rbSingle->isChecked() )  ||
+     if((si.tracks() == 2 && ui->rbDouble->isChecked() ) ||
+        (si.tracks() == 1 && ui->rbSingle->isChecked() )  ||
         ui->rbBoth->isChecked())
      {
-      if(!mapDescriptions.contains(sd.toString()))
+      if(!mapDescriptions.contains(si.toString()))
       {
-       mapDescriptions.insert(sd.toString(), sd.segmentId());
+       mapDescriptions.insert(si.toString(), si.segmentId());
        continue;
       }
      }
@@ -176,16 +176,16 @@ void SegmentSelectionWidget::refreshSegmentCB()
      street = tokens.at(0).trimmed();
      if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
      //if(street2.indexOf(" ")) street2= street2.mid(0, street2.indexOf(" "));
-     if(street == selectedStreet && ui->cbLocation->currentText() == sd.location())
+     if(street == selectedStreet && ui->cbLocation->currentText() == si.location())
      {
       // populate streets
-      if((sd.tracks() == 2 && ui->rbDouble->isChecked() ) ||
-         (sd.tracks() == 1 && ui->rbSingle->isChecked() )  ||
+      if((si.tracks() == 2 && ui->rbDouble->isChecked() ) ||
+         (si.tracks() == 1 && ui->rbSingle->isChecked() )  ||
          ui->rbBoth->isChecked())
       {
-       if(!mapDescriptions.contains(sd.toString()))
+       if(!mapDescriptions.contains(si.toString()))
        {
-        mapDescriptions.insert(sd.toString(), sd.segmentId());
+        mapDescriptions.insert(si.toString(), si.segmentId());
         continue;
        }
       }
@@ -195,13 +195,13 @@ void SegmentSelectionWidget::refreshSegmentCB()
       if(selectedStreet.trimmed().isEmpty())
       {
        // populate streets
-       if((sd.tracks() == 2 && ui->rbDouble->isChecked() ) ||
-          (sd.tracks() == 1 && ui->rbSingle->isChecked() )  ||
+       if((si.tracks() == 2 && ui->rbDouble->isChecked() ) ||
+          (si.tracks() == 1 && ui->rbSingle->isChecked() )  ||
           ui->rbBoth->isChecked())
        {
-        if(!mapDescriptions.contains(sd.toString()))
+        if(!mapDescriptions.contains(si.toString()))
         {
-         mapDescriptions.insert(sd.toString(), sd.segmentId());
+         mapDescriptions.insert(si.toString(), si.segmentId());
          continue;
         }
        }
@@ -218,22 +218,22 @@ void SegmentSelectionWidget::refreshSegmentCB()
     QString street = tokens.at(0).trimmed();
     if(street == selectedStreet || selectedStreet.isEmpty())
     {
-      if((sd.tracks() == 2 && ui->rbDouble->isChecked() ) ||
-      (sd.tracks() == 1 && ui->rbSingle->isChecked() )  ||
+      if((si.tracks() == 2 && ui->rbDouble->isChecked() ) ||
+      (si.tracks() == 1 && ui->rbSingle->isChecked() )  ||
       ui->rbBoth->isChecked())
       {
-       if(!mapDescriptions.contains(sd.toString()))
+       if(!mapDescriptions.contains(si.toString()))
        {
-        mapDescriptions.insert(sd.toString(), sd.segmentId());
+        mapDescriptions.insert(si.toString(), si.segmentId());
         continue;
        }
       }
     }
    }
-   qDebug() << "bypass " << sd.toString();
+   qDebug() << "bypass " << si.toString();
   }
-  if(sd.needsUpdate())
-   sql->updateSegment(&sd);
+  if(si.needsUpdate())
+   sql->updateSegment(new SegmentData(si));
  }
  if(m_SegmentId >0)
   ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(m_SegmentId));

@@ -3693,7 +3693,7 @@ bool ExportSql::createAltRouteTable(QSqlDatabase db, QString dbType)
  if(dbType == "Sqlite")
   commandText = "CREATE TABLE `AltRoute` (" \
     "`route` integer NOT NULL primary key AUTOINCREMENT, "\
-    "`routePrefix` varchar(10) default '', " \
+    "`routePrefix` varchar(10) NIT NULL default '', " \
     "`routeAlpha` varchar(10) NOT NULL, "\
     "`baseRoute` int(11) NOT NULL DEFAULT 0, " \
     "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,  CONSTRAINT `index` unique ( routePrefix, routeAlpha) )";

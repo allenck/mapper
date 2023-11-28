@@ -432,7 +432,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui->ssw->cbSegments()->addAction(splitSegmentAct);
   ui->ssw->cbSegments()->addAction(checkSegmentsAct);
 
-  connect(SQL::instance(), &SQL::segmentsChanged, [=]{
+  connect(SQL::instance(), &SQL::segmentChanged, [=]{
    cbSegmentInfoList = sql->getSegmentInfoList();
   });
 
@@ -989,7 +989,7 @@ void MainWindow::createActions()
      sd->setStartDate(_rd.startDate());
      sd->setEndDate(_rd.endDate());
      sd->setTractionType(_rd.tractionType());
-     sd->setCompanyKey(ui->cbCompany->currentData().toInt());
+     sd->setCompanyKey(_rd.companyKey());
      QList<SegmentData*> conflicts
              = sql->getConflictingRouteSegments(_rd.route(), _rd.routeName(),
                                                 _rd.startDate().toString("yyyy/MM/dd"),
@@ -1004,14 +1004,14 @@ void MainWindow::createActions()
      }
      if(!sql->addSegmentToRoute(sd))
      {
-      updateRoute(sd);
+      //updateRoute(sd);
       return;
      }
         m_bridge->processScript("clearPolyline", QString("%1").arg(sd->segmentId()));
         //SegmentInfo si = sql->getSegmentInfo(segmentId);
         displaySegment(sd->segmentId(), sd->description(),
                        getColor(sd->tractionType()),
-                       " ", true);
+                       sd->trackUsage(), true);
 
  });
 
@@ -1363,8 +1363,6 @@ void MainWindow::createMenus()
 
     optionsMenu = new Menu(tr("Options"));
     overlayMenu = new Menu(tr("Overlays"));
-    sortMenu = new Menu(tr("Route Sort option"));
-    sortMenu->addAction(sortTypeAct);
 
     connect(optionsMenu, &Menu::aboutToShow, [=]{
      if(config->currConnection->servertype()== "Sqlite")
@@ -1381,6 +1379,7 @@ void MainWindow::createMenus()
       optionsMenu->addAction(runInBrowserAct);
   #endif
       sortMenu = new Menu(tr("Route Sort option"));
+      sortMenu->addAction(sortTypeAct);
       optionsMenu->addMenu(sortMenu);
       optionsMenu->addAction(showGoogleMapFeaturesAct);
       optionsMenu->addAction(foreignKeyCheckAct);
@@ -1883,8 +1882,8 @@ void MainWindow::refreshRoutes()
     if(routeList.isEmpty())
      qDebug() << "no routes selected for company " << companyKey;
 
-    int len = routeList.count();
-    for(int i=0; i<len; i++)
+    //int len = routeList.count();
+    for(int i=0; i<routeList.count(); i++)
     {
          RouteData rd = (RouteData)routeList.at(i);
          QString rdStartDate = rd.startDate().toString("yyyy/MM/dd");
@@ -2284,6 +2283,8 @@ void MainWindow::onCbRouteIndexChanged(int row)
  ui->dateEdit->setMaximumDate(_rd.endDate());
  m_routeNbr = _rd.route();
  m_routeName = _rd.routeName();
+ m_companyKey = _rd.companyKey();
+ ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(m_companyKey));
  routeDlg->setSegmentData(_rd);
 
  routeView->updateRouteView();
@@ -2484,18 +2485,18 @@ void MainWindow::cbCompanySelectionChanged(int sel)
 /// Called by Google Maps when selecting a segment
 /// </summary>
 /// <param name="SegmentId"></param>
-void MainWindow::segmentSelected(qint32 pt, qint32 SegmentId)
+void MainWindow::segmentSelected(qint32 pt, qint32 segmentId)
 {
  //SQL sql;
  //webBrowser1.Document.InvokeScript("addModeOff");
  //m_bridge->processScript("addModeOff");
  //m_bAddMode = false;
  //addPointModeAct->setChecked(false);
- m_segmentId = SegmentId;
+ m_segmentId = segmentId;
  SegmentInfo si = sql->getSegmentInfo(m_segmentId);
  if (si.segmentId() == -1)
  {
-  qDebug() <<"segment " + QString("%1").arg(SegmentId) + " not found";
+  qDebug() <<"segment " + QString("%1").arg(segmentId) + " not found";
   return;
  }
  if(routeDlg)
@@ -2558,7 +2559,7 @@ void MainWindow::segmentSelected(qint32 pt, qint32 SegmentId)
   if(routeDlg)
    routeDlg->setSegmentData(rd);
 
-  otherRouteView->showRoutesUsingSegment(SegmentId);
+  otherRouteView->showRoutesUsingSegment(segmentId);
  }
  if (!ui->chkNoPan->checkState())
  {
@@ -2975,12 +2976,12 @@ void MainWindow::btnSplit_Clicked()    // SLOT
 // if(!bFirstSegmentDisplayed)
 //  return;
  //SQL sql;
- SegmentDlg segmentDlg(config, this);
- //segmentDlg.setConfiguration(config);
- segmentDlg.setSegmentId( m_segmentId);
- segmentDlg.setPt(m_currPoint);
- if(ui->cbRoute->currentIndex() >=0)
-  segmentDlg.setRouteData( routeList.at(ui->cbRoute->currentIndex()));
+ SegmentDlg segmentDlg(this);
+ //segmentDlg.setSegmentId( m_segmentId);
+ //segmentDlg.setPt(m_currPoint);
+// if(ui->cbRoute->currentIndex() >=0)
+//  segmentDlg.setRouteData( routeList.at(ui->cbRoute->currentIndex()));
+ segmentDlg.configure(routeList.at(ui->cbRoute->currentIndex()), m_segmentId, m_currPoint);
  connect(&segmentDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs)), this, SLOT(segmentDlg_routeChanged(RouteChangedEventArgs)));
  //string RouteNames = "No route";
 
@@ -3420,7 +3421,7 @@ void MainWindow::updateIntersection(qint32 i, double newLat, double newLon)
   //displaySegment(sd.SegmentId, sql->getSegmentDescription(si.SegmentId), oneWay, oneWay == "N" ? "#00FF00" : "#045fb4", true);
   displaySegment(sd.segmentId(), sd.description(),
                  /*sd.oneWay(),*/ /*sd.oneWay() == "N" ? "#00FF00" : */
-                 "#045fb4", " ",  true);
+                 "#045fb4", sd.trackUsage(),  true);
  }
  m_segmentId = currSegment;
 }
@@ -3710,7 +3711,7 @@ void MainWindow::addSegment()
 {
 #if 1 // TODO
     //SQL sql;
-    SegmentDlg segmentDlg(config, this);
+    SegmentDlg segmentDlg(this);
 //TODO    segmentDlg.routeChanged += new routeChangedEventHandler(segmentDlg_routeChanged);
     connect(&segmentDlg, &SegmentDlg::companySelectionChanged, [=](/*int companyKey*/){
      ui->cbCompany->setCurrentIndex( ui->cbCompany->findData(_rd.companyKey()));
@@ -3718,11 +3719,11 @@ void MainWindow::addSegment()
     } );
     connect(&segmentDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs)), this, SLOT(segmentDlg_routeChanged(RouteChangedEventArgs)));
     //segmentDlg.setConfiguration( config);
-    segmentDlg.setSegmentId( -1);
+    //segmentDlg.setSegmentId( -1);
     m_currPoint = 0;
     ui->lblPoint->setText(QString::number(m_currPoint));
 
-    segmentDlg.setPt( m_currPoint);
+    //segmentDlg.setPt( m_currPoint);
     //int ix = cbRoutes.SelectedIndex;
     //if(ix > -1)
     //{
@@ -3731,7 +3732,8 @@ void MainWindow::addSegment()
     RouteData rd = RouteData();
     if(ui->cbRoute->currentIndex() >= 0)
      rd = routeList.at(ui->cbRoute->currentIndex());
-    segmentDlg.setRouteData (rd);
+    //segmentDlg.setRouteData (rd);
+    segmentDlg.configure(rd, -1, m_currPoint);
     if (segmentDlg.exec() == QDialog::Accepted)
     {
         //refreshSegmentCB();
@@ -3910,9 +3912,9 @@ void MainWindow::segmentChanged(qint32 changedSegment, qint32 newSegment)
     }
     if (newSegment > 0)
     {
-     SegmentInfo sd = sql->getSegmentInfo(newSegment);
+     SegmentInfo si = sql->getSegmentInfo(newSegment);
 
-     displaySegment(newSegment, sd.description(), /*sd.oneWay(),*/
+     displaySegment(newSegment, si.description(), /*sd.oneWay(),*/
                     m_segmentColor, " ", true);
     }
 }
@@ -3982,7 +3984,7 @@ void MainWindow::RouteChanged(RouteChangedEventArgs args)
   m_bridge->processScript("clearPolyline", QString("%1").arg(args.routeSegment));
   //SegmentInfo si = sql->getSegmentInfo(args.routeSegment);
   displaySegment(args.routeSegment, rd.routeName(),
-                 /*rd.oneWay,*/ /*ttColors[e.tractionType]*/getColor(args.tractionType), " ", true);
+                 /*rd.oneWay,*/ /*ttColors[e.tractionType]*/getColor(args.tractionType), rd.trackUsage(), true);
  }
  routeView->updateRouteView();
  ui->tabWidget->setCurrentIndex(0);
@@ -4292,8 +4294,8 @@ void MainWindow::on_selectSegment(int segmentId)
   ProcessScript("selectSegment", QString("%1").arg(segmentId));
  else
  {
-  SegmentInfo sd = sql->getSegmentInfo(segmentId);
-  displaySegment(sd.segmentId(), sd.description(), getColor(_rd.tractionType()), "B", true);
+  SegmentInfo si = sql->getSegmentInfo(segmentId);
+  displaySegment(si.segmentId(), si.description(), getColor(_rd.tractionType()), "B", true);
   ProcessScript("selectSegment", QString("%1").arg(segmentId));
  }
 }

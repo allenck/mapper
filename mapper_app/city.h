@@ -25,7 +25,7 @@ public:
  LatLng center;
  QString mapType = "roadmap";
  qint32 zoom =8;
- bool bAlphaRoutes = false;
+ bool bAlphaRoutes = true;
  bool bNoPanOpt = false;
  bool bGeocoderRequest = false;
  qint32 lastRoute = 0;
