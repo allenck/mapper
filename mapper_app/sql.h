@@ -115,6 +115,8 @@ public:
                            qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave,
                            qint32 sequence, qint32 reverseSeq,
                            QString oneWay, QString trackUsage);
+    bool addSegmenToRoutes(int _newSegmentId, int _segmentId);
+
     qint32 getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * bAlphaRoute, int companyKey);
     int findNextRouteInRange(QString txt);
     bool updateTerminals(TerminalInfo ti);

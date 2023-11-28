@@ -15,9 +15,8 @@ class SplitRoute : public QDialog
     Q_OBJECT
 
 public:
-    explicit SplitRoute(Configuration *cfg, QWidget *parent = 0);
+    explicit SplitRoute(QWidget *parent = 0);
     ~SplitRoute();
-    void setConfiguration(Configuration *cfg);
     void setRouteData(RouteData rd);
     RouteData getRoute();
     RouteData getNewRoute();

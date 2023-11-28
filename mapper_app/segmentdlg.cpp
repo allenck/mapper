@@ -803,6 +803,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
  int routeSegment;
  if(ui->rbNoAdd->isChecked())
  {
+  updateOtherRoutes();
   this->accept();
   setCursor(Qt::ArrowCursor);
   this->close();
@@ -897,4 +898,12 @@ QString SegmentDlg::getColor(qint32 tractionType)
       return tti.displayColor;
  }
  return color;
+}
+
+void SegmentDlg::updateOtherRoutes()
+{
+ if(_newSegmentId >0 && _segmentId >0)
+ {
+  sql->addSegmenToRoutes(_newSegmentId, _segmentId);
+ }
 }

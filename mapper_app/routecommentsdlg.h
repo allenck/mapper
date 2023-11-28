@@ -16,7 +16,7 @@ class RouteCommentsDlg : public QDialog
     Q_OBJECT
     
 public:
-    explicit RouteCommentsDlg(Configuration *cfg, QWidget *parent = 0);
+    explicit RouteCommentsDlg(QWidget *parent = 0);
     ~RouteCommentsDlg();
     void setRoute(qint32);
     void setDate(QDate);

@@ -365,7 +365,6 @@ bool RouteViewTableModel::removeRows(int position, int rows, const QModelIndex &
 
 bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-
  if (index.isValid() && role == Qt::EditRole)
  {
   int row = index.row();
@@ -457,44 +456,6 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
 
   selectedRow = row;
   bSelectedRowChanged =true;
-//  RowChanged* changeEntry = nullptr;
-//  changeEntry->row = row;
-//  changeEntry->index = index;
-//  changeEntry->bChanged=true;
-//  changeEntry->bDeleted = false;
-//  changeEntry->segmentId = si.segmentId;
-//  changeEntry->si = si;
-//  int i;
-//  for(i=0; i < changedMap.values().count(); i++)
-//  {
-//   if(changedMap.values().at(i)->index == index)
-//      break;
-//  }
-//  if(i >= changedMap.values().count())
-//  {
-//      changedMap.values().append(changeEntry);
-//      emit rowChange(row, si.segmentId, false, true);
-//  }
-//  listOfSegments.replace(row, si);
-//  for(int i=0; i < changedMap.values().count(); i++)
-//  {
-//   if(changedMap.values().at(i)->row == selectedRow)
-//   {
-//    changeEntry = changedMap.values().at(i);
-//    break;
-//   }
-//  }
-//  if(changeEntry == nullptr)
-//  {
-//   changeEntry = new RowChanged();
-//   changeEntry->row = row;
-//   changeEntry->index = index;
-//   changeEntry->bChanged=true;
-//   changeEntry->bDeleted = false;
-//   changeEntry->segmentId = sd->segmentId();
-//   changedMap.values().append(changeEntry);
-//  }
-//  changeEntry->sd = sd;
   emit dataChanged(index, index);
 
   return true;

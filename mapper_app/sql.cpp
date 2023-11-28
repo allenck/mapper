@@ -5181,6 +5181,37 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate,
     return ret;
 }
 
+// if a segment is split, makesure that any route using the original
+// segment get the new segment added.
+bool SQL::addSegmenToRoutes(int _newSegmentId, int _segmentId)
+{
+ if(!dbOpen())
+     throw Exception(tr("database not open: %1").arg(__LINE__));
+ QSqlDatabase db = QSqlDatabase::database();
+ QString commandText;
+ SegmentInfo si = getSegmentInfo(_segmentId);
+ SegmentInfo siNew = getSegmentInfo(_segmentId);
+ QList<SegmentData> routes = getRouteDatasForDate(_segmentId, si.startDate().toString("yyyy/MM/dd"));
+ for(SegmentData sd : routes)
+ {
+  SegmentData sdNew = SegmentData(siNew);
+  sdNew.setAlphaRoute(sd.alphaRoute());
+  sdNew.setRoute(sd.route());
+  sdNew.setRouteName(sd.routeName());
+  sdNew.setTractionType(sd.tractionType());
+  sdNew.setRouteType(sd.routeType());
+  sdNew.setCompanyKey(sd._companyKey);
+  if(!doesRouteSegmentExist(sd))
+  {
+   if(!addSegmentToRoute(&sd))
+   {
+    return false;
+   }
+  }
+ }
+ return true;
+}
+
 #if 0
 bool SQL::addSegmentToRoute(RouteData rd) //16
 {
@@ -6193,7 +6224,6 @@ QList<RouteData> SQL::getRouteDataForRouteName(qint32 route, QString name)
         if(!dbOpen())
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
-
         QString commandText;
         if(config->currConnection->servertype() != "MsSql")
         {

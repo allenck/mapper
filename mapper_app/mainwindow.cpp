@@ -436,6 +436,11 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
    cbSegmentInfoList = sql->getSegmentInfoList();
   });
 
+  connect(SQL::instance(), &SQL::routeChange, [=](NotifyRouteChange rc){
+   SegmentData* sd = rc.sd();
+   if(sd->route()==m_routeNbr  && rc.type()!= SQL::DELETESEG)
+    displaySegment(sd->segmentId(),sd->description(), getColor(sd->tractionType()),sd->trackUsage(),true);
+  });
 //  connect(ui->cbSegments, SIGNAL(signalFocusOut()), this, SLOT( cbSegments_Leave()));
   connect(ui->cbRoute, SIGNAL(signalFocusOut()), this, SLOT(cbRoutes_Leave()));
   connect(companyView, SIGNAL(dataChanged()), this, SLOT(refreshCompanies()));
@@ -1866,14 +1871,7 @@ void MainWindow::refreshRoutes()
 {
     //SQL sql;
     bCbRouteRefreshing = true;
-//    int ixCompany = ui->cbCompany->currentIndex();
-    int companyKey = 0;
-//    if(ixCompany > 0)
-//    {
-//        //companyKey = ui->cbCompany->itemData(ixCompany).Int;
-        companyKey = ui->cbCompany->currentData().toInt();
-
-//    }
+    int companyKey = ui->cbCompany->currentData().toInt();
     int ix = ui->cbRoute->currentIndex();
     QString currText = ui->cbRoute->currentText();
     ui->cbRoute->clear();
@@ -2048,7 +2046,8 @@ void MainWindow::On_displayRoute(RouteData rd)
   if(sd->trackUsage().isEmpty()) // fix for MySql not storing field correctly
    sd->setTrackUsage(" ");
   objArray.clear();
-  objArray <<   sd->segmentId() << rd.routeName() <<  sd->description() << sd->oneWay() << color << sd->tracks()
+  objArray <<   sd->segmentId() << rd.routeName() <<  sd->description() << sd->oneWay()
+             << color << sd->tracks()
              << dash << sd->routeType() << sd->trackUsage() << points.count();
   objArray.append(points);
   m_bridge->processScript("createSegment",objArray);
@@ -2284,7 +2283,7 @@ void MainWindow::onCbRouteIndexChanged(int row)
  m_routeNbr = _rd.route();
  m_routeName = _rd.routeName();
  m_companyKey = _rd.companyKey();
- ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(m_companyKey));
+ //ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(m_companyKey));
  routeDlg->setSegmentData(_rd);
 
  routeView->updateRouteView();
@@ -2461,7 +2460,7 @@ void MainWindow::onCbRouteIndexChanged(int row)
 void MainWindow::refreshCompanies()
 {
     ui->cbCompany->clear();
-    ui->cbCompany->addItem(tr("All companies"),-1);
+    ui->cbCompany->addItem(tr("All companies"),0);
     companyList = sql->getCompanies();
     for(int i=0; i < companyList.count(); i++)
     {
@@ -3053,8 +3052,8 @@ void MainWindow::displaySegment(qint32 segmentId, QString segmentName,
                                 /*QString oneWay,*/ QString color, QString trackUsage,
                                 bool bClearFirst)
 {
-    SegmentInfo sd = sql->getSegmentInfo(segmentId);
-    sd.displaySegment(ui->dateEdit->text(),color, trackUsage, bClearFirst);
+    SegmentInfo si = sql->getSegmentInfo(segmentId);
+    si.displaySegment(ui->dateEdit->text(),color, trackUsage, bClearFirst);
     m_currPoint = 0;
     //bFirstSegmentDisplayed = true;
     ui->lblPoint->setText(QString::number(m_currPoint));
@@ -3589,7 +3588,7 @@ void MainWindow::copyRouteInfo_Click()
 void MainWindow::splitRoute_Click()
 {
     //SplitRoute();
-    SplitRoute splitRouteDlg(config, this);
+    SplitRoute splitRouteDlg(this);
     //splitRouteDlg.setConfiguration (config);
     splitRouteDlg.setRouteData (routeList.at(ui->cbRoute->currentIndex()));
     if (splitRouteDlg.exec() == QDialog::Accepted)
@@ -4309,7 +4308,7 @@ void MainWindow::combineRoutes()
 
 void MainWindow::updateRouteComment()
 {
- RouteCommentsDlg routeCommentsDlg(config, this);
+ RouteCommentsDlg routeCommentsDlg(this);
 
  int row =         ui->cbRoute->currentIndex();
  RouteData rd = ((RouteData)routeList.at(row));

@@ -65,6 +65,7 @@ private:
     void setPt(int value);
     void setSegmentId(qint32 value);
     void setRouteData(RouteData value);
+    void updateOtherRoutes();
 
 private slots:
     void rbUseOriginal_CheckedChanged();

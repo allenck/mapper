@@ -1,13 +1,13 @@
 #include "splitroute.h"
 #include "ui_splitroute.h"
 #include "data.h"
+#include "routecommentsdlg.h"
 
-SplitRoute::SplitRoute(Configuration *cfg, QWidget *parent) :
+SplitRoute::SplitRoute( QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SplitRoute)
 {
-    config = cfg;
-    //sql->setConfig(config);
+    config = Configuration::instance();
     sql = SQL::instance();
     ui->setupUi(this);
     this->setWindowTitle(tr("Split route at date"));
@@ -36,11 +36,6 @@ SplitRoute::~SplitRoute()
     delete ui;
 }
 
-/// <summary>
-/// Sets a reference to the current configuration
-/// </summary>
-void SplitRoute::setConfiguration(Configuration *cfg) {  config = cfg; }
-
 void SplitRoute::setRouteData(RouteData rd)
 {
     _rd = rd;
@@ -55,11 +50,17 @@ void SplitRoute::setRouteData(RouteData rd)
     ui->rnw2->configure(&rd, ui->lblHelp);
     ui->rnw2->setCompanyKey(ui->cbCompany2->currentData().toInt());
 
+    ui->dateFrom1->setDate( rd.startDate());
+    ui->dateTo1->setDate(rd.startDate().addDays(1));
+    ui->dateFrom2->setDate(rd.startDate().addDays(2));
+    ui->dateTo2->setDate( rd.endDate());
+
     bRoute1Changed = true;
     bRoute2Changed = true;
 
     if (routeDataList.isEmpty())
         refreshRoutes();
+#if 0
     //foreach (routeData rd in routeDataList)
     for(int i = 0; i < routeDataList.count(); i++)
     {
@@ -77,6 +78,7 @@ void SplitRoute::setRouteData(RouteData rd)
             break;
         }
     }
+#endif
     CompanyData* cd = sql->getCompany(_rd.companyKey());
     if (cd->companyKey > 0)
     {
@@ -386,9 +388,9 @@ void SplitRoute::btnOK_Click()
       return;
      }
     }
-    RouteData rd =  RouteData();
-    rd = routeDataList.at(ui->cbRoutes->currentIndex());
 
+    _routeNbr1 = ui->rnw1->newRoute();
+    _routeNbr2 = ui->rnw2->newRoute();
     routes = sql->getRouteDataForRouteName(_routeNbr1, ui->rnw1->newRouteName());
     if (!routes.isEmpty())
     {
@@ -443,16 +445,18 @@ void SplitRoute::btnOK_Click()
      }
     }
 
-    QList<RouteData> myArray = sql->getRouteDatasForDate(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
+    QList<RouteData> myArray = sql->getRouteDatasForDate(_rd.route(), _rd.routeName(),
+                                                         _rd.endDate().toString("yyyy/MM/dd"));
 
     //sql->BeginTransaction("SplitRoute");
     for(int i = 0; i <myArray.count(); i ++)
     {
-     SegmentData rd1 = myArray.at(i);
+     SegmentData sd1 = myArray.at(i);
      if(ui->chkDeleteOriginal->isChecked())
      {
-      if(!sql->deleteRouteSegment(rd1.route(), rd1.routeName(), rd1.segmentId(), rd1.startDate().toString("yyyy/MM/dd"),
-                                  rd1.endDate().toString("yyyy/MM/dd")))
+      if(!sql->deleteRouteSegment(sd1.route(), sd1.routeName(), sd1.segmentId(),
+                                  sd1.startDate().toString("yyyy/MM/dd"),
+                                  sd1.endDate().toString("yyyy/MM/dd")))
       {
        ui->lblHelp->setText (tr("delete failed"));
        QApplication::beep();
@@ -463,13 +467,13 @@ void SplitRoute::btnOK_Click()
      }
 
      // add back if original has an earlier start date.
-     if(rd1.startDate() < ui->dateFrom1->date()  && rd1.endDate() < ui->dateFrom2->date())
+     if(sd1.startDate() < ui->dateFrom1->date()  && sd1.endDate() < ui->dateFrom2->date())
      {
       if (sql->addSegmentToRoute(_routeNbr1, ui->rnw1->newRouteName(),
-                                 rd1.startDate(), ui->dateTo1->date(),
-                                 rd1.segmentId(), _companyList.at(ui->cbCompany1->currentIndex())->companyKey,
-                                 rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(), rd1.normalEnter(), rd1.normalLeave(),
-                                 rd1.reverseEnter(), rd1.reverseLeave(), rd1.sequence(), rd1.returnSeq(), rd1.oneWay(), rd1.trackUsage()) == false)
+                                 sd1.startDate(), ui->dateTo1->date(),
+                                 sd1.segmentId(), _companyList.at(ui->cbCompany1->currentIndex())->companyKey,
+                                 sd1.tractionType(), sd1.direction(), sd1.next(), sd1.prev(), sd1.normalEnter(), sd1.normalLeave(),
+                                 sd1.reverseEnter(), sd1.reverseLeave(), sd1.sequence(), sd1.returnSeq(), sd1.oneWay(), sd1.trackUsage()) == false)
       {
        ui->lblHelp->setText (tr("add failed"));
        QApplication::beep();
@@ -480,16 +484,16 @@ void SplitRoute::btnOK_Click()
      }
 
      // add back any after end date
-     if(rd1.endDate() > ui->dateTo2->date() )
+     if(sd1.endDate() > ui->dateTo2->date() )
      {
       if (sql->addSegmentToRoute(_routeNbr1, ui->rnw1->newRouteName(),
-                                 ui->dateTo2->date(), rd1.endDate(),
-                                 rd1.segmentId(), _companyList.at(ui->cbCompany2->currentIndex())->companyKey,
-                                 rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
-                                 rd1.normalEnter(), rd1.normalLeave(),
-                                 rd1.reverseEnter(), rd1.reverseLeave(),
-                                 rd1.sequence(), rd1.returnSeq(),
-                                 rd1.oneWay(), rd1.trackUsage()) == false)
+                                 ui->dateTo2->date(), sd1.endDate(),
+                                 sd1.segmentId(), _companyList.at(ui->cbCompany2->currentIndex())->companyKey,
+                                 sd1.tractionType(), sd1.direction(), sd1.next(), sd1.prev(),
+                                 sd1.normalEnter(), sd1.normalLeave(),
+                                 sd1.reverseEnter(), sd1.reverseLeave(),
+                                 sd1.sequence(), sd1.returnSeq(),
+                                 sd1.oneWay(), sd1.trackUsage()) == false)
       {
        ui->lblHelp->setText (tr("add failed"));
        QApplication::beep();
@@ -502,12 +506,12 @@ void SplitRoute::btnOK_Click()
 
      if (sql->addSegmentToRoute(_routeNbr1, ui->rnw1->newRouteName(),
                                 ui->dateFrom1->date(), ui->dateTo1->date(),
-                                rd1.segmentId(), _companyList.at(ui->cbCompany1->currentIndex())->companyKey,
-                                rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
-                                rd1.normalEnter(), rd1.normalLeave(),
-                                rd1.reverseEnter(), rd1.reverseLeave(),
-                                rd1.sequence(), rd1.returnSeq(),
-                                rd1.oneWay(), rd1.trackUsage()) == false)
+                                sd1.segmentId(), _companyList.at(ui->cbCompany1->currentIndex())->companyKey,
+                                sd1.tractionType(), sd1.direction(), sd1.next(), sd1.prev(),
+                                sd1.normalEnter(), sd1.normalLeave(),
+                                sd1.reverseEnter(), sd1.reverseLeave(),
+                                sd1.sequence(), sd1.returnSeq(),
+                                sd1.oneWay(), sd1.trackUsage()) == false)
      {
       ui->lblHelp->setText (tr("add failed"));
       QApplication::beep();
@@ -518,12 +522,12 @@ void SplitRoute::btnOK_Click()
 
      if (sql->addSegmentToRoute(_routeNbr2, ui->rnw2->newRouteName(),
                                 ui->dateFrom2->date().addDays(1), ui->dateTo2->date(),
-                                rd1.segmentId(), rd1.companyKey(),
-                                rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
-                                rd1.normalEnter(), rd1.normalLeave(),
-                                rd1.reverseEnter(), rd1.reverseLeave(),
-                                rd1.sequence(), rd1.returnSeq(),
-                                rd1.oneWay(), rd1.trackUsage()) == false)
+                                sd1.segmentId(), sd1.companyKey(),
+                                sd1.tractionType(), sd1.direction(), sd1.next(), sd1.prev(),
+                                sd1.normalEnter(), sd1.normalLeave(),
+                                sd1.reverseEnter(), sd1.reverseLeave(),
+                                sd1.sequence(), sd1.returnSeq(),
+                                sd1.oneWay(), sd1.trackUsage()) == false)
      {
       ui->lblHelp->setText (tr("add failed"));
       QApplication::beep();
@@ -536,7 +540,7 @@ void SplitRoute::btnOK_Click()
      _newRoute.setStartDate(ui->dateFrom2->date().addDays(1));
      _newRoute.setEndDate(ui->dateTo2->date());
      _newRoute.setCompanyKey(_companyList.at(ui->cbCompany2->currentIndex())->companyKey);
-     _newRoute.setTractionType(rd1.tractionType());
+     _newRoute.setTractionType(sd1.tractionType());
 
     }
     sql->commitTransaction("SplitRoute");
@@ -562,6 +566,14 @@ void SplitRoute::btnOK_Click()
 //     ui->txtNewRouteName2->setText( _rd.routeName());
      setCursor(Qt::ArrowCursor);
      return;
+    }
+
+    if(ui->chkAddComment->isChecked())
+    {
+     RouteCommentsDlg *dlg = new RouteCommentsDlg();
+     dlg->setDate(ui->dateFrom2->date());
+     dlg->setRoute(ui->rnw2->newRoute());
+     dlg->exec();
     }
 
     this->accept();

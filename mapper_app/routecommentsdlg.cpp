@@ -6,7 +6,7 @@
 #include <QTextDocumentFragment>
 #include "htmltextedit.h"
 
-RouteCommentsDlg::RouteCommentsDlg(Configuration *cfg, QWidget *parent) :
+RouteCommentsDlg::RouteCommentsDlg(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RouteCommentsDlg)
 {
@@ -15,7 +15,7 @@ RouteCommentsDlg::RouteCommentsDlg(Configuration *cfg, QWidget *parent) :
     _companyKey = -1;
     //_date.setYMD(1800,1,1);
     _date = QDate(1800,1,1);
-    config = cfg;
+    config = Configuration::instance();
     //sql->setConfig(config);
     sql = SQL::instance();
     ui->txtComments->setReadOnly(false);
