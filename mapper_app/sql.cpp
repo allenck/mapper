@@ -204,7 +204,7 @@ void SQL::myExceptionHandler(Exception e)
     Q_UNUSED(e)
     qDebug() << "SQL exception " << e.msg;
     QSqlDatabase db = QSqlDatabase::database();
-    db.close();
+    //db.close();
     exit(EXIT_FAILURE);
 }
 
@@ -409,7 +409,7 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
    if(!bQuery)
    {
     SQLERROR(query);
-    db.close();
+    //db.close();
     exit(EXIT_FAILURE);
    }
 
@@ -430,7 +430,7 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
        if(!bQuery)
        {
         SQLERROR(query);
-           db.close();
+           //db.close();
            exit(EXIT_FAILURE);
        }
 
@@ -1706,14 +1706,14 @@ QList<SegmentData> SQL::getRouteDatasForDate(int segmentId, QString date)
  QList<SegmentData> myArray;
  QSqlDatabase db = QSqlDatabase::database();
 
- QString commandText = "SELECT a.Route,Name,StartDate,EndDate,LineKey,companyKey,"
-                       " tractionType,direction, normalEnter, normalLeave,"
+ QString commandText = "SELECT a.Route,Name,a.StartDate,a.EndDate,LineKey,a.companyKey,"
+                       " a.tractionType, a.direction, normalEnter, normalLeave,"
                        " reverseEnter, reverseLeave, routeAlpha, s.tracks, a.trackUsage,"
                        " a.oneWay, s.street, s.description"
                        " from Routes a"
                        " join AltRoute c on a.route = c.route"
                        " join Segments on a.lineKey = s.segmentId"
-                       " where '" + date + "' between startDate and endDate"
+                       " where '" + date + "' between a.startDate and a.endDate"
                        " and lineKey = "+QString::number(segmentId);
 
  QSqlQuery query = QSqlQuery(db);
@@ -9453,7 +9453,7 @@ CommentInfo SQL::getComment(qint32 commentKey, int pos)
             QSqlError err = query.lastError();
             qDebug() << err.text() + "\n";
             qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
+            //db.close();
             exit(EXIT_FAILURE);
         }
 
