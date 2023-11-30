@@ -14,6 +14,7 @@ SOURCES += main.cpp\
     $$PWD/ttitemdelegate.cpp \
     $$PWD/turncombo.cpp \
     $$PWD/turndelegate.cpp \
+    $$PWD/usagedelegate.cpp \
     addgeoreferenceddialog.cpp \
     $$PWD/exceptions.cpp \
     $$PWD/myapplication.cpp \
@@ -90,6 +91,7 @@ HEADERS  += mainwindow.h \
     $$PWD/ttitemdelegate.h \
     $$PWD/turncombo.h \
     $$PWD/turndelegate.h \
+    $$PWD/usagedelegate.h \
     $$PWD/vptr.h \
     addgeoreferenceddialog.h \
     $$PWD/exceptions.h \

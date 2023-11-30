@@ -454,6 +454,8 @@ private slots:
     void modifyRouteTractionType();
     void on_updateRoute();
     void changeFonts(QFont f);
+    void onCbSegmentsCustomContextMenu(const QPoint &pos);
+    void addSegmentToRoute(SegmentData *sd);
 
 protected:
     //void resizeEvent(QResizeEvent *event);

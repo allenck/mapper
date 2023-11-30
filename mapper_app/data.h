@@ -663,6 +663,8 @@ class SegmentInfo
  void setLocation(QString loc) {_location = loc;}
  void setNext(int next){_next = next;}
  int next() const {return _next;}
+ QString reverseDescription();
+
  friend class SegmentData;
 };
 

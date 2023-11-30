@@ -744,6 +744,26 @@ void SegmentInfo::displaySegment(QString date, QString color, QString trackUsage
  WebViewBridge::instance()->processScript("createSegment", objArray);
 }
 
+QString SegmentInfo::reverseDescription()
+{
+ QString desc = _description;
+ QStringList sl1 = desc.split(",");
+ QStringList sl2;
+ QString separator;
+ if(sl1.at(0).length()>0 && sl1.count()==2)
+ {
+  if(sl1.at(1).contains(" to "))
+   separator=" to";
+  else
+   separator = " zur "; // German
+  sl2 = sl1.at(1).split(separator);
+  if(sl2.count()==2)
+  {
+   return sl1.at(0) +","+sl2.at(1) + separator + sl2.at(0);
+  }
+ }
+ return "reverse: "+ _description;
+}
 
 Bounds::Bounds()
 {

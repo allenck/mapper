@@ -211,6 +211,19 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
        return sd->oneWay();
    case USAGE:
        return sd->trackUsage();
+   case COMBO:
+   {
+       QString combo = sd->oneWay() + sd->trackUsage();
+       if(combo == "  " || combo == "N ")
+        return "Bidirectional";
+       else if(combo == "Y ")
+        return "OneWay";
+       else if(combo == "YR")
+        return "OneWay(normal)";
+       else if(combo == "YL")
+        return "OneWay(reverse)";
+       break;
+   }
    case TRACTIONTYPE:
        //return sd->tractionType();
        return tractionTypes.value(sd->tractionType()).description;
@@ -282,54 +295,56 @@ QVariant RouteViewTableModel::headerData(int section, Qt::Orientation orientatio
  {
     switch (section)
     {
-        case SEGMENTID:
-            return tr("SegId");
-        case NAME:
-            return tr("Name");
-        case ONEWAY:
-            return tr("1Way");
-        case TRACKS:
-            return tr("Trks");
-        case USAGE:
-            return tr("Use");
-        case TRACTIONTYPE:
-            return tr("Tr Type");
-        case TYPE:
-            return tr("Rt Type");
-        case NEXT:
-            return tr("Next->");
-        case PREV:
-            return tr("Prev->");
-        case NEXTR:
-            return tr("Next<-");
-        case PREVR:
-            return tr("Prev<-");
-        case DIR:
-            return tr("Dir");
-        case SEQ:
-            return tr("Seq");
-        case RSEQ:
-            return tr("RSeq");
-        case NE:
-         return tr(" From");
-        case NL:
-         return tr("Leave ");
-        case RE:
-         return tr("R from");
-        case RL:
-         return tr("RLeave ");
-        case STARTDATE:
-            return tr("StartDate");
-        case ENDDATE:
-            return tr("EndDate");
-        case DISTANCE:
-         return tr("Distance");
-        case ANGLES:
-         return tr("Start Angle");
-        case ANGLEE:
-         return tr("End Angle");
-        default:
-            return QVariant();
+    case SEGMENTID:
+        return tr("SegId");
+    case NAME:
+        return tr("Name");
+    case ONEWAY:
+        return tr("1Way");
+    case TRACKS:
+        return tr("Trks");
+    case USAGE:
+        return tr("Use");
+    case COMBO:
+     return tr("1WayUsage");
+    case TRACTIONTYPE:
+        return tr("Tr Type");
+    case TYPE:
+        return tr("Rt Type");
+    case NEXT:
+        return tr("Next->");
+    case PREV:
+        return tr("Prev->");
+    case NEXTR:
+        return tr("Next<-");
+    case PREVR:
+        return tr("Prev<-");
+    case DIR:
+        return tr("Dir");
+    case SEQ:
+        return tr("Seq");
+    case RSEQ:
+        return tr("RSeq");
+    case NE:
+     return tr(" From");
+    case NL:
+     return tr("Leave ");
+    case RE:
+     return tr("R from");
+    case RL:
+     return tr("RLeave ");
+    case STARTDATE:
+        return tr("StartDate");
+    case ENDDATE:
+        return tr("EndDate");
+    case DISTANCE:
+     return tr("Distance");
+    case ANGLES:
+     return tr("Start Angle");
+    case ANGLEE:
+     return tr("End Angle");
+    default:
+        return QVariant();
     }
  }
  return QVariant();
@@ -392,6 +407,13 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
    QString s = value.toString().toUpper();
    if(s == "B" || s=="L" || s == "R" || s == " ")
     sd->setTrackUsage(s);
+   break;
+  }
+  case COMBO:
+  {
+   QString val = value.toString();
+   sd->setOneWay(val.at(0));
+   sd->setTrackUsage(val.at(1));
    break;
   }
   case TRACTIONTYPE:
@@ -481,10 +503,11 @@ Qt::ItemFlags RouteViewTableModel::flags(const QModelIndex &index) const
     case NAME:
     case ANGLES:
     case ANGLEE:
-     return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
-    case TYPE:
     case ONEWAY: // 1Way
     case USAGE:
+     return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+    case TYPE:
+    case COMBO:
     case TRACTIONTYPE:
      return QAbstractTableModel::flags(index) | Qt::ItemIsEditable | Qt::ItemIsEnabled;
     case TRACKS:

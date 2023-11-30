@@ -39,6 +39,7 @@ public:
      TYPE,
      ONEWAY,
      USAGE,
+     COMBO,
      TRACTIONTYPE,
      DISTANCE,
      ANGLES,

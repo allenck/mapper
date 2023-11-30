@@ -420,17 +420,19 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui->cbRoute->addAction(updateTerminalsAct);
   ui->cbRoute->addAction(describeRouteAct);
 
-  ui->ssw->cbSegments()->setContextMenuPolicy(Qt::ActionsContextMenu);
-  ui->ssw->cbSegments()->addAction(addSegmentToRouteAct);
-  ui->ssw->cbSegments()->addAction(addSegmentToNewRouteAct);
-  ui->ssw->cbSegments()->addAction(deleteSegmentAct);
-  ui->ssw->cbSegments()->addAction(findDupSegmentsAct);
-  ui->ssw->cbSegments()->addAction(queryRouteUsageAct);
-  ui->ssw->cbSegments()->addAction(findDormantSegmentsAct);
-  ui->ssw->cbSegments()->addAction(selectSegmentAct);
-  ui->ssw->cbSegments()->addAction(editSegmentAct);
-  ui->ssw->cbSegments()->addAction(splitSegmentAct);
-  ui->ssw->cbSegments()->addAction(checkSegmentsAct);
+//  ui->ssw->cbSegments()->setContextMenuPolicy(Qt::ActionsContextMenu);
+//  ui->ssw->cbSegments()->addAction(addSegmentToRouteAct);
+//  ui->ssw->cbSegments()->addAction(addSegmentToNewRouteAct);
+//  ui->ssw->cbSegments()->addAction(deleteSegmentAct);
+//  ui->ssw->cbSegments()->addAction(findDupSegmentsAct);
+//  ui->ssw->cbSegments()->addAction(queryRouteUsageAct);
+//  ui->ssw->cbSegments()->addAction(findDormantSegmentsAct);
+//  ui->ssw->cbSegments()->addAction(selectSegmentAct);
+//  ui->ssw->cbSegments()->addAction(editSegmentAct);
+//  ui->ssw->cbSegments()->addAction(splitSegmentAct);
+//  ui->ssw->cbSegments()->addAction(checkSegmentsAct);
+  ui->ssw->cbSegments()->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(ui->ssw->cbSegments(), SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(onCbSegmentsCustomContextMenu(QPoint)));
 
   connect(SQL::instance(), &SQL::segmentChanged, [=]{
    cbSegmentInfoList = sql->getSegmentInfoList();
@@ -498,6 +500,84 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui->tabWidget->setCurrentIndex(0);
   config->saveSettings();
 }
+
+void MainWindow::onCbSegmentsCustomContextMenu(const QPoint &pos)
+{
+ //ui->ssw->cbSegments()->addAction(addSegmentToRouteAct);
+ SegmentInfo si = sql->getSegmentInfo(ui->ssw->cbSegments()->currentData().toInt());
+ SegmentData* sd = new SegmentData(si);
+ sd->setRoute(_rd.route());
+ sd->setAlphaRoute(_rd.alphaRoute());
+ sd->setRouteName(_rd.routeName());
+ sd->setStartDate(_rd.startDate());
+ sd->setEndDate(_rd.endDate());
+ sd->setTractionType(_rd.tractionType());
+ sd->setCompanyKey(_rd.companyKey());
+
+ QMenu* menu = new QMenu();
+ QMenu* actMenu = new QMenu(tr("add segment to route"));
+ QActionGroup* ag = new QActionGroup(this);
+ //ui->ssw->cbSegments()->addAction(addSegmentToNewRouteAct);
+ if(si.tracks()== 1)
+ {
+  QAction* act = new QAction(tr("OneWay"),this);
+  act->setCheckable(true);
+  act->setData(-1);
+  ag->addAction(act);
+  actMenu->addAction(act);
+ }
+ else
+ {
+  QAction* act = new QAction(tr("TwoWay"),this);
+  ag->addAction(act);
+  act->setData(0);
+  actMenu->addAction(act);
+
+  act = new QAction("OneWay: "+si.description(),this);
+  act->setData(1);
+  ag->addAction(act);
+  actMenu->addAction(act);
+
+  act = new QAction("OneWay: "+si.reverseDescription());
+  act->setData(2);
+  ag->addAction(act);
+  actMenu->addAction(act);
+  menu->addMenu(actMenu);
+  connect(ag, &QActionGroup::triggered,[=](QAction* act){
+   switch(act->data().toInt())
+   {
+   case 0:
+    sd->setOneWay(" ");
+    sd->setTrackUsage(" ");
+    addSegmentToRoute(sd); // two tracks both used
+    break;
+   case 1:
+    sd->setOneWay("Y");
+    sd->setTrackUsage("R");
+    addSegmentToRoute(sd); // two tracks both used
+    break;
+   case 2:
+    sd->setOneWay("Y");
+    sd->setTrackUsage("L");
+    addSegmentToRoute(sd); // two tracks both used
+    break;
+   case -1:
+    sd->setOneWay(act->isChecked()?"Y":"N");
+    addSegmentToRoute(sd); // single track oneway ot not
+   }
+  });
+ }
+ menu->addAction(deleteSegmentAct);
+ menu->addAction(findDupSegmentsAct);
+ menu->addAction(queryRouteUsageAct);
+ menu->addAction(findDormantSegmentsAct);
+ menu->addAction(selectSegmentAct);
+ menu->addAction(editSegmentAct);
+ menu->addAction(splitSegmentAct);
+ menu->addAction(checkSegmentsAct);
+ menu->exec(QCursor::pos());
+}
+
 
 /*static*/ MainWindow* MainWindow::_instance = nullptr;
 /*static*/ MainWindow* MainWindow::instance() {return _instance;}
@@ -1049,34 +1129,6 @@ void MainWindow::createActions()
  findDormantSegmentsAct->setStatusTip(tr("Display a lists of segments that are dormant, i.e. not in service"));
 // TODO: find dormant segments
  connect(findDormantSegmentsAct, SIGNAL(triggered()), this, SLOT(NotYetInplemented()));
-#if 0
- saveChangesAct = new QAction(tr("Commit changes"), this);
- saveChangesAct->setStatusTip(tr("Commit changes to database"));
- connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(saveChanges()));
- discardChangesAct = new QAction(tr("Discard changes"));
- discardChangesAct->setStatusTip(tr("Discard any changes"));
- connect(discardChangesAct, &QAction::triggered, [=] {
-     routeView->model()->discardChanges();
- });
-
- sortNameAct = new QAction(tr("Sort descripion"),this);
- sortNameAct->setStatusTip(tr("Sort descriptions"));
- connect(sortNameAct, &QAction::triggered, [=]{
-  Qt::SortOrder order = ui->tblRouteView->horizontalHeader()->sortIndicatorOrder();
-  switch (order) {
-  case Qt::AscendingOrder:
-   order = Qt::DescendingOrder;
-   break;
-  case Qt::DescendingOrder:
-   order = Qt::AscendingOrder;
-   break;
-  default:
-   order = Qt::AscendingOrder;
-  }
-  ui->tblRouteView->sortByColumn(routeViewSourceModel->NAME, order);
-  ui->tblRouteView->hideColumn(routeViewSourceModel->NAME);
- });
-#endif
  addRouteAct = new QAction(tr("Add new Route"),this);
  addRouteAct->setStatusTip(tr("Add a new route"));
  connect(addRouteAct, SIGNAL(triggered()), this, SLOT(addRoute()));
@@ -1281,6 +1333,33 @@ void MainWindow::createActions()
      qDebug() << "new font " << this->font().toString();
   });
 }
+
+void MainWindow::addSegmentToRoute(SegmentData* sd)
+{
+ QList<SegmentData*> conflicts
+         = sql->getConflictingRouteSegments(_rd.route(), _rd.routeName(),
+                                            _rd.startDate().toString("yyyy/MM/dd"),
+                                            _rd.endDate().toString("yyyy/MM/dd"),
+                                            sd->segmentId());
+ if(conflicts.count())
+ {
+     QMessageBox::critical(this, tr("Conflict"), tr("The segment is already present"
+                           " or conflicts with the start or end date of an"
+                           " existing segment. The segment will not be added!"));
+     return;
+ }
+ if(!sql->addSegmentToRoute(sd))
+ {
+  //updateRoute(sd);
+  return;
+ }
+    m_bridge->processScript("clearPolyline", QString("%1").arg(sd->segmentId()));
+    //SegmentInfo si = sql->getSegmentInfo(segmentId);
+    displaySegment(sd->segmentId(), sd->description(),
+                   getColor(sd->tractionType()),
+                   sd->trackUsage(), true);
+}
+
 void MainWindow::changeFonts(QFont f)
 {
     QObject *obj = this;

@@ -6,6 +6,7 @@
 #include "otherrouteview.h"
 #include "ttitemdelegate.h"
 #include "rtitemdelegate.h"
+#include "usagedelegate.h"
 #include "splitsegmentdlg.h"
 #include "checkroute.h"
 #include "turndelegate.h"
@@ -569,12 +570,13 @@ void RouteView::updateRouteView()
     ui->horizontalHeader()->resizeSection(7,35);
     ui->horizontalHeader()->resizeSection(8,65);
     ui->horizontalHeader()->resizeSection(9,65);
-    ui->setItemDelegateForColumn(sourceModel->TRACTIONTYPE, new TTItemDelegate());
+    ui->setItemDelegateForColumn(sourceModel->TRACTIONTYPE, new UsageDelegate());
     ui->setItemDelegateForColumn(sourceModel->TYPE, new RTItemDelegate());
     ui->setItemDelegateForColumn(sourceModel->NE, new TurnDelegate("back"));
     ui->setItemDelegateForColumn(sourceModel->NL, new TurnDelegate("ahead"));
     ui->setItemDelegateForColumn(sourceModel->RE, new TurnDelegate("back"));
     ui->setItemDelegateForColumn(sourceModel->RL, new TurnDelegate("ahead"));
+    ui->setItemDelegateForColumn(sourceModel->COMBO, new UsageDelegate());
     //populateList();
 }
 
@@ -874,39 +876,7 @@ void RouteView::deleteSegment()
     sourceModel->bChangesMade = true;
     MainWindow::instance()->segmentChanged(segmentId, 0);
 }
-#if 0
-void RouteView::unDeleteSegment()
-{
-    //mainWindow * myParent = qobject_cast<mainWindow*>(m_parent);
-    QItemSelectionModel * model = ui->selectionModel();
-    QModelIndexList indexes = model->selectedIndexes();
-    QModelIndex ix = indexes.at(RouteViewTableModel::SEGMENTID);
-    QModelIndex sx = proxymodel->mapToSource(ix);
-    qint32 segmentId = ix.data().toInt();
 
-    sourceModel->unDeleteRow(segmentId, ix);
-}
-
-void RouteView::commitChanges()
-{
- bool rslt = sourceModel->commitChanges();
- if(rslt)
- {
-  myParent->refreshRoutes();
-  myParent->btnDisplayRouteClicked();
- }
- myParent-> setCursor(Qt::ArrowCursor);
-}
-
-bool RouteView::bUncomittedChanges()
-{
- //if(sourceModel->changedMap.values().count()>0)
- if(sourceModel->bChangesMade)
-  return true;
- else
-  return false;
-}
-#endif
 void RouteView::on_selectSegment_triggered()
 {
  QItemSelectionModel * model = ui->selectionModel();
@@ -935,39 +905,9 @@ void RouteView::on_segmentSelected(int, int segmentId)
  if(row >= 0)
  {
   QModelIndex modelIndex = proxymodel->mapFromSource(sourceModel->index(row,1));
-  //ui->setCurrentIndex(modelIndex);
   ui->selectRow(modelIndex.row());
  }
 }
-
-#if 0
-void RouteView::checkChanges()
-{
- //if(sourceModel->changedMap.values().count() > 0)
- if(sourceModel->bChangesMade)
- {
-  QMessageBox::StandardButtons rslt;
-  MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
-  rslt = QMessageBox::warning(myParent,tr("Commit changes"),
-                              tr("There are uncommited changes to the current route."
-                                 " Do you wish to save them?"),
-                              QMessageBox::Save | QMessageBox::Discard|QMessageBox::Cancel);
-  switch (rslt)
-  {
-  case QMessageBox::Save:
-   //commitChanges();
-   sourceModel->commitChanges();
-   break;
-  case QMessageBox::Discard:
-   //sourceModel->changedMap.values().clear();
-   if(sourceModel->bChangesMade)
-   break;
-  default:
-   break;
-  }
- }
-}
-#endif
 
 void RouteView::clear()
 {

@@ -22,10 +22,10 @@ SplitRoute::SplitRoute( QWidget *parent) :
 //    connect(ui->txtNewRouteName2, SIGNAL(textEdited(QString)), this, SLOT(txtNewRouteName2_Leave()));
 
     connect(ui->dateFrom1, SIGNAL(editingFinished()), this, SLOT(dateFrom1_Leave()));
-    connect(ui->dateFrom2, SIGNAL(editingFinished()), this, SLOT(dateFrom2_ValueChanged()));
+    //connect(ui->dateFrom2, SIGNAL(editingFinished()), this, SLOT(dateFrom2_ValueChanged()));
     connect(ui->dateFrom2, SIGNAL(editingFinished()),this, SLOT(dateFrom2_Leave()));
     connect(ui->dateTo1, SIGNAL(editingFinished()), this, SLOT(dateTo1_Leave()));
-    connect(ui->dateTo1, SIGNAL(editingFinished()), this, SLOT(dateTo1_ValueChanged()));
+    //connect(ui->dateTo1, SIGNAL(editingFinished()), this, SLOT(dateTo1_ValueChanged()));
     connect(ui->dateTo2, SIGNAL(editingFinished()), this, SLOT(dateTo2_Leave()));
     connect(ui->btnOK, SIGNAL(clicked()), this, SLOT(btnOK_Click()));
     connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(Cancel_Click()));
@@ -51,8 +51,17 @@ void SplitRoute::setRouteData(RouteData rd)
     ui->rnw2->setCompanyKey(ui->cbCompany2->currentData().toInt());
 
     ui->dateFrom1->setDate( rd.startDate());
-    ui->dateTo1->setDate(rd.startDate().addDays(1));
-    ui->dateFrom2->setDate(rd.startDate().addDays(2));
+    QDate test = rd.startDate().addYears(1);
+    test =test.addDays(-1);
+    if(test > rd.endDate())
+    {
+     test = rd.startDate().addMonths(1);
+     test =test.addDays(-1);
+     if(test > rd.endDate())
+      test = rd.startDate().addDays(1);
+    }
+    ui->dateTo1->setDate(test);
+    ui->dateFrom2->setDate(test.addDays(1));
     ui->dateTo2->setDate( rd.endDate());
 
     bRoute1Changed = true;
