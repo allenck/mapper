@@ -489,21 +489,25 @@ class segmentGroup
         ~segmentGroup();
 };
 
-#if 0
+#if 1
 class RouteInfo
 {
 	public:
         explicit RouteInfo(QObject *parent = 0);
-        RouteInfo(qint32 route, QString name, QString date);
+        RouteInfo(qint32 route, QString name, QDate startDate, QDate endDate);
         RouteInfo(RouteData rd);
         qint32	route;
         QString routeName;
         qint32	tractionType;
         //QList<segmentGroup> segments;  // array of segmentGroup objects
-        QList<SegmentData> segmentDataList;
+        QList<SegmentData*> segmentDataList;
         ~RouteInfo();
         double length;
         RouteData rd;
+        QDate startDate;
+        QDate endDate;
+        int companyKey;
+        QString alphaRoute;
 };
 #endif
 

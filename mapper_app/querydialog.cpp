@@ -251,6 +251,7 @@ void QueryDialog::on_clear_QueryButton_clicked()
 void QueryDialog::on_load_QueryButton_clicked()
 {
  setCursor(Qt::WaitCursor);
+ on_clear_QueryButton_clicked();
  QString s_File_Name = QFileDialog::getOpenFileName(this, "Choose a SQL text file",
                        config->q.s_query_path, "SQL text files (*.sql *.txt);;All Files (*.*)");
  // QFileDialog take a long time to close, this should tak care of this - but does not.
@@ -1018,12 +1019,12 @@ void QueryDialog::setTitle()
 
  if(currQueryFilename.isEmpty())
 
-  QWidget::setWindowTitle(tr("Manual Sql Query (%1) <B>%3</B>")
+  QWidget::setWindowTitle(tr("Manual Sql Query (%1) %2")
                           .arg(ui->cbConnections->currentText(),database));
  else
  {
   QFileInfo info(currQueryFilename);
-  QWidget::setWindowTitle(tr("Manual Sql Query (%1) - %2 <B>%3</B>")
+  QWidget::setWindowTitle(tr("Manual Sql Query (%1) - %2 %3")
                           .arg(ui->cbConnections->currentText(),info.fileName(),database));
  }
 }

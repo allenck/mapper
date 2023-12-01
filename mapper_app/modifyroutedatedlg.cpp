@@ -116,7 +116,8 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
       return;
   }
  }
- if(ui->checkBox->isChecked())
+ // Modify later routes' dates?
+ if(!ui->checkBox->isChecked())
  {
   if(ui->rbStart->isChecked())
   {
@@ -140,6 +141,24 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
  else
   _otherRd = NULL;
 
+ if(ui->rbStart->isChecked())
+ {
+  if(ui->dateTimePicker1->date() > rd.endDate())
+  {
+   qDebug() << "can't set start date to later than end date!";
+   return;
+  }
+ }
+ else
+ {
+  if(ui->dateTimePicker1->date() < rd.startDate())
+  {
+   qDebug() << "can't set end date to before start date!";
+   return;
+  }
+ }
+
+
  if (sql->modifyRouteDate(_rd, ui->rbStart->isChecked(), ui->dateTimePicker1->date()/*,
                           ui->txtName1->text(), ui->txtName2->text()*/))
  {
@@ -158,6 +177,7 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
   return;
  }
 }
+
 void ModifyRouteDateDlg::btnCancel_Click()  //SLOT
 {
     this->reject();

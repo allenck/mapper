@@ -515,7 +515,8 @@ void MainWindow::onCbSegmentsCustomContextMenu(const QPoint &pos)
  sd->setCompanyKey(_rd.companyKey());
 
  QMenu* menu = new QMenu();
- QMenu* actMenu = new QMenu(tr("add segment to route"));
+ QMenu* actMenu = new QMenu(tr("Add segment to route"));
+ menu->addMenu(actMenu);
  QActionGroup* ag = new QActionGroup(this);
  //ui->ssw->cbSegments()->addAction(addSegmentToNewRouteAct);
  if(si.tracks()== 1)
@@ -543,37 +544,39 @@ void MainWindow::onCbSegmentsCustomContextMenu(const QPoint &pos)
   ag->addAction(act);
   actMenu->addAction(act);
   menu->addMenu(actMenu);
-  connect(ag, &QActionGroup::triggered,[=](QAction* act){
-   switch(act->data().toInt())
-   {
-   case 0:
-    sd->setOneWay(" ");
-    sd->setTrackUsage(" ");
-    addSegmentToRoute(sd); // two tracks both used
-    break;
-   case 1:
-    sd->setOneWay("Y");
-    sd->setTrackUsage("R");
-    addSegmentToRoute(sd); // two tracks both used
-    break;
-   case 2:
-    sd->setOneWay("Y");
-    sd->setTrackUsage("L");
-    addSegmentToRoute(sd); // two tracks both used
-    break;
-   case -1:
-    sd->setOneWay(act->isChecked()?"Y":"N");
-    addSegmentToRoute(sd); // single track oneway ot not
-   }
-  });
  }
+ connect(ag, &QActionGroup::triggered,[=](QAction* act){
+  switch(act->data().toInt())
+  {
+  case 0:
+   sd->setOneWay(" ");
+   sd->setTrackUsage(" ");
+   addSegmentToRoute(sd); // two tracks both used
+   break;
+  case 1:
+   sd->setOneWay("Y");
+   sd->setTrackUsage("R");
+   addSegmentToRoute(sd); // two tracks both used
+   break;
+  case 2:
+   sd->setOneWay("Y");
+   sd->setTrackUsage("L");
+   addSegmentToRoute(sd); // two tracks both used
+   break;
+  case -1:
+   sd->setOneWay(act->isChecked()?"Y":"N");
+   addSegmentToRoute(sd); // single track oneway ot not
+  }
+ });
+ menu->addAction(addSegmentToNewRouteAct);
+ menu->addAction(selectSegmentAct);
  menu->addAction(deleteSegmentAct);
+ menu->addAction(editSegmentAct);
+ menu->addAction(splitSegmentAct);
+ menu->addSeparator();
  menu->addAction(findDupSegmentsAct);
  menu->addAction(queryRouteUsageAct);
  menu->addAction(findDormantSegmentsAct);
- menu->addAction(selectSegmentAct);
- menu->addAction(editSegmentAct);
- menu->addAction(splitSegmentAct);
  menu->addAction(checkSegmentsAct);
  menu->exec(QCursor::pos());
 }
@@ -1202,20 +1205,20 @@ void MainWindow::createActions()
  refreshRoutesAct->setStatusTip(tr("Refresh the routes combobox. Especially after executing manual queries to the database."));
  connect(refreshRoutesAct, SIGNAL(triggered()), this, SLOT(refreshRoutes()));
 
- cbSort = new QComboBox();
- cbSort->setVisible(true);
- cbSort->activateWindow();
- cbSort->addItem("Route, end date");
- cbSort->addItem("Route, start date");
- cbSort->addItem("Route, name, end date");
- cbSort->addItem("Route, name, start date");
- cbSort->addItem("Name, Route, start date");
+// cbSort = new QComboBox(this);
+// cbSort->setVisible(true);
+// cbSort->activateWindow();
+// cbSort->addItem("Route, end date");
+// cbSort->addItem("Route, start date");
+// cbSort->addItem("Route, name, end date");
+// cbSort->addItem("Route, name, start date");
+// cbSort->addItem("Name, Route, start date");
 
- cbSort->setCurrentIndex(config->currCity->routeSortType);
- connect(cbSort, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSortSelectionChanged(int)));
+// cbSort->setCurrentIndex(config->currCity->routeSortType);
+// connect(cbSort, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSortSelectionChanged(int)));
 
- sortTypeAct = new QWidgetAction(this);
- sortTypeAct->setDefaultWidget(cbSort);
+// sortTypeAct = new QWidgetAction(this);
+// sortTypeAct->setDefaultWidget(cbSort);
 
  rerouteAct = new QAction(tr("Temp rerouting"),this);
  rerouteAct->setStatusTip(tr("Temporarily reroute a route between two dates. After the end date, the route will revert back to the route before the start date"));
@@ -1332,6 +1335,32 @@ void MainWindow::createActions()
      this->changeFonts(f);
      qDebug() << "new font " << this->font().toString();
   });
+}
+
+QWidgetAction *MainWindow::createWidgetAction()
+{
+ cbSort = new QComboBox(this);
+ cbSort->setVisible(true);
+ cbSort->activateWindow();
+ cbSort->addItem("Route, end date");
+ cbSort->addItem("Route, start date");
+ cbSort->addItem("Route, name, end date");
+ cbSort->addItem("Route, name, start date");
+ cbSort->addItem("Name, Route, start date");
+
+ cbSort->setCurrentIndex(config->currCity->routeSortType);
+ //connect(cbSort, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSortSelectionChanged(int)));
+ connect(cbSort, &QComboBox::currentTextChanged, [=](){
+     config->currCity->routeSortType = cbSort->currentIndex();
+     refreshRoutes();
+  qInfo() << "sort option changed:" << cbSort->currentText();
+  optionsMenu->close();
+ });
+
+ sortTypeAct = new QWidgetAction(this);
+ sortTypeAct->setDefaultWidget(cbSort);
+
+ return sortTypeAct;
 }
 
 void MainWindow::addSegmentToRoute(SegmentData* sd)
@@ -1463,7 +1492,7 @@ void MainWindow::createMenus()
       optionsMenu->addAction(runInBrowserAct);
   #endif
       sortMenu = new Menu(tr("Route Sort option"));
-      sortMenu->addAction(sortTypeAct);
+      sortMenu->addAction(createWidgetAction());
       optionsMenu->addMenu(sortMenu);
       optionsMenu->addAction(showGoogleMapFeaturesAct);
       optionsMenu->addAction(foreignKeyCheckAct);
@@ -1959,10 +1988,38 @@ void MainWindow::refreshRoutes()
     if(routeList.isEmpty())
      qDebug() << "no routes selected for company " << companyKey;
 
-    //int len = routeList.count();
-    for(int i=0; i<routeList.count(); i++)
+    QMap<QString, RouteData> map;
+    QString rSort;
+    for(RouteData rd : routeList)
     {
-         RouteData rd = (RouteData)routeList.at(i);
+     int digitCount = 0;
+     rSort = "000";
+     while(digitCount++ < rd.alphaRoute().count()-1 && rd.alphaRoute().at(digitCount).isDigit())
+      rSort.remove(0,1);
+     rSort.append(rd.alphaRoute());
+     switch(config->currCity->routeSortType)
+     {
+      case 0:
+      map.insert(rSort+rd.endDate().toString("yyyy/MM/dd"),rd);
+      break;
+     case 1:
+      map.insert(rSort+rd.startDate().toString("yyyy/MM/dd"),rd);
+      break;
+     case 2:
+      map.insert(rSort+rd.routeName()+rd.endDate().toString("yyyy/MM/dd"),rd);
+      break;
+     case 3:
+      map.insert(rSort+rd.routeName()+rd.startDate().toString("yyyy/MM/dd"),rd);
+      break;
+     case 4:
+      map.insert(rd.routeName()+rSort+rd.endDate().toString("yyyy/MM/dd"),rd);
+      break;
+     }
+    }
+    //int len = routeList.count();
+    for(int i=0; i<map.values().count(); i++)
+    {
+         RouteData rd = (RouteData)map.values().at(i);
          QString rdStartDate = rd.startDate().toString("yyyy/MM/dd");
 //         if(ui->cbRoute->findText(rd.toString())< 0)
             ui->cbRoute->addItem(rd.toString(),QVariant::fromValue(rd));

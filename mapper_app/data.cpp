@@ -487,30 +487,32 @@ double SegmentData::getLength() {
  return len;
 }
 
-#if 0
+#if 1
 RouteInfo::RouteInfo(QObject *parent)
 {
  route= -1;
  length = 0;
- segmentDataList = QList<SegmentData>();
+ segmentDataList = QList<SegmentData*>();
 
 }
 
 RouteInfo::RouteInfo(RouteData rd)
 {
  this->rd = rd;
- this->route = rd.route;
- this->routeName = rd.name;
+ this->route = rd.route();
+ this->routeName = rd.routeName();
  length = 0;
- segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"));
+ segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
 }
 
-RouteInfo::RouteInfo(qint32 route, QString name, QString date)
+RouteInfo::RouteInfo(qint32 route, QString name, QDate startDate, QDate endDate)
 {
  length = 0;
  this->route = route;
  this->routeName = name;
- segmentDataList = SQL::instance()->getRouteSegmentsInOrder(route, name, date);
+ this->startDate = startDate;
+ this->endDate = endDate;
+ segmentDataList = SQL::instance()->getRouteSegmentsInOrder(route, name, endDate.toString("yyyy/MM/dd"));
 }
 
 RouteInfo::~RouteInfo()

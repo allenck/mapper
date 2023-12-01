@@ -440,6 +440,7 @@ private:
     bool verifyAPIKey(QString path, QString apiKey);
     ExportDlg* form = nullptr;
     void enableControls( bool b);
+    QWidgetAction* createWidgetAction();
 
 private slots:
     void createCityMenu();
