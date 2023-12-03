@@ -52,6 +52,7 @@ private:
     qint32 curRow, curCol;
     qint32 route=-1;
     qint32 startSegment, endSegment;
+    int companyKey;
     QString name;
     QString startDate = "1800/01/01";
     QString endDate = "2050/12/31";
@@ -59,13 +60,6 @@ private:
     QStringList headers;
     QTableView* ui;
     TerminalInfo ti;
-//    QList<QVariant> hiddenCols;
-//    QList<QVariant> movedCols;
-
-
-    //QList<SegmentInfo> segmentInfoList;  // list of segmentInfo items in cbSegments
-//    QList<SegmentData> segmentDataList;  // list of segmentInfo items in cbSegments
-//    QList<SegmentData> saveSegmentDataList;  // list of segmentInfo items in cbSegments
     void populateList();
     QAction *copyAction;
     QAction *pasteAction;
@@ -76,9 +70,6 @@ private:
     QAction *endTerminalStartAct;
     QAction *endTerminalEndAct;
     QAction *deleteSegmentAct;
-    //QAction *unDeleteSegmentAct;
-    //QAction *saveChangesAct;
-    //QAction *discardChangesAct;
     QAction* selectSegmentAct;
     QAction *editSegmentAct;
     //QAction* showColumnsAct;

@@ -12,7 +12,7 @@ class RouteViewTableModel : public QAbstractTableModel
     Q_OBJECT
 public:
     RouteViewTableModel(QObject *parent = 0);
-    RouteViewTableModel(qint32 route, QString name, QDate dtStart, QDate dtEnd, QList<SegmentData*> segmentDataList, QObject *parent=0);
+    RouteViewTableModel(qint32 route, QString name, int companyKey, QDate dtStart, QDate dtEnd, QList<SegmentData*> segmentDataList, QObject *parent=0);
 
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
@@ -83,6 +83,7 @@ private:
      QList<SegmentData> saveSegmentDataList;
      qint32 route;
      QString name;
+     int companyKey;
      qint32 startRow, endRow;
      QMap<int, TractionTypeInfo> tractionTypes;
      QMap<int, QString> turnMap = {{0, "back"}, {1,"Left"},{2,"Right"}};

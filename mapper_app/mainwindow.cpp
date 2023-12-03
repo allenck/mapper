@@ -515,11 +515,79 @@ void MainWindow::onCbSegmentsCustomContextMenu(const QPoint &pos)
  sd->setCompanyKey(_rd.companyKey());
 
  QMenu* menu = new QMenu();
- QMenu* actMenu = new QMenu(tr("Add segment to route"));
+ QMenu* actMenu = addSegmentMenu(sd);
  menu->addMenu(actMenu);
+// QActionGroup* ag = new QActionGroup(this);
+// //ui->ssw->cbSegments()->addAction(addSegmentToNewRouteAct);
+// if(si.tracks()== 1)
+// {
+//  QAction* act = new QAction(tr("OneWay"),this);
+//  act->setCheckable(true);
+//  act->setData(-1);
+//  ag->addAction(act);
+//  actMenu->addAction(act);
+// }
+// else
+// {
+//  QAction* act = new QAction(tr("TwoWay"),this);
+//  ag->addAction(act);
+//  act->setData(0);
+//  actMenu->addAction(act);
+
+//  act = new QAction("OneWay: "+si.description(),this);
+//  act->setData(1);
+//  ag->addAction(act);
+//  actMenu->addAction(act);
+
+//  act = new QAction("OneWay: "+si.reverseDescription());
+//  act->setData(2);
+//  ag->addAction(act);
+//  actMenu->addAction(act);
+//  menu->addMenu(actMenu);
+// }
+// connect(ag, &QActionGroup::triggered,[=](QAction* act){
+//  switch(act->data().toInt())
+//  {
+//  case 0:
+//   sd->setOneWay(" ");
+//   sd->setTrackUsage(" ");
+//   addSegmentToRoute(sd); // two tracks both used
+//   break;
+//  case 1:
+//   sd->setOneWay("Y");
+//   sd->setTrackUsage("R");
+//   addSegmentToRoute(sd); // two tracks both used
+//   break;
+//  case 2:
+//   sd->setOneWay("Y");
+//   sd->setTrackUsage("L");
+//   addSegmentToRoute(sd); // two tracks both used
+//   break;
+//  case -1:
+//   sd->setOneWay(act->isChecked()?"Y":"N");
+//   addSegmentToRoute(sd); // single track oneway ot not
+//  }
+// });
+ menu->addAction(addSegmentViaUpdateRouteAct);
+ menu->addAction(selectSegmentAct);
+ menu->addAction(deleteSegmentAct);
+ menu->addAction(editSegmentAct);
+ menu->addAction(splitSegmentAct);
+ menu->addSeparator();
+ menu->addAction(findDupSegmentsAct);
+ menu->addAction(queryRouteUsageAct);
+ menu->addAction(findDormantSegmentsAct);
+ menu->addAction(checkSegmentsAct);
+ menu->exec(QCursor::pos());
+}
+
+QMenu* MainWindow::addSegmentMenu(SegmentData *sd)
+{
+ QMenu* actMenu = new QMenu(tr("Add segment to route"));
+ //menu->addMenu(actMenu);
  QActionGroup* ag = new QActionGroup(this);
  //ui->ssw->cbSegments()->addAction(addSegmentToNewRouteAct);
- if(si.tracks()== 1)
+ if(sd->tracks()== 1)
  {
   QAction* act = new QAction(tr("OneWay"),this);
   act->setCheckable(true);
@@ -534,16 +602,16 @@ void MainWindow::onCbSegmentsCustomContextMenu(const QPoint &pos)
   act->setData(0);
   actMenu->addAction(act);
 
-  act = new QAction("OneWay: "+si.description(),this);
+  act = new QAction("OneWay: "+sd->description(),this);
   act->setData(1);
   ag->addAction(act);
   actMenu->addAction(act);
 
-  act = new QAction("OneWay: "+si.reverseDescription());
+  act = new QAction("OneWay: "+sd->reverseDescription());
   act->setData(2);
   ag->addAction(act);
   actMenu->addAction(act);
-  menu->addMenu(actMenu);
+  //menu->addMenu(actMenu);
  }
  connect(ag, &QActionGroup::triggered,[=](QAction* act){
   switch(act->data().toInt())
@@ -568,19 +636,8 @@ void MainWindow::onCbSegmentsCustomContextMenu(const QPoint &pos)
    addSegmentToRoute(sd); // single track oneway ot not
   }
  });
- menu->addAction(addSegmentToNewRouteAct);
- menu->addAction(selectSegmentAct);
- menu->addAction(deleteSegmentAct);
- menu->addAction(editSegmentAct);
- menu->addAction(splitSegmentAct);
- menu->addSeparator();
- menu->addAction(findDupSegmentsAct);
- menu->addAction(queryRouteUsageAct);
- menu->addAction(findDormantSegmentsAct);
- menu->addAction(checkSegmentsAct);
- menu->exec(QCursor::pos());
+ return actMenu;
 }
-
 
 /*static*/ MainWindow* MainWindow::_instance = nullptr;
 /*static*/ MainWindow* MainWindow::instance() {return _instance;}
@@ -905,15 +962,18 @@ void MainWindow::fillOverlayMenu()
 {
  overlayMenu->clear();
  QActionGroup *overlayActionGroup = new QActionGroup(this);
- qDebug() << "building overlayMenu for:" <<config->currCity->name();
+ qDebug() << "building overlayMenu for:" <<config->currCity->name() << " overlays: " << config->currCity->city_overlayMap->count();
  QMapIterator<QString, Overlay*> iter(*config->currCity->city_overlayMap);
  while(iter.hasNext())
  {
   iter.next();
   QString name = iter.key();
   Overlay* ov = iter.value();
-  if(!ov->isSelected)
-   continue;
+//  if(!ov->isSelected)
+//  {
+//   qDebug() << "overlay " << name << " bypassed";
+//   continue;
+//  }
   QAction *act = new QAction(name, this);
   act->setData(VPtr<Overlay>::asQVariant(ov));
   act->setCheckable(true);
@@ -1100,17 +1160,16 @@ void MainWindow::createActions()
         displaySegment(sd->segmentId(), sd->description(),
                        getColor(sd->tractionType()),
                        sd->trackUsage(), true);
-
  });
 
- addSegmentToNewRouteAct = new QAction(tr("Add segment via UpdateRoute"),this);
- addSegmentToNewRouteAct->setStatusTip(tr("Add via UpdateRoute possibly creating new route."));
- connect(addSegmentToNewRouteAct, &QAction::triggered, [=]{
+ addSegmentViaUpdateRouteAct = new QAction(tr("Add segment via UpdateRoute"),this);
+ addSegmentViaUpdateRouteAct->setStatusTip(tr("Add via UpdateRoute possibly creating new route."));
+ connect(addSegmentViaUpdateRouteAct, &QAction::triggered, [=]{
   SegmentData* sd = new SegmentData(ui->ssw->segmentSelected());
   sd->setRoute(m_routeNbr);
   sd->setAlphaRoute((_rd.alphaRoute()));
   sd->setRouteName(_rd.routeName());
-  sd->setCompanyKey(ui->cbCompany->currentData().toInt());
+  sd->setCompanyKey(_rd.companyKey());
   sd->setTractionType(_rd.tractionType());
   CompanyData* cd = sql->getCompany(sd->companyKey());
   sd->setStartDate(_rd.startDate());
@@ -1347,6 +1406,7 @@ QWidgetAction *MainWindow::createWidgetAction()
  cbSort->addItem("Route, name, end date");
  cbSort->addItem("Route, name, start date");
  cbSort->addItem("Name, Route, start date");
+ cbSort->addItem("start date, name, route");
 
  cbSort->setCurrentIndex(config->currCity->routeSortType);
  //connect(cbSort, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSortSelectionChanged(int)));
@@ -1481,8 +1541,9 @@ void MainWindow::createMenus()
      if(config->currConnection->servertype()== "Sqlite")
      {
       optionsMenu->clear();
+      fillOverlayMenu();
       optionsMenu->addMenu(overlayMenu);
-      connect(overlayMenu, SIGNAL(aboutToShow()), this, SLOT(fillOverlayMenu()));
+      //connect(overlayMenu, SIGNAL(aboutToShow()), this, SLOT(fillOverlayMenu()));
       optionsMenu->addAction(displayRouteCommentsAct);
       optionsMenu->addAction(displayStationMarkersAct);
       optionsMenu->addAction(displayTerminalMarkersAct);
@@ -2014,12 +2075,15 @@ void MainWindow::refreshRoutes()
      case 4:
       map.insert(rd.routeName()+rSort+rd.endDate().toString("yyyy/MM/dd"),rd);
       break;
+     case 5:
+      map.insert(rd.startDate().toString("yyyy/MM/dd") + rd.routeName()+rSort,rd);
      }
     }
     //int len = routeList.count();
-    for(int i=0; i<map.values().count(); i++)
+    routeList = map.values();
+    for(int i=0; i<routeList.count(); i++)
     {
-         RouteData rd = (RouteData)map.values().at(i);
+         RouteData rd = (RouteData)routeList.at(i);
          QString rdStartDate = rd.startDate().toString("yyyy/MM/dd");
 //         if(ui->cbRoute->findText(rd.toString())< 0)
             ui->cbRoute->addItem(rd.toString(),QVariant::fromValue(rd));
@@ -2120,7 +2184,7 @@ void MainWindow::On_displayRoute(RouteData rd)
 
  //RouteInfo ri = sql->getRoutePoints(rd.route,rd.name, ui->dateEdit->text());
  //RouteInfo ri = RouteInfo(rd.route,rd.name, ui->dateEdit->text());
- QList<SegmentData*> segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(), ui->dateEdit->text());
+ QList<SegmentData*> segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(), rd.companyKey(), ui->dateEdit->text());
 // LatLng startPt =  LatLng();
 // LatLng endPt =  LatLng();
 // LatLng swPt = LatLng(90,180);
@@ -3916,7 +3980,7 @@ void MainWindow::deleteRoute()
 {
     //SQL sql;
 #if 1 // TODO
-    RouteData rd = routeList.at(        ui->cbRoute->currentIndex());
+    RouteData rd = routeList.at(ui->cbRoute->currentIndex());
 
     QMessageBox::StandardButton reply;
     reply=QMessageBox::warning(this, tr("Confirm Delete"),tr("Are you sure you want to delete route ")

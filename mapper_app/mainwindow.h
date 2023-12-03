@@ -204,6 +204,7 @@ public slots:
     void showGoogleMapFeatures(bool);
     void btnDisplayRouteClicked();
     void segmentChanged(qint32 changedSegment, qint32 newSegment);
+    QMenu* addSegmentMenu(SegmentData* sd);
 
 private slots:
     void about();
@@ -327,7 +328,7 @@ private:
     QAction *updateTerminalsAct;
     QAction *describeRouteAct;
     QAction* addSegmentToRouteAct; // to current route
-    QAction* addSegmentToNewRouteAct; // using RouteDlg
+    QAction* addSegmentViaUpdateRouteAct; // using RouteDlg
     QAction *deleteSegmentAct;
     QAction *findDupSegmentsAct;
     QAction *queryRouteUsageAct;
@@ -408,6 +409,7 @@ private:
     void createActions();
     void createMenus();
     void lookupStreetName(SegmentInfo sd);
+
     void closeEvent(QCloseEvent *event);
     FileDownloader *m_dataCtrl;
     FileDownloader *m_overlays;

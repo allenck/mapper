@@ -316,6 +316,7 @@ class SegmentData
     }
     void markForDelete(bool b) {_markedForDelete = b;}
     bool markedForDelete() {return _markedForDelete;}
+    QString reverseDescription();
 
  private:
     qint32 _segmentId=-1;

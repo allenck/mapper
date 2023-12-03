@@ -1688,11 +1688,12 @@ QList<SegmentData> SQL::getRouteSegmentsInOrder(qint32 route, QString name, QStr
  return myArray;
 }
 #else
-QList<SegmentData*> SQL::getRouteSegmentsInOrder(qint32 route, QString name, QString date)
+QList<SegmentData*> SQL::getRouteSegmentsInOrder(qint32 route, QString name, int companyKey, QString date)
 {
  QString where = "where Route = " + QString("%1").arg(route)
                  + " and trim(RouteName) = '" + name + "'"
                  " and '" + date + "' between StartDate and EndDate"
+                 " and companyKey = " + QString("%1").arg(companyKey) +
                  " order by StartDate, EndDate, Segmentid";
 
  return segmentDataFromView(where);
@@ -1776,7 +1777,7 @@ QList<SegmentData> SQL::getRouteDatasForDate(int segmentId, QString date)
                        " a.oneWay, s.street, s.description"
                        " from Routes a"
                        " join AltRoute c on a.route = c.route"
-                       " join Segments on a.lineKey = s.segmentId"
+                       " join Segments s on a.lineKey = s.segmentId"
                        " where '" + date + "' between a.startDate and a.endDate"
                        " and lineKey = "+QString::number(segmentId);
 
@@ -6495,7 +6496,7 @@ bool SQL::doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QD
     {
      throw IllegalArgumentException("doesRouteSegmentExist: invalid dates");
     }
-    if(route <= 0 || name.isEmpty() || segmentId <= 0 )
+    if(route <= 0 /*|| name.isEmpty()*/ || segmentId <= 0 )
     {
      throw IllegalArgumentException("doesRouteSegmentExist: invalid arguments");
     }
@@ -9121,8 +9122,8 @@ bool SQL::updateRouteComment(RouteComments rc)
                 QSqlError err = query.lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-                db.close();
-                //exit(EXIT_FAILURE);
+                //db.close();
+                return false;
             }
 
             db.commit();

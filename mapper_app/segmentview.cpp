@@ -30,9 +30,20 @@ SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
     pasteAction->setShortcut(tr("Ctrl+V"));
     connect(pasteAction, SIGNAL(triggered()), this, SLOT(aPaste()));
 
-    addToRouteAct = new QAction(tr("Add in UpdateRoute"),this);
-    addToRouteAct->setStatusTip(tr("Add this segment to the current route."));
-    connect(addToRouteAct, SIGNAL(triggered()),this, SLOT(addToRoute()));
+//    addToRouteAct = new QAction(tr("Add to current route"),this);
+//    addToRouteAct->setStatusTip(tr("Add this segment to the current route."));
+//    connect(addToRouteAct, &QAction::triggered,[=]{
+//     QItemSelectionModel * model = ui->selectionModel();
+//     QModelIndexList indexes = model->selectedIndexes();
+//     QModelIndex Index = indexes.at(0);
+//     qint32 segmentId = Index.data().toInt();
+//     MainWindow::instance()->segmentSelected(0, segmentId);
+//     MainWindow::instance()->addSegmentToRouteAct->trigger();
+//    });
+
+    addInUpdateRoute = new QAction(tr("Add in UpdateRoute"),this);
+    addInUpdateRoute->setStatusTip(tr("Add this segment uding Update Route route."));
+    connect(addInUpdateRoute, SIGNAL(triggered()),this, SLOT(addToRoute()));
 
     editSegmentAct = new QAction(tr("Edit segment"), this);
     editSegmentAct->setStatusTip(tr("Edit this segment's properties"));
@@ -81,7 +92,7 @@ void SegmentView::tablev_customContextMenu( const QPoint& pt)
     // check is item in QTableView exist or not
     if(boolGetItemTableView(ui))
     {
-        //menu = QMenu(m_parent*);
+        menu.clear();
 
         menu.addAction(copyAction);
         menu.addAction(pasteAction);
@@ -90,9 +101,24 @@ void SegmentView::tablev_customContextMenu( const QPoint& pt)
         QModelIndexList indexes = model->selectedIndexes();
         if(indexes.size() > 0)
         {
-        QModelIndex ix = indexes.at(0);
+         QModelIndex ix = proxymodel->mapToSource(indexes.at(0));
+
          if((ix.data(Qt::CheckStateRole) != Qt::Checked))
-            menu.addAction(addToRouteAct);
+         {
+           //menu.addAction(addToRouteAct);
+          SegmentInfo si = sourceModel->selectedSegment(ix.row());
+          SegmentData* sd = new SegmentData(si);
+          MainWindow* p = MainWindow::instance();
+          RouteData rd = p->_rd;
+          sd->setRoute(p->m_routeNbr);
+          sd->setRouteName(p->m_routeName);
+          sd->setCompanyKey(p->m_companyKey);
+          sd->setTractionType(rd.tractionType());
+          sd->setStartDate(rd.startDate());
+          sd->setEndDate(rd.endDate());
+          menu.addMenu(MainWindow::instance()->addSegmentMenu(sd));
+          menu.addAction(addInUpdateRoute);
+         }
         }
         menu.addAction(editSegmentAct);
         menu.addAction(selectSegmentAct);

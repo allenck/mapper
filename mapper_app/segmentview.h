@@ -32,7 +32,8 @@ public slots:
 private:
     QAction *copyAction;
     QAction *pasteAction;
-    QAction *addToRouteAct;
+    //QAction *addToRouteAct;
+    QAction *addInUpdateRoute;
     QAction *editSegmentAct;
     QAction *selectSegmentAct;
     qint32 curRow, curCol;

@@ -30,7 +30,7 @@ SegmentDlg::SegmentDlg(QWidget *parent) :
 // infoLat = m_latitude;
 // infoLon = m_longitude;
  ui->gbUsage->setVisible(false);
-
+ ui->rnw->configure(new RouteData(), ui->lblErrorText);
 
  connect(ui->txtOriginalName, SIGNAL(textChanged(QString)), this, SLOT(txtOriginalName_TextChanged(QString)));
  connect(ui->txtOriginalName, SIGNAL(editingFinished()),this,SLOT(txtOriginalName_Leave()));
@@ -197,7 +197,10 @@ void SegmentDlg::setSegmentId(qint32 value)
   ui->gbOriginal->setTitle(tr("Street"));
   ui->chkOriginalOneWay->setVisible(false);
   ui->gbNew->setTitle(tr("Segment Description"));
-  //txtOriginalName->setEnabled(false);
+  connect(ui->txtOriginalName, &QLineEdit::editingFinished, [=] {
+   if(ui->txtNewName->text().isEmpty())
+    ui->txtNewName->setText(ui->txtOriginalName->text()+", ");
+  });
 
   ui->rbUseOriginal->setEnabled( false);
   ui->chkOriginalOneWay->setEnabled( false);

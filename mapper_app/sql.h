@@ -62,7 +62,7 @@ public:
     QStringList getLocations();
     //QT_DEPRECATED SegmentInfo getSegmentInfo(qint32 segmentId);
     SegmentInfo getSegmentInfo(qint32 SegmentId);
-    QList<SegmentData *> getRouteSegmentsInOrder(qint32 route, QString name, QString date);
+    QList<SegmentData *> getRouteSegmentsInOrder(qint32 route, QString name, int companyKey, QString date);
     //QT_DEPRECATED QList<SegmentInfo> getRouteSegmentsInOrder2(qint32 route, QString name, QString date);
     QList<RouteData> getRoutes(qint32 segmentid, QString date );
 //    Q_DECL_DEPRECATED QList<LatLng>  GetSegmentPoints(qint32 SegmentId);

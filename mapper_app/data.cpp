@@ -363,6 +363,26 @@ QString SegmentData::toString2()
       str = str + QString(" (double/%1)").arg(trackType);
  return str;
 }
+QString SegmentData::reverseDescription()
+{
+ QString desc = _description;
+ QStringList sl1 = desc.split(",");
+ QStringList sl2;
+ QString separator;
+ if(sl1.at(0).length()>0 && sl1.count()==2)
+ {
+  if(sl1.at(1).contains(" to "))
+   separator=" to";
+  else
+   separator = " zur "; // German
+  sl2 = sl1.at(1).split(separator);
+  if(sl2.count()==2)
+  {
+   return sl1.at(0) +","+sl2.at(1) + separator + sl2.at(0);
+  }
+ }
+ return "reverse: "+ _description;
+}
 
 /*static*/ QStringList SegmentData::ROUTETYPES = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
 
@@ -502,7 +522,7 @@ RouteInfo::RouteInfo(RouteData rd)
  this->route = rd.route();
  this->routeName = rd.routeName();
  length = 0;
- segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
+ segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(), rd.companyKey(), rd.endDate().toString("yyyy/MM/dd"));
 }
 
 RouteInfo::RouteInfo(qint32 route, QString name, QDate startDate, QDate endDate)
@@ -512,7 +532,7 @@ RouteInfo::RouteInfo(qint32 route, QString name, QDate startDate, QDate endDate)
  this->routeName = name;
  this->startDate = startDate;
  this->endDate = endDate;
- segmentDataList = SQL::instance()->getRouteSegmentsInOrder(route, name, endDate.toString("yyyy/MM/dd"));
+ segmentDataList = SQL::instance()->getRouteSegmentsInOrder(route, name, 0, endDate.toString("yyyy/MM/dd"));
 }
 
 RouteInfo::~RouteInfo()

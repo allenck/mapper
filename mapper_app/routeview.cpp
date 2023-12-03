@@ -112,7 +112,7 @@ RouteView::RouteView(QObject* parent )
 
     ui->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
-    sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"),
+    sourceModel = new RouteViewTableModel(route, name, companyKey, QDate::fromString(startDate, "yyyy/MM/dd"),
                                           QDate::fromString(endDate, "yyyy/MM/dd"), QList<SegmentData*>());
 
 //    saveChangesAct = new QAction(tr("Commit changes"),this);
@@ -430,6 +430,7 @@ void RouteView::updateRouteView()
 //    checkChanges();
     route = myParent->m_routeNbr;
     name = myParent->m_routeName;
+    companyKey = myParent->_rd.companyKey();
     startDate = myParent->m_currRouteStartDate;
     endDate = myParent->m_currRouteEndDate;
     alphaRoute = myParent->m_alphaRoute;
@@ -520,11 +521,11 @@ void RouteView::updateRouteView()
 
     ui->setSortingEnabled(false);
     if(!sourceModel)
-     sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"),
+     sourceModel = new RouteViewTableModel(route, name, companyKey, QDate::fromString(startDate, "yyyy/MM/dd"),
                                            QDate::fromString(endDate, "yyyy/MM/dd"),
-                                           SQL::instance()->getRouteSegmentsInOrder(route, name, endDate));
+                                           SQL::instance()->getRouteSegmentsInOrder(route, name, companyKey, endDate));
     else
-     sourceModel->setList(SQL::instance()->getRouteSegmentsInOrder(route, name, endDate));
+     sourceModel->setList(SQL::instance()->getRouteSegmentsInOrder(route, name, companyKey, endDate));
     //saveSegmentInfoList = segmentInfoList;  // added 5/6/2012 ack
     //connect(saveChangesAct, SIGNAL(triggered()), sourceModel, SLOT(commitChanges()));
 //    connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(commitChanges()));

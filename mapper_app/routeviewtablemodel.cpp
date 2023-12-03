@@ -15,13 +15,14 @@ RouteViewTableModel::RouteViewTableModel(QObject *parent) :
  //connect(SQL::instance(), SIGNAL(segmentChanged(int)), this,SLOT(segmentChanged(int)));
 }
 
-RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, QDate dtStart,
+RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, int companyKey, QDate dtStart,
                                          QDate dtEnd, QList<SegmentData *> segmentDataList,
                                          QObject *parent)
      : QAbstractTableModel(parent)
 {
  this->route = route;
  this->name = name;
+ this->companyKey = companyKey;
  selectedRow = -1;
  bSelectedRowChanged = false;
  bIsSequenced = false;
