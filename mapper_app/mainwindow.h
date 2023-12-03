@@ -313,6 +313,8 @@ private:
     QMenu tab1Menu;
     QMenu *sortMenu;
 
+//    QAction *copyAction;
+//    QAction *pasteAction;
     QAction *aboutAct;
     QAction *quitAct;
     QAction *displayAct;
@@ -445,6 +447,8 @@ private:
     QWidgetAction* createWidgetAction();
 
 private slots:
+//    void aCopy();
+//    void aPaste();
     void createCityMenu();
     void sbTracks_valueChanged(int);
     void on_showDebugMessages(bool);

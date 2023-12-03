@@ -140,6 +140,11 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
  if(sd->tractionType() < 0)
   qDebug() << tr("invalid tractionType") << sd->tractionType();
 
+ if(role == Qt::CheckStateRole && index.column() == SELECT)
+ {
+  bool selected = _selectedSegments.contains( sd->segmentId());
+  return (selected?Qt::Checked:Qt::Unchecked);
+ }
  if(role == Qt::BackgroundRole)
  {
   QVariant background = QVariant();
@@ -296,6 +301,8 @@ QVariant RouteViewTableModel::headerData(int section, Qt::Orientation orientatio
  {
     switch (section)
     {
+    case SELECT:
+     return tr("Select");
     case SEGMENTID:
         return tr("SegId");
     case NAME:
@@ -381,7 +388,7 @@ bool RouteViewTableModel::removeRows(int position, int rows, const QModelIndex &
 
 bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
- if (index.isValid() && role == Qt::EditRole)
+ if (index.isValid())
  {
   int row = index.row();
 
@@ -389,99 +396,120 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
   SegmentData oldSd = SegmentData(*sd);
 
   QDate dt;
-//  int tracks;
-  switch(index.column())
+  if( role == Qt::CheckStateRole ||role == Qt::EditRole)
   {
-   case ONEWAY:
+   switch(index.column())
    {
-    QString s = value.toString().toUpper();
-    if(s == "N" || s== "Y" || s == " ")
-     sd->setOneWay(s);
-    if(s == "N")
+    case SELECT:
     {
-     sd->setTrackUsage(" ");
+     bool checked = value.toBool();
+     if(checked)
+     {
+     if(!_selectedSegments.contains(sd->segmentId()))
+      _selectedSegments.append(sd->segmentId());
+     }
+     else
+     {
+      if(_selectedSegments.contains(sd->segmentId()))
+       _selectedSegments.removeOne(sd->segmentId());
+     }
     }
    }
-   break;
-  case USAGE:
-  {
-   QString s = value.toString().toUpper();
-   if(s == "B" || s=="L" || s == "R" || s == " ")
-    sd->setTrackUsage(s);
-   break;
   }
-  case COMBO:
+  if( role == Qt::EditRole )
   {
-   QString val = value.toString();
-   sd->setOneWay(val.at(0));
-   sd->setTrackUsage(val.at(1));
-   break;
-  }
-  case TRACTIONTYPE:
-   sd->setTractionType(value.toInt());
-   break;
-  case TYPE:
-   sd->setRouteType((RouteType)value.toInt());
-   break;
-  case NEXT:
-   sd->setNext(value.toInt());
-   break;
-  case PREV:
-   sd->setPrev(value.toInt());
-   break;
-  case NEXTR:
-   sd->setNextR(value.toInt());
-   break;
-  case PREVR:
-   sd->setPrevR(value.toInt());
-   break;
-  case SEQ:
-   sd->setSequence(value.toInt());
-   break;
-  case RSEQ:
-   sd->setReturnSeq(value.toInt());
-   break;
-  case NE:
-   sd->setNormalEnter(value.toInt());
-   break;
-  case NL:
-   sd->setNormalLeave(value.toInt());
-   break;
-  case RE:
-   sd->setReverseEnter(value.toInt());
-   break;
-  case RL:
-   sd->setReverseLeave(value.toInt());
-   break;
+   switch(index.column())
+   {
+    case ONEWAY:
+    {
+     QString s = value.toString().toUpper();
+     if(s == "N" || s== "Y" || s == " ")
+      sd->setOneWay(s);
+     if(s == "N")
+     {
+      sd->setTrackUsage(" ");
+     }
+    }
+    break;
+   case USAGE:
+   {
+    QString s = value.toString().toUpper();
+    if(s == "B" || s=="L" || s == "R" || s == " ")
+     sd->setTrackUsage(s);
+    break;
+   }
+   case COMBO:
+   {
+    QString val = value.toString();
+    sd->setOneWay(val.at(0));
+    sd->setTrackUsage(val.at(1));
+    break;
+   }
+   case TRACTIONTYPE:
+    sd->setTractionType(value.toInt());
+    break;
+   case TYPE:
+    sd->setRouteType((RouteType)value.toInt());
+    break;
+   case NEXT:
+    sd->setNext(value.toInt());
+    break;
+   case PREV:
+    sd->setPrev(value.toInt());
+    break;
+   case NEXTR:
+    sd->setNextR(value.toInt());
+    break;
+   case PREVR:
+    sd->setPrevR(value.toInt());
+    break;
+   case SEQ:
+    sd->setSequence(value.toInt());
+    break;
+   case RSEQ:
+    sd->setReturnSeq(value.toInt());
+    break;
+   case NE:
+    sd->setNormalEnter(value.toInt());
+    break;
+   case NL:
+    sd->setNormalLeave(value.toInt());
+    break;
+   case RE:
+    sd->setReverseEnter(value.toInt());
+    break;
+   case RL:
+    sd->setReverseLeave(value.toInt());
+    break;
    case STARTDATE:
-      dt = value.toDate();
-      if(dt.isValid())
-      {
+    dt = value.toDate();
+    if(dt.isValid())
+    {
 
-      sd->setStartDate(value.toDate());
-      }
-      break;
+    sd->setStartDate(value.toDate());
+    }
+    break;
    case ENDDATE:
-      dt = value.toDate();
-      if(dt.isValid())
-      {
+    dt = value.toDate();
+    if(dt.isValid())
+    {
 //       if(dt >= sd->startDate())
 //        sd->setEndDate(value.toDate());
-       sd->setEndDate(value.toDate());
-      }
-      break;
+     sd->setEndDate(value.toDate());
+    }
+    break;
+   }
+   sd->setNeedsUpdate(true);
+   bChangesMade = true;
+
+   //listOfSegments.replace(row, sd);
+   SQL::instance()->updateRoute(oldSd,*sd);
+
+   selectedRow = row;
+   bSelectedRowChanged =true;
+   emit dataChanged(index, index);
   }
-  sd->setNeedsUpdate(true);
-  bChangesMade = true;
-
-  //listOfSegments.replace(row, sd);
-  SQL::instance()->updateRoute(oldSd,*sd);
-
-  selectedRow = row;
-  bSelectedRowChanged =true;
-  emit dataChanged(index, index);
-
-  return true;
+   return true;
  }
 
  return false;
@@ -500,6 +528,8 @@ Qt::ItemFlags RouteViewTableModel::flags(const QModelIndex &index) const
         return Qt::ItemIsEnabled;
     switch(index.column())
     {
+    case SELECT:
+     return Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
     case SEGMENTID:
     case NAME:
     case ANGLES:
@@ -549,6 +579,7 @@ void RouteViewTableModel::setList(QList< SegmentData* > segmentDataList)
  for(SegmentData* sd : segmentDataList)
   saveSegmentDataList.append(SegmentData(*sd));
  bChangesMade = false;
+ _selectedSegments.clear();
  reset();
  endResetModel();
 }

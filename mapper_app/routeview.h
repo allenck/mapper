@@ -35,6 +35,7 @@ public:
     RouteViewTableModel* model();
     void setList(QList<SegmentData *> segmentDataList);
     void clear();
+    QList<int> selectedSegments();
 
 signals:
     void sendRows(int, int);
@@ -79,6 +80,7 @@ private:
     QAction* sortNameAct;
     QAction* hideColumnAct;
     QAction* showColumnAct;
+    QAction* addToAnotherRouteAct;
     QAbstractButton* cornerButtonAct;
 
     QMenu *startTerminal;
@@ -97,6 +99,7 @@ private:
     void reSequenceRoute(QString whichEnd);
 
 private slots:
+    void hdr_customContextMenu( const QPoint& );
     void tablev_customContextMenu( const QPoint& );
     void tab1CustomContextMenu(const QPoint &);
     void aCopy();

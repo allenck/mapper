@@ -514,7 +514,7 @@ void MainWindow::onCbSegmentsCustomContextMenu(const QPoint &pos)
  sd->setTractionType(_rd.tractionType());
  sd->setCompanyKey(_rd.companyKey());
 
- QMenu* menu = new QMenu();
+ QMenu* menu = ui->ssw->cbSegments()->lineEdit()->createStandardContextMenu();
  QMenu* actMenu = addSegmentMenu(sd);
  menu->addMenu(actMenu);
 // QActionGroup* ag = new QActionGroup(this);
@@ -1011,6 +1011,15 @@ void MainWindow::NotYetInplemented()
 
 void MainWindow::createActions()
 {
+// copyAction = new QAction(tr("&Copy"), this);
+// copyAction->setStatusTip(tr("Copy Table Location"));
+// copyAction->setShortcut(tr("Ctrl+C"));
+// connect(copyAction, SIGNAL(triggered()), this, SLOT(aCopy()));
+
+// pasteAction = new QAction(tr("&Paste"), this);
+// pasteAction->setStatusTip(tr("Paste"));
+// pasteAction->setShortcut(tr("Ctrl+V"));
+// connect(pasteAction, SIGNAL(triggered()), this, SLOT(aPaste()));
 
  aboutAct = new QAction(tr("&About"), this);
  aboutAct->setStatusTip(tr("Show the application's About box"));
@@ -1423,6 +1432,19 @@ QWidgetAction *MainWindow::createWidgetAction()
  return sortTypeAct;
 }
 
+//void MainWindow::aCopy()
+//{
+//    QClipboard *clipboard = QApplication::clipboard();
+////    if(currentIndex.isValid())
+////        clipboard->setText(currentIndex.data().toString());
+
+//}
+
+//void MainWindow::aPaste()
+//{
+
+//}
+
 void MainWindow::addSegmentToRoute(SegmentData* sd)
 {
  QList<SegmentData*> conflicts
@@ -1642,7 +1664,8 @@ void MainWindow::cbRoute_customContextMenu( const QPoint& )
 void MainWindow::txtSegment_customContextMenu(const QPoint &)
 {
  if(ui->txtSegment->text().isEmpty()) return;
- QMenu* menu = new QMenu();
+ QMenu* menu = ui->txtSegment->createStandardContextMenu();
+ menu->addSeparator();
  QAction* edit = new QAction(tr("Edit segment"), this);
  edit->setStatusTip(tr("Edit segment details such as tracks, route type, etc."));
  menu->addAction(edit);

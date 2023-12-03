@@ -157,6 +157,8 @@ void EditSegmentDialog::segmentSelected(SegmentInfo si)
  ui->chkOneWay->setVisible(sd);
  if(sd)
  {
+  if(rd == nullptr)
+   rd = new RouteData(*sd);
   if(rd->route() > 0  && si.tracks()== 1)
   {
    ui->chkOneWay->setChecked(sd->oneWay() == "Y");

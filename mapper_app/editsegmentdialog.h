@@ -41,7 +41,7 @@ private:
  WebViewBridge* m_bridge;
  QString m_segmentStatus;
  QString m_segmentColor;
- RouteData* rd;
+ RouteData* rd = nullptr;
  QStringList _locations;
 
 private slots:
