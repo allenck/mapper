@@ -20,6 +20,8 @@ public:
     SegmentViewTableModel *sourceModel;
     segmentViewSortProxyModel *proxymodel;
     QModelIndex currentIndex;
+    int selectedRow();
+    int selectedSegmentId();
 
 signals:
     void sendRows(int, int);
@@ -36,6 +38,7 @@ private:
     QAction *addInUpdateRoute;
     QAction *editSegmentAct;
     QAction *selectSegmentAct;
+    QAction* removeFromRoute;
     qint32 curRow, curCol;
     QStringList headers;
     QTableView* ui;

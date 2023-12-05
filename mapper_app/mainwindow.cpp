@@ -515,59 +515,11 @@ void MainWindow::onCbSegmentsCustomContextMenu(const QPoint &pos)
  sd->setCompanyKey(_rd.companyKey());
 
  QMenu* menu = ui->ssw->cbSegments()->lineEdit()->createStandardContextMenu();
- QMenu* actMenu = addSegmentMenu(sd);
- menu->addMenu(actMenu);
-// QActionGroup* ag = new QActionGroup(this);
-// //ui->ssw->cbSegments()->addAction(addSegmentToNewRouteAct);
-// if(si.tracks()== 1)
-// {
-//  QAction* act = new QAction(tr("OneWay"),this);
-//  act->setCheckable(true);
-//  act->setData(-1);
-//  ag->addAction(act);
-//  actMenu->addAction(act);
-// }
-// else
-// {
-//  QAction* act = new QAction(tr("TwoWay"),this);
-//  ag->addAction(act);
-//  act->setData(0);
-//  actMenu->addAction(act);
-
-//  act = new QAction("OneWay: "+si.description(),this);
-//  act->setData(1);
-//  ag->addAction(act);
-//  actMenu->addAction(act);
-
-//  act = new QAction("OneWay: "+si.reverseDescription());
-//  act->setData(2);
-//  ag->addAction(act);
-//  actMenu->addAction(act);
-//  menu->addMenu(actMenu);
-// }
-// connect(ag, &QActionGroup::triggered,[=](QAction* act){
-//  switch(act->data().toInt())
-//  {
-//  case 0:
-//   sd->setOneWay(" ");
-//   sd->setTrackUsage(" ");
-//   addSegmentToRoute(sd); // two tracks both used
-//   break;
-//  case 1:
-//   sd->setOneWay("Y");
-//   sd->setTrackUsage("R");
-//   addSegmentToRoute(sd); // two tracks both used
-//   break;
-//  case 2:
-//   sd->setOneWay("Y");
-//   sd->setTrackUsage("L");
-//   addSegmentToRoute(sd); // two tracks both used
-//   break;
-//  case -1:
-//   sd->setOneWay(act->isChecked()?"Y":"N");
-//   addSegmentToRoute(sd); // single track oneway ot not
-//  }
-// });
+ if(!SQL::instance()->doesRouteSegmentExist(*sd))
+ {
+  QMenu* actMenu = addSegmentMenu(sd);
+  menu->addMenu(actMenu);
+ }
  menu->addAction(addSegmentViaUpdateRouteAct);
  menu->addAction(selectSegmentAct);
  menu->addAction(deleteSegmentAct);
@@ -3874,9 +3826,9 @@ void MainWindow::modifyRouteDate()
      ModifyRouteDateDlg form;
      //ModifyRouteDateDlg((routeData)cbRoutes.SelectedItem);
     //form.Configuration = config;
-    form.setConfiguration(config);
+    //form.setConfiguration(config);
     //form.setRouteData(routeList.at(ui->cbRoute->currentIndex()));
-    form.setRouteData(routeList, ui->cbRoute->currentIndex());
+    form.setRouteData(&_rd);
 
     qint32 rslt = form.exec();
     if (rslt == form.Accepted)

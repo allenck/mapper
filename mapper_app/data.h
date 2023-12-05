@@ -317,6 +317,7 @@ class SegmentData
     void markForDelete(bool b) {_markedForDelete = b;}
     bool markedForDelete() {return _markedForDelete;}
     QString reverseDescription();
+    void updateRouteInfo(RouteData rd);
 
  private:
     qint32 _segmentId=-1;

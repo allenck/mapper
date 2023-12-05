@@ -234,3 +234,4 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
  {
   return listOfSegments.at(row);
  }
+

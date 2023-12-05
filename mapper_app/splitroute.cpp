@@ -530,7 +530,7 @@ void SplitRoute::btnOK_Click()
      }
 
      if (sql->addSegmentToRoute(_routeNbr2, ui->rnw2->newRouteName(),
-                                ui->dateFrom2->date().addDays(1), ui->dateTo2->date(),
+                                ui->dateFrom2->date().addDays(0), ui->dateTo2->date(),
                                 sd1.segmentId(), sd1.companyKey(),
                                 sd1.tractionType(), sd1.direction(), sd1.next(), sd1.prev(),
                                 sd1.normalEnter(), sd1.normalLeave(),
@@ -546,7 +546,7 @@ void SplitRoute::btnOK_Click()
      }
      _newRoute.setRoute(_routeNbr2);
      _newRoute.setRouteName(ui->rnw2->newRouteName());
-     _newRoute.setStartDate(ui->dateFrom2->date().addDays(1));
+     _newRoute.setStartDate(ui->dateFrom2->date().addDays(0));
      _newRoute.setEndDate(ui->dateTo2->date());
      _newRoute.setCompanyKey(_companyList.at(ui->cbCompany2->currentIndex())->companyKey);
      _newRoute.setTractionType(sd1.tractionType());

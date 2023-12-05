@@ -384,6 +384,16 @@ QString SegmentData::reverseDescription()
  return "reverse: "+ _description;
 }
 
+void SegmentData::updateRouteInfo(RouteData rd){
+ _route = rd.route();
+ _routeName = rd.routeName();
+ _startDate = rd.startDate();
+ _endDate = rd.endDate();
+ _companyKey = rd.companyKey();
+ _tractionType = rd.tractionType();
+}
+
+
 /*static*/ QStringList SegmentData::ROUTETYPES = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
 
 void SegmentData::addPoint(LatLng pt)

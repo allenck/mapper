@@ -81,6 +81,7 @@ private:
     QAction* hideColumnAct;
     QAction* showColumnAct;
     QAction* addToAnotherRouteAct;
+    QAction* deleteSelectedRowsAct;
     QAbstractButton* cornerButtonAct;
 
     QMenu *startTerminal;

@@ -49,15 +49,20 @@ SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
     editSegmentAct->setStatusTip(tr("Edit this segment's properties"));
     connect(editSegmentAct, SIGNAL(triggered(bool)), this, SLOT(editSegment()));
 
+    removeFromRoute = new QAction(tr("Remove from route"), this);
+    connect(removeFromRoute, &QAction::triggered, [=]{
+     int row = selectedRow();
+     SegmentInfo si = sourceModel->selectedSegment(row);
+     SegmentData sd = SegmentData(si);
+     sd.updateRouteInfo(MainWindow::instance()->_rd);
+     SQL::instance()->deleteRoute(sd);
+    });
     connect(WebViewBridge::instance(), SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(on_segmentSelected(int,int)));
 
     selectSegmentAct = new QAction(tr("Select Segment"),this);
     selectSegmentAct->setStatusTip(tr("Select this segment for further use."));
     connect(selectSegmentAct, &QAction::triggered, [=]{
-     QItemSelectionModel * model = ui->selectionModel();
-     QModelIndexList indexes = model->selectedIndexes();
-     QModelIndex Index = indexes.at(0);
-     qint32 segmentId = Index.data().toInt();
+     qint32 segmentId = selectedSegmentId();
 
      emit selectSegment(segmentId);
     });
@@ -118,6 +123,10 @@ void SegmentView::tablev_customContextMenu( const QPoint& pt)
           sd->setEndDate(rd.endDate());
           menu.addMenu(MainWindow::instance()->addSegmentMenu(sd));
           menu.addAction(addInUpdateRoute);
+         }
+         else
+         {
+          menu.addAction(removeFromRoute);
          }
         }
         menu.addAction(editSegmentAct);
@@ -318,4 +327,22 @@ void SegmentView::on_segmentSelected(int, int segmentId)
   //ui->setCurrentIndex(modelIndex);
   ui->selectRow(modelIndex.row());
  }
+}
+
+// get selected row of source
+int SegmentView::selectedRow()
+{
+ QItemSelectionModel * model = ui->selectionModel();
+ QModelIndexList indexes = model->selectedIndexes();
+ QModelIndex ix = proxymodel->mapToSource(indexes.at(0));
+ return ix.row();
+}
+
+int SegmentView::selectedSegmentId()
+{
+ QItemSelectionModel * model = ui->selectionModel();
+ QModelIndexList indexes = model->selectedIndexes();
+ QModelIndex Index = indexes.at(0);
+ qint32 segmentId = Index.data().toInt();
+ return  segmentId;
 }

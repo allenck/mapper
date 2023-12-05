@@ -98,6 +98,17 @@ RouteView::RouteView(QObject* parent )
     deleteSegmentAct->setStatusTip(tr("Delete the segment from the route"));
     connect(deleteSegmentAct, SIGNAL(triggered()), this, SLOT(deleteSegment()));
 
+    deleteSelectedRowsAct = new QAction(tr("Delete selected rows"),this);
+    connect(deleteSelectedRowsAct, &QAction::triggered, [=]{
+     for(int segmentId : selectedSegments())
+     {
+      SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId);
+      SegmentData sd =  SegmentData(si);
+      sd.updateRouteInfo(rd);
+      SQL::instance()->deleteRoute(sd);
+     }
+    });
+
 //    unDeleteSegmentAct = new QAction(tr("Undo delete of segment"), this);
 //    unDeleteSegmentAct->setStatusTip(tr("Don't delete the segment from the route"));
 //    connect(unDeleteSegmentAct, SIGNAL(triggered()), this, SLOT(unDeleteSegment()));
@@ -358,6 +369,8 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
 //         menu.addAction(unDeleteSegmentAct);
 //     else
      menu.addAction(deleteSegmentAct);
+     if(selectedSegments().count())
+      menu.addAction(deleteSelectedRowsAct);
      //if(curRow == 0)
      //menu.addAction(saveChangesAct);
      //menu.addAction(discardChangesAct);

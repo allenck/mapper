@@ -7803,7 +7803,7 @@ bool SQL::deleteRoute(SegmentData sd)
      qDebug()<<"deleteRoute: not found. " + commandText;
      return false;
  }
-
+ emit routeChange(NotifyRouteChange(DELETESEG, &sd));
  return ret;
 }
 // delete a single segment

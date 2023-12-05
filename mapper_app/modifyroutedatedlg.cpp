@@ -1,6 +1,6 @@
 #include "modifyroutedatedlg.h"
 #include "ui_modifyroutedatedlg.h"
-
+#include <QPushButton>
 
 ModifyRouteDateDlg::ModifyRouteDateDlg(QWidget *parent) :
     QDialog(parent),
@@ -8,8 +8,10 @@ ModifyRouteDateDlg::ModifyRouteDateDlg(QWidget *parent) :
 {
  Q_UNUSED(parent)
  ui->setupUi(this);
+ QPushButton* btnOK = new QPushButton(tr("OK"));
+ ui->buttonBox->addButton(btnOK, QDialogButtonBox::ApplyRole);
  this->setWindowTitle(tr("Modify Route dates"));
- connect(ui->buttonBox, SIGNAL(accepted()),this, SLOT(btnOK_Click()));
+ connect(ui->buttonBox, SIGNAL(clicked(QAbstractButton*)),this, SLOT(btnOK_Click()));
  connect(ui->buttonBox, SIGNAL(rejected()), this, SLOT(btnCancel_Click()));
  connect(ui->rbStart, SIGNAL(toggled(bool)), this, SLOT(rbStartToggled(bool)));
  connect(ui->dateTimePicker1, SIGNAL(dateChanged(QDate)), this, SLOT(dateTimePicker1_ValueChanged(QDate)));
@@ -26,17 +28,17 @@ ModifyRouteDateDlg::~ModifyRouteDateDlg()
  delete ui;
 }
 
-void ModifyRouteDateDlg::setConfiguration(Configuration *cfg)
-{
- config = cfg;
-}
+//void ModifyRouteDateDlg::setConfiguration(Configuration *cfg)
+//{
+// config = cfg;
+//}
 
-void ModifyRouteDateDlg::setRouteData(QList<RouteData> routeList, int currentIx)
+void ModifyRouteDateDlg::setRouteData(RouteData* rd)
 {
- this->routeList = routeList;
- _currentIx = currentIx;
- rd = routeList.at(currentIx);
- _rd = &rd;
+// this->routeList = routeList;
+// _currentIx = currentIx;
+// rd = routeList.at(currentIx);
+ _rd = rd;
 
  ui->lblError->setText("");
  ui->lblRoute->setText(_rd->toString());
@@ -89,7 +91,7 @@ void ModifyRouteDateDlg::dateTimePicker1_ValueChanged(QDate date) //SLOT
 
 void ModifyRouteDateDlg::btnOK_Click()      //SLOT
 {
-  ui->lblError->setText("");
+ ui->lblError->setText("");
  if(!ui->rbStart->isChecked() && !ui->rbEnd->isChecked())
  {
   ui->lblError->setText(tr("Select date"));
@@ -146,6 +148,9 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
   if(ui->dateTimePicker1->date() > rd.endDate())
   {
    qDebug() << "can't set start date to later than end date!";
+   ui->lblError->setText(tr("can't set start date %1 to later than end date: %2")
+                         .arg(ui->dateTimePicker1->date().toString("yyyy/MM/dd"),
+                              rd.endDate().toString("yyy/MM/dd")));
    return;
   }
  }
@@ -154,6 +159,10 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
   if(ui->dateTimePicker1->date() < rd.startDate())
   {
    qDebug() << "can't set end date to before start date!";
+   ui->lblError->setText(tr("can't set end date %1 to before start date:%2")
+                         .arg(ui->dateTimePicker1->date().toString("yyyy/MM/dd"),
+                              rd.startDate().toString("yyyy/MM/dd")));
+
    return;
   }
  }

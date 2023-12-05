@@ -75,6 +75,7 @@ void RouteViewTableModel::routeChange(NotifyRouteChange rc)
   beginRemoveRows(QModelIndex(), row, row);
   listOfSegments.removeAt(row);
   endRemoveRows();
+  MainWindow::instance()->segmentChanged(rc.sd()->segmentId(),0);
  }
  else if(rc.type() == SQL::ADDSEG)
  {
