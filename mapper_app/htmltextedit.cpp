@@ -20,10 +20,10 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
  italicAction->setCheckable(true);
  underlineAct = new QAction(tr("Underline"), this );
  underlineAct->setCheckable(true);
- textZoomAct = new QAction(tr("Zoom +"), this);
+ textZoomAct = new QAction(tr("Size +"), this);
  textZoomAct->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_Plus));
  textZoomAct->setShortcutContext(Qt::WidgetShortcut);
- textUnzoomAct = new QAction(tr("Zoom -"), this);
+ textUnzoomAct = new QAction(tr("Size -"), this);
  textUnzoomAct->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_Minus));
  textUnzoomAct->setShortcutContext(Qt::WidgetShortcut);
  setColorRedAct = new QAction(tr("Red"), this);

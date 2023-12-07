@@ -34,7 +34,6 @@ public:
     enum COLUMNS
     {
      SEGMENTID,
-     SELECT,
      NAME,
      TRACKS,
      TYPE,

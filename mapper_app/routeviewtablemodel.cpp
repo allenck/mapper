@@ -41,7 +41,7 @@ RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, int company
          SLOT(routeChange(NotifyRouteChange)));
  //connect(SQL::instance(), SIGNAL(segmentChanged(int)), this,SLOT(segmentChanged(int)));
 
- TerminalInfo ti = SQL::instance()->getTerminalInfo(route,name, endDate.toString("yyyy/MM/dd"));
+ TerminalInfo ti = SQL::instance()->getTerminalInfo(route,name, endDate);
  for(int i =0; i < listOfSegments.count(); i++)
  {
   SegmentData* sd = listOfSegments.at(i);
@@ -141,7 +141,7 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
  if(sd->tractionType() < 0)
   qDebug() << tr("invalid tractionType") << sd->tractionType();
 
- if(role == Qt::CheckStateRole && index.column() == SELECT)
+ if(role == Qt::CheckStateRole && index.column()==SEGMENTID)
  {
   bool selected = _selectedSegments.contains( sd->segmentId());
   return (selected?Qt::Checked:Qt::Unchecked);
@@ -302,8 +302,6 @@ QVariant RouteViewTableModel::headerData(int section, Qt::Orientation orientatio
  {
     switch (section)
     {
-    case SELECT:
-     return tr("Select");
     case SEGMENTID:
         return tr("SegId");
     case NAME:
@@ -397,11 +395,11 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
   SegmentData oldSd = SegmentData(*sd);
 
   QDate dt;
-  if( role == Qt::CheckStateRole ||role == Qt::EditRole)
+  if( (role == Qt::CheckStateRole ||role == Qt::EditRole) && index.column() == SEGMENTID)
   {
    switch(index.column())
    {
-    case SELECT:
+    case SEGMENTID:
     {
      bool checked = value.toBool();
      if(checked)
@@ -529,9 +527,8 @@ Qt::ItemFlags RouteViewTableModel::flags(const QModelIndex &index) const
         return Qt::ItemIsEnabled;
     switch(index.column())
     {
-    case SELECT:
-     return Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
     case SEGMENTID:
+     return Qt::ItemIsEnabled | Qt::ItemIsUserCheckable |Qt::ItemIsSelectable;
     case NAME:
     case ANGLES:
     case ANGLEE:

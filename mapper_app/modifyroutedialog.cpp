@@ -130,12 +130,14 @@ void ModifyRouteDialog::btnOK_Click()
       this->setResult(QDialog::Rejected);
      }
 
-     TerminalInfo ti = sql->getTerminalInfo(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
+     TerminalInfo ti = sql->getTerminalInfo(rd.route(), rd.routeName(), rd.endDate());
      if(ti.route == -1)
      {
          //if(!sql->deleteTerminalInfo(rd.route, rd.name, sql->formatDate(rd.endDate)))
          //    throw (new ApplicationException("delete terminal info failed"));
-         if (!sql->updateTerminals(_routeNbr, ui->rnw->newRouteName(), ti.startDate.toString("yyyy/MM/dd"), ti.endDate.toString("yyyy/MM/dd"), ti.startSegment, ti.startWhichEnd, ti.endSegment, ti.endWhichEnd))
+         if (!sql->updateTerminals(_routeNbr, ui->rnw->newRouteName(), ti.startDate,
+                                   ti.endDate, ti.startSegment, ti.startWhichEnd,
+                                   ti.endSegment, ti.endWhichEnd))
              //throw (new ApplicationException("update terminal failed!"));
              ui->lblHelp->setText(tr("Update terminal failed"));
      }

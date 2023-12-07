@@ -55,8 +55,8 @@ private:
     qint32 startSegment, endSegment;
     int companyKey;
     QString name;
-    QString startDate = "1800/01/01";
-    QString endDate = "2050/12/31";
+    QDate startDate = QDate::fromString("1800/01/01", "yyyy/MM/dd");
+    QDate endDate = QDate::fromString("2050/12/31", "yyyy/MM/dd");
     QString alphaRoute;
     QStringList headers;
     QTableView* ui;

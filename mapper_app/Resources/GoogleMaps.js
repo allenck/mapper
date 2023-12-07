@@ -1494,7 +1494,8 @@ var path;
   if(infowindow !== null)
   {
       infowindow.setMap();
-      infowindow.marker.setMap();
+      if(infowindow.marker !== null)
+          infowindow.marker.setMap();
       infowindow = null;
   }
 

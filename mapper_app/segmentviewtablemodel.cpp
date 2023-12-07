@@ -1,5 +1,6 @@
 #include "segmentviewtablemodel.h"
 #include "sql.h"
+#include "mainwindow.h"
 
 SegmentViewTableModel::SegmentViewTableModel(QObject *parent) :
     QAbstractTableModel(parent)
@@ -43,9 +44,12 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
              return QVariant();
          else
          {
-             SegmentData sd = listOfSegments.at(index.row());
+             SegmentInfo si = listOfSegments.at(index.row());
+             SegmentData sd = SegmentData(si);
+             sd.updateRouteInfo(MainWindow::instance()->_rd);
              //segmentInfo si = sql->getSegmentInfo(sd.SegmentId);
-            if (sql->isRouteUsedOnDate(m_routeNbr, sd.segmentId(), m_date))
+            //if (sql->isRouteUsedOnDate(m_routeNbr, si.segmentId(), m_date))
+             if(sql->doesRouteSegmentExist(sd))
                 return Qt::Checked;
             else
                 return Qt::Unchecked;
@@ -75,7 +79,6 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
          switch(index.column())
          {
          case SEGMENTID:
-             //TODO setup checkbox if segment used in route.
              return sd.segmentId();
          case DESCRIPTION:
              return sd.description();
@@ -84,10 +87,6 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
          case STREETNAME:
              return sd.streetName();
          case DIRECTION:
-//             if (sd.oneWay() == "Y")
-//                 return (sd.bearing().strDirection());
-//             else
-//                 return (sd.bearing().strDirection() + "-" + sd.bearing().strReverseDirection());
           return sd.direction();
          case LAT:
              if(sd.whichEnd() == "S")

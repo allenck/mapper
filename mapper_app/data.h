@@ -318,11 +318,13 @@ class SegmentData
     bool markedForDelete() {return _markedForDelete;}
     QString reverseDescription();
     void updateRouteInfo(RouteData rd);
+    quint32 baseRoute() const {return _baseRoute;}
 
  private:
     qint32 _segmentId=-1;
     qint8 _tracks=0;
-    int _route=-1;
+    qint32 _route=-1;
+    qint32 _baseRoute=-1;
     RouteType _routeType = Surface;
     double _startLat, _startLon, _endLat, _endLon;
     double _length=0;
@@ -408,8 +410,12 @@ public:
     QString seqToString();
     qint32 sequence() {return _sequence;}
     qint32 returnSeq() {return _returnSeq;}
+    quint32 baseRoute() {return _baseRoute;}
+    void setBaseRoute(int bastRoute) {_baseRoute = bastRoute;}
+
  private:
     qint32 _route = -1;
+    qint32 _baseRoute=0;
     QString _alphaRoute;
     QString _name;
     //QDate defaultDate;
@@ -498,18 +504,22 @@ class RouteInfo
         explicit RouteInfo(QObject *parent = 0);
         RouteInfo(qint32 route, QString name, QDate startDate, QDate endDate);
         RouteInfo(RouteData rd);
-        qint32	route;
+        //QList<segmentGroup> segments;  // array of segmentGroup objects
+ private:
+        qint32	route=-1;
         QString routeName;
         qint32	tractionType;
-        //QList<segmentGroup> segments;  // array of segmentGroup objects
         QList<SegmentData*> segmentDataList;
         ~RouteInfo();
         double length;
         RouteData rd;
         QDate startDate;
         QDate endDate;
-        int companyKey;
+        int companyKey=0;
         QString alphaRoute;
+        int baseRoute=0;
+
+        friend class SQL;
 };
 #endif
 
@@ -525,8 +535,8 @@ class TerminalInfo
 
         qint32 route;
         QString name;
-        QDateTime startDate;
-        QDateTime endDate;
+        QDate startDate;
+        QDate endDate;
         qint32 startSegment;
         QString startWhichEnd;
         qint32 endSegment;

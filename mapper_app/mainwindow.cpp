@@ -914,6 +914,7 @@ void MainWindow::fillOverlayMenu()
 {
  overlayMenu->clear();
  QActionGroup *overlayActionGroup = new QActionGroup(this);
+ qDebug() << config->currCity->city_overlayMap;
  qDebug() << "building overlayMenu for:" <<config->currCity->name() << " overlays: " << config->currCity->city_overlayMap->count();
  QMapIterator<QString, Overlay*> iter(*config->currCity->city_overlayMap);
  while(iter.hasNext())
@@ -921,11 +922,6 @@ void MainWindow::fillOverlayMenu()
   iter.next();
   QString name = iter.key();
   Overlay* ov = iter.value();
-//  if(!ov->isSelected)
-//  {
-//   qDebug() << "overlay " << name << " bypassed";
-//   continue;
-//  }
   QAction *act = new QAction(name, this);
   act->setData(VPtr<Overlay>::asQVariant(ov));
   act->setCheckable(true);
@@ -1055,7 +1051,7 @@ void MainWindow::createActions()
  connect(updateTerminalsAct, SIGNAL(triggered()), this, SLOT(updateTerminals()));
 
  describeRouteAct = new QAction(tr("Describe route"),this);
- describeRouteAct->setStatusTip(tr("Display the route"));
+ describeRouteAct->setStatusTip(tr("Display the route's description. If sequenced."));
  connect(describeRouteAct,SIGNAL(triggered()), this, SLOT(describeRoute()));
 
  deleteSegmentAct= new QAction(tr("DeleteSegment"),this);
@@ -1368,6 +1364,8 @@ QWidgetAction *MainWindow::createWidgetAction()
  cbSort->addItem("Route, name, start date");
  cbSort->addItem("Name, Route, start date");
  cbSort->addItem("start date, name, route");
+ cbSort->addItem("Base Route, start date");
+
 
  cbSort->setCurrentIndex(config->currCity->routeSortType);
  //connect(cbSort, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSortSelectionChanged(int)));
@@ -1589,28 +1587,29 @@ void MainWindow::On_editCityInfo()
 
 void MainWindow::cbRoute_customContextMenu( const QPoint& )
 {
-    cbRouteMenu.clear();
-    QMenu* routeMenu = new QMenu(tr("Route Change..."));
-    cbRouteMenu.addMenu(routeMenu);
-    cbRouteMenu.addAction(addSegmentAct);
-    routeMenu->addAction(combineRoutesAct);
-    routeMenu->addAction(copyRouteAct);
-    routeMenu->addAction(deleteRouteAct);
-    cbRouteMenu.addAction(displayAct);
-    routeMenu->addAction(modifyRouteDateAct);
-    cbRouteMenu.addAction(modifyRouteTractionTypeAct);
-    routeMenu->addAction(renameRouteAct);
-    cbRouteMenu.addAction(rerouteAct);
-    cbRouteMenu.addAction(routeCommentsAct);
-    routeMenu->addAction(splitRouteAct);
-    cbRouteMenu.addAction(updateRouteAct);
-    cbRouteMenu.addAction(replaceSegments);
-    cbRouteMenu.addAction(exportRouteAct);
-    cbRouteMenu.addAction(updateTerminalsAct);
-    cbRouteMenu.addAction(describeRouteAct);
-    //cbRouteMenu.addAction(changeRouteNumberAct);
+    //cbRouteMenu->clear();
+    cbRouteMenu = ui->cbRoute->lineEdit()->createStandardContextMenu();
+    cbRouteMenu->addSeparator();
+    QMenu* extendMenu = new QMenu(tr("More ..."));
+    cbRouteMenu->addAction(addSegmentAct);
+    extendMenu->addAction(combineRoutesAct);
+    cbRouteMenu->addAction(copyRouteAct);
+    cbRouteMenu->addAction(deleteRouteAct);
+    cbRouteMenu->addAction(displayAct);
+    cbRouteMenu->addAction(modifyRouteDateAct);
+    extendMenu->addAction(modifyRouteTractionTypeAct);
+    cbRouteMenu->addAction(renameRouteAct);
+    extendMenu->addAction(rerouteAct);
+    cbRouteMenu->addAction(routeCommentsAct);
+    cbRouteMenu->addAction(splitRouteAct);
+    cbRouteMenu->addMenu(extendMenu);
+    //cbRouteMenu->addAction(updateRouteAct);
+    extendMenu->addAction(replaceSegments);
+    extendMenu->addAction(exportRouteAct);
+    extendMenu->addAction(updateTerminalsAct);
+    cbRouteMenu->addAction(describeRouteAct);
     updateTerminalsAct->setEnabled(routeView->isSequenced());
-    cbRouteMenu.exec(QCursor::pos());
+    cbRouteMenu->exec(QCursor::pos());
 }
 
 void MainWindow::txtSegment_customContextMenu(const QPoint &)
@@ -2028,11 +2027,7 @@ void MainWindow::refreshRoutes()
     QString rSort;
     for(RouteData rd : routeList)
     {
-     int digitCount = 0;
-     rSort = "000";
-     while(digitCount++ < rd.alphaRoute().count()-1 && rd.alphaRoute().at(digitCount).isDigit())
-      rSort.remove(0,1);
-     rSort.append(rd.alphaRoute());
+     rSort = QStringLiteral("%1").arg(rd.route(), 3, 10, QLatin1Char('0'))+rd.alphaRoute();
      switch(config->currCity->routeSortType)
      {
       case 0:
@@ -2052,6 +2047,9 @@ void MainWindow::refreshRoutes()
       break;
      case 5:
       map.insert(rd.startDate().toString("yyyy/MM/dd") + rd.routeName()+rSort,rd);
+      break;
+     case 6: // base route, start date
+      map.insert(QStringLiteral("%1").arg(rd.baseRoute(),3,10,QLatin1Char('0'))+rd.startDate().toString("yyyy/MM/dd"),rd);
      }
     }
     //int len = routeList.count();
@@ -2148,7 +2146,7 @@ void MainWindow::btnDisplayRouteClicked()
  int row =         ui->cbRoute->currentIndex();
  if(row < 0) return;
  RouteData rd = ((RouteData)routeList.at(row));
-
+ rd.setEndDate(ui->dateEdit->date());
  On_displayRoute(rd);
 }
 
@@ -2157,13 +2155,7 @@ void MainWindow::On_displayRoute(RouteData rd)
  if(!ui->chkNoClear->isChecked())
   btnClearClicked();
 
- //RouteInfo ri = sql->getRoutePoints(rd.route,rd.name, ui->dateEdit->text());
- //RouteInfo ri = RouteInfo(rd.route,rd.name, ui->dateEdit->text());
- QList<SegmentData*> segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(), rd.companyKey(), ui->dateEdit->text());
-// LatLng startPt =  LatLng();
-// LatLng endPt =  LatLng();
-// LatLng swPt = LatLng(90,180);
-// LatLng nePt = LatLng(-90,-180);
+ QList<SegmentData*> segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(), rd.companyKey(), rd.endDate());
  Bounds bounds = Bounds();
  bool bBoundsValid = false;
  double infoLat=0, infoLon = 0;
@@ -2176,7 +2168,7 @@ void MainWindow::On_displayRoute(RouteData rd)
  m_alphaRoute = sql->getAlphaRoute(m_routeNbr, rd.companyKey());
  if(bDisplayTerminalMarkers)
  {
-  TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, m_currRouteEndDate);
+  TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, QDate::fromString(m_currRouteEndDate,"yyyy/MM/dd)"));
   if (ti.route >= 1 && ti.startLatLng.lat() > 0 && ti.startLatLng.lon() )
   {
    objArray <<ti.startLatLng.lat() <<ti.startLatLng.lon() << getRouteMarkerImagePath(m_alphaRoute, true);
@@ -2320,59 +2312,65 @@ default:
   }
 
 
-  //if(!(infoLat == 0 && infoLon ==0))
-  {
-   QDate dt = QDate::fromString(m_currRouteStartDate, "yyyy/MM/dd");
-   dt = sql->getFirstCommentDate(m_routeNbr, dt, rd.companyKey());
-   RouteComments rc = sql->getRouteComment(m_routeNbr, dt, -1);
-   if(rc.commentKey < 0)
-   {
-    rc = sql->getRouteComment(0, dt, -1);
-   }
-   if(rc.ci.comments.isEmpty())
-   {
-    rc = sql->getNextRouteComment(m_routeNbr, dt, -1);
-    if(rc.commentKey < 0)
-    {
-     rc = sql->getNextRouteComment(0, dt, -1);
-    }
+  loadRouteComment();
 
-   }
-   if(rc.pos.lat() && rc.pos.lon())
-   {
-    infoLat = rc.pos.lat();
-    infoLon = rc.pos.lon();
-   }
-   else {
-    m_bridge->processScript("getCenter");
-    infoLat = m_latitude;
-    infoLon = m_longitude;
-   }
-   if(rc.route >= 0 && rc.ci.comments != "")
-   {
-//       if(rc.ci.comments == "")
-//           rc.ci.comments = "<body></body><";
-    int i = rc.ci.comments.indexOf("</body>");
-    if(i > 0)
-    {
-     rc.ci.comments.insert(i,"<input type='button' name='prev' value='<' onClick='prevRouteComment()'/><input type='button' name='next' value='>' onClick='nextRouteComment()'/>");
-    }
-    int ix = rc.ci.comments.indexOf("text-indent:0px;\">");
-    if(ix > 0)
-    {
-     rc.ci.comments.insert(ix+18, "<b>" + rc.date.toString("yyyy/MM/dd")+ "</b><p><h1>" + rc.routeAlpha + " " + rc.name + "</h1>");
-    }
-    objArray.clear();
-    objArray << infoLat << infoLon << rc.ci.comments << rc.route << rc.date.toString("yyyy/MM/dd") << rc.companyKey ;
-    if(bDisplayRouteComments)
-    {
-        m_bridge->processScript("displayRouteComment", objArray);
-        m_bridge->processScript("showRouteComment", bDisplayRouteComments?"true": "false");
-    }
-   }
-  }
   setCursor(Qt::ArrowCursor);
   //bFirstSegmentDisplayed=true;
+}
+
+void MainWindow::loadRouteComment()
+{
+ double infoLat=0, infoLon = 0;
+ QVariantList objArray;
+
+ QDate dt = QDate::fromString(m_currRouteStartDate, "yyyy/MM/dd");
+ dt = sql->getFirstCommentDate(m_routeNbr, dt, _rd.companyKey());
+ RouteComments rc = sql->getRouteComment(m_routeNbr, dt, -1);
+ if(rc.commentKey < 0)
+ {
+  rc = sql->getRouteComment(0, dt, -1);
+ }
+ if(rc.ci.comments.isEmpty())
+ {
+  rc = sql->getNextRouteComment(m_routeNbr, dt, -1);
+  if(rc.commentKey < 0)
+  {
+   rc = sql->getNextRouteComment(0, dt, -1);
+  }
+
+ }
+ if(rc.pos.lat() && rc.pos.lon())
+ {
+  infoLat = rc.pos.lat();
+  infoLon = rc.pos.lon();
+ }
+ else {
+  m_bridge->processScript("getCenter");
+  infoLat = m_latitude;
+  infoLon = m_longitude;
+ }
+ if(rc.route >= 0 && rc.ci.comments != "")
+ {
+//       if(rc.ci.comments == "")
+//           rc.ci.comments = "<body></body><";
+  int i = rc.ci.comments.indexOf("</body>");
+  if(i > 0)
+  {
+   rc.ci.comments.insert(i,"<input type='button' name='prev' value='<' onClick='prevRouteComment()'/><input type='button' name='next' value='>' onClick='nextRouteComment()'/>");
+  }
+  int ix = rc.ci.comments.indexOf("text-indent:0px;\">");
+  if(ix > 0)
+  {
+   rc.ci.comments.insert(ix+18, "<b>" + rc.date.toString("yyyy/MM/dd")+ "</b><p><h1>" + rc.routeAlpha + " " + rc.name + "</h1>");
+  }
+  objArray.clear();
+  objArray << infoLat << infoLon << rc.ci.comments << rc.route << rc.date.toString("yyyy/MM/dd") << rc.companyKey ;
+  if(bDisplayRouteComments)
+  {
+      m_bridge->processScript("displayRouteComment", objArray);
+      m_bridge->processScript("showRouteComment", bDisplayRouteComments?"true": "false");
+  }
+ }
 }
 
 void MainWindow::getInfoWindowComments(double lat, double lon, int route, QString date, int func)
@@ -4184,18 +4182,20 @@ void MainWindow::moveRouteStartMarker(double lat, double lon, qint32 segmentId, 
     Q_UNUSED(lat)
     Q_UNUSED(lon)
     //SQL sql;
-    TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, m_currRouteEndDate);
-    sql->updateTerminals(m_routeNbr, m_routeName, ti.startDate.toString("yyyy/MM/dd"), ti.endDate.toString("yyyy/MM/dd"), segmentId, i == 0 ? "S" : "E", ti.endSegment, ti.endWhichEnd);
+    TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, QDate::fromString(m_currRouteEndDate,"yyyy/MM/dd"));
+    sql->updateTerminals(m_routeNbr, m_routeName, ti.startDate, ti.endDate, segmentId,
+                         i == 0 ? "S" : "E", ti.endSegment, ti.endWhichEnd);
 }
 void MainWindow::moveRouteEndMarker(double lat, double lon, qint32 segmentId, qint32 i)
 {
     Q_UNUSED(lat)
     Q_UNUSED(lon)
     //SQL sql;
-    TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, m_currRouteEndDate);
-    sql->updateTerminals(m_routeNbr, m_routeName, ti.startDate.toString("yyyy/MM/dd"), ti.endDate.toString("yyyy/MM/dd"), ti.startSegment, ti.startWhichEnd, segmentId, i == 0 ? "S" : "E");
-
+    TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, QDate::fromString(m_currRouteEndDate,"yyyy/MM/dd"));
+    sql->updateTerminals(m_routeNbr, m_routeName, ti.startDate, ti.endDate, ti.startSegment,
+                         ti.startWhichEnd, segmentId, i == 0 ? "S" : "E");
 }
+
 void MainWindow::addRoute()
 {
     if(routeDlg == 0)
@@ -4234,9 +4234,11 @@ void MainWindow::displayTerminalMarkersToggeled(bool bChecked)
     bDisplayTerminalMarkers = bChecked;
     m_bridge->processScript("displayTerminalMarkers", bChecked?"true":"false");
 }
+
 void MainWindow::displayRouteCommentsToggled(bool bChecked)
 {
     bDisplayRouteComments = bChecked;
+    loadRouteComment();
     m_bridge->processScript("showRouteComment", bChecked?"true":"false");
 }
 
@@ -4935,7 +4937,14 @@ void MainWindow::describeRoute()
  //QList<QPair<int, QString>> seqList = sql->getRouteSeq(rd);
  RouteSeq rs = sql->getRouteSeq(rd);
  if(rs.seqList().isEmpty())
+ {
+  statusBar()->setStyleSheet("color: red");
+  statusBar()->showMessage("route must be sequenced", 2000);
+ QTimer::singleShot(2000, [=]{
+  statusBar()->setStyleSheet("color: black");
+ });
   return;
+ }
  QString text;
  setCursor(Qt::WaitCursor);
  bool bFirst = true;

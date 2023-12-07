@@ -123,6 +123,7 @@ RouteData::RouteData(const RouteData& o)
  _trackUsage = o._trackUsage;
  _tracks = o._tracks;
  _seqList = o._seqList;
+ _baseRoute = o._baseRoute;
 }
 
 RouteData::RouteData(const SegmentData& o)
@@ -137,6 +138,7 @@ RouteData::RouteData(const SegmentData& o)
  _companyKey = o.companyKey();
  _lineKey = o.segmentId();
  _tractionType = o.tractionType();
+ _baseRoute = o.baseRoute();
 
 }
 
@@ -391,6 +393,7 @@ void SegmentData::updateRouteInfo(RouteData rd){
  _endDate = rd.endDate();
  _companyKey = rd.companyKey();
  _tractionType = rd.tractionType();
+ _baseRoute = rd.baseRoute();
 }
 
 
@@ -532,7 +535,8 @@ RouteInfo::RouteInfo(RouteData rd)
  this->route = rd.route();
  this->routeName = rd.routeName();
  length = 0;
- segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(), rd.companyKey(), rd.endDate().toString("yyyy/MM/dd"));
+ segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(),
+                                                            rd.companyKey(), rd.endDate());
 }
 
 RouteInfo::RouteInfo(qint32 route, QString name, QDate startDate, QDate endDate)
@@ -542,7 +546,7 @@ RouteInfo::RouteInfo(qint32 route, QString name, QDate startDate, QDate endDate)
  this->routeName = name;
  this->startDate = startDate;
  this->endDate = endDate;
- segmentDataList = SQL::instance()->getRouteSegmentsInOrder(route, name, 0, endDate.toString("yyyy/MM/dd"));
+ segmentDataList = SQL::instance()->getRouteSegmentsInOrder(route, name, 0, endDate);
 }
 
 RouteInfo::~RouteInfo()

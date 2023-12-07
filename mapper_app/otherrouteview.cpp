@@ -129,7 +129,7 @@ bool OtherRouteView::boolGetItemTableView(QTableView *table)
 void OtherRouteView::On_displayRouteAct_triggered(bool)
 {
  RouteData rd = RouteData(*sd);
- emit displayRoute(*sd);
+ emit displayRoute(rd);
 }
 
 otherRouteViewSortProxyModel::otherRouteViewSortProxyModel(QObject *parent) :

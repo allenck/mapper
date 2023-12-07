@@ -53,7 +53,7 @@ public:
     QList<RouteData> getRoutesByEndDate();
     QList<RouteData> getRoutesByEndDate(qint32 companyKey);
     //QT_DEPRECATED RouteInfo getRoutePoints(qint32 route, QString name, QString date);
-    TerminalInfo getTerminalInfo(qint32 route, QString name, QString endDate);
+    TerminalInfo getTerminalInfo(qint32 route, QString name, QDate endDate);
     QList<TerminalInfo> getTerminalInfoUsingSegment(int segmentId);
     QString getAlphaRoute(qint32 route, qint32 company);
     QMap<int, TractionTypeInfo> getTractionTypes();
@@ -62,7 +62,7 @@ public:
     QStringList getLocations();
     //QT_DEPRECATED SegmentInfo getSegmentInfo(qint32 segmentId);
     SegmentInfo getSegmentInfo(qint32 SegmentId);
-    QList<SegmentData *> getRouteSegmentsInOrder(qint32 route, QString name, int companyKey, QString date);
+    QList<SegmentData *> getRouteSegmentsInOrder(qint32 route, QString name, int companyKey, QDate date);
     //QT_DEPRECATED QList<SegmentInfo> getRouteSegmentsInOrder2(qint32 route, QString name, QString date);
     QList<RouteData> getRoutes(qint32 segmentid, QString date );
 //    Q_DECL_DEPRECATED QList<LatLng>  GetSegmentPoints(qint32 SegmentId);
@@ -120,7 +120,7 @@ public:
     qint32 getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * bAlphaRoute, int companyKey);
     int findNextRouteInRange(QString txt);
     bool updateTerminals(TerminalInfo ti);
-    bool updateTerminals(qint32 route, QString name, QString startDate, QString endDate, qint32 startSegment, QString startWhichEnd, qint32 endSegment, QString endWhichEnd);
+    bool updateTerminals(qint32 route, QString name, QDate startDate, QDate endDate, qint32 startSegment, QString startWhichEnd, qint32 endSegment, QString endWhichEnd);
     QList<RouteData> getRouteInfo(qint32 route);
     RouteSeq getRouteSeq(RouteData rd);
     bool deleteRouteSeq(RouteSeq rs);

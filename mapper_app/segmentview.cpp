@@ -19,28 +19,6 @@ SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
     ui->setSelectionBehavior(QAbstractItemView::SelectRows );
     ui->setSelectionMode( QAbstractItemView::SingleSelection );
 
-    //create contextmenu
-    copyAction = new QAction(tr("&Copy"), this);
-    copyAction->setStatusTip(tr("Copy Table Location"));
-    copyAction->setShortcut(tr("Ctrl+C"));
-    connect(copyAction, SIGNAL(triggered()), this, SLOT(aCopy()));
-
-    pasteAction = new QAction(tr("&Paste"), this);
-    pasteAction->setStatusTip(tr("Paste"));
-    pasteAction->setShortcut(tr("Ctrl+V"));
-    connect(pasteAction, SIGNAL(triggered()), this, SLOT(aPaste()));
-
-//    addToRouteAct = new QAction(tr("Add to current route"),this);
-//    addToRouteAct->setStatusTip(tr("Add this segment to the current route."));
-//    connect(addToRouteAct, &QAction::triggered,[=]{
-//     QItemSelectionModel * model = ui->selectionModel();
-//     QModelIndexList indexes = model->selectedIndexes();
-//     QModelIndex Index = indexes.at(0);
-//     qint32 segmentId = Index.data().toInt();
-//     MainWindow::instance()->segmentSelected(0, segmentId);
-//     MainWindow::instance()->addSegmentToRouteAct->trigger();
-//    });
-
     addInUpdateRoute = new QAction(tr("Add in UpdateRoute"),this);
     addInUpdateRoute->setStatusTip(tr("Add this segment uding Update Route route."));
     connect(addInUpdateRoute, SIGNAL(triggered()),this, SLOT(addToRoute()));
@@ -99,8 +77,8 @@ void SegmentView::tablev_customContextMenu( const QPoint& pt)
     {
         menu.clear();
 
-        menu.addAction(copyAction);
-        menu.addAction(pasteAction);
+//        menu.addAction(copyAction);
+//        menu.addAction(pasteAction);
         //int row = ui->rowAt(pt.y());
         QItemSelectionModel * model = ui->selectionModel();
         QModelIndexList indexes = model->selectedIndexes();
@@ -148,20 +126,20 @@ bool SegmentView::boolGetItemTableView(QTableView *table)
         return (false);
 
 }
-void SegmentView::aCopy()
-{
-    QClipboard *clipboard = QApplication::clipboard();
-    //QItemSelectionModel model = ui->selectionModel();
-    //QModelIndex index =currentIndex();
-    //QAbstractItemModel* item = index.model();
-    if(currentIndex.isValid())
-        clipboard->setText(currentIndex.data().toString());
+//void SegmentView::aCopy()
+//{
+//    QClipboard *clipboard = QApplication::clipboard();
+//    //QItemSelectionModel model = ui->selectionModel();
+//    //QModelIndex index =currentIndex();
+//    //QAbstractItemModel* item = index.model();
+//    if(currentIndex.isValid())
+//        clipboard->setText(currentIndex.data().toString());
 
-}
-void SegmentView::aPaste()
-{
+//}
+//void SegmentView::aPaste()
+//{
 
-}
+//}
 
 void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
 {

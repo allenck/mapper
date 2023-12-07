@@ -32,8 +32,8 @@ public slots:
     void on_segmentSelected(int, int segmentId);
 
 private:
-    QAction *copyAction;
-    QAction *pasteAction;
+//    QAction *copyAction;
+//    QAction *pasteAction;
     //QAction *addToRouteAct;
     QAction *addInUpdateRoute;
     QAction *editSegmentAct;
@@ -51,8 +51,8 @@ private:
 private slots:
     void tablev_customContextMenu( const QPoint& pt);
 
-    void aCopy();
-    void aPaste();
+//    void aCopy();
+//    void aPaste();
     void addToRoute();
     void itemSelectionChanged(QModelIndex index );
     void Resize (int oldcount,int newcount);

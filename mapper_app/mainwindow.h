@@ -309,7 +309,7 @@ private:
     QMenu *toolsMenu;
     QMenu* optionsMenu;
     QMenu *overlayMenu = nullptr;
-    QMenu cbRouteMenu;
+    QMenu* cbRouteMenu;
     QMenu tab1Menu;
     QMenu *sortMenu;
 
@@ -463,6 +463,7 @@ private slots:
     void changeFonts(QFont f);
     void onCbSegmentsCustomContextMenu(const QPoint &pos);
     void addSegmentToRoute(SegmentData *sd);
+    void loadRouteComment();
 
 protected:
     //void resizeEvent(QResizeEvent *event);
@@ -472,6 +473,7 @@ signals:
     friend class RouteView;
     friend class WebViewBridge;
     friend class SegmentView;
+    friend class SegmentViewTableModel;
 };
 
 class Menu : public QMenu
