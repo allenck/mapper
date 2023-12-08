@@ -14,6 +14,8 @@
 #include "mainwindow.h"
 #include "exportsql.h"
 #include <QRadioButton>
+//#include "sqlite3ext.h"
+#include <QtSql>
 
 SQL* SQL::_instance = NULL;
 SQL::SQL()
@@ -10051,7 +10053,7 @@ QStringList SQL::showDatabases(QString connection, QString servertype)
  return ret;
 }
 
-
+#if 0
 bool SQL::loadSqlite3Functions(QSqlDatabase db)
 {
  bool ret=false;
@@ -10198,6 +10200,49 @@ bool SQL::loadSqlite3Functions(QSqlDatabase db)
 #endif
  return ret;
 }
+#else
+
+void distanceFunc(sqlite3_context* ctx, int argc, sqlite3_value **argv)
+{
+ double Lat1, Lon1, Lat2, Lon2;
+Lat1 = sqlite3_value_double(argv[0]);
+Lon1 = sqlite3_value_double(argv[1]);
+Lat2 = sqlite3_value_double(argv[2]);
+Lon2 = sqlite3_value_double(argv[3]);
+
+//  sqlite3_result_value(distance(LatLng(a1,a2),LatLng(a3,a4)));
+  if (Lat1 == Lat2 && Lon1 == Lon2)
+      sqlite3_result_double(ctx,0);
+  double R = 6371; // RADIUS OF THE EARTH IN KM
+  double dToRad = 0.0174532925;
+  double lat1 = Lat1 * dToRad;
+  //double lon1 = Lon1 * dToRad;
+  double lat2 = Lat2 * dToRad;
+  //double lon2 = Lon2 * dToRad;
+  double dLat = dToRad * (Lat2 - Lat1);
+  double dLon = dToRad * (Lon2 - Lon1);
+  double a = qSin(dLat / 2) * qSin(dLat / 2)
+      + qCos(lat1) * qCos(lat2)
+      * qSin(dLon / 2) * qSin(dLon / 2);
+  double c = 2 * qAtan2(qSqrt(a), qSqrt(1 - a));
+  double d = R * c;
+  sqlite3_result_double(ctx,d); // distance in kilometers
+}
+
+bool SQL::loadSqlite3Functions(QSqlDatabase db)
+{
+ QVariant v = db.driver()->handle();
+ sqlite3 *db_handle = NULL;
+ if (v.isValid() && strcmp(v.typeName(), "sqlite3*") == 0)
+ {
+  // v.data() returns a pointer to the handle
+  db_handle = *static_cast<sqlite3 **>(v.data());
+  sqlite3_initialize();
+  sqlite3_create_function(db_handle, "distance", 4, SQLITE_ANY, 0, &distanceFunc, 0, 0);
+ }
+}
+
+#endif
 //QStringList SQL::getTableList(QSqlDatabase db, QString dbType)
 //{
 // return db.tables();

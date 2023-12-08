@@ -15,6 +15,7 @@
 #include "exceptions.h"
 #include "routeselector.h"
 #include <QSqlQuery>
+#include "../functions/sqlite3.h"
 
 class NotifyRouteChange;
 class QSqldatabase;
@@ -264,6 +265,7 @@ public:
     bool getForeignKeyCheck();
     void setForeignKeyCheck(bool b);
     int displaySqlError(QSqlQuery query, QMessageBox::StandardButtons buttons, QString func, QString file, int line);
+    //static /*static*/ void distanceFunc(sqlite3_context, int argc, sqlite3_value **argv);
 
 signals:
     void details(QString);
