@@ -64,5 +64,10 @@
         <file>sql/create_stations.sql</file>
         <file>sql/mssql_create_stations.sql</file>
         <file>sql/mssql_recreateStationTable.sql</file>
+        <file>qwebchannel.js</file>
+        <file>ExtDraggableObject.js</file>
+        <file>opacityControl.js</file>
+        <file>WebChannel.js</file>
+        <file>GoogleMaps.js</file>
     </qresource>
 </RCC>

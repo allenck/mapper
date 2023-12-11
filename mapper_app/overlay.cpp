@@ -87,7 +87,8 @@ bool Overlay::importXml(QString fileName)
  }
  else{
   qDebug() << tr("error importing %1 %2").arg(fileName).arg(file->errorString());
-  throw FileNotFoundException(tr("error importing %1 %2").arg(fileName).arg(file->errorString()));
+  //throw FileNotFoundException(tr("error importing %1 %2").arg(fileName).arg(file->errorString()));
+  return false;
  }
  return true;
 }

@@ -10239,7 +10239,9 @@ bool SQL::loadSqlite3Functions(QSqlDatabase db)
   db_handle = *static_cast<sqlite3 **>(v.data());
   sqlite3_initialize();
   sqlite3_create_function(db_handle, "distance", 4, SQLITE_ANY, 0, &distanceFunc, 0, 0);
+  return true;
  }
+ return false;
 }
 
 #endif

@@ -72,12 +72,16 @@ public:
                           const QString &sourceID)override
  {
   qDebug() << "javaScriptConsoleMessage:" << message << " at"<<lineNumber<<" source:"<<sourceID;
-
  }
+
  void loadProgress(int progress)
  {
-  qDebug() << "progress "<< progress;
+  qDebug() << "progress "<< progress  << " loading " << requestedUrl().toString();
+  if(progress == 100)
+   emit pageLoaded(requestedUrl());
  }
+ signals:
+ void pageLoaded(const QUrl);
 };
 
 #endif
@@ -349,6 +353,8 @@ private:
     QAction *editConnectionsAct;
     QAction* manageOverlaysAct;
     //QAction *locateStreetAct;
+    QAction* testUrlAct;
+    QAction* testScriptAct;
     QAction *combineRoutesAct;
     QAction *refreshRoutesAct;
     QAction *routeCommentsAct;
@@ -464,6 +470,7 @@ private slots:
     void onCbSegmentsCustomContextMenu(const QPoint &pos);
     void addSegmentToRoute(SegmentData *sd);
     void loadRouteComment();
+    void initializeGoogleMaps(QUrl url);
 
 protected:
     //void resizeEvent(QResizeEvent *event);

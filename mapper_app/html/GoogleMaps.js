@@ -2,7 +2,7 @@
 var googleEarth;
 var line;
 var grayLine;
-var map;
+let map;
 var segment;
 var siArray;
 var Arrow;
@@ -10,8 +10,15 @@ var color;
 var defaultOptions;
 var options;
 var txt;
-var stationArray = new google.maps.MVCArray();
+var stationArray;// = new google.maps.MVCArray();
 var fRslt;
+var google;
+
+function echoText(text)
+{
+    console.log("echoText received: '" +text+"'");
+}
+
 
 var newSegment, segmentId, arrow,lat=0,lon=0;
 console.log("Loading GoogleMaps.js");
@@ -207,15 +214,15 @@ function Get_osm_MapType(tile, zoom)
 }
 //alert("here1" + google);
 
-osm_MapType = new google.maps.ImageMapType(
-{
- getTileUrl: Get_osm_MapType ,
- tileSize: new google.maps.Size(256, 256),
- isPng: true,
- alt: "OpenStreetMap layer",
- name: "OpenStreetMap",
- maxZoom: 18
-});
+//osm_MapType = new google.maps.ImageMapType(
+//{
+// getTileUrl: Get_osm_MapType ,
+// tileSize: new google.maps.Size(256, 256),
+// isPng: true,
+// alt: "OpenStreetMap layer",
+// name: "OpenStreetMap",
+// maxZoom: 18
+//});
 //alert("here2");
 
 var userMap = "Berlin_Bauentwicklung.1940.10000.300.3068";
@@ -824,13 +831,13 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
 
 
 //function initialize()
-function initMap()
-{
+ function initMap() {
+    //const { Map } = await google.maps.importLibrary("maps");
+
  console.log("begin GoogleMaps.js initMap()");
-    webViewBridge.debug("initMap started");
+ webViewBridge.debug("initMap started");
  connectSlots();
- geocoder  = new google.maps.Geocoder();
- var mapDiv = document.getElementById("map");
+
 
  //var Lat = 52.0;
  var Lat = webViewBridge.lat;
@@ -840,6 +847,8 @@ function initMap()
  var zoom = webViewBridge.zoom;
  //var mapTypeId = google.maps.MapTypeId.ROADMAP;
  var mapTypeId = webViewBridge.maptype;
+ var mapDiv = document.getElementById("map");
+
 
  map = new google.maps.Map(mapDiv, {
     center: new google.maps.LatLng(Lat, Lon),
@@ -850,8 +859,10 @@ function initMap()
     overviewMapControl: true,
     scrollwheel: true,
     disableDoubleClickZoom: true,
-    mapTypeId: google.maps.MapTypeId.ROADMAP
+    mapTypeId: 'roadmap'
  });
+    geocoder  = new google.maps.Geocoder();
+
 
  google.maps.event.addListenerOnce(map, 'idle', function(){
         //this part runs when the mapobject is created and rendered
@@ -910,6 +921,15 @@ function initMap()
  stationArray = new google.maps.MVCArray();
 
  //google.maps.event.trigger(map, 'resize');
+    osm_MapType = new google.maps.ImageMapType(
+    {
+     getTileUrl: Get_osm_MapType ,
+     tileSize: new google.maps.Size(256, 256),
+     isPng: true,
+     alt: "OpenStreetMap layer",
+     name: "OpenStreetMap",
+     maxZoom: 18
+    });
 
 
  webViewBridge.queryOverlay();
@@ -957,9 +977,18 @@ function initMap()
                 webViewBridge.rightClicked(contextMenuLatLng);
             }
         }, true);
+
+    google.maps.event.addListener(map, "zoom_changed", function() {
+     webViewBridge.displayZoom(map.getZoom());
+    });
+    zoomIx = map.getZoom()-17;
+    zoomOffset = offsets[zoomIx];
+
     webViewBridge.initialized();
 
-} // end initialize()
+} // end initMap()
+
+//initMap();
 
 const styles = {
   default: [],
@@ -980,12 +1009,12 @@ window.initialize = function()
 {
     initMap();
 
-    google.maps.event.addListener(map, "zoom_changed", function() {
-     webViewBridge.displayZoom(map.getZoom());
-    });
-    zoomIx = map.getZoom()-17;
-    zoomOffset = offsets[zoomIx];
-    //alert("zoomOffset = " + zoomOffset);
+//    google.maps.event.addListener(map, "zoom_changed", function() {
+//     webViewBridge.displayZoom(map.getZoom());
+//    });
+//    zoomIx = map.getZoom()-17;
+//    zoomOffset = offsets[zoomIx];
+//    //alert("zoomOffset = " + zoomOffset);
 
 }
 
@@ -2676,7 +2705,6 @@ function createCenterControl(map) {
 
   return controlButton;
 }
-
 function addCityBoundsButton()
 {
     // Create the DIV to hold the control.
@@ -2730,4 +2758,6 @@ function screenshot()
     });
 }
 
+
 console.log("GoogleMaps.js loaded!");
+onLoad();

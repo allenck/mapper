@@ -8,7 +8,6 @@
 #else
 #include <QWebEngineHistory>
 #include "websocketclientwrapper.h"
-#include "websockettransport.h"
 //#include <QWebEnginePage>
 #include <QWebSocketServer>
 #endif
@@ -70,6 +69,7 @@
 #include "systemconsole.h"
 #include <QWebEngineSettings>
 #include <QFontDialog>
+#include "ui/dialogtextedit.h"
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -79,14 +79,21 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 {
  ui->setupUi(this);
  _instance = this;
+ ui->menubar->setNativeMenuBar(false);
  cityMenu = nullptr;
  QCoreApplication::setOrganizationName("ACK Software");
  QCoreApplication::setApplicationName("Mapper");
+ QString cwd = QDir::currentPath();
+ qDebug() << "starting with CWD = '" << cwd;
+ if(cwd.contains("/mapper.app/Contents/MacOS"))
+ {
+     cwd.remove("/mapper.app/Contents/MacOS");
+     QDir::setCurrent(cwd);
+ }
  config = Configuration::instance();
  config->getSettings();
  changeFonts(config->font);
 
- QString cwd = QDir::currentPath();
  wikiRoot = cwd+ QDir::separator()+ "wiki";
  QIcon icon(":/tram-icon.ico");
  setWindowIcon(icon);
@@ -150,13 +157,14 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 #endif
 
  cwd = QDir::currentPath();
-#ifndef Q_OS_WIN
- QDir htmlDir("/var/www/html");
- if(!htmlDir.exists())
-     QDir().mkpath ("/var/www/html");
-#else
+
+//#ifndef Q_OS_WIN
+// QDir htmlDir("/var/www/html");
+// if(!htmlDir.exists())
+//     QDir().mkpath ("/var/www/html");
+//#else
  QDir htmlDir(cwd + QDir::separator() + "html");
-#endif
+//#endif
  if(!config->bRunInBrowser)
  {
 //#ifndef USE_WEBENGINE
@@ -165,13 +173,15 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 //  webView->setContextMenuPolicy(Qt::NoContextMenu);
 //  webView->setUrl(QUrl(QStringLiteral("qrc:/GoogleMaps.htm")));
 //#else
-  webView = new QWebEngineView(ui->groupBox_2);
+  webView = new QWebEngineView(this);
+  ui->horizontalLayout->addWidget(webView);
   QWebEngineSettings *settings = webView->page()->settings();
   settings->setAttribute(QWebEngineSettings::JavascriptEnabled, true);
   webView->setObjectName(QStringLiteral("webEngineView"));
   webView->setContextMenuPolicy(Qt::CustomContextMenu);
   webView->setPage(myWebEnginePage = new MyWebEnginePage());
   webView->setMinimumWidth(400);
+  //connect((MyWebEnginePage*)webView->page(), SIGNAL(pageLoaded(QUrl)), this, SLOT(initializeGoogleMaps(QUrl)));
 //  Q_ASSERT(keyTokens.size()>0);
 #if 0
 #ifdef Q_OS_WIN
@@ -212,7 +222,9 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   fileUrl = QUrl::fromLocalFile(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm");
 #else
    fileUrl = QUrl::fromLocalFile(htmlDir.absolutePath() + QDir::separator()+"GoogleMaps2.htm");
-  //fileUrl = QUrl("http://localhost/GoogleMaps2.htm");
+if(!fileUrl.isValid())
+ qDebug() << "invalid url:" << fileUrl.toString();
+   //  fileUrl = QUrl("http://localhost/GoogleMaps2.htm");
 #endif
   //if(verifyAPIKey(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm", keyTokens.at(0)))
    webView->load(fileUrl);
@@ -242,7 +254,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  if (!m_server->listen(QHostAddress::LocalHost, 12345))
  {
   QString err = m_server->errorString();
-  qCritical() <<tr("Failed to open web socket server(%1).").arg(err);
+  qCritical() <<tr("Failed to nweb socket server(%1).").arg(err);
   return;
  }
  connect(m_server, &QWebSocketServer::newConnection, [=]{
@@ -262,6 +274,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
  // wrap WebSocket clients in QWebChannelAbstractTransport objects
  m_clientWrapper = new WebSocketClientWrapper (m_server);
+ connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
 
  // setup the channel
  channel = new QWebChannel();
@@ -483,12 +496,13 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   displayStationMarkersAct->setChecked(bDisplayStationMarkers);
   bDisplayTerminalMarkers = config->currCity->bDisplayTerminalMarkers;
   displayTerminalMarkersAct->setChecked(bDisplayTerminalMarkers);
+#if 0
   displayTerminalMarkersToggeled(bDisplayTerminalMarkers);
 
   displayRouteCommentsAct->setChecked(config->currCity->bDisplayRouteComments);
   geocoderRequestAct->setChecked(config->currCity->bGeocoderRequest);
   m_bridge->processScript("setGeocoderRequest", config->currCity->bGeocoderRequest?"true":"false");
-
+#endif
   if(config->currCity->city_overlayMap->count()> 0)
   {
    //QTimer::singleShot(10000, this, SLOT(mapInit()));
@@ -635,7 +649,8 @@ void MainWindow::reloadMap()
 {
  if(webView == NULL)
  {
-  webView = new QWebEngineView(ui->groupBox_2);
+  webView = new QWebEngineView(this);
+  ui->horizontalLayout->addWidget(webView);
   webView->setObjectName(QStringLiteral("webEngineView"));
   webView->setContextMenuPolicy(Qt::NoContextMenu);
   webView->setPage(new MyWebEnginePage());
@@ -644,6 +659,30 @@ void MainWindow::reloadMap()
  }
  webView->setUrl(fileUrl);
  QVariantList objArray;
+ objArray << m_latitude << m_longitude;
+ m_bridge->processScript("setCenter", objArray);
+ //m_bridge->processScript("setCenter", QString("%1").arg(m_latitude,0,'f',8)+ "," + QString("%1").arg(m_longitude,0,'f',8));
+ objArray.clear();
+ objArray << m_zoom;
+ m_bridge->processScript("setZoom", objArray);
+ if(config->currCity->bUserMap)
+  m_bridge->processScript("setOptions");
+ else
+  m_bridge->processScript("setDefaultOptions");
+ objArray.clear();
+ objArray << m_maptype;
+ m_bridge->processScript("setMapType", objArray);
+}
+
+void MainWindow::initializeGoogleMaps(QUrl url)
+{
+ qDebug() << "page loaded: " << url.toString();
+
+ QVariantList objArray;
+ objArray << "testing echo";
+ m_bridge->processScript("echoConsole", objArray);
+ m_bridge->processScript("initMap");
+ objArray.clear();
  objArray << m_latitude << m_longitude;
  m_bridge->processScript("setCenter", objArray);
  //m_bridge->processScript("setCenter", QString("%1").arg(m_latitude,0,'f',8)+ "," + QString("%1").arg(m_longitude,0,'f',8));
@@ -1213,6 +1252,31 @@ void MainWindow::createActions()
 // locateStreetAct->setStatusTip(tr("Locate, a street, bridge, park or bahanhof. For Berlin only."));
 // connect(locateStreetAct, SIGNAL(triggered()), this, SLOT(locateStreet()));
 
+ testUrlAct = new QAction(tr("test url"));
+ connect(testUrlAct, &QAction::triggered, [=]{
+  if(webView)
+  {
+   DialogTextEdit* dlg = new DialogTextEdit("Enter Url", "Enter a url to test the webview.");
+   if(dlg->exec() == QDialog::Accepted)
+   {
+    webView->load(QUrl(dlg->result()));
+   }
+  }
+ });
+
+ testScriptAct = new QAction(tr("test script"));
+ connect(testScriptAct, &QAction::triggered, [=]{
+  if(webView)
+  {
+   DialogTextEdit* dlg = new DialogTextEdit("Enter script", "Enter a script name to test the webview.");
+   if(dlg->exec() == QDialog::Accepted)
+   {
+    m_bridge->processScript(dlg->result());
+   }
+  }
+ });
+
+
  combineRoutesAct = new QAction(tr("Combine two routes"), this);
  combineRoutesAct->setStatusTip(tr("Combine two routes into one"));
  connect(combineRoutesAct, SIGNAL(triggered()), this, SLOT(combineRoutes()));
@@ -1505,6 +1569,8 @@ void MainWindow::createMenus()
     connect(toolsMenu, &QMenu::aboutToShow, [=]{
      addPointModeAct->setChecked(m_bAddMode);
     });
+    toolsMenu->addAction(testUrlAct);
+    toolsMenu->addAction(testScriptAct);
 
     optionsMenu = new Menu(tr("Options"));
     overlayMenu = new Menu(tr("Overlays"));
@@ -4690,7 +4756,7 @@ QString loadPath = tempDir;
           qCritical() << "cannot  find opacity-slider2.png";
  }
 #endif
-#ifdef Q_OS_LINUX
+#ifndef Q_OS_WINDOWS // LINUX or MACOS
   //QFile::copy(":///GoogleMaps2b.htm", "/var/www/html/GoogleMaps2b.htm");
 //  copyAndUpdate(cwd + QDir::separator() + "GoogleMaps2b.htm", tempDir, "");
 //  copyAndUpdate(cwd + QDir::separator() + "GoogleMaps.js", tempDir, "");
@@ -4906,8 +4972,10 @@ MyWebEnginePage::MyWebEnginePage(QObject* parent) : QWebEnginePage(parent){
 //                      SLOT(loadProgress(int)));
 
  connect(this, &QWebEnginePage::loadProgress, [=](int progress){
-  qInfo() << "progress "<< progress;
+  qInfo() << "progress "<< progress << " loading " << requestedUrl().toString();
   //setVisible(true);
+  if(progress == 100)
+   emit (pageLoaded(requestedUrl()));
  });
 }
 

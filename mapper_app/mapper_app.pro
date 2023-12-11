@@ -164,6 +164,8 @@ DEPENDPATH += $$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400'
 
 unix:!macx: LIBS += -L$$PWD/../../../sqlite-amalgamation-3390400/ -lsqlite3
 
+macx: include(sqlite.pri)
+
 INCLUDEPATH += $$PWD/../../../sqlite-amalgamation-3390400
 DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3390400
 
@@ -176,11 +178,14 @@ INCLUDEPATH += $$PWD/debug
 DEPENDPATH += $$PWD/debug
 
 FORMS += \
-  routenamewidget.ui
+  routenamewidget.ui \
+  ui/dialogtextedit.ui
 
 HEADERS += \
-  routenamewidget.h
+  routenamewidget.h \
+  ui/dialogtextedit.h
 
 SOURCES += \
-  routenamewidget.cpp
+  routenamewidget.cpp \
+  ui/dialogtextedit.cpp
 

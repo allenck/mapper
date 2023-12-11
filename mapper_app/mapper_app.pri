@@ -205,4 +205,5 @@ FORMS    += ui/mainwindow.ui \
     ui/segmentselectionwidget.ui
 
 DISTFILES += \
- $$PWD/html/.gitignore
+ $$PWD/html/.gitignore \
+ $$PWD/sqlite.pri
