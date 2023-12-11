@@ -1,16 +1,10 @@
 #include <QtGui>
 #include "mainwindow.h"
 #include "removecitydialog.h"
-#ifndef USE_WEBENGINE
-#include <QtWebKit>
-#include <QWebFrame>
-#include <QWebElementCollection>
-#else
 #include <QWebEngineHistory>
 #include "websocketclientwrapper.h"
 //#include <QWebEnginePage>
 #include <QWebSocketServer>
-#endif
 #include "webviewbridge.h"
 #include "sql.h"
 #include <qfile.h>
@@ -135,44 +129,10 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
  ui->ssw->initialize();
 
-#ifndef USE_WEBENGINE
- config->bRunInBrowser = false;
-#endif
-
- tempDir = QDir::tempPath()+QDir::separator()+ "Mapper";
-#ifdef  Q_OS_WIN
- tempDir.replace("/", QDir::separator());
-#endif
-#if 0
- QFile* keys = new QFile("Resources/api_keys.txt");
- if(!keys->open(QIODevice::ReadOnly))
-  throw FileNotFoundException("keys file not found!");
- QTextStream stream(keys);
- QString keysText = stream.readLine();
- if(keysText.startsWith("//"))
-  keysText = stream.readLine();
- keyTokens = keysText.split("|");
- qDebug() << "api_keys copied";
- keys->close();
-#endif
-
  cwd = QDir::currentPath();
 
-//#ifndef Q_OS_WIN
-// QDir htmlDir("/var/www/html");
-// if(!htmlDir.exists())
-//     QDir().mkpath ("/var/www/html");
-//#else
- QDir htmlDir(cwd + QDir::separator() + "html");
-//#endif
  if(!config->bRunInBrowser)
  {
-//#ifndef USE_WEBENGINE
-//  webView = new QWebView(ui->groupBox_2);
-//  webView->setObjectName(QStringLiteral("webView"));
-//  webView->setContextMenuPolicy(Qt::NoContextMenu);
-//  webView->setUrl(QUrl(QStringLiteral("qrc:/GoogleMaps.htm")));
-//#else
   webView = new QWebEngineView(this);
   ui->horizontalLayout->addWidget(webView);
   QWebEngineSettings *settings = webView->page()->settings();
@@ -183,49 +143,14 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   webView->setMinimumWidth(400);
   //connect((MyWebEnginePage*)webView->page(), SIGNAL(pageLoaded(QUrl)), this, SLOT(initializeGoogleMaps(QUrl)));
 //  Q_ASSERT(keyTokens.size()>0);
-#if 0
-#ifdef Q_OS_WIN
-  QFileInfo info(tempDir + QDir::separator()+"GoogleMaps2.htm");
-#else
-  QFileInfo info(htmlDir.path()+"GoogleMaps2.htm");
-#endif
-//   QList<QPair<QString,QString> > updates;
-#ifdef Q_OS_WIN
-//   updates = {QPair<QString,QString>("MYAPIKEY",keyTokens.at(0)),
-//              QPair<QString,QString>("TEMPDIR",  tempDir)};
-  if(verifyAPIKey("./Resources/GoogleMaps2.htm", keyTokens.at(0)))
-    copyAndUpdate("./Resources/GoogleMaps2.htm", htmlDir.path(), "");
-   else
-    copyAndUpdate(":///GoogleMaps2.htm", htmlDir.path(), keyTokens.at(0));
-#else
-//   updates = {QPair<QString,QString>("MYAPIKEY",keyTokens.at(0)),
-//              QPair<QString,QString>("TEMPDIR",  "http://localhost")};
-   copyAndUpdate(":///GoogleMaps2.htm", htmlDir.path(), keyTokens.at(0));
-#endif
-   copyAndUpdate(":///GoogleMaps.js", htmlDir.path(), "");
-   copyAndUpdate(":///scripts/ExtDraggableObject.js", htmlDir.path(),"" );
-   copyAndUpdate(":///scripts/opacityControl.js", htmlDir.path(),"" );
-   copyAndUpdate(":///scripts/qwebchannel.js", htmlDir.path(),"" );
-   copyAndUpdate(":///scripts/WebChannel.js", htmlDir.path(),"" );
-   //QFile::copy(":///scripts/opacity-slider2.png", htmlDir.path()+ QDir::separator()+"opacity-slider2.png");
-   QFile slider(":///scripts/opacity-slider2.png");
-   if(slider.exists())
-   {
-    QFile::remove( htmlDir.path()+ QDir::separator() + "opacity-slider2.png");
-    if(!slider.copy( htmlDir.path()+ QDir::separator() + "opacity-slider2.png" ))
-       qCritical() << "copy scripts/opacity-slider2.png failed" << slider.errorString();
-   }
-   else
-       qCritical() << "cannot  find opacity-slider2.png";
-#endif
-#ifdef Q_OS_WIN
-  fileUrl = QUrl::fromLocalFile(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm");
-#else
-   fileUrl = QUrl::fromLocalFile(htmlDir.absolutePath() + QDir::separator()+"GoogleMaps2.htm");
+//#ifdef Q_OS_WIN
+  fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "html" + QDir::separator()+"GoogleMaps2.htm");
+// #else
+//    fileUrl = QUrl::fromLocalFile(htmlDir.absolutePath() + QDir::separator()+"GoogleMaps2.htm");
 if(!fileUrl.isValid())
  qDebug() << "invalid url:" << fileUrl.toString();
    //  fileUrl = QUrl("http://localhost/GoogleMaps2.htm");
-#endif
+//#endif
   //if(verifyAPIKey(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm", keyTokens.at(0)))
    webView->load(fileUrl);
 //   QFile f = QFile(htmlDir.absolutePath() + QDir::separator()+"GoogleMaps2.htm");
@@ -305,11 +230,6 @@ if(!fileUrl.isValid())
  QUrl dataUrl("http://ubuntu-2:80/public/map_tiles/overlay.lst");
  m_dataCtrl = new FileDownloader(dataUrl, this);
  connect (m_dataCtrl, SIGNAL(downloaded(QString)), this, SLOT(loadAcksoftData(QString)));
-//#ifdef WIN32
-// m_overlays = new FileDownloader(QUrl("http://localhost/map_tiles/"),this);
-//#else
-// m_overlays = new FileDownloader(QUrl("http://localhost/tileserver.php?/tms"),this);
-//#endif
 
  // get list of localhost's mbtiles overlays
  m_overlays = new FileDownloader(QUrl("http://localhost/map_tiles/mbtiles.php"),this);
@@ -350,20 +270,8 @@ if(!fileUrl.isValid())
  //connect(ui->chkOneWay, SIGNAL(toggled(bool)), this, SLOT(chkOneWay_Leave(bool)));
  connect(ui->saveImage, SIGNAL(clicked(bool)), this, SLOT(On_saveImage_clicked()));
 
- //config->saveSettings();
-
-  // Fix for problem where Google thinks webkit is on a mobile device. As a result, you can't drag the
-  // map canvas or click on a map. class myWebPage fools it to thinking the browser is Chrome.
-  //http://developer.qt.nokia.com/forums/viewthread/1643/P15
-#ifndef USE_WEBENGINE
-  webView->setPage(new myWebPage());
-  // Signal is emitted before frame loads any web content:
-  QObject::connect(webView->page()->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()),
-                    this, SLOT(addJSObject()));
-  QUrl startURL = QUrl("qrc:/GoogleMaps.htm");
-#else
   QUrl startURL = QUrl(QStringLiteral("qrc:/GoogleMaps2.htm"));
-#endif
+
 
   routeView = new RouteView(this);
   connect(routeView, SIGNAL(refreshRoutes()), this, SLOT(refreshRoutes()));
@@ -4710,63 +4618,8 @@ bool MainWindow::openWebWindow()
 #ifdef Q_OS_WIN
  cwd.replace("/", QDir::separator());
 #endif
-QString loadPath = tempDir;
-#ifdef  Q_OS_WIN
- tempDir = cwd+ QDir::separator() + "html";
- tempDir = tempDir.replace("/", "\\");
-#else
- tempDir = "/var/www/html/";
- loadPath = "http://localhost/";
-#endif
- qDebug() << "openWebWindow: tempPath =" << tempDir;
-// QFileInfo tempInfo(tempDir);
-// if(!tempInfo.isWritable())
-// {
-//     QMessageBox::critical(this, tr("Error"), tr(" cannot write to temp directory %1").arg(tempDir));
-//     abort();
-// }
-
- qDebug() << "openWebWindow: copyAndUpdate GoogleMaps2b.htm" << " to " << tempDir;
-#if 0
- QFileInfo info(tempDir+QDir::separator() + "GoogleMaps2b.htm");
- if(info.exists())
- {
-
-    //#define FORCE_COPY
-     if(verifyAPIKey("./Resources/GoogleMaps2b.htm", keyTokens.at(1)))
-       copyAndUpdate("./Resources/GoogleMaps2b.htm", tempDir, "");
-      else
-       copyAndUpdate(startHTML, tempDir, keyTokens.at(1));
-
-     qDebug() << "file verified";
-
-      copyAndUpdate(":///scripts/qwebchannel.js", tempDir,"");
-      copyAndUpdate(":///GoogleMaps.js", tempDir,"" );
-      copyAndUpdate(":///scripts/WebChannel.js", tempDir,"" );
-      copyAndUpdate(":///scripts/ExtDraggableObject.js", tempDir, "");
-      copyAndUpdate(":///scripts/opacityControl.js", tempDir,"");
-      QFile slider(":///scripts/opacity-slider2.png");
-      if(slider.exists())
-      {
-       QFile::remove(tempDir+ QDir::separator() + "opacity-slider2.png" );
-      if(!slider.copy( tempDir+ QDir::separator() + "opacity-slider2.png" ))
-          qCritical() << "copy scripts/opacity-slider2.png failed" << slider.errorString();
-      }
-      else
-          qCritical() << "cannot  find opacity-slider2.png";
- }
-#endif
-#ifndef Q_OS_WINDOWS // LINUX or MACOS
-  //QFile::copy(":///GoogleMaps2b.htm", "/var/www/html/GoogleMaps2b.htm");
-//  copyAndUpdate(cwd + QDir::separator() + "GoogleMaps2b.htm", tempDir, "");
-//  copyAndUpdate(cwd + QDir::separator() + "GoogleMaps.js", tempDir, "");
- updateTarget("./html", tempDir);
- fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "html"  + QDir::separator() + startFn);
-
- //fileUrl = QUrl("http://localhost:80/GoogleMaps2b.htm");
-#else
-    fileUrl = QUrl::fromLocalFile(tempDir  + QDir::separator() + startFn);
-#endif
+QString loadPath = cwd + "/Resources";
+    fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources"  + QDir::separator() + startFn);
 
     qInfo() << "open " << fileUrl.toString();
    if(!QDesktopServices::openUrl(fileUrl))

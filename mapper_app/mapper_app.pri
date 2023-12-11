@@ -205,5 +205,6 @@ FORMS    += ui/mainwindow.ui \
     ui/segmentselectionwidget.ui
 
 DISTFILES += \
+ $$PWD/Resources/api_key.txt \
  $$PWD/html/.gitignore \
  $$PWD/sqlite.pri

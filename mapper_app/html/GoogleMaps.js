@@ -12,7 +12,7 @@ var options;
 var txt;
 var stationArray;// = new google.maps.MVCArray();
 var fRslt;
-var google;
+
 
 function echoText(text)
 {
@@ -830,97 +830,97 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
 } // end SegmentInfo
 
 
-//function initialize()
- function initMap() {
-    //const { Map } = await google.maps.importLibrary("maps");
 
- console.log("begin GoogleMaps.js initMap()");
- webViewBridge.debug("initMap started");
- connectSlots();
+async function initMap() {
+     const { Map } = await google.maps.importLibrary("maps");
 
-
- //var Lat = 52.0;
- var Lat = webViewBridge.lat;
- //var Lon = 13.0;
- var Lon = webViewBridge.lng;
- //var zoom = 13;
- var zoom = webViewBridge.zoom;
- //var mapTypeId = google.maps.MapTypeId.ROADMAP;
- var mapTypeId = webViewBridge.maptype;
- var mapDiv = document.getElementById("map");
+     console.log("begin GoogleMaps.js initMap()");
+     webViewBridge.debug("initMap started");
+     connectSlots();
 
 
- map = new google.maps.Map(mapDiv, {
-    center: new google.maps.LatLng(Lat, Lon),
-    zoom: zoom,
-    scaleControl: true,
-    panControl: true,
-    draggable: true,
-    overviewMapControl: true,
-    scrollwheel: true,
-    disableDoubleClickZoom: true,
-    mapTypeId: 'roadmap'
- });
-    geocoder  = new google.maps.Geocoder();
+     //var Lat = 52.0;
+     var Lat = webViewBridge.lat;
+     //var Lon = 13.0;
+     var Lon = webViewBridge.lng;
+     //var zoom = 13;
+     var zoom = webViewBridge.zoom;
+     //var mapTypeId = google.maps.MapTypeId.ROADMAP;
+     var mapTypeId = webViewBridge.maptype;
+     var mapDiv = document.getElementById("map");
 
 
- google.maps.event.addListenerOnce(map, 'idle', function(){
-        //this part runs when the mapobject is created and rendered
-        google.maps.event.addListenerOnce(map, 'idle', function(){
-            //this part runs when the mapobject shown for the first time
-            webViewBridge.mapInit();
+     map = new Map(mapDiv, {
+        center: new google.maps.LatLng(Lat, Lon),
+        zoom: zoom,
+        scaleControl: true,
+        panControl: true,
+        draggable: true,
+        overviewMapControl: true,
+        scrollwheel: true,
+        disableDoubleClickZoom: true,
+        mapTypeId: 'roadmap'
+     });
+        geocoder  = new google.maps.Geocoder();
+
+
+     google.maps.event.addListenerOnce(map, 'idle', function(){
+            //this part runs when the mapobject is created and rendered
+            google.maps.event.addListenerOnce(map, 'idle', function(){
+                //this part runs when the mapobject shown for the first time
+                webViewBridge.mapInit();
+            });
         });
-    });
 
- //google.maps.event.addDomListener(mapDiv, 'resize', function(){ deprecated
-    google.maps.event.addListener(mapDiv, 'resize', function(){
-     google.maps.event.trigger(map, 'resize');
-    });
- //new google.maps.LatLng(21.291982, -157.821856),
- siArray = new google.maps.MVCArray();
- map.disableDoubleClickZoom = true;
- google.maps.event.addListener(map, "dblclick", addNewPoint);
- map.mapTypes.set('OSM', osm_MapType);
- map.mapTypes.set('UserMap',User_MapType);
- map.setMapTypeId(mapTypeId);
+     //google.maps.event.addDomListener(mapDiv, 'resize', function(){ deprecated
+        google.maps.event.addListener(mapDiv, 'resize', function(){
+         google.maps.event.trigger(map, 'resize');
+        });
+     //new google.maps.LatLng(21.291982, -157.821856),
+     siArray = new google.maps.MVCArray();
+     map.disableDoubleClickZoom = true;
+     google.maps.event.addListener(map, "dblclick", addNewPoint);
+     map.mapTypes.set('OSM', osm_MapType);
+     map.mapTypes.set('UserMap',User_MapType);
+     map.setMapTypeId(mapTypeId);
 
 
- defaultOptions = /** @type {google.maps.MapTypeControlOptions} */(
- {
-  mapTypeControlOptions:
-  {
-     mapTypeIds: ['OSM',
-        google.maps.MapTypeId.ROADMAP,
-        google.maps.MapTypeId.SATELLITE,
-        google.maps.MapTypeId.HYBRID,
-        google.maps.MapTypeId.TERRAIN,
-     ],
-     scrollwheel: true,
-     tilt: 0
-  }
+     defaultOptions = /** @type {google.maps.MapTypeControlOptions} */(
+     {
+      mapTypeControlOptions:
+      {
+         mapTypeIds: ['OSM',
+            google.maps.MapTypeId.ROADMAP,
+            google.maps.MapTypeId.SATELLITE,
+            google.maps.MapTypeId.HYBRID,
+            google.maps.MapTypeId.TERRAIN,
+         ],
+         scrollwheel: true,
+         tilt: 0
+      }
 
- });
+     });
 
- options = /** @type {google.maps.MapTypeControlOptions} */(
- {
-  mapTypeControlOptions: {
-      mapTypeIds: ['OSM',
-         google.maps.MapTypeId.ROADMAP,
-         google.maps.MapTypeId.SATELLITE,
-         google.maps.MapTypeId.HYBRID,
-         google.maps.MapTypeId.TERRAIN,
-         'UserMap'
-      ],
-      scrollwheel: true,
-      tilt: 0
-  }
- });
- map.setOptions(defaultOptions);
-    //map.setOptions( { styles: styles["hide"] })
- map.setMapTypeId(mapTypeId);
- stationArray = new google.maps.MVCArray();
+     options = /** @type {google.maps.MapTypeControlOptions} */(
+     {
+      mapTypeControlOptions: {
+          mapTypeIds: ['OSM',
+             google.maps.MapTypeId.ROADMAP,
+             google.maps.MapTypeId.SATELLITE,
+             google.maps.MapTypeId.HYBRID,
+             google.maps.MapTypeId.TERRAIN,
+             'UserMap'
+          ],
+          scrollwheel: true,
+          tilt: 0
+      }
+     });
+     map.setOptions(defaultOptions);
+        //map.setOptions( { styles: styles["hide"] })
+     map.setMapTypeId(mapTypeId);
+     stationArray = new google.maps.MVCArray();
 
- //google.maps.event.trigger(map, 'resize');
+     //google.maps.event.trigger(map, 'resize');
     osm_MapType = new google.maps.ImageMapType(
     {
      getTileUrl: Get_osm_MapType ,
@@ -932,12 +932,12 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
     });
 
 
- webViewBridge.queryOverlay();
+     webViewBridge.queryOverlay();
 
- //OK    window.external.displayZoom(map.getZoom());
- webViewBridge.displayZoom(map.getZoom());
+     //OK    window.external.displayZoom(map.getZoom());
+     webViewBridge.displayZoom(map.getZoom());
 
- //alert("initialize end");
+
     function latLng2Point(latLng, map) {
       var topRight = map.getProjection().fromLatLngToPoint(map.getBounds().getNorthEast());
       var bottomLeft = map.getProjection().fromLatLngToPoint(map.getBounds().getSouthWest());
@@ -1005,9 +1005,16 @@ const styles = {
   ],
 };
 
-window.initialize = function()
+window.initialize = function() // called by WebChannel .ie "onLoad()"
 {
+    try {
+
     initMap();
+    }
+    catch(err)
+    {
+        console.log(err);
+    }
 
 //    google.maps.event.addListener(map, "zoom_changed", function() {
 //     webViewBridge.displayZoom(map.getZoom());
@@ -1308,28 +1315,28 @@ function selectSegment(segmentId)
 
 function isSegmentDisplayed(segmentId)
 {
- var txt="N";
- var color ="";
- siArray.forEach(function(si, ix)
- {
-  try
-  {
-   if(si.segmentId && si.segmentId === segmentId)
-   {
-    color=si.getColor();
-    var Line = si.getLine();
-    if(line.getMap())
-     txt = "Y";
+    var txt="N";
+    var color ="";
+    siArray.forEach(function(si, ix)
+    {
+    try
+    {
+        if(si.segmentId && si.segmentId === segmentId)
+        {
+            color=si.getColor();
+            var Line = si.getLine();
+            if(line.getMap())
+             txt = "Y";
+            return txt;
+        }
+        }
+        catch (err)
+        {
+            txt=err;
+        }
+    });
+    webViewBridge.segmentStatus(txt, color);
     return txt;
-   }
-  }
-  catch (err)
-  {
-   txt=err;
-  }
- });
- webViewBridge.segmentStatus(txt, color);
- return txt;
 }
 
 // Erase a line segment and remove it from the list

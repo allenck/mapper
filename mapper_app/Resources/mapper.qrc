@@ -69,5 +69,7 @@
         <file>opacityControl.js</file>
         <file>WebChannel.js</file>
         <file>GoogleMaps.js</file>
+        <file>onload.js</file>
+        <file>initMap.js</file>
     </qresource>
 </RCC>

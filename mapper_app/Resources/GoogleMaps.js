@@ -831,36 +831,40 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
 
 
 
-async function initMap() {
-     const { Map } = await google.maps.importLibrary("maps");
+//async function initMap() {
+//     const { Map } = await google.maps.importLibrary("maps");
 
-     console.log("begin GoogleMaps.js initMap()");
-     webViewBridge.debug("initMap started");
-     connectSlots();
-
-
-     //var Lat = 52.0;
-     var Lat = webViewBridge.lat;
-     //var Lon = 13.0;
-     var Lon = webViewBridge.lng;
-     //var zoom = 13;
-     var zoom = webViewBridge.zoom;
-     //var mapTypeId = google.maps.MapTypeId.ROADMAP;
-     var mapTypeId = webViewBridge.maptype;
-     var mapDiv = document.getElementById("map-canvas");
+//     console.log("begin GoogleMaps.js initMap()");
+//     webViewBridge.debug("initMap started");
+//     connectSlots();
 
 
-     map = new Map(mapDiv, {
-        center: new google.maps.LatLng(Lat, Lon),
-        zoom: zoom,
-        scaleControl: true,
-        panControl: true,
-        draggable: true,
-        overviewMapControl: true,
-        scrollwheel: true,
-        disableDoubleClickZoom: true,
-        mapTypeId: 'roadmap'
-     });
+//     //var Lat = 52.0;
+//     var Lat = webViewBridge.lat;
+//     //var Lon = 13.0;
+//     var Lon = webViewBridge.lng;
+//     //var zoom = 13;
+//     var zoom = webViewBridge.zoom;
+//     //var mapTypeId = google.maps.MapTypeId.ROADMAP;
+//     var mapTypeId = webViewBridge.maptype;
+//     var mapDiv = document.getElementById("map");
+
+
+//     map = new Map(mapDiv, {
+//        center: new google.maps.LatLng(Lat, Lon),
+//        zoom: zoom,
+//        scaleControl: true,
+//        panControl: true,
+//        draggable: true,
+//        overviewMapControl: true,
+//        scrollwheel: true,
+//        disableDoubleClickZoom: true,
+//        mapTypeId: 'roadmap'
+//     });
+//}
+
+function initMap2()
+{
         geocoder  = new google.maps.Geocoder();
 
 
@@ -986,9 +990,8 @@ async function initMap() {
 
     webViewBridge.initialized();
 
-} // end initMap()
+} // end initMap2()
 
-//initMap();
 
 const styles = {
   default: [],
@@ -1007,14 +1010,14 @@ const styles = {
 
 window.initialize = function() // called by WebChannel .ie "onLoad()"
 {
-    try {
+    //try {
 
     initMap();
-    }
-    catch(err)
-    {
-        console.log(err);
-    }
+    // }
+    // catch(err)
+    // {
+    //     //console.log(err);
+    // }
 
 //    google.maps.event.addListener(map, "zoom_changed", function() {
 //     webViewBridge.displayZoom(map.getZoom());
@@ -1028,7 +1031,7 @@ window.initialize = function() // called by WebChannel .ie "onLoad()"
 function resizeMap()
 {
 //google.maps.event.trigger(map, 'resize');
-var mapDiv = document.getElementById("map-canvas");
+var mapDiv = document.getElementById("map");
 }
 
 var arrowSymbol  = {
@@ -2765,6 +2768,6 @@ function screenshot()
     });
 }
 
-
 console.log("GoogleMaps.js loaded!");
-onLoad();
+
+// onLoad(); // load the onload.js script to do this!
