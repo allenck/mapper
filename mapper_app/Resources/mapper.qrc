@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>GoogleMaps.htm</file>
         <file>go-first.png</file>
         <file>gtk-delete.png</file>
         <file>go-last-view.png</file>
@@ -69,7 +68,11 @@
         <file>opacityControl.js</file>
         <file>WebChannel.js</file>
         <file>GoogleMaps.js</file>
-        <file>onload.js</file>
-        <file>initMap.js</file>
+        <file>databases/berlinerstrassenbahn.sqlite3</file>
+        <file>databases/cincinnati.sqlite3</file>
+        <file>databases/cleveland.sqlite3</file>
+        <file>databases/indianapolis.sqlite3</file>
+        <file>databases/Louisville.sqlite3</file>
+        <file>databases/StLouis.sqlite3</file>
     </qresource>
 </RCC>

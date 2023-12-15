@@ -20,7 +20,7 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
     ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
     config = Configuration::instance();
     currCity = config->currCity;
-    this->setWindowTitle(tr("Edit Connections"));
+    this->setWindowTitle(tr("Edit Connections "));
     drivers = QSqlDatabase::drivers();
 
    // connection that is being edited
@@ -348,8 +348,8 @@ void EditConnectionsDlg::cbCitiesLeave()
 
 void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
 {
- ui->lblHelp->setText("");
- ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
+ // ui->lblHelp->setText("");
+ // ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
  if(sel < 0)
   return;
  //ui->btnSave->setText(tr("update"));
@@ -730,7 +730,11 @@ void EditConnectionsDlg::btnSaveClicked()
        QFileInfo info(ui->txtDbOrDSN->text());
        if(!info.isAbsolute())
        {
+#ifndef Q_OS_MACOS
         info = QFileInfo("Resources/databases/" + ui->txtDbOrDSN->text());
+#else
+        info = QFileInfo(config->macOSPublic+ "databases/" + ui->txtDbOrDSN->text());
+#endif
         connection->setSqliteFileName(info.fileName());
        }
        else
@@ -823,7 +827,11 @@ void EditConnectionsDlg::btnDeleteClicked()
     Connection* c = config->currCity->connections.at(i);
     if(c->servertype() == "Sqlite")
     {
+#ifndef Q_OS_MACOS
       QFile f("Resources/databases/"+c->sqlite_fileName());
+#else
+        QFile f(config->macOSPublic+"/databases/"+c->sqlite_fileName());
+#endif
       if(f.exists())
           f.remove();
     }
@@ -961,7 +969,11 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
    fn.append(".sqlite3");
   QFileInfo file(fn);
   if(!file.isAbsolute())
+#ifndef Q_OS_MACOS
       file = QFileInfo("Resources/databases/"+fn);
+#else
+      file = QFileInfo(config->macOSPublic+"/databases/"+fn);
+#endif
   if(file.exists() && !file.isWritable())
   {
    MyMessageBox::warning(this, tr("Warning"), tr("The file pathname '%1' is invalid or not writable").arg(file.absoluteFilePath()));
@@ -1062,7 +1074,11 @@ bool EditConnectionsDlg::openTestDb()
   if(info.isAbsolute())
     db.setDatabaseName( ui->txtDbOrDSN->text());
   else
+#ifndef Q_OS_MACOS
    db.setDatabaseName("Resources/databases/" + ui->txtDbOrDSN->text());
+#else
+   db.setDatabaseName("Resources/databases/" + ui->txtDbOrDSN->text());
+#endif
 //  ui->txtHost->setText("");
 //  db.setHostName(ui->txtHost->text());
  }
@@ -1214,7 +1230,11 @@ bool EditConnectionsDlg::populateDatabases()
   }
   else {
    // Sqlite
+#ifndef Q_OS_MACOS
       QDir dir("Resources/databases");
+#else
+      QDir dir(config->macOSPublic + "/databases");
+#endif
       QStringList nameFilter = {"*.sqlite3"};
       if(dir.exists())
       {
@@ -1337,7 +1357,12 @@ void EditConnectionsDlg::txtDsnTextChanged(QString text)
 
 void EditConnectionsDlg::on_tbBrowse_clicked()
 {
+#ifndef Q_OS_MACOS
    basePath = MainWindow::pwd + QDir::separator() + "Resources" + QDir::separator() +"databases" + QDir::separator();
+#else
+   basePath = config->macOSPublic + QDir::separator() +"databases" + QDir::separator();
+
+#endif
 // QFileInfo info(ui->txtDbOrDSN->text());
 // if(info.exists())
 //  basePath=info.canonicalPath();
@@ -1402,7 +1427,12 @@ void EditConnectionsDlg::ontxtDbOrDsn_editingFinished()
   if(ui->txtDbOrDSN->text().startsWith("/"))
    info.setFile(ui->txtDbOrDSN->text());
   else
+#ifndef Q_OS_MACOS
    info.setFile("Resources/databases/" + ui->txtDbOrDSN->text());
+#else
+   info.setFile(config->macOSPublic + "/databases/" + ui->txtDbOrDSN->text());
+
+#endif
 
 //  if(info.isAbsolute())
 //   ui->txtDbOrDSN->setText(info.absoluteFilePath());

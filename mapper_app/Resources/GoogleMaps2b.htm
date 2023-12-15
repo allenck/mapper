@@ -34,7 +34,7 @@
   <script type="text/javascript" src="ExtDraggableObject.js"></script>
   <script type="text/javascript" src="opacityControl.js"></script>
   <script type="text/javascript" src="WebChannel.js"> </script>
-  <script type="text/javascript" src="onload.js"></script>
+  <!--script type="text/javascript" src="onload.js"></script>
   <script>
   async function initMap() {
        const { Map } = await google.maps.importLibrary("maps");
@@ -52,7 +52,7 @@
        var zoom = webViewBridge.zoom;
        //var mapTypeId = google.maps.MapTypeId.ROADMAP;
        var mapTypeId = webViewBridge.maptype;
-       var mapDiv = document.getElementById("map");
+       mapDiv = document.getElementById("map");
 
 
        map = new Map(mapDiv, {
@@ -66,8 +66,9 @@
           disableDoubleClickZoom: true,
           mapTypeId: 'roadmap'
        });
+       initMap2();
   }
-  </script>
+  </script-->
 
   <script type="text/javascript" src="GoogleMaps.js"> </script>
   <script>
@@ -75,7 +76,6 @@
           window.open('','_parent','');
           window.close();
       }
-
   </script>
 
   <script>

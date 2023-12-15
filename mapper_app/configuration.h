@@ -64,6 +64,9 @@ public:
  void setForeignKeyCheck(bool b) {bForeignKeyCheck = b;}
  QFont font = QApplication::font();
  void changeFonts(QWidget *obj, QFont f );
+#ifdef Q_OS_MACOS
+ QString macOSPublic; // location of databases on MacOS
+#endif
 
 private:
  static Configuration* _instance;

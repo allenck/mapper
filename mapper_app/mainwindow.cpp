@@ -74,10 +74,11 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  ui->setupUi(this);
  _instance = this;
  ui->menubar->setNativeMenuBar(false);
+ ui->groupBox_2->setVisible(false);
  cityMenu = nullptr;
  QCoreApplication::setOrganizationName("ACK Software");
  QCoreApplication::setApplicationName("Mapper");
- QString cwd = QDir::currentPath();
+ cwd = QDir::currentPath();
  qDebug() << "starting with CWD = '" << cwd;
  if(cwd.contains("/mapper.app/Contents/MacOS"))
  {
@@ -133,91 +134,25 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
  if(!config->bRunInBrowser)
  {
-  webView = new QWebEngineView(this);
-  ui->horizontalLayout->addWidget(webView);
-  QWebEngineSettings *settings = webView->page()->settings();
-  settings->setAttribute(QWebEngineSettings::JavascriptEnabled, true);
-  webView->setObjectName(QStringLiteral("webEngineView"));
-  webView->setContextMenuPolicy(Qt::CustomContextMenu);
-  webView->setPage(myWebEnginePage = new MyWebEnginePage());
-  webView->setMinimumWidth(400);
-  //connect((MyWebEnginePage*)webView->page(), SIGNAL(pageLoaded(QUrl)), this, SLOT(initializeGoogleMaps(QUrl)));
-//  Q_ASSERT(keyTokens.size()>0);
-//#ifdef Q_OS_WIN
-  fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "html" + QDir::separator()+"GoogleMaps2.htm");
-// #else
-//    fileUrl = QUrl::fromLocalFile(htmlDir.absolutePath() + QDir::separator()+"GoogleMaps2.htm");
-if(!fileUrl.isValid())
- qDebug() << "invalid url:" << fileUrl.toString();
-   //  fileUrl = QUrl("http://localhost/GoogleMaps2.htm");
-//#endif
-  //if(verifyAPIKey(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm", keyTokens.at(0)))
-   webView->load(fileUrl);
-//   QFile f = QFile(htmlDir.absolutePath() + QDir::separator()+"GoogleMaps2.htm");
-//   if(f.open(QIODevice::ReadOnly))
-//   {
-//    QTextStream stream(&f);
-//    QString htmlText = stream.readAll();
-//    webView->setHtml(htmlText, QUrl("http://localHost:80"));
-//    webView->show();
-//   }
-  //else throw Exception("API key invalid");
-
+//  webView = new QWebEngineView(this);
+//  ui->horizontalLayout->addWidget(webView);
+  openWebViewPanel();
  }
  else // run in browser
  {
   qInfo() << "preparing to run in browser";
   webView = NULL;
   ui->groupBox_2->setHidden(true);
-  openWebWindow();
+  openBrowserWindow();
   //ui->saveImage->setEnabled(false);
  }
 
 #ifdef USE_WEBENGINE
- // setup the QWebSocketServer
- m_server = new QWebSocketServer(QStringLiteral("WebViewBridge"), QWebSocketServer::NonSecureMode);
- if (!m_server->listen(QHostAddress::LocalHost, 12345))
- {
-  QString err = m_server->errorString();
-  qCritical() <<tr("Failed to nweb socket server(%1).").arg(err);
-  return;
- }
- connect(m_server, &QWebSocketServer::newConnection, [=]{
-  qInfo() << "new connection to browser";
- });
- connect(m_server, &QWebSocketServer::serverError, [=](QWebSocketProtocol::CloseCode closeCode){
-  qDebug() << "server error" << m_server->errorString();
- });
- connect(m_server, &QWebSocketServer::acceptError, [=](QAbstractSocket::SocketError socketError){
-  qDebug() << "server socket error" << socketError;
- });
- connect(m_server, &QWebSocketServer::closed, [=] {
-  qDebug()  << "server closed";
- });
- if(m_server->isListening())
-  qInfo() << "listening on localhost:12345";
-
- // wrap WebSocket clients in QWebChannelAbstractTransport objects
- m_clientWrapper = new WebSocketClientWrapper (m_server);
- connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
-
- // setup the channel
- channel = new QWebChannel();
- QObject::connect(m_clientWrapper, &WebSocketClientWrapper::clientConnected,
-                  channel, &QWebChannel::connectTo);
- qInfo() << "registering webViewBridge";
- channel->registerObject("webViewBridge", m_bridge);
-
-
- if(!config->bRunInBrowser)
-  webView->page()->setWebChannel(channel);
- else
-  connect(m_clientWrapper, &WebSocketClientWrapper::clientClosed, this, &MainWindow::onWebSocketClosed);
 
 #endif
 
- if(!config->bRunInBrowser)
-  ui->verticalLayout_2->addWidget(webView);
+// if(!config->bRunInBrowser)
+//  ui->verticalLayout_2->addWidget(webView);
 
  pwd = QDir::currentPath();
  QFileInfo info3(argv[0]);
@@ -231,11 +166,12 @@ if(!fileUrl.isValid())
  m_dataCtrl = new FileDownloader(dataUrl, this);
  connect (m_dataCtrl, SIGNAL(downloaded(QString)), this, SLOT(loadAcksoftData(QString)));
 
+#if 0
  // get list of localhost's mbtiles overlays
  m_overlays = new FileDownloader(QUrl("http://localhost/map_tiles/mbtiles.php"),this);
  //m_overlays = new FileDownloader(QUrl("http://localhost/tileserver/"),this);connect(m_overlays, SIGNAL(downloaded()), this, SLOT(loadMbtilesData()));
  connect(m_overlays, SIGNAL(downloaded(QString)), this, SLOT(loadMbtilesData()));
-
+#endif
  createActions();
  createMenus();
 
@@ -1184,6 +1120,35 @@ void MainWindow::createActions()
   }
  });
 
+ testLoadAct = new QAction(tr("load file"),this);
+ testLoadAct->setStatusTip(tr("load a file from the html dir"));
+ connect(testLoadAct, &QAction::triggered, [=]{
+  if(webView)
+  {
+   DialogTextEdit* dlg = new DialogTextEdit("Enter filename", "Enter a file name to load.");
+   if(dlg->exec() == QDialog::Accepted)
+   {
+    QFileInfo info(QDir::currentPath() + QDir::separator() + "html"  + QDir::separator() + dlg->result());
+    if(info.exists())
+     fileUrl = QUrl::fromLocalFile(info.path());
+    webView->load(fileUrl);
+   }
+  }
+ });
+
+ testRunJavaScriptAct = new QAction(tr("run javascript"),this);
+ testRunJavaScriptAct->setStatusTip("enter a javascript to run");
+ connect(testRunJavaScriptAct, &QAction::triggered, [=]{
+  if(webView)
+  {
+   DialogTextEdit* dlg = new DialogTextEdit("Enter script", "Enter the javascript snippet to test the webview.");
+   if(dlg->exec() == QDialog::Accepted)
+   {
+    webView->page()->runJavaScript(dlg->result());
+   }
+  }
+ });
+
 
  combineRoutesAct = new QAction(tr("Combine two routes"), this);
  combineRoutesAct->setStatusTip(tr("Combine two routes into one"));
@@ -1224,13 +1189,13 @@ void MainWindow::createActions()
  showDebugMessages->setCheckable(true);
  showDebugMessages->setStatusTip(tr("If checked, WebViewer debug messages will be displayed. "));
  connect(showDebugMessages, SIGNAL(toggled(bool)), this, SLOT(on_showDebugMessages(bool)));
-#ifdef USE_WEBENGINE
+
  runInBrowserAct = new QAction(tr("Display map in browser"), this);
  runInBrowserAct->setCheckable(true);
  runInBrowserAct->setStatusTip(tr("If checked, map display will be in web browser. You must then restart Mapper"));
- connect(runInBrowserAct, SIGNAL(triggered(bool)), this, SLOT(on_runInBrowser(bool)));
  runInBrowserAct->setChecked(config->bRunInBrowser);
-#endif
+ //connect(runInBrowserAct, SIGNAL(toggled(bool)), this, SLOT(on_runInBrowser(bool)));
+
  addGeoreferencedOverlayAct = new QAction(tr("Edit Overlay list"), this);
  addGeoreferencedOverlayAct->setStatusTip(tr("Open a dialog to edit list of available overlays."));
  connect(addGeoreferencedOverlayAct, SIGNAL(triggered(bool)), this, SLOT(on_addGeoreferenced(bool)));
@@ -1258,7 +1223,6 @@ void MainWindow::createActions()
  setCityBoundsAct->setStatusTip(tr("Set the display bounds for thiis city/region"));
  connect(setCityBoundsAct, &QAction::triggered, [=]{
      config->currCity->setCityBounds(m_bridge);
-
   });
 
  setInspectedPageAct = new QAction(tr("Inspect page"),this);
@@ -1477,8 +1441,12 @@ void MainWindow::createMenus()
     connect(toolsMenu, &QMenu::aboutToShow, [=]{
      addPointModeAct->setChecked(m_bAddMode);
     });
+    toolsMenu->addSeparator();
+    toolsMenu->addSection("Debug");
     toolsMenu->addAction(testUrlAct);
     toolsMenu->addAction(testScriptAct);
+    toolsMenu->addAction(testLoadAct);
+    toolsMenu->addAction(testRunJavaScriptAct);
 
     optionsMenu = new Menu(tr("Options"));
     overlayMenu = new Menu(tr("Overlays"));
@@ -1495,9 +1463,12 @@ void MainWindow::createMenus()
       optionsMenu->addAction(displayTerminalMarkersAct);
       optionsMenu->addAction(showDebugMessages);
       optionsMenu->addAction(geocoderRequestAct);
-  #ifdef USE_WEBENGINE
+
+      disconnect(runInBrowserAct, SIGNAL(toggled(bool)), this, SLOT(on_runInBrowser(bool)));
       optionsMenu->addAction(runInBrowserAct);
-  #endif
+      runInBrowserAct->setChecked(config->bRunInBrowser);
+      connect(runInBrowserAct, SIGNAL(toggled(bool)), this, SLOT(on_runInBrowser(bool)));
+
       sortMenu = new Menu(tr("Route Sort option"));
       sortMenu->addAction(createWidgetAction());
       optionsMenu->addMenu(sortMenu);
@@ -4544,16 +4515,33 @@ void MainWindow::on_showDebugMessages(bool b)
  bDisplayWebDebug = b;
 }
 
-void MainWindow::on_runInBrowser(bool b)
+void MainWindow::on_runInBrowser(bool bRunInBrowser)
 {
- config->bRunInBrowser = b;
+ if(!bRunInBrowser)
+ {
+  m_bridge->processScript("alertClose");
+ }
+ m_server->close();
+ delete m_bridge;
+ createBridge();  // create the webViewBridge
+ if(bRunInBrowser)
+ {
+  ui->groupBox_2->setVisible(false);
+  openBrowserWindow();
+ }
+ else
+ {
+  ui->groupBox_2->setVisible(true);
+  openWebViewPanel();
+ }
+ config->bRunInBrowser = bRunInBrowser;
  config->saveSettings();
 
- if(QMessageBox::information(this, tr("Restart required!"), tr("This option requires that Mapper be restarted.\nDo you wish to restart now?"),QMessageBox::Yes | QMessageBox::No)== QMessageBox::Yes)
- {
-  // restart:
-  qApp->quit();
-  QProcess::startDetached(qApp->arguments()[0], qApp->arguments());}
+// if(QMessageBox::information(this, tr("Restart required!"), tr("This option requires that Mapper be restarted.\nDo you wish to restart now?"),QMessageBox::Yes | QMessageBox::No)== QMessageBox::Yes)
+// {
+//  // restart:
+//  qApp->quit();
+//  QProcess::startDetached(qApp->arguments()[0], qApp->arguments());}
 }
 
 void MainWindow::updateSegmentInfoDisplay(SegmentInfo sd)
@@ -4608,27 +4596,83 @@ void MainWindow::on_linkClicked(QUrl url)
 }
 //#endif
 
-bool MainWindow::openWebWindow()
+bool MainWindow::openBrowserWindow()
 {
  // open map display in browser window
- QString startHTML = "./Resources/GoogleMaps2b.htm";
- QString startFn = "GoogleMaps2b.htm";
-
- QString cwd = QDir::currentPath();
+     QString cwd = QDir::currentPath();
 #ifdef Q_OS_WIN
- cwd.replace("/", QDir::separator());
+    cwd.replace("/", QDir::separator());
 #endif
-QString loadPath = cwd + "/Resources";
-    fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources"  + QDir::separator() + startFn);
+    fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources"  + QDir::separator() + "GoogleMaps2b.htm");
 
     qInfo() << "open " << fileUrl.toString();
-   if(!QDesktopServices::openUrl(fileUrl))
-   {
-    qCritical() << "open webbrowser failed " << fileUrl.toDisplayString();
-    QMessageBox::critical(nullptr, tr("Error"), "open webbrowser failed ");
-   }
-   return true;
+    if(!QDesktopServices::openUrl(fileUrl))
+    {
+        qCritical() << "open webbrowser failed " << fileUrl.toDisplayString();
+        QMessageBox::critical(nullptr, tr("Error"), "open webbrowser failed ");
+    }
 
+    setupbridge();
+
+   return true;
+}
+
+bool MainWindow::openWebViewPanel()
+{
+     webView = ui->webView;
+
+     ui->groupBox_2->setVisible(true);
+     QWebEngineSettings *settings = webView->page()->settings();
+     settings->setAttribute(QWebEngineSettings::JavascriptEnabled, true);
+     //webView->setObjectName(QStringLiteral("webEngineView"));
+     webView->setContextMenuPolicy(Qt::CustomContextMenu);
+     webView->setPage(myWebEnginePage = new MyWebEnginePage());
+     webView->setMinimumWidth(400);
+    fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2n.htm");
+    webView->load(fileUrl);
+    setupbridge();
+    webView->page()->setWebChannel(channel);
+    return true;
+}
+
+bool MainWindow::setupbridge()
+{
+    // setup the QWebSocketServer
+    m_server = new QWebSocketServer(QStringLiteral("WebViewBridge"), QWebSocketServer::NonSecureMode);
+    if (!m_server->listen(QHostAddress::LocalHost, 12345))
+    {
+        QString err = m_server->errorString();
+        qCritical() <<tr("Failed to connect to web socket server(%1).").arg(err);
+        return false;
+    }
+    connect(m_server, &QWebSocketServer::newConnection, [=]{
+        qInfo() << "new connection to browser";
+    });
+    connect(m_server, &QWebSocketServer::serverError, [=](QWebSocketProtocol::CloseCode closeCode){
+        qDebug() << "server error" << m_server->errorString();
+    });
+    connect(m_server, &QWebSocketServer::acceptError, [=](QAbstractSocket::SocketError socketError){
+        qDebug() << "server socket error" << socketError;
+    });
+    connect(m_server, &QWebSocketServer::closed, [=] {
+        qDebug()  << "server closed";
+    });
+    if(m_server->isListening())
+        qInfo() << "listening on localhost:12345";
+
+    // wrap WebSocket clients in QWebChannelAbstractTransport objects
+    m_clientWrapper = new WebSocketClientWrapper (m_server);
+    if(!webView)
+        connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
+
+    // setup the channel
+    channel = new QWebChannel();
+    QObject::connect(m_clientWrapper, &WebSocketClientWrapper::clientConnected,
+                  channel, &QWebChannel::connectTo);
+    qInfo() << "registering webViewBridge";
+    channel->registerObject("webViewBridge", m_bridge);
+
+    return true;
 }
 
 bool MainWindow::copyAndUpdate(QString inFile, QString outDir, QString apiKey)
@@ -4779,8 +4823,11 @@ bool MainWindow::verifyAPIKey(QString path, QString apiKey)
 
 void MainWindow::onWebSocketClosed()
 {
- QMessageBox::critical(this, tr("Browser closed"), tr("The browser window has closed"));
- quit();
+  if(config->bRunInBrowser)
+  {
+     QMessageBox::critical(this, tr("Browser closed"), tr("The browser window has closed"));
+     //quit();
+  }
 }
 
 void MainWindow::on_addGeoreferenced(bool)
@@ -4828,7 +4875,11 @@ MyWebEnginePage::MyWebEnginePage(QObject* parent) : QWebEnginePage(parent){
   qInfo() << "progress "<< progress << " loading " << requestedUrl().toString();
   //setVisible(true);
   if(progress == 100)
+  {
    emit (pageLoaded(requestedUrl()));
+   //runJavaScript("onLoad()");
+  }
+
  });
 }
 

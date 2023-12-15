@@ -119,7 +119,7 @@ public:
     SQL* sql;
     void setModel(QAbstractItemModel *model);
     //MapView *centralWidget;
-    WebViewBridge *m_bridge;
+    WebViewBridge *m_bridge=nullptr;
     RouteView *routeView;
     SegmentView *segmentView;
     OtherRouteView *otherRouteView;
@@ -353,8 +353,12 @@ private:
     QAction *editConnectionsAct;
     QAction* manageOverlaysAct;
     //QAction *locateStreetAct;
+    // test functions
     QAction* testUrlAct;
     QAction* testScriptAct;
+    QAction* testLoadAct;
+    QAction* testRunJavaScriptAct;
+    //
     QAction *combineRoutesAct;
     QAction *refreshRoutesAct;
     QAction *routeCommentsAct;
@@ -424,7 +428,7 @@ private:
     FileDownloader *m_tilemapresource;
     Configuration* config;
     MyWebEnginePage* myWebEnginePage = nullptr;
-    qint32 m_segmentId;
+    qint32 m_segmentId =-1;
     //QT_DEPRECATED QList<SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
     QMap<int, SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
 
@@ -433,12 +437,15 @@ private:
     QList<LatLng> m_points;
     //segmentInfo si;
     SystemConsoleAction* systemConsoleAction;
-    WebViewAction* webViewAction;
+    WebViewAction* webViewAction =nullptr;
     void updateSegmentInfoDisplay(SegmentInfo sd);
     void createBridge();
-    bool openWebWindow();
+    bool openBrowserWindow();
+    bool openWebViewPanel();
+    bool setupbridge();
     void loadOverlay(Overlay* ov);
     QString wikiRoot;
+    QString cwd;
     void loadData(QString data, QString source);
 //    void refreshStreetsCb();
     bool copyAndUpdate(QString inFile, QString outDir, QString apiKey);

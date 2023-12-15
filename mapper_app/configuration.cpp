@@ -152,6 +152,9 @@ void Configuration::saveSettings()
  settings->setValue("showGMFeatures", bShowGMFeatures);
  settings->setValue("foreignKeyCheck", bForeignKeyCheck);
  settings->setValue("font",font.toString());
+#ifdef Q_OS_MAC
+ settings->setValue("macOsPublic", macOSPublic);
+#endif
 }
 
 void Configuration::getSettings()
@@ -379,7 +382,9 @@ void Configuration::getSettings()
    QFont f;
    f.fromString(settings.value("font").toString());
    font =f;
-   //settings.endGroup();
+#ifdef Q_OS_MACOS
+   macOSPublic = settings.value("macOsPublic", "").toString();
+#endif
 
    settings.beginGroup("query");
    q.b_stop_query_on_error = settings.value("stop_query_on_error").toBool();

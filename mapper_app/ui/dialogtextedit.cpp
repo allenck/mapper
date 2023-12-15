@@ -9,6 +9,7 @@ DialogTextEdit::DialogTextEdit(QString title, QString label, QWidget *parent) :
  this->title = title;
  setWindowTitle(title);
  this->label = label;
+ ui->label->setText(label);
 }
 
 DialogTextEdit::~DialogTextEdit()

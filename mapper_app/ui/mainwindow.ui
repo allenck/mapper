@@ -796,12 +796,19 @@
        </layout>
       </widget>
       <widget class="QGroupBox" name="groupBox_2">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
        <property name="title">
         <string/>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout"/>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QWebEngineView" name="webView" native="true"/>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
@@ -831,6 +838,12 @@
    <class>SegmentSelectionWidget</class>
    <extends>QWidget</extends>
    <header>segmentselectionwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>QWebEngineView</class>
+   <extends>QWidget</extends>
+   <header>qwebengineview.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

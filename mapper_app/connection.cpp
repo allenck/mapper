@@ -67,7 +67,7 @@ QSqlDatabase Connection::configure(const QString cName)
  config = Configuration::instance();
  sql = SQL::instance();
  db = QSqlDatabase::addDatabase(config->currConnection->driver(),cName);
- configureDb(db, this);
+ configureDb(db, this, config);
  // check for presence of Parameters table.
  QStringList tableList;
  QStringList sysTableList;
@@ -203,12 +203,16 @@ QSqlDatabase Connection::configure(const QString cName)
   return db;
 }
 
-void Connection::configureDb(QSqlDatabase db, Connection* currConnection)
+void Connection::configureDb(QSqlDatabase db, Connection* currConnection, Configuration* config)
 {
     QString driver = db.driverName();
     if(currConnection->connectionType() == "Local" )
     {
+#ifndef Q_OS_MACOS
         QString dbName = currConnection->sqlite_fileName();
+#else
+        QString dbName = config->macOSPublic + "/databases/" + currConnection->sqlite_fileName();
+#endif
         QFileInfo info(dbName);
         if(!info.isAbsolute() )
         {

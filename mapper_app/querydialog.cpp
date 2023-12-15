@@ -977,7 +977,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 //     tgtConn->setSqliteUserFunctionLoaded(SQL::instance()->
 //             loadSqlite3Functions(db));
 //   }
-   Connection::configureDb(db, tgtConn);
+   Connection::configureDb(db, tgtConn, config);
    if(!db.open())
    {
     ui->go_QueryButton->setEnabled(false);

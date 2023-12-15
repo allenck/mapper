@@ -12,7 +12,8 @@ var options;
 var txt;
 var stationArray;// = new google.maps.MVCArray();
 var fRslt;
-
+var mapDiv;
+var bGoogleInit = false;
 
 function echoText(text)
 {
@@ -71,8 +72,6 @@ var overlay=null;
 var opacityControl = null;
 var bGeocoderRequest = false;
 var User_MapType = null;
-console.log("GoogleMaps.js line 58!");
-
 
 var connected = false;
 //We use this function because connect statements resolve their target once, immediately
@@ -90,7 +89,7 @@ function connectSlots()
   connected = true;
 
   //alert("connectSlots " + connected);
-      alert(google.maps.version);
+      //alert(google.maps.version);
   }
   return;
 }
@@ -831,42 +830,48 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
 
 
 
-//async function initMap() {
-//     const { Map } = await google.maps.importLibrary("maps");
+async function initMap() {
+     const { Map } = await google.maps.importLibrary("maps");
+    if(bGoogleInit)
+        return;
 
-//     console.log("begin GoogleMaps.js initMap()");
-//     webViewBridge.debug("initMap started");
-//     connectSlots();
-
-
-//     //var Lat = 52.0;
-//     var Lat = webViewBridge.lat;
-//     //var Lon = 13.0;
-//     var Lon = webViewBridge.lng;
-//     //var zoom = 13;
-//     var zoom = webViewBridge.zoom;
-//     //var mapTypeId = google.maps.MapTypeId.ROADMAP;
-//     var mapTypeId = webViewBridge.maptype;
-//     var mapDiv = document.getElementById("map");
+     console.log("begin GoogleMaps.js initMap()");
+     webViewBridge.debug("initMap started");
+     connectSlots();
 
 
-//     map = new Map(mapDiv, {
-//        center: new google.maps.LatLng(Lat, Lon),
-//        zoom: zoom,
-//        scaleControl: true,
-//        panControl: true,
-//        draggable: true,
-//        overviewMapControl: true,
-//        scrollwheel: true,
-//        disableDoubleClickZoom: true,
-//        mapTypeId: 'roadmap'
-//     });
-//}
+     //var Lat = 52.0;
+     var Lat = webViewBridge.lat;
+     //var Lon = 13.0;
+     var Lon = webViewBridge.lng;
+     //var zoom = 13;
+     var zoom = webViewBridge.zoom;
+     //var mapTypeId = google.maps.MapTypeId.ROADMAP;
+     var mapTypeId = webViewBridge.maptype;
+     var mapDiv = document.getElementById("map");
+
+
+     map = new Map(mapDiv, {
+        center: new google.maps.LatLng(Lat, Lon),
+        zoom: zoom,
+        scaleControl: true,
+        panControl: true,
+        draggable: true,
+        overviewMapControl: true,
+        scrollwheel: true,
+        disableDoubleClickZoom: true,
+        mapTypeId: 'roadmap'
+     });
+
+    initMap2();
+}
 
 function initMap2()
 {
-        geocoder  = new google.maps.Geocoder();
-
+    webViewBridge.debug("initMap2 called");
+    geocoder  = new google.maps.Geocoder();
+    stationArray = new google.maps.MVCArray();
+    siArray = new google.maps.MVCArray();
 
      google.maps.event.addListenerOnce(map, 'idle', function(){
             //this part runs when the mapobject is created and rendered
@@ -989,6 +994,7 @@ function initMap2()
     zoomOffset = offsets[zoomIx];
 
     webViewBridge.initialized();
+    bGoogleInit = true;
 
 } // end initMap2()
 
@@ -2768,6 +2774,11 @@ function screenshot()
     });
 }
 
+function alertClose()
+{
+    alert("you may now close this window");
+}
+
 console.log("GoogleMaps.js loaded!");
 
-// onLoad(); // load the onload.js script to do this!
+onLoad();

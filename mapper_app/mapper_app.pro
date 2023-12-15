@@ -42,6 +42,7 @@ SUBDIRS += ui
     console #WebView
 
 CONFIG += embed_manifest_exe
+CONFIG+=use_gold_linker
 
 #DEFINES += MYPREFIX_RELEASE
 #debug{
@@ -52,7 +53,6 @@ CONFIG += embed_manifest_exe
 include(mapper_app.pri)
 
 OTHER_FILES += \
-    Resources/GoogleMaps.htm \
     Resources/sql/sqlite3_create_tables.sql \
     Resources/arrow-right-double.png \
     Resources/gtk-add.png \
@@ -109,6 +109,8 @@ win32:{
 
 DISTFILES += \
     README.txt \
+    Resources/GoogleMaps2n.htm \
+    Resources/initMap.js \
     Resources/scripts/createMsSqlDistance.sql \
     Resources/sql/addBiDirectionalToRoutes.sql \
     Resources/sql/create_stations.sql \
@@ -124,7 +126,6 @@ DISTFILES += \
     Resources/scripts/opacity-slider3d6.png \
     Resources/scripts/opacity-slider3d7.png \
     Resources/scripts/qwebchannel.js \
-    Resources/GoogleMaps2.htm \
     Resources/GoogleMaps2b.htm \
     Resources/sql/updateOneWay.sql \
     Resources/sql/updaterouteoneway.sql \

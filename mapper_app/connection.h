@@ -79,7 +79,7 @@ public:
  void setOdbcConnectorName(QString fn){_odbc_connectorName = fn;}
  QString defaultSqlDatabase() {return _defaultSqlDatabase;}
  void setDefaultSqlDatabase(QString defaultSqlDatabase) {_defaultSqlDatabase = defaultSqlDatabase;}
- static void configureDb(QSqlDatabase db, Connection *currConnection);
+ static void configureDb(QSqlDatabase db, Connection *currConnection, Configuration *config);
  //QString mySqlDatabase(){return _mySqlDatabase;}
  //void setMySqlDatabase(QString name){_mySqlDatabase =name;}
  QString connectionType(){return _connectionType;}
