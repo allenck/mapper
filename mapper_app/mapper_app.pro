@@ -28,6 +28,11 @@ RC_ICONS = Resources/tram-icon.ico
 
 DEFINES += "BUILD_DIR=\"\\\""$$OUT_PWD"\\\"\""
 DEFINES += QT_MESSAGELOGCONTEXT
+# enable NO_UDF to not use Sqlite User Defined functions
+#DEFINES += NO_UDF
+
+# enable to provide a console window to display debug and info messages
+DEFINES += HAVE_CONSOLE
 
 TARGET = mapper
 TEMPLATE = app
@@ -38,17 +43,10 @@ RCC_DIR = ui
 UI_DIR = ui
 UI_HEADERS_DIR = ui
 UI_SOURCES_DIR = ui
-SUBDIRS += ui
-    console #WebView
+
 
 CONFIG += embed_manifest_exe
 CONFIG+=use_gold_linker
-
-#DEFINES += MYPREFIX_RELEASE
-#debug{
-#  DEFINES += MYPREFIX_DEBUG
-#  DEFINES -= MYPREFIX_RELEASE
-#}
 
 include(mapper_app.pri)
 
@@ -89,23 +87,11 @@ OTHER_FILES += \
     Resources/sql/recreateCompanies.sql
 
 RESOURCES += \
-    Resources/mapper.qrc \
-    Resources/mapper.qrc \
+#    Resources/mapper.qrc \
+#    Resources/mapper.qrc \
     Resources/mapper.qrc
 
-win32:{
-#INCLUDEPATH += \
-#    C:/Program Files (x86)/SQLite3
-}
 
-#win32:CONFIG(release, debug|release): LIBS += -L'c:/Program Files (x86)/Sqlite3//' -lsqlite3
-#else:win32:CONFIG(debug, debug|release): LIBS += -L'c:/Program Files (x86)/Sqlite3//' -lsqlite3
-#else:unix:!macx: LIBS += -lsqlite3
-
-#win32: {
-#INCLUDEPATH += 'c:/Program Files (x86)/Sqlite3/source'
-#DEPENDPATH += 'c:/Program Files (x86)/Sqlite3/source'
-#}
 
 DISTFILES += \
     README.txt \
@@ -129,6 +115,7 @@ DISTFILES += \
     Resources/GoogleMaps2b.htm \
     Resources/sql/updateOneWay.sql \
     Resources/sql/updaterouteoneway.sql \
+    Resources/test.htm \
     Resources/white.png \
     Resources/orange.png \
     Resources/tram.png \
@@ -136,12 +123,7 @@ DISTFILES += \
     html/.gitignore
 
 
-#win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lWebView
-#else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/debug/ -lWebView
-#else:unix: LIBS += -L$$OUT_PWD/WebView/ -lWebView
 
-#INCLUDEPATH += $$PWD/WebView
-#DEPENDPATH += $$PWD/WebView
 
 #win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../console/release/ -lConsole
 #else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../console/debug/ -lConsole
@@ -150,43 +132,50 @@ DISTFILES += \
 #INCLUDEPATH += $$PWD/../console/debug
 #DEPENDPATH += $$PWD/../console/debug
 
-#unix:!macx: LIBS += -L$$PWD/./ -lConsole
+#unix:macx: LIBS += -L$$PWD/./ -lConsole
 
 INCLUDEPATH += $$PWD/.
 DEPENDPATH += $$PWD/.
 
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400/' -lsqlite3
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400/' -lsqlite3
+#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400/' -lsqlite3
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400/' -lsqlite3
 
-INCLUDEPATH += $$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400'
-DEPENDPATH += $$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400'
+#INCLUDEPATH += $$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400'
+#DEPENDPATH += $$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400'
 
 
-unix:!macx: LIBS += -L$$PWD/../../../sqlite-amalgamation-3390400/ -lsqlite3
+#unix:!macx: LIBS += -L$$PWD/../../../sqlite-amalgamation-3390400/ -lsqlite3
 
 macx: include(sqlite.pri)
 
-INCLUDEPATH += $$PWD/../../../sqlite-amalgamation-3390400
-DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3390400
-
-
-#win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lConsole
-#else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/debug/ -lConsole
-#else:unix: LIBS += -L$$OUT_PWD/../console/ -lConsole
+#INCLUDEPATH += $$PWD/../../../sqlite-amalgamation-3390400
+#DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3390400
 
 INCLUDEPATH += $$PWD/debug
 DEPENDPATH += $$PWD/debug
 
 FORMS += \
   routenamewidget.ui \
+  systemconsole2.ui \
   ui/dialogtextedit.ui
 
 HEADERS += \
   routenamewidget.h \
+  systemconsole2.h \
   ui/dialogtextedit.h
 
 SOURCES += \
   routenamewidget.cpp \
+  systemconsole2.cpp \
   ui/dialogtextedit.cpp
+
+
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../sqlite3/release/ -lsqlite3
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../sqlite3/debug/ -lsqlite3
+else:unix: LIBS += -L$$OUT_PWD/../sqlite3/ -lsqlite3
+
+INCLUDEPATH += $$PWD/../sqlite3
+DEPENDPATH += $$PWD/../sqlite3
 

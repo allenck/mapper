@@ -2,7 +2,7 @@
 //#include "webviewbridge.h"
 #include "mainwindow.h"
 #include <QMessageBox>
-#include "consoleinterface.h"
+#include "systemconsole2.h"
 #include <QString>
 #include "myapplication.h"
 //#include "logger.h"
@@ -60,8 +60,11 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
     QFileInfo info(context.file);
     QString fn = info.fileName();
     QByteArray formattedFn = fn.toLocal8Bit();
-
-    ConsoleInterface::instance()->sendMessage(logLevelName + ": "+ msg);
+#ifdef HAVE_CONSOLE
+    //ConsoleInterface::instance()->sendMessage(logLevelName + ": "+ msg);
+    if(SystemConsole2::instance())
+     SystemConsole2::instance()->message(logLevelName + ": "+ msg);
+#endif
     logToFile = Configuration::instance()->loggingOn();
     if (logToFile) {
         QString txt = QString("%1 %2: %3   (%4.%5)").arg(formattedTime, logLevelName, msg,  context.file).arg(context.line);
@@ -96,22 +99,26 @@ int main(int argc, char *argv[])
     if (envVar.isEmpty())
         logToFile = true;
 
-#ifndef Q_OS_WIN
-    ConsoleInterface::instance(); // create singleton class.
-    qInstallMessageHandler(customMessageOutput); // custom message handler for debugging
-#else
-# ifndef QT_DEBUG
-    ConsoleInterface::instance(); // create singleton class.
-    qInstallMessageHandler(customMessageOutput); // custom message handler for debugging
-# endif
-#endif
- QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+ //QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
  //QApplication a(argc, argv);
  QApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
  MyApplication a(argc, argv);
-
  MainWindow w(argc, argv);
+
+#ifndef Q_OS_WIN
+     //ConsoleInterface::instance(); // create singleton class.
+ // SystemConsole2::instance()->setParent(&w);
+ // SystemConsole2::instance()->setVisible(false);
+ qInstallMessageHandler(customMessageOutput); // custom message handler for debugging
+#else
+# ifndef QT_DEBUG
+     //ConsoleInterface::instance(); // create singleton class.
+ //SystemConsole2::instance();
+ qInstallMessageHandler(customMessageOutput); // custom message handler for debugging
+# endif
+#endif
+
  w.show();
 
  return a.exec();

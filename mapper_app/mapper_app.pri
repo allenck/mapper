@@ -68,12 +68,7 @@ SOURCES += main.cpp\
     $$PWD/connection.cpp \
     $$PWD/latlng.cpp \
     $$PWD/globalmercator.cpp \
-    $$PWD/consoleinterface.cpp \
-    systemconsole.cpp \
-    systemconsoleaction.cpp \
-    jtextarea.cpp \
-    flowlayout.cpp \
-    jtogglebutton.cpp
+    flowlayout.cpp
 
 HEADERS  += mainwindow.h \
     $$PWD/browsecommentsdialog.h \
@@ -146,12 +141,7 @@ HEADERS  += mainwindow.h \
     $$PWD/connection.h \
     $$PWD/latlng.h \
     $$PWD/globalmercator.h \
-    consoleinterface.h \
-    systemconsole.h \
-    systemconsoleaction.h \
-    jtextarea.h \
     flowlayout.h \
-    jtogglebutton.h \
     preferencespanel.h
 
 HEADERS += \

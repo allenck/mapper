@@ -211,18 +211,6 @@ function Get_osm_MapType(tile, zoom)
 {
  return "http://tile.openstreetmap.org/" +  zoom + "/" + tile.x + "/" + tile.y + ".png";
 }
-//alert("here1" + google);
-
-//osm_MapType = new google.maps.ImageMapType(
-//{
-// getTileUrl: Get_osm_MapType ,
-// tileSize: new google.maps.Size(256, 256),
-// isPng: true,
-// alt: "OpenStreetMap layer",
-// name: "OpenStreetMap",
-// maxZoom: 18
-//});
-//alert("here2");
 
 var userMap = "Berlin_Bauentwicklung.1940.10000.300.3068";
 var userMapTitle = "Berlin 1940";
@@ -251,15 +239,15 @@ function setUserMap(map, title)
  return null;
 }
 
-//User_MapType = new google.maps.ImageMapType(
-//{
+// User_MapType = new google.maps.ImageMapType(
+// {
 // getTileUrl: Get_User_MapType ,
 // tileSize: new google.maps.Size(256, 256),
 // isPng: true,
 // alt: userMap,
 // name: userMapTitle,
 // maxZoom: 19
-//});
+// });
 
 // Class to calculate distance and bearing
 function bearing(startLat, startLon, endLat, endLon)
@@ -838,7 +826,7 @@ async function initMap() {
      console.log("begin GoogleMaps.js initMap()");
      webViewBridge.debug("initMap started");
      connectSlots();
-
+     geocoder  = new google.maps.Geocoder();
 
      //var Lat = 52.0;
      var Lat = webViewBridge.lat;
@@ -860,31 +848,47 @@ async function initMap() {
         overviewMapControl: true,
         scrollwheel: true,
         disableDoubleClickZoom: true,
-        mapTypeId: 'roadmap'
+        mapTypeId: google.maps.MapTypeId.ROADMAP
      });
+    google.maps.event.addListenerOnce(map, 'idle', function(){
+           //this part runs when the mapobject is created and rendered
+           google.maps.event.addListenerOnce(map, 'idle', function(){
+               //this part runs when the mapobject shown for the first time
+               webViewBridge.mapInit();
+           });
+       });
 
-    initMap2();
-}
+//    initMap2();
+//}
 
-function initMap2()
-{
-    webViewBridge.debug("initMap2 called");
-    geocoder  = new google.maps.Geocoder();
-    stationArray = new google.maps.MVCArray();
-    siArray = new google.maps.MVCArray();
+//function initMap2()
+//{
+//    webViewBridge.debug("initMap2 called");
+    //geocoder  = new google.maps.Geocoder();
+    //stationArray = new google.maps.MVCArray();
+    //siArray = new google.maps.MVCArray();
 
-     google.maps.event.addListenerOnce(map, 'idle', function(){
-            //this part runs when the mapobject is created and rendered
-            google.maps.event.addListenerOnce(map, 'idle', function(){
-                //this part runs when the mapobject shown for the first time
-                webViewBridge.mapInit();
-            });
+    osm_MapType = new google.maps.ImageMapType(
+    {
+     getTileUrl: Get_osm_MapType ,
+     tileSize: new google.maps.Size(256, 256),
+     isPng: true,
+     alt: "OpenStreetMap layer",
+     name: "OpenStreetMap",
+     maxZoom: 18
+    });
+
+    google.maps.event.addListenerOnce(map, 'idle', function(){
+        //this part runs when the mapobject is created and rendered
+        google.maps.event.addListenerOnce(map, 'idle', function(){
+            //this part runs when the mapobject shown for the first time
+            webViewBridge.mapInit();
         });
+    });
 
-     //google.maps.event.addDomListener(mapDiv, 'resize', function(){ deprecated
-        google.maps.event.addListener(mapDiv, 'resize', function(){
-         google.maps.event.trigger(map, 'resize');
-        });
+    google.maps.event.addListener(mapDiv, 'resize', function(){
+     google.maps.event.trigger(map, 'resize');
+    });
      //new google.maps.LatLng(21.291982, -157.821856),
      siArray = new google.maps.MVCArray();
      map.disableDoubleClickZoom = true;
@@ -930,15 +934,6 @@ function initMap2()
      stationArray = new google.maps.MVCArray();
 
      //google.maps.event.trigger(map, 'resize');
-    osm_MapType = new google.maps.ImageMapType(
-    {
-     getTileUrl: Get_osm_MapType ,
-     tileSize: new google.maps.Size(256, 256),
-     isPng: true,
-     alt: "OpenStreetMap layer",
-     name: "OpenStreetMap",
-     maxZoom: 18
-    });
 
 
      webViewBridge.queryOverlay();
@@ -996,6 +991,7 @@ function initMap2()
     webViewBridge.initialized();
     bGoogleInit = true;
 
+    webViewBridge.debug("initMap complete");
 } // end initMap2()
 
 

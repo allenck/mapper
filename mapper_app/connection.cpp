@@ -78,8 +78,10 @@ QSqlDatabase Connection::configure(const QString cName)
  {
   if(config->currConnection->servertype() != "Sqlite")
   {
+#ifndef NO_UDF
    if(!config->currConnection->_sqlite_user_function_loaded)
     config->currConnection->_sqlite_user_function_loaded =sql->loadSqlite3Functions(db);
+#endif
   }
   if(config->currConnection->database()  != "")
   {
@@ -186,10 +188,12 @@ QSqlDatabase Connection::configure(const QString cName)
    sql->checkTables(db);
   }
 
+#ifndef NO_UDF
   if(config->currConnection->servertype() == "Sqlite" && sql->loadSqlite3Functions(db) )
   {
    config->currConnection->_sqlite_user_function_loaded = true;
   }
+#endif
  }
  else
  {

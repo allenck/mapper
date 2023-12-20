@@ -40,7 +40,7 @@ win32: {
   DESTDIR = ../mapper_app/release
  }
 }
-unix: {
+unix:macx: {
  build_pass:CONFIG(debug, debug|release) {
   DESTDIR = ../mapper_app
  } else {

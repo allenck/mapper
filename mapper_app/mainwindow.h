@@ -4,6 +4,7 @@
 #include <QtGui>
 #include <QMainWindow>
 //#include "mapview.h"
+#include "systemconsole2.h"
 #include "ui_mainwindow.h"
 #ifndef USE_WEBENGINE
 #include <QWebView>
@@ -397,6 +398,7 @@ private:
     QString  currentOverlay;
     QMap<int,TractionTypeInfo> tractionTypeList;
     QList<CompanyData*> companyList;
+    SystemConsole2* consoleDlg = nullptr;
 
     TerminalInfo m_terminalInfo;
     RouteData _rd;

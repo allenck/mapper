@@ -1,13 +1,14 @@
 #include "logger.h"
 #include <QPointer>
-#include "consoleinterface.h"
+#include "systemconsole2.h"
 #include <QDir>
 #include <QDebug>
 
 Logger::Logger(QObject *parent)
     : QObject{parent}
 {
-    QObject::connect(ConsoleInterface::instance(), SIGNAL(message(QString)), this,  SLOT(messageOutput(QString)));
+    //QObject::connect(ConsoleInterface::instance(), SIGNAL(message(QString)), this,  SLOT(messageOutput(QString)));
+    connect(SystemConsole2::instance(), SIGNAL(outMessage(QString)), this, SLOT(messageOutput(QString)));
 
     if (!QDir("./data/").exists())
     {

@@ -23,7 +23,10 @@
 #include <QFileDialog>
 #include "exportroutedialog.h"
 #include "editcitydialog.h"
-#include "systemconsoleaction.h"
+#ifdef HAVE_CONSOLE
+//#include "systemconsoleaction.h"
+#include "systemconsole2.h"
+#endif
 #include <QStatusBar>
 #include <QWidgetAction>
 #include <QMenuBar>
@@ -60,7 +63,6 @@
 #include "removecitydialog.h"
 #include "modifyroutetractiontypedlg.h"
 #include "dialogchangeroute.h"
-#include "systemconsole.h"
 #include <QWebEngineSettings>
 #include <QFontDialog>
 #include "ui/dialogtextedit.h"
@@ -89,18 +91,18 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  config->getSettings();
  changeFonts(config->font);
 
- wikiRoot = cwd+ QDir::separator()+ "wiki";
+ wikiRoot = cwd+ QDir::separator()+ "Resources/wiki";
  QIcon icon(":/tram-icon.ico");
  setWindowIcon(icon);
  QFileInfo info = QFileInfo(wikiRoot);
  if(!info.exists())
- {
-  QFileInfo info2 = QFileInfo(cwd+ QDir::separator()+ "../wiki");
-  if(info2.exists())
-      wikiRoot = info2.absoluteFilePath();
-  else
+// {
+//  QFileInfo info2 = QFileInfo(cwd+ QDir::separator()+ "../wiki");
+//  if(info2.exists())
+//      wikiRoot = info2.absoluteFilePath();
+//  else
    qWarning() << "cannot find wiki pages!";
- }
+// }
 
  while(!config->currConnection->isOpen())
  {
@@ -160,7 +162,9 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  //sql->setConfig(config);
  //ui->setupUi(this);
  webViewAction = NULL;
+ #ifdef HAVE_CONSOLE
  systemConsoleAction = NULL;
+#endif
 
  QUrl dataUrl("http://ubuntu-2:80/public/map_tiles/overlay.lst");
  m_dataCtrl = new FileDownloader(dataUrl, this);
@@ -1110,21 +1114,21 @@ void MainWindow::createActions()
 
  testScriptAct = new QAction(tr("test script"));
  connect(testScriptAct, &QAction::triggered, [=]{
-  if(webView)
-  {
+//  if(webView)
+//  {
    DialogTextEdit* dlg = new DialogTextEdit("Enter script", "Enter a script name to test the webview.");
    if(dlg->exec() == QDialog::Accepted)
    {
     m_bridge->processScript(dlg->result());
    }
-  }
+//  }
  });
 
  testLoadAct = new QAction(tr("load file"),this);
  testLoadAct->setStatusTip(tr("load a file from the html dir"));
  connect(testLoadAct, &QAction::triggered, [=]{
-  if(webView)
-  {
+//  if(webView)
+//  {
    DialogTextEdit* dlg = new DialogTextEdit("Enter filename", "Enter a file name to load.");
    if(dlg->exec() == QDialog::Accepted)
    {
@@ -1133,20 +1137,20 @@ void MainWindow::createActions()
      fileUrl = QUrl::fromLocalFile(info.path());
     webView->load(fileUrl);
    }
-  }
+//  }
  });
 
  testRunJavaScriptAct = new QAction(tr("run javascript"),this);
  testRunJavaScriptAct->setStatusTip("enter a javascript to run");
  connect(testRunJavaScriptAct, &QAction::triggered, [=]{
-  if(webView)
-  {
+//  if(webView)
+//  {
    DialogTextEdit* dlg = new DialogTextEdit("Enter script", "Enter the javascript snippet to test the webview.");
    if(dlg->exec() == QDialog::Accepted)
    {
     webView->page()->runJavaScript(dlg->result());
    }
-  }
+//  }
  });
 
 
@@ -1187,7 +1191,7 @@ void MainWindow::createActions()
 
  showDebugMessages = new QAction(tr("Show Debug messages"),this);
  showDebugMessages->setCheckable(true);
- showDebugMessages->setStatusTip(tr("If checked, WebViewer debug messages will be displayed. "));
+ showDebugMessages->setStatusTip(tr("If checked, javascript debug messages will be displayed in the infobar. "));
  connect(showDebugMessages, SIGNAL(toggled(bool)), this, SLOT(on_showDebugMessages(bool)));
 
  runInBrowserAct = new QAction(tr("Display map in browser"), this);
@@ -1441,9 +1445,11 @@ void MainWindow::createMenus()
     connect(toolsMenu, &QMenu::aboutToShow, [=]{
      addPointModeAct->setChecked(m_bAddMode);
     });
+
     toolsMenu->addSeparator();
     toolsMenu->addSection("Debug");
     toolsMenu->addAction(testUrlAct);
+    testUrlAct->setEnabled(!config->bRunInBrowser);
     toolsMenu->addAction(testScriptAct);
     toolsMenu->addAction(testLoadAct);
     toolsMenu->addAction(testRunJavaScriptAct);
@@ -1484,10 +1490,20 @@ void MainWindow::createMenus()
     helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->setToolTipsVisible(true);
 //    helpMenu->addAction(webViewAction = new WebViewAction((QObject*)this));
-//#ifndef QT_DEBUG
-    helpMenu->addAction(systemConsoleAction = new SystemConsoleAction());
-    systemConsoleAction->setToolTip(tr("Display, info, error and debug messages"));
-//#endif
+#ifdef HAVE_CONSOLE
+    //helpMenu->addAction(systemConsoleAction = new SystemConsoleAction());
+    QAction* consoleAct = new QAction(tr("System Console"),this);
+    helpMenu->addAction(consoleAct);
+
+    //systemConsoleAction->setToolTip(tr("Display, info, error and debug messages"));
+    consoleAct ->setToolTip(tr("Display, info, error and debug messages"));
+    connect(consoleAct, &QAction::triggered, [=]{
+        if(!consoleDlg )
+            consoleDlg = new SystemConsole2(this);
+        consoleDlg->raise();
+        consoleDlg->show();
+    });
+#endif
     helpMenu->addAction(usingMapper);
     helpMenu->addAction(overlayHelp);
     helpMenu->addSeparator();
@@ -1697,7 +1713,9 @@ void MainWindow::newCity(QAction* act )
       }
      }
     }
+#ifndef NO_UDF
     sql->loadSqlite3Functions();
+#endif
     if(ok)
     {
      sql->checkTables(db);
@@ -4472,6 +4490,7 @@ void MainWindow::QueryDialogAct_triggered()
  {
   queryDlg = new QueryDialog(config, this);
  }
+ queryDlg->raise();
  queryDlg->show();
 }
 
@@ -4628,7 +4647,11 @@ bool MainWindow::openWebViewPanel()
      webView->setContextMenuPolicy(Qt::CustomContextMenu);
      webView->setPage(myWebEnginePage = new MyWebEnginePage());
      webView->setMinimumWidth(400);
-    fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2n.htm");
+#ifdef Q_OS_WINDOWS
+     fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2n.htm");
+#else
+     fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2n.htm");
+#endif
     webView->load(fileUrl);
     setupbridge();
     webView->page()->setWebChannel(channel);
@@ -4841,7 +4864,7 @@ void MainWindow::on_overlayHelp()
  QDir dir(wikiRoot);
  if(dir.exists())
  {
-  QDesktopServices::openUrl(wikiRoot+"/Overlays.html");
+     QDesktopServices::openUrl(QUrl::fromLocalFile(wikiRoot+"/Overlays.html"));
  }
 }
 void MainWindow::on_usingHelp()
@@ -4849,7 +4872,7 @@ void MainWindow::on_usingHelp()
  QDir dir(wikiRoot);
  if(dir.exists())
  {
-  QDesktopServices::openUrl(wikiRoot+"/Documentation.htm");
+     QDesktopServices::openUrl(QUrl::fromLocalFile(wikiRoot+"/Documentation.htm"));
  }
 }
 #if 0

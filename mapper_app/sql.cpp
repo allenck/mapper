@@ -1,6 +1,6 @@
 #include "sql.h"
 #include "data.h"
-#include "../functions/sqlite3.h"
+#include "../sqlite3/sqlite3.h"
 #include <QApplication>
 //#ifdef Q_OS_UNIX
 //#include "/home/allen/Qt/5.15.2/Src/qtbase/src/3rdparty/sqlite/sqlite3.h"
@@ -1126,7 +1126,7 @@ QStringList SQL::getLocations()
  QStringList list;
 
  QString commandText = "select location from Segments group by location";
- QSqlQuery query = QSqlQuery(db);
+ QSqlQuery query(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
@@ -2126,6 +2126,16 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
   typeWhere = "type in(0,1)";
  if(type == RapidTransit || type == Subway)
   typeWhere = "type in(2,3)";
+
+ QString distanceWhere;
+#ifndef NO_UDF
+ distanceWhere = " and (distance(" + QString("%1").arg(lat,0,'f',8) + ","
+                          + QString("%1").arg(lon,0,'f',8) + ", a.startLat, a.startLon) < "
+                          + QString("%1").arg(radius,0,'f',8 )
+                          + " OR distance(" + QString("%1").arg(lat,0,'f',8) + ","
+                          + QString("%1").arg(lon,0,'f',8)
+                          + ", a.endLat, a.endLon) < " + QString("%1").arg(radius,0,'f',8) + ") ";
+#endif
  try
  {
   if(!dbOpen())
@@ -2133,26 +2143,20 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
   QSqlDatabase db = QSqlDatabase::database();
 
   QString commandText;
+
   if(config->currConnection->servertype() != "MsSql")
    commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon, "
         " a.length, a.street, "
         " a.description, a.OneWay, a.pointArray, a.tracks, a.type"
         " from Segments a "
-        " where "+typeWhere + " and (distance(" + QString("%1").arg(lat,0,'f',8) + ","
-        + QString("%1").arg(lon,0,'f',8) + ", a.startLat, a.startLon) < " + QString("%1").arg(radius,0,'f',8 )
-        + " OR distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8)
-        + ", a.endLat, a.endLon) < " + QString("%1").arg(radius,0,'f',8) + ") "
+        " where "+typeWhere  + distanceWhere +
         " order by a.segmentId";
    else
     commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon,"
         " a.length, a.street, a.description, a.OneWay, a.pointArray, a.tracks,"
         " a.type"
         " from Segments a "
-        "where "+ typeWhere + " and (dbo.distance(" + QString("%1").arg(lat,0,'f',8)
-        + "," + QString("%1").arg(lon,0,'f',8) + ", a.startLat, a.startLon) < "
-        + QString("%1").arg(radius,0,'f',8 )+ " OR dbo.distance(" + QString("%1").arg(lat,0,'f',8)
-        + "," + QString("%1").arg(lon,0,'f',8) + ", a.endLat, a.endLon) < "
-        + QString("%1").arg(radius,0,'f',8) + ") "
+        "where "+ typeWhere  + distanceWhere +
         "order by a.segmentId";
   //qDebug() << commandText + "\n";
   QSqlQuery query = QSqlQuery(db);
@@ -2179,17 +2183,12 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
    si.setPoints(query.value(9).toString());
    si._tracks = query.value(10).toInt();
    si._routeType = (RouteType)query.value(11).toInt();
-
-
-//   if (segmentId != currSegment)
-//   {
-//    if (currSegment > 0 && curSegmentDistance < radius)
-//    {
-//        myArray.append(sd);
-//    }
-
-//    sd =  SegmentData();
-//    currSegment = segmentId;
+#ifdef NO_UDF
+   // eliminate segments not close
+   if((Distance(lat, lon, si._startLat, si._startLon) > radius) &&
+      (Distance(lat, lon, si._endLat, si._endLon) > radius))
+    continue;
+#endif
     curSegmentDistance = radius + 1.0;
 //   }
 
@@ -2489,16 +2488,20 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
   if(!dbOpen())
       throw Exception(tr("database not open: %1").arg(__LINE__));
   QSqlDatabase db = QSqlDatabase::database();
-
+  QString distanceWhere;
+#ifndef NO_UDF
+  distanceWhere = "(distance(" + QString("%1").arg(lat,0,'f',8) + ","
+                            + QString("%1").arg(lon,0,'f',8) + ", a.startLat, a.startLon) < "
+                            + QString("%1").arg(radius,0,'f',8 )+ " OR distance("
+                            + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8)
+                            + ", a.endLat, a.endLon) < " + QString("%1").arg(radius,0,'f',8) + ")";
+#endif
   QString commandText;
   //if(config->currConnection->servertype() != "MsSql")
       commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon, a.length,"
                     " a.streetName, a.type, a.description,  a.oneWay, a.pointArray"
-                    " from Segments a where (distance(" + QString("%1").arg(lat,0,'f',8) + ","
-                    + QString("%1").arg(lon,0,'f',8) + ", a.startLat, a.startLon) < "
-                    + QString("%1").arg(radius,0,'f',8 )+ " OR distance("
-                    + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8)
-                    + ", a.endLat, a.endLon) < " + QString("%1").arg(radius,0,'f',8) + ") order by segmentId";
+                    " from Segments a where " + distanceWhere +
+                    " order by segmentId";
 //  else
 //  commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon, a.[key], a.sequence, a.length, a.streetName, b.type from LineSegment a join Segments b on a.segmentId = b.segmentId where (dbo.distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", a.startLat, a.startLon) < " + QString("%1").arg(radius,0,'f',8 )+ " OR dbo.distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", a.endLat, a.endLon) < " + QString("%1").arg(radius,0,'f',8) + ") order by segmentId, sequence";
   QSqlQuery query = QSqlQuery(db);
@@ -2543,6 +2546,13 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
    si._endLon = endLon;
    si._streetName = streetName;
    si._routeType = type;
+#ifdef NO_UDF
+   // eliminate segments not close
+   if((Distance(lat, lon, si._startLat, si._startLon) > radius) &&
+      (Distance(lat, lon, si._endLat, si._endLon) > radius))
+    continue;
+#endif
+
    if (distance < curSegmentDistance)
    {
     curSegmentDistance = distance;
@@ -10201,6 +10211,7 @@ bool SQL::loadSqlite3Functions(QSqlDatabase db)
  return ret;
 }
 #else
+#ifndef NO_UDF
 
 void distanceFunc(sqlite3_context* ctx, int argc, sqlite3_value **argv)
 {
@@ -10237,13 +10248,22 @@ bool SQL::loadSqlite3Functions(QSqlDatabase db)
  {
   // v.data() returns a pointer to the handle
   db_handle = *static_cast<sqlite3 **>(v.data());
+  if (!db_handle) {
+   qCritical() <<"Cannot get a sqlite3 handler.";
+   return false;
+  }
   sqlite3_initialize();
-  sqlite3_create_function(db_handle, "distance", 4, SQLITE_ANY, 0, &distanceFunc, 0, 0);
+  if(sqlite3_create_function(db_handle, "distance", 4, SQLITE_ANY, 0, &distanceFunc, 0, 0))
+  {
+   qCritical() << "Cannot create SQLite functions: sqlite3_create_function failed.";
+   return false;
+  }
   return true;
  }
+ qCritical() << "Cannot get a sqlite3 handle to the driver.";
  return false;
 }
-
+#endif
 #endif
 //QStringList SQL::getTableList(QSqlDatabase db, QString dbType)
 //{
@@ -11304,25 +11324,25 @@ SegmentInfo SQL::convertSegment(int segmentId, int tracks)
       throw Exception(tr("database not open: %1").arg(__LINE__));
   QSqlDatabase db = QSqlDatabase::database();
   QString commandText;
-
+  QString distanceWhere;
+#ifndef NO_UDF
+  distanceWhere = " and distance(startLat, startLon, "
+    + QString("%1").arg(si.startLat()) + ", " + QString("%1").arg(si.startLon())+ ") < .020 and "
+    + " distance(endLat, endLon, "
+    + QString("%1").arg(si.endLat()) + ", " + QString("%1").arg(si.endLon()) + ")";
+#endif
   if(config->currConnection->servertype() != "MsSql")
        commandText = "Select `SegmentId`, Description, tracks, type,"
                      " StartLat, StartLon, EndLat, EndLon, length, StartDate, EndDate, Direction,"
                      " Street, pointArray from Segments"
                      " where tracks = " + QString("%1").arg(tracks)
-                     + " and distance(startLat, startLon, "
-                     + QString("%1").arg(si.startLat()) + ", " + QString("%1").arg(si.startLon())+ ") < .020 and "
-                     + " distance(endLat, endLon, "
-                     + QString("%1").arg(si.endLat()) + ", " + QString("%1").arg(si.endLon()) + ") < .020";
+                     +  distanceWhere;
   else
        commandText = "Select `SegmentId`, Description, tracks, type,"
                      " StartLat, StartLon, EndLat, EndLon, length, StartDate, EndDate, Direction,"
                      " Street, pointArray from Segments"
                      " where tracks = " + QString("%1").arg(tracks)
-                     + " and distance(startLat, startLon, "
-                     + QString("%1").arg(si.startLat()) + ", " + QString("%1").arg(si.startLon())+ ") < .020 and "
-                     + " distance(endLat, endLon, "
-                     + QString("%1").arg(si.endLat()) + ", " + QString("%1").arg(si.endLon()) + ") < .020";
+                     +  distanceWhere;
   QSqlQuery query = QSqlQuery(db);
 //  bool bQuery = query.prepare(commandText);
 //  if(!bQuery)

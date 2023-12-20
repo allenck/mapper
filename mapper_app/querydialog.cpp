@@ -989,8 +989,10 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
     ui->go_QueryButton->setEnabled(true);
     if(tgtConn->servertype() == "Sqlite")
     {
+#ifndef NO_UDF
      if(!tgtConn->isSqliteUserFunctionLoaded())
       tgtConn->setSqliteUserFunctionLoaded( SQL::instance()->loadSqlite3Functions(db));
+#endif
     }
     else if(tgtDbType == "MsSql")
     {
