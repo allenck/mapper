@@ -1,3 +1,20 @@
+**Recent Changes November/December 2023**
+1.  Change the way that User Defined Functions are implemented. No longer use sqlite3_enable_load_extension and
+    and a recompiled Qt sqlite plugin. Now use sqlite3_create_function to define the distance function.
+2.  Extensive revision of internal classes to combine properties.
+3.  Improved the Edit Connections dialog.
+4.  Fixed nunerous bugs.
+5.  Add menu actions to ui combo boxes.
+6.  Add a new City, Indianapolis,IN to the collection of city databases.
+7.  Add option to turn off distracting Google Maps icons.
+8.  Segments now have a Location property useful for differentiating street names that duplicate those
+    in other locations.
+9.  Changed compile and link to eliminate warnings when QWebEngineView is used.
+10. Added additional sort options for routes in the route combobox.
+11. Added some information on routes in Berlin during 1941-1945 and recent route changres and extensions.
+12. Updated wiki pages with current screenshots.
+13. The Route Segments tab now has table columns that can be moved and/or hidden.
+
 **Recent Changes November 2022**
 1.  Segments no longer have a 'one-way' attribute. This has been applied instead to routes. With this
     change routes using only one of the two tracks in a segment.
