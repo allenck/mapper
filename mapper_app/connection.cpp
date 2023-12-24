@@ -215,7 +215,8 @@ void Connection::configureDb(QSqlDatabase db, Connection* currConnection, Config
 #ifndef Q_OS_MACOS
         QString dbName = currConnection->sqlite_fileName();
 #else
-        QString dbName = config->macOSPublic + "/databases/" + currConnection->sqlite_fileName();
+
+        QString dbName = QDir::currentPath() + "/Resources/databases/" + currConnection->sqlite_fileName();
 #endif
         QFileInfo info(dbName);
         if(!info.isAbsolute() )

@@ -322,7 +322,7 @@ void EditCityDialog::ok_clicked()
   QSettings settings;
   settings.setValue("EditCityDialog:size", size());
   config->saveSettings();
-  Overlay::exportXml("./overlays.xml",config->overlayMap->values());
+  Overlay::exportXml("./Resources/overlays.xml",config->overlayMap->values());
   dirty = false;
  }
 

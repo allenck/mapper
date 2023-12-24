@@ -66,6 +66,7 @@
 #include <QWebEngineSettings>
 #include <QFontDialog>
 #include "ui/dialogtextedit.h"
+#include <QWindow>
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -75,20 +76,17 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 {
  ui->setupUi(this);
  _instance = this;
- ui->menubar->setNativeMenuBar(false);
  ui->groupBox_2->setVisible(false);
  cityMenu = nullptr;
  QCoreApplication::setOrganizationName("ACK Software");
  QCoreApplication::setApplicationName("Mapper");
- cwd = QDir::currentPath();
- qDebug() << "starting with CWD = '" << cwd;
- if(cwd.contains("/mapper.app/Contents/MacOS"))
- {
-     cwd.remove("/mapper.app/Contents/MacOS");
-     QDir::setCurrent(cwd);
- }
+
  config = Configuration::instance();
  config->getSettings();
+
+ cwd = QDir::currentPath();
+// config = Configuration::instance();
+// config->getSettings();
  changeFonts(config->font);
 
  wikiRoot = cwd+ QDir::separator()+ "Resources/wiki";
@@ -133,6 +131,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  ui->ssw->initialize();
 
  cwd = QDir::currentPath();
+ qDebug() << "starting with CWD = '" << cwd;
 
  if(!config->bRunInBrowser)
  {
@@ -1212,7 +1211,7 @@ void MainWindow::createActions()
 
  exportOverlaysAct = new QAction("Export overlays", this);
  connect(exportOverlaysAct, &QAction::triggered, [=]{
-  Overlay::exportXml("./overlays.xml", config->overlayMap->values());
+  Overlay::exportXml("./Resources/overlays.xml", config->overlayMap->values());
  });
 
  overlayHelp = new QAction(tr("Overlays"),this);
@@ -1457,13 +1456,13 @@ void MainWindow::createMenus()
     optionsMenu = new Menu(tr("Options"));
     overlayMenu = new Menu(tr("Overlays"));
 
-    connect(optionsMenu, &Menu::aboutToShow, [=]{
-     if(config->currConnection->servertype()== "Sqlite")
-     {
+    // connect(optionsMenu, &Menu::aboutToShow, [=]{
+    //  if(config->currConnection->servertype()== "Sqlite")
+    //  {
       optionsMenu->clear();
       fillOverlayMenu();
       optionsMenu->addMenu(overlayMenu);
-      //connect(overlayMenu, SIGNAL(aboutToShow()), this, SLOT(fillOverlayMenu()));
+      connect(overlayMenu, SIGNAL(aboutToShow()), this, SLOT(fillOverlayMenu()));
       optionsMenu->addAction(displayRouteCommentsAct);
       optionsMenu->addAction(displayStationMarkersAct);
       optionsMenu->addAction(displayTerminalMarkersAct);
@@ -1482,8 +1481,8 @@ void MainWindow::createMenus()
       optionsMenu->addAction(foreignKeyCheckAct);
       foreignKeyCheckAct->setChecked(SQL::instance()->getForeignKeyCheck());
       optionsMenu->addAction(fontSizeChangeAct);
-     }
-    });
+    // }
+    //});
     menuBar()->addMenu(optionsMenu);
     menuBar()->addMenu(toolsMenu);
 
@@ -1732,7 +1731,7 @@ void MainWindow::newCity(QAction* act )
     ui->ssw->refresh();
     ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(config->currCity->companyKey));
     refreshCompanies();
-    cbSort->setCurrentIndex(config->currCity->routeSortType);
+    //cbSort->setCurrentIndex(config->currCity->routeSortType);
     refreshRoutes();
     stationView->showStations();
     m_latitude = config->currCity->center.lat();

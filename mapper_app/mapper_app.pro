@@ -84,7 +84,8 @@ OTHER_FILES += \
     Resources/sql/CreateMySqlFunction.sql \
     Resources/sql/recreateStationTable.sql \
     Resources/sql/recreateTractionTypes.sql \
-    Resources/sql/recreateCompanies.sql
+    Resources/sql/recreateCompanies.sql \
+    Resources/mapper.icns
 
 RESOURCES += \
 #    Resources/mapper.qrc \
@@ -120,10 +121,11 @@ DISTFILES += \
     Resources/orange.png \
     Resources/tram.png \
     Resources/tram.shadow.png \
-    html/.gitignore
+    html/.gitignore \
+    Resources/mapper.icns
 
-
-
+ICON = Resources/mapper.icns
+#CONFIG-=app_bundle
 
 #win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../console/release/ -lConsole
 #else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../console/debug/ -lConsole

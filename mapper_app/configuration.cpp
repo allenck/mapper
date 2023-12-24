@@ -3,6 +3,8 @@
 #include "overlay.h"
 #include "data.h"
 #include <QApplication>
+#include <QFileDialog>
+#include <QFile>
 
 Configuration::Configuration(QObject *parent) :
     QObject(parent)
@@ -167,8 +169,92 @@ void Configuration::getSettings()
    {
       createDefaultSettings();
    }
+   cwd = QDir::currentPath();
+   qDebug() << "starting configure with CWD = '" << cwd;
+#ifdef Q_OS_MACOS
 
-   bool ok = Overlay::importXml("./overlays.xml");
+   if(cwd.contains("/mapper.app/Contents/MacOS"))
+   {
+       //
+       QDir resources(cwd.remove("/mapper.app/Contents/MacOS") + "/Resources");
+       if(resources.exists())
+       {
+           // running in development environment, set the cwd to that of the development.
+           cwd = cwd.remove("/mapper.app/Contents/MacOS");
+           QDir::setCurrent(cwd);
+
+           QDir pDir(QDir::homePath() +"/Public/Mapper/Resources");
+           if(!pDir.exists())
+            copyFiles(cwd + "/Resources", QDir::homePath() +"/Public/Mapper/Resources");
+       }
+       else
+       {
+           QString path = macOSPublic = settings.value("macOsPublic", "").toString() + "/Resources";
+
+           if(path.isEmpty())
+               path = "~/Public";
+           QDir resources(path);
+           QStringList flist = resources.entryList();
+           if(flist.contains("GoogleMaps.js"))
+           {
+               // we are running from a dmg file on a Mac!
+               QFileInfo info(path + "/databases/StLouis.sqlite3");
+               if(!info.isWritable())
+               {
+                   QMessageBox::warning(nullptr, tr("R/W Error"), tr("The database files are read-only!") );
+               }
+               cwd = path;
+               QDir::setCurrent(cwd);
+
+           }
+           else
+           {
+               if(cwd.startsWith("/Volumes"))
+               {
+                 QString from = cwd.remove("/mapper.app/Contents/MacOS") + "/Resources";
+                   QString  to = QDir::homePath() + "/Public/Mapper/Resources";
+                 copyFiles(from, to);
+               }
+               //
+               QFileDialog dlg(nullptr);
+               dlg.setDirectory(cwd.remove("/mapper.app/Contents/MacOS"));
+               dlg.setFileMode(QFileDialog::Directory);
+               if(dlg.exec())
+               {
+                   QStringList list = dlg.selectedFiles();
+                   macOSPublic =list.at(0);
+                   cwd = list.at(0);
+                   QDir::setCurrent(cwd);
+
+               }
+           }
+           qDebug() << "CWD is now: " << cwd;
+           macOSPublic = cwd;
+       }
+
+   }
+   else
+   {
+       if(cwd.startsWith("/Volumes/mapper"))
+       {
+           macOSPublic = QDir::homePath() + "/Public/Mapper";
+           QFileInfo info(QDir::homePath() + "/Public/Mapper/Resources/GoogleMaps.js");
+           if(info.exists())
+           {
+               cwd = macOSPublic;
+               QDir::setCurrent(cwd);
+               return;
+           }
+           copyFiles("/Volumes/mapper/Resources", QDir::homePath() +"/Public/Mapper/Resources");
+           cwd = macOSPublic;
+           QDir::setCurrent(cwd);
+       }
+   }
+#endif
+
+
+
+   bool ok = Overlay::importXml("./Resources/overlays.xml");
 
    // load cities
    for(int i= 0; i < size; i++)
@@ -217,7 +303,8 @@ void Configuration::getSettings()
       nc->curOverlayId = settings.value("currOverlay", -1).toInt();
       nc->bUserMap = settings.value("userMap", false).toBool();
       nc->setConnectionUniqueId(QUuid::fromString(settings.value("currConnectionUuid").toString()));
-      QString baseAddr = QDir::currentPath() +QDir::separator() + "Resources" + QDir::separator()+"databases" + QDir::separator();
+      QString baseAddr;
+      baseAddr = QDir::currentPath() +QDir::separator() + "Resources" + QDir::separator()+"databases" + QDir::separator();
       int sizec = settings.beginReadArray("connections");
 
       // connections
@@ -344,7 +431,7 @@ void Configuration::getSettings()
 //  else
 //   qDebug() << "invalid city " << ov->cityName << ov->name;
 // }
-   if(Overlay::importXml("./overlays.xml"))
+   if(Overlay::importXml("./Resources/overlays.xml"))
    {
       for(Overlay* ov : Overlay::overlayList)
       {
@@ -363,7 +450,6 @@ void Configuration::getSettings()
               qInfo() << "add overlay " << ov->name << " for city:" << city->name();
            }
         }
-
       }
    }
    //settings.beginGroup("General");
@@ -382,9 +468,9 @@ void Configuration::getSettings()
    QFont f;
    f.fromString(settings.value("font").toString());
    font =f;
-#ifdef Q_OS_MACOS
-   macOSPublic = settings.value("macOsPublic", "").toString();
-#endif
+// #ifdef Q_OS_MACOS
+//    macOSPublic = settings.value("macOsPublic", "").toString();
+// #endif
 
    settings.beginGroup("query");
    q.b_stop_query_on_error = settings.value("stop_query_on_error").toBool();
@@ -620,7 +706,7 @@ void Configuration::createDefaultSettings()
     currentCityId = 0;
     currConnection = newCity->connections.at(0);
     currConnection->setId(newCity->curConnectionId);
-    if(Overlay::importXml("./overlays.xml"))
+    if(Overlay::importXml("./Resources/overlays.xml"))
     {
      for(Overlay* ov : Overlay::overlayList)
      {
@@ -650,5 +736,40 @@ void Configuration::changeFonts(QWidget* obj,QFont f)
     {
         QWidget *temp = objlistChildren[iIndex];
         temp->setFont(f);
+    }
+}
+
+bool Configuration::copyFiles(QString from, QString to)
+{
+    QDir fromDir(from);
+    QFileInfoList fList = fromDir.entryInfoList(QDir::NoDotAndDotDot | QDir::AllDirs | QDir::Files);
+    QFileInfo target(to);
+    if(!target.exists())
+    {
+        QDir tgt;
+        if(!tgt.mkpath(to))
+        {
+            QMessageBox::critical(nullptr, tr("Error"), tr("Error creating path %1").arg(to));
+            return false;
+        }
+    }
+
+
+    if(!fromDir.exists()  || fList.isEmpty())
+    {
+        QMessageBox::critical(nullptr, tr("invalid path"), tr("Invalid path '%1'").arg(from));
+        return false;
+    }
+    foreach (QFileInfo info, fList) {
+        if(info.isDir())
+        {
+            copyFiles(from + QDir::separator() + info.fileName(), to + QDir::separator() + info.fileName());
+            continue;
+        }
+
+        if(!QFile::copy(info.filePath(), to + QDir::separator() + info.fileName()))
+        {
+            QMessageBox::critical(nullptr, tr("Copy error"), tr("Error copying %1 to %2").arg(info.filePath(), to + QDir::separator() + info.fileName()));
+        }
     }
 }

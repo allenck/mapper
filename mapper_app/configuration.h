@@ -75,6 +75,8 @@ private:
  bool bLoggingOn = false;
  QUuid _connectionUniqueId;
  bool bForeignKeyCheck = false;
+ QString cwd;
+ bool copyFiles(QString from, QString to);
 
 signals:
   void newCityCreated(City*);
