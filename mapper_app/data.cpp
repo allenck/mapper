@@ -959,6 +959,16 @@ LatLng Bounds::center() {
  return LatLng(ctr.y(), ctr.x());
 }
 
+bool Bounds::intersects(Bounds o)
+{
+ if(!isValid() || !o.isValid())
+  return false;
+ QRectF thisRect(QPoint(_swPt.lon(), _nePt.lat()), QPoint(_nePt.lon(), _swPt.lat()));
+ QRectF otherRect(QPoint(o._swPt.lon(), o._nePt.lat()), QPoint(o._nePt.lon(), o._swPt.lat()));
+ return thisRect.intersects(otherRect);
+}
+
+
 void SegmentData::displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst)
 {
  QVariantList points, objArray;

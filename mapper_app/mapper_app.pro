@@ -97,6 +97,7 @@ RESOURCES += \
 DISTFILES += \
     README.txt \
     Resources/GoogleMaps2n.htm \
+    Resources/copyList.txt \
     Resources/initMap.js \
     Resources/scripts/createMsSqlDistance.sql \
     Resources/sql/addBiDirectionalToRoutes.sql \
@@ -158,16 +159,19 @@ INCLUDEPATH += $$PWD/debug
 DEPENDPATH += $$PWD/debug
 
 FORMS += \
+  dialogeditparameters.ui \
   routenamewidget.ui \
   systemconsole2.ui \
   ui/dialogtextedit.ui
 
 HEADERS += \
+  dialogeditparameters.h \
   routenamewidget.h \
   systemconsole2.h \
   ui/dialogtextedit.h
 
 SOURCES += \
+  dialogeditparameters.cpp \
   routenamewidget.cpp \
   systemconsole2.cpp \
   ui/dialogtextedit.cpp

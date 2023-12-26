@@ -67,6 +67,7 @@
 #include <QFontDialog>
 #include "ui/dialogtextedit.h"
 #include <QWindow>
+#include "dialogeditparameters.h"
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -802,12 +803,17 @@ void MainWindow::fillOverlayMenu()
  QActionGroup *overlayActionGroup = new QActionGroup(this);
  qDebug() << config->currCity->city_overlayMap;
  qDebug() << "building overlayMenu for:" <<config->currCity->name() << " overlays: " << config->currCity->city_overlayMap->count();
+ QList<Overlay* > oList = Overlay::getList(config->currCity);
  QMapIterator<QString, Overlay*> iter(*config->currCity->city_overlayMap);
- while(iter.hasNext())
- {
-  iter.next();
-  QString name = iter.key();
-  Overlay* ov = iter.value();
+  while(iter.hasNext())
+  {
+   iter.next();
+   QString name = iter.key();
+   Overlay* ov = iter.value();
+// for(Overlay* ov : oList)
+// {
+//   QString name = ov->cityName;
+
   QAction *act = new QAction(name, this);
   act->setData(VPtr<Overlay>::asQVariant(ov));
   act->setCheckable(true);
@@ -1098,6 +1104,19 @@ void MainWindow::createActions()
 // locateStreetAct = new QAction(tr("Locate Geodb Object"), this);
 // locateStreetAct->setStatusTip(tr("Locate, a street, bridge, park or bahanhof. For Berlin only."));
 // connect(locateStreetAct, SIGNAL(triggered()), this, SLOT(locateStreet()));
+ updateParametersAct = new QAction(tr("Update Parameters"), this);
+ updateParametersAct->setStatusTip(tr("Change city parameters"));
+ connect(updateParametersAct, &QAction::triggered, [=]{
+  DialogEditParameters dlg;
+  if(dlg.exec() == QDialog::Accepted)
+  {
+    config->cityNames().removeOne(config->currCity->name());
+    config->cityNames().append(dlg.parameters().city);
+    config->cityBounds.remove(config->currCity->name());
+    config->cityBounds.insert(dlg.parameters().city, config->currCity->bounds());
+    config->currCity->setNameOverride(dlg.parameters().city);
+  }
+ });
 
  testUrlAct = new QAction(tr("test url"));
  connect(testUrlAct, &QAction::triggered, [=]{
@@ -1423,6 +1442,7 @@ void MainWindow::createMenus()
     connectionsMenu->addAction(manageOverlaysAct);
     connectionsMenu->addAction(newCityAct);
     connectionsMenu->addAction(removeCityAct);
+    connectionsMenu->addAction(updateParametersAct);
 
     toolsMenu = new Menu(tr("Tools"));
     toolsMenu->addAction(addRouteAct);

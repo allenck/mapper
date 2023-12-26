@@ -68,5 +68,57 @@
         <file>opacityControl.js</file>
         <file>WebChannel.js</file>
         <file>GoogleMaps.js</file>
+        <file>GoogleMapsA.js</file>
+        <file>GoogleMaps2n.htm</file>
+        <file>GoogleMaps2b.htm</file>
+        <file>GoogleMaps2.htm</file>
+        <file>apikey.js</file>
+        <file>opacity-slider2.png</file>
+        <file>databases/StLouis.sqlite3</file>
+        <file>databases/louisville.sqlite3</file>
+        <file>databases/indianapolis.sqlite3</file>
+        <file>databases/cleveland.sqlite3</file>
+        <file>databases/cincinnati.sqlite3</file>
+        <file>databases/berlinerstrassenbahn.sqlite3</file>
+        <file>copyList.txt</file>
+        <file>overlays.xml</file>
+        <file>wiki/Using_MySql_or_SQL_Server_databases.html</file>
+        <file>wiki/style.css</file>
+        <file>wiki/Overlays.html</file>
+        <file>wiki/Issues.wiki</file>
+        <file>wiki/Instructions_for_compiling_SQLite.html</file>
+        <file>wiki/index.wiki</file>
+        <file>wiki/index.htm</file>
+        <file>wiki/footer.wiki</file>
+        <file>wiki/Documentation.htm</file>
+        <file>wiki/Definitions.html</file>
+        <file>wiki/Creating_a_new_database.html</file>
+        <file>wiki/Compiling_Mapper.html</file>
+        <file>wiki/images/updateroute.png</file>
+        <file>wiki/images/SplitSegment.png</file>
+        <file>wiki/images/ODBCDataSourceAdministrator.png</file>
+        <file>wiki/images/MySqlDirectConnection.png</file>
+        <file>wiki/images/ManageOverlays.png</file>
+        <file>wiki/images/Mainwindow.png</file>
+        <file>wiki/images/IntersectingSegment.png</file>
+        <file>wiki/images/first_segment.png</file>
+        <file>wiki/images/ExportDatabase.png</file>
+        <file>wiki/images/edit_city_2.png</file>
+        <file>wiki/images/edit_city_1.png</file>
+        <file>wiki/images/DavidRumseyLunaCollection.png</file>
+        <file>wiki/images/CreateNewDatabase.png</file>
+        <file>wiki/images/CincinnatiMap5.png</file>
+        <file>wiki/images/CincinnatiMap4.png</file>
+        <file>wiki/images/CincinnatiMap3.png</file>
+        <file>wiki/images/CincinnatiMap2.png</file>
+        <file>wiki/images/CincinnatiMap.png</file>
+        <file>wiki/images/Cincinnati4.png</file>
+        <file>wiki/images/Berlin_screenshot.png</file>
+        <file>wiki/images/AddSegment.png</file>
+        <file>wiki/images/addODBC-MySql.png</file>
+        <file>wiki/images/addODBC-MsSql.png</file>
+        <file>wiki/images/addConnection2.png</file>
+        <file>wiki/images/addConnection.png</file>
+        <file>wiki/images/2EvanstonLoop.png</file>
     </qresource>
 </RCC>

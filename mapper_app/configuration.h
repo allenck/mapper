@@ -77,7 +77,9 @@ private:
  bool bForeignKeyCheck = false;
  QString cwd;
  bool copyFiles(QString from, QString to);
-
+#ifdef Q_OS_MACOS
+ bool processCopyList();
+#endif
 signals:
   void newCityCreated(City*);
 public slots:

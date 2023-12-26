@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html >
+ <head>
+  <meta name="viewport" content="initial-scale=1.0" user-scalable="yes" />
+  <style type="text/css">
+    html { height: 100%; }
+    body { height: 100%; margin: 0; padding: 0 }
+    #map { height: 100%; }
+    .menu {
+        width: 160px;
+        box-shadow: 3px 3px 5px #888888;
+        border-style: solid;
+        border-width: 1px;
+        border-color: grey;
+        border-radius: 2px;
+        background-color: #ffff;
+        position: fixed;
+        text-align: center;
+        display: none;
+    }
+
+    .menu-item {
+        height: 20px;
+        background-color: white;
+    }
+</style>
+  <title>Mapper</title>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+  <!-- Use Material Design Button CSS-->
+      <link
+        href="https://unpkg.com/material-components-web@6.0.0/dist/material-components-web.css"
+        rel="stylesheet"
+      />
+  <link rel="stylesheet" type="text/css" href="./style.css" />
+  <script type="text/javascript" src="qwebchannel.js"> </script>
+  <script type="text/javascript" src="ExtDraggableObject.js"></script>
+  <script type="text/javascript" src="opacityControl.js"></script>
+  <script type="text/javascript" src="WebChannel.js" > </script>
+  <script src="https://unpkg.com/@googlemaps/js-api-loader@1.x/dist/index.min.js"></script>
+  <script src= "apikey.js"></script>
+  <script type="Module" src="GoogleMapsB.js" > </script>
+
+ </head>
+ <body style="font-family: Arial; border: 0 none;">
+ <!--The div element for the map -->
+ <div id="map">
+    <div id="wrapper">
+         <button id="load_map_button" class="mdc-button mdc-button--raised">
+           Load Dynamic Map
+         </button>
+       </div>
+     </div>
+ <!--script src="src/index.js"></script-->
+
+
+ <div class="menu" id="menu">
+     <div class="menu-item"><i class="glyphicon glyphicon-file"></i>Manage files</div>
+ </div>
+ </body>
+</html>

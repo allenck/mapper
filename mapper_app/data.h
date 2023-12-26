@@ -152,6 +152,7 @@ class Bounds : public QObject
      bool updateBounds(Bounds bnds);
      void setBottomLeft(LatLng pt) {_swPt = pt;}
      void setTopRight(LatLng pt){_nePt = pt;};
+     bool intersects(Bounds o);
      void operator=(const Bounds& other){
       _swPt = other._swPt;
       _nePt = other._nePt;

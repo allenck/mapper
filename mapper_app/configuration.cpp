@@ -172,7 +172,8 @@ void Configuration::getSettings()
    cwd = QDir::currentPath();
    qDebug() << "starting configure with CWD = '" << cwd;
 #ifdef Q_OS_MACOS
-
+   // processCopyList();
+   // QMessageBox::information(nullptr, tr("Current Directory"), cwd);
    if(cwd.contains("/mapper.app/Contents/MacOS"))
    {
        //
@@ -187,72 +188,76 @@ void Configuration::getSettings()
            if(!pDir.exists())
             copyFiles(cwd + "/Resources", QDir::homePath() +"/Public/Mapper/Resources");
        }
-       else
-       {
-           QString path = macOSPublic = settings.value("macOsPublic", "").toString() + "/Resources";
+       // else
+       // {
+       //     QString path = macOSPublic = settings.value("macOsPublic", "").toString() + "/Resources";
 
-           if(path.isEmpty())
-               path = "~/Public";
-           QDir resources(path);
-           QStringList flist = resources.entryList();
-           if(flist.contains("GoogleMaps.js"))
-           {
-               // we are running from a dmg file on a Mac!
-               QFileInfo info(path + "/databases/StLouis.sqlite3");
-               if(!info.isWritable())
-               {
-                   QMessageBox::warning(nullptr, tr("R/W Error"), tr("The database files are read-only!") );
-               }
-               cwd = path;
-               QDir::setCurrent(cwd);
+       //     if(path.isEmpty())
+       //         path = "~/Public";
+       //     QDir resources(path);
+       //     QStringList flist = resources.entryList();
+       //     if(flist.contains("GoogleMaps.js"))
+       //     {
+       //         // we are running from a dmg file on a Mac!
+       //         QFileInfo info(path + "/databases/StLouis.sqlite3");
+       //         if(!info.isWritable())
+       //         {
+       //             QMessageBox::warning(nullptr, tr("R/W Error"), tr("The database files are read-only!") );
+       //         }
+       //         cwd = path;
+       //         QDir::setCurrent(cwd);
 
-           }
-           else
-           {
-               if(cwd.startsWith("/Volumes"))
-               {
-                 QString from = cwd.remove("/mapper.app/Contents/MacOS") + "/Resources";
-                   QString  to = QDir::homePath() + "/Public/Mapper/Resources";
-                 copyFiles(from, to);
-               }
-               //
-               QFileDialog dlg(nullptr);
-               dlg.setDirectory(cwd.remove("/mapper.app/Contents/MacOS"));
-               dlg.setFileMode(QFileDialog::Directory);
-               if(dlg.exec())
-               {
-                   QStringList list = dlg.selectedFiles();
-                   macOSPublic =list.at(0);
-                   cwd = list.at(0);
-                   QDir::setCurrent(cwd);
+       //     }
+       //     else
+       //     {
+       //         if(cwd.startsWith("/Volumes"))
+       //         {
+       //           QString from = cwd.remove("/mapper.app/Contents/MacOS") + "/Resources";
+       //             QString  to = QDir::homePath() + "/Public/Mapper/Resources";
+       //           copyFiles(from, to);
+       //         }
+       //         //
+       //         QFileDialog dlg(nullptr);
+       //         dlg.setDirectory(cwd.remove("/mapper.app/Contents/MacOS"));
+       //         dlg.setFileMode(QFileDialog::Directory);
+       //         if(dlg.exec())
+       //         {
+       //             QStringList list = dlg.selectedFiles();
+       //             macOSPublic =list.at(0);
+       //             cwd = list.at(0);
+       //             QDir::setCurrent(cwd);
 
-               }
-           }
-           qDebug() << "CWD is now: " << cwd;
-           macOSPublic = cwd;
-       }
+       //         }
+       //     }
+       //     qDebug() << "CWD is now: " << cwd;
+       //     macOSPublic = cwd;
+       // }
 
    }
    else
    {
-       if(cwd.startsWith("/Volumes/mapper"))
+       // if(cwd.startsWith("/Volumes/mapper"))
+       // {
+       //     macOSPublic = QDir::homePath() + "/Public/Mapper";
+       //     QFileInfo info(QDir::homePath() + "/Public/Mapper/Resources/GoogleMaps.js");
+       //     if(info.exists())
+       //     {
+       //         cwd = macOSPublic;
+       //         QDir::setCurrent(cwd);
+       //         return;
+       //     }
+       //     copyFiles("/Volumes/mapper/Resources", QDir::homePath() +"/Public/Mapper/Resources");
+       //     cwd = macOSPublic;
+       //     QDir::setCurrent(cwd);
+       // }
+       // else
        {
-           macOSPublic = QDir::homePath() + "/Public/Mapper";
-           QFileInfo info(QDir::homePath() + "/Public/Mapper/Resources/GoogleMaps.js");
-           if(info.exists())
-           {
-               cwd = macOSPublic;
-               QDir::setCurrent(cwd);
-               return;
-           }
-           copyFiles("/Volumes/mapper/Resources", QDir::homePath() +"/Public/Mapper/Resources");
-           cwd = macOSPublic;
+           processCopyList();
+           cwd = QDir::homePath() +"/Public/Mapper";
            QDir::setCurrent(cwd);
        }
    }
 #endif
-
-
 
    bool ok = Overlay::importXml("./Resources/overlays.xml");
 
@@ -337,14 +342,22 @@ void Configuration::getSettings()
           QFileInfo info(baseAddr + fileName);
           if(!info.exists())
              qDebug() << fileName << " not found";
-//#ifdef WIN32
-//     QString ext = fileName.mid(ncn->database().lastIndexOf("."));
-//     if(fileName.toLower().endsWith(".sqlite3") && ext != ".sqlite3")
-//     {
-//      fileName.replace(ext, ".sqlite3");
-//     }
-//#endif
-         ncn->setSqliteFileName(info.fileName());
+          else
+          {
+           QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "city");
+           db.setDatabaseName(info.absoluteFilePath());
+           if(db.open())
+           {
+            Parameters p = SQL::instance()->getParameters(db);
+            if(!p.city.isEmpty())
+            {
+             ncn->setCityName(p.city);
+             nc->setNameOverride(p.city);
+            }
+           }
+           db.close();
+          }
+          ncn->setSqliteFileName(info.fileName());
         }
         else if(ncn->connectionType() == "Direct") {
            ncn->setDSN(settings.value("DSN").toString());
@@ -520,10 +533,6 @@ Configuration* Configuration::instance()
  return _instance;
 }
 
-
-
-
-
 QStringList Configuration::cityNames()
 {
  QStringList result;
@@ -546,7 +555,6 @@ void Configuration::addCity(City* city)
         emit newCityCreated(city);
     }
 }
-
 
 QString Configuration::lookupCityName(Bounds b)
 {
@@ -773,3 +781,34 @@ bool Configuration::copyFiles(QString from, QString to)
         }
     }
 }
+#ifdef Q_OS_MACOS
+bool Configuration::processCopyList()
+{
+ QFile fCList(":/copyList.txt");
+ if(fCList.exists())
+ {
+  if(!fCList.open(QIODevice::ReadOnly))
+  {
+   QMessageBox::critical(nullptr, tr("Error"), tr("Error %1 opening %2").arg(fCList.errorString(), fCList.fileName()));
+  }
+  QTextStream in(&fCList);
+  QDir dir;
+  dir.mkpath(QDir::homePath() +"/Public/Mapper/Resources");
+  dir.mkpath(QDir::homePath() +"/Public/Mapper/Resources/sql");
+  dir.mkpath(QDir::homePath() +"/Public/Mapper/Resources/databases");
+
+  while (!in.atEnd()) {
+   QString fn = in.readLine();
+   if(fn.startsWith("#"))
+    continue;
+   QFile oFile(QDir::homePath() +"/Public/Mapper/Resources/"+fn);
+   if(oFile.exists())
+       continue;
+   if(!QFile::copy(":/"+fn, QDir::homePath() +"/Public/Mapper/Resources/"+fn))
+   {
+    QMessageBox::warning(nullptr, tr("Error"), tr("Error copying %1").arg(fn));
+   }
+  }
+ }
+}
+#endif

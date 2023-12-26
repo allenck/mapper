@@ -1,0 +1,116 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+
+  
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Definitions</title></head>
+  <body style="background-color:#faf0e6">
+<h1><big><big><big><span style="font-weight: bold;"></span></big></big></big><big>&nbsp;
+&nbsp;&nbsp; &nbsp;&nbsp; Definitions &nbsp; &nbsp;&nbsp;
+&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
+&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
+</big></h1>
+<big>Route</big>
+<dl>
+
+  <dd>A route is defined as one or more <span style="font-style: italic;">Segments</span>. A route has a name and a
+route number. A route exists for a particular company for some date
+range. A route can also have a traction type property such as
+"Electric", "cable", "horse or mule", etc. <br>
+  </dd>
+  <dt style="font-style: italic;"><big>Route Number</big></dt>
+  <dd>Route numbers define a particular route, e.g. "70" for the St.
+Louis "Grand" line. While route numbers were not used on the cars, for
+example, in St, Louis before 1928, I have used them for earlier
+manifestions of the same route by by United Railways or St. Louis
+Transit to maintain continuity. So, route numbers may or may not
+actually refer to a route number displayed on a streetcar, unless the
+company actually used route numbers. Route numbers may be
+alphanumeric.&nbsp; A route number need not be changed when a route
+name changes. For example, United Railways had a "Olive-Delmar" line
+which was essentially the same as SLPS's 10-Delmar so I use the route
+number "10 for both. <br>
+  </dd>
+  <dt style="font-style: italic;"><big>Segment</big></dt>
+  <dd>A segment describes a part of a route. Segments have a start <span style="font-style: italic;">Point</span> and an end <span style="font-style: italic;">Point</span>. Segments can be used by many
+different routes. Generally a segment runs from a start point where it
+may intersect with another segment to it's end point where it may
+intersect with another segment. A segment has a "name" property which
+uniquely describes it. The generally used syntax for a segment name is:
+"&lt;street&gt;, &lt;from street&gt; to &lt;to street&gt;", e.g. "12th,
+Delmar to Olive". If there are no intersections with other segments
+between the start and end, the name may also be represented like this:
+"Boyle &amp; Olive to Maryland &amp; Kingshighway". The first example
+is preferred. It is better to restrict segments to a single street as
+this makes it easier to locate a segment when doing route
+maintenance.&nbsp; Segments also have&nbsp; "oneWay" and tracks
+properties. "Tracks" must be 1 or 2. "OneWay" is either "Y" (yes) or
+"N" (no). 2 track segments are never oneway. Single tracks are usually
+one way unless the segment is travelled in either direction. A final
+property, "type" describes the type of construction: "Streee", "Private
+R/W", "Subway", etc. <em>Note</em>: Pysically, a particular streetcar
+line may operate on a street that has double track but only goes one
+way on this street. In that case, the track is single (1) and one way.
+This was often true in the downtown area where streecar lines "looped"
+around the block. <br>
+  </dd>
+  <dt style="font-style: italic;"><big>Point</big></dt>
+  <dd>A segment always has 2 or more points that describe Each point is
+the latitude and longitude on the map. The collection of points is used
+to draw the segment on the map. <br>
+  </dd>
+  <dt style="font-style: italic;"><big>Overlay</big></dt>
+  <dd>An overlay is a map that can be shown over the base map, Google
+Maps, OpenStreet Map or a user defined map. An opacity control is
+displayed on the map surface allowing the opacity of the overlay to be
+modified. Overlays are a great tool that can be used to find a
+long-gone streetcar right-of-way on a historical map such as can be
+downloaded from the <a href="http://store.usgs.gov/b2c_usgs/usgs/maplocator/%28ctype=catalogEntry&amp;xcm=r3standardpitrex_prd&amp;carea=%24ROOT&amp;layout=6_1_61_50_2&amp;uiarea=2%29/.do">USGS
+store</a>. However the creation of an overlay is quite involved and
+requires the creation of "tiles" on a web server. <br>
+  </dd>
+  <dt style="font-style: italic;"><big>User Map</big></dt>
+  <dd>Like overlays, a map can be "tiled" and loaded on a web server to
+be used as a "base map" instead of Google Maps or OpenStreetMap". <br>
+  </dd>
+  <dt style="font-style: italic;"><big>Station</big></dt>
+  <dd>The term "station" is used to define a railroad station,
+streetcar stop or bus stop. "stations" are defined for a route and can
+be displayed on the map when a route is drawn. <br>
+  </dd>
+  <dt style="font-style: italic;"><big>Route Comment</big></dt>
+  <dd>Route Comments are notes keyed to a route and a date and can be
+used to display information such as a rerouting on a particular
+date.&nbsp; The display of Route Comments can be turned on or off as
+desired. <br>
+  </dd>
+  <dt style="font-style: italic;"><big>Terminal Markers</big></dt>
+  <dd>Terminal markers can be defined for a route one for the start of
+a route and one for the end. The display of terminal markers can be
+turned on or off as desired.&nbsp;</dd>
+  <dt style="font-style: italic;"><big>Company</big></dt>
+  <dd>A route is operated by a "Company". A company has start and end
+date properties. A given route can only exist during a company's
+existence. <br>
+</dd><dt style="font-style: italic;"><big>City</big></dt>
+  <dd>"City" as used here refers to a location for which a database exists, e.g. St. Louis, Louisville, Kentucky, Berlin, Germany, etc. <br>
+  </dd>
+  <dt style="font-style: italic;"><big>Connection</big></dt>
+  <dd>Each city has one or more connections which correspond to unique
+databases for that city. A connection may be a SQLite database, MySql
+database or Sql Server databases. MySql and SqlServer databases can
+either be on the local machine or on a remote server. SQLite databases
+can only reside on the same computer as the one where Mapper is
+running.To access a MySql or Sql Server database you must have MySqL or ODBC software installed on your computer.  <br>
+  </dd>
+  <dt><br>
+  </dt>
+
+</dl><br>
+
+<dl>
+
+  <dt><br>
+  </dt>
+</dl>
+
+</body></html>

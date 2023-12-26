@@ -6042,9 +6042,9 @@ Parameters SQL::getParameters(QSqlDatabase db)
     QString alphaRoutes;
     try
     {
-        if(!dbOpen())
-            throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+//     if(!dbOpen())
+//      throw Exception(tr("database not open: %1").arg(__LINE__));
+     //QSqlDatabase db = QSqlDatabase::database();
 
         QString commandText = "select lat, lon, title, city, minDate, maxDate, alphaRoutes from Parameters";
         QSqlQuery query = QSqlQuery(db);

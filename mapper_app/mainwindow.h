@@ -392,6 +392,7 @@ private:
     QAction* showGoogleMapFeaturesAct;
     QAction* foreignKeyCheckAct;
     QAction* fontSizeChangeAct;
+    QAction* updateParametersAct;
 
     //QSignalMapper *overlaySignalMapper;
     QActionGroup  *overlayActionGroup;
