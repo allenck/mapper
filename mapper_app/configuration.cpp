@@ -573,7 +573,7 @@ void Configuration::createDefaultSettings()
     //  create a default configuration
     City* newCity = new City();
     newCity->id = 0;
-    newCity->setName("St. Louis, MO");
+    newCity->setName("St Louis, MO");
     double latitude = 38.65858545118455;
     double longitude = -90.34764714500002;
     newCity->center = LatLng(latitude, longitude);
@@ -675,7 +675,7 @@ void Configuration::createDefaultSettings()
 
     newCity = new City();
     newCity->id = 3;
-    newCity->setName("Berlin. Germany");
+    newCity->setName("Berlin, Deutschland");
     latitude = 52.5315;
     longitude = 13.00165;
     newCity->center = LatLng(latitude, longitude);
@@ -692,6 +692,37 @@ void Configuration::createDefaultSettings()
     nc = new Connection();
     nc->setId(0);
     nc->setSqliteFileName("berlinerstrassenbahn.sqlite3");
+    nc->setDescription ("SQLITE3 connection");
+    nc->setDriver("QSQLITE");
+    nc->setServerType("Sqlite");
+    nc->setCityName(newCity->name());
+    nc->setConnectionType("Local");
+    if(!newCity->connections.contains(nc))
+    {
+     newCity->connections.append( nc);
+     newCity->connectionNames.append(nc->description());
+    }
+    currConnection = nc;
+
+    newCity = new City();
+    newCity->id = 4;
+    newCity->setName("Indianapolis, IN");
+    latitude = 39.768495;
+    longitude = -86.158042;
+    newCity->center = LatLng(latitude, longitude);
+    //newCity->setBounds(Bounds(LatLng(52.4315, 12.90165), LatLng(52.6315, 13.10165)));
+    newCity->zoom = zoom;
+    newCity->mapType = maptype;
+    newCity->curConnectionId = 0 ;
+    newCity->companyKey=0;
+    if(!cityList.contains(newCity))
+    {
+     cityList.append(newCity);
+     cityMap.insert(newCity->name(), newCity);
+    }
+    nc = new Connection();
+    nc->setId(0);
+    nc->setSqliteFileName("indianapolis.sqlite3");
     nc->setDescription ("SQLITE3 connection");
     nc->setDriver("QSQLITE");
     nc->setServerType("Sqlite");

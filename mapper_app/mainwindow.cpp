@@ -3116,10 +3116,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
  QSqlDatabase db = QSqlDatabase::database();
  db.close();
-#ifndef QT_DEBUG
- //systemConsoleAction->close();
- delete SystemConsole::getInstance();
-#endif
+//#ifndef QT_DEBUG
+// //systemConsoleAction->close();
+// delete SystemConsole2::getInstance();
+//#endif
 // if(webViewAction != NULL)
 //  webViewAction->closeWebView();
  //QMainWindow::closeEvent(event);
@@ -4528,7 +4528,8 @@ void MainWindow::On_saveImage_clicked()
   if(!saveFilename.endsWith(ext))
    saveFilename.append(ext);
 
-  if(!QWidget::grab(webView->rect()).save(saveFilename, qPrintable(saveExtension)))
+  //if(!QWidget::grab(ui->webView->rect()).save(saveFilename, qPrintable(saveExtension)))
+  if(!ui->webView->grab().save(saveFilename, qPrintable(saveExtension)))
   {
    QMessageBox::warning(this, "File could not be saved", "ok", QMessageBox::Ok);
   }

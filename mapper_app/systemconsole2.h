@@ -8,6 +8,7 @@ namespace Ui {
  class SystemConsole2;
 }
 
+class QTextStream;
 class SystemConsole2 : public QDialog
 {
   Q_OBJECT
