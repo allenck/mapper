@@ -827,17 +827,35 @@ bool Configuration::processCopyList()
   dir.mkpath(QDir::homePath() +"/Public/Mapper/Resources");
   dir.mkpath(QDir::homePath() +"/Public/Mapper/Resources/sql");
   dir.mkpath(QDir::homePath() +"/Public/Mapper/Resources/databases");
+  dir.mkpath(QDir::homePath() +"/Public/Mapper/Resources/wiki/images");
+
 
   while (!in.atEnd()) {
-   QString fn = in.readLine();
-   if(fn.startsWith("#"))
+   QString line = in.readLine();
+   if(line.startsWith("#"))
     continue;
+   QStringList sl = line.split(",");
+   QString fn = sl.at(0);
+   bool bCopy = false;
+   if(sl.count() > 1)
+    if(sl.at(1)=="yes")
+     bCopy = true;
    QFile oFile(QDir::homePath() +"/Public/Mapper/Resources/"+fn);
    if(oFile.exists())
-       continue;
+   {
+       if(!bCopy)
+        continue;
+       if(!oFile.remove())
+       {
+           QMessageBox::warning(nullptr, tr("Error"), tr("Error removing %1").arg(oFile.fileName()));
+           return false;
+       }
+
+   }
    if(!QFile::copy(":/"+fn, QDir::homePath() +"/Public/Mapper/Resources/"+fn))
    {
-    QMessageBox::warning(nullptr, tr("Error"), tr("Error copying %1").arg(fn));
+    QMessageBox::warning(nullptr, tr("Error"), tr("Error copying %1").arg(QDir::homePath() +"/Public/Mapper/Resources/"+fn));
+       //return false;
    }
   }
  }

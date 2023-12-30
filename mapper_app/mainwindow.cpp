@@ -4670,9 +4670,10 @@ bool MainWindow::openWebViewPanel()
 #ifdef Q_OS_WINDOWS
      fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2n.htm");
 #else
-     fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2n.htm");
+     //fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2n.htm");
+     fileUrl = QUrl("qrc:/GoogleMaps2b.htm");
 #endif
-    webView->load(fileUrl);
+    webView->setUrl(fileUrl);
     setupbridge();
     webView->page()->setWebChannel(channel);
     return true;
@@ -4892,7 +4893,7 @@ void MainWindow::on_usingHelp()
  QDir dir(wikiRoot);
  if(dir.exists())
  {
-     QDesktopServices::openUrl(QUrl::fromLocalFile(wikiRoot+"/Documentation.htm"));
+  QDesktopServices::openUrl(QUrl::fromLocalFile(wikiRoot+"/Documentation.htm"));
  }
 }
 #if 0

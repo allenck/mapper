@@ -44,7 +44,6 @@
         <file>sql/CreateMySqlFunction.sql</file>
         <file>sql/mySql_createDatabase.sql</file>
         <file>sql/sqlite3_recreateAltRoute.sql</file>
-        <file>sql/recreateCompanies.sql</file>
         <file>sql/recreateRouteComments.sql</file>
         <file>sql/sqlite3_recreateSegmentsTable.sql</file>
         <file>sql/recreateStationTable.sql</file>
@@ -120,5 +119,8 @@
         <file>wiki/images/addConnection2.png</file>
         <file>wiki/images/addConnection.png</file>
         <file>wiki/images/2EvanstonLoop.png</file>
+        <file>sql/mysql_recreate_routes.sql</file>
+        <file>sql/mysql_create_routeView.sql</file>
+        <file>sql/mssql_recreate_routes.sql</file>
     </qresource>
 </RCC>
