@@ -502,7 +502,7 @@ void MainWindow::reloadMap()
   webView->setObjectName(QStringLiteral("webEngineView"));
   webView->setContextMenuPolicy(Qt::NoContextMenu);
   webView->setPage(new MyWebEnginePage());
-  QUrl fileUrl = QUrl::fromLocalFile(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm");
+  //QUrl fileUrl = QUrl::fromLocalFile(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm");
   //webView->setUrl(fileUrl);
  }
  webView->setUrl(fileUrl);
@@ -3597,6 +3597,7 @@ void MainWindow::insertPoint(int SegmentId, qint32 i, double newLat, double newL
     sql->insertPoint(i, SegmentId, newLat, newLon);
     m_currPoint++;
 #endif
+    m_currPoint = i+1;
     //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
     sd = sql->getSegmentInfo(m_segmentId);
     lookupStreetName(sd);
@@ -3835,9 +3836,9 @@ void MainWindow::modifyRouteDate()
 #if 1 // not really needed since historically routes could hane multiple types
 void MainWindow::modifyRouteTractionType()
 {
- ModifyRouteTractionTypeDlg* form = new ModifyRouteTractionTypeDlg();
- form->setConfiguration(config);
- form->setRouteData(routeList, ui->cbRoute->currentIndex());
+ ModifyRouteTractionTypeDlg* form = new ModifyRouteTractionTypeDlg(routeList.at(ui->cbRoute->currentIndex()));
+ //form->setConfiguration(config);
+ //form->setRouteData(routeList, ui->cbRoute->currentIndex());
 
  qint32 rslt = form->exec();
  if (rslt == form->Accepted)
@@ -3849,7 +3850,7 @@ void MainWindow::modifyRouteTractionType()
   for(int i=0; i <routeList.count(); i++)
   {
    RouteData rd =routeList.at(i);
-   if(rd.toString() == form->getRouteData()->toString())
+   if(rd.toString() == form->getRouteData().toString())
    {
     ui->cbRoute->setCurrentIndex(i);
 

@@ -63,6 +63,12 @@
    </item>
    <item row="0" column="5">
     <widget class="QComboBox" name="cbLocation">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="toolTip">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specify a location name to limit search for street names. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
@@ -86,6 +92,12 @@
    </item>
    <item row="0" column="7">
     <widget class="QComboBox" name="cbStreets">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="toolTip">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter a street name for which segments on that street will be displated.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>

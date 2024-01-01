@@ -1,13 +1,14 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
-
-
-  
   <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Instructions for compiling SQLite</title>
   <meta http-equiv="content-type" content="text/html; charset=utf-8"><meta http-equiv="content-type" content="text/html; charset=utf-8"></head>
  <body style="background-color:#faf0e6">
 <h1>&nbsp;Instructions for Compiling SQLite</h1>
-
+As of December 2023, Mapper no longer requires a special version of Sqlite3 that incorporates the <b>SQLITE_ENABLE_LOAD_EXTENSION</b> 
+option. The functionality of the Sqlite module in Qt is sufficient with out change. Previously, Mapper defined a 'distance' function by loading a C function defined in a library. However, since the calculations
+required to support this function do not require any external program access, the 'distance' function is now defined using Sqlite's 
+  <i>sqlite3_create_function</i> interface. It is possible, however, that future versions of Mapper may need to use the older technique so this information
+  is being retained for future use.
 
 <br>
 <h2>
@@ -37,7 +38,7 @@ sqlite3ext should be copied to /usr/local/include. Also copy the command line ap
 </ol>
 <h2>
 Compiling the QT SQLite3 plugin. </h2>
-Instructions for compiling the QT SQLite3 as well as for MySQL or SQL Serverplugin can be found <a href="https://doc.qt.io/qt-5/sql-driver.html">at&nbsp; </a>or <br>
+Instructions for compiling the QT SQLite3 as well as for MySQL or SQL Serverplugin can be found <a href="https://doc.qt.io/qt-5/sql-driver.html">at&nbsp; </a><br>
 <br>
 
 

@@ -8,16 +8,18 @@ namespace Ui {
  class ModifyRouteTractionTypeDlg;
 }
 
+class QAbstractButton;
 class ModifyRouteTractionTypeDlg : public QDialog
 {
   Q_OBJECT
 
  public:
   explicit ModifyRouteTractionTypeDlg(QWidget *parent = nullptr);
+  ModifyRouteTractionTypeDlg(RouteData rd, QWidget *parent = nullptr);
   ~ModifyRouteTractionTypeDlg();
-  void setConfiguration(Configuration* config);
+  //void setConfiguration(Configuration* config);
   void setRouteData(QList<RouteData> routeList, int currentIx);
-  SegmentData *getRouteData();
+  RouteData getRouteData();
 
  private:
   Ui::ModifyRouteTractionTypeDlg *ui;
@@ -27,6 +29,8 @@ class ModifyRouteTractionTypeDlg : public QDialog
   QList<RouteData> routeList;
   SegmentData sd;
   SegmentData* _sd;
+  RouteData _rd;
+  void common();
 
  private slots:
   void dateChanged(QDate date);

@@ -2,9 +2,10 @@
 <html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Using MySql or SQL Server databases</title></head>
 <body style="background-color:#faf0e6">
 <h1>Using MySql or SQL Server databases</h1>
+Mapper has an 'Export' function which provides for transferring data from Mapper's Sqlite3 database to a local or remote database such as MySql or Microsoft's Sql Server. 
+Data can also be exported to another Sqlite database on the same PC. 
 <h2>Prerequisites</h3>
-<h>MySql<br>
-</h3>
+<h3>MySql</h3>
 Generally, to access a MySql database requires that MySql driver
 plugins are configured and compiled for your version of Qt and
 operating system. This is explained <a href="http://doc.qt.io/qt-4.8/sql-driver.html">here</a>. MySql databases can also be accessed via ODBC.<br>
@@ -13,8 +14,13 @@ operating system. This is explained <a href="http://doc.qt.io/qt-4.8/sql-driver.
 &nbsp;Accessing SQL Server databases requires ODBC. ODBC is supported
 in Windows automatically but must be added for Unix systems. <br>
 <br>
-<h3>ODBC Windows</h3>
 
+<h3>Other databases</h3>
+Exporting to other databases such as <b>Postgresql</b> or <b>Oracle</b> can also be supported either thru the use of ODBC or a Qt Sql plugin. However, while SQL commands
+generally are interpreted the same for different databases, the commands for adding or modifying tables and views may require 
+explicit coding for a given type of database. 
+
+<h3>ODBC Windows</h3>
 
 On windows, ODBC datasources must be defined with the ODBC
 configuration utility that is part of Windows. <br><br>
@@ -24,7 +30,8 @@ create a datasource for each server that you will be accessing.
 <p> 
 <h3>ODBC Unix</h3>
 On Unix, it will be
-necessary to download and install the <a href="http://www.freetds.org/">FreeTds</a> utilities. <br>
+necessary to download and install the <a href="http://www.freetds.org/">FreeTds</a> utilities to compile your own ODBC drivers.This is not
+required for MySql or Ms Sql Server.
 <br>
 <h3>Creating a MySql or SQL Server database. <br>
 </h3>

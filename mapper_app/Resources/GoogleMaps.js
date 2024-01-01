@@ -359,7 +359,7 @@ function myArrow(lLat, lLon, mLat, mLon, rLat, rLon, color, segmentId)
 //        alert("arrow clicked on " + segment);
         selectSegment(segment);
     });
-}
+} //end myArrow
 
 // new arrow
 function nArrow(segmentId, pt, dx, dy)
@@ -691,6 +691,14 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
 
         return -1;
     }
+
+    // function to see if a point is on the line
+    this.isPointOnLine = function(pt)
+    {
+      var poly = new google.maps.PolyLine({path: this.getPath});
+      return google.maps.geometry.poly.isLocationOnEdge(point, poly, 10e-1);
+    }
+
     // events
     // Select segment (click)
     google.maps.event.addListener(this.line, "click", function(e){
@@ -969,6 +977,11 @@ async function initMap() {
             menuBox.style.display = "block";
 
         latLng = point2LatLng(arguments[0], map);
+        if(findLine(latLng)!== null)
+        {
+            arguments[0].preventDefault();
+            return;
+        }
         contextMenuLatLng= latLng.lat().toFixed(6) + "," + latLng.lng().toFixed(6);
         menuBox.textContent =contextMenuLatLng
             arguments[0].preventDefault();
@@ -1869,6 +1882,19 @@ function addMarker(i, lat, lon, icon, text, SegmentId)
           if(found == false)
               rtStartMarker.setPosition(new google.maps.LatLng(lat, lon));
       });
+      return null;
+  }
+
+  function findLine(point)
+  {
+      siArray.forEach(function(si, ix)
+      {
+          if(si.isPointOnLine(point)) {
+              webViewBridge.debug("findLine is " + si.getSegment());
+              return si;
+          }
+      });
+      webViewBridge.debug("findLine is null");
       return null;
   }
 

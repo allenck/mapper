@@ -222,6 +222,12 @@
         </item>
         <item row="5" column="0" rowspan="2">
          <widget class="SegmentSelectionWidget" name="ssw" native="true">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="font">
            <font>
             <pointsize>12</pointsize>

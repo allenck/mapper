@@ -1,11 +1,11 @@
 # These files will be copied to a public 'Resources' folder on MacOS
 ExtDraggableObject.js
-GoogleMaps.js
+GoogleMaps.js,yes
 opacityControl.js
 qwebchannel.js
 WebChannel.js
-GoogleMaps2b.htm
-GoogleMaps2n.htm
+GoogleMaps2b.htm,yes
+GoogleMaps2n.htm,yes
 apikey.js
 opacity-slider2.png
 sql/create_routeView.sql
@@ -42,18 +42,18 @@ databases/indianapolis.sqlite3,yes
 databases/louisville.sqlite3,yes
 databases/StLouis.sqlite3,yes
 overlays.xml,yes
-wiki/Compiling_Mapper.html
+wiki/Compiling_Mapper.html,yes
 wiki/index.htm
 wiki/index.wiki
 wiki/Creating_a_new_database.html
-wiki/Instructions_for_compiling_SQLite.html
+wiki/Instructions_for_compiling_SQLite.html,yes
 wiki/Definitions.html
 wiki/Issues.wiki
-wiki/Overlays.html
+wiki/Overlays.html,yes
 wiki/Documentation.htm
 wiki/style.css
 wiki/footer.wiki
-wiki/Using_MySql_or_SQL_Server_databases.html
+wiki/Using_MySql_or_SQL_Server_databases.html,yes
 wiki/images/2EvanstonLoop.png
 wiki/images/CreateNewDatabase.png
 wiki/images/addConnection2.png

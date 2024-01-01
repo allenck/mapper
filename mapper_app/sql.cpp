@@ -198,6 +198,8 @@ void SQL::rollbackTransaction (QString name)
 //  exit(EXIT_FAILURE);
   return;
  }
+ qWarning() <<tr("Rollback transaction %1 ").arg(currentTransaction);
+
  currentTransaction = "";
 }
 
@@ -1448,7 +1450,8 @@ SegmentInfo SQL::getSegmentInfo(qint32 segmentId)
    si._bearingStart = Bearing(si._startLat, si._startLon, si._pointList.at(1).lat(), si._pointList.at(1).lon());
    si._bearingEnd = Bearing(si._pointList.at(si._points-2).lat(), si._pointList.at(si._points-2).lon(), si._endLat, si._endLon);
   }
-  si._bounds = Bounds::fromPointList(si._pointList);
+  if(si._pointList.count()> 1)
+   si._bounds = Bounds::fromPointList(si._pointList);
   if(si._length == 0 && si._pointList.count() > 1)
   {
    //sd._length = distance(LatLng(sd._startLat, sd._startLon), LatLng(sd._endLat, sd._endLon));
@@ -8846,6 +8849,7 @@ CommentInfo SQL::getComments(qint32 infoKey)
     }
     return ci;
 }
+
 int SQL::addComment(QString comments, QString tags)
 {
     int infoKey = -1;

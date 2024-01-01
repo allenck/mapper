@@ -145,7 +145,7 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
 
  if(ui->rbStart->isChecked())
  {
-  if(ui->dateTimePicker1->date() > rd.endDate())
+  if(ui->dateTimePicker1->date() > _rd->endDate())
   {
    qDebug() << "can't set start date to later than end date!";
    ui->lblError->setText(tr("can't set start date %1 to later than end date: %2")
@@ -156,7 +156,7 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
  }
  else
  {
-  if(ui->dateTimePicker1->date() < rd.startDate())
+  if(ui->dateTimePicker1->date() < _rd->startDate())
   {
    qDebug() << "can't set end date to before start date!";
    ui->lblError->setText(tr("can't set end date %1 to before start date:%2")
