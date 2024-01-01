@@ -222,13 +222,13 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
    {
        QString combo = sd->oneWay() + sd->trackUsage();
        if(combo == "  " || combo == "N ")
-        return "Bidirectional";
+        return "2Way";
        else if(combo == "Y ")
-        return "OneWay";
+        return "1Way";
        else if(combo == "YR")
-        return "OneWay(normal)";
+        return "1Way(normal)";
        else if(combo == "YL")
-        return "OneWay(reverse)";
+        return "1Way(reverse)";
        break;
    }
    case TRACTIONTYPE:

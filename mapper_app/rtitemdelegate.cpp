@@ -1,6 +1,6 @@
 #include "rtitemdelegate.h"
-#include "sql.h"
 #include "data.h"
+#include "qcombobox.h"
 
 RTItemDelegate::RTItemDelegate()
 {

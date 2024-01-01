@@ -4,12 +4,11 @@
 #include "editsegmentdialog.h"
 #include "webviewbridge.h"
 #include "otherrouteview.h"
-#include "ttitemdelegate.h"
 #include "rtitemdelegate.h"
 #include "usagedelegate.h"
 #include "splitsegmentdlg.h"
-#include "checkroute.h"
 #include "turndelegate.h"
+#include "ttitemdelegate.h"
 
 RouteView::RouteView(QObject* parent )
 {
@@ -638,7 +637,7 @@ void RouteView::updateRouteView()
     ui->horizontalHeader()->resizeSection(7,35);
     ui->horizontalHeader()->resizeSection(8,65);
     ui->horizontalHeader()->resizeSection(9,65);
-    ui->setItemDelegateForColumn(sourceModel->TRACTIONTYPE, new UsageDelegate());
+    ui->setItemDelegateForColumn(sourceModel->TRACTIONTYPE, new TTItemDelegate());
     ui->setItemDelegateForColumn(sourceModel->TYPE, new RTItemDelegate());
     ui->setItemDelegateForColumn(sourceModel->NE, new TurnDelegate("back"));
     ui->setItemDelegateForColumn(sourceModel->NL, new TurnDelegate("ahead"));

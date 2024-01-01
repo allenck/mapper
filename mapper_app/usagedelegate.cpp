@@ -39,15 +39,15 @@ void UsageDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, con
  {
   model->setData(index, "  ");
  }
- else if(combo == "OneWay")
+ else if(combo == "1Way")
  {
   model->setData(index, "Y ");
  }
- else if(combo == "Bidirectional")
+ else if(combo == "2Way")
  {
   model->setData(index, "  ");
  }
- else if(combo == "OneWay(normal)")
+ else if(combo == "1Way(normal)")
  {
   model->setData(index, "YR");
  }

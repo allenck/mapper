@@ -13,7 +13,6 @@
 #include <QClipboard>
 #include "routeviewtablemodel.h"
 #include "routeviewsortproxymodel.h"
-#include "sql.h"
 #include "configuration.h"
 #include "webviewbridge.h"
 #include "checkroute.h"

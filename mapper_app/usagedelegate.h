@@ -2,7 +2,6 @@
 #define USAGEDELEGATE_H
 
 #include <QStyledItemDelegate>
-#include "sql.h"
 
 class UsageDelegate : public QStyledItemDelegate
 {
@@ -13,8 +12,8 @@ class UsageDelegate : public QStyledItemDelegate
   void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const;
 
  private:
-  QStringList combos1 = {" ","OneWay"}; // single track
-  QStringList combos2 = {"Bidirectional", "OneWay(normal)","OneWay(reversed" };
+  QStringList combos1 = {" ","1Way"}; // single track
+  QStringList combos2 = {"2Way", "1Way(normal)","1Way(reversed" };
 };
 
 #endif // USAGEDELEGATE_H
