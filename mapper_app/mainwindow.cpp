@@ -68,6 +68,7 @@
 #include "ui/dialogtextedit.h"
 #include <QWindow>
 #include "dialogeditparameters.h"
+#include <QTimer>
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -520,6 +521,9 @@ void MainWindow::reloadMap()
  objArray.clear();
  objArray << m_maptype;
  m_bridge->processScript("setMapType", objArray);
+
+ showGoogleMapFeatures(false);
+
 }
 
 void MainWindow::initializeGoogleMaps(QUrl url)
@@ -1209,6 +1213,7 @@ void MainWindow::createActions()
 
  showDebugMessages = new QAction(tr("Show Debug messages"),this);
  showDebugMessages->setCheckable(true);
+ showDebugMessages->setChecked(config->bDisplayDebugMsgs);
  showDebugMessages->setStatusTip(tr("If checked, javascript debug messages will be displayed in the infobar. "));
  connect(showDebugMessages, SIGNAL(toggled(bool)), this, SLOT(on_showDebugMessages(bool)));
 
@@ -2676,6 +2681,7 @@ void MainWindow::segmentSelected(qint32 pt, qint32 segmentId)
  {
   qDebug() << "pt invalid: " << QString::number(pt) << " array has " << QString::number(m_nbrPoints);
   m_currPoint = 0;
+  pt = 0;
  }
  else
   m_currPoint = pt;
@@ -2741,7 +2747,9 @@ void MainWindow::SetPoint(qint32 i, double lat, double lon)
 
 void MainWindow::getArray()
 {
-    m_bridge->processScript("getPointArray");
+    QVariantList objArray;
+    objArray << m_segmentId;
+    m_bridge->processScript("getPointArray", objArray);
     while(!m_bridge->isResultReceived())
     {
      qApp->processEvents(QEventLoop::AllEvents, 100);
@@ -3499,21 +3507,21 @@ void MainWindow::addPoint(int pt, double lat, double lon)
 /// <param name="newLon"></param>
 void MainWindow::movePoint(qint32 segmentId, qint32 i, double newLat, double newLon)
 {
- m_segmentId = segmentId;
- SegmentInfo sd = sql->getSegmentInfo(m_segmentId);
+  m_segmentId = segmentId;
+  SegmentInfo sd = sql->getSegmentInfo(m_segmentId);
 
- if(sd.segmentId() == m_segmentId)
- {
-  sd.movePoint(i, LatLng(newLat, newLon));
- }
- //SQL sql;
- LatLng oldPoint = sql->getPointOnSegment((int)i, m_segmentId);
- //TODO what about multiple station records?
- StationInfo sti = sql->getStationAtPoint(oldPoint);
- if (sti.stationKey > 0)
- {
-     sql->updateStation(sti.stationKey, LatLng(newLat, newLon));
- }
+  if(sd.segmentId() == m_segmentId)
+  {
+   sd.movePoint(i, LatLng(newLat, newLon));
+  }
+  //SQL sql;
+  LatLng oldPoint = sql->getPointOnSegment((int)i, m_segmentId);
+  //TODO what about multiple station records?
+  StationInfo sti = sql->getStationAtPoint(oldPoint);
+  if (sti.stationKey > 0)
+  {
+      sql->updateStation(sti.stationKey, LatLng(newLat, newLon));
+  }
 }
 
 // called by webBrowser map initialization to see if an overlay should be loaded
@@ -3614,35 +3622,35 @@ void MainWindow::btnDeletePtClicked()
 {
 // if(!bFirstSegmentDisplayed)
 //  return;
- SegmentInfo sd = sql->getSegmentInfo(m_segmentId);
+   SegmentInfo sd = sql->getSegmentInfo(m_segmentId);
 
- if(sd.segmentId() == m_segmentId)
- {
-  if(m_nbrPoints < 3)
-  {
-   statusBar()->showMessage("only 2 points. use deleteSegment instead!");
-   return;
-  }
-  sd.deletePoint(m_currPoint);
-  m_bridge->processScript("deletePoint", QString("%1").arg(m_currPoint));
-  if (m_currPoint > 0)
-      m_currPoint--;
-  ui->lblPoint->setText(QString::number(m_currPoint));
+   if(sd.segmentId() == m_segmentId)
+   {
+    if(m_nbrPoints < 3)
+    {
+     statusBar()->showMessage("only 2 points. use deleteSegment instead!");
+     return;
+    }
+    sd.deletePoint(m_currPoint);
+    m_bridge->processScript("deletePoint", QString("%1").arg(m_currPoint));
+    if (m_currPoint > 0)
+        m_currPoint--;
+    ui->lblPoint->setText(QString::number(m_currPoint));
 
-  QString marker;
-  getArray();
-  if(m_nbrPoints == 0)
-  {
-   m_points = sd._pointList;
-   m_currPoint = sd._pointList.size()-1;
-  }
-  if (m_currPoint == 0)
-  {
-      //objArray[3] = "1"; // start marker
-      marker = "1";
-  }
-  else
-  {
+    QString marker;
+    getArray();
+    if(m_nbrPoints == 0)
+    {
+     m_points = sd._pointList;
+     m_currPoint = sd._pointList.size()-1;
+    }
+    if (m_currPoint == 0)
+    {
+        //objArray[3] = "1"; // start marker
+        marker = "1";
+    }
+    else
+    {
       if (m_currPoint == (m_nbrPoints - 1))
           //objArray[3] = "2"; // end marker
           marker = "2";
@@ -3663,7 +3671,6 @@ void MainWindow::btnDeletePtClicked()
       objArray<<((LatLng)m_points.at(m_currPoint)).lat()<< ((LatLng)m_points.at(m_currPoint)).lon();
       m_bridge->processScript("setCenter", objArray);
   }
-
  }
 }
 
@@ -4553,6 +4560,7 @@ void MainWindow::exportRoute()
 void MainWindow::on_showDebugMessages(bool b)
 {
  bDisplayWebDebug = b;
+ config->bDisplayDebugMsgs = b;
 }
 
 void MainWindow::on_runInBrowser(bool bRunInBrowser)
@@ -4692,6 +4700,7 @@ bool MainWindow::setupbridge()
     }
     connect(m_server, &QWebSocketServer::newConnection, [=]{
         qInfo() << "new connection to browser";
+
     });
     connect(m_server, &QWebSocketServer::serverError, [=](QWebSocketProtocol::CloseCode closeCode){
         qDebug() << "server error" << m_server->errorString();
@@ -4870,8 +4879,12 @@ void MainWindow::onWebSocketClosed()
 {
   if(config->bRunInBrowser)
   {
-     QMessageBox::critical(this, tr("Browser closed"), tr("The browser window has closed"));
-     //quit();
+     //QMessageBox::critical(this, tr("Browser closed"), tr("The browser window has closed"));
+   QMessageBox *mbox = new QMessageBox;
+   mbox->setWindowTitle(tr("Browser closed"));
+   mbox->setText("The browser window has closed");
+   mbox->show();
+   QTimer::singleShot(2000, mbox, SLOT(hide()));
   }
 }
 

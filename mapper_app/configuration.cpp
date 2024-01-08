@@ -153,6 +153,7 @@ void Configuration::saveSettings()
  settings->setValue("saveImageDir", saveImageDir);
  settings->setValue("showGMFeatures", bShowGMFeatures);
  settings->setValue("foreignKeyCheck", bForeignKeyCheck);
+ settings->setValue("displayDebugMsgs", bDisplayDebugMsgs);
  settings->setValue("font",font.toString());
 #ifdef Q_OS_MAC
  settings->setValue("macOsPublic", macOSPublic);
@@ -478,6 +479,7 @@ void Configuration::getSettings()
    saveImageDir = settings.value("saveImageDir", "").toString();
    bShowGMFeatures = settings.value("showGMFeatures", true).toBool();
    bForeignKeyCheck = settings.value("foreignKeyCheck", true).toBool();
+   bDisplayDebugMsgs = settings.value("displayDebugMsgs", false).toBool();
    QFont f;
    f.fromString(settings.value("font").toString());
    font =f;

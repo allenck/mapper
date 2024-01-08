@@ -51,6 +51,7 @@ public:
  bool bDisplayWebDebug = false;
  bool bRunInBrowser = false;
  bool bShowGMFeatures =true;
+ bool bDisplayDebugMsgs = false;
  QStringList localOverlayList;
  QStringList georeferencedList;
  QString path;

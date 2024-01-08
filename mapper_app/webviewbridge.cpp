@@ -215,6 +215,7 @@ QString WebViewBridge::getImagePath(qint32 i)
 void WebViewBridge::movePoint(qint32 segmentId, qint32 i, double lat, double lng)
 {
  emit movePointSignal(segmentId, i, lat, lng);
+ //m_parent->movePoint(segmentId, i, lat, lng);
 }
 
 void WebViewBridge::insertPoint(int SegmentId, qint32 i, double newLat, double newLon)

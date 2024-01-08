@@ -122,5 +122,6 @@
         <file>sql/mysql_recreate_routes.sql</file>
         <file>sql/mysql_create_routeView.sql</file>
         <file>sql/mssql_recreate_routes.sql</file>
+        <file>contextmenu.js</file>
     </qresource>
 </RCC>

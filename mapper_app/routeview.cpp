@@ -20,7 +20,8 @@ RouteView::RouteView(QObject* parent )
     myParent = qobject_cast<MainWindow*>(m_parent);
     ui = myParent->ui->tblRouteView;
     connect(ui->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
-    connect(myParent->ui->tab, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tab1CustomContextMenu(QPoint)));
+    connect(myParent->ui->tab, SIGNAL(customContextMenuRequested(QPoint)), this,
+            SLOT(tab1CustomContextMenu(QPoint)));
     if(auto cornerButton = ui->findChild<QAbstractButton*>(QString(), Qt::FindDirectChildrenOnly)) {
         //this button is not a normal button, it doesn't paint text or icon
         //so it is not easy to show text on it, the simplest way is tooltip
@@ -38,7 +39,8 @@ RouteView::RouteView(QObject* parent )
     }
     ui->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
     //ui->horizontalHeader()->restoreState(config->rv.state);
-    connect(ui->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(hdr_customContextMenu(QPoint)));
+    connect(ui->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), this,
+            SLOT(hdr_customContextMenu(QPoint)));
 
     ui->setAlternatingRowColors(true);
     ui->horizontalHeader()->setSectionsMovable(true);
@@ -756,8 +758,8 @@ void RouteView::itemSelectionChanged(QModelIndex index )
 
   MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
   parent->setCursor(QCursor(Qt::WaitCursor));
-  if(parent->selectedSegment() == segmentId)
-   return; // already selected
+//  if(parent->selectedSegment() == segmentId)
+//   return; // already selected
   parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
   parent->setCursor(QCursor(Qt::ArrowCursor));
 

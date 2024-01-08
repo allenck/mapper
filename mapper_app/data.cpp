@@ -651,10 +651,10 @@ void SegmentInfo::insertPoint(int ptNum, LatLng pt)
 
 void SegmentInfo::movePoint(int ptNum, LatLng pt)
 {
- if(ptNum >= _pointList.count()) return;
- _pointList.replace(ptNum, pt);
- //SQL sql;
- SQL::instance()->updateSegment(this);
+  if(ptNum >= _pointList.count()) return;
+  _pointList.replace(ptNum, pt);
+  //SQL sql;
+  SQL::instance()->updateSegment(this);
 }
 
 void SegmentInfo::deletePoint(int ptNum)
