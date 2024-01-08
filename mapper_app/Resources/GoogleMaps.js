@@ -126,7 +126,7 @@ function processScript(func, parms)
   catch (err)
   {
    txt=err;
-   alert("Error occured calling " + func + " '"+ parms + "'\n" + txt);
+   alert("Error ocurred calling " + func + " '"+ parms + "'\n" + txt);
   }
 }
 
@@ -664,12 +664,12 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
     }
     this.setPath = function(p)
     {
-        setMap(null);
+        //setMap(null);
         this.line.setPath(p);
         if(this.grayLine)
            this.grayLine.setPath(p);
         this.placeArrow();
-        setMap(map);
+        //setMap(map);
     }
 
     this.placeArrow = function ()
@@ -680,7 +680,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
       if(this.arrow)
       {
           this.arrow.setMap(null);
-          var poly = arrow.getPoly();
+          var poly = this.arrow.getPoly();
           poly = null;
           this.arrow = null;
       }
@@ -698,7 +698,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
 
     this.getPointArray = function ()
     {
-     var path = this.getPath();
+     var path = si.getPath();
      var array = new Array(0,0);
      path.forEach(function(pt, ix)
      {
@@ -853,14 +853,10 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
     });
 
     google.maps.event.addListener(this.line, "click", function(e){
-        webViewBridge.setDebug("sId = " + this.segmentId + " " + this.segmentName);
-        //line = newline;
-        //Arrow = arrow;
-        color = Color;
-        //currSegment = this;
-        hiLiteSelectedLine(this.segmentId);
+        si = hiLiteSelectedLine(this.segmentId);
+        webViewBridge.setDebug("sId = " + si.segmentId + " " + si.segmentName);
 
-        var path = line.getPath();
+        var path = si.line.getPath();
         var len = path.getLength();
         var begin, end,bounds;
         webViewBridge.setLen(len);
@@ -878,9 +874,9 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
         if(i>0)
           mIx=0;
         //addMarker(i, e.latLng.lat(), e.latLng.lng(), mIx, segmentName + " route:" + routeName);
-        addMarker(i, begin.lat(), begin.lng(), mIx, segmentName + " route:" + routeName, SegmentId);
+        addMarker(i, begin.lat(), begin.lng(), mIx, si.segmentName + " route:" + si.routeName, si.segmentId);
         //OK            window.external.selectSegment(i, SegmentId);
-        webViewBridge.selectSegment(i, SegmentId);
+        webViewBridge.selectSegment(i, si.segmentId);
         addModeOff();
     });
 
@@ -888,70 +884,63 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
     //google.maps.event.addListener(this.line, "rightclick", function(e)
     this.line.addListener("contextmenu", function(e)
     {
-     //line = newline;
-     Arrow = arrow;
-     color = Color;
-     currSegment = this;
-     if(selectedLine != null)
-         hiLightSelectedLine(this.segmentId);
-         //selectedLine.setOptions({strokeColor: selectedLine.color});
-//     line.setOptions({strokeColor: "#04b4B4"});
-//     selectedLineClr = Color;
-//     selectedLine = line;
-     var path = this.getPath();
-     var len = path.getLength();
-     //OK            window.external.setLen(len);
+        var si;
+        si = hiLiteSelectedLine(this.segmentId);
+        var path = si.getPath();
+        var len = path.getLength();
 
-     webViewBridge.setLen(len);
-     var i;
-     for(i=0; i < path.getLength()-1; i++)
-     {
-         begin = path.getAt(i);
-         end = path.getAt(i+1);
-         bounds = setBounds( begin, end);
-         if( bounds.contains(e.latLng)){
-             break;
-         }
-     }
-     //OK            window.external.selectSegment(i, SegmentId);
-     //webViewBridge.selectSegment(i, SegmentId);
+        webViewBridge.selectSegment(si.segmentId);
+        webViewBridge.setLen(len);
+        var i;
+        var mIx = 1;
+        for(i=0; i < path.getLength()-1; i++)
+        {
+            begin = path.getAt(i);
+            end = path.getAt(i+1);
+            bounds = setBounds( begin, end);
+            if( bounds.contains(e.latLng))
+            {
+                break;
+            }
+        }
+        si.insertPoint(i, e.latLng); // insert point after i
+        webViewBridge.insertPoint(si.segmentId, i, e.latLng.lat(), e.latLng.lng());
+        webViewBridge.selectSegment(i+1, si.segmentId);
 
-     //insertPoint(e, this.line, SegmentId);
-     currSegment.insertPoint(i, e.latLng);
+        addModeOff();
+        if(i>0)
+          mIx=0;
+        addMarker(i+1, e.latLng.lat(), e.latLng.lng(), mIx, si.segmentName + " route:" + si.routeName, si.segmentId);
     });
 
-    if(this.grayLine)
-        google.maps.event.addListener(this.line, "click", function(e){
-            webViewBridge.setDebug("sId = " + SegmentId + " " + segmentName);
-            //line = newline;
-            //Arrow = arrow;
-            color = Color;
-            //currSegment = this;
-            hiLiteSelectedLine(segmentId);
+//    if(this.grayLine)
+//        google.maps.event.addListener(this.line, "click", function(e){
+//            webViewBridge.setDebug("sId = " + SegmentId + " " + segmentName);
+//            si = hiLiteSelectedLine(segmentId);
 
-//            var path = grayLine.getPath();
-            var len = path.getLength();
-            var begin, end,bounds;
-            webViewBridge.setLen(len);
-            var i;
-            var mIx = 1;
-            for(i=0; i < path.getLength()-1; i++)
-            {
-              begin = path.getAt(i);
-              end = path.getAt(i+1);
-              bounds = setBounds( begin, end);
-              if( bounds.contains(e.latLng)){
-                  break;
-              }
-            }
-            if(i>0)
-              mIx=0;
-            //addMarker(i, e.latLng.lat(), e.latLng.lng(), mIx, segmentName + " route:" + routeName);
-//            addMarker(i, begin.lat(), begin.lng(), mIx, segmentName + " route:" + routeName, SegmentId);
-            //OK            window.external.selectSegment(i, SegmentId);
-            webViewBridge.selectSegment(i, SegmentId);
-            addModeOff();
-        });
+////            var path = grayLine.getPath();
+//            var len = path.getLength();
+//            var begin, end,bounds;
+//            webViewBridge.setLen(len);
+//            var i;
+//            var mIx = 1;
+//            for(i=0; i < path.getLength()-1; i++)
+//            {
+//              begin = path.getAt(i);
+//              end = path.getAt(i+1);
+//              bounds = setBounds( begin, end);
+//              if( bounds.contains(e.latLng)){
+//                  break;
+//              }
+//            }
+//            if(i>0)
+//              mIx=0;
+//            //addMarker(i, e.latLng.lat(), e.latLng.lng(), mIx, segmentName + " route:" + routeName);
+////            addMarker(i, begin.lat(), begin.lng(), mIx, segmentName + " route:" + routeName, SegmentId);
+//            //OK            window.external.selectSegment(i, SegmentId);
+//            webViewBridge.selectSegment(i, SegmentId);
+//            addModeOff();
+//        });
 
 
 
@@ -1354,6 +1343,7 @@ function hiLiteSelectedLine(segmentId)
     var line;
     var grayLine;
     var arrow;
+    var selectedSi;
 
     siArray.forEach(function(si, ix)
     {
@@ -1362,6 +1352,7 @@ function hiLiteSelectedLine(segmentId)
             line = si.line;
             grayline = si.grayLine;
             arrow = si.arrow;
+            selectedSi = si;
         }
     });
     if(selectedLine != null)
@@ -1381,9 +1372,9 @@ function hiLiteSelectedLine(segmentId)
     {
         arrow.setOptions({strokeColor: "#04b4B4", fillColor:"#04b4B4" });
     }
-    selectedLine = {segmentId: segmentId, line: line, arrow: arrow, grayLine: grayLine,
+    selectedLine = {si: selectedSi, segmentId: segmentId, line: line, arrow: arrow, grayLine: grayLine,
      color: color, grayColor: grayLineClr};
-    return null;
+    return selectedSi;
 }
 
 function restoreLine()
@@ -1924,18 +1915,37 @@ function getPointValues(i)
  return i+","+myElement.lat()+","+myElement.lng();
 }
 
-// Return the entire array of points for the current line
-function getPointArray()
+function getSegmentInfo(segmentId)
 {
- var path = line.getPath();
- var array = new Array(0,0);
- path.forEach(function(pt, ix)
- {
-  array[ix*2] = pt.lat();
-  array[(ix*2)+1] = pt.lng();
- });
- //alert("points = " +array.length);
- return array;
+    if(selectedLine && selectedLine.segmentId == segmentId)
+        return selectedLine.si;
+    var si;
+    for(let i =0; i < siArray.length; i++)
+    {
+        si = siArray[i];
+        if(si.segmentId = segmentId)
+        {
+            break;
+        }
+    }
+    if(!si)
+        console.error("segmentId " + segmentId + " is invalid");
+    return si;
+}
+
+// Return the entire array of points for the current line
+function getPointArray(segmentId)
+{
+    var si = getSegmentInfo(segmentId);
+    var path = si.getPath();
+    var array = new Array(0,0);
+    path.forEach(function(pt, ix)
+    {
+        array[ix*2] = pt.lat();
+        array[(ix*2)+1] = pt.lng();
+    });
+    //alert("points = " +array.length);
+    return array;
 }
 
 

@@ -94,7 +94,7 @@ void WebViewBridge::selectSegment(qint32 i, qint32 SegmentId)
 {
 //    //MainWindow::selectSegment(i, SegmentId);
 //    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-//    m_parent->selectSegment(i, SegmentId);
+    m_parent->segmentSelected(i, SegmentId);
  emit segmentSelected(i, SegmentId);
 }
 

@@ -3595,10 +3595,10 @@ void MainWindow::updateIntersection(qint32 i, double newLat, double newLon)
 /// <param name="i">point to insert after</param>
 /// <param name="newLat">New latitude</param>
 /// <param name="newLon">New longitude</param>
-void MainWindow::insertPoint(int SegmentId, qint32 i, double newLat, double newLon)
+void MainWindow::insertPoint(int segmentId, qint32 i, double newLat, double newLon)
 {
- segmentSelected(i,SegmentId);
- SegmentInfo sd = sql->getSegmentInfo((int)SegmentId);
+ segmentSelected(i,segmentId);
+ SegmentInfo sd = sql->getSegmentInfo((int)segmentId);
  sd.insertPoint(i, LatLng(newLat, newLon));
 #if 0
     //SQL sql;
@@ -3606,6 +3606,7 @@ void MainWindow::insertPoint(int SegmentId, qint32 i, double newLat, double newL
     m_currPoint++;
 #endif
     m_currPoint = i+1;
+    m_segmentId = segmentId;
     //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
     sd = sql->getSegmentInfo(m_segmentId);
     lookupStreetName(sd);
