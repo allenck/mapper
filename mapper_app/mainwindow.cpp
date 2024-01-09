@@ -3259,7 +3259,9 @@ void MainWindow::cbSegmentsSelectedValueChanged(SegmentInfo si)
     //webBrowser1.Document.InvokeScript("addModeOn");
     if(si.startLat() == 0)
     {
-     m_bridge->processScript("addModeOn");
+     QVariantList objArray;
+     objArray << m_segmentId;
+     m_bridge->processScript("addModeOn", objArray);
      m_bAddMode = true;
      //return;
     }
@@ -3633,7 +3635,10 @@ void MainWindow::btnDeletePtClicked()
      return;
     }
     sd.deletePoint(m_currPoint);
-    m_bridge->processScript("deletePoint", QString("%1").arg(m_currPoint));
+
+    QVariantList objArray;
+    objArray << m_currPoint << m_segmentId;
+    m_bridge->processScript("deletePoint", objArray);
     if (m_currPoint > 0)
         m_currPoint--;
     ui->lblPoint->setText(QString::number(m_currPoint));
@@ -3665,7 +3670,7 @@ void MainWindow::btnDeletePtClicked()
                           + QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)
                           + "," + QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8)
                           + ","+marker+",'',"+QString("%1").arg(m_segmentId));
-  QVariantList objArray;
+  objArray.clear();
   if(!ui->chkNoPan->isChecked())
   {
       objArray.clear();

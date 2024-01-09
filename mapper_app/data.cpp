@@ -401,6 +401,11 @@ void SegmentData::updateRouteInfo(RouteData rd){
 
 void SegmentData::addPoint(LatLng pt)
 {
+ if(_pointList.count()> 0)
+ {
+   if(_pointList.at(_pointList.count()-1)== pt)
+    throw IllegalArgumentException(" duplicate point");
+ }
  _pointList.append(pt);
  //SQL sql;
  calculate();

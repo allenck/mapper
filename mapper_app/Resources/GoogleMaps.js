@@ -668,13 +668,13 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
         this.line.setPath(p);
         if(this.grayLine)
            this.grayLine.setPath(p);
-        this.placeArrow();
+        this.placeArrow(p);
         //setMap(map);
     }
 
-    this.placeArrow = function ()
+    this.placeArrow = function (path)
     {
-     var path = this.getPath();
+     //var path = this.getPath();
      if(path.getLength() > 1)
      {
       if(this.arrow)
@@ -698,7 +698,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
 
     this.getPointArray = function ()
     {
-     var path = si.getPath();
+     var path = this.getPath();
      var array = new Array(0,0);
      path.forEach(function(pt, ix)
      {
@@ -746,15 +746,16 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
         return path;
     }
 
-    this.deletePoint = function(pt)
+    this.deletePoint = function(pt, path)
     {
-        var path = this.getPath();
+        var path = this.line.getPath();
         path.removeAt(pt);
         this.setPath(path);
         // move the arrow as well
-        placeArrow();
+        this.placeArrow(path);
         return path;
     }
+
     this.setMap = function(map)
     {
         this.line.setMap(map);
@@ -766,28 +767,30 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
 
     this.addNewPoint = function (e)
     {
-    if(bAdding)
-    {
-     map.disableDoubleClickZoom = true;
+        if(bAdding)
+        {
+            map.disableDoubleClickZoom = true;
 
-      if(line === null)
-      {
-    //OK                    window.external.SetDebug("No line defined " + e.latLng.lat() + " " + e.latLng.lng());
-       webViewBridge.setDebug("No line defined " + e.latLng.lat() + " " + e.latLng.lng());
-       return;
-      }
-      var path = this.getPath();
-      if(path.getLength() === 0)
-      {
-       addMarker(path.getLength(), e.latLng.lat(), e.latLng.lng(), 1, segment.getInfo(), segment.segmentId);
-      }
-      path.push(e.latLng);
-      //getPoints();
-      if(path.getLength() > 0)
-    // window.external.addPoint();
-       window.webViewBridge.addPoint(0, e.latLng.lat(), e.latLng.lng());
-      placeArrow();
-     }
+            if(this.line === null)
+            {
+            //OK                    window.external.SetDebug("No line defined " + e.latLng.lat() + " " + e.latLng.lng());
+                webViewBridge.setDebug("No line defined " + e.latLng.lat() + " " + e.latLng.lng());
+                return;
+            }
+            var path = this.line.getPath();
+            if(path.length === 0)
+            {
+                addMarker(path.getLength(), e.latLng.lat(), e.latLng.lng(), 1, segment.getInfo(), segment.segmentId);
+            }
+            var pt =path.push(e.latLng);
+            this.setPath(path);
+            //getPoints();
+            if(path.length > 0)
+                // window.external.addPoint();
+                window.webViewBridge.addPoint(pt, e.latLng.lat(), e.latLng.lng());
+            this.placeArrow(path);
+        }
+        bAdding = false
     }
 
     this.getArrow = function(){
@@ -964,7 +967,36 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
 //     //            window.external.setStation(e.latLng.lat(), e.latLng.lng(), SegmentId, i);
 //     webViewBridge.setStation(e.latLng.lat(), e.latLng.lng(), SegmentId, i);
 //    });
-     google.maps.event.addListener(map, "dblclick", this.addNewPoint);
+//    google.maps.event.addListener(map, "dblclick", function(e){
+//        if(currSegment)
+//        {
+//            bAdding = true;
+//            //currSegment.addNewPoint(e);
+//            var line = currSegment.line;
+//            if(bAdding)
+//            {
+//                //map.disableDoubleClickZoom = true;
+
+//                if(line === null)
+//                {
+//                //OK                    window.external.SetDebug("No line defined " + e.latLng.lat() + " " + e.latLng.lng());
+//                    webViewBridge.setDebug("No line defined " + e.latLng.lat() + " " + e.latLng.lng());
+//                    return;
+//                }
+//                var path = line.getPath();
+////                if(path.length === 0)
+////                {
+////                    addMarker(path.getLength(), e.latLng.lat(), e.latLng.lng(), 1, segment.getInfo(), segment.segmentId);
+////                }
+//                var pt =path.push(e.latLng);
+//                currSegment.setPath(path);
+//                //getPoints();
+//                if(path.length > 0)
+//                    // window.external.addPoint();
+//                    window.webViewBridge.addPoint(pt, e.latLng.lat(), e.latLng.lng());
+//                currSegment.placeArrow(path);
+//            }}
+//     });
 
 } // end SegmentInfo
 
@@ -1259,8 +1291,8 @@ function createSegment(segmentId, routeName, segmentName, oneWay, color, tracks,
             }
         }
 
-        getPoints();
-        placeArrow(path);
+        //getPoints();
+        newSegment.placeArrow(path);
     }
     if(typeof points == 'array')
     {
@@ -1279,8 +1311,8 @@ function createSegment(segmentId, routeName, segmentName, oneWay, color, tracks,
                 grayPath.push(new google.maps.LatLng(arguments[i+10], arguments[i+11]));
             }
         }
-        getPoints();
-        placeArrow(path);
+        //getPoints();
+        newSegment.placeArrow(path);
     }
     return null;
 }
@@ -1436,19 +1468,22 @@ function hiLiteLine(segmentId)
     return null;
 }
 
-function addModeOn()
+function addModeOn(segmentId)
 {
- bAdding = true;
- map.setOptions({draggableCursor:'Crosshair'});
- webViewBridge.addPointMode(bAdding);
- return null;
+    currentSegment = getSegmentInfo(segmentId);
+    bAdding = true;
+    map.setOptions({draggableCursor:'Crosshair'});
+    webViewBridge.addPointMode(bAdding);
+    return null;
 }
+
 function addModeOff()
 {
- bAdding = false;
- map.setOptions({draggableCursor:'Hand'});
- webViewBridge.addPointMode(bAdding);
- return null;
+    bAdding = false;
+    map.setOptions({draggableCursor:'Hand'});
+    webViewBridge.addPointMode(bAdding);
+    currentSegment = null;
+    return null;
 }
 
 function isAddModeOn()
@@ -1461,39 +1496,41 @@ function isAddModeOn()
 
 function addNewPoint(e)
 {
-if(bAdding)
-{
- map.disableDoubleClickZoom = true;
+    if(bAdding)
+    {
+        if(!currSegment)
+            return;
+        var line = currSegment.line;
 
-  if(line === null)
-  {
-//OK                    window.external.SetDebug("No line defined " + e.latLng.lat() + " " + e.latLng.lng());
-   webViewBridge.setDebug("No line defined " + e.latLng.lat() + " " + e.latLng.lng());
-   return;
-  }
-  var path = line.getPath();
-  if(path.getLength() === 0)
-  {
-   addMarker(path.getLength(), e.latLng.lat(), e.latLng.lng(), 1, segment.getInfo(), segment.segmentId);
-  }
-  path.push(e.latLng);
-  getPoints();
-  if(path.getLength() > 0)
-// window.external.addPoint();
-   webViewBridge.addPoint(0, e.latLng.lat(), e.latLng.lng());
-  placeArrow(path);
- }
+        if(line === null)
+        {
+            //OK                    window.external.SetDebug("No line defined " + e.latLng.lat() + " " + e.latLng.lng());
+            webViewBridge.setDebug("No line defined " + e.latLng.lat() + " " + e.latLng.lng());
+            return;
+        }
+        var path = line.getPath();
+        if(path.getLength() === 0)
+        {
+            addMarker(path.getLength(), e.latLng.lat(), e.latLng.lng(), 1, segment.getInfo(), segment.segmentId);
+        }
+        path.push(e.latLng);
+        //getPoints();
+        if(path.getLength() > 0)
+            // window.external.addPoint();
+            webViewBridge.addPoint(0, e.latLng.lat(), e.latLng.lng());
+        currSegment.placeArrow(path);
+    }
 }
 
 
-  function displayPoint( lat, lon)
-  {
-      var path = line.getPath();
-      path.push(new google.maps.LatLng(lat, lon));
-      getPoints();
-      placeArrow(path);
-      return;
-  }
+//  function displayPoint( lat, lon)
+//  {
+//      var path = line.getPath();
+//      path.push(new google.maps.LatLng(lat, lon));
+//      //getPoints();
+//      placeArrow(path);
+//      return;
+//  }
 
   function setCenter(Lat, Lon)
   {
@@ -1637,17 +1674,21 @@ function clearPolyline(segmentId)
   }
 
     });
-    var count = stationArray.getLength();
-    stationArray.forEach(function(stationMarker, ix)
+
+    if(stationArray)
     {
-      if(ix >= count)
-          return;
-      if(stationMarker && stationMarker !== 'undefined' && stationMarker.segmentId  && stationMarker.segmentId === segmentId)
-      {
-          stationMarker.setMap();
-          stationArray.removeAt(ix);
-      }
-    });
+        var count = stationArray.getLength();
+        stationArray.forEach(function(stationMarker, ix)
+        {
+          if(ix >= count)
+              return;
+          if(stationMarker && stationMarker !== 'undefined' && stationMarker.segmentId  && stationMarker.segmentId === segmentId)
+          {
+              stationMarker.setMap();
+              stationArray.removeAt(ix);
+          }
+        });
+    }
     //alert("polyline " + segmentId + " cleared");
      return null;
     }
@@ -1774,14 +1815,16 @@ var path;
   }
 
   selectedLine = null;
-  while(stationArray.getLength() > 0)
-  {
-      var stationMarker = stationArray.pop();
-      stationMarker.setMap();
-      if(stationMarker.infoWindow)
-          stationMarker.infoWindow.setMap();
-      stationMarker = null;
-  }
+
+  if(stationArray)
+      while(stationArray.getLength() > 0)
+      {
+          var stationMarker = stationArray.pop();
+          stationMarker.setMap();
+          if(stationMarker.infoWindow)
+              stationMarker.infoWindow.setMap();
+          stationMarker = null;
+      }
   return null;
 }
 
@@ -1842,78 +1885,72 @@ function insertPoint(e, line, segmentId)
   }
 
 
-function deletePoint(pt)
+function deletePoint(pt, segmentId)
 {
- var path = line.getPath();
- var len = path.getLength();
- path.removeAt(pt);
- line.setPath(path);
- getPoints();
- // move the arrow as well
- placeArrow(path);
- return;
+    var si = getSegmentInfo(segmentId);
+    si.deletePoint(pt);
 }
 
-function placeArrow(path, segment)
-{
- if(path.getLength() > 1)
- {
-  arrow =currSegment.getArrow();
-  if(arrow)
-  {
-      arrow.setMap(null);
-      var poly = arrow.getPoly();
-      poly = null;
-      arrow = null;
-  }
-  //else
-  {
-  var len = path.getLength();
-  var brng = new bearing(path.getAt(len-1).lat(), path.getAt(len-1).lng(),path.getAt(len-2).lat(), path.getAt(len-2).lng() );
-  var left = pointRadialDistance( new google.maps.LatLng(path.getAt(len-1).lat(), path.getAt(len-1).lng()), brng.getBearing()-15, .020);
-  var right = pointRadialDistance( new google.maps.LatLng(path.getAt(len-1).lat(), path.getAt(len-1).lng()), brng.getBearing()+15, .020);
-  currSegment.setArrow(new myArrow(left.lat(), left.lng(), path.getAt(len-1).lat(), path.getAt(len-1).lng(), right.lat(), right.lng(), currSegment.getColor(), currSegment.segmentId));
-  }
- }
- return;
-}  // end placeArrow()
+//function placeArrow(path, segment)
+//{
+// if(path.getLength() > 1)
+// {
+//  arrow =currSegment.getArrow();
+//  if(arrow)
+//  {
+//      arrow.setMap(null);
+//      var poly = arrow.getPoly();
+//      poly = null;
+//      arrow = null;
+//  }
+//  //else
+//  {
+//  var len = path.getLength();
+//  var brng = new bearing(path.getAt(len-1).lat(), path.getAt(len-1).lng(),path.getAt(len-2).lat(), path.getAt(len-2).lng() );
+//  var left = pointRadialDistance( new google.maps.LatLng(path.getAt(len-1).lat(), path.getAt(len-1).lng()), brng.getBearing()-15, .020);
+//  var right = pointRadialDistance( new google.maps.LatLng(path.getAt(len-1).lat(), path.getAt(len-1).lng()), brng.getBearing()+15, .020);
+//  currSegment.setArrow(new myArrow(left.lat(), left.lng(), path.getAt(len-1).lat(), path.getAt(len-1).lng(), right.lat(), right.lng(), currSegment.getColor(), currSegment.segmentId));
+//  }
+// }
+// return;
+//}  // end placeArrow()
 
-function getPoints()
-{
-    var path = line.getPath();
-    var len = path.getLength();
-    path.forEach(setArray);
-    return;
-}
+//function getPoints()
+//{
+//    var path = line.getPath();
+//    var len = path.getLength();
+//    path.forEach(setArray);
+//    return;
+//}
 
-var pointArray = [];
-function setArray(element, number)
-{
- var pt = [element.lat(), element.lng()];
- pointArray[number]= pt;
-    return;
-}
+//var pointArray = [];
+//function setArray(element, number)
+//{
+// var pt = [element.lat(), element.lng()];
+// pointArray[number]= pt;
+//    return;
+//}
 
-function getLen()
-{
- var len =-1;
- if(line == null)
-  len = -1;
- else
- {
-  var path = line.getPath();
-   len = path.getLength();
- }
- return len;
-}
+//function getLen()
+//{
+// var len =-1;
+// if(line == null)
+//  len = -1;
+// else
+// {
+//  var path = line.getPath();
+//   len = path.getLength();
+// }
+// return len;
+//}
 
-function getPointValues(i)
-{
- //alert("getPointValues: " + i);
- var path = line.getPath();
- var myElement = path.getAt(i);
- return i+","+myElement.lat()+","+myElement.lng();
-}
+//function getPointValues(i)
+//{
+// //alert("getPointValues: " + i);
+// var path = line.getPath();
+// var myElement = path.getAt(i);
+// return i+","+myElement.lat()+","+myElement.lng();
+//}
 
 function getSegmentInfo(segmentId)
 {
@@ -1922,8 +1959,8 @@ function getSegmentInfo(segmentId)
     var si;
     for(let i =0; i < siArray.length; i++)
     {
-        si = siArray[i];
-        if(si.segmentId = segmentId)
+        si = siArray.getAt(i);
+        if(si.segmentId == segmentId)
         {
             break;
         }
@@ -1994,7 +2031,7 @@ function addMarker(i, lat, lon, icon, text, SegmentId)
   line.setPath(path);
 
   // move the arrow as well
-  placeArrow(path);
+  //placeArrow(path);
   //line.setMap(map);
 //OK                window.external.movePoint( i, pt.latLng.lat(),pt.latLng.lng());
 
@@ -2384,6 +2421,8 @@ function removeStationMarker(stationKey)
 
 function removeStationMarkers()
 {
+    if(!stationArray)
+        return;
  var count = stationArray.getLength();
  stationArray.forEach(function(element, index)
  {
