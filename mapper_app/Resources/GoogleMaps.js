@@ -845,6 +845,10 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
     }
 
     // events
+    google.maps.event.addListener(map, "mousemove", function(e){
+        if(bAdding)
+            map.setOptions({draggableCursor:'Crosshair'});
+    });
 
     // Select segment (click)
     google.maps.event.addListener(this.line, "mouseover", function(e){
@@ -1480,7 +1484,7 @@ function addModeOn(segmentId)
 function addModeOff()
 {
     bAdding = false;
-    map.setOptions({draggableCursor:'Hand'});
+    map.setOptions({draggableCursor:'default'});
     webViewBridge.addPointMode(bAdding);
     currentSegment = null;
     return null;

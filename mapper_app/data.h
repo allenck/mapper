@@ -320,6 +320,7 @@ class SegmentData
     QString reverseDescription();
     void updateRouteInfo(RouteData rd);
     quint32 baseRoute() const {return _baseRoute;}
+    void update(const SegmentInfo& si);
 
  private:
     qint32 _segmentId=-1;
@@ -569,8 +570,8 @@ class SegmentInfo
  //QString oneWay;
  qint32 _segmentId = -1;
  qint32 lineSegments;
- qint32 _points;
- double _length;
+ qint32 _points =0;
+ double _length = 0;
  QDate _startDate = QDate::fromString("1880/01/01", "yyyy/MM/dd");
  QDate _endDate= QDate::fromString("2050/12/31", "yyyy/MM/dd");
  Bearing _bearing;

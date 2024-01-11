@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include "mainwindow.h"
 #include "vptr.h"
+#include "companyview.h"
 
 RouteDlg::RouteDlg(QWidget *parent) :
     QDialog(parent),
@@ -73,6 +74,9 @@ RouteDlg::RouteDlg(QWidget *parent) :
     connect(ui->dateStart, SIGNAL(editingFinished()), this, SLOT(dateStart_Leave()));
     myParent = (MainWindow*)parent;
     connect(myParent, SIGNAL(newCitySelected()), this, SLOT(OnNewCity()));
+    connect(CompanyView::instance()->model(), &MyCompanyTableModel::companyChange, [=]{
+     fillCompanies();
+    } );
     fillCompanies();
     fillTractionTypes();
 
@@ -1742,8 +1746,8 @@ void RouteDlg::btnAdd_Click()         // SLOT
   if (ui->btnAdd->text() == "Add")
   {
    CompanyData* cd = sql->getCompany(companyKey);
-      //if (_routeNbr == -1 && _alphaRoute != "")
-//   _routeNbr = sql->addAltRoute(ui->txtRouteNbr->text(), cd->routePrefix);
+   if (ui->rnw->routeNbrMustBeAdded())
+    _routeNbr = sql->addAltRoute(ui->rnw->newRoute(), ui->rnw->alphaRoute());
 //   sd->setRoute(_routeNbr);
    sql->beginTransaction("addRouteSegment");
    if(!sql->doesAltRouteExist(sd->route(), sd->alphaRoute()))

@@ -304,6 +304,7 @@ private slots:
     void on_overlayHelp();
     void on_usingHelp();
     void processTileMapResource();
+    void onNewSegment_triggered();
 
 private:
     //Webviewer *centralWidget;
@@ -342,6 +343,7 @@ private:
     QAction *findDormantSegmentsAct;
     QAction *selectSegmentAct;
     QAction* editSegmentAct;
+    QAction* newSegmentAct;
     QAction *addRouteAct;
     QAction *addPointModeAct;
     QAction *reloadMapAct;
@@ -378,12 +380,10 @@ private:
     QAction* usingMapper;
     QAction* splitSegmentAct;
     QAction* setInspectedPageAct = nullptr;
-    QList<QAction*> cityActions;
-    //QActionGroup  *actionGroup;
+    QAction* displayAllRoutesAct;
     QAction* exportOverlaysAct;
     QAction* setCityBoundsAct;
     QAction* setLoggingAct;
-    QList<QAction*> overlayActions;
     QAction* newCityAct;
     QAction* removeCityAct;
     QAction* changeRouteNumberAct;
@@ -393,6 +393,9 @@ private:
     QAction* foreignKeyCheckAct;
     QAction* fontSizeChangeAct;
     QAction* updateParametersAct;
+
+    QList<QAction*> cityActions;
+    QList<QAction*> overlayActions;
 
     //QSignalMapper *overlaySignalMapper;
     QActionGroup  *overlayActionGroup;
@@ -481,6 +484,7 @@ private slots:
     void addSegmentToRoute(SegmentData *sd);
     void loadRouteComment();
     void initializeGoogleMaps(QUrl url);
+    void displayAll();
 
 protected:
     //void resizeEvent(QResizeEvent *event);

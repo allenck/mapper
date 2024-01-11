@@ -101,21 +101,24 @@ SegmentDlg::SegmentDlg(QWidget *parent) :
  ui->dateStart->setMaximumDate( parms.maxDate);
  ui->dateEnd->setMinimumDate( parms.minDate);
  ui->dateEnd->setMaximumDate( parms.maxDate);
- ui->dateStart->setDate( _rd.startDate());
- ui->dateEnd->setDate( _rd.endDate());
+ if(_rd)
+ {
+  ui->dateStart->setDate( _rd->startDate());
+  ui->dateEnd->setDate( _rd->endDate());
+ }
 
  fillCompanies();
 // ui->cbRouteName->clear();
 // ui->cbRouteName->addItem(strNoRoute);
- if (_rd.route() > 0)
+ if (_rd && _rd->route() > 0)
  {
-     _routeNbr = _rd.route();
-     ui->rnw->setAlphaRoute(_rd.alphaRoute());
-     //cbRouteName.Text = _rd.name;
+     _routeNbr = _rd->route();
+     ui->rnw->setAlphaRoute(_rd->alphaRoute());
+     //cbRouteName.Text = _rd->name;
 //     for(int i = 0; i < _routeNameList.count(); i++)
 //     {
 //         QString routeName = _routeNameList.at(i);
-//         if(routeName == _rd.routeName())
+//         if(routeName == _rd->routeName())
 //         {
 //             ui->cbRouteName->setCurrentIndex(i+1);
 //             break;
@@ -134,14 +137,15 @@ SegmentDlg::~SegmentDlg()
     delete ui;
 }
 
-void SegmentDlg::configure(RouteData rd, int segmentId, int point)
+void SegmentDlg::configure(RouteData* rd, int segmentId, int point)
 {
  setRouteData(rd);
  setSegmentId(segmentId);
  setPt(point);
  if(segmentId >0)
  {
-  if(sql->doesRouteSegmentExist(rd.route(), rd.routeName(),segmentId, rd.startDate(), rd.endDate()))
+  if(sql->doesRouteSegmentExist(rd->route(), rd->routeName(),segmentId, rd->startDate(),
+                                rd->endDate()))
   {
    ui->rbNoAdd->setChecked(true);
    //ui->groupBox7->setEnabled(false);
@@ -241,43 +245,28 @@ qint32 SegmentDlg::tractionType()
 bool SegmentDlg::oneWay() { return ui->chkOriginalOneWay->isChecked(); }
 int SegmentDlg::tracks() { return si.tracks(); }
 
-void SegmentDlg::setRouteData(RouteData value)
+void SegmentDlg::setRouteData(RouteData* value)
 {
     int i = 0;
     //bRouteChanging = true;
-    if (value.route() < 1)
+    if (value->route() < 1)
         return;
     _rd = value;
-    _routeNbr = _rd.route();
-//    ui->txtRouteNbr->setText( _rd.alphaRoute());
-//    ui->cbRouteName->clear();
-//    ui->cbRouteName->addItem(strNoRoute);
-    ui->rnw->configure(&value, ui->lblErrorText);
+    _routeNbr = _rd->route();
+    ui->rnw->configure(value, ui->lblErrorText);
     ui->groupBox7->setEnabled(true);
     QThread::msleep(100);
     ui->groupBox7->setEnabled(false);
 
     _routeNameList = sql->getRouteNames(_routeNbr);
-//    for(int i=0; i < _routeNameList.count(); i++)
-//        ui->cbRouteName->addItem(_routeNameList.at(i));
-
-//    cbRouteName.Text = _rd.name;
-//    for(int i=0; i < _routeNameList.count(); i++)
-//    {
-//        if(_rd.routeName() == _routeNameList.at(i))
-//        {
-//            ui->cbRouteName->setCurrentIndex(i + 1);
-//            break;
-//        }
-//    }
-
     Parameters parms = sql->getParameters();
     ui->dateStart->setMinimumDate( parms.minDate);
     ui->dateStart->setMaximumDate( parms.maxDate);
     ui->dateEnd->setMinimumDate( parms.minDate);
     ui->dateEnd->setMaximumDate( parms.maxDate);
-    ui->dateStart->setDate( _rd.startDate());
-    ui->dateEnd->setDate( _rd.endDate());
+    ui->dateStart->setDate( _rd->startDate());
+    ui->dateEnd->setDate( _rd->endDate());
+    ui->cbTractionType->setCurrentIndex(ui->cbTractionType->findData(_rd->tractionType()));
 
     //if (ui->cbCompany->currentIndex() == -1)
     {
@@ -285,7 +274,7 @@ void SegmentDlg::setRouteData(RouteData value)
         for (i=0;i < _companyList.count(); i++)
         {
             CompanyData* cd = (CompanyData*)_companyList.at(i);
-            if(cd->companyKey == _rd.companyKey())
+            if(cd->companyKey == _rd->companyKey())
             {
                 ui->cbCompany->setCurrentIndex(i);
                 break;
@@ -348,7 +337,7 @@ void SegmentDlg::fillTractionTypes()
     for(int i = 0; i < _tractionTypeList.count(); i++)
     {
      TractionTypeInfo tti = _tractionTypeList.values().at(i);
-     ui->cbTractionType->addItem(tti.ToString());
+     ui->cbTractionType->addItem(tti.ToString(), tti.tractionType);
     }
     //cbTractionType.Text = "";
 }
@@ -442,7 +431,7 @@ void SegmentDlg::txtRouteNbr_Leave()    // SLOT
  }
  for(int i=0; i <_routeNameList.count();i ++)
  {
-     if (_rd.route() > 0  && _routeNbr == _rd.route() && _rd.routeName() == _routeNameList.at(i))
+     if (_rd->route() > 0  && _routeNbr == _rd->route() && _rd->routeName() == _routeNameList.at(i))
      {
          ui->cbRouteName->setCurrentIndex(i+1);
          break;
@@ -818,9 +807,11 @@ void SegmentDlg::btnOK_Click()  // SLOT
    routeSegment = _segmentId;
   else
    routeSegment = _newSegmentId;
+
   CompanyData* cd = sql->getCompany(ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt());
-  if (_routeNbr == -1 && _alphaRoute != "")
-   _routeNbr = sql->addAltRoute(_alphaRoute, cd->routePrefix);
+  _routeNbr = ui->rnw->newRoute();
+  if (ui->rnw->routeNbrMustBeAdded())
+   _routeNbr = sql->addAltRoute(ui->rnw->newRoute(), ui->rnw->alphaRoute());
   if (_routeNbr > 0)
   {
    int tractionType = _tractionTypeList.values().at(ui->cbTractionType->currentIndex()).tractionType;
@@ -876,8 +867,8 @@ void SegmentDlg::btnOK_Click()  // SLOT
  else
  {
   //if (routeChanged != null && _rd != null)
-  RouteChangedEventArgs args = RouteChangedEventArgs(_rd.route(), _rd.routeName(), _newSegmentId,
-                                                     _rd.tractionType(), _rd.companyKey(), _rd.endDate(), "Update");
+  RouteChangedEventArgs args = RouteChangedEventArgs(_rd->route(), _rd->routeName(), _newSegmentId,
+                                                     _rd->tractionType(), _rd->companyKey(), _rd->endDate(), "Update");
   emit routeChangedEvent(args);
 
  }

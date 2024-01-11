@@ -97,7 +97,8 @@ void RouteNameWidget::txtRouteNbr_Leave()
     {
         QMessageBox::StandardButtons rslt;
         rslt = QMessageBox::warning(this,tr("Route number not found"),
-                                    tr( "The route number was not found. Enter Yes to add it"),
+                                    tr( "The route number %1 was not found. Enter Yes to add it")
+                                    .arg(ui->txtRouteNbr->text()),
                                     QMessageBox::Yes | QMessageBox::No);
         switch (rslt)
         {

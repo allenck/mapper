@@ -387,6 +387,7 @@ void MainWindow::onCbSegmentsCustomContextMenu(const QPoint &pos)
  menu->addAction(selectSegmentAct);
  menu->addAction(deleteSegmentAct);
  menu->addAction(editSegmentAct);
+ menu->addAction(newSegmentAct);
  menu->addAction(splitSegmentAct);
  menu->addSeparator();
  menu->addAction(findDupSegmentsAct);
@@ -409,6 +410,12 @@ QMenu* MainWindow::addSegmentMenu(SegmentData *sd)
   act->setData(-1);
   ag->addAction(act);
   actMenu->addAction(act);
+  act = new QAction(tr("TwoWay"),this);
+  act->setCheckable(true);
+  act->setData(0);
+  ag->addAction(act);
+  actMenu->addAction(act);
+
  }
  else
  {
@@ -894,6 +901,10 @@ void MainWindow::createActions()
  displayAct->setStatusTip(tr("Display the current route"));
  connect(displayAct, SIGNAL(triggered()), this, SLOT(btnDisplayRouteClicked()));
 
+ displayAllRoutesAct = new QAction(tr("Display all routes"),this);
+ displayAllRoutesAct->setStatusTip(tr("Display all routes on date"));
+ connect(displayAllRoutesAct, SIGNAL(triggered(bool)), this, SLOT(displayAll()));
+
  copyRouteAct = new QAction(tr("Copy route"), this);
  copyRouteAct->setStatusTip(tr("Create a new route from this one"));
  connect(copyRouteAct, SIGNAL(triggered()), this, SLOT(copyRouteInfo_Click()));
@@ -962,7 +973,12 @@ void MainWindow::createActions()
   cbSegmentsSelectedValueChanged(sql->getSegmentInfo(segmentId));
 });
  editSegmentAct = new QAction("Edit Segment", this);
+ editSegmentAct->setStatusTip(tr("Edit asegment's properties"));
  connect(editSegmentAct, SIGNAL(triggered()), this, SLOT(On_editSegment_triggered()));
+
+ newSegmentAct = new QAction(tr("New Segment"), this);
+ newSegmentAct->setStatusTip(tr("Create new segment not on a route"));
+ connect(newSegmentAct, SIGNAL(triggered(bool)), this, SLOT(onNewSegment_triggered()));
 
  findDupSegmentsAct=new QAction(tr("Show duplicate segments view"),this);
  findDupSegmentsAct->setStatusTip(tr("Display a view of duplicate segments, i.e. with similar starting and ending points."));
@@ -1593,6 +1609,7 @@ void MainWindow::cbRoute_customContextMenu( const QPoint& )
     extendMenu->addAction(exportRouteAct);
     extendMenu->addAction(updateTerminalsAct);
     cbRouteMenu->addAction(describeRouteAct);
+    cbRouteMenu->addAction(displayAllRoutesAct);
     updateTerminalsAct->setEnabled(routeView->isSequenced());
     cbRouteMenu->exec(QCursor::pos());
 }
@@ -1607,6 +1624,7 @@ void MainWindow::txtSegment_customContextMenu(const QPoint &)
  menu->addAction(edit);
  connect(edit, SIGNAL(triggered(bool)), this, SLOT(On_editSegment_triggered()));
  menu->addAction(splitSegmentAct);
+
  //menu->addAction(updateRouteAct);
  menu->exec(QCursor::pos());
 
@@ -2139,6 +2157,8 @@ void MainWindow::btnDisplayRouteClicked()
 
 void MainWindow::On_displayRoute(RouteData rd)
 {
+ m_bridge->processScript("addModeOff");
+
  if(!ui->chkNoClear->isChecked())
   btnClearClicked();
 
@@ -2298,11 +2318,66 @@ default:
    m_bridge->processScript("fitMapBounds", objArray);
   }
 
-
   loadRouteComment();
 
   setCursor(Qt::ArrowCursor);
   //bFirstSegmentDisplayed=true;
+}
+
+void MainWindow::displayAll()
+{
+ QList<SegmentData*> segmentDataList = sql->getRoutSegmentsForDate(_rd.startDate(), ui->cbCompany->currentData().toInt());
+
+ double length = 0.0;
+ //foreach (segmentGroup sg in ri.segments)
+ for(int i = 0; i< segmentDataList.count(); i++)
+ {
+  SegmentData* sd = segmentDataList.at(i);
+  if(sd->segmentId() == 367)
+   qDebug() << "halt";
+  QVariantList objArray;
+  objArray << sd->segmentId();
+  m_bridge->processScript("clearPolyline", objArray);
+  QString color = getColor(sd->tractionType());
+
+  QVariantList points;
+  for(int i=0; i < sd->pointList().count(); i++)
+  {
+   LatLng pt = sd->pointList().at(i);
+   points.append(pt.lat());
+   points.append(pt.lon());
+  }
+
+  Bounds bounds = Bounds();
+  bool bBoundsValid = bounds.updateBounds(sd->bounds());
+
+  int dash = 0;
+  if(sd->routeType() == Incline)
+   dash = 1;
+  else if(sd->routeType() == SurfacePRW)
+   dash = 2;
+  else if(sd->routeType() == Subway)
+   dash = 3;
+  if(sd->trackUsage().isEmpty()) // fix for MySql not storing field correctly
+   sd->setTrackUsage(" ");
+  objArray.clear();
+  objArray <<   sd->segmentId() << sd->routeName() <<  sd->description() << sd->oneWay()
+             << color << sd->tracks()
+             << dash << sd->routeType() << sd->trackUsage() << points.count();
+  objArray.append(points);
+  m_bridge->processScript("createSegment",objArray);
+
+  //statusBar()->showMessage(tr("route length = %1 km, %2 miles").arg(sd.length()).arg(sd.length()*0.621371192));
+  if(sd->tracks() == 2)
+  {
+   if(sd->oneWay() == "Y")
+    length += sd->length();
+   else
+    length += sd->length()*2;
+  }
+  else
+   length += sd->length();
+ }
 }
 
 void MainWindow::loadRouteComment()
@@ -3143,7 +3218,7 @@ void MainWindow::btnSplit_Clicked()    // SLOT
  //segmentDlg.setPt(m_currPoint);
 // if(ui->cbRoute->currentIndex() >=0)
 //  segmentDlg.setRouteData( routeList.at(ui->cbRoute->currentIndex()));
- segmentDlg.configure(routeList.at(ui->cbRoute->currentIndex()), m_segmentId, m_currPoint);
+ segmentDlg.configure(new RouteData(routeList.at(ui->cbRoute->currentIndex())), m_segmentId, m_currPoint);
  connect(&segmentDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs)), this, SLOT(segmentDlg_routeChanged(RouteChangedEventArgs)));
  //string RouteNames = "No route";
 
@@ -3877,15 +3952,14 @@ void MainWindow::modifyRouteTractionType()
 #endif
 void MainWindow::addSegment()
 {
-#if 1 // TODO
-    //SQL sql;
-    SegmentDlg segmentDlg(this);
+    m_bridge->processScript("addModeOff");
+    SegmentDlg*  segmentDlg = new SegmentDlg(this);
 //TODO    segmentDlg.routeChanged += new routeChangedEventHandler(segmentDlg_routeChanged);
-    connect(&segmentDlg, &SegmentDlg::companySelectionChanged, [=](/*int companyKey*/){
+    connect(segmentDlg, &SegmentDlg::companySelectionChanged, [=](/*int companyKey*/){
      ui->cbCompany->setCurrentIndex( ui->cbCompany->findData(_rd.companyKey()));
      refreshRoutes();
     } );
-    connect(&segmentDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs)), this, SLOT(segmentDlg_routeChanged(RouteChangedEventArgs)));
+    connect(segmentDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs)), this, SLOT(segmentDlg_routeChanged(RouteChangedEventArgs)));
     //segmentDlg.setConfiguration( config);
     //segmentDlg.setSegmentId( -1);
     m_currPoint = 0;
@@ -3897,16 +3971,16 @@ void MainWindow::addSegment()
     //{
     //    segmentDlg.RouteData = (routeData)routeDataList[ix];
     //}
-    RouteData rd = RouteData();
+    RouteData* rd = nullptr;
     if(ui->cbRoute->currentIndex() >= 0)
-     rd = routeList.at(ui->cbRoute->currentIndex());
+     rd = new RouteData(routeList.at(ui->cbRoute->currentIndex()));
     //segmentDlg.setRouteData (rd);
-    segmentDlg.configure(rd, -1, m_currPoint);
-    if (segmentDlg.exec() == QDialog::Accepted)
+    segmentDlg->configure(rd, -1, m_currPoint);
+    if (segmentDlg->exec() == QDialog::Accepted)
     {
         //refreshSegmentCB();
        ui->ssw->refresh();
-       m_segmentId = segmentDlg.newSegmentId();
+       m_segmentId = segmentDlg->newSegmentId();
         m_nbrPoints = 0;
         //??routeDlg.SegmentId = m_SegmentId;
         //        ui->txtSegment->setText(sql->getSegmentDescription(m_SegmentId));
@@ -3915,7 +3989,7 @@ void MainWindow::addSegment()
         //        ui->chkOneWay->setChecked("Y"== sql->getSegmentOneWay(m_SegmentId));
 //        SegmentData* sd = sql->getSegmentData(rd.route(), m_segmentId, rd.startDate().toString("yyyy/MM/dd"),
 //                                             rd.endDate().toString("yyyy/MM/dd"));
-        SegmentData sd = segmentDlg.segment();
+        SegmentData sd = segmentDlg->segment();
         updateSegmentInfoDisplay(sd);
 
         int dash = 0;
@@ -3927,8 +4001,8 @@ void MainWindow::addSegment()
          dash = 3;
 
         QVariantList objArray;
-        objArray << m_segmentId << segmentDlg.routeName()<<ui->txtSegment->text()
-                 <<sd.oneWay()<<getColor(segmentDlg.tractionType())<<sd.tracks()
+        objArray << m_segmentId << segmentDlg->routeName()<<ui->txtSegment->text()
+                 <<sd.oneWay()<<getColor(segmentDlg->tractionType())<<sd.tracks()
                  << dash << sd.routeType() << sd.trackUsage() << 0;
         m_bridge->processScript("createSegment",objArray);
 
@@ -3941,9 +4015,6 @@ void MainWindow::addSegment()
         //refreshRoutes();
         //refreshSegmentCB();
     }
-#else
-    NotYetInplemented();
-#endif
 }
 void MainWindow::deleteRoute()
 {
@@ -4623,17 +4694,25 @@ void MainWindow::updateSegmentInfoDisplay(SegmentInfo sd)
 void MainWindow::On_editSegment_triggered()
 {
  SegmentInfo si = sql->getSegmentInfo(ui->ssw->cbSegments()->currentData().toInt());
- SegmentData* sd = sql->getSegmentData(m_routeNbr,si.segmentId(),m_currRouteStartDate, m_currRouteEndDate);
+ SegmentData* sd = sql->getSegmentData(m_routeNbr,m_segmentId,m_currRouteStartDate, m_currRouteEndDate);
 
  EditSegmentDialog* dlg;
  if(sd)
-  dlg = new EditSegmentDialog(sd, si,this);
+  dlg = new EditSegmentDialog(sd, &si,this);
  else
-  dlg = new EditSegmentDialog(si,this);
+  dlg = new EditSegmentDialog(&si,this);
  int ret = dlg->exec();
  if(ret == QDialog::Accepted)
   //refreshSegmentCB();
   ui->ssw->refresh();
+}
+
+void MainWindow::onNewSegment_triggered()
+{
+    EditSegmentDialog* dlg = new EditSegmentDialog(this);
+    int ret = dlg->exec();
+    if(ret == QDialog::Accepted)
+      ui->ssw->refresh();
 }
 
 //#ifdef USE_WEBENGINE

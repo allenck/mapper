@@ -525,6 +525,19 @@ double SegmentData::getLength() {
  return len;
 }
 
+void SegmentData::update(const SegmentInfo& si)
+{
+ if(_segmentId == si._segmentId)
+ {
+  _streetName = si._streetName;
+  _description = si._description;
+  _tracks = si._tracks;
+  _location = si._location;
+  _routeType = si._routeType;
+ }
+}
+
+
 #if 1
 RouteInfo::RouteInfo(QObject *parent)
 {

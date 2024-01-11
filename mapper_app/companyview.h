@@ -18,6 +18,10 @@ protected:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
     QVariant data(const QModelIndex &index, int role) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
+
+ signals:
+    void companyChange();
+
  private:
     QMap<QString, QString> hdrMap = {{"key", "Company Key"},{"Description", "Company Name"},
                                      {"routePrefix", "Prefix"}, {"startDate", "Start"}, {"endDate", "End"},
@@ -45,8 +49,8 @@ public:
      INFO
     };
     bool bUncomittedChanges();
-
-
+    MyCompanyTableModel* model() {return _model;}
+    static CompanyView* instance();
 signals:
     void dataChanged();
 
@@ -57,7 +61,7 @@ public slots:
     void refresh();
 
 private:
-    QSqlTableModel *model;
+    MyCompanyTableModel *_model;
     Configuration * config;
     SQL* sql;
     QTableView* tableView;
@@ -69,6 +73,7 @@ private:
     bool boolGetItemTableView(QTableView *table);
     QModelIndex currentIndex;
     bool bNeedsRefresh;
+    static CompanyView* _instance;
 
 private slots:
     void Resize (int oldcount,int newcount);
