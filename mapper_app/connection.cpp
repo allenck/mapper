@@ -187,6 +187,8 @@ QSqlDatabase Connection::configure(const QString cName)
    }
    sql->checkTables(db);
   }
+  else
+   sql->checkTables(db);
 
 #ifndef NO_UDF
   if(config->currConnection->servertype() == "Sqlite" && sql->loadSqlite3Functions(db) )

@@ -33,6 +33,9 @@ private:
     void refreshRoutes();
     void fillCompanies();
     SQL* sql;
+    QMap<int,TractionTypeInfo> _tractionList;
+    void fillTractionTypes();
+
 private slots:
 //    void txtNewRouteNbr1_TextChanged(QString text);
 //    void txtNewRouteNbr2_TextChanged(QString text);

@@ -71,6 +71,7 @@ CREATE TABLE if not exists `Segments` (
   `Length` decimal(15,5) NOT NULL DEFAULT 0,
   `points` int(11) NOT NULL default 0,
   `StartDate` date NOT NULL DEFAULT '1800-01-01',
+  `DoubleDate` date NOT NULL DEFAULT '0000-00-00',
   `endDate` date NOT NULL DEFAULT '1800-01-01',
   `Direction` varchar(6) NOT NULL DEFAULT ' ',
   `Locality` varchar(15) NOT NULL DEFAULT ' ',

@@ -249,9 +249,9 @@ class SegmentData
     int prevR() {return _prevR;}
     void setPrevR(int prev){_prevR = prev;}
     Bearing bearing() {
-//     _bearing = Bearing(_startLat, _startLon, _endLat, _endLon);
-//     _direction = _bearing.strDirection();
-//     _length = _bearing.Distance();
+     _bearing = Bearing(_startLat, _startLon, _endLat, _endLon);
+     _direction = _bearing.strDirection();
+     _length = _bearing.Distance();
      return _bearing;
     }
     void setBearing(Bearing bearing){_bearing = bearing;}
@@ -321,6 +321,8 @@ class SegmentData
     void updateRouteInfo(RouteData rd);
     quint32 baseRoute() const {return _baseRoute;}
     void update(const SegmentInfo& si);
+    QDate doubleDate() {return _doubleDate;}
+    void setDoubleDate(QDate date){_doubleDate = date;}
 
  private:
     qint32 _segmentId=-1;
@@ -334,6 +336,7 @@ class SegmentData
     QString _streetName;
     QString _description;
     QDate _startDate = QDate::fromString("1880/01/01", "yyyy/MM/dd");
+    QDate _doubleDate;
     QDate _endDate = QDate::fromString("2050/12/31", "yyyy/MM/dd");
     QString _direction = " ";
     Bearing _bearing;      // bearing from start to end
@@ -564,8 +567,6 @@ class TractionTypeInfo
 
 class SegmentInfo
 {
-
-	public:
  QString _description;
  //QString oneWay;
  qint32 _segmentId = -1;
@@ -573,6 +574,7 @@ class SegmentInfo
  qint32 _points =0;
  double _length = 0;
  QDate _startDate = QDate::fromString("1880/01/01", "yyyy/MM/dd");
+ QDate _doubleDate;
  QDate _endDate= QDate::fromString("2050/12/31", "yyyy/MM/dd");
  Bearing _bearing;
  double _startLat, _startLon, _endLat, _endLon;
@@ -600,6 +602,7 @@ class SegmentInfo
  QString _trackType = " ";
  QString _location;
 
+ public:
  static QStringList ROUTETYPES;// = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
 
  SegmentInfo()
@@ -622,6 +625,7 @@ class SegmentInfo
  void displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst);
  QString toString();
  qint32 segmentId() const {return _segmentId;}
+ void setSegmentId(int segmentId) {_segmentId = segmentId;}
  QDate startDate() {return _startDate;}
  QDate endDate() {return _endDate;}
  double startLat() {return _startLat;}
@@ -682,8 +686,11 @@ class SegmentInfo
  void setNext(int next){_next = next;}
  int next() const {return _next;}
  QString reverseDescription();
+ QDate doubleDate() {return _doubleDate;}
+ void setDoubleDate(QDate date){_doubleDate = date;}
 
  friend class SegmentData;
+ friend class SQL;
 };
 
 class RouteIntersects

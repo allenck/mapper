@@ -12,8 +12,8 @@ ModifyRouteDialog::ModifyRouteDialog(QWidget *parent) :
     sql = SQL::instance();
     ui->lblHelp->setText("");
     refreshRoutes();
-    connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(btnOK_Click()));
-    connect(ui->buttonBox,SIGNAL(rejected()),this, SLOT(close()));
+    connect(ui->btnSave, SIGNAL(clicked()), this, SLOT(btnOK_Click()));
+    connect(ui->btnCancel,SIGNAL(clicked()),this, SLOT(reject()));
     //connect((ui->txtNewRouteNbr, SIGNAL(editingFinished()),this, SLOT()))
 }
 
@@ -96,7 +96,7 @@ void ModifyRouteDialog::btnOK_Click()
     if(ui->rnw->routeNbrMustBeAdded())
     {
       //sql->addAltRoute(ui->rnw->alphaRoute().toInt(), ui->rnw->alphaRoute());
-     _routeNbr = sql->addAltRoute(ui->rnw->alphaRoute(), cd->routePrefix);
+     _routeNbr = sql->addAltRoute(ui->rnw->newRoute(),ui->rnw->alphaRoute());
     }
     //foreach (routeData rd1 in myArray)
     for(int i=0; i < myArray.count(); i++)
@@ -172,6 +172,7 @@ void ModifyRouteDialog::btnOK_Click()
 //    this.DialogResult = DialogResult.OK;
 //    this.Close();
     this->setResult(QDialog::Accepted);
+    accept();
 }
 
 void ModifyRouteDialog::refreshRoutes()

@@ -1,6 +1,17 @@
+**Recent Changes January 2024
+1.  A new column, 'DoubleDate' has been added to the Segments table. This date can be set via the edit
+    segment dialog. The date defines the date upon which a segment was converted to double track. This
+    allows a segment to be displayed as single track before the DoubleDate. Therefore, it is not
+    necessary to have 1 track and 2 track segments defined for the same section of a route. Single track
+    segments can be converted to 2 track segments.
+2.  The Edit Segment dialog will now combine duplicate segments, applying the oldest (lowest segment
+    number) to all affected routes.
+3.  More routes before 1900 for Indianapolis have been added.
+
 **Recent Changes November/December 2023**
-1.  Change the way that User Defined Functions are implemented. No longer use sqlite3_enable_load_extension and
-    and a recompiled Qt sqlite plugin. Now use sqlite3_create_function to define the distance function.
+1.  Change the way that User Defined Functions are implemented. No longer use sqlite3_enable_load_extension
+    and a recompiled Qt sqlite plugin. Now Mapper uses the sqlite3_create_function to define the
+    distance function.
 2.  Extensive revision of internal classes to combine properties.
 3.  Improved the Edit Connections dialog.
 4.  Fixed nunerous bugs.

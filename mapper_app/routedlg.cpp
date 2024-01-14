@@ -1608,6 +1608,11 @@ void RouteDlg::btnAdd_Click()         // SLOT
   }
   QDate ds = ui->dateStart->date();
   QDate de = ui->dateEnd->date();
+  if(ds > de)
+  {
+   ui->lblHelpText->setText(tr("Invalid start date"));
+   return;
+  }
   Q_ASSERT(ui->dateStart->date() >= minDate);
   if(maxDate.isValid())
   Q_ASSERT(ui->dateEnd->date() <= maxDate);
@@ -1943,7 +1948,8 @@ void RouteDlg::checkDirection(QString routeDirection)
     if (routeDirection == sd->bearing().strDirection())
         return;
 
-    SegmentData sdReverse = sql->getSegmentInOppositeDirection(*sd);
+    SegmentInfo si = SegmentInfo(*sd);
+    SegmentInfo siReverse = sql->getSegmentInOppositeDirection(si);
     int seq = 0;
     int companyKey = -1;
     companyKey = -1;
@@ -1955,7 +1961,7 @@ void RouteDlg::checkDirection(QString routeDirection)
     }
     QList<SegmentData> myArray;
 
-    if (sdReverse.segmentId()< 1)
+    if (siReverse.segmentId()< 1)
     {
 //        DialogResult rslt = MessageBox.Show("You have selected a direction opposite to the defined direction for this segment.\n" +
 //            "If this is a street with routes running in both directions, enter 'Yes' to create a new segment\n in the " +
@@ -1967,28 +1973,30 @@ void RouteDlg::checkDirection(QString routeDirection)
       case QMessageBox::Yes:
       {
           // Create a new segment in the opposite direction
-          sdReverse =  SegmentData(*sd);
+          siReverse =  SegmentData(*sd);
 //          sdReverse.setStartLat(sd->endLat());
 //          sdReverse.startLon = si.endLon;
 //          sdReverse.endLat = si.startLat;
 //          sdReverse.endLon = si.startLon;
-          sdReverse.setBearing(Bearing(sdReverse.startLat(), sdReverse.startLon(), sdReverse.endLat(), sdReverse.endLon()));
-          sdReverse.setDirection(sdReverse.bearing().strDirection());
+//          siReverse.setBearing(Bearing(siReverse.startLat(), siReverse.startLon(), siReverse.endLat(), siReverse.endLon()));
+//          siReverse.setDirection(siReverse.bearing().strDirection());
 //          sdReverse.length = si.length;
 //          sdReverse.startDate = si.startDate;
 //          sdReverse.endDate = si.endDate;
-          sdReverse.setOneWay("Y");
+//          siReverse.setOneWay("Y");
 //          sdReverse.routeType = si.routeType;
 //          sdReverse.lineSegments = si.pointList.count();
-          for(int i = sdReverse.pointList().count()-1; i >= 0; i --)
-           sdReverse.pointList().append(sd->pointList().at(i));
+          for(int i = siReverse.pointList().count()-1; i >= 0; i --)
+           siReverse.pointList().append(sd->pointList().at(i));
           // Parse out the description
-          sdReverse.setDescription(SegmentDescription(sd->description()).ReverseDescription() + " (1 way) "
-                                    +  sdReverse.bearing().strDirection());
+          siReverse.setDescription(SegmentDescription(sd->description()).ReverseDescription() + " (1 way) "
+                                    +  siReverse.bearing().strDirection());
 
           bool bAlreadyExists = false;
           seq =0;
-          sdReverse.setSegmentId(sql->addSegment(sdReverse.description(), "Y", sd->tracks(), sdReverse.routeType(), sdReverse.pointList(), sd->location(), & bAlreadyExists));
+          siReverse.setSegmentId(sql->addSegment(siReverse.description(), "Y", sd->tracks(),
+                                                 siReverse.routeType(), siReverse.pointList(),
+                                                 sd->location(), & bAlreadyExists));
 //          if (sdReverse.segmentId != -1 && !bAlreadyExists)
 //          {
 //              SegmentData sd = sql->getSegmentData(si.segmentId);
@@ -2022,10 +2030,10 @@ void RouteDlg::checkDirection(QString routeDirection)
             sd->setRouteName(ui->rnw->alphaRoute());
             sd->setStartDate(ui->dateStart->date());
             sd->setEndDate(ui->dateEnd->date());
-            sd->setSegmentId(sdReverse.segmentId());
-            sd->setDirection(sdReverse.direction());
-            sd->setNext(sdReverse.next());
-            sd->setPrev(sdReverse.prev());
+            sd->setSegmentId(siReverse.segmentId());
+            sd->setDirection(siReverse.direction());
+            sd->setNext(siReverse.next());
+            //sd->setPrev(siReverse.prev());
             sd->setTractionType(tractionType);
             sd->setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
             sd->setTrackUsage(trackUsage);
@@ -2038,13 +2046,13 @@ void RouteDlg::checkDirection(QString routeDirection)
            }
           }
           // Notify whoever is interested that a segment has changed.
-          ui->lblSegmentText->setText(sdReverse.description());
-          _segmentId = sdReverse.segmentId();
+          ui->lblSegmentText->setText(siReverse.description());
+          _segmentId = siReverse.segmentId();
 //??          _routeNbr = _routeNbr;
 //                if (SegmentChanged != null)
 //                    SegmentChanged(this, new segmentChangedEventArgs(si.SegmentId, sdReverse.SegmentId));
           //segmentChangedEventArgs args = segmentChangedEventArgs(si.SegmentId, sdReverse.SegmentId);
-          emit SegmentChangedEvent(sd->segmentId(), sdReverse.segmentId());
+          emit SegmentChangedEvent(sd->segmentId(), siReverse.segmentId());
       }
           break;
 
@@ -2052,62 +2060,23 @@ void RouteDlg::checkDirection(QString routeDirection)
       case QMessageBox::No:
       {
           // Reverse the segment and all it's points
-          sdReverse = SegmentData(*sd);
-//          sdReverse.startLat = si.endLat;
-//          sdReverse.startLon = si.endLon;
-//          sdReverse.endLat = si.startLat;
-//          sdReverse.endLon = si.startLon;
-          sdReverse.setBearing(Bearing(sdReverse.startLat(), sdReverse.startLon(), sdReverse.endLat(), sdReverse.endLon()));
-          sdReverse.setDirection(sdReverse.bearing().strDirection());
-//          sdReverse.length = si.length;
-//          sdReverse.startDate = si.startDate;
-//          sdReverse.endDate = si.endDate;
+          siReverse = SegmentInfo(*sd);
+//          siReverse.setBearing(Bearing(siReverse.startLat(), siReverse.startLon(), siReverse.endLat(), siReverse.endLon()));
+//          siReverse.setDirection(siReverse.bearing().strDirection());
           // Parse out the description
-          sdReverse.setDescription(SegmentDescription(sd->description()).ReverseDescription() + " (1 way) " + sdReverse.direction());
+          siReverse.setDescription(SegmentDescription(sd->description()).ReverseDescription() + " (1 way) " + siReverse.direction());
 //          sdReverse.lineSegments = si.pointList.count();
 
-          sdReverse.pointList().clear();
+          siReverse.pointList().clear();
           for(int i = sd->pointList().count()-1; i >= 0; i --)
-           sdReverse.pointList().append(sd->pointList().at(i));
+           siReverse.pointList().append(sd->pointList().at(i));
       // Change the segment's description and then delete all the existing segments.
           ui->lblSegmentText->setText( sd->description());
-//                if (sql->updateSegmentDescription(si.SegmentId, si.description, si.oneWay) != true)
-//                {
-//                    ui->lblHelpText->setText(tr( "update description failed."));
-//                    //System.Media.SystemSounds.Beep.Play();
-//                    ui->rbNormal->setChecked(true);
-//                }
-          if(!sql->updateSegment(&sdReverse))
+          if(!sql->updateSegment(&siReverse))
           {
               ui->lblHelpText->setText(tr("Reverse segment failed"));
               ui->rbNormal->setChecked(true);
           }
-//                myArray = sql->getSegmentData(si.SegmentId);
-//                int nbrPoints = myArray.count()+1;
-//                //foreach (segmentData sd in myArray)
-//                for(int i=0; i < myArray.count(); i++)
-//                {
-//                    segmentData sd = myArray.at(i);
-//                    if (sql->deletePoint(sd->sequence, si.SegmentId, nbrPoints) != true)
-//                    {
-//                        ui->lblHelpText->setText(tr( "delete point failed"));
-//                        //System.Media.SystemSounds.Beep.Play();
-//                        ui->rbNormal->setChecked(true);
-//                    }
-//                    nbrPoints--;
-//                }
-
-//                seq = 0;
-//                //foreach (segmentData sd in myArray)
-//                for(int i=0; i < myArray.count(); i++)
-//                {
-//                    segmentData sd = myArray.at(i);
-//                    sql->addPoint(seq, si.SegmentId, sd->endLat, sd->endLon, sd->startLat, sd->startLon, sd->streetName);
-//                    seq++;
-//                }
-          // Notify whoever is interested that a segment has changed.
-//                if (SegmentChanged != null)
-//                    SegmentChanged(this, new segmentChangedEventArgs(si.SegmentId, -1));
           emit SegmentChangedEvent(sd->segmentId(), -1);
       }
           break;
@@ -2158,7 +2127,7 @@ void RouteDlg::checkDirection(QString routeDirection)
 //                                    /*cbTractionType.SelectedIndex+1*/tractionType, direction, 0,0,
 //                                    _normalEnter, _normalLeave, _reverseEnter, _reverseLeave, ui->cbOneWay->isChecked()?"Y":"N", trackUsage))
          sd->setRouteName(ui->rnw->alphaRoute());
-         sd->setSegmentId(sdReverse.segmentId());
+         sd->setSegmentId(siReverse.segmentId());
          sd->setTractionType(tractionType);
          sd->setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
          sd->setTrackUsage(trackUsage);
@@ -2168,9 +2137,9 @@ void RouteDlg::checkDirection(QString routeDirection)
          checkUpdate(__FUNCTION__);
 //            if(SegmentChanged != null)
 //                SegmentChanged(this, new segmentChangedEventArgs(si.SegmentId,sdReverse.SegmentId));
-         emit SegmentChangedEvent(sd->segmentId(),sdReverse.segmentId());
-         _segmentId = sdReverse.segmentId();
-         ui->lblSegmentText->setText(sdReverse.description());
+         emit SegmentChangedEvent(sd->segmentId(),siReverse.segmentId());
+         _segmentId = siReverse.segmentId();
+         ui->lblSegmentText->setText(siReverse.description());
 
        }
      }

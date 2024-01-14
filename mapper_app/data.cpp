@@ -525,6 +525,7 @@ double SegmentData::getLength() {
  return len;
 }
 
+// update common fields
 void SegmentData::update(const SegmentInfo& si)
 {
  if(_segmentId == si._segmentId)
@@ -534,6 +535,7 @@ void SegmentData::update(const SegmentInfo& si)
   _tracks = si._tracks;
   _location = si._location;
   _routeType = si._routeType;
+  _doubleDate = si._doubleDate;
  }
 }
 
@@ -600,6 +602,7 @@ SegmentInfo::SegmentInfo(const SegmentInfo& o)
  //_next = o._next;
  _trackType = o._trackType;
  _location = o._location;
+ _doubleDate = o._doubleDate;
 }
 
 SegmentInfo::SegmentInfo(const SegmentData& o)
@@ -630,6 +633,7 @@ SegmentInfo::SegmentInfo(const SegmentData& o)
  //_next = o._next;
  _trackType = o._trackType;
  _location = o._location;
+ _doubleDate = o._doubleDate;
 }
 
 #if 1
@@ -784,6 +788,9 @@ void SegmentInfo::displaySegment(QString date, QString color, QString trackUsage
   points.append(((LatLng)_pointList.at(i)).lon());
  }
  int dash = 0;
+ int tracks = _tracks;
+ if(_tracks == 2 && _doubleDate.isValid() && _doubleDate < QDate::fromString(date, "yyyy/MM/dd"))
+  tracks = 1;
  if(_routeType == Incline)
   dash = 1;
  else if(_routeType == SurfacePRW)
@@ -793,8 +800,9 @@ void SegmentInfo::displaySegment(QString date, QString color, QString trackUsage
  if(trackUsage.isEmpty()) // fix for MySql not storing field correctly
   trackUsage =" ";
  objArray.clear();
- objArray << _segmentId << routeNames<<_description << " " <<color<< _tracks
-          << dash << _routeType << trackUsage << _pointList.count()*2 << points;
+ objArray << _segmentId << routeNames<<_description << " " <<color<< tracks
+          << dash << _routeType << trackUsage << points.count();
+ objArray.append(points);
  WebViewBridge::instance()->processScript("createSegment", objArray);
 }
 
@@ -1029,7 +1037,9 @@ void SegmentData::displaySegment(QString date, QString color, QString trackUsage
  else if(routeType() == Subway)
   dash = 3;
  objArray.clear();
- objArray << _segmentId << routeNames<<_description<<_oneWay<<color<< _tracks << dash << _routeType << trackUsage << _pointList.count()*2 << points;
+ objArray << _segmentId << routeNames<<_description<<_oneWay<<color<< _tracks << dash
+          << _routeType << trackUsage << points.count();
+ objArray.append(points);
  WebViewBridge::instance()->processScript("createSegment", objArray);
 }
 

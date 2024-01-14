@@ -149,7 +149,7 @@ public:
     QDate getRoutesNextDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
     bool doesRouteSegmentExist(SegmentData sd);
     bool doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QDate startDate, QDate endDate);
-    SegmentInfo getSegmentInSameDirection(SegmentInfo siIn);
+    SegmentInfo getSegmentInSameDirection(SegmentInfo siIn, bool reverse = false);
     bool deleteSegment(qint32 SegmentId);
     qint32 getDefaultCompany(qint32 route, QString date);
     LatLng getPointInfo(qint32 pt, qint32 SegmentId);
@@ -171,7 +171,7 @@ public:
                                                    qint32 segmentId);
     QList<SegmentData *> getRoutes(qint32 segmentid);
     QList<RouteIntersects> updateLikeRoutes(qint32 segmentid, qint32 route, QString name, QString date, bool bAllRoutes = false);
-    SegmentData getSegmentInOppositeDirection(SegmentData siIn);
+    SegmentInfo getSegmentInOppositeDirection(SegmentInfo siIn);
     bool isRouteUsedOnDate(qint32 route, qint32 segmentId,  QString date);
     CommentInfo getComments(qint32 infoKey);
     QList<StationInfo> getStations(qint32 route, QString name, QString date);
@@ -226,7 +226,7 @@ public:
     bool updateTractionType(qint32 tractionType, QString description, QString displayColor, int routeType, QSqlDatabase db = QSqlDatabase());
     void checkTables(QSqlDatabase db);
     bool executeScript(QString path, QSqlDatabase db = QSqlDatabase());
-//    QT_DEPRECATED bool getSegmentDates(SegmentInfo* is);
+    bool executeCommand(QString commandString, QSqlDatabase db  = QSqlDatabase());
     QString getPrevRouteName(QDate dt);
     QString getNextRouteName(QDate dt);
     bool testAltRoute();

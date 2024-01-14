@@ -3171,6 +3171,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `Length` decimal(15,5) NOT NULL DEFAULT 0,"
                 " `Points` int(11) NOT NULL default 0,"
                 " `StartDate` date NOT NULL DEFAULT '0000-00-00',"
+                " `DoubleDate` date NOT NULL DEFAULT '0000-00-00',"
                 " `EndDate` date NOT NULL DEFAULT '0000-00-00',"
                 " `Direction` varchar(6) NOT NULL DEFAULT ' ',"
                 " `OneWay` char(1) NOT NULL DEFAULT 'N',"
@@ -3194,6 +3195,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `Length` decimal(15,5) NOT NULL,"
                 " `Points` int(11) NOT NULL default 0,"
                 " `StartDate` date NOT NULL,"
+                " `DoubleDate` date NOT NULL,"
                 " `EndDate` date NOT NULL, `Direction` varchar(6) NOT NULL,"
                 " `pointArray` text NOT NULL,"
                 " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,PRIMARY KEY (`SegmentId`)) ENGINE=InnoDB AUTO_INCREMENT=1116 DEFAULT CHARSET=latin1";
@@ -3215,6 +3217,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
     "[Length] [decimal](15, 5) NOT NULL,"\
     "[Points] [int] NOT NULL,"\
     "[StartDate] [date] NOT NULL,"\
+    "[DoubleDate] [date] NOT NULL,"\
     "[EndDate] [date] NOT NULL,"\
     "[Direction] [varchar](6) NOT NULL,"\
     "[PointArray] [text] NULL,"\

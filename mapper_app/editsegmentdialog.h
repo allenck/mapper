@@ -38,12 +38,15 @@ private:
  void common();
  bool bStartDateEdited;
  bool bEndDateEdited;
+ bool bDoubleTrackedDateEdited;
+ bool bReplaceDups = false;
  WebViewBridge* m_bridge;
  QString m_segmentStatus;
  QString m_segmentColor;
  RouteData* rd = nullptr;
  QStringList _locations;
  void processAdd();
+ QList<SegmentInfo> dupSegments;
 
 private slots:
  //void fillSegments();
@@ -61,6 +64,9 @@ private slots:
  void On_dtEnd_editingFinished();
  void On_segmentStatusSignal(QString, QString);
  void On_trackUsageChanged(int);
+ void On_doubleTrackedDate_editingFinished();
+ void On_doubleTracked_dateChanged(QDate dt);
+
 };
 
 #endif // EDITSEGMENTDIALOG_H

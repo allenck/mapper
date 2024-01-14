@@ -382,7 +382,7 @@ var offsets = [.5, .6, .7, .8, .9, 1.0];
 var lineSymbol = {
     path: 'M 0,-1 0,1',
     strokeOpacity: 1,
-    strokeWeight: 1,
+    strokeWeight: 2,
     name:  "lineSymbol",
     scale: 3
 };
@@ -418,7 +418,7 @@ var doubleLine = {
     //path: 'M 0.5,-1 0.5,1 M -0.5,-1 -0.5,1',
     path: "M 1.0,-1 1.0,1 M -1.0,-1 -1.0,1",
     strokeOpacity: 1,
-    strokeWeight: 1,
+    strokeWeight: 2,
     scale: 3,
     name:  "doubleLine"
 };
@@ -426,7 +426,7 @@ var doubleLine = {
 var lineLT = {
     path: 'M -1.5,0 1.5,0  M 1.0,-1 1.0,1',
     strokeOpacity: 1,
-    strokeWeight: 1,
+    strokeWeight: 2,
     scale: 3,
     name:  "lineLT"
 };
@@ -434,14 +434,14 @@ var lineLT = {
 var lineRT = {
     path: 'M -1.5,0 1.5,0  M -1.0,-1 -1.0,1',
     strokeOpacity: 1,
-    strokeWeight: 1,
+    strokeWeight: 2,
     scale: 3,
     name:  "lineRT"
 };
 var lineL = {
     path: 'M 1.0,-1 1.0,1' ,
     strokeOpacity: 1,
-    strokeWeight: 1,
+    strokeWeight: 2,
     scale: 3,
     name:  "lineL"
 };
@@ -449,7 +449,7 @@ var lineL = {
 var lineR = {
     path: 'M -1.0,-1 -1.0,1',
     strokeOpacity: 1,
-    strokeWeight: 1,
+    strokeWeight: 2,
     scale: 3,
     name:  "lineR"
 };
@@ -845,6 +845,10 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
     }
 
     // events
+    google.maps.event.addListener(map, "mousemove", function(e){
+        if(bAdding)
+            map.setOptions({draggableCursor:'Crosshair'});
+    });
 
     // Select segment (click)
     google.maps.event.addListener(this.line, "mouseover", function(e){
@@ -1480,7 +1484,7 @@ function addModeOn(segmentId)
 function addModeOff()
 {
     bAdding = false;
-    map.setOptions({draggableCursor:'Hand'});
+    map.setOptions({draggableCursor:'default'});
     webViewBridge.addPointMode(bAdding);
     currentSegment = null;
     return null;
@@ -1974,15 +1978,17 @@ function getSegmentInfo(segmentId)
 function getPointArray(segmentId)
 {
     var si = getSegmentInfo(segmentId);
-    var path = si.getPath();
-    var array = new Array(0,0);
-    path.forEach(function(pt, ix)
-    {
-        array[ix*2] = pt.lat();
-        array[(ix*2)+1] = pt.lng();
-    });
-    //alert("points = " +array.length);
-    return array;
+    //var line = si.line;
+    //var path = si.line.getPath();
+    var siArray = si.getPointArray();
+//    var array = new Array(0,0);
+//    path.forEach(function(pt, ix)
+//    {
+//        array[ix*2] = pt.lat();
+//        array[(ix*2)+1] = pt.lng();
+//    });
+//    //alert("points = " +array.length);
+    return siArray;
 }
 
 

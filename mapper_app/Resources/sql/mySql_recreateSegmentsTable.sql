@@ -15,6 +15,7 @@ CREATE TABLE `Segments` ( `SegmentId` integer  primary key AUTO_INCREMENT NOT NU
                           `EndLon` decimal(15,13) NOT NULL DEFAULT 0.0,
                           `Length` decimal(15,5) NOT NULL DEFAULT 0,
                           `StartDate` date NOT NULL DEFAULT '0000-00-00',
+                          `DoubleDate` date NOT NULL DEFAULT '0000-00-00',
                           `EndDate` date NOT NULL DEFAULT '0000-00-00',
                           `Direction` varchar(6) NOT NULL DEFAULT ' ',
                           `OneWay` char(1) NOT NULL DEFAULT 'N',
@@ -24,9 +25,9 @@ CREATE TABLE `Segments` ( `SegmentId` integer  primary key AUTO_INCREMENT NOT NU
 ALTER TABLE `Routes` ADD CONSTRAINT `Routes_ibfk_1` FOREIGN KEY (`LineKey`) REFERENCES `Segments` (`SegmentId`);
 ALTER TABLE `Stations` ADD CONSTRAINT `SegmentId_ibfk_1` FOREIGN KEY (`segmentId`) REFERENCES `Segments` (`SegmentId`);
 INSERT INTO `Segments` (SegmentId, Description, OneWay, Tracks,Street, Location, `Type`, StartLat, StartLon,EndLat, EndLon,
-                        Length, Points, StartDate, endDate, Direction, lastUpdate, pointArray)
+                        Length, Points, StartDate, DoubleDate, endDate, Direction, lastUpdate, pointArray)
                         select SegmentId, Description, OneWay, Tracks,Street, Location, `Type`, StartLat, StartLon,EndLat, EndLon,
-                        Length, points, StartDate, endDate, Direction, lastUpdate, pointArray FROM `t1_backup`;
+                        Length, points, StartDate, doubleDate, endDate, Direction, lastUpdate, pointArray FROM `t1_backup`;
 drop table t1_backup;
 COMMIT;
 

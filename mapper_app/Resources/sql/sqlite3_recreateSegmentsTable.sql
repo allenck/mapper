@@ -2,9 +2,9 @@ PRAGMA foreign_keys = 0;
 BEGIN TRANSACTION;
 update Segments set tracks=1 where tracks not in(1,2);
 CREATE TEMPORARY TABLE `t1_backup` (SegmentId, Description, OneWay, Tracks, `Type`, StartLat, StartLon, EndLat, EndLon,
-                       Length, Points, StartDate, endDate, Direction, lastUpdate, pointArray, street, location);
+                       Length, Points, StartDate, DoubleDate, endDate, Direction, lastUpdate, pointArray, street, location);
 insert into t1_backup SELECT SegmentId, Description, OneWay, Tracks, `Type`, StartLat, StartLon, EndLat, EndLon,
-                       Length, Points, StartDate, endDate, Direction, lastUpdate, pointArray, street, location from `Segments`;
+                       Length, Points, StartDate, DoubleDate, endDate, Direction, lastUpdate, pointArray, street, location from `Segments`;
 DROP TABLE `Segments`;
 CREATE TABLE `Segments` ( `SegmentId` integer  primary key AUTOINCREMENT NOT NULL,
                           `Description` varchar(100) NOT NULL,
@@ -18,6 +18,7 @@ CREATE TABLE `Segments` ( `SegmentId` integer  primary key AUTOINCREMENT NOT NUL
                           `EndLon` decimal(15,13) NOT NULL DEFAULT 0.0,
                           `Length` decimal(15,5) NOT NULL DEFAULT 0,
                           `StartDate` date NOT NULL DEFAULT '0000-00-00',
+                          `DoubleDate` date NOT NULL DEFAULT '0000-00-00',
                           `EndDate` date NOT NULL DEFAULT '0000-00-00',
                           `Direction` varchar(6) NOT NULL DEFAULT ' ',
                           `OneWay` char(1) NOT NULL DEFAULT 'N',
@@ -25,9 +26,9 @@ CREATE TABLE `Segments` ( `SegmentId` integer  primary key AUTOINCREMENT NOT NUL
                           `PointArray` text,
                           `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP);
 INSERT INTO `Segments` (SegmentId, Description, OneWay, Tracks,Street, Location, `Type`, StartLat, StartLon,EndLat, EndLon,
-                        Length, Points, StartDate, endDate, Direction, lastUpdate, pointArray)
+                        Length, Points, StartDate, DoubleDate, endDate, Direction, lastUpdate, pointArray)
                         select SegmentId, Description, OneWay, Tracks,Street, Location, `Type`, StartLat, StartLon,EndLat, EndLon,
-                        Length, points, StartDate, endDate, Direction, lastUpdate, pointArray FROM `t1_backup`;
+                        Length, points, StartDate, DoubleDate, endDate, Direction, lastUpdate, pointArray FROM `t1_backup`;
 drop table t1_backup;
 PRAGMA foreign_keys = 1;
 COMMIT;

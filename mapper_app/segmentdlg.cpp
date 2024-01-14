@@ -176,7 +176,7 @@ void SegmentDlg::setSegmentId(qint32 value)
   ui->gbOriginal->setTitle(tr("Original segment:"));
   ui->gbNew->setTitle(tr("New segment:"));
   ui->txtOriginalName->setText( sql->getSegmentDescription(_segmentId));
-  ui->cbLocation->setCurrentText(si._location);
+  ui->cbLocation->setCurrentText(si.location());
 
   ui->txtNewName->setText( ui->txtOriginalName->text());
   ui->chkNewOneWay->setChecked(ui->chkOriginalOneWay->isChecked());
@@ -811,7 +811,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
   CompanyData* cd = sql->getCompany(ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt());
   _routeNbr = ui->rnw->newRoute();
   if (ui->rnw->routeNbrMustBeAdded())
-   _routeNbr = sql->addAltRoute(ui->rnw->newRoute(), ui->rnw->alphaRoute());
+   sql->addAltRoute(ui->rnw->newRoute(), ui->rnw->alphaRoute());
   if (_routeNbr > 0)
   {
    int tractionType = _tractionTypeList.values().at(ui->cbTractionType->currentIndex()).tractionType;

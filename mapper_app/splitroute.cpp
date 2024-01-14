@@ -29,6 +29,8 @@ SplitRoute::SplitRoute( QWidget *parent) :
     connect(ui->dateTo2, SIGNAL(editingFinished()), this, SLOT(dateTo2_Leave()));
     connect(ui->btnOK, SIGNAL(clicked()), this, SLOT(btnOK_Click()));
     connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(Cancel_Click()));
+
+    fillTractionTypes();
 }
 
 SplitRoute::~SplitRoute()
@@ -498,7 +500,7 @@ void SplitRoute::btnOK_Click()
       if (sql->addSegmentToRoute(_routeNbr1, ui->rnw1->newRouteName(),
                                  ui->dateTo2->date(), sd1.endDate(),
                                  sd1.segmentId(), _companyList.at(ui->cbCompany2->currentIndex())->companyKey,
-                                 sd1.tractionType(), sd1.direction(), sd1.next(), sd1.prev(),
+                                 ui->cbTractionType->currentData().toInt(), sd1.direction(), sd1.next(), sd1.prev(),
                                  sd1.normalEnter(), sd1.normalLeave(),
                                  sd1.reverseEnter(), sd1.reverseLeave(),
                                  sd1.sequence(), sd1.returnSeq(),
@@ -532,7 +534,7 @@ void SplitRoute::btnOK_Click()
      if (sql->addSegmentToRoute(_routeNbr2, ui->rnw2->newRouteName(),
                                 ui->dateFrom2->date().addDays(0), ui->dateTo2->date(),
                                 sd1.segmentId(), sd1.companyKey(),
-                                sd1.tractionType(), sd1.direction(), sd1.next(), sd1.prev(),
+                                ui->cbTractionType->currentData().toInt(), sd1.direction(), sd1.next(), sd1.prev(),
                                 sd1.normalEnter(), sd1.normalLeave(),
                                 sd1.reverseEnter(), sd1.reverseLeave(),
                                 sd1.sequence(), sd1.returnSeq(),
@@ -603,3 +605,23 @@ void SplitRoute::txtNewRouteNbr2_TextChanged(QString text)
 
 }
 #endif
+void SplitRoute::fillTractionTypes()
+{
+    ui->cbTractionType->clear();
+    //cbTractionType.Text = " ";
+    _tractionList = sql->getTractionTypes();
+    if ( _tractionList.count() == 0)
+        return;
+    //int count = 0;
+    //foreach (tractionTypeInfo tti in _tractionList)
+    for(int i= 0; i < _tractionList.count(); i++)
+    {
+     //if (si.routeType == tti.routeType)
+     {
+      TractionTypeInfo tti  = (TractionTypeInfo)_tractionList.values().at(i);
+      ui->cbTractionType->addItem(tti.ToString(),tti.tractionType);
+      //count++;
+     }
+    }
+    //cbTractionType.Text = "";
+}
