@@ -28,7 +28,6 @@ public:
     //enum TypeOfChange{Add,Delete,Update};
     void setSegmentData(RouteData value);
     void setSegmentData(SegmentData *sd);
-    void fillCompanies();
 
 
 public slots:
@@ -36,6 +35,7 @@ public slots:
     void routeChanged(RouteData rd);
     void setAddMode(bool value);
     void OnNewCity();
+    void fillCompanies();
 
 signals:
     void SegmentChangedEvent(qint32 changedSegment, qint32 newSegment);
@@ -48,7 +48,7 @@ signals:
 private:
     Ui::RouteDlg *ui;
     Configuration* config;
-    qint32 _routeNbr;
+    qint32 _routeNbr = -1;
     QString _alphaRoute;
     QList<SegmentData*> _segmentDataList;
     QList<CompanyData*> _companyList;

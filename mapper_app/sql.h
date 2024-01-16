@@ -155,7 +155,7 @@ public:
     LatLng getPointInfo(qint32 pt, qint32 SegmentId);
     qint32 addCompany(QString name, qint32 route, QString startDate, QString endDate);
     qint32 addSegment(QString Description, QString OneWay, int tracks, RouteType routeType, const QList<LatLng> pointList, QString Location, bool * bAlreadyExists, bool forceInsert= false);
-    qint32 addSegment(SegmentData sd, bool *bAlreadyExists, bool forceInsert);
+    qint32 addSegment(SegmentInfo sd, bool *bAlreadyExists, bool forceInsert);
     qint32 splitSegment(qint32 pt, qint32 SegmentId, QString oldDesc, QString oldOneWay, QString newDesc, QString newOneWay, RouteType routeType, RouteType newRouteType, int oldTracks, int newTracks, QString oldStreet, QString newStreet);
     SegmentData *getSegmentData(qint32 route, qint32 SegmentId, QString startDate, QString endDate);
     QList<SegmentData *> getSegmentDataList(RouteData rd);

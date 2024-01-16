@@ -70,6 +70,11 @@ void RouteNameWidget::configure(RouteData* rd, QLabel *lblHelpText)
  setRouteName(rd->routeName());
 }
 
+int RouteNameWidget::newRoute()
+{
+ return _routeNbr;
+}
+
 QString RouteNameWidget::newRouteName()
 {
  return ui->cbRouteName->currentText();
@@ -78,7 +83,6 @@ QString RouteNameWidget::newRouteName()
 void RouteNameWidget::txtRouteNbr_Leave()
 {
     lblHelpText->clear();
-    bool bAlphaRoute = false;
     bNewRouteNbr = false;
     bool isNumeric = false;
     if(ui->txtRouteNbr->text().contains(","))
@@ -92,8 +96,9 @@ void RouteNameWidget::txtRouteNbr_Leave()
     ui->txtRouteNbr->text().toInt(&isNumeric);
     if(companyKey == -1)
      throw IllegalArgumentException("missing company key");
-    int newRoute = sql->getNumericRoute(ui->txtRouteNbr->text(), & _alphaRoute, & bAlphaRoute, companyKey);
-    if(newRoute < 0)
+
+    _routeNbr = sql->getNumericRoute(ui->txtRouteNbr->text(), & _alphaRoute, & bAlphaRoute, companyKey);
+    if(_routeNbr < 0)
     {
         QMessageBox::StandardButtons rslt;
         rslt = QMessageBox::warning(this,tr("Route number not found"),
@@ -116,8 +121,8 @@ void RouteNameWidget::txtRouteNbr_Leave()
                 return;
         }
     }
-    else
-     _routeNbr = newRoute;
+//    else
+//     _routeNbr = newRoute;
     emit routeNumberChange(_routeNbr);
 
     if (!config->currCity->bAlphaRoutes && !isNumeric)

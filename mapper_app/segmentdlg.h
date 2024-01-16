@@ -57,7 +57,6 @@ private:
     bool bNewRouteNbr;
     bool bSplitting;
     QMap<int, TractionTypeInfo> tractionTypeList;
-    void fillCompanies();
     void fillTractionTypes();
     void checkUpdate();
     QString getColor(qint32 tractionType);
@@ -68,6 +67,7 @@ private:
     void updateOtherRoutes();
 
 private slots:
+    void fillCompanies();
     void rbUseOriginal_CheckedChanged();
     //void txtRouteNbr_Leave();
     void rbUseNew_CheckedChanged();

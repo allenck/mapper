@@ -160,18 +160,21 @@ DEPENDPATH += $$PWD/debug
 FORMS += \
   dialogeditparameters.ui \
   routenamewidget.ui \
+  splitcompanyroutesdialog.ui \
   systemconsole2.ui \
   ui/dialogtextedit.ui
 
 HEADERS += \
   dialogeditparameters.h \
   routenamewidget.h \
+  splitcompanyroutesdialog.h \
   systemconsole2.h \
   ui/dialogtextedit.h
 
 SOURCES += \
   dialogeditparameters.cpp \
   routenamewidget.cpp \
+  splitcompanyroutesdialog.cpp \
   systemconsole2.cpp \
   ui/dialogtextedit.cpp
 

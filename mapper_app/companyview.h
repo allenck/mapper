@@ -51,6 +51,7 @@ public:
     bool bUncomittedChanges();
     MyCompanyTableModel* model() {return _model;}
     static CompanyView* instance();
+
 signals:
     void dataChanged();
 

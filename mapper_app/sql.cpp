@@ -6653,14 +6653,14 @@ bool SQL::doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QD
 {
     bool ret = false;
     int count = 0;
-    if( !startDate.isValid() || !endDate.isValid()
-        || (startDate > endDate))
+    if( startDate.isValid() && endDate.isValid()
+        && (startDate > endDate))
     {
      throw IllegalArgumentException("doesRouteSegmentExist: invalid dates");
     }
     if(route <= 0 /*|| name.isEmpty()*/ || segmentId <= 0 )
     {
-     throw IllegalArgumentException("doesRouteSegmentExist: invalid arguments");
+     return false;
     }
     try
     {
@@ -7136,14 +7136,14 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
 /// </summary>
 /// <param name="Description"></param>
 /// <returns></returns>
-qint32 SQL::addSegment(SegmentData sd, bool *bAlreadyExists, bool forceInsert)
+qint32 SQL::addSegment(SegmentInfo si, bool *bAlreadyExists, bool forceInsert)
 {
  int rows = 0;
  int SegmentId = -1;
  *(bAlreadyExists) = false;
  QString street;
- if(sd._description.contains(","))
-  street = sd._description.mid(0,sd._description.indexOf(","));
+ if(si._description.contains(","))
+  street = si._description.mid(0,si._description.indexOf(","));
 
  try
  {
@@ -7152,9 +7152,9 @@ qint32 SQL::addSegment(SegmentData sd, bool *bAlreadyExists, bool forceInsert)
  QSqlDatabase db = QSqlDatabase::database();
  beginTransaction("addSegment");
 
- QString commandText = "Select SegmentId from Segments where Description = '" + sd._description
-   + "' and tracks = " + QString("%1").arg(sd._tracks)
-   + " and type = "  + QString("%1").arg(sd._routeType);
+ QString commandText = "Select SegmentId from Segments where Description = '" + si._description
+   + "' and tracks = " + QString("%1").arg(si._tracks)
+   + " and type = "  + QString("%1").arg(si._routeType);
 //   + " and OneWay= '" + sd._oneWay + "'";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
@@ -7178,35 +7178,36 @@ qint32 SQL::addSegment(SegmentData sd, bool *bAlreadyExists, bool forceInsert)
  }
  // Add a new SegmentId
  QString pointArray = "";
- for(int i = 0; i < sd._pointList.count(); i ++)
+ for(int i = 0; i < si._pointList.count(); i ++)
  {
   if(i > 0)
    pointArray.append(",");
-  LatLng pt = sd._pointList.at(i);
+  LatLng pt = si._pointList.at(i);
   pointArray.append(pt.str());
  }
  if(pointArray.count() < 2)
  {
-  qDebug() << "Warning segment '" << sd._description << "' has less than two points!!";
+  qDebug() << "Warning segment '" << si._description << "' has less than two points!!";
  }
  commandText = "Insert into Segments (street, Location, Description, /*OneWay,*/ type, pointArray, points, tracks, "
-               "startLat, startlon, endLat, endLon, length, Direction, startDate, endDate) "
-               "values ('" +street+"','" + sd.location()+"','"+ sd._description + "', "/*'" + sd._oneWay + "',"*/
-               + QString("%1").arg((qint32)sd._routeType) + ",'"
+               "startLat, startlon, endLat, endLon, length, Direction, startDate, endDate, DoubleDate) "
+               "values ('" +street+"','" + si.location()+"','"+ si._description + "', "/*'" + sd._oneWay + "',"*/
+               + QString("%1").arg((qint32)si._routeType) + ",'"
                + pointArray+ "', "
-               + QString("%1").arg(sd._points) + ", "
-               + QString::number(sd._tracks) + ", "
+               + QString("%1").arg(si._points) + ", "
+               + QString::number(si._tracks) + ", "
                //+ ",0,0,0,0,0"
-               + QString("%1").arg(sd._startLat,0,'f',8) + ", "
-               + QString("%1").arg(sd._startLon,0,'f',8) + ", "
-               + QString("%1").arg(sd._endLat,0,'f',8) + ", "
-               + QString("%1").arg(sd._endLon,0,'f',8) + ", "
-               + QString("%1").arg(sd._length,0,'f',8) + ", "
+               + QString("%1").arg(si._startLat,0,'f',8) + ", "
+               + QString("%1").arg(si._startLon,0,'f',8) + ", "
+               + QString("%1").arg(si._endLat,0,'f',8) + ", "
+               + QString("%1").arg(si._endLon,0,'f',8) + ", "
+               + QString("%1").arg(si._length,0,'f',8) + ", "
                //+ ", ' ', '1800/01/01'"
-               + "'" + sd._direction + "', "
-               + "'" + sd._startDate.toString("yyyy/MM/dd")+"', "
+               + "'" + si._direction + "', "
+               + "'" + si._startDate.toString("yyyy/MM/dd")+"', "
                //+ ", '2050/12/31'"
-               + "'" + sd._endDate.toString("yyyy/MM/dd")+"'"
+               + "'" + si._endDate.toString("yyyy/MM/dd")+"'"
+               + ",'" + si._doubleDate.toString("yyyy/MM/dd")+"'"
                + ")";
  bQuery = query.exec(commandText);
  if(!bQuery)
@@ -11562,7 +11563,8 @@ SegmentInfo SQL::convertSegment(int segmentId, int tracks)
 
 int SQL::nextRouteNumberInRange(int lowRange, int highRange){
  QSqlDatabase db = QSqlDatabase::database();
- QString commandText = "select max(route) from AltRoute where route >= " + QString::number(lowRange) + " and route < " +QString::number(highRange);
+ QString commandText = "select max(route) from AltRoute where route >= "
+   + QString::number(lowRange) + " and route < " +QString::number(highRange);
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  qDebug() << query.lastQuery() << " line:" <<__LINE__;
@@ -11572,14 +11574,15 @@ int SQL::nextRouteNumberInRange(int lowRange, int highRange){
      QSqlError err = query.lastError();
      qDebug() << err.text() + "\n";
      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     db.close();
-     exit(EXIT_FAILURE);
+     return -1;
  }
  while(query.next())
  {
-  return query.value(0).toUInt();
+  int rslt = query.value(0).toUInt();
+  if(rslt == 0)
+   return lowRange;
  }
- return 0;
+ return lowRange;
 }
 
 bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute)

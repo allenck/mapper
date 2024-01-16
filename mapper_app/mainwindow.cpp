@@ -69,6 +69,7 @@
 #include <QWindow>
 #include "dialogeditparameters.h"
 #include <QTimer>
+#include "splitcompanyroutesdialog.h"
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -376,6 +377,8 @@ void MainWindow::onCbSegmentsCustomContextMenu(const QPoint &pos)
  sd->setEndDate(_rd.endDate());
  sd->setTractionType(_rd.tractionType());
  sd->setCompanyKey(_rd.companyKey());
+ if(sd->startDate() > sd->endDate()) // new route?
+  sd->setEndDate(sd->startDate().addDays(1));
 
  QMenu* menu = ui->ssw->cbSegments()->lineEdit()->createStandardContextMenu();
  if(!SQL::instance()->doesRouteSegmentExist(*sd))
@@ -995,6 +998,13 @@ void MainWindow::createActions()
   queryDlg->show();
  });
 
+ companyChangeRoutes = new QAction(tr("ChangeCompany for routes"),this);
+ companyChangeRoutes->setStatusTip(tr("Change compay for all routes at a date"));
+ connect(companyChangeRoutes, &QAction::triggered, [=]{
+  SplitCompanyRoutesDialog dlg;
+  dlg.exec();
+ });
+
  addSegmentToRouteAct = new QAction(tr("Add segment to route"), this);
  addSegmentToRouteAct->setStatusTip(tr("Add segment to current route"));
  connect(addSegmentToRouteAct, &QAction::triggered, [=]{
@@ -1040,9 +1050,17 @@ void MainWindow::createActions()
   sd->setRouteName(_rd.routeName());
   sd->setCompanyKey(_rd.companyKey());
   sd->setTractionType(_rd.tractionType());
-  CompanyData* cd = sql->getCompany(sd->companyKey());
-  sd->setStartDate(_rd.startDate());
-  sd->setEndDate(_rd.endDate());
+  CompanyData* cd = sql->getCompany(_rd.companyKey()>0?_rd.companyKey():ui->cbCompany->currentData().toInt());
+  if(_rd.startDate().isValid())
+  {
+   sd->setStartDate(_rd.startDate());
+   sd->setEndDate(_rd.endDate());
+  }
+  else
+  {
+   sd->setStartDate(cd->startDate);
+   sd->setEndDate(cd->endDate);
+  }
   if(sd->startDate() < cd->startDate)
    sd->setStartDate(cd->startDate);
   if(sd->endDate() > cd->endDate)
@@ -1485,6 +1503,7 @@ void MainWindow::createMenus()
     connect(toolsMenu, &QMenu::aboutToShow, [=]{
      addPointModeAct->setChecked(m_bAddMode);
     });
+    toolsMenu->addAction(companyChangeRoutes);
 
     toolsMenu->addSeparator();
     toolsMenu->addSection("Debug");
@@ -2756,7 +2775,7 @@ void MainWindow::segmentSelected(qint32 pt, qint32 segmentId)
 // ui->cbSegments->setCurrentIndex(ix);
  m_points = si.pointList();
  m_nbrPoints = m_points.size();
- Q_ASSERT(m_points.count() >1);
+ Q_ASSERT(m_points.count() == 0 || m_points.count() >1);
 
  if (m_nbrPoints <= 0)
      return;
@@ -4098,6 +4117,8 @@ void MainWindow::updateRoute(SegmentData* sd )
 //      //routeDlg->setSegmentId( sd->segmentId());
 //      if(sd->alphaRoute().isEmpty())
 //       sd->setAlphaRoute(_rd.alphaRoute());
+      if(sd->companyKey()<0)
+       sd->setCompanyKey(ui->cbCompany->currentData().toInt());
       routeDlg->setSegmentData(sd);
       routeDlg->show();
       routeDlg->raise();
@@ -4722,7 +4743,7 @@ void MainWindow::updateSegmentInfoDisplay(SegmentInfo si)
 
 void MainWindow::On_editSegment_triggered()
 {
- SegmentInfo si = sql->getSegmentInfo(ui->ssw->cbSegments()->currentData().toInt());
+ SegmentInfo si = sql->getSegmentInfo(m_segmentId);
  SegmentData* sd = sql->getSegmentData(m_routeNbr,m_segmentId,m_currRouteStartDate, m_currRouteEndDate);
 
  EditSegmentDialog* dlg;

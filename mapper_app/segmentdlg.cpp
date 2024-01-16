@@ -2,6 +2,7 @@
 #include "ui_segmentdlg.h"
 #include "webviewbridge.h"
 #include "mainwindow.h"
+#include "companyview.h"
 
 SegmentDlg::SegmentDlg(QWidget *parent) :
     QDialog(parent),
@@ -56,6 +57,7 @@ SegmentDlg::SegmentDlg(QWidget *parent) :
  {
   ui->gbUsage->setVisible((ui->chkNewOneWay->isChecked() && ui->sbTracks->value()==2));
  });
+ connect(CompanyView::instance()->model(), SIGNAL(companyChange()), this, SLOT(fillCompanies()));
 
  _routeTypeList <<"0 - Surface in street"<< "1 - Surface PRW"<< "2 - Rapid Transit" << "3 - Subway/Metro/U-Bahn"<< "4 - Heavy Rail" <<  "5 - Incline" << "6 - Other";
  ui->cbRouteType->addItems(_routeTypeList);
@@ -751,8 +753,18 @@ void SegmentDlg::btnOK_Click()  // SLOT
   QString strBiDirectional = ui->chkNewOneWay->isChecked()?"Y":"Y";
   RouteType rt = (RouteType)ui->cbRouteType->currentIndex();
   QList<LatLng> pointList = QList<LatLng>();
-  _newSegmentId = sql->addSegment(newName, strOneWay, ui->sbTracks->value(), rt, pointList,
-                                  ui->cbLocation->currentText(), &bAlreadyExists);
+//  _newSegmentId = sql->addSegment(newName, strOneWay, ui->sbTracks->value(), rt, pointList,
+//                                  ui->cbLocation->currentText(), &bAlreadyExists);
+  SegmentInfo si;
+  si.setDescription(newName);
+  si.setTracks(ui->sbTracks->value());
+  si.setRouteType(rt);
+  si.setLocation(ui->cbLocation->currentText());
+  si.setStartDate(ui->dateStart->date());
+  si.setEndDate(ui->dateEnd->date());
+  if(ui->sbTracks->value() == 2)
+   si.setDoubleDate(ui->dateStart->date());
+  _newSegmentId = sql->addSegment(si, &bAlreadyExists, false);
   if (_newSegmentId < 0)
   {
    ui->lblErrorText->setText(tr( "add segment failed!"));

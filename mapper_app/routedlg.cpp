@@ -236,6 +236,7 @@ void RouteDlg::setSegmentData(SegmentData* sd)
 // ui->cbRouteName->addItem(strNoRoute);
 // ui->cbRouteName->setCurrentText(sd->routeName());
  ui->rnw->configure(sd, ui->lblHelpText);
+ ui->rnw->setCompanyKey(sd->companyKey());
  cbOneWay_checkedChanged(sd->oneWay()=="Y");
  ui->cbOneWay->setChecked(sd->oneWay()=="Y");
  ui->gbUsage->setVisible(sd->tracks()==2 && sd->oneWay() == "Y");
@@ -1014,6 +1015,13 @@ void RouteDlg::checkUpdate(QString func)
 //            ui->btnDelete->setEnabled(true);
 //        }
 //    }
+    if( !ui->dateStart->date().isValid() || !ui->dateEnd->date().isValid()
+        || (ui->dateStart->date() > ui->dateEnd->date()))
+    {
+     ui->lblHelpText->setText(tr("check dates!"));
+     return;
+    }
+
     if (sql->doesRouteSegmentExist(_routeNbr, ui->rnw->alphaRoute(), _segmentId, ui->dateStart->date(),
                                    ui->dateEnd->date()))
     {
@@ -1752,7 +1760,13 @@ void RouteDlg::btnAdd_Click()         // SLOT
   {
    CompanyData* cd = sql->getCompany(companyKey);
    if (ui->rnw->routeNbrMustBeAdded())
+   {
     _routeNbr = sql->addAltRoute(ui->rnw->newRoute(), ui->rnw->alphaRoute());
+   }
+   else
+   {
+    _routeNbr = ui->rnw->newRoute();
+   }
 //   sd->setRoute(_routeNbr);
    sql->beginTransaction("addRouteSegment");
    if(!sql->doesAltRouteExist(sd->route(), sd->alphaRoute()))

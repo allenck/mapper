@@ -393,6 +393,7 @@ private:
     QAction* foreignKeyCheckAct;
     QAction* fontSizeChangeAct;
     QAction* updateParametersAct;
+    QAction* companyChangeRoutes;
 
     QList<QAction*> cityActions;
     QList<QAction*> overlayActions;

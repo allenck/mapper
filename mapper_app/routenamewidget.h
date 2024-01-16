@@ -18,7 +18,7 @@ class RouteNameWidget : public QWidget
   void setCompanyKey(int companyKey);
   void setSegmentData(SegmentData* sd);
   void setRouteData(RouteData *rd);
-  int newRoute() {return _routeNbr;}
+  int newRoute();
   QString newRouteName();
   bool routeNbrMustBeAdded() {return bNewRouteNbr;} // true if entry to altRoute must be added
   void setHelpLabel(QLabel *lblHelpText ) {this->lblHelpText = lblHelpText;}
@@ -39,6 +39,7 @@ class RouteNameWidget : public QWidget
  private:
   Ui::RouteNameWidget *ui;
   bool bNewRouteNbr = false;
+  bool bAlphaRoute = false;
   SQL* sql;
   QString _alphaRoute;
   int companyKey=-1;

@@ -122,8 +122,10 @@ connect(ui->btnSave, &QPushButton::clicked, [=]{
   else
    sd = new SegmentData(*si);
  }
+
  if(si->tracks() == 1)
   ui->doubleTracked->setVisible(false);
+ ui->doubleTracked->setDate(sd->doubleDate());
 
  SegmentInfo dup = sql->getSegmentInSameDirection(*si);
  if(dup.segmentId()>0 && dup.routeType() == si->routeType())
