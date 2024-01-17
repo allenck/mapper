@@ -3934,12 +3934,13 @@ bool SQL::updateSegment(SegmentData* sd)
    + "street='" + sd->_streetName + "',"
    + "location='" + sd->_location + "',"
    + "tracks="+ QString::number(sd->_tracks) + ","
-   + "next=" + QString::number(sd->_next) + ","
-   + "Prev=" + QString::number(sd->_prev) + ","
-   + "nextR=" + QString::number(sd->_nextR) + ","
-   + "prevR=" + QString::number(sd->_prevR) + ","
-   + "startDate='" + sd->_startDate.toString("yyyy/MM/dd") + "', "
-   + "endDate='" + sd->_endDate.toString("yyyy/MM/dd") + "', "
+//   + "next=" + QString::number(sd->_next) + ","
+//   + "Prev=" + QString::number(sd->_prev) + ","
+//   + "nextR=" + QString::number(sd->_nextR) + ","
+//   + "prevR=" + QString::number(sd->_prevR) + ","
+//   + "startDate='" + sd->_startDate.toString("yyyy/MM/dd") + "', "
+//   + "endDate='" + sd->_endDate.toString("yyyy/MM/dd") + "', "
+   + "DoubleDate='" + sd->_doubleDate.toString("yyyy/MM/dd") + "', "
    + "lastUpdate=:lastUpdate "
    + "where SegmentId = " + QString("%1").arg(sd->segmentId());
  query.prepare(commandText);
@@ -5275,7 +5276,8 @@ bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 SegmentId,
 }
 
 // TODO: add next, prev, seq,... etc
-bool SQL::addSegmentToRoute(SegmentData* sd)
+// if notify is false, routeview will not get notified of additions
+bool SQL::addSegmentToRoute(SegmentData* sd, bool notify)
 {
   if(addSegmentToRoute( sd->route(), sd->routeName(), sd->startDate(),
                             sd->endDate(), sd->segmentId(), sd->companyKey(),
@@ -5283,8 +5285,11 @@ bool SQL::addSegmentToRoute(SegmentData* sd)
                             sd->normalEnter(), sd->normalLeave(),
                             sd->reverseEnter(), sd->reverseLeave(), sd->sequence(), sd->returnSeq(),
                             sd->oneWay(), sd->trackUsage()))
+  {
+   if(notify)
      emit routeChange(NotifyRouteChange(ADDSEG, sd));
-     return true;
+  }
+  return true;
 }
 
 bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate, QDate endDate,
@@ -10017,7 +10022,9 @@ bool SQL::updateRoute(RouteData rd)
  return ret;
 }
 #endif
-bool SQL::updateRoute(SegmentData osd, SegmentData sd)
+
+// if notify is false, routeview will not be notified of changes
+bool SQL::updateRoute(SegmentData osd, SegmentData sd, bool notify)
 {
  bool ret = false;
  int rows = 0;
@@ -10082,12 +10089,13 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd)
      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
      throw Exception(err.text());
  }
-  qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+  //qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
  rows = query.numRowsAffected();
  if (rows > 0)
  {
   SegmentData* sdNew = new SegmentData(sd);
-  emit routeChange(NotifyRouteChange(MODIFYSEG, sdNew));
+  if(notify)
+   emit routeChange(NotifyRouteChange(MODIFYSEG, sdNew));
   ret = true;
  }
  else

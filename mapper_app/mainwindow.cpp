@@ -1002,7 +1002,8 @@ void MainWindow::createActions()
  companyChangeRoutes->setStatusTip(tr("Change compay for all routes at a date"));
  connect(companyChangeRoutes, &QAction::triggered, [=]{
   SplitCompanyRoutesDialog dlg;
-  dlg.exec();
+  if(dlg.exec() == QDialog::Accepted)
+   refreshRoutes();
  });
 
  addSegmentToRouteAct = new QAction(tr("Add segment to route"), this);

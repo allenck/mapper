@@ -109,7 +109,7 @@ public:
     bool deleteRouteSegment(SegmentData sd);
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate, QString routeStartDate, QString routeEndDate);
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate);
-    bool addSegmentToRoute(SegmentData *sd);
+    bool addSegmentToRoute(SegmentData *sd, bool notify = true);
     //bool addSegmentToRoute(RouteData rd);
     QT_DEPRECATED bool addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate, QDate endDate,
                            qint32 SegmentId, qint32 companyKey, qint32 tractionType, QString direction,
@@ -196,7 +196,7 @@ public:
     QList<StationInfo> getStationsLikeName(QString);
     QT_DEPRECATED bool updateRoute(qint32 route, QString name, QString endDate, qint32 segmentId, qint32 next, qint32 prev, QString trackUsage);
     //bool updateRoute(RouteData rd);
-    bool updateRoute(SegmentData osd, SegmentData sd);
+    bool updateRoute(SegmentData osd, SegmentData sd, bool notify = true);
     QT_DEPRECATED int updateRouteDate(int segmentId, QString startDate, QString endDate);
     int updateRouteSegment(int segmentId, QString startDate, QString endDate, int newSegment);
     QDate getFirstCommentDate(qint32 route, QDate date, qint32 companyKey);

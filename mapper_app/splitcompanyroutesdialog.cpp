@@ -62,14 +62,25 @@ void SplitCompanyRoutesDialog::btnApply_clicked()
   SegmentData sdOld = SegmentData(*sd);
   SegmentData sdNew = SegmentData(*sd);
   sdOld.setEndDate(ui->dateEdit->date().addDays(-1));
-  if(!sql->updateSegment(&sdNew))
+  if(!sql->updateRoute(*sd, sdOld, false)) // do not notify routeview of changes!
   {
-   ui->lblHelp->setText("");
+   ui->lblHelp->setText("Update failed");
    sql->rollbackTransaction("company split");
    return;
   }
   sdNew.setStartDate(ui->dateEdit->date());
   sdNew.setCompanyKey(ui->cbCompany2->currentData().toInt());
+  if(sql->doesRouteSegmentExist(sdNew))
+  {
+   qDebug() << "segment " << sdNew.segmentId() << " already present, route " << sdNew.route();
+   continue;
+  }
+  if(!sql->addSegmentToRoute(&sdNew, false))
+  {
+   ui->lblHelp->setText("insert failed");
+   sql->rollbackTransaction("company split");
+   return;
+  }
  }
  sql->commitTransaction("company split");
  accepted();
