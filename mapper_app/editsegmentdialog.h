@@ -18,8 +18,8 @@ class EditSegmentDialog : public QDialog
 
 public:
  explicit EditSegmentDialog(QWidget *parent = 0);
- EditSegmentDialog(SegmentInfo* sd, QWidget *parent = 0);
- EditSegmentDialog(SegmentData *sd, SegmentInfo* si, QWidget *parent=0);
+ EditSegmentDialog(SegmentData* sd, QWidget *parent = 0);
+ EditSegmentDialog(SegmentInfo si, QWidget *parent=0);
  ~EditSegmentDialog();
 
 private:
@@ -28,9 +28,7 @@ private:
  SQL* sql;
  //QList<SegmentInfo> segmentlist;
  MainWindow* myParent;
- SegmentInfo* si = nullptr;
- SegmentData* sd = nullptr;
- SegmentData* osd = nullptr;
+ SegmentInfo si;
  void setUpdate();
  //QPushButton* btnUpdate;
  QPushButton* btnVerifyDates;
@@ -45,15 +43,18 @@ private:
  QString m_segmentColor;
  RouteData* rd = nullptr;
  QStringList _locations;
- void processAdd();
+ //void processAdd();
  QList<SegmentInfo> dupSegments;
+ QDate oldestStartDate;
+ QDate latestEndDate;
+ QList<SegmentInfo>reversed;
 
 private slots:
  //void fillSegments();
- void segmentSelected(SegmentInfo *si);
+ void segmentSelected(SegmentInfo si);
  void On_cbRouteType_currentIndexChanged(int);
  void On_sbTracks_valueChanged(int);
- void On_chkOneWay_toggled(bool);
+ //void On_chkOneWay_toggled(bool);
  void On_txtDescription_editingFinished();
  void On_dtBegin_dateChanged(QDate);
  void On_dtEnd_dateChanged(QDate);
@@ -63,7 +64,7 @@ private slots:
  void On_dtBegin_editingFinished();
  void On_dtEnd_editingFinished();
  void On_segmentStatusSignal(QString, QString);
- void On_trackUsageChanged(int);
+ //void On_trackUsageChanged(int);
  void On_doubleTrackedDate_editingFinished();
  void On_doubleTracked_dateChanged(QDate dt);
 

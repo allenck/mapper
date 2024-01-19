@@ -8,7 +8,7 @@ SplitCompanyRoutesDialog::SplitCompanyRoutesDialog(QWidget *parent) :
 {
  ui->setupUi(this);
  sql = SQL::instance();
- connect(ui->cbCompany2, &QComboBox::currentIndexChanged, [=](int index){
+ connect(ui->cbCompany2, &QComboBox::currentTextChanged, [=](){
   CompanyData* cd = sql->getCompany(ui->cbCompany2->currentData().toInt());
   ui->dateEdit->setDate(cd->startDate);
  });

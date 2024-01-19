@@ -1920,80 +1920,82 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
         // Get all the segments intersecting both ends using the same point
         updateIntersection(0, sd.startLat(), sd.startLon());
         updateIntersection(0, sd.endLat(), sd.endLon());
-        SegmentInfo siDup = sql->getSegmentInSameDirection(sd);
-
-        // Get a list of all routes using this segment.
-        QList<SegmentData*> segmentDataList = sql->getRouteSegmentsBySegment(sd.segmentId());
-        if ( segmentDataList.count() > 0)
+        QList<SegmentInfo> siDups = sql->getSegmentsInSameDirection(sd);
+        foreach(SegmentInfo siDup, siDups)
         {
-            if ( siDup.segmentId() >= 0)
-            {
-//                DialogResult rslt = MessageBox.Show(segmentInfoList.Count + " routes are using this segment. A duplicate segment is defined.\n Move these routes to that segment?",
-//                    "Segment in use", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Hand);
-                QMessageBox msgBox;
-                msgBox.setIcon(QMessageBox::Warning);
-                msgBox.setText(tr("Segment in use"));
-                msgBox.setInformativeText(QString("%1").arg(segmentDataList.count()) + tr(" routes are using this segment. A duplicate segment is defined.\n Move these routes to that segment?"));
-                msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
-                msgBox.setDefaultButton(QMessageBox::No);
-                int rslt = msgBox.exec();
-                switch (rslt)
-                {
-                    case QMessageBox::Yes:
-                        //foreach (routeData rd in segmentInfoList)
-                    for(int i =0; i< segmentDataList.count(); i++)
-                        {
-                        SegmentData *sd = new SegmentData(*segmentDataList.at(i));
-                        if (sql->deleteRouteSegment(sd->route(), sd->routeName(), sd->segmentId(),
-                                                    sd->startDate().toString("yyyy/MM/dd"),
-                                                    sd->endDate().toString("yyyy/MM/dd")) != true)
-                            {
-                                //infoPanel.Text = "Delete Error";
-                                statusBar()->showMessage(tr("Delete failed"));
-                                //infoPanel.ForeColor = Color.Red;
-                                //System.Media.SystemSounds.Beep.Play();
-                                QApplication::beep();
-                                return;
-                            }
-                        if (sql->doesRouteSegmentExist(sd->route(), sd->routeName(), siDup.segmentId(),
-                                                       sd->startDate(), sd->endDate()))
-                                continue;
-//                            if (!sql->addSegmentToRoute(rd.route(), rd.routeName(), rd.startDate(), rd.endDate(), sdDup.segmentId(),
-//                                                        rd.companyKey(),
-//                                                        rd.tractionType(), rd.direction(), rd.next(), rd.prev(), rd.normalEnter(),
-//                                                        rd.normalLeave(), rd.reverseEnter(), rd.reverseLeave(), rd.oneWay(), rd.trackUsage()))
-                        SegmentData *sd1 = new SegmentData(*sd);
-                        sd1->setSegmentId(siDup.segmentId());
-                        if (!sql->addSegmentToRoute(sd))
-                        {
-                                //infoPanel.Text = "Update Error";
-                                statusBar()->showMessage(tr("Update failed"));
-                                //infoPanel.ForeColor = Color.Red;
-                                //System.Media.SystemSounds.Beep.Play();
-                                QApplication::beep();
-                                return;
-                            }
-                        }
-                        break;
-                    case QMessageBox::No:
-                        //QMessageBox::StandardButton reply;
-                        //MessageBox.Show("The segment cannot be deleted until the routes using it are removed.", "Error");
-                        QMessageBox::warning(this, tr("Error"), tr("The segment cannot be deleted until the routes using it are removed."), QMessageBox::NoButton);
-                        return;
+           // Get a list of all routes using this segment.
+           QList<SegmentData*> segmentDataList = sql->getRouteSegmentsBySegment(sd.segmentId());
+           if ( segmentDataList.count() > 0)
+           {
+               if ( siDup.segmentId() >= 0)
+               {
+   //                DialogResult rslt = MessageBox.Show(segmentInfoList.Count + " routes are using this segment. A duplicate segment is defined.\n Move these routes to that segment?",
+   //                    "Segment in use", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Hand);
+                   QMessageBox msgBox;
+                   msgBox.setIcon(QMessageBox::Warning);
+                   msgBox.setText(tr("Segment in use"));
+                   msgBox.setInformativeText(QString("%1").arg(segmentDataList.count()) + tr(" routes are using this segment. A duplicate segment is defined.\n Move these routes to that segment?"));
+                   msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+                   msgBox.setDefaultButton(QMessageBox::No);
+                   int rslt = msgBox.exec();
+                   switch (rslt)
+                   {
+                       case QMessageBox::Yes:
+                           //foreach (routeData rd in segmentInfoList)
+                       for(int i =0; i< segmentDataList.count(); i++)
+                           {
+                           SegmentData *sd = new SegmentData(*segmentDataList.at(i));
+                           if (sql->deleteRouteSegment(sd->route(), sd->routeName(), sd->segmentId(),
+                                                       sd->startDate().toString("yyyy/MM/dd"),
+                                                       sd->endDate().toString("yyyy/MM/dd")) != true)
+                               {
+                                   //infoPanel.Text = "Delete Error";
+                                   statusBar()->showMessage(tr("Delete failed"));
+                                   //infoPanel.ForeColor = Color.Red;
+                                   //System.Media.SystemSounds.Beep.Play();
+                                   QApplication::beep();
+                                   return;
+                               }
+                           if (sql->doesRouteSegmentExist(sd->route(), sd->routeName(), siDup.segmentId(),
+                                                          sd->startDate(), sd->endDate()))
+                                   continue;
+   //                            if (!sql->addSegmentToRoute(rd.route(), rd.routeName(), rd.startDate(), rd.endDate(), sdDup.segmentId(),
+   //                                                        rd.companyKey(),
+   //                                                        rd.tractionType(), rd.direction(), rd.next(), rd.prev(), rd.normalEnter(),
+   //                                                        rd.normalLeave(), rd.reverseEnter(), rd.reverseLeave(), rd.oneWay(), rd.trackUsage()))
+                           SegmentData *sd1 = new SegmentData(*sd);
+                           sd1->setSegmentId(siDup.segmentId());
+                           if (!sql->addSegmentToRoute(sd))
+                           {
+                                   //infoPanel.Text = "Update Error";
+                                   statusBar()->showMessage(tr("Update failed"));
+                                   //infoPanel.ForeColor = Color.Red;
+                                   //System.Media.SystemSounds.Beep.Play();
+                                   QApplication::beep();
+                                   return;
+                               }
+                           }
+                           break;
+                       case QMessageBox::No:
+                           //QMessageBox::StandardButton reply;
+                           //MessageBox.Show("The segment cannot be deleted until the routes using it are removed.", "Error");
+                           QMessageBox::warning(this, tr("Error"), tr("The segment cannot be deleted until the routes using it are removed."), QMessageBox::NoButton);
+                           return;
 
-                    case QMessageBox::Cancel:
-                        return;
-                    default:
-                        break;
-                }
-            }
-            else
-            {
-                //QMessageBox::StandardButton reply;
-                //MessageBox.Show("The segment cannot be deleted until the routes using it are removed.", "Error");
-                QMessageBox::warning(this, tr("Error"), tr("The segment cannot be deleted until the routes using it are removed."), QMessageBox::NoButton);
-                return;
-            }
+                       case QMessageBox::Cancel:
+                           return;
+                       default:
+                           break;
+                   }
+               }
+               else
+               {
+                   //QMessageBox::StandardButton reply;
+                   //MessageBox.Show("The segment cannot be deleted until the routes using it are removed.", "Error");
+                   QMessageBox::warning(this, tr("Error"), tr("The segment cannot be deleted until the routes using it are removed."), QMessageBox::NoButton);
+                   return;
+               }
+           }
         }
         QMessageBox::StandardButton rslt;
         rslt = QMessageBox::warning(this, tr("Delete segment"), tr("Are you sure that you want to permanently delete this segment?"), QMessageBox::Yes | QMessageBox::No);
@@ -4560,13 +4562,13 @@ void MainWindow::findDupSegments()
     foreach(SegmentInfo si, cbSegmentInfoList)
     {
 //        SegmentInfo si = cbSegmentInfoList.at(i);
-        SegmentInfo siDup = sql->getSegmentInSameDirection(si);
-//        sdDup.next = si.segmentId;
-
-        if(siDup.segmentId() > -1)
-            myArray.append(siDup);
-        qApp->processEvents();
-
+        QList<SegmentInfo> siDups = sql->getSegmentsInSameDirection(si);
+        foreach(SegmentInfo siDup, siDups)
+        {
+          if(siDup.segmentId() > -1)
+              myArray.append(siDup);
+          qApp->processEvents();
+        }
     }
 //    if(ui->tabWidget->count() < 7)
 //     ui->tabWidget->addTab(ui->tblDupSegments,"DuplicateSegments");
@@ -4749,13 +4751,16 @@ void MainWindow::On_editSegment_triggered()
 
  EditSegmentDialog* dlg;
  if(sd)
-  dlg = new EditSegmentDialog(sd, &si,this);
+  dlg = new EditSegmentDialog(sd,this);
  else
-  dlg = new EditSegmentDialog(&si,this);
+  dlg = new EditSegmentDialog(si,this);
  int ret = dlg->exec();
  if(ret == QDialog::Accepted)
+ {
   //refreshSegmentCB();
   ui->ssw->refresh();
+  refreshRoutes();
+ }
 }
 
 void MainWindow::onNewSegment_triggered()

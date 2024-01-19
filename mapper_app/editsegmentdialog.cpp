@@ -13,48 +13,31 @@ EditSegmentDialog::EditSegmentDialog(QWidget *parent) :
  common();
 }
 
-EditSegmentDialog::EditSegmentDialog(SegmentInfo *si, QWidget *parent) :
+EditSegmentDialog::EditSegmentDialog(SegmentInfo si, QWidget *parent) :
   QDialog(parent),
   ui(new Ui::EditSegmentDialog)
 {
  this->si = si;
  common();
- segmentSelected(si);
+ segmentSelected(this->si);
 
  //ui->ssw->initialize();
  //connect(ui->ssw, SIGNAL(segmentSelected(SegmentData)), this, SLOT(segmentSelected(SegmentData)));
 }
 
-EditSegmentDialog::EditSegmentDialog(SegmentData *sd, SegmentInfo* si, QWidget *parent) :
+EditSegmentDialog::EditSegmentDialog(SegmentData *sd, QWidget *parent) :
   QDialog(parent),
   ui(new Ui::EditSegmentDialog)
 {
- this->sd = sd;
- this->osd = sd;
- this->si = si;
+ this->si = sql->getSegmentInfo(sd->segmentId());
  common();
  segmentSelected(si);
-
-// ui->ssw->initialize();
-// connect(ui->ssw, SIGNAL(segmentSelected(SegmentData)), this, SLOT(segmentSelected(SegmentData)));
 }
 
 void EditSegmentDialog::common()
 {
  ui->setupUi(this);
  sql = SQL::instance();
- if(sd)
- {
-  if(!si)
-   si = new SegmentInfo(*sd);
- }
- else
- {
-  if(!si)
-   si = new SegmentInfo();
-  else
-   sd = new SegmentData(*si);
- }
 
  ui->lblHelp->setText("");
  _locations = sql->getLocations();
@@ -69,15 +52,15 @@ void EditSegmentDialog::common()
 
  QStringList routeTypes = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
  ui->cbRouteType->addItems(routeTypes);
- ui->txtPoints->setText(QString::number(si->pointList().count()));
- ui->txtKm->setText(QString::number(si->length()));
- ui->txtMiles->setText(QString::number(si->length()* 0.621371192));
- ui->txtBearing->setText(QString("%1°").arg(si->bearing().angle()));
+ ui->txtPoints->setText(QString::number(si.pointList().count()));
+ ui->txtKm->setText(QString::number(si.length()));
+ ui->txtMiles->setText(QString::number(si.length()* 0.621371192));
+ ui->txtBearing->setText(QString("%1°").arg(si.bearing().angle()));
  ui->btnSave->setEnabled(false);
- ui->txtDirection->setText(si->direction());
- ui->chkOneWay->setVisible(sd);
- ui->usageLabel->setVisible(sd != nullptr && sd->oneWay()==  "Y" && si->tracks()==2 );
- ui->trackUsage->setVisible(sd != nullptr && sd->oneWay()==  "Y" && si->tracks()==2);
+ ui->txtDirection->setText(si.direction());
+ //ui->chkOneWay->setVisible(sd);
+// ui->usageLabel->setVisible(sd != nullptr && sd->oneWay()==  "Y" && si->tracks()==2 );
+// ui->trackUsage->setVisible(sd != nullptr && sd->oneWay()==  "Y" && si->tracks()==2);
 
 connect(ui->btnCancel, SIGNAL(clicked(bool)), this, SLOT(reject()));
 connect(ui->btnSave, &QPushButton::clicked, [=]{
@@ -85,21 +68,9 @@ connect(ui->btnSave, &QPushButton::clicked, [=]{
   accept();
  });
  btnVerifyDates = new QPushButton(tr("Verify dates"));
- //ui->buttonBox->addButton(btnVerifyDates, QDialogButtonBox::ButtonRole::ApplyRole);
- connect(btnVerifyDates, &QPushButton::clicked, [=]{
-  QPair<QDate,QDate> pair= sql->getStartAndEndDates(sd->segmentId());
-  if(sd->segmentId() >=0)
-  {
-   ui->dtBegin->setDate(pair.first);
-   ui->dtEnd->setDate(pair.second);
-  }
- });
-
-// connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(segmentSelected(int)));
-// fillSegments();
 
  connect(ui->cbRouteType, SIGNAL(currentIndexChanged(int)), this, SLOT(On_cbRouteType_currentIndexChanged(int)));
- connect(ui->chkOneWay, SIGNAL(toggled(bool)), this, SLOT(On_chkOneWay_toggled(bool)));
+ //connect(ui->chkOneWay, SIGNAL(toggled(bool)), this, SLOT(On_chkOneWay_toggled(bool)));
  connect(ui->txtDescription, SIGNAL(editingFinished()), this, SLOT(On_txtDescription_editingFinished()));
  connect(ui->sbTracks, SIGNAL(valueChanged(int)), this, SLOT(On_sbTracks_valueChanged(int)));
  connect(ui->dtBegin, SIGNAL(dateChanged(QDate)),this, SLOT(On_dtBegin_dateChanged(QDate)));
@@ -108,36 +79,74 @@ connect(ui->btnSave, &QPushButton::clicked, [=]{
  connect(ui->dtEnd, SIGNAL(editingFinished()), this, SLOT(On_dtEnd_editingFinished()));
  connect(ui->doubleTracked, SIGNAL(dateChanged(QDate)), this, SLOT(On_doubleTracked_dateChanged(QDate)));
  connect(ui->doubleTracked, SIGNAL(editingFinished()), this, SLOT(On_doubleTrackedDate_editingFinished()) );
- connect(ui->trackUsage, SIGNAL(currentIndexChanged(int)), this, SLOT(On_trackUsageChanged(int)));
+ //connect(ui->trackUsage, SIGNAL(currentIndexChanged(int)), this, SLOT(On_trackUsageChanged(int)));
 
- if(sd)
- {
-  if(!si)
-   si = new SegmentInfo(*sd);
- }
- else
- {
-  if(!si)
-   si = new SegmentInfo();
-  else
-   sd = new SegmentData(*si);
- }
+// if(sd)
+// {
+//  if(!si)
+//   si = new SegmentInfo(*sd);
+// }
+// else
+// {
+//  if(!si)
+//   si = new SegmentInfo();
+//  else
+//   sd = new SegmentData(*si);
+// }
+ oldestStartDate = si.endDate();
+ latestEndDate = si.startDate();
 
- if(si->tracks() == 1)
+ if(si.tracks() == 1)
   ui->doubleTracked->setVisible(false);
- ui->doubleTracked->setDate(sd->doubleDate());
+ ui->doubleTracked->setDate(si.doubleDate());
+ //ui->chkOneWay->setChecked(sd->oneWay()=="Y");
 
- SegmentInfo dup = sql->getSegmentInSameDirection(*si);
- if(dup.segmentId()>0 && dup.routeType() == si->routeType())
+ QList<SegmentInfo> dups = sql->getSegmentsInSameDirection(si);
+ foreach(SegmentInfo dup, dups)
+ {
   dupSegments.append(dup);
- dup = sql->getSegmentInOppositeDirection(*si);
- if(dup.segmentId()>0&& dup.routeType() == si->routeType())
-  dupSegments.append(dup);
+  ui->listWidget->addItem(dup.toString());
+  if(dup.segmentId()>0 && dup.routeType() == si.routeType())
+  {
+    QList<SegmentData*> routes = sql->getRouteSegmentsBySegment(dup.segmentId());
+    foreach(SegmentData* sd, routes)
+    {
+      if(sd->startDate() < oldestStartDate)
+       oldestStartDate = sd->startDate();
+      if(sd->endDate() > latestEndDate)
+       latestEndDate = dup.endDate();
+    }
+  }
+ }
+ reversed = sql->getSegmentsInOppositeDirection(si);
+ foreach(SegmentInfo dup, reversed)
+ {
+  if(dup.segmentId()>0 && dup.routeType() == si.routeType())
+  {
+   dupSegments.append(dup);
+   ui->listWidget->addItem(dup.toString());
+   if(dup.segmentId()>0 && dup.routeType() == si.routeType())
+   {
+     QList<SegmentData*> routes = sql->getRouteSegmentsBySegment(dup.segmentId());
+     foreach(SegmentData* sd, routes)
+     {
+       if(sd->startDate() < oldestStartDate)
+        oldestStartDate = sd->startDate();
+       if(dup.endDate() > latestEndDate)
+        latestEndDate = sd->endDate();
+     }
+   }
+  }
+ }
  if(dupSegments.count() >0)
  {
   ui->lblHelp->setText(tr("Duplicate segments exist"));
   ui->lblHelp->setStyleSheet("color:#FFA500");
+  si.setStartDate(oldestStartDate);
+  si.setEndDate(latestEndDate);
  }
+ ui->dtBegin->setDate(si.startDate());
+ ui->dtEnd->setDate(si.endDate());
 }
 
 EditSegmentDialog::~EditSegmentDialog()
@@ -150,11 +159,11 @@ bool compareSegmentInfoByName1(const SegmentData & s1, const SegmentData & s2)
     return s1.description() < s2.description();
 }
 
-void EditSegmentDialog::segmentSelected(SegmentInfo* si)
+void EditSegmentDialog::segmentSelected(SegmentInfo si)
 {
- if(si->segmentId()<0)
+ if(si.segmentId()<0)
   return;
- this->si = si;
+ //this->si = SegmentInfo(*si);
  //ui->ssw->initialize();
 
  //SegmentInfo newSi = SegmentInfo(si);
@@ -164,109 +173,53 @@ void EditSegmentDialog::segmentSelected(SegmentInfo* si)
  bStartDateEdited = false;
  bEndDateEdited = false;
 
- ui->cbLocation->setCurrentText(si->location());
- connect(ui->cbLocation, &QComboBox::editTextChanged, [=]{
-  if(!_locations.contains( ui->cbLocation->currentText()))
-  {
-   qDebug() << "location " << " added";
-  }
- });
- if(si->segmentId() > 0)
+ ui->cbLocation->setCurrentText(si.location());
+ connect(ui->cbLocation, &QComboBox::editTextChanged, [=]
  {
-  ui->label_segmentId->setText(QString::number(si->segmentId()));
-  ui->txtDescription->setText(si->description());
+   if(!_locations.contains( ui->cbLocation->currentText()))
+   {
+    qDebug() << "location " << " added";
+   }
+ });
+ if(si.segmentId() > 0)
+ {
+  ui->label_segmentId->setText(QString::number(si.segmentId()));
+  ui->txtDescription->setText(si.description());
   //ui->chkOneWay->setVisible(sd);
  }
- if(sd)
- {
-  if(rd == nullptr)
-   rd = new RouteData(*sd);
-  if(rd->route() > 0  && sd->tracks()== 1)
-  {
-   ui->chkOneWay->setChecked(sd->oneWay() == "Y");
-  }
-  if(rd->route() > 0  && sd->tracks()== 2)
-  {
-   if(sd->trackUsage() =="L")
-    ui->trackUsage->setCurrentIndex(1); // left track
-   else  if(sd->trackUsage() =="R")
-    ui->trackUsage->setCurrentIndex(2); // right track
-   else
-    ui->trackUsage->setCurrentIndex(0); // both tracks
-  }
-
-  ui->usageLabel->setVisible(sd->tracks() ==2 && sd->oneWay()=="Y");
-  ui->trackUsage->setVisible(sd->tracks() ==2 && sd->oneWay()=="Y");
- }
- ui->sbTracks->setValue(si->tracks());
- ui->cbRouteType->setCurrentIndex(si->routeType());
- ui->dtBegin->setDate(si->startDate());
- ui->doubleTracked->setDate(si->doubleDate());
- ui->dtEnd->setDate(si->endDate());
- ui->txtPoints->setText(QString::number(si->pointList().count()));
- ui->txtKm->setText(QString::number(si->length(),'g', 3));
- ui->txtMiles->setText(QString::number(si->length()*0.621371192,'g',3));
- ui->txtDirection->setText(si->direction());
- ui->txtBearing->setText(QString::number(si->bearing().angle(),'g',4));
+ ui->sbTracks->setValue(si.tracks());
+ ui->cbRouteType->setCurrentIndex(si.routeType());
+ ui->dtBegin->setDate(si.startDate());
+ ui->doubleTracked->setDate(si.doubleDate());
+ ui->dtEnd->setDate(si.endDate());
+ ui->txtPoints->setText(QString::number(si.pointList().count()));
+ ui->txtKm->setText(QString::number(si.length(),'g', 3));
+ ui->txtMiles->setText(QString::number(si.length()*0.621371192,'g',3));
+ ui->txtDirection->setText(si.direction());
+ ui->txtBearing->setText(QString::number(si.bearing().angle(),'g',4));
 
 // sql->getSegmentDates(si);
 // if(sd.bNeedsUpdate)
 //  btnUpdate->setEnabled(true);
  ui->btnSave->setEnabled(true);
- ui->txtRoutes->setText(QString::number(/*sd.routeCount*/sql->getCountOfRoutesUsingSegment(si->segmentId())));
+ ui->txtRoutes->setText(QString::number(/*sd.routeCount*/sql->getCountOfRoutesUsingSegment(si.segmentId())));
 }
 
 void EditSegmentDialog::On_cbRouteType_currentIndexChanged(int i)
 {
- si->setRouteType((RouteType)i);
+ si.setRouteType((RouteType)i);
 }
 
 void EditSegmentDialog::On_sbTracks_valueChanged(int v)
 {
  ui->lblHelp->setText("");
- si->setTracks(v);
- if(rd )
+ if(reversed.count() == 0)
  {
-  ui->chkOneWay->setChecked(v==1);
-  ui->trackUsage->setVisible(v==2);
-  ui->usageLabel->setVisible(v==2);
+  QMessageBox::warning(this, tr("Warning"), "There are no segments defined in the opposite direction");
  }
+ si.setTracks(v);
  ui->doubleTracked->setVisible(v==2);
 
-}
-
-
-void EditSegmentDialog::On_chkOneWay_toggled(bool b)
-{
- if(!b)
- {
-  //sd.setOneWay("N");
-  sd->setOneWay("N");
- }
- else
- {
-  //sd.setOneWay("Y");
-  sd->setOneWay( "N");
-
- }
- sd->setNeedsUpdate(true);
-}
-
-void  EditSegmentDialog::On_trackUsageChanged(int i)
-{
- switch(i)
- {
- case  1:
-  sd->setTrackUsage("L");
-  break;
- case 2:
-  sd->setTrackUsage("R");
-  break;
- default:
-  sd->setTrackUsage(" ");
-  break;
- }
- sd->setNeedsUpdate(true);
 }
 
 void EditSegmentDialog::On_txtDescription_editingFinished()
@@ -278,24 +231,24 @@ void EditSegmentDialog::On_txtDescription_editingFinished()
    return;
   }
   SegmentInfo si1 = sql->getSegmentIdForDescription(txt);
-  if(si->segmentId()==-1 && si1.segmentId() >0)
+  if(si.segmentId()==-1 && si1.segmentId() >0)
   {
    ui->lblHelp->setText(tr("description aready present for segment %1").arg(si1.segmentId()));
    return;
   }
-  if(si->segmentId() > 0 && si1.segmentId()>0 && (si->segmentId()!= si1.segmentId()))
+  if(si.segmentId() > 0 && si1.segmentId()>0 && (si.segmentId()!= si1.segmentId()))
   {
    ui->lblHelp->setText(tr("description aready present for segment %1").arg(si1.segmentId()));
    return;
   }
 
-  sd->setDescription(txt);
-  si->setDescription(txt);
+  //sd->setDescription(txt);
+  si.setDescription(txt);
   int ix = txt.indexOf(",");
   if(ix > 0)
-   sd->setStreetName(txt.mid(0,ix));
+   si.setStreetName(txt.mid(0,ix));
   else
-   sd->setStreetName("");
+   si.setStreetName("");
   setUpdate();
 }
 
@@ -313,9 +266,9 @@ void EditSegmentDialog::On_dtBegin_editingFinished()
   QMessageBox::critical(this, tr("date error"), "The Begin date must be before the end date");
   return;
  }
- if(dt > sd->startDate())
+ if(dt > si.startDate())
  {
-  QList<SegmentData> list = sql->getRouteDatasForDate(sd->segmentId(), dt.toString("yyyy/MM/dd"));
+  QList<SegmentData> list = sql->getRouteDatasForDate(si.segmentId(), dt.toString("yyyy/MM/dd"));
   QString detail;
   foreach (SegmentData sd, list)
   {
@@ -330,11 +283,11 @@ void EditSegmentDialog::On_dtBegin_editingFinished()
   msg.setDetailedText(detail);
   if(msg.exec() == QMessageBox::Yes)
   {
-   sd->setStartDate(dt);
+   si.setStartDate(dt);
    setUpdate();
   }
   else
-   ui->dtBegin->setDate(sd->startDate());
+   ui->dtBegin->setDate(si.startDate());
   msg.close();
  }
 }
@@ -354,30 +307,30 @@ void EditSegmentDialog::On_dtEnd_editingFinished()
   QMessageBox::critical(this, tr("date error"), "The Begin date must be before the end date");
   return;
  }
- if(dt < sd->endDate())
+ if(dt < si.endDate())
  {
-  QList<SegmentData> list = sql->getRouteDatasForDate(sd->segmentId(), dt.toString("yyyy/MM/dd"));
-  QString detail;
-  foreach (SegmentData sd, list)
-  {
-   detail.append(sd.toString() +"\n");
-  }
-  QMessageBox msg;
-  msg.setWindowTitle(tr("Date Warning"));
-  msg.setText(tr("%1 routes are using this segment on this date.").arg(list.count()));
-  msg.setStandardButtons( QMessageBox::Yes| QMessageBox::No);
-  msg.setInformativeText("Click on 'Yes' to alter all the routes using this segment. Enter 'No'' to cancel");
-  msg.setIcon(QMessageBox::Warning);
-  msg.setDetailedText(detail);
-  msg.exec();
-  if(msg.exec() == QMessageBox::Yes)
-  {
-   sd->setEndDate(dt);
-   setUpdate();
-  }
-  else
-   ui->dtEnd->setDate(sd->endDate());
-  msg.close();
+   QList<SegmentData> list = sql->getRouteDatasForDate(si.segmentId(), dt.toString("yyyy/MM/dd"));
+   QString detail;
+   foreach (SegmentData sd, list)
+   {
+     detail.append(sd.toString() +"\n");
+   }
+   QMessageBox msg;
+   msg.setWindowTitle(tr("Date Warning"));
+   msg.setText(tr("%1 routes are using this segment on this date.").arg(list.count()));
+   msg.setStandardButtons( QMessageBox::Yes| QMessageBox::No);
+   msg.setInformativeText("Click on 'Yes' to alter all the routes using this segment. Enter 'No'' to cancel");
+   msg.setIcon(QMessageBox::Warning);
+   msg.setDetailedText(detail);
+   msg.exec();
+   if(msg.exec() == QMessageBox::Yes)
+   {
+     si.setEndDate(dt);
+     setUpdate();
+   }
+   else
+     ui->dtEnd->setDate(si.endDate());
+   msg.close();
  }
 }
 
@@ -391,25 +344,20 @@ void EditSegmentDialog::On_doubleTrackedDate_editingFinished()
 {
  if(ui->doubleTracked->date().isValid())
  {
-  if(ui->doubleTracked->date() < si->startDate() || ui->doubleTracked->date() > si->endDate())
+  if(ui->doubleTracked->date() < si.startDate() || ui->doubleTracked->date() > si.endDate())
   {
    ui->lblHelp->setText("Double Tracked Date must be after startDate or before end date!");
    return;
   }
-  si->setDoubleDate(ui->doubleTracked->date());
-  sd->setDoubleDate(ui->doubleTracked->date());
+  si.setDoubleDate(ui->doubleTracked->date());
+  ui->btnSave->setEnabled(true);
  }
 }
 
 
 void EditSegmentDialog::setUpdate()
 {
- if(!sd->needsUpdate())
- {
-  sd->setNeedsUpdate(true);
-//  btnUpdate->setEnabled(true);
   ui->btnSave->setEnabled(true);
- }
 }
 
 void EditSegmentDialog::On_btnSave_clicked()
@@ -422,27 +370,27 @@ void EditSegmentDialog::On_btnSave_clicked()
     ui->lblHelp->setText("End date must be after start date!");
     return;
   }
-  if(si->segmentId() == -1)
-    processAdd();
+  if(si.segmentId() == -1)
+    throw IllegalArgumentException("invalid segmentId");
 
-  si->setEndDate(ui->dtEnd->date());
-  si->setStartDate(ui->dtBegin->date());
-  si->setLocation(ui->cbLocation->currentText());
+  si.setEndDate(ui->dtEnd->date());
+  si.setStartDate(ui->dtBegin->date());
+  si.setLocation(ui->cbLocation->currentText());
 
-  sd->update(*si); // populate sd with shared fields
-
-  if(si->tracks() == 2 && dupSegments.count() > 0)
+  if(si.tracks() == 2 && dupSegments.count() > 0)
   {
    QString infoText;
-   foreach (SegmentInfo si, dupSegments) {
+   foreach (SegmentInfo si, dupSegments)
+   {
     infoText.append(tr("Segment %1 %2\n").arg(si.segmentId()).arg(si.description()));
    }
-    QMessageBox* box = new QMessageBox(QMessageBox::Question, tr("Duplicates"),
-                                       tr("Duplicate segments exist. Replace in routes with this segment?"),
-                                       QMessageBox::Cancel | QMessageBox::Yes | QMessageBox::No);
-    box->setInformativeText(infoText);
-    int ret = box->exec();
-    switch (ret) {
+   QMessageBox* box = new QMessageBox(QMessageBox::Question, tr("Duplicates"),
+                                      tr("Duplicate segments exist. Replace in routes with this segment?"),
+                                      QMessageBox::Cancel | QMessageBox::Yes | QMessageBox::No);
+   box->setInformativeText(infoText);
+   int ret = box->exec();
+   switch (ret)
+   {
     case QMessageBox::Cancel:
      reject();
      break;
@@ -450,101 +398,97 @@ void EditSegmentDialog::On_btnSave_clicked()
      bReplaceDups = true;
     default:
      break;
-    }
-
-  }
+   }
+ }
 
   sql->beginTransaction("updateSegment");
-  if(!sql->updateSegment(si))
+  if(!sql->updateSegment(&si))
   {
    sql->rollbackTransaction("updateSegment");
-   ui->lblHelp->setText(tr("update segment %1 failed").arg(si->segmentId()));
+   ui->lblHelp->setText(tr("update segment %1 failed").arg(si.segmentId()));
    return;
   }
-
-//  if(osd && sd->needsUpdate())
-//  {
-//   if(!sql->updateRoute(*osd, *sd))
-//   {
-//    ui->lblHelp->setText(tr("update route failed"));
-//    sql->rollbackTransaction("updateSegment");
-//    return;
-//   }
-//  }
+  QString oneWay;
+  QString trackUsage;
+  QList<SegmentData*> routeList = sql->getRouteSegmentsBySegment(si.segmentId());
+  foreach (SegmentData* sd, routeList)
+  {
+    SegmentData sd1 = SegmentData(*sd);
+    sd1.setSegmentId(si.segmentId());
+    sd1.setTracks(si.tracks());
+    if(sd1.oneWay() == "Y" )
+    {
+     if(si.direction().at(0) == sd1.direction().at(0))
+      sd1.setTrackUsage("R");
+     else
+      sd1.setTrackUsage("L");
+    }
+    if(!sql->updateRoute(*sd,sd1))
+    {
+     ui->lblHelp->setText(tr("update route failed"));
+     sql->rollbackTransaction("updateSegment");
+     return;
+    }
+  }
   if(bReplaceDups)
   {
-   QDate oldestStartDate = si->startDate();
-   foreach (SegmentInfo siDup, dupSegments)
-   {
-    if(siDup.startDate() < oldestStartDate)
-     oldestStartDate = siDup.startDate();
-   }
-   foreach (SegmentInfo siDup, dupSegments) {
-    if(!siDup.doubleDate().isValid() && ui->doubleTracked->date().isValid())
+    foreach (SegmentInfo siDup, dupSegments)
     {
-     siDup.setDoubleDate(ui->doubleTracked->date());
-     siDup.setTracks(2);
-     if(!sql->updateSegment(&siDup))
-     {
-      sql->rollbackTransaction("updateSegment");
-      ui->lblHelp->setText(tr("update segment %1 failed").arg(siDup.segmentId()));
-      return;
-     }
-
-     // Keep the oldest segment, e.g the one with the lowest segment id.
-     int fromId;
-     int toId;
-     if(si->segmentId()< siDup.segmentId())
-     {
-      toId = si->segmentId();
-      fromId = siDup.segmentId();
-     }
-     else
-     {
-      toId = siDup.segmentId();
-      fromId = si->segmentId();
-     }
-     QString commandText = QString("update Routes set lineKey = %1 where lineKey = %2")
-       .arg(toId).arg(fromId);
-
-     if(!sql->executeCommand(commandText))
-     {
+ //     QString commandText = QString("update Routes set lineKey = %1 where lineKey = %2")
+ //       .arg(toId).arg(fromId);
+      QList<SegmentData*> routeList = sql->getRouteSegmentsBySegment(siDup.segmentId());
+      foreach (SegmentData* sd, routeList)
       {
-       sql->rollbackTransaction("updateSegment");
-       ui->lblHelp->setText(tr("update routes using segment %1 failed").arg(fromId));
-       return;
+        SegmentData sd1 = SegmentData(*sd);
+        sd1.setSegmentId(si.segmentId());
+        sd1.setTracks(si.tracks());
+        if(sd1.oneWay() == "Y" )
+        {
+         if(si.direction().at(0) == sd1.direction().at(0))
+          sd1.setTrackUsage("R");
+         else
+          sd1.setTrackUsage("L");
+        }
+        if(!sql->deleteRoute(*sd))
+        {
+          sql->rollbackTransaction("updateSegment");
+          ui->lblHelp->setText(tr("delete route %1 failed").arg(sd->route()));
+          return;
+        }
+        if(!sql->addSegmentToRoute(&sd1))
+        {
+          sql->rollbackTransaction("updateSegment");
+          ui->lblHelp->setText(tr("delete route %1 failed").arg(sd->route()));
+          return;
+        }
       }
-     }
-     // adjust start date on oldest segment
-     commandText = QString("update segments set startDate = '%1' where segmentid = %2")
-       .arg(oldestStartDate.toString("yyyy/MM/dd")).arg(toId);
-     if(!sql->executeCommand(commandText))
-     {
-      {
-       sql->rollbackTransaction("updateSegment");
-       ui->lblHelp->setText(tr("update  segment %1 failed").arg(toId));
-       return;
-      }
-     }
-     // TODO: delete fromId
+       // TODO: delete fromId
     }
-   }
+    if(ui->chkDeleteUnused)
+    {
+     foreach (SegmentInfo siDup, dupSegments) {
+      if(sql->getRouteSegmentsBySegment(siDup.segmentId()).count() ==0)
+      {
+       if(!sql->deleteSegment(siDup.segmentId()))
+       {
+        sql->rollbackTransaction("updateSegment");
+        ui->lblHelp->setText(tr("delete segment %1 failed").arg(siDup.segmentId()));
+        return;
+       }
+      }
+     }
+    }
+
+    sql->commitTransaction("updateSegment");
+
+    m_bridge->processScript("isSegmentDisplayed", QString("%1").arg(si.segmentId()));
+    while(!m_bridge->isResultReceived())
+    {qApp->processEvents();}
+    if (m_segmentStatus == "Y")
+    {
+      si.displaySegment(ui->dtEnd->date().toString("yyyy/MM/dd"),m_segmentColor, "", true);
+    }
   }
-  sql->commitTransaction("updateSegment");
-  sd->setNeedsUpdate(false);
-
-// btnUpdate->setEnabled(false);
-// ui->buttonBox->button(QDialogButtonBox::Save)->setEnabled(false);
-
- m_bridge->processScript("isSegmentDisplayed", QString("%1").arg(sd->segmentId()));
- while(!m_bridge->isResultReceived())
- {qApp->processEvents();}
- if (m_segmentStatus == "Y")
- {
- //displaySegment(sd.SegmentId, si.description, si.oneWay, m_segmentColor, true);
-  si->displaySegment(ui->dtEnd->date().toString("yyyy/MM/dd"),m_segmentColor, "", true);
- }
- //ui->ssw->refresh();
 }
 
 void EditSegmentDialog::On_segmentStatusSignal(QString txt, QString color)
@@ -552,7 +496,7 @@ void EditSegmentDialog::On_segmentStatusSignal(QString txt, QString color)
  m_segmentStatus = txt;
  m_segmentColor = color;
 }
-
+#if 0
 void EditSegmentDialog::processAdd()
 {
  QString txt = ui->txtDescription->text();
@@ -578,3 +522,4 @@ void EditSegmentDialog::processAdd()
  WebViewBridge::instance()->processScript("addModeOn", objArray);
 
 }
+#endif

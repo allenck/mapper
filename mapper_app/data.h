@@ -657,7 +657,7 @@ class SegmentInfo
  void setRouteType(RouteType routeType) {_routeType = routeType;}
  void setDescription(QString description) {_description = description;}
  void setTracks(int tracks) {_tracks = tracks;}
- QString direction() {return _direction;}
+ QString direction();
  void setStreetName(QString streetName) {_streetName = streetName;}
  bool needsUpdate() {return _bNeedsUpdate;}
  void setNeedsUpdate(bool b) {_bNeedsUpdate = b;}

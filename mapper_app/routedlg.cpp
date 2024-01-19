@@ -1963,7 +1963,10 @@ void RouteDlg::checkDirection(QString routeDirection)
         return;
 
     SegmentInfo si = SegmentInfo(*sd);
-    SegmentInfo siReverse = sql->getSegmentInOppositeDirection(si);
+    QList<SegmentInfo> siReverseList = sql->getSegmentsInOppositeDirection(si);
+    if(siReverseList.isEmpty())
+     return;
+    SegmentInfo siReverse =  siReverseList.at(0);
     int seq = 0;
     int companyKey = -1;
     companyKey = -1;
@@ -2097,6 +2100,7 @@ void RouteDlg::checkDirection(QString routeDirection)
       default:    // cancel
           return;
      }
+
  }
  else
  {
@@ -2163,6 +2167,7 @@ void RouteDlg::checkDirection(QString routeDirection)
              return;
          }
  }
+
  checkUpdate(__FUNCTION__);
 
 }

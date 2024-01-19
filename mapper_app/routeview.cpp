@@ -970,8 +970,9 @@ void RouteView::editSegment()
  qint32 segmentId = indexes.at(RouteViewTableModel::SEGMENTID).data().toInt();
  SegmentData* sd = sourceModel->getList().at(proxymodel->mapToSource(indexes.at(RouteViewTableModel::SEGMENTID)).row());
  SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId);
- EditSegmentDialog* dlg = new EditSegmentDialog(sd, &si);
- dlg->exec();
+ EditSegmentDialog* dlg = new EditSegmentDialog(si);
+ if(dlg->exec() == QDialog::Accepted)
+  MainWindow::instance()->refreshRoutes();
 }
 
 void RouteView::on_segmentSelected(int, int segmentId)

@@ -753,6 +753,17 @@ void SegmentInfo::checkTracks()
  }
 }
 
+QString SegmentInfo::direction()
+{
+
+ if(_direction.isEmpty())
+ {
+  _direction = bearing().strDirection();
+ }
+ return _direction;
+}
+
+
 void SegmentInfo::displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst)
 {
  QVariantList points, objArray;
