@@ -1,5 +1,6 @@
 #include "routenamewidget.h"
 #include "ui_routenamewidget.h"
+#include "mainwindow.h"
 
 RouteNameWidget::RouteNameWidget(QWidget *parent) :
   QWidget(parent),
@@ -95,7 +96,11 @@ void RouteNameWidget::txtRouteNbr_Leave()
     }
     ui->txtRouteNbr->text().toInt(&isNumeric);
     if(companyKey == -1)
-     throw IllegalArgumentException("missing company key");
+    {
+     //throw IllegalArgumentException("missing company key");
+        lblHelpText->setText(tr("select a company"));
+        return;
+    }
 
     _routeNbr = sql->getNumericRoute(ui->txtRouteNbr->text(), & _alphaRoute, & bAlphaRoute, companyKey);
     if(_routeNbr < 0)
@@ -271,4 +276,9 @@ void RouteNameWidget::txtRouteName_Leave()
 
     //checkUpdate(__FUNCTION__);
     emit routeNameChanged(ui->cbRouteName->currentText());
+}
+
+void RouteNameWidget::companyChange(int index)
+{
+  companyKey = MainWindow::instance()->ui->cbCompany->currentData().toInt();
 }

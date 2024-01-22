@@ -29,8 +29,9 @@ EditSegmentDialog::EditSegmentDialog(SegmentData *sd, QWidget *parent) :
   QDialog(parent),
   ui(new Ui::EditSegmentDialog)
 {
- this->si = sql->getSegmentInfo(sd->segmentId());
+ this->si = SegmentInfo(*sd);
  common();
+ //this->si = sql->getSegmentInfo(sd->segmentId());
  segmentSelected(si);
 }
 
@@ -95,6 +96,7 @@ connect(ui->btnSave, &QPushButton::clicked, [=]{
 // }
  oldestStartDate = si.endDate();
  latestEndDate = si.startDate();
+ oldestDoubleTrackDate = si.endDate();
 
  if(si.tracks() == 1)
   ui->doubleTracked->setVisible(false);
@@ -115,6 +117,8 @@ connect(ui->btnSave, &QPushButton::clicked, [=]{
        oldestStartDate = sd->startDate();
       if(sd->endDate() > latestEndDate)
        latestEndDate = dup.endDate();
+      if(sd->tracks() ==2 && sd->startDate() < oldestDoubleTrackDate)
+        oldestDoubleTrackDate = sd->startDate();
     }
   }
  }
@@ -134,6 +138,8 @@ connect(ui->btnSave, &QPushButton::clicked, [=]{
         oldestStartDate = sd->startDate();
        if(dup.endDate() > latestEndDate)
         latestEndDate = sd->endDate();
+       if(sd->tracks() ==2 && sd->startDate() < oldestDoubleTrackDate)
+         oldestDoubleTrackDate = sd->startDate();
      }
    }
   }
@@ -144,6 +150,7 @@ connect(ui->btnSave, &QPushButton::clicked, [=]{
   ui->lblHelp->setStyleSheet("color:#FFA500");
   si.setStartDate(oldestStartDate);
   si.setEndDate(latestEndDate);
+  si.setDoubleDate(oldestDoubleTrackDate);
  }
  ui->dtBegin->setDate(si.startDate());
  ui->dtEnd->setDate(si.endDate());

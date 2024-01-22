@@ -114,7 +114,6 @@ void RouteViewTableModel::segmentChanged(int segmentId)
   sd->setStreetName(si.streetName());
   QString color = MainWindow::instance()->getColor(sd->tractionType());
   MainWindow::instance()->displaySegment(sd->segmentId(),sd->description(), color, sd->trackUsage(), true);
-
  }
 }
 
@@ -449,6 +448,7 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
     break;
    case TYPE:
     sd->setRouteType((RouteType)value.toInt());
+    bSegmentNeedsUpdate = true;
     break;
    case NEXT:
     sd->setNext(value.toInt());
@@ -484,16 +484,16 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
     dt = value.toDate();
     if(dt.isValid())
     {
-
-    sd->setStartDate(value.toDate());
+        bSegmentNeedsUpdate = true;
+        sd->setStartDate(value.toDate());
     }
+
     break;
    case ENDDATE:
     dt = value.toDate();
     if(dt.isValid())
     {
-//       if(dt >= sd->startDate())
-//        sd->setEndDate(value.toDate());
+     bSegmentNeedsUpdate = true;
      sd->setEndDate(value.toDate());
     }
     break;
@@ -504,6 +504,17 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
    //listOfSegments.replace(row, sd);
    SQL::instance()->updateRoute(oldSd,*sd);
 
+   if(bSegmentNeedsUpdate)
+   {
+       SegmentInfo si = SQL::instance()->getSegmentInfo(sd->segmentId());
+       si.setRouteType(sd->routeType());
+       if(sd->startDate() < si.startDate())
+           si.setStartDate(sd->startDate());
+       if(sd->endDate() > si.endDate())
+           si.setEndDate(sd->endDate());
+
+       SQL::instance()->updateSegment(&si);
+   }
    selectedRow = row;
    bSelectedRowChanged =true;
    emit dataChanged(index, index);

@@ -80,4 +80,5 @@ wiki/images/CincinnatiMap5.png
 wiki/images/SplitSegment.png
 wiki/images/CincinnatiMap.png
 wiki/images/updateroute.png
+wiki/Credits.html
 

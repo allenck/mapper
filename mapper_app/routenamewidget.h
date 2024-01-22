@@ -31,6 +31,7 @@ class RouteNameWidget : public QWidget
  private slots:
   void txtRouteNbr_Leave();
   void txtRouteName_Leave();
+  void companyChange(int index);
 
  signals:
   void routeNameChanged(QString name);

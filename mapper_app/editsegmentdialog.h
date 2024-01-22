@@ -47,6 +47,7 @@ private:
  QList<SegmentInfo> dupSegments;
  QDate oldestStartDate;
  QDate latestEndDate;
+ QDate oldestDoubleTrackDate;
  QList<SegmentInfo>reversed;
 
 private slots:

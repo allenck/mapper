@@ -121,6 +121,7 @@ DISTFILES += \
     Resources/orange.png \
     Resources/tram.png \
     Resources/tram.shadow.png \
+    Resources/wiki/Credits.html \
     html/.gitignore \
     Resources/mapper.icns
 

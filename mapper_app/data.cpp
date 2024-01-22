@@ -631,7 +631,7 @@ SegmentInfo::SegmentInfo(const SegmentData& o)
  _tracks = o._tracks;
  _bNeedsUpdate = o._bNeedsUpdate;
  //_next = o._next;
- _trackType = o._trackType;
+ _routeType = o._routeType;
  _location = o._location;
  _doubleDate = o._doubleDate;
 }

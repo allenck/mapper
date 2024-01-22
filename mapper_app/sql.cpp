@@ -204,6 +204,7 @@ void SQL::rollbackTransaction (QString name)
 }
 
 void SQL::myExceptionHandler(Exception e)
+
 {
     Q_UNUSED(e)
     qDebug() << "SQL exception " << e.msg;
@@ -4835,9 +4836,10 @@ bool SQL::updateRecord(SegmentInfo sd)
         Q_ASSERT(sd._endLat != 0);
         Q_ASSERT(sd._endLon != 0);
 
-        QString commandText = "update Segments set street = '" + sd._streetName + "', length= " + QString("%1").arg(sd._length) +
+        QString commandText = "update Segments set street = '" + sd._streetName + "', "
+                              "length= " + QString("%1").arg(sd._length) +
             ", tracks="+ QString::number(sd._tracks) + ", startLat=" + QString::number(sd._startLat, 'g', 8) +",startLon=" + QString::number(sd._startLon,'g',8)+ + ", endLat=" + QString::number(sd._endLat, 'g', 8) +",endLon=" + QString::number(sd._endLon,'g',8)+
-            //",oneWay='" + sd._oneWay + "'" +
+            ", type=" + QString::number((int)sd._routeType) + " " +
             ",lastUpdate=:lastUpdate where SegmentId = " + QString("%1").arg(sd.segmentId());
         QSqlQuery query = QSqlQuery(db);
         query.prepare(commandText);
@@ -5739,17 +5741,19 @@ int SQL:: findNextRouteInRange(QString routeAlpha)
   return -1;
  if(highRange < lowRange)
  {
-  QMessageBox::critical(nullptr, tr("Error"), tr("Range end must be greater than start in range %1 to %2").arg(lowRange).arg(highRange));
+  QMessageBox::critical(nullptr, tr("Error"), tr("Range end must be greater than start in range %1 to %2")
+                        .arg(lowRange).arg(highRange));
   return -1;
  }
- int last = nextRouteNumberInRange(lowRange, highRange)+1;
- if(last > highRange)
+ int next = nextRouteNumberInRange(lowRange, highRange) + 1;
+ if(next >= highRange )
  {
   QMessageBox::critical(nullptr, tr("Error"), tr("No numbers available in range %1 to %2").arg(lowRange).arg(highRange));
   return -1;
  }
- return last;
+ return next;
 }
+
  /// <summary>
 /// Get a list of distinct routeData items
 /// </summary>
@@ -11609,6 +11613,7 @@ int SQL::nextRouteNumberInRange(int lowRange, int highRange){
   int rslt = query.value(0).toUInt();
   if(rslt == 0)
    return lowRange;
+  return rslt;
  }
  return lowRange;
 }

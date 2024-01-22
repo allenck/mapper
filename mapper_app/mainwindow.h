@@ -343,6 +343,7 @@ private:
     QAction *findDormantSegmentsAct;
     QAction *selectSegmentAct;
     QAction* editSegmentAct;
+    QAction* sswEditSegmentAct;
     QAction* newSegmentAct;
     QAction *addRouteAct;
     QAction *addPointModeAct;
@@ -394,6 +395,7 @@ private:
     QAction* fontSizeChangeAct;
     QAction* updateParametersAct;
     QAction* companyChangeRoutes;
+    QAction* creditsAct;
 
     QList<QAction*> cityActions;
     QList<QAction*> overlayActions;

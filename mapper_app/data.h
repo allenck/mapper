@@ -355,7 +355,7 @@ class SegmentData
     QString _trackUsage = " ";
     LatLng _sw;
     LatLng _ne;
-    QString _trackType = " ";
+    //QString _trackType = " ";
     void calculate();
     bool _markedForDelete = false;
 

@@ -251,7 +251,7 @@ void SegmentDlg::setRouteData(RouteData* value)
 {
     int i = 0;
     //bRouteChanging = true;
-    if (value->route() < 1)
+    if (!value || value->route() < 1)
         return;
     _rd = value;
     _routeNbr = _rd->route();
@@ -282,8 +282,8 @@ void SegmentDlg::setRouteData(RouteData* value)
                 break;
             }
         }
-
     }
+    ui->rnw->setCompanyKey(ui->cbCompany->currentData().toInt());
 }
 
 void SegmentDlg::fillCompanies()
@@ -305,6 +305,9 @@ void SegmentDlg::fillCompanies()
 
 void SegmentDlg::cbCompany_currentIndexChanged(int companyKey)
 {
+    ui->lblErrorText->setText("");
+    if(companyKey < 1)
+     return;
  CompanyData* cd = _companyList.at(companyKey);
  if(ui->dateStart->date() > cd->endDate)
  {

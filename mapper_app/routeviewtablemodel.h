@@ -90,6 +90,7 @@ private:
      QMap<int, QString> turnMap2 = {{0, "ahead"}, {1,"Left"},{2,"Right"}};
      bool bChangesMade = false; // set when changes need to be comitted.
      QList<int> _selectedSegments;
+     bool bSegmentNeedsUpdate = false;
 
      friend class RouteView;
 };

@@ -389,7 +389,7 @@ void MainWindow::onCbSegmentsCustomContextMenu(const QPoint &pos)
  menu->addAction(addSegmentViaUpdateRouteAct);
  menu->addAction(selectSegmentAct);
  menu->addAction(deleteSegmentAct);
- menu->addAction(editSegmentAct);
+ menu->addAction(sswEditSegmentAct);
  menu->addAction(newSegmentAct);
  menu->addAction(splitSegmentAct);
  menu->addSeparator();
@@ -979,6 +979,14 @@ void MainWindow::createActions()
  editSegmentAct->setStatusTip(tr("Edit asegment's properties"));
  connect(editSegmentAct, SIGNAL(triggered()), this, SLOT(On_editSegment_triggered()));
 
+ sswEditSegmentAct = new QAction("Edit Segment", this);
+ sswEditSegmentAct->setStatusTip(tr("Edit asegment's properties"));
+ connect(sswEditSegmentAct, &QAction::triggered, [=]{
+  m_segmentId = ui->ssw->cbSegments()->currentData().toInt();
+  On_editSegment_triggered();
+ });
+
+
  newSegmentAct = new QAction(tr("New Segment"), this);
  newSegmentAct->setStatusTip(tr("Create new segment not on a route"));
  connect(newSegmentAct, SIGNAL(triggered(bool)), this, SLOT(onNewSegment_triggered()));
@@ -1262,6 +1270,12 @@ void MainWindow::createActions()
  addGeoreferencedOverlayAct->setStatusTip(tr("Open a dialog to edit list of available overlays."));
  connect(addGeoreferencedOverlayAct, SIGNAL(triggered(bool)), this, SLOT(on_addGeoreferenced(bool)));
 
+ creditsAct = new QAction(tr("Credits"),this);
+ creditsAct->setStatusTip(tr("Credits and information sources"));
+ connect(creditsAct, &QAction::triggered,[=]{
+     QDesktopServices::openUrl(QUrl::fromLocalFile(wikiRoot+"/Credits.html"));
+
+ });
  browseCommentsAct = new QAction(tr("Browse Comments"), this);
  connect(browseCommentsAct, &QAction::triggered, [=]{
   BrowseCommentsDialog* dlg = new BrowseCommentsDialog();
@@ -1565,12 +1579,13 @@ void MainWindow::createMenus()
     });
 #endif
     helpMenu->addAction(usingMapper);
+    helpMenu->addAction(creditsAct);
     helpMenu->addAction(overlayHelp);
     helpMenu->addSeparator();
     helpMenu->addAction(aboutAct);
     //helpMenu->addAction(aboutQtAct);
-
 }
+
 void MainWindow::createCityMenu()
 {
  cityMenu->clear();

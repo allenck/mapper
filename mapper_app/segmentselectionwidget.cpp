@@ -168,7 +168,15 @@ void SegmentSelectionWidget::refreshSegmentCB()
      }
     }
    }
-   tokens2 = tokens.at(1).split("to");
+
+   QString split;
+   if(tokens.at(1).contains("to"))
+    split = "to";
+   else if(tokens.at(1).contains("zur"))
+    split = "zur";
+   else
+    split = "-";
+   tokens2 = tokens.at(1).split(split);
    {
     for(int i=0; i < tokens2.count(); i++)
     {

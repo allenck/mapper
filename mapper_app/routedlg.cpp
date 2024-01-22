@@ -1808,7 +1808,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
    }
    else
     sql->rollbackTransaction("addRouteSegment");
-   Q_ASSERT(sql->currentTransaction.isEmpty());
+   Q_ASSERT(sql->currentTransaction != "addRouteSegment");
   }
   else
   {
