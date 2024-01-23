@@ -64,13 +64,13 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
 //   QString dbType =  ui->cbDbType->currentText();
 //   setupComboBoxes(dbType);
 
-   connect(ui->cbDriverType, SIGNAL(currentIndexChanged(int)), this, SLOT(cbDriverTypeSelectionChanged(int)));
+   connect(ui->cbDriverType, SIGNAL(currentTextChanged(QString)), this, SLOT(cbDriverTypeSelectionChanged(QString)));
 
-   connect(ui->cbConnect, &QComboBox::currentTextChanged, [=]{
-    setControls(ui->cbConnect->currentText());
-    if(ui->cbConnect->currentText() == "ODBC")
-        setControls(ui->cbConnect->currentText());
-    });
+//   connect(ui->cbConnect, &QComboBox::currentTextChanged, [=]{
+//    setControls(ui->cbConnect->currentText());
+//    if(ui->cbConnect->currentText() == "ODBC")
+//        setControls(ui->cbConnect->currentText());
+//    });
 
     connect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this,  SLOT(onDbTypeChanged(QString)));
 
@@ -191,6 +191,8 @@ void EditConnectionsDlg::setupComboBoxes(QString txt)
 
 void EditConnectionsDlg::onDbTypeChanged(QString dbType)
 {
+ disconnect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(onDbTypeChanged(QString)));
+
  if(dbType == "Sqlite")
  {
      setComboBoxItemEnabled(ui->cbDriverType,0,true); //QSQLITE
@@ -204,6 +206,9 @@ void EditConnectionsDlg::onDbTypeChanged(QString dbType)
      setComboBoxItemEnabled(ui->cbConnect, 0, true); // Local"
      setComboBoxItemEnabled(ui->cbConnect, 1, false); // Direct");
      setComboBoxItemEnabled(ui->cbConnect, 2, false); // ODBC");
+     ui->cbConnect->setCurrentText("Local");
+     ui->cbDriverType->setCurrentText("QSQLITE");
+     setControls("Local");
  }
  else if(dbType == "MySql")
  {
@@ -241,6 +246,21 @@ void EditConnectionsDlg::onDbTypeChanged(QString dbType)
  {
   throw IllegalArgumentException("invalid dbType");
  }
+ if(dbType != "Sqlite")
+ {
+  QString driverType = ui->cbDriverType->currentText();
+  // driver type must be either QMYSQL QMARIADB or QODBC
+  if(!(driverType == "QMYSQL" || driverType == "QMYSQL3" ||
+     driverType == "QMARIADB" || driverType == "QODBC" ||
+     driverType == "QODBC3"))
+  {
+   ui->cbDriverType->setCurrentText("QODBC");
+   ui->cbConnect->setCurrentText("ODBC");
+   setControls("ODBC");
+  }
+ }
+ connect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(onDbTypeChanged(QString)));
+
 }
 
 void EditConnectionsDlg::setCity(City* city)
@@ -405,22 +425,24 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
  connectionChanging=false;
 }
 
-void EditConnectionsDlg::cbDriverTypeSelectionChanged(int sel)
+void EditConnectionsDlg::cbDriverTypeSelectionChanged(QString sel)
 {
  Q_UNUSED(sel)
  QString text = ui->cbDriverType->currentText();
  QString connectionType = ui->cbConnect->currentText();
  Connection*  c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
- QString driverType = c->driver();
+ //QString driverType = c->driver();
+ QString driverType = ui->cbDriverType->currentText();
+ QString dbType = ui->cbDbType->currentText();
 
- if(driverType == "QSQLITE" || driverType == "QSQLITE3")
+ if(dbType == "Sqlite" && (driverType == "QSQLITE" || driverType == "QSQLITE3"))
  {
   ui->cbDbType->setCurrentIndex(ui->cbDbType->findText("Sqlite"));
   if(ui->cbConnect->currentText() != "Local")
    ui->cbConnect->setCurrentText("Local");
  }
- else if(driverType == "QMYSQL" || driverType == "QMYSQL3"
-         || driverType == "QMARIADB" || driverType == "QMARIADB")
+ else if(dbType == "MySql" && (driverType == "QMYSQL" || driverType == "QMYSQL3"
+         || driverType == "QMARIADB" || driverType == "QMARIADB"))
  {
   ui->cbDbType->setCurrentIndex(ui->cbDbType->findText("MsSql"));
 //  if(ui->cbConnect->currentText() == "Local")
@@ -430,7 +452,8 @@ void EditConnectionsDlg::cbDriverTypeSelectionChanged(int sel)
     ui->cbConnect->setCurrentIndex(ui->cbConnect->findText(c->connectionType()));
   }
  }
- else if(ui->cbDriverType->currentText() == "QODBC" || ui->cbDriverType->currentText() == "QODBC3")
+ else if((dbType == "MySql" || dbType == "MsSql") &&(ui->cbDriverType->currentText() == "QODBC"
+          || ui->cbDriverType->currentText() == "QODBC3"))
  {
 //  ui->cbDbType->setCurrentIndex(ui->cbDbType->findText("MsSql"));
 //  ui->cbConnect->setCurrentText("ODBC");
@@ -506,9 +529,15 @@ void EditConnectionsDlg::setControls(QString txt)
      else if(keyVal.contains("MySQL"))
          odbcMap.insert("MySql", key);
   }
+
 #else
+#  ifdef Q_OS_MACOS
+  findODBCDsn("/Library/ODBC/odbc.ini", &databases);
+  findODBCDsn("/etc/odbc.ini", &databases);
+#  else
   findODBCDsn(QDir::home().absolutePath() + QDir::separator()+ ".odbc.ini", &databases);
   findODBCDsn("/etc/odbc.ini", &databases);
+#  endif
 #endif
   // use database (required for ODBC)
   ui->label_10->setVisible(true);
@@ -609,8 +638,9 @@ void EditConnectionsDlg::findODBCDsn(QString iniFile, QStringList* dsnList)
     int last = str.indexOf("]");
     if((last - first) > 0)
     {
-     QString entry = str.mid(first, last-first);
-     dsnList->append(entry.trimmed());
+      QString entry = str.mid(first, last-first);
+      if(!dsnList->contains(entry.trimmed()))
+        dsnList->append(entry.trimmed());
     }
    }
   }
@@ -622,7 +652,7 @@ void EditConnectionsDlg::findODBCDsn(QString iniFile, QStringList* dsnList)
  ini.close();
 
  qDebug()<<ini.fileName();
- qDebug() << QString("%1").arg(databases.count());
+ qDebug()<< "number of databases" << QString("%1").arg(databases.count());
 }
 #endif
 
@@ -983,7 +1013,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
   {
      if(!bCreate)
      {
-         ui->lblHelp->setStyleSheet("QLabel {  color : #FF8000; }");
+         ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
          ui->lblHelp->setText(tr("%1 tables are defined in %2").arg(db.tables().count()).arg(fn));
          this->setCursor(QCursor(Qt::ArrowCursor));
        return true;
@@ -1087,6 +1117,9 @@ bool EditConnectionsDlg::openTestDb()
   //QString connector = ui->txtDbOrDSN->text();
   QString connector = ui->cbODBCDsn->currentText();
   db.setDatabaseName(connector);
+  db.setUserName("allen");
+  db.setPassword("iic723");
+  db.setHostName("192.168.1.101");
  }
  else if( ui->cbConnect->currentText()== "Direct")
  { // MySql

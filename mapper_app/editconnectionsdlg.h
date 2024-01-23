@@ -57,7 +57,7 @@ private:
 private slots:
  void cbCitiesSelectionChanged(int sel);
  void cbConnectionsSelectionChanged(int sel);
- void cbDriverTypeSelectionChanged(int sel);
+ void cbDriverTypeSelectionChanged(QString sel);
  void btnTestClicked();
  void btnSaveClicked();
  void btnCancelClicked();
