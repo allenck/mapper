@@ -30,7 +30,7 @@ Connection::Connection(const Connection& o){
  this->_database = o._database;
  this->_hostName = o._hostName;
  this->_port = o._port;
- this->_useDatabase = o._useDatabase;
+ //this->_useDatabase = o._useDatabase;
  this->db = o.db;
  this->_servertype = o._servertype; // "MsSql (default), "MySql"
  this->bOpen = o.bOpen;

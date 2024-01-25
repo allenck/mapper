@@ -65,7 +65,7 @@ bool ExportSql::openDb()
    {
     if(tgtConn->servertype() != "Local" )
     {
-     if(tgtConn->useDatabase() != "default" && tgtConn->useDatabase() != tgtConn->defaultSqlDatabase())
+     if(tgtConn->database() != "default" && tgtConn->database() != tgtConn->defaultSqlDatabase())
      {
       QSqlQuery query = QSqlQuery(_targetDb);
       QString cmd;

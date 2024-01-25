@@ -78,10 +78,10 @@ bool SQL::dbOpen()
 //        cout << "Logged on\n";
      if(config->currConnection->driver()=="QODBC" || config->currConnection->driver() == "QODBC3")
      {
-      if(config->currConnection->useDatabase() != "default" && config->currConnection->useDatabase() != "")
+      if(config->currConnection->database() != "default" && config->currConnection->database() != "")
       {
        QSqlQuery query = QSqlQuery(db);
-       if(!query.exec(tr("use [%1]").arg(config->currConnection->useDatabase())))
+       if(!query.exec(tr("use [%1]").arg(config->currConnection->database())))
        {
         SQLERROR(query);
         db.close();
@@ -10483,7 +10483,7 @@ bool SQL::doesColumnExist(QString table, QString column)
  {
   int count;
   commandText = "Select count(*) from information_schema.COLUMNS"
-                " where table_schema ='" + config->currConnection->defaultSqlDatabase()
+                " where table_schema ='" + config->currConnection->database()
                 + "' and table_name = '" + table +"' and column_name = '" + column + "'";
   query.prepare(commandText);
 //  query.bindValue(":tbName",table);
@@ -10722,7 +10722,7 @@ void SQL::checkTables(QSqlDatabase db)
 
   if(!doesColumnExist("Segments", "DoubleDate"))
   {
-     addColumn("Segments", "DoubleDate", "date NOT NULL DEFAULT '0000-00-00'");
+     addColumn("Segments", "DoubleDate", "date NOT NULL DEFAULT '2000-01-01'");
      if(config->currConnection->servertype() == "Sqlite")
       executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
   }
@@ -10799,9 +10799,10 @@ void SQL::checkTables(QSqlDatabase db)
    else if(config->currConnection->servertype() == "MySql")
    {
     addColumn("Routes", "TrackUsage", "ENUM('N', 'B', 'R')");
+    executeScript(":/sql/mysql_recreate_routes.sql");
    }
    // TODO: add Sql Server syntax
-   executeScript(":/sql/mssql_recreate_routes.sql");
+   //executeScript(":/sql/mssql_recreate_routes.sql");
   }
 
   if(!doesColumnExist("Routes", "Sequence"))
@@ -10880,7 +10881,7 @@ bool SQL::executeCommand(QString commandString, QSqlDatabase db)
 bool SQL::executeScript(QString path, QSqlDatabase db)
 {
  QFileInfo info(path);
-
+ qDebug() << "execute script " << path;
  QFile file(path);
  if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
  {

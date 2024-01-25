@@ -53,11 +53,18 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
 //   int index = 0;
    for(int i=0; i < config->currCity->connections.count(); i++)
    {
+       // if(ui->cbCities->currentText().isEmpty())
+       // {
+       //     ui->cbCities->setCurrentText(currCity->name());
+       //     config->currCity->connections.at(i)->cityName() = currCity->name();
+       // }
     City* selectedCity = config->cityMap.value(ui->cbCities->currentText());
     Connection* connection = selectedCity->connections.at(i);
     setControls(connection->connectionType());
     ui->cbConnections->addItem(connection->description(),VPtr<Connection>::asQVariant(connection));
    }
+
+   onDbTypeChanged(connection->servertype());
 
 //   ui->cbDbType->setCurrentText(connection->servertype());
 
@@ -174,13 +181,13 @@ void EditConnectionsDlg::setupComboBoxes(QString txt)
   ui->cbConnect->addItem("ODBC");
   ui->cbDriverType->setCurrentText(connection->driver());
   ui->txtDefaultDb->setText(connection->defaultSqlDatabase());
-  ui->txtUseDatabase->setText(connection->useDatabase());
+  ui->txtUseDatabase->setText(connection->database());
  }
  else if(txt == "MsSql")// MsSql
  {
   ui->cbDriverType->setCurrentText(connection->driver());
   ui->txtDefaultDb->setText(connection->defaultSqlDatabase());
-  ui->txtUseDatabase->setText(connection->useDatabase());
+  ui->txtUseDatabase->setText(connection->database());
  }
  else
   return;
@@ -368,7 +375,7 @@ void EditConnectionsDlg::cbCitiesLeave()
 
 void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
 {
- // ui->lblHelp->setText("");
+ ui->lblHelp->setText("");
  // ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
  if(sel < 0)
   return;
@@ -395,6 +402,8 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
   ui->txtUserId->setText(connection->userId());
   ui->txtPWD->setText(connection->pwd());
   ui->txtDefaultDb->setText(connection->defaultSqlDatabase());
+  if(connection->database().isEmpty())
+      connection->setDatabase(connection->defaultSqlDatabase());
   if(openTestDb())
   {
    QStringList list = SQL::instance()->showMySqlDatabases(db);
@@ -533,10 +542,11 @@ void EditConnectionsDlg::setControls(QString txt)
 #else
 #  ifdef Q_OS_MACOS
   findODBCDsn("/Library/ODBC/odbc.ini", &databases);
-  findODBCDsn("/etc/odbc.ini", &databases);
-#  else
   findODBCDsn(QDir::home().absolutePath() + QDir::separator()+ ".odbc.ini", &databases);
-  findODBCDsn("/etc/odbc.ini", &databases);
+#  else
+  // location of unixODBC config files
+  findODBCDsn(QDir::home().absolutePath() + QDir::separator()+ ".odbc.ini", &databases);
+  findODBCDsn("/usr/local/etc/odbc.ini", &databases);
 #  endif
 #endif
   // use database (required for ODBC)
@@ -732,7 +742,9 @@ void EditConnectionsDlg::btnSaveClicked()
    }
    if(connection->cityName() != currCity->name())
    {
-       throw IllegalArgumentException("internal error, connection not for city");
+       //throw IllegalArgumentException("internal error, connection not for city");
+       ui->lblHelp->setStyleSheet("color:red");
+       ui->lblHelp->setText("connection city name is invalid");
    }
     //QString savedb = ui->txtUseDatabase->text();
 
@@ -753,7 +765,7 @@ void EditConnectionsDlg::btnSaveClicked()
      //connection->setOdbcConnectorName(ui->txtDbOrDSN->text());
      connection->setOdbcConnectorName(ui->cbODBCDsn->currentText());
      connection->setDefaultSqlDatabase(ui->txtDefaultDb->text());
-     connection->setUseDatabase(ui->txtUseDatabase->text());
+     connection->setDatabase(ui->txtUseDatabase->text());
   }
   else if(ui->cbDbType->currentText() == "Sqlite")
   {
@@ -887,6 +899,7 @@ void EditConnectionsDlg::cbConnectionsTextChanged(QString text)
 
 void EditConnectionsDlg::cbConnectionsLeave()
 {
+    ui->lblHelp->setText("");
  if(bCbConnectionsTextChanged)
  {
 #if 0
@@ -950,9 +963,10 @@ void EditConnectionsDlg::newConnection(){
     ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
     ui->cbDbType->setCurrentIndex(2); // Sqlite
     ui->cbCities->setEditable(true);
-    ui->cbCities->setCurrentText("");
-    ui->cbCities->lineEdit()->setPlaceholderText(tr("enter a city name. e.g. 'St Louis, MO'"));
+    // ui->cbCities->setCurrentText("");
+    // ui->cbCities->lineEdit()->setPlaceholderText(tr("enter a city name. e.g. 'St Louis, MO'"));
     connection = new Connection();
+    connection->cityName() = ui->cbCities->currentText();
     //connection->setCityName(currCity->name());
     connect(ui->cbCities->lineEdit(), &QLineEdit::editingFinished, [=] {
         QString cityName = ui->cbCities->lineEdit()->text();
@@ -1004,7 +1018,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
 #else
       file = QFileInfo(config->macOSPublic+"/databases/"+fn);
 #endif
-  if(file.exists() && !file.isWritable())
+  if( file.exists() && !file.isWritable())
   {
    MyMessageBox::warning(this, tr("Warning"), tr("The file pathname '%1' is invalid or not writable").arg(file.absoluteFilePath()));
    return false;
@@ -1051,38 +1065,81 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
   return false;
  }
 
+ QString currDb = getDatabase();
+
  QStringList tableList = db.tables();
- if(!tableList.contains("Parameters", Qt::CaseInsensitive))
+ if(!currDb.isEmpty() && !tableList.contains("Parameters", Qt::CaseInsensitive))
  {
   //createSqliteTables(db);
   ExportSql* expSql = new ExportSql(Configuration::instance(), false);
   expSql->createParametersTable(db, ui->cbDbType->currentText());
  }
 
- QString currDb = db.databaseName();
+ QString odbcDsn = db.databaseName();
+
  if(ui->cbDbType->currentText() =="MsSql" || ui->cbDbType->currentText() =="MySql")
  {
-     QString currDb = getDatabase();
-     ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
-     ui->lblHelp->setText(tr("Connection succeeded. %1 Has %2 tables!<br> %3").arg(currDb).arg(tableList.count()).arg(tableList.join(", ")));
-     ui->txtDefaultDb->setText(currDb);
-     parms = SQL::instance()->getParameters(db);
-     currCity->setCenter(LatLng(parms.lat, parms.lon));
- }
- else
- {
-     ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
-     ui->lblHelp->setText(tr("Connection succeeded. %1 Has %2 tables!<br> %3").arg(currDb).arg(tableList.count()).arg(tableList.join(", ")));
-     currCity->setCenter(LatLng(parms.lat, parms.lon));
-     parms = SQL::instance()->getParameters(db);
-     if(parms.city == ui->cbCities->currentText())
-      currCity->setCenter(LatLng(parms.lat, parms.lon));
+     if(!currDb.isEmpty())
+     {
+         ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
+         ui->lblHelp->setText(tr("Connection succeeded. %1 Has %2 tables!<br> %3").arg(currDb).arg(tableList.count()).arg(tableList.join(", ")));
+         ui->txtDefaultDb->setText(currDb);
+         parms = SQL::instance()->getParameters(db);
+         currCity->setCenter(LatLng(parms.lat, parms.lon));
+         ui->txtDefaultDb->setText(currDb);
+     }
      else
-         QMessageBox::warning(this, tr("City Name"), tr("The city name entered, '%1'; is not"
-                                                        " the same as in the database:'%2'\n"
-                                                        "The name in the database will be used.").arg(ui->cbCities->currentText(),parms.city));
-     currCity->setNameOverride(parms.city);
-     ui->cbCities->setCurrentText(parms.city);
+     {
+         if(!ui->txtUseDatabase->text().isEmpty())
+         {
+             if(!SQL::instance()->useDatabase(ui->txtUseDatabase->text(), db))
+             {
+                 ui->lblHelp->setStyleSheet("color:red");
+                 ui->lblHelp->setText(tr("unable to set used database %1").arg(currDb));
+                 return false;
+             }
+         }
+         else
+         {
+             ui->lblHelp->setStyleSheet("color:red");
+             ui->lblHelp->setText(tr("there is no database specified"));
+             QStringList list;
+             if(ui->cbDbType->currentText() =="MySql")
+                 list = SQL::instance()->showMySqlDatabases(db);
+             if(ui->cbDbType->currentText() =="MsSql")
+                 list = SQL::instance()->showMsSqlDatabases(db);
+             QCompleter* completer = new QCompleter(list);
+             ui->txtUseDatabase->setCompleter(completer);
+             return false;
+
+         }
+         ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
+         ui->lblHelp->setText(tr("Connection succeeded. No default database. %1 Has %2 tables!<br> %3").arg(currDb).arg(tableList.count()).arg(tableList.join(", ")));
+         currCity->setCenter(LatLng(parms.lat, parms.lon));
+         parms = SQL::instance()->getParameters(db);
+         if(parms.city == ui->cbCities->currentText())
+          currCity->setCenter(LatLng(parms.lat, parms.lon));
+         else
+             QMessageBox::warning(this, tr("City Name"), tr("The city name entered, '%1'; is not"
+                                                            " the same as in the database:'%2'\n"
+                                                            "The name in the database will be used.").arg(ui->cbCities->currentText(),parms.city));
+         currCity->setNameOverride(parms.city);
+         ui->cbCities->setCurrentText(parms.city);
+     }
+     if(!ui->txtUseDatabase->text().isEmpty())
+     {
+         QStringList list;
+         if(ui->cbDbType->currentText() =="MySql")
+             list = SQL::instance()->showMySqlDatabases(db);
+         if(ui->cbDbType->currentText() =="MsSql")
+             list = SQL::instance()->showMsSqlDatabases(db);
+         QCompleter* completer = new QCompleter(list);
+         ui->txtUseDatabase->setCompleter(completer);
+     }
+     if(ui->cbConnections->currentText().isEmpty() && !ui->cbCities->currentText().isEmpty())
+     {
+         ui->cbConnections->setCurrentText(ui->cbCities->currentText() + " " + ui->cbDbType->currentText() + " " + ui->cbConnect->currentText());
+     }
  }
  timer->stop();
  this->setCursor(QCursor(Qt::ArrowCursor));
@@ -1117,9 +1174,6 @@ bool EditConnectionsDlg::openTestDb()
   //QString connector = ui->txtDbOrDSN->text();
   QString connector = ui->cbODBCDsn->currentText();
   db.setDatabaseName(connector);
-  db.setUserName("allen");
-  db.setPassword("iic723");
-  db.setHostName("192.168.1.101");
  }
  else if( ui->cbConnect->currentText()== "Direct")
  { // MySql

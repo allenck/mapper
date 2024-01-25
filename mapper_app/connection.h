@@ -19,7 +19,7 @@ class Connection : public QObject
  QString _database;
  QString _hostName;
  qint32  _port =0;
- QString _useDatabase; // MySql or MsSql
+ //QString _useDatabase; // MySql or MsSql
  QSqlDatabase db;
  SQL* sql;
  QString _servertype = "Sqlite"; // "MsSql (default), "MySql"
@@ -66,8 +66,8 @@ public:
  void setHost(QString h) {_hostName = h;}
  qint32 port() {return _port;}
  void setPort(qint32 p) {_port = p;}
- QString useDatabase() {return _useDatabase;}
- void setUseDatabase(QString u) {_useDatabase = u;}
+// QString useDatabase() {return _useDatabase;}
+// void setUseDatabase(QString u) {_useDatabase = u;}
  QString cityName() {return _cityName;}
  void setCityName(QString name) {_cityName = name;}
  //static QString dbType(QString name);
