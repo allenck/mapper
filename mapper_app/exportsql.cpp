@@ -3170,9 +3170,9 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `EndLon` decimal(15,13) NOT NULL DEFAULT 0.0,"
                 " `Length` decimal(15,5) NOT NULL DEFAULT 0,"
                 " `Points` int(11) NOT NULL default 0,"
-                " `StartDate` date NOT NULL DEFAULT '0000-00-00',"
-                " `DoubleDate` date NOT NULL DEFAULT '0000-00-00',"
-                " `EndDate` date NOT NULL DEFAULT '0000-00-00',"
+                " `StartDate` date NOT NULL DEFAULT '1800-01-01',"
+                " `DoubleDate` date NOT NULL DEFAULT '1800-01-01',"
+                " `EndDate` date NOT NULL DEFAULT '1800-01-01',"
                 " `Direction` varchar(6) NOT NULL DEFAULT ' ',"
                 " `OneWay` char(1) NOT NULL DEFAULT 'N',"
                 " `Points` int(11) NOT NULL default 0,"
@@ -3883,9 +3883,9 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
  if(dbType == "Sqlite")
   commandText = "CREATE TABLE if not exists `Companies` ( "\
           "`key` integer NOT NULL primary key AUTOINCREMENT,"\
-          "`Description` varchar(50) NOT NULL default '', "\
+          "`Description` varchar(60) NOT NULL default '', "\
           "`routePrefix` varchar(10) not null default '', "\
-          "`info` varchar(50) not null default '',"
+          "`info` varchar(60) not null default '',"
           "`startDate` date DEFAULT NULL," \
           "`endDate` date DEFAULT NULL," \
           "`firstRoute` int(11) DEFAULT NULL," \
@@ -3895,9 +3895,9 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
  else if(dbType == "MySql")
   commandText = "CREATE TABLE `Companies` ("\
     "`key` int(11) NOT NULL AUTO_INCREMENT,"\
-    "`Description` varchar(50) NOT NULL,"\
+    "`Description` varchar(60) NOT NULL,"\
     "`routePrefix` varchar(10) DEFAULT '',"\
-    "`info` varchar(50),"
+    "`info` varchar(60),"
     "`startDate` date DEFAULT NULL,"\
     "`endDate` date DEFAULT NULL,"\
     "`firstRoute` int(11) DEFAULT NULL,"\
@@ -3911,8 +3911,8 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
   "SET QUOTED_IDENTIFIER ON;"\
   "CREATE TABLE [dbo].[Companies]("\
         "[key] [int] IDENTITY(1,1) NOT NULL,"\
-        "[Description] [varchar](50) NOT NULL,"\
-        "[info] varchar(50),"
+        "[Description] [varchar](60) NOT NULL,"\
+        "[info] varchar(60),"
         "[routePrefix] [varchar](10) NOT NULL,"\
         "[startDate] [date] NULL,"\
         "[endDate] [date] NULL,"\
@@ -4183,9 +4183,22 @@ bool ExportSql::createMsSqlFunctions(QSqlDatabase db)
 
 int ExportSql::errSqlMessage(QSqlQuery query)
 {
- return QMessageBox::critical(nullptr, tr("Sql Error"), tr("An SqL error has occurred.<br>"
+ if(ignoreList.contains(query.lastError().nativeErrorCode()))
+ {
+  ignored++;
+  return QMessageBox::Ignore;
+ }
+ int ret = QMessageBox::critical(nullptr, tr("Sql Error"), tr("An SqL error has occurred.<br>"
                                  "Sql error:%1<br><B>query:</B> %2").arg(query.lastError().text()).arg(query.lastQuery()),
                                  QMessageBox::Ignore|QMessageBox::Abort);
+ int ret2 = QMessageBox::question(nullptr, tr("Ignore"), tr("Should this error be ignored for subsequent transactions?"),
+                                  QMessageBox::Yes|QMessageBox::No);
+ if(ret2 == QMessageBox::Yes)
+ {
+  ignoreList.append(query.lastError().nativeErrorCode());
+  ignored++;
+ }
+ return ret;
 }
 
 bool ExportSql::exportTable(QString table)
@@ -4195,6 +4208,7 @@ bool ExportSql::exportTable(QString table)
  QString srcServerType = srcConn->servertype();
  if(!openDb())
   return false;
+ ignoreList.clear();
 
  //SQL::instance()->useDatabase(tgtConn->defaultSqlDatabase(), _targetDb);
 
@@ -4212,6 +4226,7 @@ bool ExportSql::exportTable(QString table)
  deleted=0;
  errors=0;
  notUpdated=0;
+ ignored = 0;
 
  getCount(table, bDropTables || !tables.contains(table,Qt::CaseInsensitive));
  if(tables.contains(table,Qt::CaseInsensitive) && bDropTables)
@@ -4422,6 +4437,7 @@ bool ExportSql::exportTable(QString table)
     QSqlError err = query2.lastError();
     qDebug() << "error code:" << err.nativeErrorCode() << " " << err.text() + "\n";
     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+    qDebug() << "values: " << query.boundValues();
     errors++;
    }
    else

@@ -122,8 +122,10 @@ DISTFILES += \
     Resources/tram.png \
     Resources/tram.shadow.png \
     Resources/wiki/Credits.html \
+    compile_MySql_plugin.sh \
     html/.gitignore \
-    Resources/mapper.icns
+    Resources/mapper.icns \
+    mysql-qt-driver.sh
 
 ICON = Resources/mapper.icns
 #CONFIG-=app_bundle

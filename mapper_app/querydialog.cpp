@@ -451,12 +451,13 @@ void QueryDialog::on_go_QueryButton_clicked()
  QTextCursor cur = ui->editQuery->textCursor();
  if (cur.hasSelection())
  {
-  text = cur.selectedText();
+  //text = cur.selectedText();
+  text = cur.selection().toRawText();
  }
  else
   text = ui->editQuery->toPlainText(); // select all lines
 
- QStringList lines = text.split("\n");
+ QStringList lines = text.split(/*"\n"*/QChar(8233));
  QString combined;
  foreach(QString line, lines)
  {

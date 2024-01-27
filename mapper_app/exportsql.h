@@ -83,7 +83,7 @@ private:
     QSqlDatabase srcDb;
     QSqlDatabase _targetDb;
     Configuration *config;
-    qint32 added, updated, deleted, errors, notUpdated;
+    qint32 added, updated, deleted, errors, notUpdated, ignored;
     Connection* srcConn = nullptr;
     Connection* tgtConn = nullptr;
     qint32 rowCount;
@@ -105,6 +105,7 @@ private:
     QString tgtDbType;
     int errSqlMessage(QSqlQuery query);
     int errReturn;
+    QList<QString> ignoreList;
 
 };
 

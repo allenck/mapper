@@ -23,6 +23,7 @@ ExportDlg::ExportDlg(Configuration *cfg, QWidget *parent) :
      timer->stop();
      close();
  });
+ connect(ui->chkRoutes, SIGNAL(toggled(bool)), this, SLOT(on_chkRoutes_toggled(bool)));
  ui->progressBar->setMinimum(0);
  ui->progressBar->setMaximum(100);
  ui->progressBar->setValue(0);
@@ -391,6 +392,20 @@ void ExportDlg::on_chkSegments_toggled(bool bChecked)
   {
    // foreign key refereces this table
    ui->chkRoutes->setChecked(true);
+  }
+ }
+}
+
+void ExportDlg::on_chkRoutes_toggled(bool bChecked)
+{
+ if(bChecked)
+ {
+  if(!ui->chkRoutes->isChecked())
+  {
+   // foreign key refereces this table
+   ui->chkSegments->setChecked(true);
+   ui->chkCompanies->setChecked(true);
+   ui->chkAltRoute->setChecked(true);
   }
  }
 }

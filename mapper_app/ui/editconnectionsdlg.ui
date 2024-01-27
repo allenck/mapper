@@ -221,6 +221,9 @@
      <property name="toolTip">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Depending on which SQL database program you are using, this should be the filename of the file containing the data or a schema name. For SQLITE databases this will be a .sqlite3 file. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
+     <property name="placeholderText">
+      <string>Sqlite file name</string>
+     </property>
     </widget>
    </item>
    <item row="2" column="0">
@@ -348,7 +351,11 @@
     </widget>
    </item>
    <item row="8" column="1" colspan="8">
-    <widget class="QComboBox" name="cbODBCDsn"/>
+    <widget class="QComboBox" name="cbODBCDsn">
+     <property name="placeholderText">
+      <string>ODBC DSN</string>
+     </property>
+    </widget>
    </item>
    <item row="0" column="1" colspan="8">
     <widget class="QComboBox" name="cbCities">

@@ -1,11 +1,11 @@
 CREATE TABLE `Routes` (
    `Route` int NOT NULL,
    `Name` varchar(125) CHARACTER SET latin1 COLLATE latin1_german1_ci NOT NULL,
-   `StartDate` check(`StartDate` <= `EndDate`) date NOT NULL,
+   `StartDate` date NOT NULL,
    `EndDate` date NOT NULL,
    `LineKey` int NOT NULL,
    `OneWay` char(1) check(`oneWay` in ('Y','N',' ')) DEFAULT 'Y',
-   `TrackUsage` check(`TrackUsage` in ('B', 'L', 'R', ' ')) char(1) DEFAULT ' ',
+   `TrackUsage`  char(1) DEFAULT ' ',
    `CompanyKey` int NOT NULL,
    `tractionType` int NOT NULL,
    `Direction` varchar(6) NOT NULL, 

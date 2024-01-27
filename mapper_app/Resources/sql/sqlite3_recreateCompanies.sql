@@ -5,9 +5,9 @@ PRAGMA foreign_keys = 0;
 DROP TABLE `Companies`;
 CREATE TABLE if not exists `Companies` (
           `key` integer NOT NULL primary key AUTOINCREMENT,
-          `Description` varchar(50) NOT NULL default '',
+          `Description` varchar(60) NOT NULL default '',
           `routePrefix` varchar(10) NOT NULL default '',
-          `info` varchar(50) NOT NULL DEFAULT '',
+          `info` varchar(60) NOT NULL DEFAULT '',
           `startDate` date DEFAULT NULL,
           `endDate` date DEFAULT NULL,
           `firstRoute` int(11) DEFAULT NULL,

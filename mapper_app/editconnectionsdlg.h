@@ -42,6 +42,7 @@ private:
  QString getDatabase();
 #ifndef Q_WS_WIN
  void findODBCDsn(QString iniFile, QStringList* dsnList);
+ QString getODBCDSNValue(QString iniFile, QString dsn, QString key);
 #endif
   bool verifyDatabase(QString name);
   void setControls(QString txt);
@@ -53,6 +54,7 @@ private:
   QString basePath;
   void removeEmptyFiles();
   Parameters parms;
+  QMap<QString, QList<QPair<QString,QString>>> odbcPairMap;
 
 private slots:
  void cbCitiesSelectionChanged(int sel);
@@ -75,6 +77,8 @@ private slots:
  void ontxtDbOrDsn_editingFinished();
  void setupComboBoxes(QString);
  void onDbTypeChanged(QString);
+ void cbConnections_contextMenuRequested(QPoint);
+ void handleOverrides(QString dbName);
 };
 
 #endif // EDITCONNECTIONSDLG_H

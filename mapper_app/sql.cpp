@@ -6155,7 +6155,7 @@ qint32 SQL::getRouteCompany(qint32 route)
 /// <returns></returns>
 Parameters SQL::getParameters(QSqlDatabase db)
 {
-    Parameters parms = Parameters();
+     Parameters parms = Parameters();
     QString alphaRoutes;
     try
     {
@@ -6163,7 +6163,8 @@ Parameters SQL::getParameters(QSqlDatabase db)
 //      throw Exception(tr("database not open: %1").arg(__LINE__));
      //QSqlDatabase db = QSqlDatabase::database();
 
-        QString commandText = "select lat, lon, title, city, minDate, maxDate, alphaRoutes from Parameters";
+        QString commandText = "select lat, lon, title, city, minDate, maxDate, alphaRoutes "
+                              "from Parameters";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -10861,7 +10862,11 @@ void SQL::checkTables(QSqlDatabase db)
     found = true;
   }
   if(!found)
-   executeScript(":/sql/recreateRouteComments.sql");
+  {
+   if(config->currConnection->servertype() == "Sqlite")
+    executeScript(":/sql/recreateRouteComments.sql");
+   // export should take care of MySql & MsSql.
+  }
  }
  setForeignKeyCheck(config->foreignKeyCheck());
 }

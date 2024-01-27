@@ -39,6 +39,7 @@ private slots:
     void on_chkTractionTypes_toggled(bool);
     void on_chkCompanies_toggled(bool);
     void on_chkAll_toggled(bool);
+    void on_chkRoutes_toggled(bool bChecked);
 };
 
 #endif // EXPORTDLG_H

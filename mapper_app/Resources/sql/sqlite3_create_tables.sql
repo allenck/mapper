@@ -20,8 +20,8 @@ CREATE TABLE if not exists `TractionTypes` (
 
 CREATE TABLE if not exists `Companies` (
   `key` integer NOT NULL primary key AUTOINCREMENT,
-  `Description` varchar(50) NOT NULL,
-  `info` varchar(50),
+  `Description` varchar(60) NOT NULL,
+  `info` varchar(60),
   `routePrefix` varchar(10) default '',
   `startDate` date DEFAULT NULL,
   `endDate` date DEFAULT NULL,
@@ -71,13 +71,14 @@ CREATE TABLE if not exists `Segments` (
   `Length` decimal(15,5) NOT NULL DEFAULT 0,
   `points` int(11) NOT NULL default 0,
   `StartDate` date NOT NULL DEFAULT '1800-01-01',
-  `DoubleDate` date NOT NULL DEFAULT '0000-00-00',
+  `DoubleDate` date NOT NULL DEFAULT '1800-01-01',
   `endDate` date NOT NULL DEFAULT '1800-01-01',
   `Direction` varchar(6) NOT NULL DEFAULT ' ',
   `Locality` varchar(15) NOT NULL DEFAULT ' ',
   `pointArray` text,
   `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
 CREATE TABLE if not exists `LineSegment` (
   `Key` integer NOT NULL primary key AUTOINCREMENT,
   `StartLat` decimal(15,13) NOT NULL,

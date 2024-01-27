@@ -53,7 +53,6 @@ SOURCES += main.cpp\
     reroutingdlg.cpp \
     createsqlitedatabasedialog.cpp \
     checkroute.cpp \
-    settingsdb.cpp \
     querydialog.cpp \
     querymodel.cpp \
     kml.cpp \
@@ -126,7 +125,6 @@ HEADERS  += mainwindow.h \
     reroutingdlg.h \
     createsqlitedatabasedialog.h \
     checkroute.h \
-    settingsdb.h \
     querydialog.h \
     querymodel.h \
     kml.h \

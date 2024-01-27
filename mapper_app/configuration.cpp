@@ -17,7 +17,12 @@ Configuration::Configuration(QObject *parent) :
 void Configuration::saveSettings()
 {
 
- QSettings* settings = new QSettings();
+    QSettings* settings;
+//#ifndef Q_OS_MAC
+    settings = new QSettings();
+// #else
+//     settings = new QSettings("Mapper.ini", QSettings::IniFormat);
+// #endif
  //settingsDb settings;
  settings->beginWriteArray("cities");
  settings->remove("");
