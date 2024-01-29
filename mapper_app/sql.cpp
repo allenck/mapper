@@ -482,7 +482,7 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
                "from Routes r "
                "join AltRoute c on r.route =  c.route "
                + where +
-               " group by r.route, r.name, r.startDate, r.endDate, r.companykey,tractionType, c.routeAlpha "
+               " group by c.baseRoute, r.route, r.name, r.startDate, r.endDate, r.companykey,tractionType, c.routeAlpha "
                " order by c.routeAlpha, r.name, r.endDate ";
  query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
@@ -1207,7 +1207,7 @@ bool SQL::updateSegmentDates(SegmentInfo* sd)
  QString commandText;
  QSqlQuery query = QSqlQuery(db);
  bool bQuery;
- commandText = "select min(startDate), max(EndDate) from routes where linekey = "
+ commandText = "select min(startDate), max(EndDate) from Routes where linekey = "
                + QString("%1").arg(sd->segmentId());
  bQuery = query.exec(commandText);
  if(!bQuery)
@@ -10993,7 +10993,7 @@ int SQL::getCountOfRoutesUsingSegment(int segmentId)
 {
  QSqlDatabase db = QSqlDatabase();
  QSqlQuery query = QSqlQuery(db);
- QString commandText = "select count(*) from routes where linekey =" + QString("%1").arg(segmentId) ;
+ QString commandText = "select count(*) from Routes where linekey =" + QString("%1").arg(segmentId) ;
  if(!query.exec(commandText))
  {
   SQLERROR(query);
@@ -11034,7 +11034,7 @@ bool SQL::deleteAndReplaceSegmentWith(int segmentId1, int segmentId2)
  int rows =0;
 
  beginTransaction("replaceSegment");
- QString commandText = "update routes set lineKey = " + QString("%1").arg(segmentId2) + "  where linekey =" + QString("%1").arg(segmentId1) ;
+ QString commandText = "update Routes set lineKey = " + QString("%1").arg(segmentId2) + "  where linekey =" + QString("%1").arg(segmentId1) ;
  if(!query.exec(commandText))
  {
   SQLERROR(query);
@@ -11103,7 +11103,7 @@ QList<SegmentInfo> SQL::getUnusedSegments()
  QSqlQuery query = QSqlQuery(db);
  QList<SegmentInfo> list;
  QString commandText = "select  distinct s.segmentid, s.description, s.tracks, s.type"
-                       " from Segments s where s.segmentid not in (select linekey from routes r) ";
+                       " from Segments s where s.segmentid not in (select linekey from Routes r) ";
  if(!query.exec(commandText))
  {
   SQLERROR(query);
@@ -11370,9 +11370,9 @@ QMap<int,RouteName*>* SQL::routeNameList()
  return list;
 }
 
-QString SQL::getDatabase()
+QString SQL::getDatabase(QSqlDatabase db)
 {
- QSqlDatabase db = QSqlDatabase();
+ //QSqlDatabase db = QSqlDatabase();
 
  QSqlQuery query = QSqlQuery(db);
  QString dbName ="";
@@ -11401,6 +11401,9 @@ QString SQL::getDatabase()
 
 bool SQL::useDatabase(QString dbName, QSqlDatabase db)
 {
+    QString currentDb = getDatabase(db);
+    if(currentDb == dbName)
+        return true;
     QSqlQuery query = QSqlQuery(db);
     QString commandText = "use " +dbName;
     if(!query.exec(commandText))

@@ -36,7 +36,8 @@ private:
  QTimer *timer;
  QTcpSocket socket;
  QStringList databases;
- QMap<QString, QString> odbcMap;
+ QStringList availableDatabases;
+ //QMap<QString, QString> odbcMap;
  bool createSqliteTables(QSqlDatabase db);
  bool populateDatabases();
  QString getDatabase();

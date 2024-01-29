@@ -451,16 +451,17 @@ void QueryDialog::on_go_QueryButton_clicked()
  QTextCursor cur = ui->editQuery->textCursor();
  if (cur.hasSelection())
  {
-  //text = cur.selectedText();
-  text = cur.selection().toRawText();
+  text = cur.selectedText();
+  //text = cur.selection().toRawText();
  }
  else
   text = ui->editQuery->toPlainText(); // select all lines
 
- QStringList lines = text.split(/*"\n"*/QChar(8233));
+ QStringList lines = text.split("\n");
  QString combined;
  foreach(QString line, lines)
  {
+  line = line.replace(QChar(8233)," ");
   if(line.startsWith("#"))
    continue;
   combined.append(line + " ");

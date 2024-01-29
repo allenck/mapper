@@ -132,8 +132,8 @@ void ExportDlg::btnGo_clicked()
 // else
 
  stopEnabled = true;
- if(currConnection->servertype() == "MsSql")
-     SQL::instance()->useDatabase(currConnection->defaultSqlDatabase(), exprt->targetDb());
+ // if(currConnection->servertype() == "MsSql")
+ //     SQL::instance()->useDatabase(currConnection->defaultSqlDatabase(), exprt->targetDb());
  while(stopEnabled)
  {
   if(ui->chkParameters->isChecked())
