@@ -3939,8 +3939,8 @@ bool SQL::updateSegment(SegmentData* sd)
 //   + "Prev=" + QString::number(sd->_prev) + ","
 //   + "nextR=" + QString::number(sd->_nextR) + ","
 //   + "prevR=" + QString::number(sd->_prevR) + ","
-//   + "startDate='" + sd->_startDate.toString("yyyy/MM/dd") + "', "
-//   + "endDate='" + sd->_endDate.toString("yyyy/MM/dd") + "', "
+   + "startDate='" + sd->_segmentStartDate.toString("yyyy/MM/dd") + "', "
+   + "endDate='" + sd->_segmentEndDate.toString("yyyy/MM/dd") + "', "
    + "DoubleDate='" + sd->_doubleDate.toString("yyyy/MM/dd") + "', "
    + "lastUpdate=:lastUpdate "
    + "where SegmentId = " + QString("%1").arg(sd->segmentId());
@@ -10823,7 +10823,7 @@ void SQL::checkTables(QSqlDatabase db)
     addColumn("Routes", "NextR", "int(11) NOT NULL DEFAULT -1", "ReverseLeave");
     addColumn("Routes", "PrevR", "int(11) NOT NULL DEFAULT -1", "NextR");
     executeScript(":/sql/sqlite3_recreate_routes.sql",db);
-    executeScript(":/sql/createRouteView", db);
+    executeScript(":/sql/create_routeView", db);
    }
    else if(config->currConnection->servertype() == "MySql")
    {
@@ -12046,6 +12046,8 @@ QList<SegmentData*>  SQL::segmentDataFromView(QString where)
   sd->setPoints(query.value(34).toString());
   sd->_baseRoute = query.value(35).toInt();
   sd->_doubleDate = query.value(36).toDate();
+  sd->_segmentStartDate = query.value(37).toDate();
+  sd->_segmentEndDate = query.value(38).toDate();
   list.append(sd);
  }
  return list;

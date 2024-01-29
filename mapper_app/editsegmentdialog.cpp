@@ -351,7 +351,7 @@ void EditSegmentDialog::On_doubleTrackedDate_editingFinished()
 {
  if(ui->doubleTracked->date().isValid())
  {
-  if(ui->doubleTracked->date() < si.startDate() || ui->doubleTracked->date() > si.endDate())
+  if(ui->doubleTracked->date() < ui->dtBegin->date() || ui->doubleTracked->date() > ui->dtEnd->date())
   {
    ui->lblHelp->setText("Double Tracked Date must be after startDate or before end date!");
    return;
@@ -383,6 +383,7 @@ void EditSegmentDialog::On_btnSave_clicked()
   si.setEndDate(ui->dtEnd->date());
   si.setStartDate(ui->dtBegin->date());
   si.setLocation(ui->cbLocation->currentText());
+  si.setDoubleDate(ui->doubleTracked->date());
 
   if(si.tracks() == 2 && dupSegments.count() > 0)
   {
@@ -406,7 +407,7 @@ void EditSegmentDialog::On_btnSave_clicked()
     default:
      break;
    }
- }
+  }
 
   sql->beginTransaction("updateSegment");
   if(!sql->updateSegment(&si))
@@ -485,17 +486,17 @@ void EditSegmentDialog::On_btnSave_clicked()
       }
      }
     }
+   }
+   sql->commitTransaction("updateSegment");
 
-    sql->commitTransaction("updateSegment");
+   m_bridge->processScript("isSegmentDisplayed", QString("%1").arg(si.segmentId()));
+   while(!m_bridge->isResultReceived())
+   {qApp->processEvents();}
+   if (m_segmentStatus == "Y")
+   {
+     si.displaySegment(ui->dtEnd->date().toString("yyyy/MM/dd"),m_segmentColor, "", true);
+   }
 
-    m_bridge->processScript("isSegmentDisplayed", QString("%1").arg(si.segmentId()));
-    while(!m_bridge->isResultReceived())
-    {qApp->processEvents();}
-    if (m_segmentStatus == "Y")
-    {
-      si.displaySegment(ui->dtEnd->date().toString("yyyy/MM/dd"),m_segmentColor, "", true);
-    }
-  }
 }
 
 void EditSegmentDialog::On_segmentStatusSignal(QString txt, QString color)

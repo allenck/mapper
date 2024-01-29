@@ -338,6 +338,8 @@ class SegmentData
     QDate _startDate = QDate::fromString("1880/01/01", "yyyy/MM/dd");
     QDate _doubleDate;
     QDate _endDate = QDate::fromString("2050/12/31", "yyyy/MM/dd");
+    QDate _segmentStartDate;
+    QDate _segmentEndDate;
     QString _direction = " ";
     Bearing _bearing;      // bearing from start to end
     Bearing _bearingStart; // bearing of first portion from point(first +1) to point(first)

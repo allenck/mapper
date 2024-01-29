@@ -612,8 +612,8 @@ SegmentInfo::SegmentInfo(const SegmentData& o)
  //lineSegments = o.lineSegments;
  _points = o._points;
  _length = o._length;
- _startDate = o._startDate;
- _endDate = o._endDate;
+ _startDate = o._segmentStartDate;
+ _endDate = o._segmentEndDate;
  _bearing = o._bearing;
  _startLat = o._startLat;
  _startLon = o._startLon;
