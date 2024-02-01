@@ -242,6 +242,8 @@ void ExportDlg::btnGo_clicked()
       ui->progressBar->setValue(0);
       if(!exprt->dropRoutes())
        ui->lblHelp->setText("Drop Route failed");
+      if(!exprt->dropStations())
+       ui->lblHelp->setText("Drop Stations failed");
       if(!exprt->exportTable("Segments"))
       {
        ui->lblHelp->setText("Export of Segments has errors");

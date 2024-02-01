@@ -19,7 +19,7 @@ CREATE TABLE  [dbo].[Stations](
       [lastUpdate] [datetime] NOT NULL,
    CONSTRAINT [PK_station] PRIMARY KEY CLUSTERED
   (
-      [route] ASC,
+      [segmentId] ASC,
       [name] ASC,
       [startDate] ASC,
       [endDate] ASC

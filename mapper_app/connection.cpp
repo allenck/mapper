@@ -74,7 +74,7 @@ QSqlDatabase Connection::configure(const QString cName)
 
 // if(ok)
 // {
- if((bOpen = db.open()))
+ if((bOpen = db.open(_userId, _PWD)))
  {
   if(config->currConnection->servertype() != "Sqlite")
   {
@@ -244,6 +244,8 @@ void Connection::configureDb(QSqlDatabase db, Connection* currConnection, Config
     else if(currConnection->connectionType() == "ODBC")
     {
         db.setDatabaseName(currConnection->dsn());
+        db.setUserName(currConnection->userId());
+        db.setPassword(currConnection->pwd());
     }
     else
     {

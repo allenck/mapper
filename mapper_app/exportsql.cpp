@@ -146,13 +146,13 @@ bool ExportSql::exportAll()
  exportTable("Companies");
  exportTable("TractionTypes");
  exportTable("AltRoute");
- exportTable("Comments");
  exportTable("Intersections");
  exportTable("Stations");
  exportLineSegments();
  exportTable("Segments");
  exportTable("Routes");
  exportTable("Terminals");
+ exportTable("Comments");
  exportTable("RouteComments");
  exportTable("RouteSeq");
  return true;
@@ -3273,6 +3273,11 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
 
 bool ExportSql::dropTable(QString table, QSqlDatabase db, QString dbType)
 {
+ QStringList tables = db.tables();
+ if(!tables.contains(table)){
+  qDebug() << "drop table ok as table " << table << " not present!";
+  return true;
+ }
  qWarning() << "dropping table: " << table;
  if(table == "Routes")
      qDebug() << "debug stop";
@@ -3302,6 +3307,15 @@ bool ExportSql::dropRoutes()
 
  return dropTable("Routes", _targetDb, tgtConn->servertype());
 }
+
+bool ExportSql::dropStations()
+{
+ srcDb = QSqlDatabase::database();
+ if(!openDb()) return false;
+
+ return dropTable("Stations", _targetDb, tgtConn->servertype());
+}
+
 #if 0
 bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
 {
@@ -3450,7 +3464,7 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
   return SQL::instance()->executeScript(":/sql/sqlite3_create_routes.sql", db);
  if(dbType == "MySql")
   return SQL::instance()->executeScript(":/sql/mysql_create_routes.sql", db);
- if(dbType == "mssql")
+ if(dbType == "MsSql")
   return SQL::instance()->executeScript(":/sql/mssql_create_routes.sql", db);
  return false;
 }
@@ -4103,7 +4117,8 @@ bool ExportSql::createCommentsTable(QSqlDatabase db, QString dbType)
  {
   commandText = "SET ANSI_NULLS ON;"\
    "SET QUOTED_IDENTIFIER ON;"\
-   "SET ANSI_PADDING ON;"\
+                "SET ANSI_PADDING ON;" \
+   "DROP TABLE IF EXISTS [Comments];" \
    "CREATE TABLE [dbo].[comments]("\
         "[commentKey] [int] IDENTITY(1,1) NOT NULL,"\
         "[tags] [varchar](1000) NOT NULL,"\
@@ -4203,7 +4218,7 @@ int ExportSql::errSqlMessage(QSqlQuery query)
   return QMessageBox::Ignore;
  }
  int ret = QMessageBox::critical(nullptr, tr("Sql Error"), tr("An SqL error has occurred.<br>"
-                                 "Sql error:%1<br><B>query:</B> %2").arg(query.lastError().text()).arg(query.lastQuery()),
+                                 "Sql error:%1<br><B>query:</B> %2 %3").arg(query.lastError().text(),query.lastQuery(),displayQueryValues(query)),
                                  QMessageBox::Ignore|QMessageBox::Abort);
  int ret2 = QMessageBox::question(nullptr, tr("Ignore"), tr("Should this error be ignored for subsequent transactions?"),
                                   QMessageBox::Yes|QMessageBox::No);
@@ -4278,7 +4293,8 @@ bool ExportSql::exportTable(QString table)
   if(table.compare("TractionTypes", Qt::CaseInsensitive)==0)
    if(!createTractionTypesTable(_targetDb, tgtConn->servertype())) return false;
  }
- if(tgtDbType == "MsSql" && table != "Terminals" && table != "RouteComments")
+ if(tgtDbType == "MsSql" && table != "Terminals" && table != "RouteComments"
+    && table != "Routes")
   setIdentityInsert(table, true);
  QString commandText;
  QString selectText = "Select ";
@@ -4459,7 +4475,7 @@ bool ExportSql::exportTable(QString table)
     QSqlError err = query2.lastError();
     qDebug() << "error code:" << err.nativeErrorCode() << " " << err.text() + "\n";
     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-    qDebug() << "values: " << query.boundValues();
+    qDebug() << "values: " << displayQueryValues(query);
     errors++;
    }
    else
@@ -4508,4 +4524,15 @@ bool ExportSql::areTableDefsEqual(QString table, Connection* c1, Connection* c2,
   return false;
  }
  return true;
+}
+
+QString ExportSql::displayQueryValues(QSqlQuery query)
+{
+ QString str;
+ for(int i=0; i < query.boundValues().count();i++) {
+  if(i > 0)
+   str.append(",");
+  str.append(query.boundValue(i).toString());
+ }
+ return str;
 }

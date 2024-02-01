@@ -139,7 +139,19 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
    ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
    if(c->id() == config->currConnection->id())
     ui->cbConnections->setCurrentIndex(i);
-
+  }
+  // add other cities as well
+  for(City* city : config->cityList)
+  {
+   if(city->name() == config->currCity->name())
+    continue; // aleady got these!
+   for(int i=0; i<city->connections.count(); i++)
+   {
+    Connection* c = city->connections.at(i);
+    ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
+    if(c->id() == config->currConnection->id())
+     ui->cbConnections->setCurrentIndex(i);
+   }
   }
   setWindowTitle(tr("Manual Sql Query (%1)").arg(ui->cbConnections->currentText()));
 

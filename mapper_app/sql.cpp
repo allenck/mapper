@@ -8802,11 +8802,12 @@ QList<StationInfo> SQL::getStations(qint32 route, QString name, QString date)
             "JOIN Segments sr ON c.lineKey = sr.segmentid "\
             "where c.route = " + QString("%1").arg(route) + " and c.name = '" + name + "'  and '" + date + "' between c.startDate and c.endDate  and '" + date + "' between a.startDate and a.endDate " \
             "and a.routeType = sr.type and a.segmentid = c.lineKey " \
-            "GROUP BY stationKey, a.name, a.latitude, a.longitude, a.infoKey, a.startDate, a.endDate, a.geodb_loc_id, a.route, r.routeAlpha, a.routeType, a.segmentId";
+            "GROUP BY stationKey, a.name, a.latitude, a.longitude, a.infoKey, a.startDate, a.endDate, a.geodb_loc_id, a.route, r.routeAlpha, a.routeType, a.segmentId, a.markerType";
 //qDebug()<< commandText + "\n";
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
+    qDebug() << commandText;
     SQLERROR(query);
     //db.close();
     //exit(EXIT_FAILURE);
@@ -10776,6 +10777,7 @@ void SQL::checkTables(QSqlDatabase db)
    else
     executeScript(":/sql/recreateStationTable.sql",db);
   }
+
   if(!doesColumnExist("Stations", "markerType"))
   {
    //addColumn("AltRoute", "routePrefix", "varchar(10)");
@@ -10812,8 +10814,8 @@ void SQL::checkTables(QSqlDatabase db)
    if(addColumn("Routes", "Sequence", "int(11) NOT NULL DEFAULT -1", "ReverseLeave"))
     if(addColumn("Routes", "ReverseSeq", "int(11) NOT NULL DEFAULT -1", "Sequence"))
     {
-     if(config->currConnection->servertype() == "Sqlite" )
-      executeScript(":/sql/sqlite3_recreate_routes.sql");
+//     if(config->currConnection->servertype() == "Sqlite" )
+//      executeScript(":/sql/sqlite3_recreate_routes.sql");
     }
   }
 
@@ -10823,13 +10825,13 @@ void SQL::checkTables(QSqlDatabase db)
    {
     addColumn("Routes", "NextR", "int(11) NOT NULL DEFAULT -1", "ReverseLeave");
     addColumn("Routes", "PrevR", "int(11) NOT NULL DEFAULT -1", "NextR");
-    executeScript(":/sql/sqlite3_recreate_routes.sql",db);
-    executeScript(":/sql/create_routeView", db);
+//    executeScript(":/sql/sqlite3_recreate_routes.sql",db);
+//    executeScript(":/sql/create_routeView", db);
    }
    else if(config->currConnection->servertype() == "MySql")
    {
-    addColumn("Routes", "NextR", "int(11) NOT NULL DEFAULT -1", "ReverseLeave");
-    addColumn("Routes", "PrevR", "int(11) NOT NULL DEFAULT -1", "NextR");
+//    addColumn("Routes", "NextR", "int(11) NOT NULL DEFAULT -1", "ReverseLeave");
+//    addColumn("Routes", "PrevR", "int(11) NOT NULL DEFAULT -1", "NextR");
 
    }
    // TODO: add Sql Server syntax
@@ -10839,14 +10841,14 @@ void SQL::checkTables(QSqlDatabase db)
   QStringList routesPk = listPkColumns("Routes", config->currConnection->servertype(), db);
   if(!routesPk.contains("CompanyKey", Qt::CaseInsensitive)!=0)
   {
-   if(config->currConnection->servertype() == "Sqlite")
-    executeScript(":/sql/sqlite3_recreate_routes.sql");
-   else if(config->currConnection->servertype() == "MySql")
-    executeScript(":/sql/mysql_recreate_routes.sql");
-   else
-   {
-    // TODO: MsSql query
-   }
+//   if(config->currConnection->servertype() == "Sqlite")
+//    executeScript(":/sql/sqlite3_recreate_routes.sql");
+//   else if(config->currConnection->servertype() == "MySql")
+//    executeScript(":/sql/mysql_recreate_routes.sql");
+//   else
+//   {
+//    // TODO: MsSql query
+//   }
   }
 
   if(!doesColumnExist("RouteComments", "latitude"))
@@ -10854,7 +10856,10 @@ void SQL::checkTables(QSqlDatabase db)
 
 //  QStringList views = listViews();
 //  if(!views.contains("RouteView", Qt::CaseInsensitive))
-  executeScript(":/sql/create_routeView.sql");
+  if(config->currConnection->servertype() == "MsSql")
+   executeScript(":/sql/mssql_create_routeView.sql");
+  else
+   executeScript(":/sql/create_routeView.sql");
 
   bool found = false;
   foreach(FKInfo info, fkList)
@@ -12060,6 +12065,8 @@ bool SQL::getForeignKeyCheck()
  int count = 0;
  try
  {
+  if(config->currConnection->servertype() != "Sqlite")
+   return false;
      if(!dbOpen())
          throw Exception(tr("database not open: %1").arg(__LINE__));
      QSqlDatabase db = QSqlDatabase::database();

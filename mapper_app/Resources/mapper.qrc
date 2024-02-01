@@ -125,5 +125,6 @@
         <file>contextmenu.js</file>
         <file>sql/mysql_recreateRouteComments.sql</file>
         <file>sql/update_segmentDates.sql</file>
+        <file>sql/mssql_create_routeView.sql</file>
     </qresource>
 </RCC>

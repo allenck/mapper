@@ -65,6 +65,7 @@ public:
     bool createCommentsTable(QSqlDatabase db, QString dbType);
     bool createTractionTypesTable(QSqlDatabase db, QString dbType);
     bool dropRoutes();
+    bool dropStations();
     bool createMySqlFunctions(QSqlDatabase db = QSqlDatabase());
     bool createMsSqlFunctions(QSqlDatabase db);
     QSqlDatabase targetDb() {return _targetDb;}
@@ -108,6 +109,8 @@ private:
     int errReturn;
     QList<QString> ignoreList;
     QString identityInsertTable;
+    QString displayQueryValues(QSqlQuery query);
+
 };
 
 class SleeperThread : public QThread
