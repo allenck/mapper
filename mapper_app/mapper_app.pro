@@ -143,16 +143,17 @@ INCLUDEPATH += $$PWD/.
 DEPENDPATH += $$PWD/.
 
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400/' -lsqlite3
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400/' -lsqlite3
+#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400/' -lsqlite3
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400/' -lsqlite3
 
-INCLUDEPATH += $$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400'
-DEPENDPATH += $$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400'
+#INCLUDEPATH += $$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400'
+#DEPENDPATH += $$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400'
 
 
 #unix:!macx: LIBS += -L$$PWD/../../../sqlite-amalgamation-3390400/ -lsqlite3
 
-macx: include(sqlite.pri)
+
+include(sqlite.pri)
 
 #INCLUDEPATH += $$PWD/../../../sqlite-amalgamation-3390400
 #DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3390400
@@ -183,10 +184,10 @@ SOURCES += \
 
 
 
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../sqlite3/release/ -lsqlite3
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../sqlite3/debug/ -lsqlite3
-else:unix: LIBS += -L$$OUT_PWD/../sqlite3/ -lsqlite3
+#win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../sqlite3/release/ -lsqlite3
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../sqlite3/debug/ -lsqlite3
+#else:unix: LIBS += -L$$OUT_PWD/../sqlite3/ -lsqlite3
 
-INCLUDEPATH += $$PWD/../sqlite3
-DEPENDPATH += $$PWD/../sqlite3
+#INCLUDEPATH += $$PWD/../sqlite3
+#DEPENDPATH += $$PWD/../sqlite3
 

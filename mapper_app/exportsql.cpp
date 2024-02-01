@@ -21,6 +21,18 @@ void ExportSql::setTargetConn(Connection* tgtConn)
  this->tgtConn = tgtConn;
 }
 
+bool ExportSql::setIdentityInsert(QString table, bool b )
+{
+ if(identityInsertTable == table)
+  return true;
+ if(!identityInsertTable.isEmpty() && !SQL::instance()->executeCommand(QString("SET IDENTITY_INSERT %1 %2")
+                                    .arg(identityInsertTable, "OFF"), _targetDb))
+  throw IllegalArgumentException("Error setting identity_insert off");
+ bool ret = SQL::instance()->executeCommand(QString("SET IDENTITY_INSERT %1 %2").arg(table, b?"on":"off"), _targetDb);
+ if(ret)
+  identityInsertTable = table;
+ return ret;
+}
 
 void ExportSql::setOverride(QDateTime ovrTs)
 {
@@ -53,6 +65,8 @@ bool ExportSql::openDb()
    _targetDb = QSqlDatabase::addDatabase(tgtConn->driver(), "export");
    tgtConn->configureDb(_targetDb, tgtConn , config);
    tgtDbType = tgtConn->servertype();
+   _targetDb.setUserName(tgtConn->userId());
+   _targetDb.setPassword(tgtConn->pwd());
 
    if(! _targetDb.open())
    {
@@ -4264,13 +4278,18 @@ bool ExportSql::exportTable(QString table)
   if(table.compare("TractionTypes", Qt::CaseInsensitive)==0)
    if(!createTractionTypesTable(_targetDb, tgtConn->servertype())) return false;
  }
+ if(tgtDbType == "MsSql" && table != "Terminals" && table != "RouteComments")
+  setIdentityInsert(table, true);
  QString commandText;
  QString selectText = "Select ";
  for(int i=0; i< columns.count(); i++)
  {
   QString col = columns.at(i);
+  if(tgtConn->servertype()== "MsSql")
+   selectText.append("["+col+"]");
+  else
    selectText.append("`"+col+"`");
-   if(i < columns.count()-1)
+  if(i < columns.count()-1)
     selectText.append(",");
  }
  selectText.append(" from ");
@@ -4396,8 +4415,11 @@ bool ExportSql::exportTable(QString table)
    for(int i=0; i< columns.count(); i++)
    {
     QString col = columns.at(i);
-    commandString.append("`" + col + "`");
-     if(i < columns.count()-1)
+    if(tgtConn->servertype()== "MsSql")
+     commandString.append("[" + col + "]");
+    else
+     commandString.append("`" + col + "`");
+    if(i < columns.count()-1)
       commandString.append(",");
    }
    commandString.append(") values (");
@@ -4443,6 +4465,7 @@ bool ExportSql::exportTable(QString table)
    else
     added++;
   }
+
   sendProgress();
  }
 

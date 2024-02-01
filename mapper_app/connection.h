@@ -29,7 +29,7 @@ class Connection : public QObject
  //const QString cName;
  QString _connectionName;
  QString _sqlite_fileName;    // Sqlite
- QString _odbc_connectorName;
+ //QString _odbc_connectorName;
  QString _defaultSqlDatabase; // MySql or MsSql
  //QString _mySqlDatabase;
  QString _connectionType="Local";
@@ -75,8 +75,8 @@ public:
  void setConnectionName(QString name) {_connectionName =name; }
  QString sqlite_fileName() {return _sqlite_fileName;}
  void setSqliteFileName(QString fn){_sqlite_fileName = fn;}
- QString odbc_connectorName(){return _odbc_connectorName;}
- void setOdbcConnectorName(QString fn){_odbc_connectorName = fn;}
+// QString odbc_connectorName(){return _odbc_connectorName;}
+// void setOdbcConnectorName(QString fn){_odbc_connectorName = fn;}
  QString defaultSqlDatabase() {return _defaultSqlDatabase;}
  void setDefaultSqlDatabase(QString defaultSqlDatabase) {_defaultSqlDatabase = defaultSqlDatabase;}
  static void configureDb(QSqlDatabase db, Connection *currConnection, Configuration *config);

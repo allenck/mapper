@@ -1588,6 +1588,8 @@ void MainWindow::createMenus()
 
 void MainWindow::createCityMenu()
 {
+ if(cityMenu == nullptr)
+  return;
  cityMenu->clear();
 
  for(int i=0; i < config->cityList.count(); i++)

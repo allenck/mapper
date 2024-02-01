@@ -33,6 +33,7 @@ public:
     void setOverride(QDateTime strOvr);
     void setNoDelete(bool bFlag);
     void setTargetConn(Connection* tgtConn);
+    bool setIdentityInsert(QString table, bool );
 
     //bool exportAltRoute();
     bool exportAll();
@@ -106,7 +107,7 @@ private:
     int errSqlMessage(QSqlQuery query);
     int errReturn;
     QList<QString> ignoreList;
-
+    QString identityInsertTable;
 };
 
 class SleeperThread : public QThread

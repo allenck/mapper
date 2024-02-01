@@ -755,14 +755,13 @@ class Parameters
 {
 public:
     Parameters(){
-        bAlphaRoutes = false;
     }
 
     QString title;
     QString city;
     double lat, lon;
     QDate minDate, maxDate;
-    bool bAlphaRoutes;
+    bool bAlphaRoutes= false;
 };
 
 class CommentInfo

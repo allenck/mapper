@@ -26,9 +26,9 @@ CREATE TABLE  [dbo].[Stations](
   ) WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
   ) ON [PRIMARY];
 SET ANSI_PADDING OFF;
-//  ALTER TABLE [dbo].[Stations]  WITH CHECK ADD  CONSTRAINT [FK__stations__segmen__4AB81AF0] FOREIGN KEY([lineSegmentId])"\
-//    "REFERENCES [dbo].[LineSegment] ([Key]);
-//ALTER TABLE [dbo].[stations] CHECK CONSTRAINT [FK__stations__segmen__4AB81AF0];
+ALTER TABLE [dbo].[Stations]  WITH CHECK ADD  CONSTRAINT [FK__stations__segmen__4AB81AF0] FOREIGN KEY([segmentId])
+  REFERENCES [dbo].[Segments] ([segmentId]);
+ALTER TABLE [dbo].[stations] CHECK CONSTRAINT [FK__stations__segmen__4AB81AF0];
 ALTER TABLE [dbo].[Stations] ADD  CONSTRAINT [DF_stations_route]  DEFAULT ((0)) FOR [route];
 ALTER TABLE [dbo].[Stations] ADD  CONSTRAINT [DF_stations_routeType]  DEFAULT ((0)) FOR [routeType];
 ALTER TABLE [dbo].[Stations] ADD  CONSTRAINT [DF_stations_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];

@@ -1,11 +1,13 @@
 #include "sql.h"
 #include "data.h"
-#include "../sqlite3/sqlite3.h"
+//#include "../sqlite3/sqlite3.h"
+#include "sqlite3.h"
 #include <QApplication>
 //#ifdef Q_OS_UNIX
-//#include "/home/allen/Qt/5.15.2/Src/qtbase/src/3rdparty/sqlite/sqlite3.h"
+//#include "/home/allen/Qt/6.4.1/Src/qtbase/src/3rdparty/sqlite/sqlite3.h"
 //#else
-//#include "c:/Qt/5.15.2/Src/qtbase/src/3rdparty/sqlite/sqlite3.h"
+//#include "c:/Qt/6.4.1/Src/qtbase/src/3rdparty/sqlite/sqlite3.h"
+//#include "c:/Qt/6.4.1/Src/qtbase/src/3rdparty/sqlite/sqlite3.h"
 //#endif
 #include <algorithm>
 #include <QDebug>
@@ -6172,8 +6174,7 @@ Parameters SQL::getParameters(QSqlDatabase db)
             QSqlError err = query.lastError();
             qDebug() << err.text() + "\n";
             qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            return parms;
         }
         if (!query.isActive())
         {

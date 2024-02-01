@@ -27,8 +27,8 @@ SQLITE_ENABLE_MATH_FUNCTIONS \
 SQLITE_ENABLE_RTREE \
 SQLITE_OMIT_COMPLETE
 
-build_pass:CONFIG(debug, debug|release) {
- DESTDIR = ../mapper_app/debug
-} else {
- DESTDIR = ../mapper_app/release
-}
+#build_pass:CONFIG(debug, debug|release) {
+# DESTDIR = ../mapper_app/debug
+#} else {
+# DESTDIR = ../mapper_app/release
+#}

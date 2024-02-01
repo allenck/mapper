@@ -56,6 +56,8 @@ private:
   void removeEmptyFiles();
   Parameters parms;
   QMap<QString, QList<QPair<QString,QString>>> odbcPairMap;
+  bool setDatabase(QString useDatabase);
+  int findId(Connection* c);
 
 private slots:
  void cbCitiesSelectionChanged(int sel);

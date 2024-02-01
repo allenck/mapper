@@ -980,7 +980,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 //             loadSqlite3Functions(db));
 //   }
    Connection::configureDb(db, tgtConn, config);
-   if(!db.open())
+   if(!db.open(tgtConn->userId(), tgtConn->pwd()))
    {
     ui->go_QueryButton->setEnabled(false);
     qDebug() << "Database not open: " + ui->cbConnections->currentText() + ", current databasename: " + db.databaseName() + " " + db.lastError().text();

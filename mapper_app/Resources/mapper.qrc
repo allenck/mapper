@@ -124,5 +124,6 @@
         <file>sql/mssql_recreate_routes.sql</file>
         <file>contextmenu.js</file>
         <file>sql/mysql_recreateRouteComments.sql</file>
+        <file>sql/update_segmentDates.sql</file>
     </qresource>
 </RCC>

@@ -74,7 +74,7 @@ void Configuration::saveSettings()
    settings->setValue("connectionType", cn->connectionType());
    settings->setValue("description",cn->description());
    settings->setValue("uniqueId", cn->uniqueId().toString());
-   settings->setValue("defaultSqlDatabase", cn->defaultSqlDatabase());
+   //settings->setValue("defaultSqlDatabase", cn->defaultSqlDatabase());
 
    if(cn->connectionType()== "Local")
    {
@@ -82,15 +82,17 @@ void Configuration::saveSettings()
    }
    else if(cn->connectionType()== "ODBC")
    {
-       settings->setValue("odbcConnector", cn->odbc_connectorName());
+       settings->setValue("DSN", cn->dsn());
        settings->setValue("defaultSqlDatabase", cn->defaultSqlDatabase());
        settings->setValue("useSqlDatabase", cn->database());
+       settings->setValue("PWD", cn->pwd());
+       settings->setValue("UID", cn->userId());
    }
    else if(cn->connectionType()== "Direct")
    {
     settings->setValue("database", cn->database());
     settings->setValue("DSN", cn->dsn());
-    settings->setValue("driver", cn->driver());
+    //settings->setValue("driver", cn->driver());
     settings->setValue("PWD", cn->pwd());
     settings->setValue("UID", cn->userId());
     if(cn->host() != "")
@@ -366,7 +368,7 @@ void Configuration::getSettings()
           ncn->setSqliteFileName(info.fileName());
         }
         else if(ncn->connectionType() == "Direct") {
-           ncn->setDSN(settings.value("DSN").toString());
+           //ncn->setDSN(settings.value("DSN").toString());  // not needed
            ncn->setPWD(settings.value("PWD").toString());
            ncn->setUserId(settings.value("UID").toString());
            ncn->setHost(settings.value("hostname").toString());
@@ -376,9 +378,15 @@ void Configuration::getSettings()
            //ncn->setMySqlDatabase(settings.value("mySqlDatabase").toString());
         }
         else if(ncn->connectionType() == "ODBC") {
-           ncn->setOdbcConnectorName(settings.value("odbcConnector").toString());
+           ncn->setDSN(settings.value("DSN").toString());
+           if(!settings.value("odbcConnector").toString().isEmpty())
+            ncn->setDSN(settings.value("odbcConnector").toString());
            ncn->setDefaultSqlDatabase(settings.value("defaultSqlDatabase").toString());
            ncn->setDatabase(settings.value("useSqlDatabase").toString());
+           ncn->setPWD(settings.value("PWD").toString());
+           ncn->setUserId(settings.value("UID").toString());
+           ncn->setHost(settings.value("hostname").toString());
+           ncn->setPort(settings.value("port").toInt());
         }
 
         if(!nc->connections.contains(ncn))

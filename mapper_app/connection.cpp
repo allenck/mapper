@@ -37,7 +37,7 @@ Connection::Connection(const Connection& o){
  this->_cityName = o._cityName;
  this->_connectionName = o._connectionName;
  this->_sqlite_fileName = o._sqlite_fileName;
- this->_odbc_connectorName = o._odbc_connectorName;
+ //this->_odbc_connectorName = o._odbc_connectorName;
  this->_defaultSqlDatabase = o._defaultSqlDatabase;
  //this->_mySqlDatabase = o._mySqlDatabase;
  this->_connectionType = o._connectionType;
@@ -243,7 +243,7 @@ void Connection::configureDb(QSqlDatabase db, Connection* currConnection, Config
     }
     else if(currConnection->connectionType() == "ODBC")
     {
-        db.setDatabaseName(currConnection->odbc_connectorName());
+        db.setDatabaseName(currConnection->dsn());
     }
     else
     {
@@ -262,3 +262,4 @@ void Connection::configureDb(QSqlDatabase db, Connection* currConnection, Config
       }
     }
 }
+

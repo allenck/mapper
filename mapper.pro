@@ -12,7 +12,7 @@ QT += xml
 
 SUBDIRS =  functions \
     sqlfun \
-    sqlite3 \
+#    sqlite3 \
     mapper_app
 
 DEPENDPATH += . mapper_app
