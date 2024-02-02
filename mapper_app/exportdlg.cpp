@@ -2,6 +2,7 @@
 #include "ui_exportdlg.h"
 #include <QCloseEvent>
 #include "vptr.h"
+#include "mainwindow.h"
 
 ExportDlg::ExportDlg(Configuration *cfg, QWidget *parent) :
     QDialog(parent),
@@ -21,6 +22,7 @@ ExportDlg::ExportDlg(Configuration *cfg, QWidget *parent) :
  connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(btnCancel_clicked()) );
  connect(ui->btnFinish, &QPushButton::clicked, [=]{
      timer->stop();
+     MainWindow::instance()->form = nullptr;
      close();
  });
  connect(ui->chkRoutes, SIGNAL(toggled(bool)), this, SLOT(on_chkRoutes_toggled(bool)));
@@ -202,6 +204,8 @@ void ExportDlg::btnGo_clicked()
   {
       ui->lblHelp->setText(tr("Comments"));
       qApp->processEvents();
+      if(!exprt->dropRouteComments())
+        ui->lblHelp->setText("Drop table RouteComments failed");
       ui->progressBar->setValue(0);
       if(!exprt->exportTable("Comments"))
       {

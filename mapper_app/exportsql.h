@@ -66,6 +66,7 @@ public:
     bool createTractionTypesTable(QSqlDatabase db, QString dbType);
     bool dropRoutes();
     bool dropStations();
+    bool dropRouteComments();
     bool createMySqlFunctions(QSqlDatabase db = QSqlDatabase());
     bool createMsSqlFunctions(QSqlDatabase db);
     QSqlDatabase targetDb() {return _targetDb;}

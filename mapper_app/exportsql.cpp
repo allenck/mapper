@@ -147,13 +147,13 @@ bool ExportSql::exportAll()
  exportTable("TractionTypes");
  exportTable("AltRoute");
  exportTable("Intersections");
- exportTable("Stations");
  exportLineSegments();
  exportTable("Segments");
  exportTable("Routes");
  exportTable("Terminals");
  exportTable("Comments");
  exportTable("RouteComments");
+ exportTable("Stations");
  exportTable("RouteSeq");
  return true;
 }
@@ -3314,6 +3314,14 @@ bool ExportSql::dropStations()
  if(!openDb()) return false;
 
  return dropTable("Stations", _targetDb, tgtConn->servertype());
+}
+
+bool ExportSql::dropRouteComments()
+{
+ srcDb = QSqlDatabase::database();
+ if(!openDb()) return false;
+
+ return dropTable("RouteComments", _targetDb, tgtConn->servertype());
 }
 
 #if 0

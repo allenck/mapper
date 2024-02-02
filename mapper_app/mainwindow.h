@@ -498,6 +498,7 @@ signals:
     friend class WebViewBridge;
     friend class SegmentView;
     friend class SegmentViewTableModel;
+    friend class ExportDlg;
 };
 
 class Menu : public QMenu
