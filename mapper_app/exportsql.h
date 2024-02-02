@@ -12,9 +12,9 @@ class QSqldatabase;
 #define SQLERROR_E(query) \
 do \
 { \
- QSqlError err = query.lastError(); \
+ QSqlError err = query->lastError(); \
  qCritical() << "Sql error:" << err.text(); \
- qCritical() << query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n"; \
+ qCritical() << query->lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n"; \
     switch (errSqlMessage(query, __LINE__)) {\
     case QMessageBox::Abort:\
      emit ExportSql::requestStop();\
@@ -36,7 +36,7 @@ public:
     void setNoDelete(bool bFlag);
     void setTargetConn(Connection* tgtConn);
     bool setIdentityInsert(QString table, bool );
-    void logError(QSqlQuery query, bool ignored, int line);
+    void logError(QSqlQuery* query, bool ignored, int line);
 
     //bool exportAltRoute();
     bool exportAll();
@@ -109,11 +109,11 @@ private:
     bool Retry(QSqlDatabase *db, QSqlQuery *query, QString CommandText);
     bool bDropTables;
     QString tgtDbType;
-    int errSqlMessage(QSqlQuery query, int line);
+    int errSqlMessage(QSqlQuery* query, int line);
     int errReturn;
     QList<QString> ignoreList;
     QString identityInsertTable;
-    QString displayQueryValues(QSqlQuery query);
+    QString displayQueryValues(QSqlQuery* query);
     QFile* logfile = nullptr;
     QTextStream* stream = nullptr;
 };

@@ -92,14 +92,14 @@ bool ExportSql::openDb()
     {
      if(tgtConn->database() != "default" && tgtConn->database() != tgtConn->defaultSqlDatabase())
      {
-      QSqlQuery query = QSqlQuery(_targetDb);
+      QSqlQuery* query = new QSqlQuery(_targetDb);
       QString cmd;
       if(tgtConn->servertype() == "MySql")
         cmd = QString("use %1").arg(tgtConn->defaultSqlDatabase());
       else
        cmd = QString("use [%1]").arg(tgtConn->defaultSqlDatabase());
 
-      if(!query.exec(cmd))
+      if(!query->exec(cmd))
       {
        SQLERROR_E(query);
        _targetDb.close();
@@ -109,15 +109,15 @@ bool ExportSql::openDb()
        cmd = "select db_name()";
       else
        cmd = "select Database()";
-      if(!query.exec(cmd))
+      if(!query->exec(cmd))
       {
        SQLERROR_E(query);
        _targetDb.close();
        return false;
       }
-      while(query.next())
+      while(query->next())
       {
-       QString dbName = query.value(0).toString();
+       QString dbName = query->value(0).toString();
        //if(dbName != tgtConn->useDatabase())
        if(dbName != tgtConn->defaultSqlDatabase())
         return false;
@@ -181,7 +181,7 @@ bool ExportSql::exportAltRoute()
     errors=0;
     notUpdated=0;
     QString commandText;
-    QSqlQuery query2 = QSqlQuery(_targetDb);
+    QSqlQuery* query2 = new QSqlQuery(_targetDb);
     bool bQuery;
     bool bFound = false;
 
@@ -198,11 +198,11 @@ bool ExportSql::exportAltRoute()
     else
      commandText = "select route, routePrefox, routeAlpha, baseRoute, lastUpdate from altRoute "
                    "where lastUpdate > :lastUpdated order by lastUpdate";
-    QSqlQuery query = QSqlQuery(srcDb);
-    query.prepare(commandText);
+    QSqlQuery* query = new QSqlQuery(srcDb);
+    query->prepare(commandText);
     if(!bDropTables)
-     query.bindValue(":lastUpdated", lastUpdated);
-    bQuery = query.exec();
+     query->bindValue(":lastUpdated", lastUpdated);
+    bQuery = query->exec();
     if(!bQuery)
     {
         SQLERROR_E(query);
@@ -212,32 +212,32 @@ bool ExportSql::exportAltRoute()
     qint32 route=0, route2=0, baseRoute, baseRoute2;
     QString altRoute="", altRoute2="", routePrefix="", routePrefix2="";
     QDateTime lastUpdate, lastUpdate2;
-    while(query.next())
+    while(query->next())
     {
-        route = query.value(0).toInt();
-        routePrefix = query.value(1).toString();
-        altRoute=query.value(2).toString();
-        baseRoute = query.value(3).toInt();
-        lastUpdate = query.value(4).toDateTime();
+        route = query->value(0).toInt();
+        routePrefix = query->value(1).toString();
+        altRoute=query->value(2).toString();
+        baseRoute = query->value(3).toInt();
+        lastUpdate = query->value(4).toDateTime();
 
         if(!bDropTables)
         {
         commandText = "select route, routePrefix, routeAlpha, baseRoute, lastUpdate from altRoute where route="+QString("%1").arg(route);
-        QSqlQuery query2 = QSqlQuery(_targetDb);
-        bQuery = query2.exec(commandText);
+        QSqlQuery* query2 = new QSqlQuery(_targetDb);
+        bQuery = query2->exec(commandText);
         if(!bQuery)
         {
             SQLERROR_E(query2);
             //db.close();
             exit(EXIT_FAILURE);
         }
-        while(query2.next())
+        while(query2->next())
         {
-            route2 = query2.value(0).toInt();
-            routePrefix2 = query2.value(1).toString();
-            altRoute2=query2.value(2).toString();
-            baseRoute2=query2.value(3).toInt();
-            lastUpdate2=query2.value(4).toDateTime();
+            route2 = query2->value(0).toInt();
+            routePrefix2 = query2->value(1).toString();
+            altRoute2=query2->value(2).toString();
+            baseRoute2=query2->value(3).toInt();
+            lastUpdate2=query2->value(4).toDateTime();
             bFound = true;
         }
         }
@@ -253,10 +253,10 @@ bool ExportSql::exportAltRoute()
                 commandText = "update altRoute set routeAlpha='"+altRoute+"', baseRoute = :baseRoute, lastUpdate=:lastUpdate where route = "+QString("%1").arg(route);
             else
                 commandText = "update altRoute set routeAlpha='"+altRoute+"', baseRoute = :baseRoute, lastUpdate=:lastUpdate where route = "+QString("%1").arg(route);
-            query2.prepare(commandText);
-            query2.bindValue(":lastUpdate", lastUpdate);
-            query2.bindValue(":baseRoute", baseRoute);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":lastUpdate", lastUpdate);
+            query2->bindValue(":baseRoute", baseRoute);
+            bQuery = query2->exec();
             if(!bQuery)
             {
                 SQLERROR_E(query2);
@@ -273,10 +273,10 @@ bool ExportSql::exportAltRoute()
                 commandText = "insert into altRoute (route, routePrefix, routeAlpha, baseRoute, lastUpdate) values("+QString("%1").arg(route) + ",'"+routePrefix+ "','"+ altRoute+ "', :baseRoute, :lastUpdate);";
             else
                 commandText = "SET IDENTITY_INSERT [dbo].[altRoute] ON;insert into altRoute (route, routePrefix, routeAlpha, baseRoute, lastUpdate) values("+QString("%1").arg(route) + ",'"+routePrefix+ "','"+altRoute+ "', :baseRoute, :lastUpdate);SET IDENTITY_INSERT [dbo].[altRoute] OFF;";
-            query2.prepare(commandText);
-            query2.bindValue(":lastUpdate", lastUpdate);
-            query2.bindValue(":baseRoute", baseRoute);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":lastUpdate", lastUpdate);
+            query2->bindValue(":baseRoute", baseRoute);
+            bQuery = query2->exec();
             if(!bQuery)
             {
              SQLERROR_E(query2);
@@ -308,7 +308,7 @@ bool ExportSql::exportComments()
     errors=0;
     notUpdated=0;
     QString commandText;
-    QSqlQuery query2 = QSqlQuery(_targetDb);
+    QSqlQuery* query2 = new QSqlQuery(_targetDb);
     bool bFound = false;
     bool bQuery;
 
@@ -332,11 +332,11 @@ bool ExportSql::exportComments()
       commandText = "select commentKey, tags, comments, lastUpdate from Comments  order by lastUpdate";
      else
       commandText = "select commentKey, tags, comments, lastUpdate from Comments where lastUpdate > :lastUpdated  order by lastUpdate";
-     QSqlQuery query = QSqlQuery(srcDb);
-     query.prepare(commandText);
+     QSqlQuery* query = new QSqlQuery(srcDb);
+     query->prepare(commandText);
      if(!bDropTables)
-      query.bindValue(":lastUpdated", lastUpdated);
-      bQuery = query.exec();
+      query->bindValue(":lastUpdated", lastUpdated);
+      bQuery = query->exec();
      if(!bQuery)
      {
         SQLERROR_E(query);
@@ -346,12 +346,12 @@ bool ExportSql::exportComments()
     qint32 key=0, key2=0;
     QString tags="", tags2="", comments="", comments2="";
     QDateTime lastUpdate, lastUpdate2;
-    while(query.next())
+    while(query->next())
     {
-        key = query.value(0).toInt();
-        tags=query.value(1).toString();
-        comments = query.value(2).toString();
-        lastUpdate = query.value(3).toDateTime();
+        key = query->value(0).toInt();
+        tags=query->value(1).toString();
+        comments = query->value(2).toString();
+        lastUpdate = query->value(3).toDateTime();
         //if(srcConn->servertype() != "MySql")
         {
             comments.replace("&up", up);
@@ -360,21 +360,21 @@ bool ExportSql::exportComments()
     if(!bDropTables)
     {
         commandText = "select commentKey, tags, comments, lastUpdate from Comments where commentKey="+QString("%1").arg(key);
-        QSqlQuery query2 = QSqlQuery(_targetDb);
-        bQuery = query2.exec(commandText);
+        QSqlQuery* query2 = new QSqlQuery(_targetDb);
+        bQuery = query2->exec(commandText);
         if(!bQuery)
         {
             SQLERROR_E(query2);
             //db.close();
             exit(EXIT_FAILURE);
         }
-        while(query2.next())
+        while(query2->next())
         {
             bFound = true;
-            key2 = query2.value(0).toInt();
-            tags2=query2.value(1).toString();
-            comments2=query2.value(2).toString();
-            lastUpdate2 = query.value(3).toDateTime();
+            key2 = query2->value(0).toInt();
+            tags2=query2->value(1).toString();
+            comments2=query2->value(2).toString();
+            lastUpdate2 = query->value(3).toDateTime();
             //if(tgtConn->servertype() != "MySql")
             {
                 comments2.replace("&up", up);
@@ -401,14 +401,14 @@ bool ExportSql::exportComments()
             {
                 commandText = "update  Comments set comments=:comments, tags =:tags,lastUpdate=:lastUpdate where commentKey = " + QString("%1").arg(key);
             }
-            query2.prepare(commandText);
-            query2.bindValue(":comments", comments);
-            query2.bindValue(":tags", tags);
-            query2.bindValue(":lastUpdate",lastUpdate);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":comments", comments);
+            query2->bindValue(":tags", tags);
+            query2->bindValue(":lastUpdate",lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
@@ -426,15 +426,15 @@ bool ExportSql::exportComments()
             {
                 commandText = "SET IDENTITY_INSERT [dbo].[Comments] ON; insert into Comments (commentKey, comments, tags, lastUpdate ) values(:commentKey, :comments,:tags,:lastUpdate); SET IDENTITY_INSERT [dbo].[Comments] OFF";
             }
-            query2.prepare(commandText);
-            query2.bindValue(":commentKey", key);
-            query2.bindValue(":comments", comments);
-            query2.bindValue(":tags", tags);
-            query2.bindValue(":lastUpdate",lastUpdate);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":commentKey", key);
+            query2->bindValue(":comments", comments);
+            query2->bindValue(":tags", tags);
+            query2->bindValue(":lastUpdate",lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
@@ -467,7 +467,7 @@ bool ExportSql::exportCompanies()
     errors=0;
     notUpdated=0;
     QString commandText;
-    QSqlQuery query2 = QSqlQuery(_targetDb);
+    QSqlQuery* query2 = new QSqlQuery(_targetDb);
     bool bFound = false;
     bool bQuery;
 
@@ -495,11 +495,11 @@ bool ExportSql::exportCompanies()
             commandText = "select [key], description, startDate, endDate, firstRoute, lastRoute, lastUpdate from Companies where lastUpdate > :lastUpdated  order by lastUpdate";
 
     }
-    QSqlQuery query = QSqlQuery(srcDb);
-    query.prepare(commandText);
+    QSqlQuery* query = new QSqlQuery(srcDb);
+    query->prepare(commandText);
     if(!bDropTables)
-     query.bindValue(":lastUpdated", lastUpdated);
-    bQuery = query.exec();
+     query->bindValue(":lastUpdated", lastUpdated);
+    bQuery = query->exec();
     if(!bQuery)
     {
         SQLERROR_E(query);
@@ -511,15 +511,15 @@ bool ExportSql::exportCompanies()
     QDateTime lastUpdate;
     QDateTime startDate, startDate2, endDate, endDate2;
     qint32 firstRoute=0, firstRoute2=0, lastRoute=0, lastRoute2=0;
-    while(query.next())
+    while(query->next())
     {
-        key = query.value(0).toInt();
-        description=query.value(1).toString();
-        startDate = query.value(2).toDateTime();
-        endDate = query.value(3).toDateTime();
-        firstRoute = query.value(4).toInt();
-        lastRoute = query.value(5).toInt();
-        lastUpdate = query.value(6).toDateTime();
+        key = query->value(0).toInt();
+        description=query->value(1).toString();
+        startDate = query->value(2).toDateTime();
+        endDate = query->value(3).toDateTime();
+        firstRoute = query->value(4).toInt();
+        lastRoute = query->value(5).toInt();
+        lastUpdate = query->value(6).toDateTime();
         if(lastUpdate.isValid() || lastUpdate.isNull())
             lastUpdate = QDateTime::currentDateTimeUtc();
 
@@ -529,22 +529,22 @@ bool ExportSql::exportCompanies()
             commandText = "select `key`, description, startDate, endDate, firstRoute, lastRoute from Companies where `key`="+QString("%1").arg(key);
         else
             commandText = "select [key], description, startDate, endDate, firstRoute, lastRoute from Companies where [key]="+QString("%1").arg(key);
-        QSqlQuery query2 = QSqlQuery(_targetDb);
-        bQuery = query2.exec(commandText);
+        QSqlQuery* query2 = new QSqlQuery(_targetDb);
+        bQuery = query2->exec(commandText);
         if(!bQuery)
         {
             SQLERROR_E(query2);
             //db.close();
             exit(EXIT_FAILURE);
         }
-        while(query2.next())
+        while(query2->next())
         {
-            key2 = query2.value(0).toInt();
-            description2=query2.value(1).toString();
-            startDate2 = query2.value(2).toDateTime();
-            endDate2 = query2.value(3).toDateTime();
-            firstRoute2 = query2.value(4).toInt();
-            lastRoute2 = query2.value(5).toInt();
+            key2 = query2->value(0).toInt();
+            description2=query2->value(1).toString();
+            startDate2 = query2->value(2).toDateTime();
+            endDate2 = query2->value(3).toDateTime();
+            firstRoute2 = query2->value(4).toInt();
+            lastRoute2 = query2->value(5).toInt();
             bFound = true;
         }
     }
@@ -560,12 +560,12 @@ bool ExportSql::exportCompanies()
                 commandText = "update Companies set description='"+description+"', startDate='"+startDate.toString("yyyy/MM/dd")+"', endDate = '"+endDate.toString("yyyy/MM/dd")+"', firstRoute="+QString("%1").arg(firstRoute)+",lastroute="+QString("%1").arg(lastRoute)+ ",lastUpdate=:lastUpdate where `key` = "+QString("%1").arg(key);
             else
                 commandText = "update Companies set description='"+description+"', startDate='"+startDate.toString("yyyy/MM/dd")+"', endDate = '"+endDate.toString("yyyy/MM/dd")+"', firstRoute="+QString("%1").arg(firstRoute)+",lastroute="+QString("%1").arg(lastRoute)+ ",lastUpdate=:lastUpdate where [key] = "+QString("%1").arg(key);
-            query2.prepare(commandText);
-            query2.bindValue(":lastUpdate", lastUpdate);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":lastUpdate", lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
@@ -581,12 +581,12 @@ bool ExportSql::exportCompanies()
                 commandText = "insert into Companies (`key`, description, startDate, endDate, firstRoute, lastRoute, lastUpdate) values("+QString("%1").arg(key) + ",'" + description + "','"+startDate.toString("yyyy/MM/dd")+"','" + endDate.toString("yyyy/MM/dd")+"'," + QString("%1").arg(firstRoute) + "," + QString("%1").arg(lastRoute) +",:lastUpdate)";
             else
                 commandText = "SET IDENTITY_INSERT [dbo].[Companies] ON; insert into Companies ([key], description, startDate, endDate, firstRoute, lastRoute,lastUpdate) values("+QString("%1").arg(key) + ",'" + description + "','"+startDate.toString("yyyy/MM/dd")+"','" + endDate.toString("yyyy/MM/dd")+"'," + QString("%1").arg(firstRoute) + "," + QString("%1").arg(lastRoute) + ",:lastUpdate); SET IDENTITY_INSERT [dbo].[Companies] OFF";
-            query2.prepare(commandText);
-            query2.bindValue(":lastUpdate", lastUpdate);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":lastUpdate", lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
@@ -610,20 +610,20 @@ bool ExportSql::exportCompanies()
             commandText = "select `key` from Companies";
         else
             commandText = "select [key] from Companies ";
-        QSqlQuery query2 = QSqlQuery(_targetDb);
-        bQuery = query2.exec(commandText);
+        QSqlQuery* query2 = new QSqlQuery(_targetDb);
+        bQuery = query2->exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query2.lastError();
+            QSqlError err = query2->lastError();
             qDebug() << err.text() + "\n";
             qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
             //db.close();
             exit(EXIT_FAILURE);
         }
         QList<qint32> CompaniesList;
-        while(query2.next())
+        while(query2->next())
         {
-            key = query2.value(0).toInt();
+            key = query2->value(0).toInt();
             CompaniesList.append(key);
         }
         rowCount = CompaniesList.count();
@@ -635,20 +635,20 @@ bool ExportSql::exportCompanies()
                 commandText = "select count(*) from Companies  where `key` = "+QString("%1").arg(key);
             else
                 commandText = "select count(*) from Companies  where [key] = "+QString("%1").arg(key);
-            QSqlQuery query = QSqlQuery(srcDb);
-            bool bQuery = query.exec(commandText);
+            QSqlQuery* query = new QSqlQuery(srcDb);
+            bool bQuery = query->exec(commandText);
             if(!bQuery)
             {
-                QSqlError err = query.lastError();
+                QSqlError err = query->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
                 exit(EXIT_FAILURE);
             }
             int srcCount=0;
-            while(query.next())
+            while(query->next())
             {
-                srcCount = query.value(0).toInt();
+                srcCount = query->value(0).toInt();
             }
             if(srcCount > 0)
             {
@@ -660,18 +660,18 @@ bool ExportSql::exportCompanies()
                 commandText = "delete from Companies  where `key` = "+QString("%1").arg(key);
             else
                 commandText = "delete from Companies  where [key] = "+QString("%1").arg(key);
-            QSqlQuery query2 = QSqlQuery(_targetDb);
-            bQuery = query2.exec(commandText);
+            QSqlQuery* query2 = new QSqlQuery(_targetDb);
+            bQuery = query2->exec(commandText);
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
                 //exit(EXIT_FAILURE);
                 errors++;
             }
-            deleted += query2.numRowsAffected();
+            deleted += query2->numRowsAffected();
 
             sendProgress();
         }
@@ -696,7 +696,7 @@ bool ExportSql::exportIntersections()
     errors=0;
     notUpdated=0;
     QString commandText;
-    QSqlQuery query2 = QSqlQuery(_targetDb);
+    QSqlQuery* query2 = new QSqlQuery(_targetDb);
     bool bFound = false;
     bool bQuery;
 
@@ -723,11 +723,11 @@ bool ExportSql::exportIntersections()
         else
             commandText = "select [key], street1, street2, latitude, longitude, lastUpdate from Intersections where lastUpdate > :lastUpdated  order by lastUpdate";
     }
-    QSqlQuery query = QSqlQuery(srcDb);
-    query.prepare(commandText);
+    QSqlQuery* query = new QSqlQuery(srcDb);
+    query->prepare(commandText);
     if(!bDropTables)
-     query.bindValue(":lastUpdated", lastUpdated);
-    bQuery = query.exec();
+     query->bindValue(":lastUpdated", lastUpdated);
+    bQuery = query->exec();
     if(!bQuery)
     {
         SQLERROR_E(query);
@@ -738,14 +738,14 @@ bool ExportSql::exportIntersections()
     QString street1="", street12="", street2="", street22="";
     QDateTime lastUpdate;
     double latitude=0, latitude2=0, longitude=0, longitude2=0;
-    while(query.next())
+    while(query->next())
     {
-        key = query.value(0).toInt();
-        street1=query.value(1).toString();
-        street2 = query.value(2).toString();
-        latitude = query.value(3).toDouble();
-        longitude = query.value(4).toDouble();
-        lastUpdate = query.value(5).toDateTime();
+        key = query->value(0).toInt();
+        street1=query->value(1).toString();
+        street2 = query->value(2).toString();
+        latitude = query->value(3).toDouble();
+        longitude = query->value(4).toDouble();
+        lastUpdate = query->value(5).toDateTime();
      if(!bDropTables)
      {
 
@@ -753,23 +753,23 @@ bool ExportSql::exportIntersections()
             commandText = "select `key`, street1, street2, latitude, longitude from Intersections where `key`="+QString("%1").arg(key);
         else
             commandText = "select [key], street1, street2, latitude, longitude from Intersections where [key]="+QString("%1").arg(key);
-        QSqlQuery query2 = QSqlQuery(_targetDb);
-        bQuery = query2.exec(commandText);
+        QSqlQuery* query2 = new QSqlQuery(_targetDb);
+        bQuery = query2->exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query2.lastError();
+            QSqlError err = query2->lastError();
             qDebug() << err.text() + "\n";
             qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
             //db.close();
             exit(EXIT_FAILURE);
         }
-        while(query2.next())
+        while(query2->next())
         {
-            key2 = query.value(0).toInt();
-            street12=query.value(1).toString();
-            street22 = query.value(2).toString();
-            latitude2 = query.value(3).toDouble();
-            longitude2 = query.value(4).toDouble();
+            key2 = query->value(0).toInt();
+            street12=query->value(1).toString();
+            street22 = query->value(2).toString();
+            latitude2 = query->value(3).toDouble();
+            longitude2 = query->value(4).toDouble();
             bFound = true;
         }
         }
@@ -785,12 +785,12 @@ bool ExportSql::exportIntersections()
                 commandText = "update Intersections set street1='"+street1+"', street2='"+street2+"',latitude="+QString("%1").arg(latitude, 0,'f',8)+",longitude="+QString("%1").arg(longitude,0,'f',8)+",lastUpdate=:lastUpdate where `key` = "+QString("%1").arg(key);
             else
                 commandText = "update Intersections set street1='"+street1+"', street2='"+street2+"',latitude="+QString("%1").arg(latitude, 0,'f',8)+",longitude="+QString("%1").arg(longitude,0,'f',8)+",:lastUpdate where [key] = "+QString("%1").arg(key);
-            query2.prepare(commandText);
-            query2.bindValue(":lastUpdate", lastUpdate);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":lastUpdate", lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
@@ -806,12 +806,12 @@ bool ExportSql::exportIntersections()
                 commandText = "insert into Intersections (`key`, street1, street2, latitude, longitude, lastUpdate) values(" + QString("%1").arg(key) + ",'" + street1 + "','" +street2 + "',"+QString("%1").arg(latitude, 0,'f',8)+","+QString("%1").arg(longitude,0,'f',8)+",:lastUpdate)";
             else
                 commandText = "SET IDENTITY_INSERT [dbo].[Intersections] ON; insert into Intersections ([key], street1, street2, latitude, longitude,lastUpdate) values(" + QString("%1").arg(key) + ",'" + street1 + "','" +street2 + "',"+QString("%1").arg(latitude, 0,'f',8)+","+QString("%1").arg(longitude,0,'f',8)+",:lastUpdate); SET IDENTITY_INSERT [dbo].[Intersections] OFF";
-            query2.prepare(commandText);
-            query2.bindValue(":lastUpdate", lastUpdate);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":lastUpdate", lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
@@ -846,7 +846,7 @@ bool ExportSql::exportTractionTypes()
     errors=0;
     notUpdated=0;
     QString commandText;
-    QSqlQuery query2 = QSqlQuery(_targetDb);
+    QSqlQuery* query2 = new QSqlQuery(_targetDb);
     bool bFound = false;
 
     getCount("TractionTypes");
@@ -863,11 +863,11 @@ bool ExportSql::exportTractionTypes()
     else
      commandText = "select tractionType, description, displayColor, routeType, icon, lastUpdate from TractionTypes where lastUpdate > :lastUpdated  order by lastUpdate";
 
-    QSqlQuery query = QSqlQuery(srcDb);
-    query.prepare(commandText);
+    QSqlQuery* query = new QSqlQuery(srcDb);
+    query->prepare(commandText);
     if(!bDropTables)
-     query.bindValue(":lastUpdated", lastUpdated);
-    bool bQuery = query.exec();
+     query->bindValue(":lastUpdated", lastUpdated);
+    bool bQuery = query->exec();
     if(!bQuery)
     {
         SQLERROR_E(query);
@@ -878,14 +878,14 @@ bool ExportSql::exportTractionTypes()
     QString description="", description2="", displayColor="", displayColor2="", icon="", icon2="";
     QDateTime lastUpdate;
 
-    while(query.next())
+    while(query->next())
     {
-        tractionType = query.value(0).toInt();
-        description=query.value(1).toString();
-        displayColor=query.value(2).toString();
-        routeType=query.value(3).toInt();
-        icon=query.value(4).toString();
-        lastUpdate = query.value(5).toDateTime();
+        tractionType = query->value(0).toInt();
+        description=query->value(1).toString();
+        displayColor=query->value(2).toString();
+        routeType=query->value(3).toInt();
+        icon=query->value(4).toString();
+        lastUpdate = query->value(5).toDateTime();
 
      if(!bDropTables)
      {
@@ -893,24 +893,24 @@ bool ExportSql::exportTractionTypes()
                       "routeType, icon "
                       "from TractionTypes"
                       " where tractionType="+QString("%1").arg(tractionType);
-        QSqlQuery query2 = QSqlQuery(_targetDb);
-        bQuery = query2.exec(commandText);
+        QSqlQuery* query2 = new QSqlQuery(_targetDb);
+        bQuery = query2->exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query2.lastError();
+            QSqlError err = query2->lastError();
             qDebug() << err.text() + "\n";
             qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
             //db.close();
             exit(EXIT_FAILURE);
         }
         bool bFound = false;
-        while(query2.next())
+        while(query2->next())
         {
-            tractionType2 = query2.value(0).toInt();
-            description2=query2.value(1).toString();
-            displayColor2=query2.value(2).toString();
-            routeType2=query2.value(3).toInt();
-            icon2=query2.value(4).toString();
+            tractionType2 = query2->value(0).toInt();
+            description2=query2->value(1).toString();
+            displayColor2=query2->value(2).toString();
+            routeType2=query2->value(3).toInt();
+            icon2=query2->value(4).toString();
             bFound = true;
         }
      }
@@ -926,12 +926,12 @@ bool ExportSql::exportTractionTypes()
                 commandText = "update TractionTypes set description='"+description+"',displayColor='"+displayColor+"',routeType="+QString("%1").arg(routeType)+",icon='"+icon+"', lastUpdate=:lastUpdate where tractionType = "+QString("%1").arg(tractionType);
             else
                 commandText = "update TractionTypes set description='"+description+"',displayColor='"+displayColor+"',routeType="+QString("%1").arg(routeType)+",icon='"+icon+"', lastUpdate=:lastUpdate where tractionType = "+QString("%1").arg(tractionType);
-            query2.prepare(commandText);
-            query2.bindValue(":LastUpdate", lastUpdate);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":LastUpdate", lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 errors++;
@@ -945,12 +945,12 @@ bool ExportSql::exportTractionTypes()
                 commandText = "insert into TractionTypes (tractionType, description, displayColor, routeType, icon, lastUpdate) values("+QString("%1").arg(tractionType) + ",'"+description+ "','"+displayColor+"',"+QString("%1").arg(routeType)+",'"+icon+"',:lastUpdate)";
             else
                 commandText = "SET IDENTITY_INSERT [dbo].[TractionTypes] ON; insert into TractionTypes (tractionType, description, displayColor, routeType, icon, lastUpdate) values("+QString("%1").arg(tractionType) + ",'"+description+ "','"+displayColor+"',"+QString("%1").arg(routeType)+",'"+icon+"',:lastUpdate);SET IDENTITY_INSERT [dbo].[TractionTypes] OFF ";
-            query2.prepare(commandText);
-            query2.bindValue(":lastUpdate",lastUpdate);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":lastUpdate",lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
@@ -984,7 +984,7 @@ bool ExportSql::exportParameters()
     errors=0;
     notUpdated=0;
     QString commandText;
-    QSqlQuery query2 = QSqlQuery(_targetDb);
+    QSqlQuery* query2 = new QSqlQuery(_targetDb);
     bool bFound = false;
     bool bQuery;
     bool exists = true;
@@ -1013,11 +1013,11 @@ bool ExportSql::exportParameters()
             commandText = "select [key], lat, lon, title, city, minDate, maxDate, alphaRoutes,lastUpdate from Parameters where lastUpdate > :lastUpdated  order by lastUpdate";
 
     }
-    QSqlQuery query = QSqlQuery(srcDb);
-    query.prepare(commandText);
+    QSqlQuery* query = new QSqlQuery(srcDb);
+    query->prepare(commandText);
     if(!bDropTables)
-     query.bindValue(":lastUpdated", lastUpdated);
-    bQuery = query.exec();
+     query->bindValue(":lastUpdated", lastUpdated);
+    bQuery = query->exec();
     if(!bQuery)
     {
         SQLERROR_E(query);
@@ -1029,43 +1029,43 @@ bool ExportSql::exportParameters()
     QDateTime lastUpdate;
     double lat=0, lat2=0, lon=0, lon2=0;
     QDate minDate, maxDate, minDate2, maxDate2;
-    while(query.next())
+    while(query->next())
     {
-        key = query.value(0).toInt();
-        lat= query.value(1).toDouble();
-        lon=query.value(2).toDouble();
-        title=query.value(3).toString();
-        city=query.value(4).toString();
-        minDate = query.value(5).toDate();
-        maxDate = query.value(6).toDate();
-        alphaRoutes=query.value(7).toString();
-        lastUpdate = query.value(8).toDateTime();
+        key = query->value(0).toInt();
+        lat= query->value(1).toDouble();
+        lon=query->value(2).toDouble();
+        title=query->value(3).toString();
+        city=query->value(4).toString();
+        minDate = query->value(5).toDate();
+        maxDate = query->value(6).toDate();
+        alphaRoutes=query->value(7).toString();
+        lastUpdate = query->value(8).toDateTime();
         if(!bDropTables)
         {
         if(tgtConn->servertype() != "MsSql")
             commandText = "select `key`, lat, lon, title, city, minDate, maxDate, alphaRoutes from Parameters where `key`="+QString("%1").arg(key);
         else
             commandText = "select [key], lat, lon, title, city, minDate, maxDate, alphaRoutes from Parameters where [key]="+QString("%1").arg(key);
-        QSqlQuery query2 = QSqlQuery(_targetDb);
-        bQuery = query2.exec(commandText);
+        QSqlQuery* query2 = new QSqlQuery(_targetDb);
+        bQuery = query2->exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query2.lastError();
+            QSqlError err = query2->lastError();
             qDebug() << err.text() + "\n";
             qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
             //db.close();
             exit(EXIT_FAILURE);
         }
-        while(query2.next())
+        while(query2->next())
         {
-            key2 = query2.value(0).toInt();
-            lat2= query2.value(1).toDouble();
-            lon2=query2.value(2).toDouble();
-            title2=query2.value(3).toString();
-            city2=query2.value(4).toString();
-            minDate2 = query.value(5).toDate();
-            maxDate2 = query.value(6).toDate();
-            alphaRoutes2=query.value(7).toString();
+            key2 = query2->value(0).toInt();
+            lat2= query2->value(1).toDouble();
+            lon2=query2->value(2).toDouble();
+            title2=query2->value(3).toString();
+            city2=query2->value(4).toString();
+            minDate2 = query->value(5).toDate();
+            maxDate2 = query->value(6).toDate();
+            alphaRoutes2=query->value(7).toString();
             bFound = true;
         }
         }
@@ -1081,12 +1081,12 @@ bool ExportSql::exportParameters()
                 commandText = "update Parameters set lat="+QString("%1").arg(lat, 0, 'f',8) +",lon="+QString("%1").arg(lon, 0, 'f',8)+", title='"+title+"',city='"+city+"', minDate = '"+minDate.toString("yyyy/MM/dd") + "', maxDate = '"+maxDate.toString("yyyy/MM/dd")+"',alphaRoutes='"+alphaRoutes+"', lastUpdate =:lastUpdate where `key` = "+QString("%1").arg(key);
             else
                 commandText = "update Parameters set lat="+QString("%1").arg(lat, 0, 'f',8) +",lon="+QString("%1").arg(lon, 0, 'f',8)+", title='"+title+"',city='"+city+"',maxDate = '"+maxDate.toString("yyyy/MM/dd")+"', alphaRoutes='"+alphaRoutes+"',lastUpdate=:lastUpdate where [key] = "+QString("%1").arg(key);
-            query2.prepare(commandText);
-            query2.bindValue(":lastUpdate",lastUpdate);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":lastUpdate",lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
@@ -1102,12 +1102,12 @@ bool ExportSql::exportParameters()
                 commandText = "insert into Parameters (`key`, lat, lon, title, city, minDate, maxDate, alphaRoutes, lastUpdate) values("+QString("%1").arg(key) + ","+QString("%1").arg(lat, 0, 'f',8) +","+QString("%1").arg(lon, 0, 'f',8)+", '"+title+"','"+city+"', '"+minDate.toString("yyyy/MM/dd") + "','" + maxDate.toString("yyyy/MM/dd") + "','"+alphaRoutes+"',:lastUpdate)";
             else
                 commandText = "SET IDENTITY_INSERT [dbo].[Parameters] ON; insert into Parameters ([key], lat, lon, title, city, minDate, maxDate, alphaRoutes, lastUpdate) values("+QString("%1").arg(key) + ","+QString("%1").arg(lat, 0, 'f',8) +","+QString("%1").arg(lon, 0, 'f',8)+", '"+title+"','"+city+"', '"+minDate.toString("yyyy/MM/dd") + "','" + maxDate.toString("yyyy/MM/dd") + "','"+alphaRoutes+"',:lastUpdate); SET IDENTITY_INSERT [dbo].[Parameters] OFF";
-            query2.prepare(commandText);
-            query2.bindValue(":lastUpdate",lastUpdate);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":lastUpdate",lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
@@ -1150,13 +1150,13 @@ bool ExportSql::exportLineSegments()
         commandText = "select `key`, a.startLat, a.startLon, a.endLat, a.endLon, streetName, a.segmentId, sequence, a.length, s.description, s.oneWay, a.lastUpdate, s.lastUpdate from LineSegment a join Segments s on a.segmentId = s.segmentId where a.lastUpdate > :lastUpdated  order by a.lastUpdate";
     else
         commandText = "select [key], a.startLat, a.startLon, a.endLat, a.endLon, streetName, a.segmentId, sequence, a.length, s.description, s.oneWay, a.lastUpdate, s.lastUpdate from LineSegment a join Segments s on a.segmentId = s.segmentId where a.lastUpdate > :lastUpdated  order by a.lastUpdate";
-    QSqlQuery query = QSqlQuery(srcDb);
-    query.prepare(commandText);
-    query.bindValue(":lastUpdated",lastUpdated);
-    bool bQuery = query.exec();
+    QSqlQuery* query = new QSqlQuery(srcDb);
+    query->prepare(commandText);
+    query->bindValue(":lastUpdated",lastUpdated);
+    bool bQuery = query->exec();
     if(!bQuery)
     {
-        QSqlError err = query.lastError();
+        QSqlError err = query->lastError();
         qDebug() << err.text() + "\n";
         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
         //db.close();
@@ -1168,41 +1168,41 @@ bool ExportSql::exportLineSegments()
     double startLat=0, startLat2=0, startLon=0, startLon2=0;
     double endLat=0, endLat2=0, endLon=0, endLon2=0;
     double length = 0, length2=0;
-    while(query.next())
+    while(query->next())
     {
-        key = query.value(0).toInt();
-        startLat= query.value(1).toDouble();
-        startLon = query.value(2).toDouble();
-        endLat = query.value(3).toDouble();
-        endLon = query.value(4).toDouble();
-        streetName = query.value(5).toString();
-        segmentId = query.value(6).toInt();
-        sequence = query.value(7).toInt();
-        length = query.value(8).toDouble();
+        key = query->value(0).toInt();
+        startLat= query->value(1).toDouble();
+        startLon = query->value(2).toDouble();
+        endLat = query->value(3).toDouble();
+        endLon = query->value(4).toDouble();
+        streetName = query->value(5).toString();
+        segmentId = query->value(6).toInt();
+        sequence = query->value(7).toInt();
+        length = query->value(8).toDouble();
 
-        description = query.value(9).toString();
-        oneWay = query.value(10).toString();
-        lastUpdate = query.value(11).toDateTime();
-        lastUpdateS = query.value(12).toDateTime();
+        description = query->value(9).toString();
+        oneWay = query->value(10).toString();
+        lastUpdate = query->value(11).toDateTime();
+        lastUpdateS = query->value(12).toDateTime();
 
         commandText = "select segmentId, description, oneWay from Segments where segmentId="+QString("%1").arg(segmentId);
-        QSqlQuery query2 = QSqlQuery(_targetDb);
-        bQuery = query2.exec(commandText);
+        QSqlQuery* query2 = new QSqlQuery(_targetDb);
+        bQuery = query2->exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query2.lastError();
+            QSqlError err = query2->lastError();
             qDebug() << err.text() + "\n";
             qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
             //db.close();
-            if(!Retry(&_targetDb, &query2, commandText))
+            if(!Retry(&_targetDb, query2, commandText))
                 exit(EXIT_FAILURE);
 
         }
-        while(query2.next())
+        while(query2->next())
         {
-            segmentId2 = query2.value(0).toInt();
-            description2 = query2.value(1).toString();
-            oneWay = query2.value(2).toString();
+            segmentId2 = query2->value(0).toInt();
+            description2 = query2->value(1).toString();
+            oneWay = query2->value(2).toString();
         }
         if(segmentId != segmentId2)
         {
@@ -1214,16 +1214,16 @@ bool ExportSql::exportLineSegments()
                //setIdentityInsert("Segments", true);
                commandText = "SET IDENTITY_INSERT [dbo].[Segments] ON; insert into Segments (segmentId, description, oneWay, lastUpdate) values("+QString("%1").arg(segmentId)+",'"+description+"','"+oneWay+"',:lastUpdateS); SET IDENTITY_INSERT [dbo].[Segments] OFF";
            }
-           query2.prepare(commandText);
-           query2.bindValue(":lastUpdateS", lastUpdateS);
-            bQuery = query2.exec();
+           query2->prepare(commandText);
+           query2->bindValue(":lastUpdateS", lastUpdateS);
+            bQuery = query2->exec();
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
-                if(!Retry(&_targetDb, &query2, ""))
+                if(!Retry(&_targetDb, query2, ""))
                     exit(EXIT_FAILURE);
 
                 errors++;
@@ -1239,31 +1239,31 @@ bool ExportSql::exportLineSegments()
             commandText = "select `key`, startLat, startLon, endLat, endLon, streetName, segmentId, sequence, length, lastUpdate from LineSegment where `key`="+QString("%1").arg(key);
         else
             commandText = "select [key], startLat, startLon, endLat, endLon, streetName, segmentId, sequence, length, lastUpdate from LineSegment where [key]="+QString("%1").arg(key);
-        query2 = QSqlQuery(_targetDb);
-        bQuery = query2.exec(commandText);
+        query2 = new QSqlQuery(_targetDb);
+        bQuery = query2->exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query2.lastError();
+            QSqlError err = query2->lastError();
             qDebug() << err.text() + "\n";
             qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
             //db.close();
-            if(!Retry(&_targetDb, &query2, commandText))
+            if(!Retry(&_targetDb, query2, commandText))
                 exit(EXIT_FAILURE);
         }
         bool bFound = false;
-        while(query2.next())
+        while(query2->next())
         {
             bFound = true;
-            key2 = query2.value(0).toInt();
-            startLat2= query2.value(1).toDouble();
-            startLon2 = query2.value(2).toDouble();
-            endLat2 = query2.value(3).toDouble();
-            endLon2 = query2.value(4).toDouble();
-            streetName2 = query2.value(5).toString();
-            segmentId2 = query2.value(6).toInt();
-            sequence2 = query2.value(7).toInt();
-            length2 = query2.value(8).toDouble();
-            lastUpdate2 = query2.value(9).toDateTime();
+            key2 = query2->value(0).toInt();
+            startLat2= query2->value(1).toDouble();
+            startLon2 = query2->value(2).toDouble();
+            endLat2 = query2->value(3).toDouble();
+            endLon2 = query2->value(4).toDouble();
+            streetName2 = query2->value(5).toString();
+            segmentId2 = query2->value(6).toInt();
+            sequence2 = query2->value(7).toInt();
+            length2 = query2->value(8).toDouble();
+            lastUpdate2 = query2->value(9).toDateTime();
         }
         if(bFound && key== key2 && startLat == startLat2 && startLon == startLon2 && endLat == endLat2 && endLon== endLon2 && streetName == streetName2 && segmentId == segmentId2 && sequence == sequence2 && length == length2 && lastUpdate == lastUpdate2)
         {
@@ -1280,17 +1280,17 @@ bool ExportSql::exportLineSegments()
             else
                 commandText = "update LineSegment set startLat="+QString("%1").arg(startLat, 0, 'f',8) +",startLon="+QString("%1").arg(startLon, 0, 'f',8)+", endLat="+QString("%1").arg(endLat, 0, 'f',8) +",endLon="+QString("%1").arg(endLon, 0, 'f',8)+",streetName='"+streetName+"',segmentId="+QString("%1").arg(segmentId)+", sequence="+QString("%1").arg(sequence)+",length="+QString("%1").arg(length, 0, 'f', 8)+",lastUpdate=:lastUpdate where [key] = "+QString("%1").arg(key);
 
-            query2.prepare(commandText);
-            query2.bindValue(":lastUpdate", lastUpdate);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":lastUpdate", lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
                 //exit(EXIT_FAILURE);
-                if(!Retry(&_targetDb, &query2, ""))
+                if(!Retry(&_targetDb, query2, ""))
                     exit(EXIT_FAILURE);
 
                 errors++;
@@ -1308,17 +1308,17 @@ bool ExportSql::exportLineSegments()
                 commandText = "SET IDENTITY_INSERT [dbo].[LineSegment] ON; insert into LineSegment ([key], startLat, startLon, endLat, endLon, streetName, segmentId, sequence, length, lastUpdate) values("+QString("%1").arg(key) + ","+QString("%1").arg(startLat, 0, 'f',8) +","+QString("%1").arg(startLon, 0, 'f',8)+", "+QString("%1").arg(endLat, 0, 'f',8) +","+QString("%1").arg(endLon, 0, 'f',8)+",'"+streetName+"',"+QString("%1").arg(segmentId)+","+QString("%1").arg(sequence)+","+QString("%1").arg(length, 0, 'f', 8)+",:lastUpdate); SET IDENTITY_INSERT [dbo].[LineSegment] OFF";
 
             }
-            query2.prepare(commandText);
-            query2.bindValue(":lastUpdate", lastUpdate);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":lastUpdate", lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
                 //exit(EXIT_FAILURE);
-//                if(!Retry(&targetDb, &query2, ""))
+//                if(!Retry(&targetDb, query2, ""))
 //                    exit(EXIT_FAILURE);
 
                 errors++;
@@ -1339,22 +1339,22 @@ bool ExportSql::exportLineSegments()
             commandText = "select `key` from LineSegment where lastUpdate <'"+ beginTime + "'";
         else
             commandText = "select [key] from LineSegment where lastUpdate <'"+ beginTime + "'";
-        QSqlQuery query2 = QSqlQuery(_targetDb);
-        bQuery = query2.exec(commandText);
+        QSqlQuery* query2 = new QSqlQuery(_targetDb);
+        bQuery = query2->exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query2.lastError();
+            QSqlError err = query2->lastError();
             qDebug() << err.text() + "\n";
             qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
             //db.close();
-            if(!Retry(&_targetDb, &query2, commandText))
+            if(!Retry(&_targetDb, query2, commandText))
                 exit(EXIT_FAILURE);
 
         }
         QList<qint32> lineSegmentList;
-        while(query2.next())
+        while(query2->next())
         {
-            key = query2.value(0).toInt();
+            key = query2->value(0).toInt();
             lineSegmentList.append(key);
             qApp->processEvents(QEventLoop::AllEvents);
         }
@@ -1367,20 +1367,20 @@ bool ExportSql::exportLineSegments()
                 commandText = "select count(*) from LineSegment  where `key` = "+QString("%1").arg(key);
             else
                 commandText = "select count(*) from LineSegment  where [key] = "+QString("%1").arg(key);
-            QSqlQuery query = QSqlQuery(srcDb);
-            bool bQuery = query.exec(commandText);
+            QSqlQuery* query = new QSqlQuery(srcDb);
+            bool bQuery = query->exec(commandText);
             if(!bQuery)
             {
-                QSqlError err = query.lastError();
+                QSqlError err = query->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
                 exit(EXIT_FAILURE);
             }
             int srcCount=0;
-            while(query.next())
+            while(query->next())
             {
-                srcCount = query.value(0).toInt();
+                srcCount = query->value(0).toInt();
             }
             if(srcCount > 0)
             {
@@ -1392,22 +1392,22 @@ bool ExportSql::exportLineSegments()
                 commandText = "delete from LineSegment  where `key` = "+QString("%1").arg(key);
             else
                 commandText = "delete from LineSegment  where [key] = "+QString("%1").arg(key);
-            QSqlQuery query2 = QSqlQuery(_targetDb);
-            bQuery = query2.exec(commandText);
+            QSqlQuery* query2 = new QSqlQuery(_targetDb);
+            bQuery = query2->exec(commandText);
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
                 //exit(EXIT_FAILURE);
-                if(!Retry(&_targetDb, &query2, commandText))
+                if(!Retry(&_targetDb, query2, commandText))
                     exit(EXIT_FAILURE);
 
                 errors++;
             }
-            if(query2.numRowsAffected()>0)
-                deleted += query2.numRowsAffected();
+            if(query2->numRowsAffected()>0)
+                deleted += query2->numRowsAffected();
             else
                 qDebug()<< "fail? "+ commandText;
 
@@ -1464,13 +1464,13 @@ bool ExportSql::exportSegments()
                  "from Segments";
   }
 
-  QSqlQuery query = QSqlQuery(srcDb);
-  QSqlQuery query2 = QSqlQuery(_targetDb);
+  QSqlQuery* query = new QSqlQuery(srcDb);
+  QSqlQuery* query2 = new QSqlQuery(_targetDb);
 
-  query.prepare(commandText);
+  query->prepare(commandText);
   if(!bDropTables)
-   query.bindValue(":lastUpdated", lastUpdated);
-  bool bQuery = query.exec();
+   query->bindValue(":lastUpdated", lastUpdated);
+  bool bQuery = query->exec();
   if(!bQuery)
   {
    SQLERROR_E(query);
@@ -1484,26 +1484,26 @@ bool ExportSql::exportSegments()
   QDateTime lastUpdate, lastUpdate2;
   double startLat=0, startLat2=0, startLon = 0, startLon2=0, endLat=0, endLat2=0, endLon=0, endLon2=0, length=0, length2=0;
   QDateTime startDate, startDate2, endDate, endDate2;
-  while(query.next())
+  while(query->next())
   {
-   segmentId = query.value(0).toInt();
-   description = query.value(1).toString();
-   oneWay = query.value(2).toString();
-   type = query.value(3).toInt();
-   startLat = query.value(4).toDouble();
-   startLon = query.value(5).toDouble();
-   endLat = query.value(6).toDouble();
-   endLon = query.value(7).toDouble();
-   length = query.value(8).toDouble();
-   points = query.value(9).toInt();
-   startDate = query.value(10).toDateTime();
-   endDate = query.value(11).toDateTime();
-   direction=query.value(12).toString();
-   lastUpdate = query.value(13).toDateTime();
-   street = query.value(14).toString();
-   pointArray = query.value(15).toString();
-   tracks = query.value(16).toInt();
-   location = query.value(17).toString();
+   segmentId = query->value(0).toInt();
+   description = query->value(1).toString();
+   oneWay = query->value(2).toString();
+   type = query->value(3).toInt();
+   startLat = query->value(4).toDouble();
+   startLon = query->value(5).toDouble();
+   endLat = query->value(6).toDouble();
+   endLon = query->value(7).toDouble();
+   length = query->value(8).toDouble();
+   points = query->value(9).toInt();
+   startDate = query->value(10).toDateTime();
+   endDate = query->value(11).toDateTime();
+   direction=query->value(12).toString();
+   lastUpdate = query->value(13).toDateTime();
+   street = query->value(14).toString();
+   pointArray = query->value(15).toString();
+   tracks = query->value(16).toInt();
+   location = query->value(17).toString();
    bool bFound = false;
 
    if(!bDropTables)
@@ -1512,37 +1512,37 @@ bool ExportSql::exportSegments()
                   " endLon, length, points, startDate, endDate, direction,lastUpdate, street,"
                   " pointArray, tracks, location"
                   " from Segments where segmentId="+QString("%1").arg(segmentId);
-    bQuery = query2.exec(commandText);
+    bQuery = query2->exec(commandText);
     if(!bQuery)
     {
      SQLERROR_E(query2);
      //db.close();
-     if(!Retry(&_targetDb, &query2, commandText))
+     if(!Retry(&_targetDb, query2, commandText))
          exit(EXIT_FAILURE);
     }
     bool bFound = false;
 
-    while(query2.next())
+    while(query2->next())
     {
      bFound = true;
-     segmentId2 = query2.value(0).toInt();
-     description2 = query2.value(1).toString();
-     oneWay2 = query2.value(2).toString();
-     type2 = query2.value(3).toInt();
-     startLat2 = query2.value(4).toDouble();
-     startLon2 = query2.value(5).toDouble();
-     endLat2 = query2.value(6).toDouble();
-     endLon2 = query2.value(7).toDouble();
-     length2 = query2.value(8).toDouble();
-     points2 = query2.value(9).toInt();
-     startDate2 = query2.value(10).toDateTime();
-     endDate2 = query2.value(11).toDateTime();
-     direction2=query2.value(12).toString();
-     lastUpdate2 = query2.value(13).toDateTime();
-     street2 = query.value(14).toString();
-     pointArray2 = query.value(15).toString();
-     tracks2 = query.value(16).toInt();
-     location2 = query.value(17).toString();
+     segmentId2 = query2->value(0).toInt();
+     description2 = query2->value(1).toString();
+     oneWay2 = query2->value(2).toString();
+     type2 = query2->value(3).toInt();
+     startLat2 = query2->value(4).toDouble();
+     startLon2 = query2->value(5).toDouble();
+     endLat2 = query2->value(6).toDouble();
+     endLon2 = query2->value(7).toDouble();
+     length2 = query2->value(8).toDouble();
+     points2 = query2->value(9).toInt();
+     startDate2 = query2->value(10).toDateTime();
+     endDate2 = query2->value(11).toDateTime();
+     direction2=query2->value(12).toString();
+     lastUpdate2 = query2->value(13).toDateTime();
+     street2 = query->value(14).toString();
+     pointArray2 = query->value(15).toString();
+     tracks2 = query->value(16).toInt();
+     location2 = query->value(17).toString();
     }
     if(bFound && segmentId== segmentId2 && description == description2 && oneWay == oneWay2
        && type == type2 && startLat == startLat2 && startLon == startLon2 && endLat == endLat2
@@ -1564,15 +1564,15 @@ bool ExportSql::exportSegments()
      commandText = "update Segments set description='"+description+"', oneWay= '"+oneWay+ "', type="+QString("%1").arg(type)+", startLat="+QString("%1").arg(startLat, 0, 'f', 8)+",startLon="+QString("%1").arg(startLon, 0, 'f', 8)+",endLat="+QString("%1").arg(endLat, 0, 'f',8)+",endLon="+QString("%1").arg(endLon, 0, 'f',8)+",length="+QString("%1").arg(length,0,'f',8)+",points="+QString("%1").arg(length,0,'f',8)+",startDate='"+startDate.toString("yyyy/MM/dd")+"',endDate='"+endDate.toString("yyyy/MM/dd")+"',direction='"+direction+"',lastUpdate =:lastUpdate, street='"+ street +"', pointArray ='"+ pointArray +"', tracks = " + QString::number(tracks) + " where segmentId = "+QString("%1").arg(segmentId);
     else
      commandText = "update Segments set description='"+description+"', oneWay= '"+oneWay+ "', type="+QString("%1").arg(type)+", startLat="+QString("%1").arg(startLat, 0, 'f', 8)+",startLon="+QString("%1").arg(startLon, 0, 'f', 8)+",endLat="+QString("%1").arg(endLat, 0, 'f',8)+",endLon="+QString("%1").arg(endLon, 0, 'f',8)+",length="+QString("%1").arg(length,0,'f',8)+",points="+QString("%1").arg(length,0,'f',8)+",startDate='"+startDate.toString("yyyy/MM/dd")+"',endDate='"+endDate.toString("yyyy/MM/dd")+"',direction='"+direction+"',lastUpdate=:lastUpdate, street='"+ street +"', pointArray ='"+ pointArray +"', tracks = " + QString::number(tracks) + " where segmentId = "+QString("%1").arg(segmentId);
-    query2.prepare(commandText);
-    query2.bindValue(":lastUpdate", lastUpdate);
-    bQuery = query2.exec();
+    query2->prepare(commandText);
+    query2->bindValue(":lastUpdate", lastUpdate);
+    bQuery = query2->exec();
     if(!bQuery)
     {
      SQLERROR_E(query2);
      //db.close();
      //exit(EXIT_FAILURE);
-     if(!Retry(&_targetDb, &query2, ""))
+     if(!Retry(&_targetDb, query2, ""))
          exit(EXIT_FAILURE);
      errors++;
     }
@@ -1583,18 +1583,18 @@ bool ExportSql::exportSegments()
     if(points2 > points)
     {
      commandText = "delete from LineSegment where segmentId = " + QString("%1").arg(segmentId)+ " and sequence >= "+ QString("%1").arg(points);
-     bQuery = query2.exec(commandText);
+     bQuery = query2->exec(commandText);
      if(!bQuery)
      {
       SQLERROR_E(query2);
       //db.close();
       //exit(EXIT_FAILURE);
-//                    if(!Retry(&targetDb, &query2, commandText))
+//                    if(!Retry(&targetDb, query2, commandText))
 //                        exit(EXIT_FAILURE);
       errors++;
      }
-     if(query2.numRowsAffected()>0)
-      deleted += query2.numRowsAffected();
+     if(query2->numRowsAffected()>0)
+      deleted += query2->numRowsAffected();
     }
    }
    else
@@ -1630,24 +1630,24 @@ bool ExportSql::exportSegments()
                    + ",'" + location
                    + "',:lastUpdate); SET IDENTITY_INSERT [dbo].[Segments] OFF; ";
     }
-    bQuery = query2.prepare(commandText);
+    bQuery = query2->prepare(commandText);
     if(!bQuery)
     {
      SQLERROR_E(query2);
     }
-    query2.bindValue(":lastUpdate",lastUpdate);
-    bQuery = query2.exec();
+    query2->bindValue(":lastUpdate",lastUpdate);
+    bQuery = query2->exec();
     if(!bQuery)
     {
      SQLERROR_E(query2);
-     QSqlError err = query2.lastError();
+     QSqlError err = query2->lastError();
      qDebug() << err.databaseText() + "\n";
      qDebug() << err.driverText() + "\n";
      //db.close();
      //exit(EXIT_FAILURE);
      QMessageBox::critical(nullptr, tr("SQL Error"), tr("An sql error has occurred processing Segments. "
-                          "The server returned %1 %2\n%3").arg(err.driverText()).arg(err.databaseText()).arg(query.lastQuery()));
-     if(!Retry(&_targetDb, &query2, ""))
+                          "The server returned %1 %2\n%3").arg(err.driverText()).arg(err.databaseText()).arg(query->lastQuery()));
+     if(!Retry(&_targetDb, query2, ""))
          exit(EXIT_FAILURE);
 
      errors++;
@@ -1666,20 +1666,20 @@ bool ExportSql::exportSegments()
    // Process Segment deletes
    emit(progressMsg("Processing segment deletes"));
    commandText = "select segmentId from Segments where lastUpdate>'" + beginTime + "'";
-   QSqlQuery query2 = QSqlQuery(_targetDb);
-   bQuery = query2.exec(commandText);
+   QSqlQuery* query2 = new QSqlQuery(_targetDb);
+   bQuery = query2->exec(commandText);
    if(!bQuery)
    {
     SQLERROR_E(query2);
        //db.close();
-       if(!Retry(&_targetDb, &query2, commandText))
+       if(!Retry(&_targetDb, query2, commandText))
            exit(EXIT_FAILURE);
 
    }
    QList<qint32> tgtSegmentList;
-   while(query2.next())
+   while(query2->next())
    {
-       tgtSegmentList.append(query2.value(0).toInt());
+       tgtSegmentList.append(query2->value(0).toInt());
        qApp->processEvents(QEventLoop::AllEvents);
    }
    rowCount = tgtSegmentList.count();
@@ -1688,8 +1688,8 @@ bool ExportSql::exportSegments()
    {
     qint32 segment = tgtSegmentList.at(i);
     commandText = "select count(*) from Segments  where segmentId = "+QString("%1").arg(segment);
-    QSqlQuery query = QSqlQuery(srcDb);
-    bool bQuery = query.exec(commandText);
+    QSqlQuery* query = new QSqlQuery(srcDb);
+    bool bQuery = query->exec(commandText);
     if(!bQuery)
     {
      SQLERROR_E(query);
@@ -1697,9 +1697,9 @@ bool ExportSql::exportSegments()
      exit(EXIT_FAILURE);
     }
     int srcCount=0;
-    while(query.next())
+    while(query->next())
     {
-     srcCount = query.value(0).toInt();
+     srcCount = query->value(0).toInt();
     }
     if(srcCount > 0)
     {
@@ -1708,34 +1708,34 @@ bool ExportSql::exportSegments()
     }
 
     commandText = "delete from Routes where lineKey = "+QString("%1").arg(segment);
-    QSqlQuery query2 = QSqlQuery(_targetDb);
-    bQuery = query2.exec(commandText);
+    QSqlQuery* query2 = new QSqlQuery(_targetDb);
+    bQuery = query2->exec(commandText);
     if(!bQuery)
     {
      SQLERROR_E(query2);
      //db.close();
-     if(!Retry(&_targetDb, &query2, commandText))
+     if(!Retry(&_targetDb, query2, commandText))
          exit(EXIT_FAILURE);
 
     }
-    if(query2.numRowsAffected()>0)
-     routesDeleted += query2.numRowsAffected();
+    if(query2->numRowsAffected()>0)
+     routesDeleted += query2->numRowsAffected();
     else
      qDebug()<< "fail? "+ commandText;
 
     commandText = "delete from Segments where segmentId = "+QString("%1").arg(segment);
     query2 = QSqlQuery(_targetDb);
-    bQuery = query2.exec(commandText);
+    bQuery = query2->exec(commandText);
     if(!bQuery)
     {
      SQLERROR_E(query2);
      //db.close();
-     if(!Retry(&_targetDb, &query2, commandText))
+     if(!Retry(&_targetDb, query2, commandText))
          exit(EXIT_FAILURE);
 
     }
-    if(query2.numRowsAffected()>0)
-     deleted += query2.numRowsAffected();
+    if(query2->numRowsAffected()>0)
+     deleted += query2->numRowsAffected();
     else
      qDebug()<< "fail? "+ commandText;
 
@@ -1743,17 +1743,17 @@ bool ExportSql::exportSegments()
     // delete any orphaned line segments
     commandText = "delete from LineSegment where segmentId = "+QString("%1").arg(segment);
     query2 = QSqlQuery(_targetDb);
-    bQuery = query2.exec(commandText);
+    bQuery = query2->exec(commandText);
     if(!bQuery)
     {
      SQLERROR_E(query2);
      //db.close();
-     if(!Retry(&_targetDb, &query2, commandText))
+     if(!Retry(&_targetDb, query2, commandText))
          exit(EXIT_FAILURE);
 
     }
-    if(query2.numRowsAffected()>0)
-     lineSegmentsDeleted += query2.numRowsAffected();
+    if(query2->numRowsAffected()>0)
+     lineSegmentsDeleted += query2->numRowsAffected();
     else
      qDebug()<< "fail? "+ commandText;
 
@@ -1815,21 +1815,21 @@ bool ExportSql::exportSegments()
                   "where lastUpdate > :lastUpdated  order by lastUpdate";
   }
 
-  QSqlQuery query = QSqlQuery(srcDb);
-  QSqlQuery query2 = QSqlQuery(_targetDb);
+  QSqlQuery* query = new QSqlQuery(srcDb);
+  QSqlQuery* query2 = new QSqlQuery(_targetDb);
 
-  query.prepare(commandText);
+  query->prepare(commandText);
   if(!bDropTables)
-   query.bindValue(":lastUpdated", lastUpdated);
-  bool bQuery = query.exec();
+   query->bindValue(":lastUpdated", lastUpdated);
+  bool bQuery = query->exec();
   if(!bQuery)
   {
    SQLERROR_E(query);
-      QSqlError err = query.lastError();
+      QSqlError err = query->lastError();
       qDebug() << err.text() + "\n";
       qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
       //db.close();
-      if(!Retry(&srcDb, &query, ""))
+      if(!Retry(&srcDb, query, ""))
           exit(EXIT_FAILURE);
   }
   qint32 route=0, route2=0, lineKey=0, lineKey2=0, companyKey, companyKey2,
@@ -1840,29 +1840,29 @@ bool ExportSql::exportSegments()
   QString name="", name2="", direction="", direction2="", oneWay="", oneWay2="", trackUsage="", trackUsage2="";
   QDateTime lastUpdate, lastUpdate2;
   QDateTime startDate, startDate2, endDate, endDate2;
-  while(query.next())
+  while(query->next())
   {
-   route = query.value(0).toInt();
-   name=query.value(1).toString();
-   startDate = query.value(2).toDateTime();
-   endDate = query.value(3).toDateTime();
-   lineKey = query.value(4).toInt();
-   oneWay = query.value(5).toString();
-   trackUsage = query.value(6).toString();
-   companyKey = query.value(7).toInt();
-   tractionType= query.value(8).toInt();
-   direction = query.value(9).toString();
-   next = query.value(10).toInt();
-   prev = query.value(11).toInt();
-   normalEnter = query.value(12).toInt();
-   normalLeave = query.value(13).toInt();
-   reverseEnter = query.value(14).toInt();
-   reverseLeave = query.value(15).toInt();
-   sequence = query.value(16).toInt();
-   reverseSeq = query.value(17).toInt();
-   nextR = query.value(18).toInt();
-   prevR = query.value(19).toInt();
-   lastUpdate = query.value(20).toDateTime();
+   route = query->value(0).toInt();
+   name=query->value(1).toString();
+   startDate = query->value(2).toDateTime();
+   endDate = query->value(3).toDateTime();
+   lineKey = query->value(4).toInt();
+   oneWay = query->value(5).toString();
+   trackUsage = query->value(6).toString();
+   companyKey = query->value(7).toInt();
+   tractionType= query->value(8).toInt();
+   direction = query->value(9).toString();
+   next = query->value(10).toInt();
+   prev = query->value(11).toInt();
+   normalEnter = query->value(12).toInt();
+   normalLeave = query->value(13).toInt();
+   reverseEnter = query->value(14).toInt();
+   reverseLeave = query->value(15).toInt();
+   sequence = query->value(16).toInt();
+   reverseSeq = query->value(17).toInt();
+   nextR = query->value(18).toInt();
+   prevR = query->value(19).toInt();
+   lastUpdate = query->value(20).toDateTime();
 
 
    route2 = -1;
@@ -1881,43 +1881,43 @@ bool ExportSql::exportSegments()
                   + " and name='" + name+ "' and startDate='" + startDate.toString("yyyy/MM/dd")
                   + "' and endDate='" + endDate.toString("yyyy/MM/dd") + "' and lineKey="
                   + QString("%1").arg(lineKey);
-    bQuery = query2.exec(commandText);
+    bQuery = query2->exec(commandText);
     if(!bQuery)
     {
-        QSqlError err = query2.lastError();
+        QSqlError err = query2->lastError();
         qDebug()<< "Error#: " +QString("%1").arg(err.nativeErrorCode());
         qDebug() << err.text() + "\n";
         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
         //db.close();
-        if(!Retry(&_targetDb, &query2, commandText))
+        if(!Retry(&_targetDb, query2, commandText))
             //exit(EXIT_FAILURE);
             return false;
 
     }
-    while(query2.next())
+    while(query2->next())
     {
         bFound = true;
-        route2 = query2.value(0).toInt();
-        name2=query2.value(1).toString();
-        startDate2 = query2.value(2).toDateTime();
-        endDate2 = query2.value(3).toDateTime();
-        lineKey2 = query2.value(4).toInt();
-        oneWay2 = query.value(5).toString();
-        trackUsage2 = query.value(6).toString();
-        companyKey2 = query2.value(7).toInt();
-        tractionType2= query2.value(8).toInt();
-        direction2 = query2.value(9).toString();
-        next2 = query2.value(10).toInt();
-        prev2 = query2.value(11).toInt();
-        normalEnter2 = query2.value(12).toInt();
-        normalLeave2 = query2.value(13).toInt();
-        reverseEnter2 = query2.value(14).toInt();
-        reverseLeave2 = query2.value(15).toInt();
-        sequence2 = query.value(16).toInt();
-        reverseSeq2 = query.value(17).toInt();
-        nextR2 = query2.value(18).toInt();
-        prevR2 = query2.value(19).toInt();
-        lastUpdate2 = query.value(20).toDateTime();
+        route2 = query2->value(0).toInt();
+        name2=query2->value(1).toString();
+        startDate2 = query2->value(2).toDateTime();
+        endDate2 = query2->value(3).toDateTime();
+        lineKey2 = query2->value(4).toInt();
+        oneWay2 = query->value(5).toString();
+        trackUsage2 = query->value(6).toString();
+        companyKey2 = query2->value(7).toInt();
+        tractionType2= query2->value(8).toInt();
+        direction2 = query2->value(9).toString();
+        next2 = query2->value(10).toInt();
+        prev2 = query2->value(11).toInt();
+        normalEnter2 = query2->value(12).toInt();
+        normalLeave2 = query2->value(13).toInt();
+        reverseEnter2 = query2->value(14).toInt();
+        reverseLeave2 = query2->value(15).toInt();
+        sequence2 = query->value(16).toInt();
+        reverseSeq2 = query->value(17).toInt();
+        nextR2 = query2->value(18).toInt();
+        prevR2 = query2->value(19).toInt();
+        lastUpdate2 = query->value(20).toDateTime();
     }
    }
    if( bFound && route== route2 && name == name2 && startDate.date() == startDate2.date()
@@ -1973,19 +1973,19 @@ bool ExportSql::exportSegments()
           +" and name='"+ name + "' and startDate='" + startDate.toString("yyyy/MM/dd")
           + "' and endDate='" + endDate.toString("yyyy/MM/dd") + "' "
           " and lineKey=" + QString("%1").arg(lineKey);
-    query2.prepare(commandText);
-    query2.bindValue(":lastUpdate", lastUpdate);
-    bQuery = query2.exec();
+    query2->prepare(commandText);
+    query2->bindValue(":lastUpdate", lastUpdate);
+    bQuery = query2->exec();
     if(!bQuery)
     {
-        QSqlError err = query2.lastError();
+        QSqlError err = query2->lastError();
         qDebug()<< "Error#: " +QString("%1").arg(err.nativeErrorCode());
         qDebug() << err.text() + "\n";
         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
 
         //db.close();
         //exit(EXIT_FAILURE);
-        if(!Retry(&_targetDb, &query2, ""))
+        if(!Retry(&_targetDb, query2, ""))
             errors++;
     }
     else
@@ -2025,12 +2025,12 @@ bool ExportSql::exportSegments()
                       +","+QString("%1").arg(reverseEnter)+","+QString("%1").arg(reverseLeave)
                       +","+QString("%1").arg(sequence)+","+QString("%1").arg(reverseSeq)
                       + ",:lastUpdate)";
-    query2.prepare(commandText);
-    query2.bindValue(":lastUpdate", lastUpdate);
-    bQuery = query2.exec();
+    query2->prepare(commandText);
+    query2->bindValue(":lastUpdate", lastUpdate);
+    bQuery = query2->exec();
     if(!bQuery)
     {
-        QSqlError err = query2.lastError();
+        QSqlError err = query2->lastError();
         qDebug()<< "Error#: " +QString("%1").arg(err.nativeErrorCode());
         qDebug() << err.text() + "\n";
         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
@@ -2039,7 +2039,7 @@ bool ExportSql::exportSegments()
 
         //db.close();
         //exit(EXIT_FAILURE);
-        if(!Retry(&_targetDb, &query2, ""))
+        if(!Retry(&_targetDb, query2, ""))
             errors++;
     }
     else
@@ -2054,24 +2054,24 @@ bool ExportSql::exportSegments()
       emit(progressMsg("Processing Route deletes"));
       QList<SegmentData> tgtRouteList;
       commandText = "select route, name, startDate, endDate, lineKey from Routes where lastUpdate <'"+beginTime+"'";
-      QSqlQuery query2 = QSqlQuery(_targetDb);
-      bQuery = query2.exec(commandText);
+      QSqlQuery* query2 = new QSqlQuery(_targetDb);
+      bQuery = query2->exec(commandText);
       if(!bQuery)
       {
-          QSqlError err = query2.lastError();
+          QSqlError err = query2->lastError();
           qDebug() << err.text() + "\n";
           qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
           //db.close();
           exit(EXIT_FAILURE);
       }
-      while(query2.next())
+      while(query2->next())
       {
           SegmentData sd;
-          sd.setRoute( query2.value(0).toInt());
-          sd.setRouteName(query2.value(1).toString());
-          sd.setStartDate(query2.value(2).toDate());
-          sd.setEndDate(query2.value(3).toDate());
-          sd.setSegmentId(query2.value(4).toInt());
+          sd.setRoute( query2->value(0).toInt());
+          sd.setRouteName(query2->value(1).toString());
+          sd.setStartDate(query2->value(2).toDate());
+          sd.setEndDate(query2->value(3).toDate());
+          sd.setSegmentId(query2->value(4).toInt());
 
           tgtRouteList.append(sd);
           qApp->processEvents(QEventLoop::AllEvents);
@@ -2087,20 +2087,20 @@ bool ExportSql::exportSegments()
                         + "' and endDate='" + sd.endDate().toString("yyyy/MM/dd")
                         + "' and lineKey=" + QString("%1").arg(sd.segmentId());
 
-          QSqlQuery query = QSqlQuery(srcDb);
-          bool bQuery = query.exec(commandText);
+          QSqlQuery* query = new QSqlQuery(srcDb);
+          bool bQuery = query->exec(commandText);
           if(!bQuery)
           {
-              QSqlError err = query.lastError();
+              QSqlError err = query->lastError();
               qDebug() << err.text() + "\n";
               qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
               //db.close();
               exit(EXIT_FAILURE);
           }
           int srcCount=0;
-          while(query.next())
+          while(query->next())
           {
-              srcCount = query.value(0).toInt();
+              srcCount = query->value(0).toInt();
           }
           if(srcCount > 0)
           {
@@ -2114,18 +2114,18 @@ bool ExportSql::exportSegments()
                         " and lineKey=" + QString("%1").arg(sd.segmentId());
           //commandText = "delete from Routes where route=" + QString("%1").arg(rd.route) +" and startDate='" + rd.startDate.toString("yyyy/MM/dd") + "' and endDate='" + rd.endDate.toString("yyyy/MM/dd") + "' and lineKey=" + QString("%1").arg(rd.lineKey);
 
-          QSqlQuery query2 = QSqlQuery(_targetDb);
-          bQuery = query2.exec(commandText);
+          QSqlQuery* query2 = new QSqlQuery(_targetDb);
+          bQuery = query2->exec(commandText);
           if(!bQuery)
           {
-              QSqlError err = query2.lastError();
+              QSqlError err = query2->lastError();
               qDebug() << err.text() + "\n";
               qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
               //db.close();
               exit(EXIT_FAILURE);
           }
-          if(query2.numRowsAffected()>0)
-              deleted += query2.numRowsAffected();
+          if(query2->numRowsAffected()>0)
+              deleted += query2->numRowsAffected();
           else
               qDebug()<< "fail? " + commandText;
 
@@ -2159,19 +2159,19 @@ bool ExportSql::exportSegments()
 
   commandText = "delete from Routes where route=" +  QString("%1").arg(rd.route()) +" and name='"+ rd.routeName()
     + "' and startDate='" + rd.startDate().toString("yyyy/MM/dd") + "' and endDate='" + rd.endDate().toString("yyyy/MM/dd") +"'";
-  QSqlQuery query = QSqlQuery(_targetDb);
-  query.prepare(commandText);
-  bool bQuery = query.exec();
+  QSqlQuery* query = new QSqlQuery(_targetDb);
+  query->prepare(commandText);
+  bool bQuery = query->exec();
   if(!bQuery)
   {
-   QSqlError err = query.lastError();
+   QSqlError err = query->lastError();
    qDebug() << err.text() + "\n";
    qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
    //db.close();
-   if(!Retry(&srcDb, &query, ""))
+   if(!Retry(&srcDb, query, ""))
        exit(EXIT_FAILURE);
   }
-  int rowsDeleted = query.numRowsAffected();
+  int rowsDeleted = query->numRowsAffected();
 
 
   if(srcConn->servertype() == "MsSql")
@@ -2182,19 +2182,19 @@ bool ExportSql::exportSegments()
   else
    commandText = "select route, TRIM(name), startDate, endDate, lineKey, companyKey,tractionType, Direction, next, prev, normalEnter, normalLeave, reverseEnter, ReverseLeave, lastUpdate from Routes where route = :route and startDate = :startDate and endDate = :endDate";
 
-  query = QSqlQuery(srcDb);
-  query.prepare(commandText);
-  query.bindValue(":route", QString::number(rd.route()));
-  query.bindValue(":startDate", rd.startDate().toString("yyyy/MM/dd"));
-  query.bindValue(":endDate",rd.endDate().toString("yyyy/MM/dd"));
-  bQuery = query.exec();
+  query = new QSqlQuery(srcDb);
+  query->prepare(commandText);
+  query->bindValue(":route", QString::number(rd.route()));
+  query->bindValue(":startDate", rd.startDate().toString("yyyy/MM/dd"));
+  query->bindValue(":endDate",rd.endDate().toString("yyyy/MM/dd"));
+  bQuery = query->exec();
   if(!bQuery)
   {
-      QSqlError err = query.lastError();
+      QSqlError err = query->lastError();
       qDebug() << err.text() + "\n";
       qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
       //db.close();
-      if(!Retry(&srcDb, &query, ""))
+      if(!Retry(&srcDb, query, ""))
           exit(EXIT_FAILURE);
   }
 
@@ -2205,25 +2205,25 @@ bool ExportSql::exportSegments()
   QString name="", name2="", direction="", direction2="";
   QDateTime lastUpdate, lastUpdate2;
   QDateTime startDate, startDate2, endDate, endDate2;
-  while(query.next())
+  while(query->next())
   {
-      route = query.value(0).toInt();
-      name=query.value(1).toString();
-      startDate = query.value(2).toDateTime();
-      endDate = query.value(3).toDateTime();
-      lineKey = query.value(4).toInt();
-      companyKey = query.value(5).toInt();
-      tractionType= query.value(6).toInt();
-      direction = query.value(7).toString();
-      next = query.value(8).toInt();
-      prev = query.value(9).toInt();
-      normalEnter = query.value(10).toInt();
-      normalLeave = query.value(11).toInt();
-      reverseEnter = query.value(12).toInt();
-      reverseLeave = query.value(13).toInt();
-      sequence = query.value(14).toInt();
-      reverseSeq = query.value(15).toInt();
-      lastUpdate = query.value(16).toDateTime();
+      route = query->value(0).toInt();
+      name=query->value(1).toString();
+      startDate = query->value(2).toDateTime();
+      endDate = query->value(3).toDateTime();
+      lineKey = query->value(4).toInt();
+      companyKey = query->value(5).toInt();
+      tractionType= query->value(6).toInt();
+      direction = query->value(7).toString();
+      next = query->value(8).toInt();
+      prev = query->value(9).toInt();
+      normalEnter = query->value(10).toInt();
+      normalLeave = query->value(11).toInt();
+      reverseEnter = query->value(12).toInt();
+      reverseLeave = query->value(13).toInt();
+      sequence = query->value(14).toInt();
+      reverseSeq = query->value(15).toInt();
+      lastUpdate = query->value(16).toDateTime();
 
       route2 = -1;
       name2 = "??";
@@ -2232,40 +2232,40 @@ bool ExportSql::exportSegments()
                     " Direction, next, prev, normalEnter, normalLeave, reverseEnter, ReverseLeave,"
                     " sequence, reverseSeq, lastUpdate"
                     " from Routes where route = "+QString("%1").arg(route)+" and name='"+name+ "' and startDate='"+startDate.toString("yyyy/MM/dd")+ "' and endDate='"+endDate.toString("yyyy/MM/dd")+"' and lineKey="+ QString("%1").arg(lineKey);
-      QSqlQuery query2 = QSqlQuery(_targetDb);
-      bQuery = query2.exec(commandText);
+      QSqlQuery* query2 = new QSqlQuery(_targetDb);
+      bQuery = query2->exec(commandText);
       if(!bQuery)
       {
-          QSqlError err = query2.lastError();
+          QSqlError err = query2->lastError();
           qDebug()<< "Error#: " +QString("%1").arg(err.nativeErrorCode());
           qDebug() << err.text() + "\n";
           qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
           //db.close();
-          if(!Retry(&_targetDb, &query2, commandText))
+          if(!Retry(&_targetDb, query2, commandText))
               exit(EXIT_FAILURE);
 
       }
       bool bFound = false;
-      while(query2.next())
+      while(query2->next())
       {
           bFound = true;
-          route2 = query2.value(0).toInt();
-          name2=query2.value(1).toString();
-          startDate2 = query2.value(2).toDateTime();
-          endDate2 = query2.value(3).toDateTime();
-          lineKey2 = query2.value(4).toInt();
-          companyKey2 = query2.value(5).toInt();
-          tractionType2= query2.value(6).toInt();
-          direction2 = query2.value(7).toString();
-          next2 = query2.value(8).toInt();
-          prev2 = query2.value(9).toInt();
-          normalEnter2 = query2.value(10).toInt();
-          normalLeave2 = query2.value(11).toInt();
-          reverseEnter2 = query2.value(12).toInt();
-          reverseLeave2 = query2.value(13).toInt();
-          sequence2 = query.value(14).toInt();
-          reverseSeq2 = query.value(15).toInt();
-          lastUpdate2 = query.value(16).toDateTime();
+          route2 = query2->value(0).toInt();
+          name2=query2->value(1).toString();
+          startDate2 = query2->value(2).toDateTime();
+          endDate2 = query2->value(3).toDateTime();
+          lineKey2 = query2->value(4).toInt();
+          companyKey2 = query2->value(5).toInt();
+          tractionType2= query2->value(6).toInt();
+          direction2 = query2->value(7).toString();
+          next2 = query2->value(8).toInt();
+          prev2 = query2->value(9).toInt();
+          normalEnter2 = query2->value(10).toInt();
+          normalLeave2 = query2->value(11).toInt();
+          reverseEnter2 = query2->value(12).toInt();
+          reverseLeave2 = query2->value(13).toInt();
+          sequence2 = query->value(14).toInt();
+          reverseSeq2 = query->value(15).toInt();
+          lastUpdate2 = query->value(16).toDateTime();
       }
       if( bFound && route== route2 && name == name2 && startDate.date() == startDate2.date()
           && endDate.date() == endDate2.date() && lineKey == lineKey2 && companyKey == companyKey2
@@ -2306,19 +2306,19 @@ bool ExportSql::exportSegments()
                 + " and name='"+ name + "' and startDate='" + startDate.toString("yyyy/MM/dd") + "'"
                 " and endDate='" + endDate.toString("yyyy/MM/dd") + "'"
                 " and lineKey=" + QString("%1").arg(lineKey);
-          query2.prepare(commandText);
-          query2.bindValue(":lastUpdate", lastUpdate);
-          bQuery = query2.exec();
+          query2->prepare(commandText);
+          query2->bindValue(":lastUpdate", lastUpdate);
+          bQuery = query2->exec();
           if(!bQuery)
           {
-              QSqlError err = query2.lastError();
+              QSqlError err = query2->lastError();
               qDebug()<< "Error#: " +QString("%1").arg(err.nativeErrorCode());
               qDebug() << err.text() + "\n";
               qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
 
               //db.close();
               //exit(EXIT_FAILURE);
-              if(!Retry(&_targetDb, &query2, ""))
+              if(!Retry(&_targetDb, query2, ""))
                   errors++;
           }
           else
@@ -2354,12 +2354,12 @@ bool ExportSql::exportSegments()
                             +","+QString("%1").arg(reverseEnter)+","+QString("%1").arg(reverseLeave)
                             +","+QString("%1").arg(sequence) +","+QString("%1").arg(reverseSeq)
                             + ",:lastUpdate)";
-          query2.prepare(commandText);
-          query2.bindValue(":lastUpdate", lastUpdate);
-          bQuery = query2.exec();
+          query2->prepare(commandText);
+          query2->bindValue(":lastUpdate", lastUpdate);
+          bQuery = query2->exec();
           if(!bQuery)
           {
-              QSqlError err = query2.lastError();
+              QSqlError err = query2->lastError();
               qDebug()<< "Error#: " +QString("%1").arg(err.nativeErrorCode());
               qDebug() << err.text() + "\n";
               qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
@@ -2368,7 +2368,7 @@ bool ExportSql::exportSegments()
 
               //db.close();
               //exit(EXIT_FAILURE);
-              if(!Retry(&_targetDb, &query2, ""))
+              if(!Retry(&_targetDb, query2, ""))
                   errors++;
           }
           else
@@ -2385,23 +2385,23 @@ bool ExportSql::exportSegments()
       QList<routeData> tgtRouteList;
       commandText = "select route, name, startDate, endDate, lineKey from Routes where lastUpdate <'"+beginTime+"'";
 qlQuery query2 = QSqlQuery(targetDb);
-     bQuery = query2.exec(commandText);
+     bQuery = query2->exec(commandText);
      if(!bQuery)
      {
-         QSqlError err = query2.lastError();
+         QSqlError err = query2->lastError();
          qDebug() << err.text() + "\n";
          qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
          //db.close();
          exit(EXIT_FAILURE);
      }
-     while(query2.next())
+     while(query2->next())
      {
          routeData rd;
-         rd.route = query2.value(0).toInt();
-         rd.name=query2.value(1).toString();
-         rd.startDate = query2.value(2).toDateTime();
-         rd.endDate = query2.value(3).toDateTime();
-         rd.lineKey = query2.value(4).toInt();
+         rd.route = query2->value(0).toInt();
+         rd.name=query2->value(1).toString();
+         rd.startDate = query2->value(2).toDateTime();
+         rd.endDate = query2->value(3).toDateTime();
+         rd.lineKey = query2->value(4).toInt();
 
          tgtRouteList.append(rd);
          qApp->processEvents(QEventLoop::AllEvents);
@@ -2414,20 +2414,20 @@ qlQuery query2 = QSqlQuery(targetDb);
          routeData rd = tgtRouteList.at(i);
          commandText = "select count(*) from Routes  where route=" + QString("%1").arg(rd.route) +" and name='"+ rd.name + "' and startDate='" + rd.startDate.toString("yyyy/MM/dd") + "' and endDate='" + rd.endDate.toString("yyyy/MM/dd") + "' and lineKey=" + QString("%1").arg(rd.lineKey);
 
-         QSqlQuery query = QSqlQuery(srcDb);
-         bool bQuery = query.exec(commandText);
+         QSqlQuery* query = new QSqlQuery(srcDb);
+         bool bQuery = query->exec(commandText);
          if(!bQuery)
          {
-             QSqlError err = query.lastError();
+             QSqlError err = query->lastError();
              qDebug() << err.text() + "\n";
              qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
              //db.close();
              exit(EXIT_FAILURE);
          }
          int srcCount=0;
-         while(query.next())
+         while(query->next())
          {
-             srcCount = query.value(0).toInt();
+             srcCount = query->value(0).toInt();
          }
          if(srcCount > 0)
          {
@@ -2438,18 +2438,18 @@ qlQuery query2 = QSqlQuery(targetDb);
          commandText = "delete from Routes where route=" + QString("%1").arg(rd.route) +" and name='"+ rd.name + "' and startDate='" + rd.startDate.toString("yyyy/MM/dd") + "' and endDate='" + rd.endDate.toString("yyyy/MM/dd") + "' and lineKey=" + QString("%1").arg(rd.lineKey);
          //commandText = "delete from Routes where route=" + QString("%1").arg(rd.route) +" and startDate='" + rd.startDate.toString("yyyy/MM/dd") + "' and endDate='" + rd.endDate.toString("yyyy/MM/dd") + "' and lineKey=" + QString("%1").arg(rd.lineKey);
 
-         QSqlQuery query2 = QSqlQuery(targetDb);
-         bQuery = query2.exec(commandText);
+         QSqlQuery* query2 = new QSqlQuery(targetDb);
+         bQuery = query2->exec(commandText);
          if(!bQuery)
          {
-             QSqlError err = query2.lastError();
+             QSqlError err = query2->lastError();
              qDebug() << err.text() + "\n";
              qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
              //db.close();
              exit(EXIT_FAILURE);
          }
-         if(query2.numRowsAffected()>0)
-             deleted += query2.numRowsAffected();
+         if(query2->numRowsAffected()>0)
+             deleted += query2->numRowsAffected();
          else
              qDebug()<< "fail? " + commandText;
 
@@ -2478,7 +2478,7 @@ bool ExportSql::exportStations()
     errors=0;
     notUpdated=0;
     QString commandText;
-    QSqlQuery query2 = QSqlQuery(_targetDb);
+    QSqlQuery* query2 = new QSqlQuery(_targetDb);
     bool bFound = false;
 
     getCount("Stations", bDropTables);
@@ -2494,11 +2494,11 @@ bool ExportSql::exportStations()
      commandText = "select stationKey, name, suffix, latitude, longitude, startDate, endDate, infoKey, geodb_loc_id, routeType, SegmentId, point, lastUpdate from Stations ";
     else
      commandText = "select stationKey, name, suffix, latitude, longitude, startDate, endDate, infoKey, geodb_loc_id, routeType, SegmentId, point, lastUpdate from Stations where lastUpdate >:lastUpdated";
-    QSqlQuery query = QSqlQuery(srcDb);
-    query.prepare(commandText);
+    QSqlQuery* query = new QSqlQuery(srcDb);
+    query->prepare(commandText);
     if(!bDropTables)
-     query.bindValue(":lastUpdated", lastUpdated);
-    bool bQuery = query.exec();
+     query->bindValue(":lastUpdated", lastUpdated);
+    bool bQuery = query->exec();
     if(!bQuery)
     {
      SQLERROR_E(query);
@@ -2510,55 +2510,55 @@ bool ExportSql::exportStations()
     QDateTime lastUpdate;
     double latitude=0, latitude2=0, longitude=0, longitude2=0;
     QDateTime startDate, startDate2, endDate, endDate2;
-    while(query.next())
+    while(query->next())
     {
-        stationKey = query.value(0).toInt();
-        name=query.value(1).toString();
-        suffix=query.value(2).toString();
-        latitude = query.value(3).toDouble();
-        longitude = query.value(4).toDouble();
-        startDate = query.value(5).toDateTime();
-        endDate = query.value(6).toDateTime();
-        if(query.value(7).isNull())
+        stationKey = query->value(0).toInt();
+        name=query->value(1).toString();
+        suffix=query->value(2).toString();
+        latitude = query->value(3).toDouble();
+        longitude = query->value(4).toDouble();
+        startDate = query->value(5).toDateTime();
+        endDate = query->value(6).toDateTime();
+        if(query->value(7).isNull())
             infoKey = -1;
         else
-            query.value(7).toInt();
-        geodb_loc_id = query.value(8).toInt();
-        routeType = query.value(9).toInt();
-        segmentId = query.value(10).toInt();
-        point = query.value(11).toInt();
-        lastUpdate = query.value(12).toDateTime();
+            query->value(7).toInt();
+        geodb_loc_id = query->value(8).toInt();
+        routeType = query->value(9).toInt();
+        segmentId = query->value(10).toInt();
+        point = query->value(11).toInt();
+        lastUpdate = query->value(12).toDateTime();
         if(lastUpdate.isValid() || lastUpdate.isNull())
             lastUpdate = QDateTime::currentDateTimeUtc();
         if(!bDropTables)
         {
          commandText = "select stationKey, name, suffix, latitude, longitude, startDate, endDate, infoKey, geodb_loc_id, routeType, SegmentId, point, lastUpdate from Stations ";
-         bQuery = query2.exec(commandText);
+         bQuery = query2->exec(commandText);
          if(!bQuery)
          {
-             QSqlError err = query2.lastError();
+             QSqlError err = query2->lastError();
              qDebug() << err.text() + "\n";
              qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
              //db.close();
              exit(EXIT_FAILURE);
          }
-         while(query2.next())
+         while(query2->next())
          {
-             stationKey2 = query2.value(0).toInt();
-             name2=query2.value(1).toString();
-             suffix2 = query2.value(2).toString();
-             latitude2 = query2.value(3).toDouble();
-             longitude2 = query2.value(4).toDouble();
-             startDate2 = query2.value(5).toDateTime();
-             endDate2 = query2.value(6).toDateTime();
-             if(query2.value(7).isNull())
+             stationKey2 = query2->value(0).toInt();
+             name2=query2->value(1).toString();
+             suffix2 = query2->value(2).toString();
+             latitude2 = query2->value(3).toDouble();
+             longitude2 = query2->value(4).toDouble();
+             startDate2 = query2->value(5).toDateTime();
+             endDate2 = query2->value(6).toDateTime();
+             if(query2->value(7).isNull())
                  infoKey2 = -1;
              else
-                 infoKey2 = query2.value(7).toInt();
-             geodb_loc_id2 = query2.value(8).toInt();
-             routeType2 = query2.value(9).toInt();
-             segmentId2 = query.value(10).toInt();
-             point2 = query.value(11).toInt();
+                 infoKey2 = query2->value(7).toInt();
+             geodb_loc_id2 = query2->value(8).toInt();
+             routeType2 = query2->value(9).toInt();
+             segmentId2 = query->value(10).toInt();
+             point2 = query->value(11).toInt();
             bFound = true;
          }
         }
@@ -2574,12 +2574,12 @@ bool ExportSql::exportStations()
                 commandText = "update Stations set name='"+name+"',latitude="+QString("%1").arg(latitude, 0,'f',8)+",longitude="+QString("%1").arg(longitude,0,'f',8)+",startDate='"+startDate.toString("yyyy/MM/dd")+"',endDate='"+endDate.toString("yyyy/MM/dd")+"',infoKey="+QString("%1").arg(infoKey)+",geodb_loc_id="+QString("%1").arg(geodb_loc_id)+",lastUpdate=:lastUpdate where stationKey = "+QString("%1").arg(stationKey);
             else
                 commandText = "update Stations set name='"+name+"',latitude="+QString("%1").arg(latitude, 0,'f',8)+",longitude="+QString("%1").arg(longitude,0,'f',8)+",startDate='"+startDate.toString("yyyy/MM/dd")+"',endDate='"+endDate.toString("yyyy/MM/dd")+"',infoKey="+QString("%1").arg(infoKey)+",geodb_loc_id="+QString("%1").arg(geodb_loc_id)+ ",lastUpdate=:lastUpdate where stationKey = "+QString("%1").arg(stationKey);
-            query2.prepare(commandText);
-            query2.bindValue(":lastUpdate",lastUpdate);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":lastUpdate",lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
@@ -2595,12 +2595,12 @@ bool ExportSql::exportStations()
              commandText = "insert into Stations (stationKey, name, latitude, longitude, startDate, endDate, infoKey, geodb_loc_id, routeType, suffix, segmentId, point, lastUpdate) values("+QString("%1").arg(stationKey) + ",'"+name+"',"+QString("%1").arg(latitude, 0,'f',8)+","+QString("%1").arg(longitude,0,'f',8)+",'"+startDate.toString("yyyy/MM/dd")+"','"+endDate.toString("yyyy/MM/dd")+"',"+QString("%1").arg(infoKey)+","+QString("%1").arg(geodb_loc_id) +","+QString("%1").arg(routeType)+ ",'" + suffix + "'," +QString::number(segmentId) + "," +QString::number(point) + ",:lastUpdate)";
             else
              commandText = "SET IDENTITY_INSERT [dbo].[Stations] ON; insert into [dbo].[Stations] (stationKey, name, latitude, longitude, startDate, endDate, infoKey, geodb_loc_id, routeType, suffix, segmentId, point, lastUpdate) values("+QString("%1").arg(stationKey) + ",'"+name+"',"+QString("%1").arg(latitude, 0,'f',8)+","+QString("%1").arg(longitude,0,'f',8)+",'"+startDate.toString("yyyy/MM/dd")+"','"+endDate.toString("yyyy/MM/dd")+"',"+QString("%1").arg(infoKey)+","+QString("%1").arg(geodb_loc_id) +","+ QString("%1").arg(routeType)+ ",'" + suffix + "'," +QString::number(segmentId) + "," +QString::number(point) + ",:lastUpdate); SET IDENTITY_INSERT [dbo].[Stations] OFF";
-            query2.prepare(commandText);
-            query2.bindValue(":lastUpdate", lastUpdate);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":lastUpdate", lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
@@ -2636,7 +2636,7 @@ bool ExportSql::exportTerminals()
     errors=0;
     notUpdated=0;
     QString commandText;
-    QSqlQuery query2 = QSqlQuery(_targetDb);
+    QSqlQuery* query2 = new QSqlQuery(_targetDb);
     bool bFound = false;
 
     getCount("Terminals", bDropTables);
@@ -2650,14 +2650,14 @@ bool ExportSql::exportTerminals()
     else
      commandText = "select route, name, startDate, endDate, startSegment, startWhichEnd, endSegment,  endWhichEnd, lastUpdate from Terminals where lastUpdate > :lastUpdated  order by lastUpdate";
 
-    QSqlQuery query = QSqlQuery(srcDb);
-    query.prepare(commandText);
+    QSqlQuery* query = new QSqlQuery(srcDb);
+    query->prepare(commandText);
     if(!bDropTables)
-     query.bindValue(":lastUpdated", lastUpdated);
-    bool bQuery = query.exec();
+     query->bindValue(":lastUpdated", lastUpdated);
+    bool bQuery = query->exec();
     if(!bQuery)
     {
-        QSqlError err = query.lastError();
+        QSqlError err = query->lastError();
         qDebug() << err.text() + "\n";
         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
         //db.close();
@@ -2667,39 +2667,39 @@ bool ExportSql::exportTerminals()
     QString name="", name2="", startWhichEnd="", startWhichEnd2="", endWhichEnd="", endWhichEnd2="";
     QDateTime lastUpdate;
     QDateTime startDate, startDate2, endDate, endDate2;
-    while(query.next())
+    while(query->next())
     {
-        route = query.value(0).toInt();
-        name=query.value(1).toString();
-        startDate = query.value(2).toDateTime();
-        endDate = query.value(3).toDateTime();
-        startSegment = query.value(4).toInt();
-        startWhichEnd = query.value(5).toString();
-        endSegment = query.value(6).toInt();
-        endWhichEnd = query.value(7).toString();
-        lastUpdate =query.value(8).toDateTime();
+        route = query->value(0).toInt();
+        name=query->value(1).toString();
+        startDate = query->value(2).toDateTime();
+        endDate = query->value(3).toDateTime();
+        startSegment = query->value(4).toInt();
+        startWhichEnd = query->value(5).toString();
+        endSegment = query->value(6).toInt();
+        endWhichEnd = query->value(7).toString();
+        lastUpdate =query->value(8).toDateTime();
 
         if(!bDropTables)
         {
         commandText = "select route, name, startDate, endDate, startSegment, startWhichEnd, endSegment,  endWhichEnd from Terminals where route="+QString("%1").arg(route)+" and name='"+name+"' and startDate='"+startDate.toString("yyyy/MM/dd")+"' and endDate='"+endDate.toString("yyyy/MM/dd")+"'";
-        QSqlQuery query2 = QSqlQuery(_targetDb);
-        bQuery = query2.exec(commandText);
+        QSqlQuery* query2 = new QSqlQuery(_targetDb);
+        bQuery = query2->exec(commandText);
         if(!bQuery)
         {
             SQLERROR_E(query2);
             //db.close();
             exit(EXIT_FAILURE);
         }
-        while(query2.next())
+        while(query2->next())
         {
-            route2 = query2.value(0).toInt();
-            name2=query2.value(1).toString();
-            startDate2 = query2.value(2).toDateTime();
-            endDate2 = query2.value(3).toDateTime();
-            startSegment2 = query2.value(4).toInt();
-            startWhichEnd2 = query2.value(5).toString();
-            endSegment2 = query2.value(6).toInt();
-            endWhichEnd2 = query2.value(7).toString();
+            route2 = query2->value(0).toInt();
+            name2=query2->value(1).toString();
+            startDate2 = query2->value(2).toDateTime();
+            endDate2 = query2->value(3).toDateTime();
+            startSegment2 = query2->value(4).toInt();
+            startWhichEnd2 = query2->value(5).toString();
+            endSegment2 = query2->value(6).toInt();
+            endWhichEnd2 = query2->value(7).toString();
             bFound = true;
         }
         }
@@ -2715,9 +2715,9 @@ bool ExportSql::exportTerminals()
                 commandText = "update Terminals set startSegment=" + QString("%1").arg(startSegment)+",startWhichEnd='"+startWhichEnd+"',endSegment="+QString("%1").arg(endSegment)+",endWhichEnd='"+endWhichEnd+ "',lastUpdate=:lastUpdate  where route="+QString("%1").arg(route)+" and name='"+name+"' and startDate='"+startDate.toString("yyyy/MM/dd")+"' and endDate='"+endDate.toString("yyyy/MM/dd")+"'";
             else
                 commandText = "update Terminals set startSegment=" + QString("%1").arg(startSegment)+",startWhichEnd='"+startWhichEnd+"',endSegment="+QString("%1").arg(endSegment)+",endWhichEnd='"+endWhichEnd+ "',lastUpdate=:lastUpdate where route="+QString("%1").arg(route)+" and name='"+name+"' and startDate='"+startDate.toString("yyyy/MM/dd")+"' and endDate='"+endDate.toString("yyyy/MM/dd")+"'";
-            query2.prepare(commandText);
-            query2.bindValue(":lastUpdate", lastUpdate);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":lastUpdate", lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
                 SQLERROR_E(query2);
@@ -2734,9 +2734,9 @@ bool ExportSql::exportTerminals()
                 commandText = "insert into Terminals (route, name, startDate, endDate, startSegment, startWhichEnd, endSegment,  endWhichEnd,lastUpdate) values("+QString("%1").arg(route)  +",'"+name+"','"+startDate.toString("yyyy/MM/dd")+"','"+endDate.toString("yyyy/MM/dd") + "'," + QString("%1").arg(startSegment)+",'"+startWhichEnd+"',"+QString("%1").arg(endSegment)+",'"+endWhichEnd+ "',:lastUpdate)";
             else
                 commandText = "insert into Terminals (route, name, startDate, endDate, startSegment, startWhichEnd, endSegment,  endWhichEnd,lastUpdate) values("+QString("%1").arg(route)  +",'"+name+"','"+startDate.toString("yyyy/MM/dd")+"','"+endDate.toString("yyyy/MM/dd") + "'," + QString("%1").arg(startSegment)+",'"+startWhichEnd+"',"+QString("%1").arg(endSegment)+",'"+endWhichEnd+ "',:lastUpdate)";
-            query2.prepare(commandText);
-            query2.bindValue(":lastUpdate", lastUpdate);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":lastUpdate", lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
                SQLERROR_E(query2);
@@ -2761,7 +2761,7 @@ bool ExportSql::getCount(QString table, bool bDropTable)
  emit(progressMsg("Processing "+ table + " inserts/updates"));
  lastUpdated = QDateTime::fromString("1800/01/01 00:00:01","yyyy/MM/dd hh:mm:ss");
  QString commandText;
- QSqlQuery query2 = QSqlQuery(_targetDb);
+ QSqlQuery* query2 = new QSqlQuery(_targetDb);
 
  if(!bDropTable)
  {
@@ -2772,11 +2772,11 @@ bool ExportSql::getCount(QString table, bool bDropTable)
 //            "FROM INFORMATION_SCHEMA.TABLES "
 //            "WHERE TABLE_TYPE='BASE TABLE' "
 //            "AND TABLE_NAME='" +table +"'";
-//    if(!query2.exec(commandText))
+//    if(!query2->exec(commandText))
 //    {
 //        SQLERROR_E(query2);
 //    }
-//    if(!query2.isValid())
+//    if(!query2->isValid())
 //    {
 //       rowsCompleted = 0;
 //       return false;
@@ -2786,20 +2786,20 @@ bool ExportSql::getCount(QString table, bool bDropTable)
    }
    else
     commandText ="select max(lastUpdate) from " + table;
-   bool bQuery = query2.exec(commandText);
+   bool bQuery = query2->exec(commandText);
    if(!bQuery)
    {
     SQLERROR_E(query2);
     //db.close();
-    //if(!Retry(&targetDb, &query2, commandText))
+    //if(!Retry(&targetDb, query2, commandText))
      //exit(EXIT_FAILURE);
      //return;
    }
-   while(query2.next())
+   while(query2->next())
    {
-    lastUpdated = query2.value(0).toDateTime();
+    lastUpdated = query2->value(0).toDateTime();
     strLastUpdated = "'" + lastUpdated.toString("yyyy/MM/dd hh:mm:ss") +"'";
-    //strLastUpdated = "'" + query2.value(0).toString() +"'";
+    //strLastUpdated = "'" + query2->value(0).toString() +"'";
     if(!lastUpdated.isValid())
     {
      lastUpdated = QDateTime::fromString("1800/01/01 00:00:01", "yyyy/MM/dd hh:mm:ss");
@@ -2820,23 +2820,23 @@ bool ExportSql::getCount(QString table, bool bDropTable)
   commandText = "select count(*) from " + table;
  else
   commandText = "select count(*) from " + table + " where lastUpdate > :lastUpdated";
- QSqlQuery query = QSqlQuery(srcDb);
- query.prepare(commandText);
+ QSqlQuery* query = new QSqlQuery(srcDb);
+ query->prepare(commandText);
  if(!bDropTable)
-  query.bindValue(":lastUpdated", lastUpdated);
- bool bQuery = query.exec();
+  query->bindValue(":lastUpdated", lastUpdated);
+ bool bQuery = query->exec();
  if(!bQuery)
  {
-  QSqlError err = query.lastError();
+  QSqlError err = query->lastError();
   qDebug() << err.text() + "\n";
   qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
   //db.close();
-  if(!Retry(&srcDb, &query, ""))
+  if(!Retry(&srcDb, query, ""))
    exit(EXIT_FAILURE);
  }
- while(query.next())
+ while(query->next())
  {
-  rowCount = query.value(0).toInt();
+  rowCount = query->value(0).toInt();
   qDebug()<< QString("Row count = %1 lastUpdate = '%2'").arg(rowCount).arg(lastUpdated.toString("yyyy/MM/dd hh:mm:ss"));
  }
  rowsCompleted = 0;
@@ -2855,11 +2855,11 @@ void ExportSql::sendProgress()
 //void ExportSql::setIdentityInsert(QString table, bool bOn)
 //{
 //    QString commandText ="SET IDENTITY_INSERT [dbo].[" + table + "] " +(bOn?"ON":"OFF");
-//    QSqlQuery query2 = QSqlQuery(targetDb);
-//    bool bQuery = query2.exec(commandText);
+//    QSqlQuery* query2 = new QSqlQuery(targetDb);
+//    bool bQuery = query2->exec(commandText);
 //    if(!bQuery)
 //    {
-//        QSqlError err = query2.lastError();
+//        QSqlError err = query2->lastError();
 //        qDebug() << err.text() + "\n";
 //        qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
 //        //db.close();
@@ -2867,7 +2867,7 @@ void ExportSql::sendProgress()
 //    }
 //    else
 //    {
-//        //qDebug() << query2.lastError();
+//        //qDebug() << query2->lastError();
 //        qDebug() << commandText;
 //    }
 //}
@@ -2884,7 +2884,7 @@ bool ExportSql::exportRouteComments()
     deleted=0;
     errors=0;
     notUpdated=0;
-    QSqlQuery query2 = QSqlQuery(_targetDb);
+    QSqlQuery* query2 = new QSqlQuery(_targetDb);
     bool bFound = false;
     QString commandText;
 
@@ -2904,14 +2904,14 @@ bool ExportSql::exportRouteComments()
      commandText = "select route, date, commentKey, companyKey, latitude, longitude, lastUpdate "
                    "from RouteComments where lastUpdate > :lastUpdated  order by lastUpdate";
 
-    QSqlQuery query = QSqlQuery(srcDb);
-    query.prepare(commandText);
+    QSqlQuery* query = new QSqlQuery(srcDb);
+    query->prepare(commandText);
     if(!bDropTables)
-     query.bindValue(":lastUpdated", lastUpdated);
-    bool bQuery = query.exec();
+     query->bindValue(":lastUpdated", lastUpdated);
+    bool bQuery = query->exec();
     if(!bQuery)
     {
-        QSqlError err = query.lastError();
+        QSqlError err = query->lastError();
         qDebug()<< "Error#: " +QString("%1").arg(err.nativeErrorCode());
         qDebug() << err.text() + "\n";
         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
@@ -2922,40 +2922,40 @@ bool ExportSql::exportRouteComments()
     QDateTime lastUpdate, lastUpdate2;
     double latitude, longitude, latitude2, longitude2;
     QDate date, date2;
-    while(query.next())
+    while(query->next())
     {
-        route = query.value(0).toInt();
-        date=query.value(1).toDate();
-        commentKey = query.value(2).toInt();
-        companyKey = query.value(3).toInt();
-        latitude = query.value(4).toDouble();
-        longitude = query.value(5).toDouble();
-        lastUpdate =query.value(6).toDateTime();
+        route = query->value(0).toInt();
+        date=query->value(1).toDate();
+        commentKey = query->value(2).toInt();
+        companyKey = query->value(3).toInt();
+        latitude = query->value(4).toDouble();
+        longitude = query->value(5).toDouble();
+        lastUpdate =query->value(6).toDateTime();
 
         if(!bDropTables)
         {
          commandText = "select route, date, commentKey, companyKey, latitude, longitude, lastUpdate "
                        "from RouteComments where route="+QString("%1").arg(route) + " and date ='"
                        + date.toString("yyyy/MM/dd")+"'";
-         bQuery = query2.exec(commandText);
+         bQuery = query2->exec(commandText);
          if(!bQuery)
          {
-             QSqlError err = query2.lastError();
+             QSqlError err = query2->lastError();
              qDebug()<< "Error#: " +QString("%1").arg(err.nativeErrorCode());
              qDebug() << err.text() + "\n";
              qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
              //db.close();
              exit(EXIT_FAILURE);
          }
-         while(query2.next())
+         while(query2->next())
          {
-             route2 = query2.value(0).toInt();
-             date2=query2.value(1).toDate();
-             commentKey2 = query2.value(2).toInt();
-             companyKey2 = query2.value(3).toInt();
-             latitude2 = query.value(4).toDouble();
-             longitude2 = query.value(5).toDouble();
-             lastUpdate2 = query.value(6).toDateTime();
+             route2 = query2->value(0).toInt();
+             date2=query2->value(1).toDate();
+             commentKey2 = query2->value(2).toInt();
+             companyKey2 = query2->value(3).toInt();
+             latitude2 = query->value(4).toDouble();
+             longitude2 = query->value(5).toDouble();
+             lastUpdate2 = query->value(6).toDateTime();
              bFound = true;
          }
         }
@@ -2977,16 +2977,16 @@ bool ExportSql::exportRouteComments()
                               + date.toString("yyyy/MM/dd")+"'";
             else
                 commandText = "update  RouteComments set commentKey=:comments, companyKey=:companyKey,latitude = :latitude, longitude = :longitude,lastUpdate=:lastUpdate where route="+QString("%1").arg(route) + " and date ='"+date.toString("yyyy/MM/dd")+"'";
-            query2.prepare(commandText);
-            query2.bindValue(":commentKey", commentKey);
-            query2.bindValue(":companyKey", companyKey);
-            query2.bindValue(":latitude", latitude);
-            query2.bindValue(":longitude", longitude);
-            query2.bindValue(":lastUpdate", lastUpdate);
-            bQuery = query2.exec();
+            query2->prepare(commandText);
+            query2->bindValue(":commentKey", commentKey);
+            query2->bindValue(":companyKey", companyKey);
+            query2->bindValue(":latitude", latitude);
+            query2->bindValue(":longitude", longitude);
+            query2->bindValue(":lastUpdate", lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug()<< "Error#: " +QString("%1").arg(err.nativeErrorCode());
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
@@ -3009,19 +3009,19 @@ bool ExportSql::exportRouteComments()
                               "latitude, longitude,lastUpdate ) values (:route, :date, :commentKey, "
                               ":companyKey, :latitude, :longitude, :lastUpdate)";
 
-            query2.prepare(commandText);
-            query2.bindValue(":route", route);
-            query2.bindValue(":date", date.toString("yyyy/MM/dd"));
-            query2.bindValue(":commentKey", commentKey);
-            query2.bindValue(":companyKey", companyKey);
-            query2.bindValue(":latitude", latitude);
-            query2.bindValue(":longitude", longitude);
+            query2->prepare(commandText);
+            query2->bindValue(":route", route);
+            query2->bindValue(":date", date.toString("yyyy/MM/dd"));
+            query2->bindValue(":commentKey", commentKey);
+            query2->bindValue(":companyKey", companyKey);
+            query2->bindValue(":latitude", latitude);
+            query2->bindValue(":longitude", longitude);
             //if(tgtConn->servertype() == "MsSql")
-                query2.bindValue(":lastUpdate", lastUpdate);
-            bQuery = query2.exec();
+                query2->bindValue(":lastUpdate", lastUpdate);
+            bQuery = query2->exec();
             if(!bQuery)
             {
-                QSqlError err = query2.lastError();
+                QSqlError err = query2->lastError();
                 qDebug()<< "Error#: " +QString("%1").arg(err.nativeErrorCode());
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
@@ -3050,11 +3050,11 @@ void ExportSql::updateTimestamp(QString table)
     srcDb = QSqlDatabase::database();
 
     QString commandText = "update " + table + " set lastupdate = '2000-01-01 00:00:00' where lastUpdate = '0000-00-00 00:00:00'";
-    QSqlQuery query = QSqlQuery(srcDb);
-    bool bQuery = query.exec(commandText);
+    QSqlQuery* query = new QSqlQuery(srcDb);
+    bool bQuery = query->exec(commandText);
     if(!bQuery)
     {
-        QSqlError err = query.lastError();
+        QSqlError err = query->lastError();
         qDebug() << err.text() + "\n";
         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
         //db.close();
@@ -3103,22 +3103,22 @@ bool ExportSql::export_geodb_geometry()
     srcDb = QSqlDatabase::database();
 
     QString commandText = "delete from geodb_berlin.dbo.geodb_geometry";
-    QSqlQuery query2 = QSqlQuery(_targetDb);
-    bool bQuery = query2.exec(commandText);
+    QSqlQuery* query2 = new QSqlQuery(_targetDb);
+    bool bQuery = query2->exec(commandText);
     if(!bQuery)
     {
-        QSqlError err = query2.lastError();
+        QSqlError err = query2->lastError();
         qDebug() << err.text() + "\n";
         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
         //db.close();
         //exit(EXIT_FAILURE);
     }
     commandText = "select loc_id, text_val, coord_type, AsText(coord_geometry), coord_subType, admin_level, belongs_to_01, belongs_to_02, valid_since, date_type_since, valid_until, date_type_until from geodb_berlin.geodb_geometry";
-    QSqlQuery query = QSqlQuery(srcDb);
-    bQuery = query.exec(commandText);
+    QSqlQuery* query = new QSqlQuery(srcDb);
+    bQuery = query->exec(commandText);
     if(!bQuery)
     {
-        QSqlError err = query.lastError();
+        QSqlError err = query->lastError();
         qDebug()<< "Error#: " +QString("%1").arg(err.nativeErrorCode());
         qDebug() << err.text() + "\n";
         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
@@ -3138,29 +3138,29 @@ bool ExportSql::export_geodb_geometry()
     int date_type_since;
     QDate valid_until;
     int date_type_until;
-    while(query.next())
+    while(query->next())
     {
-        loc_id = query.value(0).toInt();
-        text_val = query.value(1).toString();
-        coord_type = query.value(2).toInt();
-        coord_geometry = query.value(3).toString();
-        coord_subType = query.value(4).toInt();
-        admin_level =query.value(5).toInt();
-        belongs_to_01=query.value(6).toInt();
-        belongs_to_02=query.value(7).toInt();
-        valid_since = query.value(8).toDate();
-        date_type_since = query.value(9).toInt();
-        valid_until = query.value(10).toDate();
-        date_type_until = query.value(11).toInt();
+        loc_id = query->value(0).toInt();
+        text_val = query->value(1).toString();
+        coord_type = query->value(2).toInt();
+        coord_geometry = query->value(3).toString();
+        coord_subType = query->value(4).toInt();
+        admin_level =query->value(5).toInt();
+        belongs_to_01=query->value(6).toInt();
+        belongs_to_02=query->value(7).toInt();
+        valid_since = query->value(8).toDate();
+        date_type_since = query->value(9).toInt();
+        valid_until = query->value(10).toDate();
+        date_type_until = query->value(11).toInt();
 
 
         commandText = "insert into geodb_berlin.dbo.geodb_geometry (loc_id, text_val, coord_type, coord_geometry, coord_subType, admin_level, belongs_to_01, belongs_to_02, valid_since, date_type_since, valid_until, date_type_until) values ("+QString("%1").arg(loc_id)+", '"+ text_val+ "', "+QString("%1").arg(coord_type)+", geometry::STGeomFromText('"+coord_geometry+"', 3068), "+QString("%1").arg(coord_subType)+", "+QString("%1").arg(admin_level)+", "+QString("%1").arg(belongs_to_01)+", "+QString("%1").arg(belongs_to_02)+", '"+ valid_since.toString("yyyy/MM/dd")+"', "+QString("%1").arg(date_type_since)+", '"+valid_until.toString("yyyy/MM/dd")+"', "+QString("%1").arg(date_type_until)+")";
         query2 = QSqlQuery(_targetDb);
 
-        bQuery = query2.exec(commandText);
+        bQuery = query2->exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query2.lastError();
+            QSqlError err = query2->lastError();
             qDebug()<< "Error#: " +QString("%1").arg(err.nativeErrorCode());
             qDebug() << err.text() + "\n";
             qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
@@ -3176,7 +3176,7 @@ bool ExportSql::export_geodb_geometry()
 bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
 {
 
- QSqlQuery query = QSqlQuery(db);
+ QSqlQuery* query = new QSqlQuery(db);
  QString commandText;
  bool bQuery;
  dropTable("Segments", db, dbType);
@@ -3271,12 +3271,12 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
   commandText.append("ALTER TABLE [dbo].[Segments] ADD  CONSTRAINT [DF_Segments_PointArray]  DEFAULT ('') FOR [pointArray];");
   commandText.append("ALTER TABLE [dbo].[Segments] ADD  CONSTRAINT [DF_Segments_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];");
  }
- query.prepare(commandText);
- bQuery = query.exec();
+ query->prepare(commandText);
+ bQuery = query->exec();
  if(!bQuery)
  {
   SQLERROR_E(query);
-  throw Exception(tr("SQL Error creating Segments: %1").arg(query.lastError().text()));
+  throw Exception(tr("SQL Error creating Segments: %1").arg(query->lastError().text()));
 
  }
  return true;
@@ -3292,7 +3292,7 @@ bool ExportSql::dropTable(QString table, QSqlDatabase db, QString dbType)
  qWarning() << "dropping table: " << table;
  if(table == "Routes")
      qDebug() << "debug stop";
- QSqlQuery query = QSqlQuery(db);
+ QSqlQuery* query = new QSqlQuery(db);
  QString commandText;
  bool bQuery;
  if(dbType == "Sqlite")
@@ -3302,7 +3302,7 @@ bool ExportSql::dropTable(QString table, QSqlDatabase db, QString dbType)
  else
   commandText = QString("IF OBJECT_ID(N'dbo." + table +"', N'U') IS NOT NULL "\
                         "DROP TABLE [dbo].["+table +"];");
- bQuery = query.exec(commandText);
+ bQuery = query->exec(commandText);
  if(!bQuery)
  {
   SQLERROR_E(query);
@@ -3338,7 +3338,7 @@ bool ExportSql::dropRouteComments()
 #if 0
 bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
 {
- QSqlQuery query = QSqlQuery(db);
+ QSqlQuery* query = new QSqlQuery(db);
  QString commandText;
  bool bQuery;
  dropTable("Routes", db, dbType);
@@ -3464,12 +3464,12 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
                   "ALTER TABLE [dbo].[Routes] ADD  CONSTRAINT [DF_Routes_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];");
  }
 
- query.prepare(commandText);
- bQuery = query.exec();
+ query->prepare(commandText);
+ bQuery = query->exec();
  if(!bQuery)
  {
   SQLERROR_E(query);
-  QSqlError err = query.lastError();
+  QSqlError err = query->lastError();
   qDebug() << err.text() + "\n";
   qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
   throw Exception(tr("SQL Error creating Routes: %1").arg(err.text()));
@@ -3490,7 +3490,7 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
 #endif
 bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
 {
- QSqlQuery query = QSqlQuery(db);
+ QSqlQuery* query = new QSqlQuery(db);
  QString commandText;
  bool bQuery;
  dropTable("RouteComments", db, dbType);
@@ -3529,14 +3529,14 @@ bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
   commandText.append("ALTER TABLE [dbo].[RouteComments] ADD  CONSTRAINT [DF_RouteComments_companyKey]  DEFAULT ((0)) FOR [companyKey];");
   commandText.append("ALTER TABLE [dbo].[RouteComments] ADD  CONSTRAINT [DF_RouteComments_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];");
  }
- query.prepare(commandText);
- bQuery = query.exec();
+ query->prepare(commandText);
+ bQuery = query->exec();
  if(!bQuery)
  {
-  QSqlError err = query.lastError();
+  QSqlError err = query->lastError();
   qDebug() << err.text() + "\n";
   qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-  throw Exception(tr("SQL Error creating RouteComments: %1").arg(query.lastError().text()));
+  throw Exception(tr("SQL Error creating RouteComments: %1").arg(query->lastError().text()));
 
  }
  return true;
@@ -3545,7 +3545,7 @@ bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
 #if 0
 bool ExportSql::createStationsTable(QSqlDatabase db, QString dbType)
 {
- QSqlQuery query = QSqlQuery(db);
+ QSqlQuery* query = new QSqlQuery(db);
  QString commandText;
  bool bQuery;
  dropTable("Stations", db, dbType);
@@ -3626,14 +3626,14 @@ bool ExportSql::createStationsTable(QSqlDatabase db, QString dbType)
   commandText.append("ALTER TABLE [dbo].[Stations] ADD  CONSTRAINT [DF_stations_routeType]  DEFAULT ((0)) FOR [routeType];");
   commandText.append("ALTER TABLE [dbo].[Stations] ADD  CONSTRAINT [DF_stations_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];");
  }
- query.prepare(commandText);
- bQuery = query.exec();
+ query->prepare(commandText);
+ bQuery = query->exec();
  if(!bQuery)
  {
-  QSqlError err = query.lastError();
+  QSqlError err = query->lastError();
   qDebug() << err.text() + "\n";
   qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-  throw Exception(tr("SQL Error creating Stations: %1").arg(query.lastError().text()));
+  throw Exception(tr("SQL Error creating Stations: %1").arg(query->lastError().text()));
 
  }
  return true;
@@ -3654,7 +3654,7 @@ bool ExportSql::createStationsTable(QSqlDatabase db, QString dbType)
 #endif
 bool ExportSql::createTerminalsTable(QSqlDatabase db, QString dbType)
 {
- QSqlQuery query = QSqlQuery(db);
+ QSqlQuery* query = new QSqlQuery(db);
  QString commandText;
  bool bQuery;
  dropTable("Terminals", db, dbType);
@@ -3691,14 +3691,14 @@ bool ExportSql::createTerminalsTable(QSqlDatabase db, QString dbType)
         "[lastUpdate] [datetime] NOT NULL);");
   commandText.append("ALTER TABLE [dbo].[Terminals] ADD  CONSTRAINT [DF_Terminals_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];");
  }
- query.prepare(commandText);
- bQuery = query.exec();
+ query->prepare(commandText);
+ bQuery = query->exec();
  if(!bQuery)
  {
-  QSqlError err = query.lastError();
+  QSqlError err = query->lastError();
   qDebug() << err.text() + "\n";
   qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-  throw Exception(tr("SQL Error creating Terminals: %1").arg(query.lastError().text()));
+  throw Exception(tr("SQL Error creating Terminals: %1").arg(query->lastError().text()));
 
  }
  return true;
@@ -3707,7 +3707,7 @@ bool ExportSql::createTerminalsTable(QSqlDatabase db, QString dbType)
 #if 0 // template
 bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
 {
- QSqlQuery query = QSqlQuery(db);
+ QSqlQuery* query = new QSqlQuery(db);
  QString commandText;
  bool bQuery;
  dropTable("RouteComments", db, dbType);
@@ -3720,11 +3720,11 @@ bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
  {
   commandText = "";
  }
- query.prepare(commandText);
- bQuery = query.exec();
+ query->prepare(commandText);
+ bQuery = query->exec();
  if(!bQuery)
  {
-  QSqlError err = query.lastError();
+  QSqlError err = query->lastError();
   qDebug() << err.text() + "\n";
   qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
   return false;
@@ -3735,7 +3735,7 @@ bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
 
 bool ExportSql::createAltRouteTable(QSqlDatabase db, QString dbType)
 {
- QSqlQuery query = QSqlQuery(db);
+ QSqlQuery* query = new QSqlQuery(db);
  QString commandText;
  bool bQuery;
  dropTable("AltRoute", db, dbType);
@@ -3782,12 +3782,12 @@ bool ExportSql::createAltRouteTable(QSqlDatabase db, QString dbType)
   "ALTER TABLE [dbo].[AltRoute] ADD  CONSTRAINT [DF_AltRoute_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];";
 
  }
- query.prepare(commandText);
- bQuery = query.exec();
+ query->prepare(commandText);
+ bQuery = query->exec();
  if(!bQuery)
  {
   SQLERROR_E(query);
-  throw Exception(tr("SQL Error creating altRoute: %1").arg(query.lastError().text()));
+  throw Exception(tr("SQL Error creating altRoute: %1").arg(query->lastError().text()));
 
  }
  return true;
@@ -3795,7 +3795,7 @@ bool ExportSql::createAltRouteTable(QSqlDatabase db, QString dbType)
 
 bool ExportSql::createParametersTable(QSqlDatabase db, QString dbType)
 {
- QSqlQuery query = QSqlQuery(db);
+ QSqlQuery* query = new QSqlQuery(db);
  QString commandText;
  bool bQuery;
  dropTable("Parameters", db, dbType);
@@ -3848,21 +3848,21 @@ bool ExportSql::createParametersTable(QSqlDatabase db, QString dbType)
    "ALTER TABLE [dbo].[Parameters] ADD  CONSTRAINT [DF_parameters_alphaRoutes]  DEFAULT ('N') FOR [alphaRoutes];"\
    "ALTER TABLE [dbo].[Parameters] ADD  CONSTRAINT [DF_parameters_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];";
  }
- query.prepare(commandText);
- bQuery = query.exec();
+ query->prepare(commandText);
+ bQuery = query->exec();
  if(!bQuery)
  {
-  QSqlError err = query.lastError();
+  QSqlError err = query->lastError();
   qDebug() << err.text() + "\n";
   qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-  throw Exception(tr("SQL Error creating Parameters: %1").arg(query.lastError().text()));
+  throw Exception(tr("SQL Error creating Parameters: %1").arg(query->lastError().text()));
 
  }
  return true;
 }
 bool ExportSql::createTractionTypesTable(QSqlDatabase db, QString dbType)
 {
- QSqlQuery query = QSqlQuery(db);
+ QSqlQuery* query = new QSqlQuery(db);
  QString commandText;
  bool bQuery;
  dropTable("TractionTypes", db, dbType);
@@ -3910,19 +3910,19 @@ bool ExportSql::createTractionTypesTable(QSqlDatabase db, QString dbType)
   "ALTER TABLE [dbo].[TractionTypes] ADD  CONSTRAINT [DF_TractionTypes_icon]  DEFAULT ('') FOR [icon];"\
   "ALTER TABLE [dbo].[TractionTypes] ADD  CONSTRAINT [DF_TractionTypes_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate]";
  }
- query.prepare(commandText);
- bQuery = query.exec();
+ query->prepare(commandText);
+ bQuery = query->exec();
  if(!bQuery)
  {
   SQLERROR_E(query);
-  throw Exception(tr("SQL Error creating TractionTypes: %1").arg(query.lastError().text()));
+  throw Exception(tr("SQL Error creating TractionTypes: %1").arg(query->lastError().text()));
   ;
  }
  return true;
 }
 bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
 {
- QSqlQuery query = QSqlQuery(db);
+ QSqlQuery* query = new QSqlQuery(db);
  QString commandText;
  bool bQuery;
  dropTable("Companies", db, dbType);
@@ -3975,12 +3975,12 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
     "ALTER TABLE [dbo].[Companies] ADD  CONSTRAINT [DF_Companies_routePrefix]  DEFAULT ('') FOR [routePrefix];"\
     "ALTER TABLE [dbo].[Companies] ADD  CONSTRAINT [DF_Companies_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];";
  }
- query.prepare(commandText);
- bQuery = query.exec();
+ query->prepare(commandText);
+ bQuery = query->exec();
  if(!bQuery)
  {
   SQLERROR_E(query);
-  throw Exception(tr("SQL Error creating Companies: %1").arg(query.lastError().text()));
+  throw Exception(tr("SQL Error creating Companies: %1").arg(query->lastError().text()));
 
  }
  return true;
@@ -3988,7 +3988,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
 
 bool ExportSql::createIntersectionsTable(QSqlDatabase db, QString dbType)
 {
- QSqlQuery query = QSqlQuery(db);
+ QSqlQuery* query = new QSqlQuery(db);
  QString commandText;
  bool bQuery;
  dropTable("Intersections", db, dbType);
@@ -4030,12 +4030,12 @@ bool ExportSql::createIntersectionsTable(QSqlDatabase db, QString dbType)
     "SET ANSI_PADDING OFF;"\
     "ALTER TABLE [dbo].[Intersections] ADD  CONSTRAINT [DF_Intersections_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];";
  }
- query.prepare(commandText);
- bQuery = query.exec();
+ query->prepare(commandText);
+ bQuery = query->exec();
  if(!bQuery)
  {
   SQLERROR_E(query);
-  throw Exception(tr("SQL Error creating Intersections: %1").arg(query.lastError().text()));
+  throw Exception(tr("SQL Error creating Intersections: %1").arg(query->lastError().text()));
 
  }
  return true;
@@ -4043,7 +4043,7 @@ bool ExportSql::createIntersectionsTable(QSqlDatabase db, QString dbType)
 
 bool ExportSql::createRouteSeqTable(QSqlDatabase db, QString dbType)
 {
- QSqlQuery query = QSqlQuery(db);
+ QSqlQuery* query = new QSqlQuery(db);
  QString commandText;
  bool bQuery;
  dropTable("RouteSeq", db, dbType);
@@ -4097,12 +4097,12 @@ bool ExportSql::createRouteSeqTable(QSqlDatabase db, QString dbType)
     "SET ANSI_PADDING OFF;"\
     "ALTER TABLE [dbo].[Intersections] ADD  CONSTRAINT [DF_Intersections_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];";
  }
- query.prepare(commandText);
- bQuery = query.exec();
+ query->prepare(commandText);
+ bQuery = query->exec();
  if(!bQuery)
  {
   SQLERROR_E(query);
-  throw Exception(tr("SQL Error creating RouteSeq: %1").arg(query.lastError().text()));
+  throw Exception(tr("SQL Error creating RouteSeq: %1").arg(query->lastError().text()));
 
  }
  return true;
@@ -4110,7 +4110,7 @@ bool ExportSql::createRouteSeqTable(QSqlDatabase db, QString dbType)
 
 bool ExportSql::createCommentsTable(QSqlDatabase db, QString dbType)
 {
- QSqlQuery query = QSqlQuery(db);
+ QSqlQuery* query = new QSqlQuery(db);
  QString commandText;
  bool bQuery;
  dropTable("Comments", db, dbType);
@@ -4152,12 +4152,12 @@ bool ExportSql::createCommentsTable(QSqlDatabase db, QString dbType)
     "ALTER TABLE [dbo].[comments] ADD  CONSTRAINT [DF_comments_new_comments]  DEFAULT ('') FOR [comments];"\
     "ALTER TABLE [dbo].[comments] ADD  CONSTRAINT [DF_comments_lastupdate]  DEFAULT (getdate()) FOR [lastupdate];";
  }
- query.prepare(commandText);
- bQuery = query.exec();
+ query->prepare(commandText);
+ bQuery = query->exec();
  if(!bQuery)
  {
   SQLERROR_E(query);
-  throw Exception(tr("SQL Error creating Comments: %1").arg(query.lastError().text()));
+  throw Exception(tr("SQL Error creating Comments: %1").arg(query->lastError().text()));
 
  }
  return true;
@@ -4169,7 +4169,7 @@ bool ExportSql::createMySqlFunctions(QSqlDatabase db)
 
 bool ExportSql::createMsSqlFunctions(QSqlDatabase db)
 {
-    QSqlQuery query = QSqlQuery(db);
+    QSqlQuery* query = new QSqlQuery(db);
     bool bQuery;
 
     QString commandText =
@@ -4217,34 +4217,34 @@ bool ExportSql::createMsSqlFunctions(QSqlDatabase db)
 
     "End "
     "GO ";
-    query.prepare(commandText);
-    bQuery = query.exec();
+    query->prepare(commandText);
+    bQuery = query->exec();
     if(!bQuery)
     {
      SQLERROR_E(query);
-     throw Exception(tr("SQL Error creating Comments: %1").arg(query.lastError().text()));
+     throw Exception(tr("SQL Error creating Comments: %1").arg(query->lastError().text()));
 
     }
     return true;
 }
 
 
-int ExportSql::errSqlMessage(QSqlQuery query, int line)
+int ExportSql::errSqlMessage(QSqlQuery* query, int line)
 {
- if(ignoreList.contains(query.lastError().nativeErrorCode()))
+ if(ignoreList.contains(query->lastError().nativeErrorCode()))
  {
   ignored++;
   logError(query, true, line);
   return QMessageBox::Ignore;
  }
  int ret = QMessageBox::critical(nullptr, tr("Sql Error"), tr("An SqL error has occurred.<br>"
-                                 "Sql error:%1<br><B>query:</B> %2 %3").arg(query.lastError().text(),query.lastQuery(),displayQueryValues(query)),
+                                 "Sql error:%1<br><B>query:</B> %2 %3").arg(query->lastError().text(),query->lastQuery(),displayQueryValues(query)),
                                  QMessageBox::Ignore|QMessageBox::Abort);
  int ret2 = QMessageBox::question(nullptr, tr("Ignore"), tr("Should this error be ignored for subsequent transactions?"),
                                   QMessageBox::Yes|QMessageBox::No);
  if(ret2 == QMessageBox::Yes)
  {
-  ignoreList.append(query.lastError().nativeErrorCode());
+  ignoreList.append(query->lastError().nativeErrorCode());
   ignored++;
  }
  logError(query, true, line);
@@ -4337,24 +4337,24 @@ bool ExportSql::exportTable(QString table)
   commandText = selectText + " order by lastUpdate";
  else
   commandText = selectText + " where lastUpdate > :lastUpdated  order by lastUpdate";
- QSqlQuery query = QSqlQuery(srcDb);
- QSqlQuery query2 = QSqlQuery(_targetDb);
+ QSqlQuery* query = new QSqlQuery(srcDb);
+ QSqlQuery* query2 = new QSqlQuery(_targetDb);
 
- bool bPrepare =query.prepare(commandText);
+ bool bPrepare =query->prepare(commandText);
  if(!bDropTables)
-  query.bindValue(":lastUpdated", lastUpdated);
- bool bQuery = query.exec();
+  query->bindValue(":lastUpdated", lastUpdated);
+ bool bQuery = query->exec();
  if(!bQuery)
  {
   SQLERROR_E(query);
-     QSqlError err = query.lastError();
+     QSqlError err = query->lastError();
      qDebug() << err.text() + "\n";
      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
      //db.close();
      return false;
  }
  QStringList keys = SQL::instance()->listPkColumns(table, tgtDbType, _targetDb);
- while(query.next())
+ while(query->next())
  {
   bool bFound = false;
   if(!bDropTables)
@@ -4367,33 +4367,33 @@ bool ExportSql::exportTable(QString table)
      if(i < keys.count()-1)
        commandText.append(" and ");
    }
-   query2.prepare(commandText);
+   query2->prepare(commandText);
    for(int i=0; i< keys.count(); i++)
    {
     QString col = keys.at(i);
-    query2.bindValue(":"+ col, query.value(i) );
+    query2->bindValue(":"+ col, query->value(i) );
    }
 
-   bQuery = query2.exec();
+   bQuery = query2->exec();
    if(!bQuery)
    {
     SQLERROR_E(query2);
-       QSqlError err = query2.lastError();
+       QSqlError err = query2->lastError();
        qDebug() << err.text() + "\n";
        qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
        return false;
    }
-   bFound = query2.next();
+   bFound = query2->next();
   }
   if(bFound)
   {
    bool bEqual = true;
 
-   if(query.record() == query2.record())
+   if(query->record() == query2->record())
    {
-    for(int i=0; i < query.record().count(); i++)
+    for(int i=0; i < query->record().count(); i++)
     {
-     if(query.value(i) != query2.value(i))
+     if(query->value(i) != query2->value(i))
      {
       bEqual = false;
       break;
@@ -4429,17 +4429,17 @@ bool ExportSql::exportTable(QString table)
        commandString.append(",");
    }
 
-   query2.prepare(commandString);
+   query2->prepare(commandString);
    for(int i=0; i< columns.count(); i++)
    {
     QString col = columns.at(i);
-    query2.bindValue(":"+ col, query.value(i) );
+    query2->bindValue(":"+ col, query->value(i) );
    }
-   bQuery = query2.exec();
+   bQuery = query2->exec();
    if(!bQuery)
    {
     SQLERROR_E(query2);
-    QSqlError err = query2.lastError();
+    QSqlError err = query2->lastError();
     qDebug() << err.text() + "\n";
     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
     errors++;
@@ -4470,31 +4470,31 @@ bool ExportSql::exportTable(QString table)
    }
    commandString.append(")");
 
-   query2.prepare(commandString);
+   query2->prepare(commandString);
    for(int i=0; i< columns.count(); i++)
    {
     QString col = columns.at(i);
     if(col.compare("lastUpdate",Qt::CaseInsensitive)==0)
     {
-     QDateTime dt = query.value(i).toDateTime();
+     QDateTime dt = query->value(i).toDateTime();
      if(!dt.isValid())
-      qDebug() << "date is invalid '" <<query.value(i).toString() << "'";
+      qDebug() << "date is invalid '" <<query->value(i).toString() << "'";
      if(dt.date().month()==1 && dt.date().day()>28)
      {
       //dt.date().setDate(dt.date().year(), 1, 28);
       dt = QDateTime(QDate(dt.date().year(), 1, 28), dt.time());
      }
-     query2.bindValue(":"+ col, dt);
+     query2->bindValue(":"+ col, dt);
     }
     else
-     query2.bindValue(":"+ col, query.value(i) );
+     query2->bindValue(":"+ col, query->value(i) );
 
    }
-   bQuery = query2.exec();
+   bQuery = query2->exec();
    if(!bQuery)
    {
     SQLERROR_E(query2);
-    QSqlError err = query2.lastError();
+    QSqlError err = query2->lastError();
     qDebug() << "error code:" << err.nativeErrorCode() << " " << err.text() + "\n";
     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
     qDebug() << "values: " << displayQueryValues(query);
@@ -4548,22 +4548,22 @@ bool ExportSql::areTableDefsEqual(QString table, Connection* c1, Connection* c2,
  return true;
 }
 
-QString ExportSql::displayQueryValues(QSqlQuery query)
+QString ExportSql::displayQueryValues(QSqlQuery* query)
 {
  QString str;
- for(int i=0; i < query.boundValues().count();i++) {
+ for(int i=0; i < query->boundValues().count();i++) {
   if(i > 0)
    str.append(",");
 #if QT_VERSION >= 0x060600
-  str.append(query.boundValueName(i)) + "=" + query.boundValue(i).toString());
+  str.append(query->boundValueName(i)) + "=" + query->boundValue(i).toString());
 #else
-  str.append(query.boundValue(i).toString());
+  str.append(query->boundValue(i).toString());
 #endif
  }
  return str;
 }
 
-void ExportSql::logError(QSqlQuery query, bool ignored, int line)
+void ExportSql::logError(QSqlQuery* query, bool ignored, int line)
 {
  QDir logDir;
  if(!logDir.exists("logs"))
@@ -4580,7 +4580,7 @@ void ExportSql::logError(QSqlQuery query, bool ignored, int line)
   stream = new QTextStream(logfile);
  }
  *stream << QDateTime::currentDateTime().toString() << "at line " << QString::number(line) << (ignored?" IGNORED":" ..") << "\n";
- *stream << query.lastError().text() << " " << query.lastError().nativeErrorCode() << "\n";
- *stream << query.executedQuery()<< "\n";
+ *stream << query->lastError().text() << " " << query->lastError().nativeErrorCode() << "\n";
+ *stream << query->executedQuery()<< "\n";
  *stream << displayQueryValues(query) << "\n\n";
 }
