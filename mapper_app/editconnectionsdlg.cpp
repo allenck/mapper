@@ -1203,17 +1203,20 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
   //ui->txtDbOrDSN->setText(file.completeBaseName());
   QStringList tableList = db.tables();
   ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
-  ui->lblHelp->setText(tr("Connection succeeded. %1 Has %2 tables!<br> %3").arg(ui->txtDbOrDSN->text()).arg(tableList.count()).arg(tableList.join(", ")));
+  ui->lblHelp->setText(tr("Connection succeeded. %1 Has %2 tables!<br> %3")
+                           .arg(ui->txtDbOrDSN->text()).arg(tableList.count()).arg(tableList.join(", ")));
 
  } // end Sqlite
  else
  {
+     QString defaultDb = getDatabase();
+     ui->txtDefaultDb->setText(defaultDb);
      if(!ui->txtUseDatabase->text().isEmpty())
      {
          setDatabase(ui->txtUseDatabase->text());
      }
  }
- if(!db.open())
+ if(!db.isOpen())
  {
      ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
   ui->lblHelp->setText( db.lastError().text());
@@ -1273,7 +1276,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
      {
          if(!ui->txtUseDatabase->text().isEmpty())
          {
-             if(!SQL::instance()->useDatabase(ui->txtUseDatabase->text(), db))
+             if(!SQL::instance()->useDatabase(ui->txtUseDatabase->text(),ui->cbDbType->currentText(), db))
              {
                  ui->lblHelp->setStyleSheet("color:red");
                  ui->lblHelp->setText(tr("unable to set used database %1").arg(currDb));
@@ -1456,7 +1459,7 @@ bool EditConnectionsDlg::populateDatabases()
                                             "Do you wish to create it?").arg(currDatabase));
         if(rslt == QMessageBox::Yes)
         {
-          if(SQL::instance()->useDatabase("master", db))
+          if(SQL::instance()->useDatabase("master",ui->cbDbType->currentText(), db))
           {
             if(SQL::instance()->createSqlDatabase(currDatabase, db, "MsSql"))
             {
@@ -1593,6 +1596,7 @@ QString EditConnectionsDlg::getDatabase()
  }
  return dbName;
 }
+
 bool EditConnectionsDlg::setDatabase(QString useDatabase)
 {
     QString currentDb = getDatabase();
@@ -1790,7 +1794,7 @@ void EditConnectionsDlg::ontxtDbOrDsn_editingFinished()
        int ret = QMessageBox::question(this, tr("Create new database?"), tr("The database '") +dbName + tr("' does not exist on the server.<br>Do you wish to create it?"));
        if(ret == QMessageBox::Yes)
        {
-        if(SQL::instance()->useDatabase("master", db))
+        if(SQL::instance()->useDatabase("master",ui->cbDbType->currentText(), db))
         {
          SQL::instance()->createSqlDatabase(dbName, db, ui->cbDbType->currentText());
         }

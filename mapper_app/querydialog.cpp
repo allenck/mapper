@@ -1031,7 +1031,8 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 
 void QueryDialog::setTitle()
 {
- QString database = SQL::instance()->getDatabase();
+    Connection c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
+ QString database = SQL::instance()->getDatabase(c.servertype());
 
  if(currQueryFilename.isEmpty())
 

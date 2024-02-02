@@ -243,8 +243,8 @@ public:
     QList<FKInfo> getForeignKeyInfo(QSqlDatabase db, Connection *c, QString table="");
     QMap<int, RouteName*> *routeNameList();
     bool createSqlDatabase(QString dbName, QSqlDatabase db, QString dbType);
-    QString getDatabase(QSqlDatabase db = QSqlDatabase());
-    bool useDatabase(QString dbName, QSqlDatabase db);
+    QString getDatabase(QString serverType, QSqlDatabase db = QSqlDatabase());
+    bool useDatabase(QString dbName, QString serverType, QSqlDatabase db);
     QStringList  showMySqlDatabases(QSqlDatabase db);
     QStringList showMsSqlDatabases(QSqlDatabase db);
     int sqlErrorMessage(QSqlQuery query, QMessageBox::StandardButtons buttons);

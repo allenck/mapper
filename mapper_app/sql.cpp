@@ -11376,16 +11376,16 @@ QMap<int,RouteName*>* SQL::routeNameList()
  return list;
 }
 
-QString SQL::getDatabase(QSqlDatabase db)
+QString SQL::getDatabase(QString serverType, QSqlDatabase db)
 {
  //QSqlDatabase db = QSqlDatabase();
 
  QSqlQuery query = QSqlQuery(db);
  QString dbName ="";
  QString commandText;
- if(config->currConnection->servertype() == "MsSql")
+ if(serverType == "MsSql")
   commandText = "SELECT DB_NAME() ";
- else if(config->currConnection->servertype() == "MySql")
+ else if(serverType == "MySql")
   commandText = "SELECT DATABASE()";
  else
   return dbName;
@@ -11405,9 +11405,9 @@ QString SQL::getDatabase(QSqlDatabase db)
  return dbName;
 }
 
-bool SQL::useDatabase(QString dbName, QSqlDatabase db)
+bool SQL::useDatabase(QString dbName, QString serverType, QSqlDatabase db)
 {
-    QString currentDb = getDatabase(db);
+    QString currentDb = getDatabase(serverType, db);
     if(currentDb == dbName)
         return true;
     QSqlQuery query = QSqlQuery(db);
