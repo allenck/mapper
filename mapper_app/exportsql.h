@@ -6,6 +6,7 @@
 #include "qthread.h"
 //#include "exportdlg.h"
 #include <QSqlQuery>
+#include <QFile>
 
 class QSqldatabase;
 #define SQLERROR_E(query) \
@@ -14,7 +15,7 @@ do \
  QSqlError err = query.lastError(); \
  qCritical() << "Sql error:" << err.text(); \
  qCritical() << query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n"; \
-    switch (errSqlMessage(query)) {\
+    switch (errSqlMessage(query, __LINE__)) {\
     case QMessageBox::Abort:\
      emit ExportSql::requestStop();\
      return false;\
@@ -30,10 +31,12 @@ class ExportSql : public QObject
     Q_OBJECT
 public:
     ExportSql(Configuration* cfg, bool bDropTables, QObject *parent = 0);
+    ~ExportSql();
     void setOverride(QDateTime strOvr);
     void setNoDelete(bool bFlag);
     void setTargetConn(Connection* tgtConn);
     bool setIdentityInsert(QString table, bool );
+    void logError(QSqlQuery query, bool ignored, int line);
 
     //bool exportAltRoute();
     bool exportAll();
@@ -106,12 +109,13 @@ private:
     bool Retry(QSqlDatabase *db, QSqlQuery *query, QString CommandText);
     bool bDropTables;
     QString tgtDbType;
-    int errSqlMessage(QSqlQuery query);
+    int errSqlMessage(QSqlQuery query, int line);
     int errReturn;
     QList<QString> ignoreList;
     QString identityInsertTable;
     QString displayQueryValues(QSqlQuery query);
-
+    QFile* logfile = nullptr;
+    QTextStream* stream = nullptr;
 };
 
 class SleeperThread : public QThread

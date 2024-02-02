@@ -2,7 +2,9 @@
 #include "qsqlerror.h"
 #include <QMessageBox>
 #include "sql.h"
-
+#include <QDir>
+#include <QFile>
+#include <QTextStream>
 
 ExportSql::ExportSql(Configuration *cfg, bool bDropTable, QObject *parent) :
     QObject(parent)
@@ -15,6 +17,15 @@ ExportSql::ExportSql(Configuration *cfg, bool bDropTable, QObject *parent) :
  tgtConn = NULL;
 }
 
+ExportSql::~ExportSql()
+{
+ if(logfile)
+ {
+  logfile->close();
+  logfile = nullptr;
+  stream = nullptr;
+ }
+}
 
 void ExportSql::setTargetConn(Connection* tgtConn)
 {
@@ -4218,11 +4229,12 @@ bool ExportSql::createMsSqlFunctions(QSqlDatabase db)
 }
 
 
-int ExportSql::errSqlMessage(QSqlQuery query)
+int ExportSql::errSqlMessage(QSqlQuery query, int line)
 {
  if(ignoreList.contains(query.lastError().nativeErrorCode()))
  {
   ignored++;
+  logError(query, true, line);
   return QMessageBox::Ignore;
  }
  int ret = QMessageBox::critical(nullptr, tr("Sql Error"), tr("An SqL error has occurred.<br>"
@@ -4235,6 +4247,8 @@ int ExportSql::errSqlMessage(QSqlQuery query)
   ignoreList.append(query.lastError().nativeErrorCode());
   ignored++;
  }
+ logError(query, true, line);
+
  return ret;
 }
 
@@ -4540,7 +4554,33 @@ QString ExportSql::displayQueryValues(QSqlQuery query)
  for(int i=0; i < query.boundValues().count();i++) {
   if(i > 0)
    str.append(",");
+#if QT_VERSION >= 0x060600
+  str.append(query.boundValueName(i)) + "=" + query.boundValue(i).toString());
+#else
   str.append(query.boundValue(i).toString());
+#endif
  }
  return str;
+}
+
+void ExportSql::logError(QSqlQuery query, bool ignored, int line)
+{
+ QDir logDir;
+ if(!logDir.exists("logs"))
+  logDir.mkdir("logs");
+ if(logfile == nullptr)
+ {
+  logfile = new QFile(QDir::currentPath()+"/logs/exportLog_" + QDateTime::currentDateTime().toString("yyyyMMdd_hhmm")+".log");
+  if(!logfile->open(QIODevice::WriteOnly | QIODevice::Truncate))
+  {
+   QString msg = tr("error opening %1 %2").arg(logfile->fileName(), logfile->errorString());
+   qDebug() << msg;
+   throw IOException(msg);
+  }
+  stream = new QTextStream(logfile);
+ }
+ *stream << QDateTime::currentDateTime().toString() << "at line " << QString::number(line) << (ignored?" IGNORED":" ..") << "\n";
+ *stream << query.lastError().text() << " " << query.lastError().nativeErrorCode() << "\n";
+ *stream << query.executedQuery()<< "\n";
+ *stream << displayQueryValues(query) << "\n\n";
 }
