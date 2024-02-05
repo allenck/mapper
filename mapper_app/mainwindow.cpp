@@ -2323,15 +2323,17 @@ default:
  }
 
  m_bridge->executeScript("removeStationMarkers", "");
- if(config->currCity->bDisplayStationMarkers)
+ if(bDisplayStationMarkers)
  {
-  QList<StationInfo> stationList = sql->getStations(m_routeNbr, m_routeName, m_currRouteEndDate);
+  QList<StationInfo> stationList = sql->getStations(m_alphaRoute, QDate::fromString(m_currRouteEndDate, "yyyy/MM/dd"));
   if (!stationList.isEmpty())
   {
    //foreach (stationInfo sti in stationList)
-   for(int i=0; i < stationList.count(); i ++)
+   for(int i=stationList.count()-1; i >= 0; i --)
    {
     StationInfo sti= stationList.at(i);
+    if(isStationOnSegment(&sti,segmentDataList))
+     stationList.removeAt(i);
     if(sti.markerType == "")
      sti.markerType= markerType;
     QString str = sti.stationName;
@@ -2424,6 +2426,40 @@ void MainWindow::displayAll()
   else
    length += sd->length();
  }
+}
+
+// this function is used to eliminate stations from the display that are
+// not on s segment of a route. This can happen because route designations have
+// changed from time to time.
+bool MainWindow::isStationOnSegment(StationInfo* sti, QList<SegmentData*> segmentDataList)
+{
+ if(sti->segmentId <= 0)
+ {
+  for(SegmentData* sd1 : segmentDataList)
+  {
+   for(LatLng latlng : sd1->pointList())
+   {
+    if(sti->latitude == latlng.lat() && sti->longitude == latlng.lon())
+    {
+     sti->segmentId =sd1->segmentId();
+     if(!SQL::instance()->updateStation(*sti))
+     {
+      qDebug() << "error updating station ";
+     }
+     return true;
+    }
+   }
+  }
+ }
+ else
+ {
+  for(SegmentData* sd1 : segmentDataList)
+  {
+   if(sd1->segmentId() == sti->segmentId)
+    return true;
+  }
+ }
+ return false;
 }
 
 void MainWindow::loadRouteComment()
@@ -2564,12 +2600,13 @@ void MainWindow::onCbRouteIndexChanged(int row)
  m_routeNbr = _rd.route();
  m_routeName = _rd.routeName();
  m_companyKey = _rd.companyKey();
+ m_alphaRoute = _rd.alphaRoute();;
  //ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(m_companyKey));
  routeDlg->setSegmentData(_rd);
 
  routeView->updateRouteView();
 
- stationView->model()->setStationList(sql->getStations(m_routeNbr, m_routeName, m_currRouteEndDate));
+ stationView->model()->setStationList(sql->getStations(m_alphaRoute, QDate::fromString(m_currRouteEndDate, "yyyy/MM/dd")));
  stationView->model()->reset();
 
 }
@@ -3665,7 +3702,9 @@ void MainWindow::movePoint(qint32 segmentId, qint32 i, double newLat, double new
   StationInfo sti = sql->getStationAtPoint(oldPoint);
   if (sti.stationKey > 0)
   {
-      sql->updateStation(sti.stationKey, LatLng(newLat, newLon));
+   sti.latitude = newLat;
+   sti.longitude = newLon;
+      sql->updateStation(sti);
   }
 }
 
@@ -4363,9 +4402,11 @@ void MainWindow::addModeToggled(bool isChecked)
 void MainWindow::displayStationMarkersToggeled(bool bChecked)
 {
     bDisplayStationMarkers = bChecked;
+    config->currCity->bDisplayStationMarkers = bChecked;
     //displayStationMarkersAct->setChecked(bDisplayStationMarkers);
     m_bridge->processScript("displayStationMarkers", bChecked?"true":"false");
 }
+
 void MainWindow::displayTerminalMarkersToggeled(bool bChecked)
 {
     bDisplayTerminalMarkers = bChecked;
@@ -4410,20 +4451,23 @@ void MainWindow::setStation(double lat, double lon, qint32 segmentId, qint32 ptI
  try
  {
   LatLng pt =  LatLng(lat, lon);
-  SegmentInfo sd = sql->getSegmentInfo(segmentId);
-  EditStation form(-1, bDisplayStationMarkers, this);
-  //form.setConfiguration(config);
-  form.setPoint(pt);
-  form.setSegmentId(segmentId);
-  form.setIndex( ptIndex);
+  StationInfo sti = sql->getStationAtPoint(pt);
+  SegmentInfo si = sql->getSegmentInfo(segmentId);
+  //EditStation form(-1, bDisplayStationMarkers, this);
+  sti.latitude = lat;
+  sti.longitude = lon;
+  sti.segmentId = segmentId;
   QDate dt;
-  dt = sd.startDate();
-  form.setStartDate( dt);
-  dt = sd.endDate();
-  form.setEndDate( dt);
+  if(si.segmentId() >0)
+  {
+   dt = si.startDate();
+   sti.startDate = dt;
+   dt = si.endDate();
+   sti.endDate = dt;
+  }
 
   QString markerType = "green";
-  switch (sd.routeType())
+  switch (si.routeType())
   {
    case RapidTransit:
        markerType = "green";
@@ -4441,9 +4485,8 @@ void MainWindow::setStation(double lat, double lon, qint32 segmentId, qint32 ptI
        markerType = "red";
        break;
   }
-  form.setMarkerType(markerType);
-
-  //if (form.ShowDialog() == DialogResult.OK)
+  sti.markerType = markerType;
+  EditStation form = EditStation(sti);
   form.exec();
  }
  catch (std::exception e)
@@ -4458,7 +4501,7 @@ void MainWindow::updateStation(qint32 stationKey, qint32 segmentId)
     CommentInfo ci =  CommentInfo();
     QVariantList objArray;
 
-    EditStation form(sti.stationKey, bDisplayStationMarkers, this);
+    EditStation form(sti, this);
     //form.setConfiguration(config);
     //form.setStationId(sti.stationKey);
  form.exec();
@@ -4473,8 +4516,8 @@ void MainWindow::moveStationMarker(qint32 stationKey, qint32 segmentId, double l
  if(sti.segmentId != -1 && sti.segmentId != segmentId)
  {
   // add another station with the same name but different segment.
-  int stationKey = sql->addStation(sti.stationName,LatLng(sti.latitude, sti.longitude),segmentId,sd.startDate().toString("yyyy/MM/dd"),
-                                   sd.endDate().toString("yyyy/MM/dd"),sti.geodb_loc_id, sti.infoKey,sd.routeType(),sti.markerType,sti.point);
+//  int stationKey = sql->addStation(sti.stationName,LatLng(sti.latitude, sti.longitude),segmentId,sd.startDate().toString("yyyy/MM/dd"),
+//                                   sd.endDate().toString("yyyy/MM/dd"),sti.geodb_loc_id, sti.infoKey,sd.routeType(),sti.markerType,sti.point);
   CommentInfo ci = sql->getComments(sti.infoKey);
   QVariantList objArray;
   objArray << lat<< lon << (bDisplayStationMarkers?true:false)<<segmentId<<sti.stationName
@@ -4488,10 +4531,12 @@ void MainWindow::moveStationMarker(qint32 stationKey, qint32 segmentId, double l
  LatLng latLng(lat, lon);
  if(latLng.isValid())
  {
-     if(sti.geodb_loc_id > 0)
-         sql->updateStation(sti.geodb_loc_id, stationKey,  LatLng(lat, lon));
-     else
-         sql->updateStation(stationKey,  LatLng(lat, lon), segmentId);
+//     if(sti.geodb_loc_id > 0)
+//         sql->updateStation(sti.geodb_loc_id, stationKey,  LatLng(lat, lon));
+//     else
+         sti.latitude = lat;
+         sti.longitude = lon;
+         sql->updateStation(sti);
     }
     sti = sql->getStationInfo(stationKey);
     sti.latitude = lat;

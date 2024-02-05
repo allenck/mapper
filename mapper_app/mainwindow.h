@@ -467,6 +467,7 @@ private:
     ExportDlg* form = nullptr;
     void enableControls( bool b);
     QWidgetAction* createWidgetAction();
+    bool isStationOnSegment(StationInfo* sti, QList<SegmentData*> segmentDataList);
 
 private slots:
 //    void aCopy();

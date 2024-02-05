@@ -126,5 +126,8 @@
         <file>sql/mysql_recreateRouteComments.sql</file>
         <file>sql/update_segmentDates.sql</file>
         <file>sql/mssql_create_routeView.sql</file>
+        <file>S-Bahn-Logo.svg</file>
+        <file>U-Bahn.svg</file>
+        <file>Strassenbahn-Haltestelle.svg</file>
     </qresource>
 </RCC>

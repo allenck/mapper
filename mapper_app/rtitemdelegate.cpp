@@ -6,8 +6,13 @@ RTItemDelegate::RTItemDelegate()
 {
  //enum RouteType { Surface, SurfacePRW, RapidTransit, Subway, Rail, Incline, Other };
 
- routeTypes = {{RouteType::Surface, "Surface"},{RouteType::SurfacePRW, "Surface PRW"}, {RouteType::Subway, "Subway"},
-               {RouteType::Rail, "Rail"}, {RouteType::Incline, "Incline"}, {RouteType::Other, "Other"}
+ routeTypes = {{RouteType::Surface, "Surface"},
+               {RouteType::SurfacePRW, "Surface PRW"},
+               {RouteType::RapidTransit, "Rapid Transit"},
+               {RouteType::Subway, "Subway"},
+               {RouteType::Rail, "Rail"},
+               {RouteType::Incline, "Incline"},
+               {RouteType::Other, "Other"}
               };
 }
 

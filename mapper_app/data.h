@@ -712,23 +712,18 @@ class StationInfo
     public:
         //explicit stationInfo(QObject *parent = 0);
         StationInfo(){stationKey = -1;}
+        QStringList routes;
         QString stationName;
         QString stationSuffix; // if multiple stops exist at say the intersection of two lines, each stop can be identified with a suffix code.
         double latitude;       // latitude of the station
         double longitude;      // longitude of the station.
-        Q_DECL_DEPRECATED qint16 lineSegmentId;
-        qint32 segmentId;
-        qint32 point;
         qint32 stationKey;
         qint32 infoKey;        // key to the comments table containing descritptive text for the station.
-        QDateTime startDate;
-        QDateTime endDate;
-        qint32 geodb_loc_id;   // link to another database containing street information.
-        RouteType routeType;
-        qint32 route;
-        QString alphaRoute;
-        QString routeName;
+        QDate startDate;
+        QDate endDate;
+
         QString markerType;
+        int segmentId = -1;
 };
 
 class CompanyData

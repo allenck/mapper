@@ -21,6 +21,7 @@ ExportSql::~ExportSql()
 {
  if(logfile)
  {
+  logfile->flush();
   logfile->close();
   logfile = nullptr;
   stream = nullptr;
@@ -4555,7 +4556,7 @@ QString ExportSql::displayQueryValues(QSqlQuery* query)
   if(i > 0)
    str.append(",");
 #if QT_VERSION >= 0x060600
-  str.append(query->boundValueName(i)) + "=" + query->boundValue(i).toString());
+  str.append(query->boundValueName(i) + "=" + query->boundValue(i).toString());
 #else
   str.append(query->boundValue(i).toString());
 #endif
@@ -4583,4 +4584,5 @@ void ExportSql::logError(QSqlQuery* query, bool ignored, int line)
  *stream << query->lastError().text() << " " << query->lastError().nativeErrorCode() << "\n";
  *stream << query->executedQuery()<< "\n";
  *stream << displayQueryValues(query) << "\n\n";
+ stream->flush();
 }

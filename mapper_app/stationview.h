@@ -33,6 +33,18 @@ class StationViewTableModel : public QAbstractTableModel
 public:
     explicit StationViewTableModel(QObject *parent = 0);
     StationViewTableModel(QList<StationInfo> stationList, QObject *parent=0);
+    enum COLUMNS
+    {
+     STATIONKEY,
+     NAME,
+     ROUTES,
+     STARTDATE,
+     ENDDATE,
+     LATITUDE,
+     LONGITUDE,
+     MARKER
+    };
+
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;

@@ -50,10 +50,10 @@ var image = ["http://maps.google.com/mapfiles/marker.png",
   "http://maps.google.com/mapfiles/kml/paddle/pink-blank.png",
   "http://maps.google.com/mapfiles/shadow50.png",
   "http://acksoft.dyndns.biz/picturegallery/images/17.png",
-  "http://acksoft.dyndns.biz/picturegallery/images/129.png",
+  "Strassenbahn-Haltstelle.svg",
   "http://maps.google.com/mapfiles/kml/paddle/ylw-blank.png",
-  "http://hpstorage.acksoft.dyndns.biz/picturegallery/images/sbahn_small.png",
-  "http://hpstorage.acksoft.dyndns.biz/picturegallery/images/ubahn_small.png",
+  "S-Bahn-Logo.svg",
+  "U-Bahn.svg",
   "http:ubuntu-2:1080/public/map_tiles/tram.png",
   "http:ubuntu-2:1080/public/map_tiles/tram.shadow.png",
   "http://maps.google.com/mapfiles/kml/paddle/wht-blank.png",
@@ -68,7 +68,7 @@ var image = ["http://maps.google.com/mapfiles/marker.png",
   "https://www.google.com/mapfiles/arrow.png" // big green down arrow
 ];
 var images = {"default":0, "start":1, "end":2, "shadow":3, "arrow":4, "arrowShadow":5,
-  "smallGreen":6, "smallBlue":7,"smallRed":8,"smallShadow":9,"stop":10,"resume":11,"smallYellow":12,
+  "smallGreen":6, "smallBlue":7,"smallRed":8,"smallShadow":9,"stop":10,"haltstelle":11,"smallYellow":12,
   "sbahn":13, "ubahn":14, "tram":15, "tramshadow":16, "smallWhite":17, "blue-red":18,
   "orange":19, "bvgtram":20, "subway":21, "subwayshadow":22, "purple":23, "rail":24, "bus":25, "greenDownArrow":26};
 
@@ -445,6 +445,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
     this.oneWay = oneWay;
     this.Color = Color;
     this.arrow = null;
+    this.routeType = routeType;
     var points = 0;
     //var newline = this.line;
     //var newGrayLine = this.grayLine;
@@ -480,7 +481,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
           icon: doubleLine, //5 Subway
           offset: '70%',
           repeat: '10px'
-     }]
+     }],
      [{
           icon: lineL, // 6 left line
           offset: '0%',
@@ -537,6 +538,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
              ;
 
         }
+
 
         this.line = new google.maps.Polyline(
         {
@@ -1991,7 +1993,7 @@ function addMarker(i, lat, lon, icon, text, SegmentId)
 
 function addStationMarker(lat, lon, visible, segmentId, stationName, stationKey, infoKey, HTMLText, typeIcon)
 {
- console.error("addStationMarker lat=" + lat +  " lon=" + lon + " visible=" +  visible  + " segmentid =" + segmentId + " name= "  + stationName + " stationKey=" +  stationKey + " infoKey="+ infoKey + " text =" + HTMLText +  " icon=" + typeIcon);
+ console.log("addStationMarker lat=" + lat +  " lon=" + lon + " visible=" +  visible  + " segmentid =" + segmentId + " name= "  + stationName + " stationKey=" +  stationKey + " infoKey="+ infoKey + " text =" + HTMLText +  " icon=" + typeIcon);
 
  var bPresent = false;
  if(stationArray)
@@ -2017,11 +2019,12 @@ function addStationMarker(lat, lon, visible, segmentId, stationName, stationKey,
  var icon = getIcon(typeIcon);
  var shadow = getShadow(typeIcon);
 
- console.error("icon is typeof " + typeof(icon) + " " + icon)
+ console.log("icon is typeof " + typeof(icon) + " " + icon)
  var stationMarker = new google.maps.Marker({
                                               position: new google.maps.LatLng(lat, lon),
-                                              icon:icon,
-                                              shadow:shadow,
+                                              //icon:icon,
+                                                icon: new google.maps.MarkerImage(icon,
+                                                    null, null, null, new google.maps.Size(16,16)),shadow:shadow,
                                               draggable:true,
                                               title:stationName
                                              });

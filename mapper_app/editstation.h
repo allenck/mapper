@@ -16,56 +16,49 @@ class EditStation : public QDialog
     Q_OBJECT
 
 public:
-    explicit EditStation(qint32 stationKey, bool bDisplayStationMarkers, QWidget *parent = 0);
+    explicit EditStation(StationInfo sti, QWidget *parent = 0);
     ~EditStation();
-    qint32 SegmentId();
-    void setSegmentId(qint32 value);
+    qint32 segmentId();
+//    void setSegmentId(qint32 value);
     qint32 StationId();
     void setStationId(qint32 value);
     QString StationName();
     void setStationName(QString value);
-    LatLng Point();
-    void setPoint(LatLng value);
-    int Index ();
-    void setIndex(qint32 value);
+//    LatLng Point();
+//    void setPoint(LatLng value);
+//    int Index ();
+//    void setIndex(qint32 value);
     //void setConfiguration (Configuration * cfg);
     qint32 infoKey ();
     bool WasStationDeleted();
-    int LineSegmentId();
     QDate StartDate();
     void setStartDate(QDate value);
     QDate EndDate();
     void setEndDate(QDate value);
-    qint32 Geodb_Loc_Id();
-    void setGeodb_Loc_Id(qint32 value);
+    LatLng latLng();
+    void setLatLng(LatLng value);
     void setMarkerType(QString);
 
 private:
     Ui::editStation *ui;
     qint32 _segmentId;
     qint32 _stationKey;
-    qint32 _lineSegmentId;
     QString _stationName;
-    LatLng _latLng;
-    qint32 _pt;
     qint32 _infoKey;
     Configuration *config;
-    bool _bStationDeleted;
-    qint32 _bGeodb_loc_id;
     bool bDirty;
-
+    LatLng _latLng;
     SQL* sql;
     //SegmentInfo si;
-    SegmentInfo sd;
-    void setRadioButtons();
-    bool bDisplayStationMarkers;
-    bool bUpdateExisting;
+    //void setRadioButtons();
     QString markerType;
     void setStationId(StationInfo sti);
     void closeEvent(QCloseEvent*);
+    StationInfo _sti;
+    bool _bStationDeleted = false;
 
 private slots:
-    void txtGeodbLocId_Leave();
+    void txtLatLng_Leave();
     void btnOK_Click();
     void btnEditText_Click();
     void btnDelete_Click();

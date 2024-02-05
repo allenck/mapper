@@ -1,14 +1,7 @@
 #include "sql.h"
 #include "data.h"
-//#include "../sqlite3/sqlite3.h"
 #include "sqlite3.h"
 #include <QApplication>
-//#ifdef Q_OS_UNIX
-//#include "/home/allen/Qt/6.4.1/Src/qtbase/src/3rdparty/sqlite/sqlite3.h"
-//#else
-//#include "c:/Qt/6.4.1/Src/qtbase/src/3rdparty/sqlite/sqlite3.h"
-//#include "c:/Qt/6.4.1/Src/qtbase/src/3rdparty/sqlite/sqlite3.h"
-//#endif
 #include <algorithm>
 #include <QDebug>
 #include <QTextEdit>
@@ -4000,8 +3993,7 @@ bool SQL::updateSegment(qint32 SegmentId)
  if(!bQuery)
  {
   SQLERROR(query);
-  db.close();
-  exit(EXIT_FAILURE);
+  return false;
  }
  if (!query.isActive())
  {
@@ -4081,10 +4073,9 @@ StationInfo SQL::getStationInfo(qint32 stationKey)
      throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
 
- QString commandText = "SELECT stationKey, a.name, latitude, longitude, a.SegmentId, infoKey,"
-                       " startDate, endDate, geodb_loc_id, routeType, a.route, markerType"
-                       " from Stations a left"
-                       " join AltRoute r on r.route = a.route"
+ QString commandText = "SELECT stationKey, a.name, latitude, longitude, "
+                       " startDate, endDate, routes, markerType, segmentId"
+                       " from Stations a "
                        " where stationKey = " + QString("%1").arg(stationKey);
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
@@ -4103,24 +4094,11 @@ StationInfo SQL::getStationInfo(qint32 stationKey)
   sti.stationName = query.value(1).toString();
   sti.latitude = query.value(2).toDouble();
   sti.longitude = query.value(3).toDouble();
-  sti.segmentId = query.value(4).toInt();
-  if (!query.value(5).isNull())
-      sti.infoKey = query.value(5).toInt();
-  else
-      sti.infoKey = -1;
-  if (query.value(6).isNull())
-      sti.startDate = QDateTime();
-  else
-      sti.startDate = query.value(6).toDateTime();
-  if (query.value(7).isNull())
-      sti.endDate = QDateTime::fromString("3000-01-01", "yyyy/MM/dd");
-  else
-      sti.endDate = query.value(7).toDateTime();
-  if (!query.value(8).isNull())
-      sti.geodb_loc_id = query.value(8).toInt();
-  sti.routeType = (RouteType)query.value(9).toInt();
-  sti.route = query.value(10).toInt();
-  sti.markerType = query.value(11).toString();
+  sti.startDate = query.value(4).toDate();
+  sti.endDate = query.value(5).toDate();
+  sti.routes = query.value(6).toString().split(",");
+  sti.markerType = query.value(7).toString();
+  sti.segmentId = query.value(8).toInt();
  }
  return sti;
 }
@@ -4133,9 +4111,9 @@ StationInfo SQL::getStationInfo(QString name)
      throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
 
- QString commandText = "SELECT stationKey, a.name, latitude, longitude, a.SegmentId, infoKey,"
-                       " startDate, endDate, markerType  "
-                       "from Stations a where name = '" + name + "'";
+ QString commandText = "SELECT stationKey, a.name, latitude, longitude, "
+                       " startDate, endDate, segmentId, MarkerType, routes "
+                       "from Stations a where a.name = '" + name + "'";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -4153,21 +4131,11 @@ StationInfo SQL::getStationInfo(QString name)
   sti.stationName = query.value(1).toString();
   sti.latitude = query.value(2).toDouble();
   sti.longitude = query.value(3).toDouble();
-  sti.lineSegmentId = query.value(4).toInt();
-  if (!query.value(5).isNull())
-      sti.infoKey = query.value(5).toInt();
-  else
-      sti.infoKey = -1;
-  if (query.value(6).isNull())
-      sti.startDate = QDateTime();
-  else
-      sti.startDate = query.value(6).toDateTime();
-  if (query.value(7).isNull())
-      sti.endDate = QDateTime::fromString("3000-01-01", "yyyy/MM/dd");
-  else
-      sti.endDate = query.value(7).toDateTime();
-  sti.markerType = query.value(8).toString();
-
+  sti.startDate = query.value(4).toDate();
+  sti.endDate = query.value(5).toDate();
+  sti.segmentId = query.value(6).toInt();
+  sti.markerType = query.value(7).toString();
+  sti.routes = query.value(8).toString().split(",");
  }
  return sti;
 }
@@ -4211,7 +4179,44 @@ bool SQL::updateStation(qint32 stationKey, qint32 infoKey)
     return ret;
 }
 
-bool SQL::updateStationRoute(qint32 stationKey, qint32 route) // not used
+//bool SQL::updateStationRoute(qint32 stationKey, qint32 route) // not used
+//{
+//    bool ret = false;
+//    int rows = 0;
+//    try
+//    {
+//        if(!dbOpen())
+//            throw Exception(tr("database not open: %1").arg(__LINE__));
+//        QSqlDatabase db = QSqlDatabase::database();
+//        beginTransaction("updateStation");
+
+//        QString commandText = "update Stations set route = " + QString("%1").arg(route) + " " +
+//            "where stationKey = " + QString("%1").arg(stationKey);
+//        QSqlQuery query = QSqlQuery(db);
+//        bool bQuery = query.exec(commandText);
+//        if(!bQuery)
+//        {
+//            QSqlError err = query.lastError();
+//            qDebug() << err.text() + "\n";
+//            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+//            db.close();
+//            exit(EXIT_FAILURE);
+//        }
+//        rows = query.numRowsAffected();
+//        if(rows > 0)
+//        {
+//            commitTransaction("updateStation");
+//            ret = true;
+//        }
+//    }
+//    catch (Exception e)
+//    {
+//        //myExceptionHandler(e);
+//    }
+//    return ret;
+//}
+
+bool SQL::updateStation(StationInfo sti)
 {
     bool ret = false;
     int rows = 0;
@@ -4222,93 +4227,26 @@ bool SQL::updateStationRoute(qint32 stationKey, qint32 route) // not used
         QSqlDatabase db = QSqlDatabase::database();
         beginTransaction("updateStation");
 
-        QString commandText = "update Stations set route = " + QString("%1").arg(route) + " " +
-            "where stationKey = " + QString("%1").arg(stationKey);
-        QSqlQuery query = QSqlQuery(db);
-        bool bQuery = query.exec(commandText);
-        if(!bQuery)
-        {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
-        }
-        rows = query.numRowsAffected();
-        if(rows > 0)
-        {
-            commitTransaction("updateStation");
-            ret = true;
-        }
-    }
-    catch (Exception e)
-    {
-        //myExceptionHandler(e);
-    }
-    return ret;
-}
-
-bool SQL::updateStation(qint32 stationKey, LatLng latLng)
-{
-    bool ret = false;
-    int rows = 0;
-    try
-    {
-        if(!dbOpen())
-            throw Exception(tr("database not open: %1").arg(__LINE__));
-        QSqlDatabase db = QSqlDatabase::database();
-        beginTransaction("updateStation");
-
-        QString commandText = "update Stations set latitude = " + QString("%1").arg(latLng.lat(),0,'f',8) + ", longitude = " + QString("%1").arg(latLng.lon(),0,'f',8) + ",lastUpdate=:lastUpdate where stationKey = " + QString("%1").arg(stationKey);
+        QString commandText = "update Stations set latitude = " + QString("%1").arg(sti.latitude,0,'f',8)
+                              + ", longitude = " + QString("%1").arg(sti.longitude,0,'f',8)
+                              + ", startDate ='" + sti.startDate.toString("yyyy/MM/dd") + "'"
+                              + ", endDate ='" + sti.endDate.toString("yyyy/MM/dd") + "'"
+                              + ", routes = '" + sti.routes.join(",") + "'"
+                              + ", name = '" + sti.stationName + "'"
+                              + ", markerType ='" + sti.markerType + "'"
+                              + ", segmentId = " + QString::number(sti.segmentId)
+                              + ", infoKey = " + QString::number(sti.infoKey)
+                              + ",lastUpdate=:lastUpdate "
+                              " where stationKey = " + QString("%1").arg(sti.stationKey);
         QSqlQuery query = QSqlQuery(db);
         query.prepare(commandText);
         query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-        bool bQuery = query.exec(commandText);
+        bool bQuery = query.exec();
         if(!bQuery)
         {
             QSqlError err = query.lastError();
             qDebug() << err.text() + "\n";
             qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
-        }
-        rows = query.numRowsAffected();
-        if (rows > 0)
-        {
-            commitTransaction("updateStation");
-            ret = true;
-        }
-    }
-    catch (Exception e)
-    {
-        //myExceptionHandler(e);
-    }
-    return ret;
-}
-
-bool SQL::updateStation(qint32 stationKey, LatLng latLng, qint32 segmentId)
-{
-    bool ret = false;
-    int rows = 0;
-    //int lineSegment=-1;
-//    try
-//    {
-        if(!dbOpen())
-            throw Exception(tr("database not open: %1").arg(__LINE__));
-        QSqlDatabase db = QSqlDatabase::database();
-        beginTransaction("updateStation");
-
-        QString commandText;
-        QSqlQuery query = QSqlQuery(db);
-        commandText = "update Stations set latitude = " + QString("%1").arg(latLng.lat(),0,'f',8) + ", longitude = " + QString("%1").arg(latLng.lon(),0,'f',8) + \
-                ", SegmentId ="+ QString("%1").arg(segmentId) + \
-                ", lastUpdate=:lastUpdate where stationKey = " + QString("%1").arg(stationKey);
-        query.prepare(commandText);
-        query.bindValue(":lastUpdate",QDateTime::currentDateTimeUtc());
-        bool bQuery = query.exec();
-        if(!bQuery)
-        {
-            SQLERROR(query);
             return false;
         }
         rows = query.numRowsAffected();
@@ -4317,229 +4255,15 @@ bool SQL::updateStation(qint32 stationKey, LatLng latLng, qint32 segmentId)
             commitTransaction("updateStation");
             ret = true;
         }
-//    }
-//    catch (Exception e)
-//    {
-//        //myExceptionHandler(e);
-//    }
-    return ret;
-}
-
-bool SQL::updateStation(qint32 stationKey,  qint32 route, qint32 lineSegmentId, qint32 segmentId,
-                        QString startDate, QString endDate, qint32 *newStationId, int point)
-{
-    Q_UNUSED(segmentId)
-    bool ret = false;
-    int rows = 0;
-    int dbroute = -1;
-    try
-    {
-        if(!dbOpen())
-            throw Exception(tr("database not open: %1").arg(__LINE__));
-        QSqlDatabase db = QSqlDatabase::database();
-        beginTransaction("updateStation");
-
-        QString commandText = "select route from Stations where stationKey = "
-                              + QString("%1").arg(stationKey);
-        QSqlQuery query = QSqlQuery(db);
-        bool bQuery = query.exec(commandText);
-        if(!bQuery)
-        {
-            SQLERROR(query);
-            db.close();
-            exit(EXIT_FAILURE);
-        }
-        while(query.next())
-        {
-            dbroute = query.value(0).toInt();
-        }
-        if(route == dbroute || dbroute == 0)
-        {
-            //commandText = "update Stations set route = " + QString("%1").arg(route) + ",lastUpdate=:lastUpdate where stationKey = " + QString("%1").arg(stationKey);
-            commandText = QString("update Stations set route = %1, segmentId = %2, point = %3,"
-                                  " lastUpdate= :lastUpdate"
-                                  " where stationKey = %4").arg(route).arg(segmentId).arg(point).arg(stationKey);
-            query.prepare(commandText);
-            query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-            bQuery = query.exec();
-            if(!bQuery)
-            {
-                SQLERROR(query);
-                db.close();
-                exit(EXIT_FAILURE);
-            }
-            rows = query.numRowsAffected();
-            if (rows >= 0)
-            {
-                commitTransaction("updateStation");
-                ret = true;
-            }
-        }
-        else
-        {
-            // we need to add a new station record for a different route
-            StationInfo sti = getStationInfo(stationKey);
-            if(sti.route < 1)
-            {
-                rollbackTransaction("updateStation");
-                return false;
-            }
-            *(newStationId) = addStation(sti.stationName,LatLng(sti.latitude, sti.longitude),lineSegmentId, startDate, endDate, sti.geodb_loc_id, sti.infoKey, sti.routeType, sti.markerType, point);
-            if(*(newStationId) < 0)
-            {
-                rollbackTransaction("updateStation");
-                return false;
-            }
-            commitTransaction("updateStation");
-        }
-
     }
     catch (Exception e)
     {
-        myExceptionHandler(e);
-    }
-    return ret;
-}
-/// <summary>
-/// Update all stations with the same geodb_loc_id
-/// </summary>
-/// <param name="geodb_loc_id"></param>
-/// <param name="stationKey"></param>
-/// <param name="latLng"></param>
-/// <returns></returns>
-bool SQL::updateStation(qint32 geodb_loc_id, qint32 stationKey, LatLng latLng)
-{
-    Q_UNUSED(stationKey)
-    bool ret = false;
-    int rows = 0;
-    try
-    {
-        if(!dbOpen())
-            throw Exception(tr("database not open: %1").arg(__LINE__));
-        QSqlDatabase db = QSqlDatabase::database();
-
-        QString commandText = "update Stations set latitude = " + QString("%1").arg(latLng.lat(),0,'f',8) + ", longitude = " + QString("%1").arg(latLng.lon(),0,'f',8) + ",lastUpdate=:lastUpdate where geodb_loc_id = " + QString("%1").arg(geodb_loc_id);
-        QSqlQuery query = QSqlQuery(db);
-        query.prepare(commandText);
-        query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-        bool bQuery = query.exec();
-        if(!bQuery)
-        {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
-        }
-        rows = query.numRowsAffected();
-        if (rows > 0)
-            ret = true;
-    }
-    catch (Exception e)
-    {
-        myExceptionHandler(e);
+        //myExceptionHandler(e);
     }
     return ret;
 }
 
-bool SQL::updateStationLineSegment(qint32 route, qint32 lineSegmentId, LatLng pt)
-{
-    bool ret = false;
-    int rows = 0;
-    try
-    {
-        if(!dbOpen())
-            throw Exception(tr("database not open: %1").arg(__LINE__));
-        QSqlDatabase db = QSqlDatabase::database();
 
-        QString commandText = "update Stations set lineSegmentId = " + QString("%1").arg(lineSegmentId) + ", latitude = " + QString("%1").arg(pt.lat(),0,'f', 8) + ",longitude = " + QString("%1").arg(pt.lon(),0, 'f',8) + ",lastUpdate=:lastUpdate where route = " + QString("%1").arg(route);
-        QSqlQuery query = QSqlQuery(db);
-        query.prepare(commandText);
-        query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-        bool bQuery = query.exec();
-        if(!bQuery)
-        {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
-        }
-        rows = query.numRowsAffected();
-        if (rows > 0)
-            ret = true;
-    }
-    catch (Exception e)
-    {
-        myExceptionHandler(e);
-    }
-    return ret;
-}
-
-bool SQL::updateStationLineSegment(qint32 geodb_loc_id, qint32 route, qint32 lineSegmentId, LatLng pt)
-{
-    bool ret = false;
-    int rows = 0;
-    try
-    {
-        if(!dbOpen())
-            throw Exception(tr("database not open: %1").arg(__LINE__));
-        QSqlDatabase db = QSqlDatabase::database();
-
-        QString commandText = "update Stations set lineSegmentId = " + QString("%1").arg(lineSegmentId) + ", latitude = "+QString("%1").arg(pt.lat(),0,'f',8) + ",longitude = " + QString("%1").arg(pt.lon(),0,'f',8)  +",lastUpdate=:lastUpdate where geodb_loc_id = " + QString("%1").arg(geodb_loc_id)+ " and route ="+QString("%1").arg(route);
-        QSqlQuery query = QSqlQuery(db);
-        query.prepare(commandText);
-        query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-        bool bQuery = query.exec();
-        if(!bQuery)
-        {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
-        }
-        rows = query.numRowsAffected();
-        if (rows > 0)
-            ret = true;
-    }
-    catch (Exception e)
-    {
-        myExceptionHandler(e);
-    }
-    return ret;
-}
-
-bool SQL::updateStation(qint32 stationKey, qint32 infoKey, QString name, qint32 segmentId, QString startDate, QString endDate, QString markerType)
-{
-    bool ret = false;
-    int rows = 0;
-    try
-    {
-        if(!dbOpen())
-            throw Exception(tr("database not open: %1").arg(__LINE__));
-        QSqlDatabase db = QSqlDatabase::database();
-
-        QString commandText = "update Stations set infoKey = " + QString("%1").arg(infoKey) + ", name ='" + name + "', segmentId =" + QString("%1").arg(segmentId)+ ", startDate='" + startDate + "',endDate='" + endDate + "',markerType='" + markerType +"',lastUpdate=:lastUpdate where stationKey = " + QString("%1").arg(stationKey);
-        QSqlQuery query = QSqlQuery(db);
-        query.prepare(commandText);
-        query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-        bool bQuery = query.exec();
-        if(!bQuery)
-        {
-            SQLERROR(query);
-            exit(EXIT_FAILURE);
-        }
-        rows = query.numRowsAffected();
-        if (rows > 0)
-            ret = true;
-    }
-    catch (Exception e)
-    {
-        myExceptionHandler(e);
-    }
-    return ret;
-}
 
 StationInfo SQL::getStationAtPoint(LatLng pt)
 {
@@ -4554,13 +4278,17 @@ StationInfo SQL::getStationAtPoint(LatLng pt)
 
         QString commandText;
         if(config->currConnection->servertype() != "MsSql")
-            commandText = "SELECT stationKey, a.name, latitude, longitude, a.segmentId, infoKey,"
-                          "  a.startDate, a.endDate"
+            commandText = "SELECT stationKey, routes, a.name, latitude, longitude, "
+                          "  a.startDate, a.endDate, segmentId, infoKey, markerType"
                           "  from Stations a"
                           " where latitude = " + QString("%1").arg(pt.lat(),0,'f',8)
                           + " and longitude = " + QString("%1").arg(pt.lon(),0,'f',8);
         else
-            commandText = "SELECT stationKey, a.name, latitude, longitude, a.segmentId, infoKey,  a.startDate, a.endDate  from Stations a where latitude = " + QString("%1").arg(pt.lat(),0,'f',8) + " and longitude = " + QString("%1").arg(pt.lon(),0,'f',8);
+            commandText = "SELECT stationKey, routes, a.name, latitude, longitude, "
+                          "a.segmentId, infoKey,  a.startDate, a.endDate,  "
+                          "segmentid, infoKey,markerType"
+                          "from Stations a "
+                          "where latitude = " + QString("%1").arg(pt.lat(),0,'f',8) + " and longitude = " + QString("%1").arg(pt.lon(),0,'f',8);
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -4572,23 +4300,15 @@ StationInfo SQL::getStationAtPoint(LatLng pt)
         if (!query.isActive())
         {
             sti.stationKey = query.value(0).toInt();
-            sti.stationName = query.value(1).toString();
-            sti.latitude = query.value(2).toDouble();
-            sti.longitude = query.value(3).toDouble();
-            sti.segmentId = query.value(4).toInt();
-            if (!query.value(5).isNull())
-                sti.infoKey = query.value(5).toInt();
-            else
-                sti.infoKey = -1;
-            if (query.value(6).isNull())
-                sti.startDate = QDateTime();
-            else
-                sti.startDate = query.value(6).toDateTime();
-            if (query.value(7).isNull())
-                sti.endDate = QDateTime(QDate(3000,1,1), QTime());
-            else
-                sti.endDate = query.value(7).toDateTime();
-
+            sti.routes = query.value(1).toString().split(",");
+            sti.stationName = query.value(2).toString();
+            sti.latitude = query.value(3).toDouble();
+            sti.longitude = query.value(4).toDouble();
+            sti.startDate = query.value(5).toDate();
+            sti.endDate = query.value(6).toDate();
+            sti.segmentId = query.value(7).toInt();
+            sti.infoKey = query.value(8).toInt();
+            sti.markerType = query.value(9).toString();
         }
     }
     catch (Exception e)
@@ -4602,8 +4322,8 @@ QList<StationInfo> SQL::getStationsLikeName(QString name)
 {
  QList<StationInfo> list;
  QSqlDatabase db = QSqlDatabase::database();
- QString commandText = "SELECT stationKey, a.name, latitude, longitude, a.SegmentId,"
-                       " infoKey, startDate, endDate, markerType"
+ QString commandText = "SELECT stationKey, a.name, latitude, longitude,"
+                       "  startDate, endDate, segmentId, Infokey, markerType"
                        "  from Stations a where lower(name) like '%" + name.toLower() + "%' COLLATE NOCASE";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
@@ -4623,28 +4343,11 @@ QList<StationInfo> SQL::getStationsLikeName(QString name)
      sti.stationName = query.value(1).toString();
      sti.latitude = query.value(2).toDouble();
      sti.longitude = query.value(3).toDouble();
-     sti.lineSegmentId = query.value(4).toInt();
-     if (!query.value(5).isNull())
-         sti.infoKey = query.value(5).toInt();
-     else
-         sti.infoKey = -1;
-     if (query.value(6).isNull())
-         sti.startDate = QDateTime();
-     else
-         sti.startDate = query.value(6).toDateTime();
-     if (query.value(7).isNull())
-         sti.endDate = QDateTime::fromString("3000-01-01", "yyyy/MM/dd");
-     else
-         sti.endDate = query.value(7).toDateTime();
-     if (!query.value(8).isNull())
-         sti.geodb_loc_id = query.value(8).toInt();
-     sti.routeType = (RouteType)query.value(9).toInt();
-     sti.route = query.value(10).toInt();
-     if(query.value(11).isNull())
-         sti.alphaRoute = "";
-     else
-         sti.alphaRoute = query.value(11).toString();
-     sti.markerType = query.value(11).toString();
+     sti.startDate = query.value(4).toDate();
+     sti.endDate = query.value(5).toDate();
+     sti.segmentId = query.value(6).toInt();
+     sti.infoKey = query.value(7).toInt();
+     sti.markerType = query.value(8).toString();
      list.append(sti);
  }
  return list;
@@ -8685,7 +8388,7 @@ bool SQL::isRouteUsedOnDate(qint32 route, qint32 segmentId,  QString date)
     return ret;
 }
 
-QList<StationInfo> SQL::getStations(qint32 route, QString name, QString date)
+QList<StationInfo> SQL::getStations(QString alphaRoute, QDate date)
 {
  bool bZeroRoutes = false;
  QList<StationInfo> myArray;
@@ -8694,116 +8397,13 @@ QList<StationInfo> SQL::getStations(qint32 route, QString name, QString date)
  QSqlDatabase db = QSqlDatabase::database();
  QString commandText;
  QSqlQuery query = QSqlQuery(db);
- //QSqlQuery query2 = QSqlQuery(db);
- //QSqlQuery query3 = QSqlQuery(db);
  StationInfo sti;
  //int pointsCount = 0;
  bool bQuery;
-
- // Begin conversion code
-#if 0
- // create temp table
- commandText = "Create Temporary Table IF NOT EXISTS  `t_points` (latitude, longitude, segmentId, point, type, route)";
- if(!query2.exec(commandText))
- {
-  SQLERROR(query2);
-  return myArray;
- }
- commandText = "select r.lineKey, s.pointArray, r.route, s.type from Routes r join Segments s on r.lineKey = s.segmentId";
- if(!query2.exec(commandText))
- {
-  SQLERROR(query2);
-  return myArray;
- }
- while(query2.next())
- {
-  segmentInfo si;
-  LatLng ll;
-  int route, type;
-  sd.SegmentId = query2.value(0).toInt();
-  si.setPoints(query2.value(1).toString());
-  route = query2.value(2).toInt();
-  si.routeType = (RouteType)query2.value(3).toInt();
-  int point;
-  for(int i = 0; i < si.pointList.count(); i++)
-  {
-   ll = si.pointList.at(i);
-   point = i;
-
-   commandText = QString("insert into`t_points` (latitude, longitude, segmentId, point, type, route) values(%1,%2,%3,%4,%5,%6)").arg(ll.lat()).arg(ll.lon()).arg(si.SegmentId).arg(point).arg(si.routeType).arg(route);
-   if(!query3.exec(commandText))
-   {
-    SQLERROR(query3);
-    return myArray;
-   }
-   pointsCount++;
-  }
- }
-
- commandText = "select stationKey, latitude, longitude, name from Stations where segmentId < 0";
- if(!query.exec(commandText))
- {
-  SQLERROR(query);
-  return myArray;
- }
- while(query.next())
- {
-  sti.stationKey = query.value(0).toInt();
-  sti.latitude = query.value(1).toDouble();
-  sti.longitude = query.value(2).toDouble();
-  sti.stationName = query.value(3).toString();
-  sti.segmentId = -1;
-
-  commandText = QString("select latitude, longitude, segmentId, point, type, route from t_points where distance(latitude, longitude, %1, %2) < .020").arg(sti.latitude).arg(sti.longitude);
-  if(!query2.exec(commandText))
-  {
-   SQLERROR(query2);
-   return myArray;
-  }
-
-  while(query2.next())
-  {
-   double latitude = query2.value(0).toDouble();
-   double longitude = query2.value(1).toDouble();
-   int segmentId = query2.value(2).toInt();
-   int point = query2.value(3).toInt();
-   int type = query2.value(4).toInt();
-   int route = query2.value(5).toInt();
-   commandText = QString("update Stations set route = %1, segmentId =%2, point= %3, routeType =%4 where stationKey = %5").arg(route).arg(segmentId).arg(point).arg(type).arg(sti.stationKey);
-   if(!query3.exec(commandText))
-   {
-    SQLERROR(query3);
-    return myArray;
-   }
-  }
- }
-#endif
- // end conversion code
-
-// if(config->currConnection->servertype() != "MsSql")
-//    commandText =
-//    "SELECT stationKey, a.name, latitude, longitude, b.`key` , infoKey, b.segmentId, a.startDate, a.endDate, geodb_loc_id, c.route, r.routeAlpha, sr.type, b.sequence, a.segmentId, a.markerType " \
-//            "FROM Stations a " \
-//            "JOIN LineSegment b ON ( distance( latitude, longitude, b.startlat, b.startlon ) < .020 " \
-//            "OR distance( latitude, longitude, b.endlat, b.endlon ) < .020 ) " \
-//            "JOIN Routes c ON c.lineKey = b.segmentId " \
-//            "JOIN AltRoute r ON c.route = r.route " \
-//            "JOIN Segments sr ON c.lineKey = sr.segmentid "\
-//            "where r.route = " + QString("%1").arg(route) + " and c.name = '" + name + "'  and '" + date + "' between c.startDate and c.endDate  and '" + date + "' between a.startDate and a.endDate " \
-//            "and a.endDate and a.routeType = sr.type " \
-//            "GROUP BY stationKey, a.name, latitude, longitude, infoKey, a.startDate, a.endDate, geodb_loc_id, a.route, r.routeAlpha, sr.type";
-//else
-    commandText =
-            "SELECT a.stationKey, a.name, latitude, longitude,  a.infoKey, a.segmentId, a.startDate, a.endDate, geodb_loc_id,"
-            " a.route, r.routeAlpha, a.routeType, a.markerType " \
-            "FROM Stations a " \
-            "JOIN Routes c ON c.route = " + QString("%1").arg(route) + " " \
-            "JOIN AltRoute r ON r.route = c.route " \
-            "JOIN Segments sr ON c.lineKey = sr.segmentid "\
-            "where c.route = " + QString("%1").arg(route) + " and c.name = '" + name + "'  and '" + date + "' between c.startDate and c.endDate  and '" + date + "' between a.startDate and a.endDate " \
-            "and a.routeType = sr.type and a.segmentid = c.lineKey " \
-            "GROUP BY stationKey, a.name, a.latitude, a.longitude, a.infoKey, a.startDate, a.endDate, a.geodb_loc_id, a.route, r.routeAlpha, a.routeType, a.segmentId, a.markerType";
-//qDebug()<< commandText + "\n";
+    commandText = "select stationKey, routes, name, latitude, longitude, startDate, "
+                  "endDate, MarkerType from Stations where  routes like '%" + alphaRoute+ "%' "
+                  " and '" + date.toString("yyyy/MM/dd")
+                  + "' between startDate and endDate";
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
@@ -8822,33 +8422,15 @@ QList<StationInfo> SQL::getStations(qint32 route, QString name, QString date)
  {
     StationInfo sti =  StationInfo();
     sti.stationKey = query.value(0).toInt();
-    sti.stationName = query.value(1).toString();
-    sti.latitude = query.value(2).toDouble();
-    sti.longitude = query.value(3).toDouble();
-    if(query.value(4).isNull())
-        sti.infoKey = -1;
-    else
-        sti.infoKey = query.value(4).toInt();
-    sti.segmentId = query.value(5).toInt();
-    if(sti.segmentId < 0)
-        bZeroRoutes = true;
-
-    if (query.value(6).isNull())
-        sti.startDate = QDateTime();
-    else
-        sti.startDate = query.value(6).toDateTime();
-    if (query.value(7).isNull())
-        sti.endDate = QDateTime::fromString("3000-01-01", "yyyy/MM/dd");
-    else
-        sti.endDate = query.value(7).toDateTime();
-    if(!query.value(8).isNull())
-        sti.geodb_loc_id = query.value(8).toInt();
-    sti.route = query.value(9).toInt();
-    if(sti.route < 1)
-        bZeroRoutes = true;
-    sti.alphaRoute = query.value(10).toString();
-    sti.routeType = (RouteType)query.value(11).toInt();
-    sti.markerType= query.value(12).toString();
+    sti.routes = query.value(1).toString().split(",");
+    sti.stationName = query.value(2).toString();
+    sti.latitude = query.value(3).toDouble();
+    sti.longitude = query.value(4).toDouble();
+    sti.startDate = query.value(5).toDate();
+    sti.endDate = query.value(6).toDate();
+    sti.markerType = query.value(7).toString();
+    if(!sti.routes.contains(alphaRoute))
+     continue;
     myArray.append(sti);
  }
  return myArray;
@@ -8863,14 +8445,14 @@ QList<StationInfo> SQL::getStations()
 
  QString commandText;
  if(config->currConnection->servertype() != "MsSql")
-     commandText = "SELECT stationKey, a.name, latitude, longitude, a.SegmentId, a.point, infoKey, a.startDate, "
-                   "a.endDate, geodb_loc_id, routeType, suffix "
-                   "from Stations a  GROUP BY stationKey, a.name, latitude, longitude, infoKey, "
-                   "a.startDate, a.endDate, geodb_loc_id, routeType";
+     commandText = "SELECT stationKey, a.name, latitude, longitude,  "
+                   "a.endDate "
+                   "from Stations a  GROUP BY stationKey, a.name, latitude, longitude, "
+                   "a.startDate, a.endDate";
  else
-     commandText = "SELECT stationKey, a.name, latitude, longitude, a.SegmentId, a.point, infoKey, a.startDate, "
-                   "a.endDate, geodb_loc_id, routeType, suffix from Stations a  GROUP BY stationKey, a.name, latitude, longitude, infoKey, "
-                   "a.startDate, a.endDate, geodb_loc_id, routeType";
+     commandText = "SELECT stationKey, a.name, latitude, longitude,  a.startDate, "
+                   "a.endDate, from Stations a  GROUP BY stationKey, a.name, latitude, longitude,  "
+                   "a.startDate, a.endDate";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -8891,35 +8473,8 @@ QList<StationInfo> SQL::getStations()
      sti.stationName = query.value(1).toString();
      sti.latitude = query.value(2).toDouble();
      sti.longitude = query.value(3).toDouble();
-     sti.segmentId = query.value(4).toInt();
-     sti.point = query.value(5).toInt();
-     if (query.value(6).isNull())
-         sti.infoKey = -1;
-     else
-         sti.infoKey = query.value(6).toInt();
-     if (query.value(7).isNull())
-         sti.startDate = QDateTime();
-     else
-         sti.startDate = query.value(7).toDateTime();
-     if (query.value(8).isNull())
-         sti.endDate = QDateTime::fromString("3000-01-01");
-     else
-         sti.endDate = query.value(8).toDateTime();
-     if (!query.value(9).isNull())
-         sti.geodb_loc_id = query.value(9).toInt();
-     //            sti.routeType = (RouteType)query.value(9).toInt();
-     //            sti.segmentId = query.value(10).toInt();
-     //            sti.route = query.value(11).toInt();
-     //            if(query.value(12).isNull())
-     //            {
-     //                sti.alphaRoute = "";
-     //            }
-     //            else
-     //            {
-     //                sti.alphaRoute = query.value(12).toString();
-     //            }
-     sti.routeType = (RouteType)query.value(10).toInt();
-     sti.stationSuffix = query.value(11).toString();
+     sti.startDate = query.value(7).toDate();
+     sti.endDate = query.value(8).toDate();
      myArray.append(sti);
  }
  return myArray;
@@ -9869,7 +9424,7 @@ qint32 SQL::addStation(QString name, LatLng location, qint32 lineSegmentId, QStr
 
 }
 #endif
-qint32 SQL::addStation(QString name, LatLng location, qint32 segmentId, QString startDate, QString endDate, qint32 geodb_loc_id, qint32 infoKey, RouteType routeType, QString markerType, int point)
+qint32 SQL::addStation(StationInfo sti)
 {
    int stationKey = -1;
    int rows = -1;
@@ -9879,7 +9434,9 @@ qint32 SQL::addStation(QString name, LatLng location, qint32 segmentId, QString 
            throw Exception(tr("database not open: %1").arg(__LINE__));
        QSqlDatabase db = QSqlDatabase::database();
 
-       QString commandText = "select stationKey from Stations where name ='"+ name + "' and startDate ='" + startDate + "' and endDate = '" + endDate + "'";
+       QString commandText = "select stationKey from Stations where name ='"
+         + sti.stationName + "' and startDate ='" + sti.startDate.toString("yyyy/MM/dd")
+         + "' and endDate = '" + sti.endDate.toString("yyyy/MM/dd") + "'";
        QSqlQuery query = QSqlQuery(db);
        bool bQuery = query.exec(commandText);
        if(!bQuery)
@@ -9898,19 +9455,21 @@ qint32 SQL::addStation(QString name, LatLng location, qint32 segmentId, QString 
            // maybe need to do an update here!
            return stationKey;
        }
-       commandText = " insert into Stations (name, latitude, longitude, segmentId, startDate, endDate, " \
-         "geodb_loc_id, routeType, markerType, infoKey, point) " \
-         "values ('" + name + "', " + QString("%1").arg(location.lat(),0,'f',8) + "," +
-         QString("%1").arg(location.lon(),0,'f',8)+ "," + QString("%1").arg(segmentId) + ",'" +
-         startDate + "','" + endDate + "', " + QString("%1").arg(geodb_loc_id) + "," +
-         QString("%1").arg((int)routeType)+",'" +QString("%1").arg(markerType)+ "',"+QString("%1").arg(infoKey)+
-         "," + QString::number(point) +" )";
+       commandText = " insert into Stations (routes, name, latitude, longitude, "
+                     "startDate, endDate, segmentId, infoKey,MarkerType)" \
+         "values ('" + sti.routes.join(",") + "','" +sti.stationName + "', "
+         + QString::number(sti.latitude,'g',8) + ","
+         + QString::number(sti.longitude,'g',8) + ",'"
+         + sti.startDate.toString("yyyy/MM/dd") + "','"
+         + sti.endDate.toString("yyyy/MM/dd")
+         + "', " + QString::number(sti.segmentId)
+         + ", " + QString::number(sti.infoKey)
+         + ",'" +sti.markerType + "')";
        bQuery = query.exec(commandText);
        if(!bQuery)
        {
            SQLERROR(query);
-           db.close();
-           exit(EXIT_FAILURE);
+           return -1;
        }
        rows = query.numRowsAffected();
        //if (rows == 1)
@@ -9941,7 +9500,6 @@ qint32 SQL::addStation(QString name, LatLng location, qint32 segmentId, QString 
        myExceptionHandler(e);
    }
    return stationKey;
-
 }
 
 bool SQL::deleteStation(qint32 stationKey)
@@ -10759,33 +10317,33 @@ void SQL::checkTables(QSqlDatabase db)
    }
   }
 #endif
-  if(!doesColumnExist("Stations", "suffix"))
+  if(!doesColumnExist("Stations", "routes"))
   {
-   //addColumn("AltRoute", "routePrefix", "varchar(10)");
+   addColumn("Stations", "routes", "varchar(50)");
    if(config->currConnection->servertype() == "MsSql")
     executeScript(":/sql/mssql_recreateStationTable.sql",db);
    else
     executeScript(":/sql/recreateStationTable.sql",db); // sqlite & mysql
   }
 
-  if(!doesConstraintExist("Stations", "segmentId"))
-  {
-   // change main unique index to "constraint main unique (`segmentId`,`name`,`startDate`,`endDate`)"
-   qDebug("Stations table must be modified!");
-   if(config->currConnection->servertype() == "MsSql")
-    executeScript(":/sql/mssql_recreateStationTable.sql",db);
-   else
-    executeScript(":/sql/recreateStationTable.sql",db);
-  }
+//  if(!doesConstraintExist("Stations", "segmentId"))
+//  {
+//   // change main unique index to "constraint main unique (`segmentId`,`name`,`startDate`,`endDate`)"
+//   qDebug("Stations table must be modified!");
+//   if(config->currConnection->servertype() == "MsSql")
+//    executeScript(":/sql/mssql_recreateStationTable.sql",db);
+//   else
+//    executeScript(":/sql/recreateStationTable.sql",db);
+//  }
 
-  if(!doesColumnExist("Stations", "markerType"))
-  {
-   //addColumn("AltRoute", "routePrefix", "varchar(10)");
-   if(config->currConnection->servertype() == "MsSql")
-    executeScript(":/sql/mssql_recreateStationTable.sql",db);
-   else
-    executeScript(":/sql/recreateStationTable.sql",db);
-  }
+//  if(!doesColumnExist("Stations", "markerType"))
+//  {
+//   //addColumn("AltRoute", "routePrefix", "varchar(10)");
+//   if(config->currConnection->servertype() == "MsSql")
+//    executeScript(":/sql/mssql_recreateStationTable.sql",db);
+//   else
+//    executeScript(":/sql/recreateStationTable.sql",db);
+//  }
 
   if(!doesColumnExist("Routes", "OneWay"))
   {
