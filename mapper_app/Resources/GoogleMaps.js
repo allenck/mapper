@@ -388,9 +388,18 @@ var doubleTick =
     name:  "doubleTick"
 };
 
-var pArray = ["M 0.5,-1 0.5,1 M -0.5,-1 -0.5,1", "M 0.6,-1 0.6,1 M -0.6,-1 -0.6,1",
-        "M 0.7,-1 0.7,1 M -0.7,-1 -0.7,1","M 0.8,-1 0.8,1 M -0.8,-1 -0.8,1",
-        "M 0.9,-1 0.9,1 M -0.9,-1 -0.9,1","M 1.0,-1 1.0,1 M -1.0,-1 -1.0,1"]
+var elevated =
+{
+    path: 'M -2.5,0 2.5,0 M 1.0,-2 1.0,2 M -1.0,-2 -1.0,2',
+    strokeOpacity: 1,
+    strokeWeight:1,
+    name:  "elevated"
+};
+
+
+//var pArray = ["M 0.5,-1 0.5,1 M -0.5,-1 -0.5,1", "M 0.6,-1 0.6,1 M -0.6,-1 -0.6,1",
+//        "M 0.7,-1 0.7,1 M -0.7,-1 -0.7,1","M 0.8,-1 0.8,1 M -0.8,-1 -0.8,1",
+//        "M 0.9,-1 0.9,1 M -0.9,-1 -0.9,1","M 1.0,-1 1.0,1 M -1.0,-1 -1.0,1"]
 var doubleLine = {
     //path: 'M 0.5,-1 0.5,1 M -0.5,-1 -0.5,1',
     path: "M 1.0,-1 1.0,1 M -1.0,-1 -1.0,1",
@@ -502,6 +511,11 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
          offset: '0%',
          repeat: '6px'
       }],
+     [{
+          icon: elevated, //10 elevated
+          offset: '0%',
+          repeat: '12px'
+     }],
     ];
 
     var j = 0;  // Single track street
@@ -510,6 +524,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
     if(tracks ===1 && dash ===2) j= 3; // single track PRW
     if(dash === 1) j = 1; // incline
     if(dash === 3) j = 5; // Subway
+    if(routeType == 7) j = 10; // elevated
     if(trackUsage === "L")
     {
         var iconIx = 7;

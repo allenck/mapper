@@ -12,6 +12,8 @@ RTItemDelegate::RTItemDelegate()
                {RouteType::Subway, "Subway"},
                {RouteType::Rail, "Rail"},
                {RouteType::Incline, "Incline"},
+               {RouteType::MagLev, "Maglev"},
+               {RouteType::Elevated, "Elevated"},
                {RouteType::Other, "Other"}
               };
 }

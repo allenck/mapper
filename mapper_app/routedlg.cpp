@@ -375,10 +375,10 @@ void RouteDlg::setAddMode (bool value)
 {
     bAddMode = value;
     Parameters parms = sql->getParameters();
-    ui->dateStart->setMinimumDate( parms.minDate);
-    ui->dateStart->setMaximumDate( parms.maxDate);
-    ui->dateEnd->setMaximumDate( parms.maxDate);
-    ui->dateEnd->setMinimumDate(parms.minDate);
+//    ui->dateStart->setMinimumDate( parms.minDate);
+//    ui->dateStart->setMaximumDate( parms.maxDate);
+//    ui->dateEnd->setMaximumDate( parms.maxDate);
+//    ui->dateEnd->setMinimumDate(parms.minDate);
     displayDates(__FUNCTION__);
 
 }
@@ -1767,7 +1767,6 @@ void RouteDlg::btnAdd_Click()         // SLOT
    {
     _routeNbr = ui->rnw->newRoute();
    }
-//   sd->setRoute(_routeNbr);
    sql->beginTransaction("addRouteSegment");
    if(!sql->doesAltRouteExist(sd->route(), sd->alphaRoute()))
    {
@@ -1796,6 +1795,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
        sd->setOneWay( ui->cbOneWay->isChecked()?"Y":"N");
        sd->setTractionType(_tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType);
        sd->setTrackUsage(trackUsage);
+       sd->setCompanyKey(cd->companyKey);
        if (!sql->addSegmentToRoute(sd))
        {
            ui->lblHelpText->setText(tr( "Add Error"));
@@ -1814,55 +1814,6 @@ void RouteDlg::btnAdd_Click()         // SLOT
   {
    // update
 
- //  int ix = ui->cbSegments->currentIndex();
- //  if (ix >= 0)
- //  {
- //  if(ui->rnw->alphaRoute() != sd->routeName() || ui->dateStart->date() != sd->startDate()
- //      || ui->dateEnd->date() != sd->endDate())
- //  {
- //   //RouteData rd = (RouteData)_segmentInfoList[ix];
- ////   if (sql->deleteRouteSegment(_routeNbr, ui->rnw->alphaRoute(), _SegmentId, _rd.startDate.toString("yyyy/MM/dd"), _rd.endDate.toString("yyyy/MM/dd")) != true)
- //   if (sql->deleteRouteSegment(_routeNbr, ui->rnw->alphaRoute(), _segmentId,
- //                               sd->startDate().toString("yyyy/MM/dd"), sd->endDate().toString("yyyy/MM/dd")) != true)
- //   {
- //    ui->lblHelpText->setText(tr( "Delete Error"));
- //    //System.Media.SystemSounds.Beep.Play();
- //    sql->RollbackTransaction("UpdateRoute");
- //    return;
- //   }
-
- //   int companyKey= ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt();
-
- //   QString alpha = sql->getAlphaRoute(_routeNbr, companyKey);
- //   if (alpha == "")
- //   {
- //    CompanyData* cd = sql->getCompany(companyKey);
- //       _routeNbr = sql->addAltRoute(_alphaRoute, cd->routePrefix);
- //   }
- //   QString trackUsage = " ";
- //   SegmentData sd = sql->getSegmentInfo(_segmentId);
- //   if(ui->cbOneWay->isChecked() && sd->tracks() == 2)
- //   {
- //    if(ui->rbLeft->isChecked()) trackUsage = "L";
- //    if(ui->rbRight->isChecked()) trackUsage = "R";
- //   }
- //   int next = -1;
- //   int prev = -1;
- //   int tractionType = _tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType;
- //   if (!sql->addSegmentToRoute(_routeNbr, ui->rnw->alphaRoute(), ui->dateStart->date(), ui->dateEnd->date(),
- //                               _segmentId, companyKey, /*cbTractionType.SelectedIndex+1*/tractionType, direction, next,prev,
- //                               _normalEnter, _normalLeave, _reverseEnter, _reverseLeave, ui->cbOneWay->isChecked()?"Y":"N", trackUsage))
- //   {
- //    ui->lblHelpText->setText(tr( "Update Error"));
- //    //System.Media.SystemSounds.Beep.Play();
- //    sql->RollbackTransaction("UpdateRoute");
- //    return;
- //   }
- //   sd->setStartDate(ui->dateEnd->date());
- //   sd->setEndDate(ui->dateEnd->date());
- //   sd->setRouteName(ui->rnw->alphaRoute());
- //  }
- //  else
    {
     sd->setRouteName(ui->rnw->alphaRoute());
     sd->setCompanyKey(ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt());
@@ -2270,6 +2221,10 @@ void RouteDlg::cbCompany_SelectedIndexChanged(int i)
  }
  if(!sd )
   return;
+ if(ui->dateStart->date() > cd->endDate || ui->dateStart->date() < cd->startDate)
+  ui->dateStart->setDate(cd->startDate);
+ if(ui->dateEnd->date() > cd->endDate)
+  ui->dateEnd->setDate(cd->endDate);
  if(sd->startDate() >= cd->startDate)
  {
     ui->dateStart->setDate(sd->startDate());

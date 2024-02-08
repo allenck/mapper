@@ -26,7 +26,8 @@ public:
     qint32 newSegment;
 };
 #endif
-enum RouteType { Surface, SurfacePRW, RapidTransit, Subway, Rail, Incline, Other };
+enum RouteType { Surface, SurfacePRW, RapidTransit, Subway, Rail,
+                 Incline, MagLev, Elevated, Other };
 static bool to_enum(int n)
 {
  switch (n)
@@ -37,6 +38,8 @@ static bool to_enum(int n)
  case Subway:
  case Rail:
  case Incline:
+ case MagLev:
+ case Elevated:
  case Other:
   return true;
  default:

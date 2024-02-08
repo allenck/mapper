@@ -378,13 +378,16 @@ void EditSegmentDialog::On_btnSave_clicked()
     return;
   }
   if(si.segmentId() == -1)
-    throw IllegalArgumentException("invalid segmentId");
+  {
+    ui->lblHelp->setText("invalid segmentId");
+    return;
+  }
 
   si.setEndDate(ui->dtEnd->date());
   si.setStartDate(ui->dtBegin->date());
   si.setLocation(ui->cbLocation->currentText());
   si.setDoubleDate(ui->doubleTracked->date());
-
+  si.setRouteType((RouteType)ui->cbRouteType->currentData().toInt());
   if(si.tracks() == 2 && dupSegments.count() > 0)
   {
    QString infoText;
@@ -466,7 +469,7 @@ void EditSegmentDialog::On_btnSave_clicked()
         if(!sql->addSegmentToRoute(&sd1))
         {
           sql->rollbackTransaction("updateSegment");
-          ui->lblHelp->setText(tr("delete route %1 failed").arg(sd->route()));
+          ui->lblHelp->setText(tr("add route %1 failed").arg(sd->route()));
           return;
         }
       }

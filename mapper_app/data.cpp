@@ -397,7 +397,10 @@ void SegmentData::updateRouteInfo(RouteData rd){
 }
 
 
-/*static*/ QStringList SegmentData::ROUTETYPES = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
+/*static*/ QStringList SegmentData::ROUTETYPES =
+  QStringList() << "Surface" << "Surface PRW" << "Rapid Transit"
+                << "Subway" << "Rail"  << "Incline"<< "MagLev"
+                << "Elevated" << "Other";
 
 void SegmentData::addPoint(LatLng pt)
 {

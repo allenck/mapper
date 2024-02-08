@@ -468,6 +468,8 @@ private:
     void enableControls( bool b);
     QWidgetAction* createWidgetAction();
     bool isStationOnSegment(StationInfo* sti, QList<SegmentData*> segmentDataList);
+    QString createSortString(QString alphaRoute);
+    int countDigits(QString str);
 
 private slots:
 //    void aCopy();

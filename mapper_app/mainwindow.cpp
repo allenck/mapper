@@ -461,6 +461,7 @@ QMenu* MainWindow::addSegmentMenu(SegmentData *sd)
    addSegmentToRoute(sd); // single track oneway ot not
   }
  });
+ selectSegment(sd->segmentId());
  return actMenu;
 }
 
@@ -1048,6 +1049,7 @@ void MainWindow::createActions()
         displaySegment(sd->segmentId(), sd->description(),
                        getColor(sd->tractionType()),
                        sd->trackUsage(), true);
+        selectSegment(sd->segmentId());
  });
 
  addSegmentViaUpdateRouteAct = new QAction(tr("Add segment via UpdateRoute"),this);
@@ -2071,7 +2073,7 @@ void MainWindow::refreshRoutes()
     QString rSort;
     for(RouteData rd : routeList)
     {
-     rSort = QStringLiteral("%1").arg(rd.route(), 3, 10, QLatin1Char('0'))+rd.alphaRoute();
+      rSort = createSortString(rd.alphaRoute());
      switch(config->currCity->routeSortType)
      {
       case 0:
@@ -3422,7 +3424,7 @@ void MainWindow::cbSegmentsSelectedValueChanged(SegmentInfo si)
     m_segmentId = si.segmentId();
     updateSegmentInfoDisplay(si);
     m_points = si.pointList();
-    Q_ASSERT(m_points.count() !=1);
+    //Q_ASSERT(m_points.count() !=1);
 
     //routeDlg->setSegmentId( m_segmentId);
     SegmentData* sd = new SegmentData(ui->ssw->segmentSelected());
@@ -5227,4 +5229,48 @@ void MainWindow::describeRoute()
  box.exec();
 
  setCursor(Qt::ArrowCursor);
+}
+
+// create string for sorting alpha routes
+QString MainWindow::createSortString(QString alphaRoute)
+{
+ int len = alphaRoute.length();
+ QString result;
+ int index =0;
+ while(index < len)
+ {
+  if(alphaRoute.at(index).isDigit())
+  {
+   int digits = countDigits(alphaRoute.mid(index));
+   int diff = 3-digits;
+   while(diff)
+   {
+    result.append(QChar('0'));
+    diff--;
+   }
+   while(digits)
+   {
+    result.append(alphaRoute.at(index++));
+    digits--;
+   }
+   index+=digits;
+  }
+  else
+   result.append(alphaRoute.at(index++));
+ }
+ return result;
+}
+
+int MainWindow::countDigits(QString str)
+{
+ int len = str.length();
+ int ix = 0;
+ while(ix < len)
+ {
+  if(str.at(ix).isDigit())
+   ix++;
+  else
+   break;
+ }
+ return ix;
 }
