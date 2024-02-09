@@ -296,7 +296,17 @@ void EditStation::btnOK_Click()
   return;
  }
  _sti.markerType = ui->cbIcons->currentData().toString();
- if (_sti.stationKey>0)
+
+ QList<SegmentInfo> sList = sql->getIntersectingSegments(_sti.latitude, _sti.longitude,
+                                                         .020, _sti.routeType);
+ for(SegmentInfo si : sList)
+ {
+  QString sTxt = QString::number(si.segmentId());
+  if(!_sti.segments.contains(sTxt))
+   _sti.segments.append(sTxt);
+ }
+
+ if (_sti.stationKey > 0)
  {
   if(StationView::instance() != NULL)
    StationView::instance()->changeStation("chg", _sti);
@@ -304,7 +314,7 @@ void EditStation::btnOK_Click()
   //sql->updateStation(_stationKey, _infoKey,_stationName, _segmentId, ui->dateStart->dateTime().toString("yyyy/MM/dd"),ui->dateEnd->dateTime().toString("yyyy/MM/dd"),markerType);
   sql->updateStation(_sti);
   QVariantList objArray;
-  objArray << _stationKey << markerType;
+  objArray << _stationKey << _sti.markerType;
   WebViewBridge::instance()->processScript("updateStationMarker", objArray);
  }
  else
@@ -330,6 +340,26 @@ void EditStation::btnOK_Click()
                +","+(config->currCity->bDisplayStationMarkers?"true":"false") << _segmentId << _stationName
             << _stationKey << _sti.infoKey<<ci.comments << markerType;
    WebViewBridge::instance()->processScript("addStationMarker",objArray);
+  }
+ }
+ // get other stations at this point and update segments field
+ QList<StationInfo> stnList = sql->getStationAtPoint(LatLng(_sti.latitude, _sti.longitude));
+ for(StationInfo sti : stnList)
+ {
+  if(_sti.stationKey == sti.stationKey)
+   continue;
+  bool bNeedsUpdate = false;
+  for(QString sTxt :_sti.segments)
+  {
+   if(!sti.segments.contains(sTxt))
+   {
+    sti.segments.append(sTxt);
+    bNeedsUpdate = true;
+   }
+   if(bNeedsUpdate)
+   {
+    sql->updateStation(sti);
+   }
   }
  }
  bDirty = false;

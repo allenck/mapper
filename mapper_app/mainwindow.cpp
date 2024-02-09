@@ -2327,7 +2327,14 @@ default:
  m_bridge->executeScript("removeStationMarkers", "");
  if(bDisplayStationMarkers)
  {
-  QList<StationInfo> stationList = sql->getStations(m_alphaRoute, QDate::fromString(m_currRouteEndDate, "yyyy/MM/dd"));
+  //QList<StationInfo> stationList = sql->getStations(m_alphaRoute, QDate::fromString(m_currRouteEndDate, "yyyy/MM/dd"));
+  QList<StationInfo> stationList;
+  for(SegmentData* sd : segmentDataList)
+  {
+   QList<StationInfo> sList = sql->getStationsOnSegment(sd->segmentId());
+   for(StationInfo sti : sList)
+    stationList.append(sti);
+  }
   if (!stationList.isEmpty())
   {
    //foreach (stationInfo sti in stationList)
@@ -2373,7 +2380,7 @@ default:
 
 void MainWindow::displayAll()
 {
- QList<SegmentData*> segmentDataList = sql->getRoutSegmentsForDate(_rd.startDate(), ui->cbCompany->currentData().toInt());
+ QList<SegmentData*> segmentDataList = sql->getRouteSegmentsForDate(_rd.startDate(), ui->cbCompany->currentData().toInt());
 
  double length = 0.0;
  //foreach (segmentGroup sg in ri.segments)
@@ -2608,7 +2615,16 @@ void MainWindow::onCbRouteIndexChanged(int row)
 
  routeView->updateRouteView();
 
- stationView->model()->setStationList(sql->getStations(m_alphaRoute, QDate::fromString(m_currRouteEndDate, "yyyy/MM/dd")));
+ //stationView->model()->setStationList(sql->getStations(m_alphaRoute, QDate::fromString(m_currRouteEndDate, "yyyy/MM/dd")));
+ QList<SegmentData*> rsList = sql->getRouteSegmentsInOrder(_rd.route(), _rd.routeName(),_rd.companyKey(),ui->dateEdit->date());
+ QList<StationInfo> stationList;
+ for(SegmentData* sd : rsList)
+ {
+  QList<StationInfo> sList = sql->getStationsOnSegment(sd->segmentId());
+  for(StationInfo sti : sList)
+   stationList.append(sti);
+ }
+ stationView->model()->setStationList(stationList);
  stationView->model()->reset();
 
 }
@@ -3701,12 +3717,15 @@ void MainWindow::movePoint(qint32 segmentId, qint32 i, double newLat, double new
   //SQL sql;
   LatLng oldPoint = sql->getPointOnSegment((int)i, m_segmentId);
   //TODO what about multiple station records?
-  StationInfo sti = sql->getStationAtPoint(oldPoint);
-  if (sti.stationKey > 0)
+  QList<StationInfo> stiList = sql->getStationAtPoint(oldPoint);
+  for(StationInfo sti : stiList)
   {
-   sti.latitude = newLat;
-   sti.longitude = newLon;
-      sql->updateStation(sti);
+   if (sti.stationKey > 0)
+   {
+    sti.latitude = newLat;
+    sti.longitude = newLon;
+       sql->updateStation(sti);
+   }
   }
 }
 
@@ -4453,12 +4472,32 @@ void MainWindow::setStation(double lat, double lon, qint32 segmentId, qint32 ptI
  try
  {
   LatLng pt =  LatLng(lat, lon);
-  StationInfo sti = sql->getStationAtPoint(pt);
+  QList<StationInfo> stiList = sql->getStationAtPoint(pt);
   SegmentInfo si = sql->getSegmentInfo(segmentId);
   //EditStation form(-1, bDisplayStationMarkers, this);
-  sti.latitude = lat;
-  sti.longitude = lon;
-  sti.segmentId = segmentId;
+
+  // if multiple segments meet here, get a list of them
+  QList<SegmentInfo> sList = sql->getIntersectingSegments(lat, lon, .020, _rd.routeType());
+
+  StationInfo sti;
+  for(StationInfo sti1 : stiList)
+  {
+   sti1.latitude = lat;
+   sti1.longitude = lon;
+   sti1.segmentId = segmentId;
+   QString aSegmentId = QString::number(segmentId);
+   if(!sti1.segments.contains(aSegmentId))
+    sti1.segments.append(aSegmentId);
+   if(ui->dateEdit->date()>= sti1.startDate && ui->dateEdit->date() <= sti.endDate)
+    sti = StationInfo(sti1);
+   for(SegmentInfo si : sList)
+   {
+    QString sTxt = QString::number(si.segmentId());
+    if(!sti1.segments.contains(sTxt))
+      sti1.segments.append(sTxt);
+   }
+   sql->updateStation(sti1);
+  }
   QDate dt;
   if(si.segmentId() >0)
   {

@@ -65,7 +65,7 @@ public:
     SegmentInfo getSegmentInfo(qint32 SegmentId);
     SegmentInfo getSegmentIdForDescription(QString);
     QList<SegmentData *> getRouteSegmentsInOrder(qint32 route, QString name, int companyKey, QDate date);
-    QList<SegmentData*> getRoutSegmentsForDate(QDate date, int companyKey);
+    QList<SegmentData*> getRouteSegmentsForDate(QDate date, int companyKey);
     QList<RouteData> getRoutes(qint32 segmentid, QString date );
 //    Q_DECL_DEPRECATED QList<LatLng>  GetSegmentPoints(qint32 SegmentId);
     bool canConnect(SegmentData sd1, QString matchedTo, SegmentData sd2);
@@ -80,7 +80,7 @@ public:
     void rollbackTransaction (QString name);
     Q_DECL_DEPRECATED bool updateSegment(qint32 SegmentId);
     LatLng getPointOnSegment(qint32 pt, qint32 segmentId);
-    StationInfo getStationAtPoint(LatLng pt);
+    QList<StationInfo> getStationAtPoint(LatLng pt);
     bool updateStation(qint32 stationKey, qint32 infoKey);
     bool updateStation(StationInfo sti);
     //bool updateStationRoute(qint32 stationKey, qint32 route);
@@ -176,6 +176,7 @@ public:
     CommentInfo getComments(qint32 infoKey);
     QList<StationInfo> getStations(QString alphaRoute, QDate date);
     StationInfo getStationInfo(qint32 stationKey);
+    QList<StationInfo> getStationsOnSegment(qint32 segmentId);
     StationInfo getStationInfo(QString name);
     int addComment(QString comments, QString tags);
     bool updateComment(qint32 infoKey, QString comments, QString tags = "");

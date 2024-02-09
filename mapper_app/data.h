@@ -422,6 +422,7 @@ public:
     qint32 returnSeq() {return _returnSeq;}
     quint32 baseRoute() {return _baseRoute;}
     void setBaseRoute(int bastRoute) {_baseRoute = bastRoute;}
+    RouteType routeType() {return _routeType;}
 
  private:
     qint32 _route = -1;
@@ -724,9 +725,10 @@ class StationInfo
         qint32 infoKey;        // key to the comments table containing descritptive text for the station.
         QDate startDate;
         QDate endDate;
-
+        RouteType routeType;
         QString markerType;
-        int segmentId = -1;
+QT_DEPRECATED  int segmentId = -1;
+        QStringList segments; // list of segments
 };
 
 class CompanyData

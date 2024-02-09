@@ -49,7 +49,7 @@ void SplitCompanyRoutesDialog::fillCompanies()
 void SplitCompanyRoutesDialog::btnApply_clicked()
 {
  ui->lblHelp->setText("");
- QList<SegmentData*> segmentList = sql->getRoutSegmentsForDate(ui->dateEdit->date(),
+ QList<SegmentData*> segmentList = sql->getRouteSegmentsForDate(ui->dateEdit->date(),
                                                                ui->cbCompany1->currentData().toInt());
  if(segmentList.isEmpty())
  {
