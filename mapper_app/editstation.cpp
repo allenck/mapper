@@ -40,7 +40,8 @@ EditStation::EditStation(StationInfo sti, QWidget *parent) :
     ui->cbIcons->addItem(QIcon(":/subway.png"), "Subway icon", "subway");
     ui->cbIcons->addItem(QIcon(":/S-Bahn-Logo.svg"), "sbahn");
     ui->cbIcons->addItem(QIcon(":/U-Bahn.svg"), "ubahn");
-    ui->cbIcons->addItem(QIcon(":/Strassenbahn-Haltstelle.svg"), "haltstelle");
+    ui->cbIcons->addItem(QIcon(":/Strassenbahn-Haltestelle.svg"), "haltestelle");
+    ui->cbIcons->addItem(QIcon(":/sl-metro-logo.svg"),"slmetro");
 
     connect(ui->cbIcons, SIGNAL(currentIndexChanged(int)), this, SLOT(On_cbIcons_selectionChanged(int)));
     if(_stationKey > 0)

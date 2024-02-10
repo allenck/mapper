@@ -2333,7 +2333,13 @@ default:
   {
    QList<StationInfo> sList = sql->getStationsOnSegment(sd->segmentId());
    for(StationInfo sti : sList)
+   {
+    if(sti.routeType != sd->routeType())
+     continue;
+    if(sti.endDate < ui->dateEdit->date() || sti.startDate> ui->dateEdit->date())
+     continue;
     stationList.append(sti);
+   }
   }
   if (!stationList.isEmpty())
   {
@@ -4527,8 +4533,8 @@ void MainWindow::setStation(double lat, double lon, qint32 segmentId, qint32 ptI
        break;
   }
   sti.markerType = markerType;
-  EditStation form = EditStation(sti);
-  form.exec();
+  EditStation* form = new EditStation(sti);
+  form->exec();
  }
  catch (std::exception e)
  {

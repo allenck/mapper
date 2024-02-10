@@ -1064,3 +1064,19 @@ RouteSeq::RouteSeq(const RouteSeq& o){
  _rd = o._rd;
  _lastUpdate = o._lastUpdate;
 }
+StationInfo::StationInfo(const StationInfo& o)
+{
+ routes = o.routes;
+ stationName =o.stationName;
+ stationSuffix = o.stationSuffix; // if multiple stops exist at say the intersection of two lines, each stop can be identified with a suffix code.
+ latitude = o.latitude;       // latitude of the station
+ longitude = o.longitude;      // longitude of the station.
+ stationKey = o.stationKey;
+ infoKey = o.infoKey;        // key to the comments table containing descritptive text for the station.
+ startDate = o.startDate;
+ endDate = o.endDate;
+ routeType = o.routeType;
+ markerType = o.markerType;
+ segmentId = o.segmentId;
+ segments = o.segments;
+}

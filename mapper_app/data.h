@@ -716,6 +716,8 @@ class StationInfo
     public:
         //explicit stationInfo(QObject *parent = 0);
         StationInfo(){stationKey = -1;}
+        ~StationInfo() {}
+        StationInfo(const StationInfo&);
         QStringList routes;
         QString stationName;
         QString stationSuffix; // if multiple stops exist at say the intersection of two lines, each stop can be identified with a suffix code.

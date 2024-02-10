@@ -1,4 +1,4 @@
-BEGIN  Transaction;
+BEGIN;
 CREATE TEMPORARY TABLE `t1_backup`  as  SELECT * from `Stations`;
 DROP TABLE `Stations`;
 CREATE TABLE `Stations` (
@@ -10,7 +10,7 @@ CREATE TABLE `Stations` (
   `startDate` date DEFAULT NULL,
   `endDate` date DEFAULT NULL,
   `SegmentId` int DEFAULT -1,
-  `segments` varchar(50) NOT NULL,
+  `segments` varchar(50) NOT NULL DEFAULT '',
   `infoKey` int(11) NOT NULL DEFAuLT -1,
   `markerType` varchar(15) default '',
   `routeType` int(11) NOT NULL DEFAULT -1,
@@ -18,9 +18,12 @@ CREATE TABLE `Stations` (
   constraint main unique (`name`,`startDate`,`endDate`),
   constraint `stationKey` UNIQUE (`stationKey`)
 );
-INSERT INTO `Stations` (stationKey, routes, name, latitude, longitude, startDate, endDate, segmentId, segments, infoKey, markerType, routeType, lastUpdate ) SELECT stationKey, routes, name, latitude, longitude,
-                          startDate, endDate, segmentid, format('%d',segmentid), infoKey, MarkerType, routeType, lastUpdate FROM `t1_backup`;
+INSERT INTO `Stations` (stationKey, routes, name, latitude, longitude, startDate, endDate,
+                        segmentId, segments, infoKey, markerType, routeType, lastUpdate )
+                        SELECT stationKey, '', name, latitude, longitude,
+                          startDate, endDate, segmentid, format('%d',segmentid), infoKey,
+                          MarkerType, routeType, lastUpdate FROM `t1_backup`;
 drop table t1_backup;
-COMMIT Transaction;
+COMMIT ;
 
 

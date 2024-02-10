@@ -9,7 +9,11 @@ CREATE TABLE  [dbo].[Stations](
       [longitude] [decimal](15, 13) NOT NULL,
       [startDate] [date] NOT NULL,
       [endDate] [date] NOT NULL,
+      [segmentId] int NOT NULL,
+      [segments] varchar(50) NOT NULL DEFAULT '',
+      [infoKey] int NOT NULL DEFAuLT -1,
       [markerType] varchar(15) default '',
+      [routeType] int NOT NULL DEFAULT -1,
       [lastUpdate] [datetime] NOT NULL,
    CONSTRAINT [PK_station] PRIMARY KEY CLUSTERED
   (

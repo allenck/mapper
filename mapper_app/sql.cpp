@@ -10378,6 +10378,7 @@ void SQL::checkTables(QSqlDatabase db)
   if(!doesColumnExist("Stations", "routes"))
   {
    addColumn("Stations", "routes", "varchar(50)");
+   addColumn("Stations", "segments", "varchar(50)");
    if(config->currConnection->servertype() == "MsSql")
     executeScript(":/sql/mssql_recreateStationTable.sql",db);
    else

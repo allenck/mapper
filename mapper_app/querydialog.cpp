@@ -489,7 +489,7 @@ void QueryDialog::on_go_QueryButton_clicked()
      && tokens.at(0).compare("select", Qt::CaseInsensitive)  == 0
      && tokens.at(1) == "*"
      && tokens.at(2).compare("from", Qt::CaseInsensitive) == 0
-      && !viewList.contains(tokens.at(3),Qt::CaseInsensitive) )
+     && !viewList.contains(tokens.at(3),Qt::CaseInsensitive) && db.isValid())
   {
    processSelect(tokens.at(3), txt);
   }
@@ -558,8 +558,8 @@ void QueryDialog::on_go_QueryButton_clicked()
 
 bool QueryDialog::processALine(QString txt, QString tabName)
 {
- QueryModel *query_view_model = new QueryModel(this ,db, config->currConnection->servertype());
- //queryModelList.append(query_view_modell);
+ QueryModel *query_view_model = new QueryModel(this ,db,
+                                               config->currConnection->servertype());
  query_view_model->setQuery(txt, db);
  if (query_view_model->lastError().isValid())
  {
@@ -643,7 +643,7 @@ void QueryDialog::processSelect(QString table, QString commandLine)
 {
  QWidget *tab_First_Result=0;
 
- QSqlDatabase db = QSqlDatabase::database();
+ //QSqlDatabase db = QSqlDatabase::database();
  QueryEditModel* model = new QueryEditModel(nullptr, db);
  model->setTable(table);
  QString whereClause;
@@ -964,7 +964,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   {
    // reverting to default (currrent) database!
    //
-   // the docs recommed not setting QSqlDatabase as a member of a class but since
+   // the docs recommend not setting QSqlDatabase as a member of a class but since
    // this class is always present once created there should be no problem.
    db = QSqlDatabase::database(tgtConn->connectionName()); // restore default connection
   }
@@ -981,9 +981,9 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   }
 
 #if 1
-  //if(tgtConn->connectionName().isEmpty())
+  if(tgtConn->connectionName().isEmpty())
   {
-   db = QSqlDatabase::addDatabase(tgtConn->driver(), QString("query%1").arg(ix));
+   db = QSqlDatabase::addDatabase(tgtConn->driver(), QString("query-%1").arg(tgtConn->description()));
    tgtConn->setConnectionName(db.connectionName());
 //   if(tgtConn->servertype() == "Sqlite")
 //   {
@@ -1026,6 +1026,11 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    }
 #endif
    setTitle();
+  }
+  else
+  {
+   qDebug() << "connection name:" << tgtConn->connectionName();
+   qDebug() << "driver:" << db.driverName() << " database:" << db.databaseName();
   }
 }
 

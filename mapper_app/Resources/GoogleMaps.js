@@ -49,12 +49,12 @@ var image = ["http://maps.google.com/mapfiles/marker.png",
   "http://maps.google.com/mapfiles/kml/paddle/blu-blank.png",
   "http://maps.google.com/mapfiles/kml/paddle/pink-blank.png",
   "http://maps.google.com/mapfiles/shadow50.png",
-  "http://acksoft.dyndns.biz/picturegallery/images/17.png",
+  "sl-metro-logo.svg",
   "Strassenbahn-Haltestelle.svg",
   "http://maps.google.com/mapfiles/kml/paddle/ylw-blank.png",
   "S-Bahn-Logo.svg",
   "U-Bahn.svg",
-  "http:ubuntu-2:1080/public/map_tiles/tram.png",
+  "tram.png",
   "http:ubuntu-2:1080/public/map_tiles/tram.shadow.png",
   "http://maps.google.com/mapfiles/kml/paddle/wht-blank.png",
   "http:ubuntu-2:1080/public/map_tiles/blue-red-blank.png",
@@ -68,9 +68,10 @@ var image = ["http://maps.google.com/mapfiles/marker.png",
   "https://www.google.com/mapfiles/arrow.png" // big green down arrow
 ];
 var images = {"default":0, "start":1, "end":2, "shadow":3, "arrow":4, "arrowShadow":5,
-  "smallGreen":6, "smallBlue":7,"smallRed":8,"smallShadow":9,"stop":10,"haltstelle":11,"smallYellow":12,
-  "sbahn":13, "ubahn":14, "tram":15, "tramshadow":16, "smallWhite":17, "blue-red":18,
-  "orange":19, "bvgtram":20, "subway":21, "subwayshadow":22, "purple":23, "rail":24, "bus":25, "greenDownArrow":26};
+  "smallGreen":6, "smallBlue":7,"smallRed":8,"smallShadow":9,"slmetro":10,"haltestelle":11,
+  "smallYellow":12,"sbahn":13, "ubahn":14, "tram":15, "tramshadow":16, "smallWhite":17,
+  "blue-red":18,"orange":19, "bvgtram":20, "subway":21, "subwayshadow":22, "purple":23,
+  "rail":24, "bus":25, "greenDownArrow":26};
 
 var connected = false;
 //We use this function because connect statements resolve their target once, immediately
@@ -2142,6 +2143,12 @@ function getIcon(typeIcon)
           break;
       case "rail":
           icon = image[images.rail];
+          break;
+      case "slmetro":
+          icon = image[images.slmetro];
+          break;
+      case "haltstelle":
+          icon = image[images.haltstelle];
           break;
       default:
          //alert("icon type = " + typeIcon);

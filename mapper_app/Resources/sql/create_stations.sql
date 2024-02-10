@@ -7,7 +7,7 @@ CREATE TABLE `Stations` (
   `startDate` date DEFAULT NULL,
   `endDate` date DEFAULT NULL,
   `segmentId` int(11) NOT NULL,
-  `segments` varchar(50) NOT NULL,
+  `segments` varchar(50) NOT NULL DEFAULT '',
   `infoKey` int(11) NOT NULL DEFAuLT -1,
   `markerType` varchar(15) default '',
   `routeType` int(11) NOT NULL DEFAULT -1,

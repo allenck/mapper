@@ -15,7 +15,10 @@ QueryModel::QueryModel(QObject *parent, QSqlDatabase db, QString dbtype) :
 {
  driver=db.driverName();
  dbType = dbtype;
+ qDebug() << "connection name:" << db.connectionName();
+ qDebug() << "driver:" << db.driverName() << " database:" << db.databaseName();
 }
+
 void QueryModel::sort( int column, Qt::SortOrder order)
 {
  //table_blobs->on_init_list(-1);
