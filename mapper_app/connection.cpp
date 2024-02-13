@@ -221,6 +221,10 @@ void Connection::configureDb(QSqlDatabase db, Connection* currConnection, Config
         QString dbName = QDir::currentPath() + "/Resources/databases/" + currConnection->sqlite_fileName();
 #endif
         QFileInfo info(dbName);
+        if(!info.isWritable())
+        {
+            QFile::setPermissions(dbName,QFileDevice::ReadOwner|QFileDevice::WriteOwner);
+        }
         if(!info.isAbsolute() )
         {
          if(!dbName.startsWith("Resources/databases/"))

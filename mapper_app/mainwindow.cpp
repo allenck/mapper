@@ -70,6 +70,7 @@
 #include "dialogeditparameters.h"
 #include <QTimer>
 #include "splitcompanyroutesdialog.h"
+#include <QSystemTrayIcon>
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -78,6 +79,10 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui(new Ui::MainWindow)
 {
  ui->setupUi(this);
+    ui->setupUi(this);
+    QSystemTrayIcon * sys = new QSystemTrayIcon(this);
+    sys->setIcon(QIcon(":/gui/tram-icon.ico"));
+    sys->show();
  _instance = this;
  ui->groupBox_2->setVisible(false);
  cityMenu = nullptr;
@@ -316,7 +321,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   refreshCompanies();
   ui->cbCompany->setCurrentIndex( ui->cbCompany->findData(config->currCity->companyKey));
   refreshRoutes();
-  stationView->showStations();
+  //stationView->showStations();
   ui->chkNoPan->setChecked(config->currCity->bNoPanOpt);
   for(int i = 0; i < routeList.count(); i ++ )
   {
@@ -1815,7 +1820,7 @@ void MainWindow::newCity(QAction* act )
     refreshCompanies();
     //cbSort->setCurrentIndex(config->currCity->routeSortType);
     refreshRoutes();
-    stationView->showStations();
+    //stationView->showStations();
     m_latitude = config->currCity->center.lat();
     m_longitude = config->currCity->center.lon();
     m_zoom = config->currCity->zoom;
@@ -2325,30 +2330,45 @@ default:
  }
 
  m_bridge->executeScript("removeStationMarkers", "");
+ QList<StationInfo> stationList;
  if(bDisplayStationMarkers)
  {
   //QList<StationInfo> stationList = sql->getStations(m_alphaRoute, QDate::fromString(m_currRouteEndDate, "yyyy/MM/dd"));
-  QList<StationInfo> stationList;
-  for(SegmentData* sd : segmentDataList)
-  {
-   QList<StationInfo> sList = sql->getStationsOnSegment(sd->segmentId());
-   for(StationInfo sti : sList)
-   {
-    if(sti.routeType != sd->routeType())
-     continue;
-    if(sti.endDate < ui->dateEdit->date() || sti.startDate> ui->dateEdit->date())
-     continue;
-    stationList.append(sti);
-   }
-  }
+  // QMap<int,StationInfo> stationMap;
+  // for(SegmentData* sd : segmentDataList)
+  // {
+  //  QList<StationInfo> sList = sql->getStationsOnSegment(sd->segmentId());
+  //  for(StationInfo sti : sList)
+  //  {
+  //   if(sti.routeType != sd->routeType())
+  //   {
+  //       sti.routeType = sd->routeType();
+  //       sql->updateStation(sti);
+  //   }
+  //   if(sti.routes.at(0).isEmpty()||sti.routes.at(0) == " ")
+  //   {
+  //       sti.routes.removeAt(0);
+  //       sql->updateStation(sti);
+  //   }
+  //   if(!sti.routes.contains(m_alphaRoute))
+  //   {
+  //       sti.routes.append(m_alphaRoute);
+  //       sql->updateStation(sti);
+  //   }
+  //   if(sti.endDate < _rd.startDate() || sti.startDate> _rd.endDate())
+  //    continue;
+  //   stationMap.insert(sti.stationKey, sti);
+  //  }
+      stationList = getStations(segmentDataList);
+  //}
   if (!stationList.isEmpty())
   {
    //foreach (stationInfo sti in stationList)
    for(int i=stationList.count()-1; i >= 0; i --)
    {
     StationInfo sti= stationList.at(i);
-    if(isStationOnSegment(&sti,segmentDataList))
-     stationList.removeAt(i);
+    // if(isStationOnSegment(&sti,segmentDataList))
+    //  stationList.removeAt(i);
     if(sti.markerType == "")
      sti.markerType= markerType;
     QString str = sti.stationName;
@@ -2368,9 +2388,10 @@ default:
       m_bridge->processScript("addStationMarker", objArray);
      }
     }
-    stationView->showStations();
+
+    stationView->showStations(stationList);
    }
-  }
+  } // if(bDisplayStationMarkers)
   if(!ui->chkNoPan->checkState() && bBoundsValid)
   {
    objArray.clear();
@@ -2622,19 +2643,50 @@ void MainWindow::onCbRouteIndexChanged(int row)
  routeView->updateRouteView();
 
  //stationView->model()->setStationList(sql->getStations(m_alphaRoute, QDate::fromString(m_currRouteEndDate, "yyyy/MM/dd")));
- QList<SegmentData*> rsList = sql->getRouteSegmentsInOrder(_rd.route(), _rd.routeName(),_rd.companyKey(),ui->dateEdit->date());
- QList<StationInfo> stationList;
- for(SegmentData* sd : rsList)
- {
-  QList<StationInfo> sList = sql->getStationsOnSegment(sd->segmentId());
-  for(StationInfo sti : sList)
-   stationList.append(sti);
- }
- stationView->model()->setStationList(stationList);
+  QList<SegmentData*> rsList = sql->getRouteSegmentsInOrder(_rd.route(), _rd.routeName(),_rd.companyKey(),ui->dateEdit->date());
+ // QMap<int, StationInfo> stationMap;
+ // for(SegmentData* sd : rsList)
+ // {
+ //  QList<StationInfo> sList = sql->getStationsOnSegment(sd->segmentId());
+ //  for(StationInfo sti : sList)
+ //   stationMap.insert(sti.stationKey, sti);
+ // }
+
+ stationView->model()->setStationList(getStations(rsList));
  stationView->model()->reset();
 
 }
 
+QList<StationInfo> MainWindow::getStations(QList<SegmentData*> rsList)
+{
+    QMap<int,StationInfo> stationMap;
+    for(SegmentData* sd : rsList)
+    {
+        QList<StationInfo> sList = sql->getStationsOnSegment(sd->segmentId());
+        for(StationInfo sti : sList)
+        {
+            if(sti.routeType != sd->routeType())
+            {
+                sti.routeType = sd->routeType();
+                sql->updateStation(sti);
+            }
+            if(sti.routes.at(0).isEmpty()||sti.routes.at(0) == " ")
+            {
+                sti.routes.removeAt(0);
+                sql->updateStation(sti);
+            }
+            if(!sti.routes.contains(m_alphaRoute))
+            {
+                sti.routes.append(m_alphaRoute);
+                sql->updateStation(sti);
+            }
+            if(sti.endDate < _rd.startDate() || sti.startDate> _rd.endDate())
+                continue;
+            stationMap.insert(sti.stationKey, sti);
+        }
+    }
+    return stationMap.values();
+}
 //void MainWindow::onResize()
 //{
 //   m_bridge->processScript("resizeMap", "");

@@ -29,9 +29,9 @@ public:
     Q_PROPERTY(int zoom READ curZoom NOTIFY onZoomChanged)
     Q_PROPERTY(QString maptype READ curMaptype NOTIFY onMapTypeChanged)
     Q_PROPERTY(LatLng latlng MEMBER _latLng WRITE setLatLng NOTIFY latlngChanged)
-    void processScript(QString func, QString parms);
+    QT_DEPRECATED void processScript(QString func, QString parms);
     void processScript(QString func);
-    void processScript(QString func, QString parms, QString name, QString value);
+    QT_DEPRECATED void processScript(QString func, QString parms, QString name, QString value);
     void processScript(QString func, QList<QVariant>objArray);
 
     //QVariant rslt;
@@ -63,6 +63,7 @@ signals:
     void segmentStatusSignal(QString txt, QString color);
     void queryOverlaySignal();
     void on_scriptResult(QVariant);
+    void on_scriptFunctionResult(QVariant, QVariant);
     void on_scriptArrayResult(QVariantList);
     void on_rightClicked(LatLng pos);
     void on_cityBounds(Bounds bounds);
@@ -71,6 +72,7 @@ signals:
 public slots:
     void selectSegment(qint32 i, qint32 SegmentId); //19
     void scriptResult(QVariant rtn); //20
+    void scriptFunctionResult(QVariant function, QVariant value);
     void scriptArrayResult(QVariantList list);
     void setPoint(qint32 i, double lat, double lon);
     void setLat(double lat);

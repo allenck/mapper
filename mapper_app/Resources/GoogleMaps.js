@@ -65,13 +65,12 @@ var image = ["http://maps.google.com/mapfiles/marker.png",
   "http://maps.google.com/mapfiles/kml/paddle/purple-blank.png",
   "http://maps.google.com/mapfiles/kml/pal5/icon63l.png", // "H"
   "http://maps.google.com/mapfiles/kml/shapes/bus.png",
-  "https://www.google.com/mapfiles/arrow.png" // big green down arrow
 ];
 var images = {"default":0, "start":1, "end":2, "shadow":3, "arrow":4, "arrowShadow":5,
   "smallGreen":6, "smallBlue":7,"smallRed":8,"smallShadow":9,"slmetro":10,"haltestelle":11,
   "smallYellow":12,"sbahn":13, "ubahn":14, "tram":15, "tramshadow":16, "smallWhite":17,
   "blue-red":18,"orange":19, "bvgtram":20, "subway":21, "subwayshadow":22, "purple":23,
-  "rail":24, "bus":25, "greenDownArrow":26};
+  "rail":24, "bus":25};
 
 var connected = false;
 //We use this function because connect statements resolve their target once, immediately
@@ -107,12 +106,10 @@ function processScript(func, parms)
     webViewBridge.scriptArrayResult( fRslt);
    else
    {
-//       console.trace( call + fRslt);
-//    if(webViewBridge.scriptResult !== null)
-       if("fRslt" in window)
-        webViewBridge.scriptResult( fRslt);
-       else
-        console.trace("bad return: '" + call + fRslt + "'");
+    if("fRslt" in window)
+     webViewBridge.scriptResult( fRslt);
+    else
+     console.trace("bad return: '" + call + fRslt + "'");
    }
   }
   catch (err)
@@ -186,7 +183,7 @@ function processScript3(func, objArray, count)
       else
       {
           if("fRslt" in window)
-              webViewBridge.scriptResult( fRslt);
+              webViewBridge.scriptFunctionResult(func, fRslt);
       }
   }
   catch (err)
@@ -2312,6 +2309,7 @@ function isStationMarkerDisplayed(stationKey)
     else
         return "hidden";
   }
+  return rVal;
  });
  console.error("stationKey " + stationKey + " not found 2");
  return rVal;
@@ -2723,7 +2721,7 @@ function displayRouteComment(latitude, longitude, HTMLText, route, date, company
  this.marker = new google.maps.Marker({
        position: new google.maps.LatLng(latitude, longitude),
        map: map,
-       icon: image[images.greenDownArrow],
+       icon: image[images.arrow],
        zIndex: 10,
        draggable: true,
        visible: true,

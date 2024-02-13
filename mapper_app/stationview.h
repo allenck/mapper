@@ -9,9 +9,7 @@
 #include <QAbstractTableModel>
 #include <QList>
 #include "data.h"
-
-
-
+#include <QSortFilterProxyModel>
 
 class StationViewSortProxyModel : public QSortFilterProxyModel
 {
@@ -73,7 +71,7 @@ class StationView : public QObject
     Q_OBJECT
 public:
     StationView(Configuration *cfg, QObject *parent = 0);
-    void showStations();
+    void showStations(QList<StationInfo> stationList);
     static StationView* instance();
 
 
@@ -96,6 +94,7 @@ private:
     QAction *pasteAction;
     QAction *displayAction;
     QAction *editAction;
+    QAction* deleteAction;
     int curRow;
     int curCol;
     QMenu menu;

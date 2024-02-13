@@ -11,7 +11,7 @@ Configuration::Configuration(QObject *parent) :
 {
  currentCityId = -1;
  qRegisterMetaType<Bounds>("Bounds");
- //qRegisterMetaTypeStreamOperators<Bounds>("Bounds");
+
 }
 
 void Configuration::saveSettings()
@@ -165,13 +165,14 @@ void Configuration::saveSettings()
 #ifdef Q_OS_MAC
  settings->setValue("macOsPublic", macOSPublic);
 #endif
+
 }
 
 void Configuration::getSettings()
 {
    QSettings settings;
    qDebug() << settings.fileName();
-   //settingsDb settings;
+
    int size = settings.beginReadArray("cities");
    if( size == 0)
    {
@@ -824,9 +825,13 @@ bool Configuration::copyFiles(QString from, QString to)
         if(!QFile::copy(info.filePath(), to + QDir::separator() + info.fileName()))
         {
             QMessageBox::critical(nullptr, tr("Copy error"), tr("Error copying %1 to %2").arg(info.filePath(), to + QDir::separator() + info.fileName()));
+            return false;
         }
+        QFile::setPermissions(to + QDir::separator() + info.fileName(),QFileDevice::ReadOwner|QFileDevice::WriteOwner);
     }
+    return true;
 }
+
 #ifdef Q_OS_MACOS
 bool Configuration::processCopyList()
 {
@@ -844,7 +849,6 @@ bool Configuration::processCopyList()
   dir.mkpath(QDir::homePath() +"/Public/Mapper/Resources/databases");
   dir.mkpath(QDir::homePath() +"/Public/Mapper/Resources/wiki/images");
 
-
   while (!in.atEnd()) {
    QString line = in.readLine();
    if(line.startsWith("#"))
@@ -855,17 +859,19 @@ bool Configuration::processCopyList()
    if(sl.count() > 1)
     if(sl.at(1)=="yes")
      bCopy = true;
+   QFile iFile(":/"+fn);
    QFile oFile(QDir::homePath() +"/Public/Mapper/Resources/"+fn);
    if(oFile.exists())
    {
        if(!bCopy)
         continue;
+       if(iFile.fileTime(QFileDevice::FileModificationTime) <= oFile.fileTime(QFileDevice::FileModificationTime))
+           continue;
        if(!oFile.remove())
        {
            QMessageBox::warning(nullptr, tr("Error"), tr("Error removing %1").arg(oFile.fileName()));
            return false;
        }
-
    }
    if(!QFile::copy(":/"+fn, QDir::homePath() +"/Public/Mapper/Resources/"+fn))
    {

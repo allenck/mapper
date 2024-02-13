@@ -129,5 +129,7 @@
         <file>S-Bahn-Logo.svg</file>
         <file>U-Bahn.svg</file>
         <file>Strassenbahn-Haltestelle.svg</file>
+        <file>sl-metro-logo.svg</file>
+        <file>wiki/Credits.html</file>
     </qresource>
 </RCC>

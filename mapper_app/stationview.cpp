@@ -27,6 +27,7 @@ StationView::StationView(Configuration *cfg, QObject *parent) :
     sourceModel = new StationViewTableModel();
     proxymodel = new StationViewSortProxyModel(this);
     proxymodel->setSourceModel(sourceModel);
+    ui->setSortingEnabled(true);
     ui->setModel(proxymodel);
     //connect(this, SIGNAL(sendRows(int, int)), proxymodel, SLOT(getRows(int,int)));
     connect(ui, SIGNAL(clicked(QModelIndex)), this, SLOT(itemSelectionChanged(QModelIndex)));
@@ -52,8 +53,20 @@ StationView::StationView(Configuration *cfg, QObject *parent) :
     editAction->setShortcut(tr("Ctrl+E"));
     connect(editAction, SIGNAL(triggered(bool)), this, SLOT(on_editTriggered()));
 
+    deleteAction = new QAction(tr("Delete station"),this);
+    connect(deleteAction, &QAction::triggered, [=]{
+        int stationKey = currentIndex.model()->index(currentIndex.row(), 0).data().toInt();
+        qDebug() << "delete" << stationKey;
+        sourceModel->removeRows(currentIndex.row(), currentIndex.row());
+        sql->deleteStation(stationKey);
+    });
+
     myParent->ui->tabWidget->setTabText(3, "Stations");
     _instance = this;
+
+    ui->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
+
 }
 /*static*/ StationView* StationView::instance()
 {
@@ -69,16 +82,16 @@ void StationView::Resize (int oldcount,int newcount)
     ui->resizeRowsToContents ();
 }
 
-void StationView::showStations()
+void StationView::showStations(QList<StationInfo> stationList)
 {
     //SQL sql;
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     //sql->setConfig( myParent->getConfiguration());
     //QList<StationInfo> stationList =   sql->getStations();
-    QList<StationInfo> stationList =   sql->getStations(myParent->m_alphaRoute, QDate::fromString(myParent->m_currRouteEndDate, "yyyy/MM/dd"));
+    //QList<StationInfo> stationList =   sql->getStations(myParent->m_alphaRoute, QDate::fromString(myParent->m_currRouteEndDate, "yyyy/MM/dd"));
     if(stationList.isEmpty())
         return;
-    ui->setSortingEnabled(false);
+    ui->setSortingEnabled(true);
 
     sourceModel = new StationViewTableModel(stationList, this);
     proxymodel->setSourceModel(sourceModel);
@@ -100,8 +113,6 @@ void StationView::showStations()
 
     ui->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
-
-
 }
 
 void StationView::changeStation(QString typeOfChg, StationInfo sti)
@@ -124,13 +135,16 @@ void StationView::tablev_customContextMenu( const QPoint& pt)
 
   menu.addAction(copyAction);
   menu.addAction(pasteAction);
+  menu.addSeparator();
   menu.addAction(displayAction);
   menu.addAction(editAction);
+  menu.addAction(deleteAction);
+
   QItemSelectionModel * model = ui->selectionModel();
   QModelIndexList indexes = model->selectedIndexes();
   //qint32 row = model->currentIndex().row();
   //qint32 col =model->currentIndex().column();
-  QModelIndex Index = indexes.at(0);
+  QModelIndex Index = proxymodel->mapToSource(indexes.at(0));
   QString txtSegmentId = Index.data().toString();
   txtSegmentId.replace("!", "");
   txtSegmentId.replace("*", "");
@@ -173,8 +187,10 @@ void StationView::on_DisplayTriggered(bool)
   QVariantList objArray;
   objArray << stationKey;
   WebViewBridge::instance()->processScript("isStationMarkerDisplayed", objArray);
-  while(WebViewBridge::instance()->getRslt() == QVariant())
+  while(!WebViewBridge::instance()->isResultReceived())
+  {
    qApp->processEvents();
+  }
   QString rslt = WebViewBridge::instance()->getRslt().toString();
   qDebug() << tr("stationmarker %1 is displayed %2").arg(stationKey).arg(rslt);
 

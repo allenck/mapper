@@ -8,11 +8,14 @@ GoogleMaps2b.htm,yes
 GoogleMaps2n.htm,yes
 apikey.js
 opacity-slider2.png
+S-Bahn-logo.svg
+sl-metro-logo.svg
+Strassenbahn-Haltestelle.svg
+U-Bahn.svg
 sql/create_routeView.sql
 sql/CreateMsSqlFunction.sql
 sql/mysql_recreate_routes.sql
 sql/CreateMySqlFunction.sql
-sql/recreateCompanies.sql
 sql/addBiDirectionalToRoutes.sql
 sql/recreateRouteComments.sql
 sql/create_stations.sql

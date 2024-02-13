@@ -44,7 +44,6 @@ UI_DIR = ui
 UI_HEADERS_DIR = ui
 UI_SOURCES_DIR = ui
 
-
 CONFIG += embed_manifest_exe
 CONFIG+=use_gold_linker
 

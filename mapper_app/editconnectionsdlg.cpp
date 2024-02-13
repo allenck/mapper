@@ -1237,7 +1237,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
         defaultDb= getODBCDSNValue( "/Library/ODBC/odbc.ini",ui->cbODBCDsn->currentText(), "database");
      if(!defaultDb.isEmpty())
      {
-         if(SQL::instance()->useDatabase(defaultDb,db))
+         if(SQL::instance()->useDatabase(ui->cbDbType->currentText(),defaultDb,db))
          {
              currDb = getDatabase();
              ui->txtUseDatabase->setText(currDb);

@@ -38,10 +38,12 @@ EditStation::EditStation(StationInfo sti, QWidget *parent) :
     ui->cbIcons->addItem(QIcon(":/blue-red-blank.png"), "Blue & red bubble", "blue-red");
     ui->cbIcons->addItem(QIcon(":/tram.png"), "Tram icon", "tram");
     ui->cbIcons->addItem(QIcon(":/subway.png"), "Subway icon", "subway");
-    ui->cbIcons->addItem(QIcon(":/S-Bahn-Logo.svg"), "sbahn");
-    ui->cbIcons->addItem(QIcon(":/U-Bahn.svg"), "ubahn");
-    ui->cbIcons->addItem(QIcon(":/Strassenbahn-Haltestelle.svg"), "haltestelle");
-    ui->cbIcons->addItem(QIcon(":/sl-metro-logo.svg"),"slmetro");
+    ui->cbIcons->addItem(QIcon(":/S-Bahn-Logo.svg"), "U-Bahn", "sbahn");
+    ui->cbIcons->addItem(QIcon(":/U-Bahn.svg"), "S-Bahn", "ubahn");
+    ui->cbIcons->addItem(QIcon(":/Strassenbahn-Haltestelle.svg"), "Haltestelle", "haltestelle");
+    ui->cbIcons->addItem(QIcon(":/sl-metro-logo.svg"),"StL Metro", "slmetro");
+    int iconIndex = ui->cbIcons->findData(QVariant(sti.markerType));
+    ui->cbIcons->setCurrentIndex(iconIndex);
 
     connect(ui->cbIcons, SIGNAL(currentIndexChanged(int)), this, SLOT(On_cbIcons_selectionChanged(int)));
     if(_stationKey > 0)
@@ -100,12 +102,12 @@ void EditStation::setMarkerType(QString markerType)
 
 void EditStation::On_cbIcons_selectionChanged(int i)
 {
- if(markerType != ui->cbIcons->itemData(i).toString())
+    if(markerType != ui->cbIcons->currentData().toString())
  {
   qDebug() << "marker type change from " << markerType << " to " << ui->cbIcons->itemData(i).toString();
   bDirty = true;
  }
- markerType = ui->cbIcons->itemData(i).toString();
+ markerType = ui->cbIcons->currentData().toString();
 }
 
 void EditStation::setStationId(qint32 value)
@@ -297,6 +299,13 @@ void EditStation::btnOK_Click()
   return;
  }
  _sti.markerType = ui->cbIcons->currentData().toString();
+ if(_sti.markerType.isEmpty())
+ {
+     ui->lblErrorText->setText(tr("Marker type must be selected!"));
+     QApplication::beep();
+     ui->cbIcons->setFocus();
+     return;
+ }
 
  QList<SegmentInfo> sList = sql->getIntersectingSegments(_sti.latitude, _sti.longitude,
                                                          .020, _sti.routeType);

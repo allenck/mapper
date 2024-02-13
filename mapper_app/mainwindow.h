@@ -430,6 +430,7 @@ private:
     void createActions();
     void createMenus();
     void lookupStreetName(SegmentInfo sd);
+    QList<StationInfo> getStations(QList<SegmentData*>);
 
     void closeEvent(QCloseEvent *event);
     FileDownloader *m_dataCtrl;

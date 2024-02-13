@@ -82,7 +82,7 @@ void WebViewBridge::processScript(QString func, QString parms, QString name, QSt
 
 void WebViewBridge::processScript(QString func, QVariantList objArray)
 {
- //qDebug() << "processScript " << func;
+ qDebug() << "processScript " << func;
 
  bResultReceived = false;
  emit executeScript3(func, objArray, objArray.count() );
@@ -109,12 +109,8 @@ void WebViewBridge::getInfoWindowComments(double lat, double lon, int route, QSt
 void WebViewBridge::scriptResult(QVariant value)
 {
  try {
-  if(value == 0)
-   //value = QVariant();
-   return;
-  qDebug() << "scriptResult" << value;
-//  if(value.isNull())
-//   return;
+  if(value != QVariant())
+   qDebug() << "scriptResult" << value;
   myRslt = value;
   bResultReceived = true;
   emit on_scriptResult(value);
@@ -124,6 +120,24 @@ void WebViewBridge::scriptResult(QVariant value)
   qDebug() << "bad script result";
  }
 }
+
+// receive result of function
+void WebViewBridge::scriptFunctionResult(QVariant function, QVariant value)
+{
+    try {
+        qDebug() << "scriptFunctionResult" << function << value;
+        //  if(value.isNull())
+        //   return;
+        myRslt = value;
+        bResultReceived = true;
+        emit on_scriptFunctionResult(function,value);
+    }
+    catch(Exception)
+    {
+        qDebug() << "bad script result";
+    }
+}
+
 
 void WebViewBridge::scriptArrayResult(QVariantList value)
 {
