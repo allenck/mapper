@@ -99,7 +99,7 @@ private:
     void reSequenceRoute(QString whichEnd);
 
 private slots:
-    void hdr_customContextMenu( const QPoint& );
+    void hdr_customContextMenu(const QPoint pt );
     void tablev_customContextMenu( const QPoint& );
     void tab1CustomContextMenu(const QPoint &);
     void aCopy();

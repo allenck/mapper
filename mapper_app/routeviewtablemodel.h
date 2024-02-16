@@ -56,6 +56,7 @@ public:
      SEQ,
      RSEQ,
      STARTDATE,
+     DOUBLEDATE,
      ENDDATE
     };
     int getRow(int segmentId);

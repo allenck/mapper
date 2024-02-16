@@ -194,22 +194,10 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
    switch(index.column())
    {
    case SEGMENTID:
-//    for(int i=0; i < changedMap.values().count(); i++)
-//    {
-//     //if((changedMap.values().at(i)).index == index)
-//     if(index.row() == changedMap.values().at(i)->row)
-//     {
-//      if(changedMap.values().at(i)->bDeleted)
-//         return QString("%1").arg(sd->segmentId())+" !";
-
-//      if(changedMap.values().at(i)->bChanged)
-//         return QString("%1").arg(sd->segmentId())+" *";
-//     }
     if(sd->markedForDelete())
      return QString("%1").arg(sd->segmentId())+" !";
     if(sd->needsUpdate())
      return QString("%1").arg(sd->segmentId())+" *";
-//    }
     return sd->segmentId();
    case NAME:
        return sd->description();
@@ -261,6 +249,8 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
     return turnMap2.value(sd->reverseLeave());
    case STARTDATE:
        return sd->startDate().toString("yyyy/MM/dd");
+   case DOUBLEDATE:
+       return sd->doubleDate().toString("yyyy/MM/dd");
    case ENDDATE:
        return sd->endDate().toString("yyyy/MM/dd");
    case DISTANCE:
@@ -341,6 +331,8 @@ QVariant RouteViewTableModel::headerData(int section, Qt::Orientation orientatio
      return tr("RLeave ");
     case STARTDATE:
         return tr("StartDate");
+    case DOUBLEDATE:
+        return tr("Doubled");
     case ENDDATE:
         return tr("EndDate");
     case DISTANCE:
@@ -487,8 +479,15 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
         bSegmentNeedsUpdate = true;
         sd->setStartDate(value.toDate());
     }
-
     break;
+   case DOUBLEDATE:
+       dt = value.toDate();
+       if(dt.isValid())
+       {
+           bSegmentNeedsUpdate = true;
+           sd->setDoubleDate(value.toDate());
+       }
+       break;
    case ENDDATE:
     dt = value.toDate();
     if(dt.isValid())

@@ -152,9 +152,11 @@ RouteView::RouteView(QObject* parent )
 
     hideColumnAct = new QAction(tr("Hide Column"),this);
     connect(hideColumnAct, &QAction::triggered, [=]{
-     QItemSelectionModel * model = ui->selectionModel();
-     QModelIndex ci = proxymodel->mapToSource( model->currentIndex());
-     int logicalIndex = ui->horizontalHeader()->logicalIndex(ci.column());
+     // QItemSelectionModel * model = ui->selectionModel();
+     // QModelIndex mix = model->currentIndex();
+     // QModelIndex ci = proxymodel->mapToSource( model->currentIndex());
+     // int logicalIndex = ui->horizontalHeader()->logicalIndex(ci.column());
+     int logicalIndex =hideColumnAct->data().toInt();
      ui->hideColumn(logicalIndex);
      if(!config->rv.hiddenColumns.contains(logicalIndex))
       config->rv.hiddenColumns.append(logicalIndex);
@@ -316,11 +318,12 @@ void RouteView::Resize (int oldcount,int newcount)
     ui->resizeRowsToContents ();
 }
 
-void RouteView::hdr_customContextMenu( const QPoint& pt)
+void RouteView::hdr_customContextMenu( const QPoint pt)
 {
-    curRow = ui->rowAt(pt.y());
-    curCol = ui->columnAt(pt.x());
+    // curRow = ui->rowAt(pt.y());
+    //curCol = ui->columnAt(pt.x());
     menu.clear();
+    hideColumnAct->setData(ui->horizontalHeader()->logicalIndexAt(pt));
     menu.addAction(hideColumnAct);
     if(config->rv.hiddenColumns.count()>0)
     {
