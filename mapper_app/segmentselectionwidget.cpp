@@ -340,9 +340,20 @@ void SegmentSelectionWidget::cbStreets_currentIndexChanged(int)
 void SegmentSelectionWidget::segmentSelected(int pt, int segmentId)
 {
  m_SegmentId = segmentId;
- int ix = ui->cbSegments->findData(segmentId);
+ SegmentInfo si = sql->getSegmentInfo(segmentId);
+ ui->cbLocation->setCurrentText(si.location());
+ ui->cbStreets->setCurrentText(si.streetName());int ix = ui->cbSegments->findData(segmentId);
  if(ix >=0)
   ui->cbSegments->setCurrentIndex(ix);
+ else
+ {
+
+  bCbStreets_text_changed = true;
+  cbStreets_editingFinished();
+  ix = ui->cbSegments->findData(segmentId);
+  if(ix >=0)
+   ui->cbSegments->setCurrentIndex(ix);
+ }
 }
 
 void SegmentSelectionWidget::cbSegments_currentIndexChanged(int index)
