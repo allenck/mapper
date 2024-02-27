@@ -362,6 +362,7 @@ private:
     QAction* testScriptAct;
     QAction* testLoadAct;
     QAction* testRunJavaScriptAct;
+    //QAction* testUseBundleResources;
     //
     QAction *combineRoutesAct;
     QAction *refreshRoutesAct;

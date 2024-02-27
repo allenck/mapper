@@ -1225,6 +1225,51 @@ void MainWindow::createActions()
 //  }
  });
 
+// #ifdef Q_OS_MACOS
+//  testUseBundleResources = new QAction(tr("use Bundle Resources"),this);
+//  testUseBundleResources->setStatusTip(tr("use bundle resources instead of ones in build dir"));
+//  testUseBundleResources->setCheckable(true);
+//  testUseBundleResources->setChecked(config->bUseBundleResources);
+//  connect(testUseBundleResources, &QAction::triggered, [=](bool bUseBundleResources){
+//      if(bUseBundleResources)
+//      {
+//          if( config->startCwd.contains("/mapper.app/Contents/MacOS"))
+//          {
+//              //
+//              // QDir resources(cwd.remove("/mapper.app/Contents/MacOS") + "/Resources");
+//              //  if(resources.exists())
+//              //  {
+//              // running in development environment, set the cwd to that of the development.
+//              if(bUseBundleResources)
+//                  cwd = config->startCwd.remove("/mapper.app/Contents");
+
+//              cwd = config->startCwd.remove("/mapper.app/Contents/MacOS");
+//              QDir::setCurrent(cwd);
+
+//              // QDir pDir(QDir::homePath() +"/Public/Mapper/Resources");
+//              // if(!pDir.exists())
+//              //  copyFiles(cwd + "/Resources", QDir::homePath() +"/Public/Mapper/Resources");
+//              //}
+//          }
+//          else
+//          {
+//              //     {
+//              //         //processCopyList();
+//              cwd = config->startCwd.remove("/mapper.app/Contents");
+//              QDir::setCurrent(cwd);
+//              //     }
+//          }
+//      }
+//      QSqlDatabase db = QSqlDatabase();
+//      qDebug() << "close " << db.databaseName();
+//      db.close();
+//      Connection* c = config->currConnection;
+//      c->configure();
+//      qDebug() << "open " << db.databaseName();
+
+//      config->bUseBundleResources = bUseBundleResources;
+//  });
+// #endif
 
  combineRoutesAct = new QAction(tr("Combine two routes"), this);
  combineRoutesAct->setStatusTip(tr("Combine two routes into one"));
@@ -1534,7 +1579,9 @@ void MainWindow::createMenus()
     toolsMenu->addAction(testScriptAct);
     toolsMenu->addAction(testLoadAct);
     toolsMenu->addAction(testRunJavaScriptAct);
-
+// #ifdef Q_OS_MACOS
+//     toolsMenu->addAction(testUseBundleResources);
+// #endif
     optionsMenu = new Menu(tr("Options"));
     overlayMenu = new Menu(tr("Overlays"));
 

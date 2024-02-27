@@ -151,7 +151,43 @@ DEPENDPATH += $$PWD/.
 
 #unix:!macx: LIBS += -L$$PWD/../../../sqlite-amalgamation-3390400/ -lsqlite3
 
+macx: {
+QMAKE_INFO_PLIST = $$PWD/myInfo.plist
+VERSION=1.1.1
+APP_DB_FILES.files += $$PWD/Resources/databases/StLouis.sqlite3 \
+        $$PWD/Resources/databases/berlinerstrassenbahn.sqlite3 \
+        $$PWD/Resources/databases/indianapolis.sqlite3 \
+        $$PWD/Resources/databases/louisville.sqlite3 \
+        $$PWD/Resources/databases/cincinnati.sqlite3
+APP_DB_FILES.path = Contents/Resources/databases
+QMAKE_BUNDLE_DATA +=APP_DB_FILES
 
+APP_WIKI_FILES.files = $$files($$PWD/Resources/wiki/*)
+APP_WIKI_FILES.path = Contents/Resources/wiki
+QMAKE_BUNDLE_DATA +=APP_WIKI_FILES
+
+APP_WIKI_IMAGES.files = $$files($$PWD/Resources/wiki/images/*)
+APP_WIKI_IMAGES.path = Contents/Resources/wiki/images
+QMAKE_BUNDLE_DATA +=APP_WIKI_IMAGES
+
+APP_RESOURCES.files += $$PWD/Resources/GoogleMaps.js \
+      $$PWD/Resources/GoogleMaps.js \
+      $$PWD/Resources/ExtDraggableObject.js \
+      $$PWD/Resources/opacityControl.js \
+      $$PWD/Resources/qwebchannel.js \
+      $$PWD/Resources/WebChannel.js \
+      $$PWD/Resources/GoogleMaps2b.htm \
+      $$PWD/Resources/GoogleMaps2n.htm \
+      $$PWD/Resources/apikey.js \
+      $$PWD/Resources/opacity-slider2.png \
+      $$PWD/Resources/S-Bahn-logo.svg \
+      $$PWD/Resources/sl-metro-logo.svg \
+      $$PWD/Resources/Strassenbahn-Haltestelle.svg \
+      $$PWD/Resources/U-Bahn.svg \
+      $$PWD/Resources/overlays.xml
+APP_RESOURCES.path = Contents/Resources
+QMAKE_BUNDLE_DATA +=APP_RESOURCES
+}
 include(sqlite.pri)
 
 #INCLUDEPATH += $$PWD/../../../sqlite-amalgamation-3390400

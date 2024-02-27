@@ -66,7 +66,8 @@ public:
  QFont font = QApplication::font();
  void changeFonts(QWidget *obj, QFont f );
 #ifdef Q_OS_MACOS
- QString macOSPublic; // location of databases on MacOS
+ //bool bUseBundleResources = false;
+ QString startCwd;
 #endif
 
 private:
@@ -77,10 +78,11 @@ private:
  QUuid _connectionUniqueId;
  bool bForeignKeyCheck = false;
  QString cwd;
- bool copyFiles(QString from, QString to);
-#ifdef Q_OS_MACOS
- bool processCopyList();
-#endif
+ QString devEnv;
+ //bool copyFiles(QString from, QString to);
+// #ifdef Q_OS_MACOS
+//  bool processCopyList();
+// #endif
 signals:
   void newCityCreated(City*);
 public slots:
