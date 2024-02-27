@@ -151,9 +151,13 @@ DEPENDPATH += $$PWD/.
 
 #unix:!macx: LIBS += -L$$PWD/../../../sqlite-amalgamation-3390400/ -lsqlite3
 
-macx: {
-QMAKE_INFO_PLIST = $$PWD/myInfo.plist
 VERSION=1.1.1
+MY_VERSION_STR = '\\"$${VERSION}\\"'
+DEFINES += MY_VERSION=\"$${MY_VERSION_STR}\"
+macx: {
+# copy necessary resources to MacOS mapper.app/Contents/
+QMAKE_INFO_PLIST = $$PWD/myInfo.plist
+
 APP_DB_FILES.files += $$PWD/Resources/databases/StLouis.sqlite3 \
         $$PWD/Resources/databases/berlinerstrassenbahn.sqlite3 \
         $$PWD/Resources/databases/indianapolis.sqlite3 \

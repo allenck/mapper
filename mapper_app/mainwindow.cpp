@@ -1966,8 +1966,9 @@ void MainWindow::newOverlay(QAction* act)
 void MainWindow::about()
 {
  QMessageBox::about(this, tr("About Mapper"),
-     tr("The <b>Mapper</b> Written by Allen C. Kempe. "
-        "maintain database of streetcar and transit routes.\r\nCompiled with QT version %1").arg(QT_VERSION_STR));
+     tr("The <b>Mapper</b> version %2. Written by Allen C. Kempe. "
+        "maintain database of streetcar and transit routes.\r\n"
+        "Compiled with QT version %1").arg(QT_VERSION_STR).arg(MY_VERSION));
 }
 
 void MainWindow::btnDeleteSegment_Click()   //SLOT
