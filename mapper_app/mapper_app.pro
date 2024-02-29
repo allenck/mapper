@@ -230,3 +230,4 @@ SOURCES += \
 #INCLUDEPATH += $$PWD/../sqlite3
 #DEPENDPATH += $$PWD/../sqlite3
 
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lsqlite3

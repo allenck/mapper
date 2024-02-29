@@ -3033,10 +3033,16 @@ void MainWindow::getArray()
     QVariantList objArray;
     objArray << m_segmentId;
     m_bridge->processScript("getPointArray", objArray);
-    while(!m_bridge->isResultReceived())
-    {
-     qApp->processEvents(QEventLoop::AllEvents, 100);
-    }
+    connect(m_bridge, SIGNAL(on_scriptResult(QVariant)), this, SLOT(getArrayResult(QVariant)));
+}
+//    while(!m_bridge->isResultReceived())
+//    {
+//     qApp->processEvents(QEventLoop::AllEvents, 100);
+//    }
+void MainWindow::getArrayResult(QVariant v)
+{
+    disconnect(m_bridge, SIGNAL(on_scriptResult(QVariant)), this, SLOT(getArrayResult(QVariant)));
+
     QVariantList points;
     points = m_bridge->myList;
     m_nbrPoints = points.count()/2;

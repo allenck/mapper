@@ -1,4 +1,5 @@
 #include "querydialog.h"
+#include "querymodel.h"
 #include "ui_querydialog.h"
 #include <QMessageBox>
 #include <QFileDialog>

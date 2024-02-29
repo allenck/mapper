@@ -90,8 +90,8 @@ private:
     bool bIsSequenced;
 
     bool boolGetItemTableView(QTableView *table);
-    RouteViewTableModel *sourceModel;
-    RouteViewSortProxyModel *proxymodel;
+    RouteViewTableModel *sourceModel = nullptr;
+    RouteViewSortProxyModel *proxymodel = nullptr;
     QModelIndex currentIndex;
     CheckRoute *chk;
     RouteData rd;

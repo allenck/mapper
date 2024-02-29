@@ -1,4 +1,5 @@
 #include "ttitemdelegate.h"
+#include <QSortFilterProxyModel>
 
 TTItemDelegate::TTItemDelegate()
 {
@@ -21,15 +22,25 @@ QWidget* TTItemDelegate::createEditor(QWidget *parent, const QStyleOptionViewIte
 
 void TTItemDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
 {
- QComboBox *comboBox = static_cast<QComboBox*>(editor);
- int value = index.model()->data(index, Qt::EditRole).toUInt();
- comboBox->setCurrentText(index.data().toString());
+    QModelIndex mIndex = index;
+    if(qobject_cast<const QSortFilterProxyModel*>(index.model()))
+        mIndex = qobject_cast<const QSortFilterProxyModel*>(index.model())->mapToSource(index);
+    QComboBox *comboBox = static_cast<QComboBox*>(editor);
+    int value = mIndex.model()->data(mIndex, Qt::EditRole).toUInt();
+    comboBox->setCurrentText(mIndex.data().toString());
 }
 
 void TTItemDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
 {
- QComboBox *comboBox = static_cast<QComboBox*>(editor);
- model->setData(index, comboBox->currentData().toInt(), Qt::EditRole);
+    QModelIndex mIndex = index;
+    QAbstractItemModel* mModel = model;
+    if(qobject_cast<const QSortFilterProxyModel*>(index.model()))
+    {
+        mIndex = qobject_cast<const QSortFilterProxyModel*>(index.model())->mapToSource(index);
+        mModel = (QAbstractItemModel *)mIndex.model();
+    }
+    QComboBox *comboBox = static_cast<QComboBox*>(editor);
+    mModel->setData(mIndex, comboBox->currentData().toInt(), Qt::EditRole);
 }
 
 //void TTItemDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const

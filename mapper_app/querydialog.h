@@ -3,7 +3,6 @@
 
 #include <QDialog>
 #include "configuration.h"
-#include "querymodel.h"
 #include <QTableView>
 #include <QMenu>
 #include <QMenuBar>

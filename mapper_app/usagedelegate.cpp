@@ -24,35 +24,45 @@ QWidget* UsageDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem
 
 void UsageDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
 {
- QComboBox *comboBox = static_cast<QComboBox*>(editor);
- int value = index.model()->data(index, Qt::EditRole).toUInt();
- comboBox->setCurrentText(index.data().toString());
+    QModelIndex mIndex = index;
+    if(qobject_cast<const QSortFilterProxyModel*>(index.model()))
+        mIndex = qobject_cast<const QSortFilterProxyModel*>(index.model())->mapToSource(index);
+    QComboBox *comboBox = static_cast<QComboBox*>(editor);
+    int value = index.model()->data(index, Qt::EditRole).toUInt();
+    comboBox->setCurrentText(mIndex.data().toString());
 }
 
 void UsageDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
 {
+    QModelIndex mIndex = index;
+    QAbstractItemModel* mModel = model;
+    if(qobject_cast<const QSortFilterProxyModel*>(index.model()))
+    {
+        mIndex = qobject_cast<const QSortFilterProxyModel*>(index.model())->mapToSource(index);
+        mModel = (QAbstractItemModel *)mIndex.model();
+    }
  QComboBox *comboBox = static_cast<QComboBox*>(editor);
  //model->setData(index, comboBox->currentData().toInt(), Qt::EditRole);
 
  QString combo = comboBox->currentText();
  if(combo == " ")
  {
-  model->setData(index, "  ");
+  mModel->setData(mIndex, "  ");
  }
  else if(combo == "1Way")
  {
-  model->setData(index, "Y ");
+  mModel->setData(mIndex, "Y ");
  }
  else if(combo == "2Way")
  {
-  model->setData(index, "  ");
+  mModel->setData(mIndex, "  ");
  }
  else if(combo == "1Way(normal)")
  {
-  model->setData(index, "YR");
+  mModel->setData(mIndex, "YR");
  }
  else
  {
-  model->setData(index, "YL");
+  mModel->setData(mIndex, "YL");
  }
 }

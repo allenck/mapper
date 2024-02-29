@@ -542,9 +542,10 @@ Qt::ItemFlags RouteViewTableModel::flags(const QModelIndex &index) const
     case NAME:
     case ANGLES:
     case ANGLEE:
+        return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
     case ONEWAY: // 1Way
     case USAGE:
-     return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+     return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
     case TYPE:
     case COMBO:
     case TRACTIONTYPE:

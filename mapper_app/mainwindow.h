@@ -210,6 +210,7 @@ public slots:
     void btnDisplayRouteClicked();
     void segmentChanged(qint32 changedSegment, qint32 newSegment);
     QMenu* addSegmentMenu(SegmentData* sd);
+    void getArrayResult(QVariant);
 
 private slots:
     void about();

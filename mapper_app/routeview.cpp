@@ -507,89 +507,9 @@ void RouteView::updateRouteView()
     endDate = QDate::fromString(myParent->m_currRouteEndDate, "yyyy/MM/dd");
     alphaRoute = myParent->m_alphaRoute;
 
-    //segmentInfoList = SQL::instance()->getRouteSegmentsInOrder2(route, name, endDate);
-    //segmentDataList = SQL::instance()->getRouteSegmentsInOrder(route, name, endDate);
-    //rd = myParent->routeList.at(myParent->ui->cbRoute->currentIndex());
     rd = myParent->ui->cbRoute->currentData().value<RouteData>();
     myParent->ui->routeViewLabel->setText(tr("Route segments for route %1").arg(rd.toString()));
 
-//    qDebug()<<"checkRoute: "+alphaRoute + " '"+name+"' "+endDate;
-//    chk = new CheckRoute(segmentDataList, config, this);
-//    chk->setStart(startSegment);
-//    chk->setEnd(endSegment);
-//    bIsSequenced = chk->setSeqNbrs();
-
-//    if(segmentDataList.count()== 0)
-//        return;
-#if 0
-    bIsSequenced = true;
-    for(int i=0; i <segmentInfoList.count(); i++)
-    {
-        segmentInfo si = segmentInfoList.at(i);
-        if(si.next < 1 && si.prev < 1 )
-        {
-            bIsSequenced=false;
-            break;
-        }
-    }
-    if(bIsSequenced && ti.startSegment > 0)
-    {
-        // assign sequence numbers
-        bool bWorking = true;
-        qint32 nextSequence = ti.startSegment;
-        qint32 currSeq = -1;
-        int i=0;
-
-        while(bWorking)
-        {
-            for( i=0; i < segmentInfoList.count(); i ++)
-            {
-                segmentInfo * si = (segmentInfo*)&segmentInfoList.at(i);
-                if(segmentInfoList.at(i).SegmentId == nextSequence)
-                {
-                    nextSequence = segmentInfoList.at(i).next;
-                    si->sequence = ++currSeq;
-                    //if(segmentInfoList.at(i).SegmentId == ti.endSegment)
-                    if(si->SegmentId == ti.endSegment)
-                    {
-                        bWorking = false;
-                    }
-                    break;
-                }
-            }
-            if(i >= segmentInfoList.count())
-                break;
-            if(currSeq > segmentInfoList.count())
-                break;
-        }
-        nextSequence = ti.endSegment;
-        currSeq = -1;
-        bWorking = true;
-        while(bWorking)
-        {
-            for( i=0; i < segmentInfoList.count(); i ++)
-            {
-                segmentInfo * si = (segmentInfo*)&segmentInfoList.at(i);
-                if(segmentInfoList.at(i).SegmentId == nextSequence)
-                {
-                    nextSequence = segmentInfoList.at(i).prev;
-                    si->returnSeq = ++currSeq;
-                    //if(segmentInfoList.at(i).SegmentId == ti.startSegment)
-                    if(si->SegmentId == ti.startSegment)
-                    {
-                        bWorking = false;
-                    }
-                    break;
-                }
-            }
-            if(i >= segmentInfoList.count())
-                break;
-            if(currSeq > segmentInfoList.count())
-                break;
-
-        }
-    }
-#endif
 
     ui->setSortingEnabled(false);
     if(!sourceModel)
@@ -597,19 +517,8 @@ void RouteView::updateRouteView()
                                            SQL::instance()->getRouteSegmentsInOrder(route, name, companyKey, endDate));
     else
      sourceModel->setList(SQL::instance()->getRouteSegmentsInOrder(route, name, companyKey, endDate));
-    //saveSegmentInfoList = segmentInfoList;  // added 5/6/2012 ack
-    //connect(saveChangesAct, SIGNAL(triggered()), sourceModel, SLOT(commitChanges()));
-//    connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(commitChanges()));
-
-//    saveSegmentDataList.clear();
-//    foreach(SegmentData sd, segmentDataList)
-//        saveSegmentDataList.append(sd);
     sourceModel->setSequenced(bIsSequenced);
 
-    //routeViewFilterProxyModel* filterProxy = new routeViewFilterProxyModel(this);
-    //routeViewSortProxyModel *proxyModel= new routeViewSortProxyModel(this);
-    //filterProxy->setTerminals(startRow, endRow);
-    //filterProxy->setSourceModel(sourceModel);
     proxymodel->setSourceModel(sourceModel);
 
     // get the row of the start segment and the end segment
@@ -642,6 +551,7 @@ void RouteView::updateRouteView()
     ui->horizontalHeader()->resizeSection(7,35);
     ui->horizontalHeader()->resizeSection(8,65);
     ui->horizontalHeader()->resizeSection(9,65);
+    ui->resizeColumnsToContents();
     ui->setItemDelegateForColumn(sourceModel->TRACTIONTYPE, new TTItemDelegate());
     ui->setItemDelegateForColumn(sourceModel->TYPE, new RTItemDelegate());
     ui->setItemDelegateForColumn(sourceModel->NE, new TurnDelegate("back"));
