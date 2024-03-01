@@ -10293,6 +10293,8 @@ bool SQL::updateTractionType(qint32 tractionType, QString description, QString d
 // check tables to see if alterations need to be made
 void SQL::checkTables(QSqlDatabase db)
 {
+    QDir rsrc(":/sql");
+ QList<QFileInfo> sqlfiles = rsrc.entryInfoList();
  // check for presence of Parameters table.
  QStringList tableList;
  if(db.isOpen())

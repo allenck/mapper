@@ -54,7 +54,6 @@
         <file>sql/mysql_recreateCompanies.sql</file>
         <file>sql/sqlite3_recreateCompanies.sql</file>
         <file>sql/mySql_recreateSegmentsTable.sql</file>
-        <file>sql/create_routeView.sql</file>
         <file>sql/sqlite3_recreate_routes.sql</file>
         <file>sql/mssql_create_routes.sql</file>
         <file>sql/mysql_create_routes.sql</file>
@@ -85,5 +84,6 @@
         <file>U-Bahn.svg</file>
         <file>Strassenbahn-Haltestelle.svg</file>
         <file>sl-metro-logo.svg</file>
+        <file>sql/create_routeView.sql</file>
     </qresource>
 </RCC>
