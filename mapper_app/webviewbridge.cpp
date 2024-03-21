@@ -51,11 +51,10 @@ void WebViewBridge::setLatLng(LatLng latlng){this->_latLng = latlng; emit latlng
 int WebViewBridge::curZoom(){return _zoom;}
 QVariant WebViewBridge::getRslt(){return myRslt;}
 QString WebViewBridge::curMaptype(){return maptype;}
-//int webViewBridge::curBrowseWindowWidth(){return browseWindowWidth;}
-//int webViewBridge::curBrowseWindowHeight(){return browseWindowHeight;}
+
 void WebViewBridge::processScript(QString func, QString parms)
 {
- qDebug() << "processScript " << func;
+ qDebug() << "processScript " << func << " " << parms;
 
  bResultReceived = false;
  emit executeScript( func,  parms);

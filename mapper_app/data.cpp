@@ -182,6 +182,14 @@ QString RouteData::toString()
 
  return str;
 }
+
+bool RouteData::operator==(const RouteData& o )
+{
+ if(o._route == _route && o._name == _name && o._endDate == _endDate
+    && o._startDate == _startDate)
+  return true;
+ return false;
+}
 //enum routeType { Surface, SurfacePRW, RapidTransit, Subway, Rail, Other };
 segmentGroup::segmentGroup()
 {

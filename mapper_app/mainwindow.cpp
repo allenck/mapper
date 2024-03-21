@@ -2169,6 +2169,20 @@ void MainWindow::refreshRoutes()
     bCbRouteRefreshing = false;
 }
 
+void MainWindow::selectRoute(RouteData rd)
+{
+ //int ix = ui->cbRoute->findData(QVariant::fromValue(rd));
+ int ix;
+ for(ix=0; ix < ui->cbRoute->count(); ix++)
+ {
+  RouteData rd1 = ui->cbRoute->itemData(ix).value<RouteData>();
+  if(rd1 == rd)
+   break;
+ }
+ if(ix >= 0)
+  ui->cbRoute->setCurrentIndex(ix);
+}
+
 void MainWindow::txtRouteNbrLeave()
 {
     QString txt = ui->txtRouteNbr->text();
@@ -2933,6 +2947,8 @@ void MainWindow::segmentSelected(qint32 pt, qint32 segmentId)
  //m_bridge->processScript("addModeOff");
  //m_bAddMode = false;
  //addPointModeAct->setChecked(false);
+ if(m_segmentId == segmentId && m_currPoint == pt)
+  return;
  m_segmentId = segmentId;
  SegmentInfo si = sql->getSegmentInfo(m_segmentId);
  if (si.segmentId() == -1)

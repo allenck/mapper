@@ -211,6 +211,7 @@ public slots:
     void segmentChanged(qint32 changedSegment, qint32 newSegment);
     QMenu* addSegmentMenu(SegmentData* sd);
     void getArrayResult(QVariant);
+    void selectRoute(RouteData rd);
 
 private slots:
     void about();
@@ -262,7 +263,6 @@ private slots:
     void displayTerminalMarkersToggeled(bool bChecked);
     void displayRouteCommentsToggled(bool bChecked);
     void chkShowOverlayChanged(bool bChecked);
-//    void chkOneWay_Leave(bool bChecked);
     void sbRouteTriggered(int sliderAction);
     void txtRouteNbrLeave();
     void On_saveImage_clicked();

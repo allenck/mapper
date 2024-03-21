@@ -423,6 +423,7 @@ public:
     quint32 baseRoute() {return _baseRoute;}
     void setBaseRoute(int bastRoute) {_baseRoute = bastRoute;}
     RouteType routeType() {return _routeType;}
+    bool operator==(const RouteData &o);
 
  private:
     qint32 _route = -1;
