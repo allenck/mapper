@@ -393,6 +393,22 @@ void EditSegmentDialog::On_btnSave_clicked()
    QString infoText;
    foreach (SegmentInfo si, dupSegments)
    {
+    if(this->si.segmentId() != si.segmentId() && si.tracks()==2)
+    {
+     // 2 track segment already exists!
+     int ret = QMessageBox::question(nullptr, tr("Duplicate exists"), tr("A duplicate already exists. "
+                                     "\nShould this route be changed to use it?"), QMessageBox::Yes | QMessageBox::No);
+     if(ret == QMessageBox::Yes)
+     {
+      QString txt = QString("update Routes set lineKey = %1 where lineKey = %2").arg(si.segmentId()).arg( this->si.segmentId());
+      bool rslt = sql->executeCommand(txt);
+      if(rslt)
+      {
+       sql->deleteSegment(this->si.segmentId());
+       return;
+      }
+     }
+    }
     infoText.append(tr("Segment %1 %2\n").arg(si.segmentId()).arg(si.description()));
    }
    QMessageBox* box = new QMessageBox(QMessageBox::Question, tr("Duplicates"),

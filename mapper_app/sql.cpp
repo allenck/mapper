@@ -5130,6 +5130,7 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate,
         if(!bQuery)
         {
          SQLERROR(query);
+         qDebug() << query.lastError().text() << commandText;
          //db.close();
          return ret;
         }

@@ -415,7 +415,7 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
      QString s = value.toString().toUpper();
      if(s == "N" || s== "Y" || s == " ")
       sd->setOneWay(s);
-     if(s == "N")
+     if(s != "Y" )
      {
       sd->setTrackUsage(" ");
      }
@@ -426,6 +426,8 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
     QString s = value.toString().toUpper();
     if(s == "B" || s=="L" || s == "R" || s == " ")
      sd->setTrackUsage(s);
+    if(sd->tracks()==1)
+     sd->setTrackUsage(" ");
     break;
    }
    case COMBO:

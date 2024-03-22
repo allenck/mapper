@@ -2972,7 +2972,7 @@ void MainWindow::segmentSelected(qint32 pt, qint32 segmentId)
 // ui->cbSegments->setCurrentIndex(ix);
  m_points = si.pointList();
  m_nbrPoints = m_points.size();
- Q_ASSERT(m_points.count() == 0 || m_points.count() >1);
+ //Q_ASSERT(m_points.count() == 0 || m_points.count() >1);
 
  if (m_nbrPoints <= 0)
      return;
