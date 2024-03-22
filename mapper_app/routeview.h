@@ -34,7 +34,7 @@ public:
     RouteViewTableModel* model();
     void setList(QList<SegmentData *> segmentDataList);
     void clear();
-    QList<int> selectedSegments();
+    QList<SegmentData *> selectedSegments();
 
 signals:
     void sendRows(int, int);

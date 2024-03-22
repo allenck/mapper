@@ -101,12 +101,12 @@ RouteView::RouteView(QObject* parent )
 
     deleteSelectedRowsAct = new QAction(tr("Delete selected rows"),this);
     connect(deleteSelectedRowsAct, &QAction::triggered, [=]{
-     for(int segmentId : selectedSegments())
+     for(SegmentData* sd : selectedSegments())
      {
-      SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId);
-      SegmentData sd =  SegmentData(si);
-      sd.updateRouteInfo(rd);
-      SQL::instance()->deleteRoute(sd);
+//      SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId);
+//      SegmentData sd =  SegmentData(si);
+//      sd.updateRouteInfo(rd);
+      SQL::instance()->deleteRoute(*sd);
      }
     });
 
@@ -205,17 +205,17 @@ RouteView::RouteView(QObject* parent )
         RouteData rd = cbCombo->currentData().value<RouteData>();
         if(cbCombo->currentIndex() < 0)
          return;
-        for(int segmentId : sourceModel->_selectedSegments)
+        for(SegmentData* sd : sourceModel->_selectedSegments)
         {
-         SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId);
-         SegmentData* sd = new SegmentData(si);
-         sd->setRoute(rd.route());
-         sd->setRouteName(rd.routeName());
-         sd->setStartDate(rd.startDate());
-         sd->setEndDate(rd.endDate());
-         sd->setTractionType(rd.tractionType());
-         sd->setCompanyKey(rd.companyKey());
-         sd->setSegmentId(segmentId);
+//         SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId);
+//         SegmentData* sd = new SegmentData(si);
+//         sd->setRoute(rd.route());
+//         sd->setRouteName(rd.routeName());
+//         sd->setStartDate(rd.startDate());
+//         sd->setEndDate(rd.endDate());
+//         sd->setTractionType(rd.tractionType());
+//         sd->setCompanyKey(rd.companyKey());
+//         sd->setSegmentId(segmentId);
          SQL::instance()->addSegmentToRoute(sd);
         }
        }
@@ -903,7 +903,7 @@ void RouteView::clear()
     sourceModel->clear();
 }
 
-QList<int> RouteView::selectedSegments()
+QList<SegmentData*> RouteView::selectedSegments()
 {
  return sourceModel->_selectedSegments;
 }

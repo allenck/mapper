@@ -142,7 +142,7 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
 
  if(role == Qt::CheckStateRole && index.column()==SEGMENTID)
  {
-  bool selected = _selectedSegments.contains( sd->segmentId());
+  bool selected = _selectedSegments.contains( sd);
   return (selected?Qt::Checked:Qt::Unchecked);
  }
  if(role == Qt::BackgroundRole)
@@ -395,13 +395,13 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
      bool checked = value.toBool();
      if(checked)
      {
-     if(!_selectedSegments.contains(sd->segmentId()))
-      _selectedSegments.append(sd->segmentId());
+     if(!_selectedSegments.contains(sd))
+      _selectedSegments.append(sd);
      }
      else
      {
-      if(_selectedSegments.contains(sd->segmentId()))
-       _selectedSegments.removeOne(sd->segmentId());
+      if(_selectedSegments.contains(sd))
+       _selectedSegments.removeOne(sd);
      }
     }
    }
