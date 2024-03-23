@@ -161,6 +161,7 @@ void Configuration::saveSettings()
  settings->setValue("showGMFeatures", bShowGMFeatures);
  settings->setValue("foreignKeyCheck", bForeignKeyCheck);
  settings->setValue("displayDebugMsgs", bDisplayDebugMsgs);
+ settings->setValue("displayArrows", bDisplaySegmentArrows);
  settings->setValue("font",font.toString());
 // #ifdef Q_OS_MAC
 //  settings->setValue("useBundleResources", bUseBundleResources);
@@ -451,6 +452,7 @@ void Configuration::getSettings()
    bShowGMFeatures = settings.value("showGMFeatures", true).toBool();
    bForeignKeyCheck = settings.value("foreignKeyCheck", true).toBool();
    bDisplayDebugMsgs = settings.value("displayDebugMsgs", false).toBool();
+   bDisplaySegmentArrows = settings.value("displayArrows", false).toBool();
    QFont f;
    f.fromString(settings.value("font").toString());
    font =f;

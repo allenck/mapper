@@ -1415,6 +1415,12 @@ void MainWindow::createActions()
      this->changeFonts(f);
      qDebug() << "new font " << this->font().toString();
   });
+  displaySegmentArrows = new QAction(tr("Display segment arrows"), this);
+  displaySegmentArrows->setCheckable(true);
+  displaySegmentArrows->setStatusTip(tr("Display arrows on double track segments"));
+  connect(displaySegmentArrows, &QAction::toggled, [=](bool b){
+   config->bDisplaySegmentArrows = b;
+  });
 }
 
 QWidgetAction *MainWindow::createWidgetAction()
@@ -1610,6 +1616,8 @@ void MainWindow::createMenus()
       optionsMenu->addAction(foreignKeyCheckAct);
       foreignKeyCheckAct->setChecked(SQL::instance()->getForeignKeyCheck());
       optionsMenu->addAction(fontSizeChangeAct);
+      optionsMenu->addAction(displaySegmentArrows);
+      displaySegmentArrows->setChecked(config->bDisplaySegmentArrows);
     // }
     //});
     menuBar()->addMenu(optionsMenu);
@@ -2332,7 +2340,7 @@ void MainWindow::On_displayRoute(RouteData rd)
   if(sd->trackUsage().isEmpty()) // fix for MySql not storing field correctly
    sd->setTrackUsage(" ");
   objArray.clear();
-  objArray <<   sd->segmentId() << rd.routeName() <<  sd->description() << sd->oneWay()
+  objArray <<   sd->segmentId() << rd.routeName() <<  sd->description() << config->bDisplaySegmentArrows
              << color << tracks
              << dash << sd->routeType() << sd->trackUsage() << points.count();
   objArray.append(points);
@@ -2507,7 +2515,8 @@ void MainWindow::displayAll()
   if(sd->trackUsage().isEmpty()) // fix for MySql not storing field correctly
    sd->setTrackUsage(" ");
   objArray.clear();
-  objArray <<   sd->segmentId() << sd->routeName() <<  sd->description() << sd->oneWay()
+  objArray <<   sd->segmentId() << sd->routeName() <<  sd->description()
+             << config->bDisplaySegmentArrows
              << color << tracks
              << dash << sd->routeType() << sd->trackUsage() << points.count();
   objArray.append(points);

@@ -507,7 +507,8 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
 
    if(bSegmentNeedsUpdate)
    {
-       SegmentInfo si = SQL::instance()->getSegmentInfo(sd->segmentId());
+       //SegmentInfo si = SQL::instance()->getSegmentInfo(sd->segmentId());
+    SegmentInfo si = SegmentInfo(*sd);
        si.setRouteType(sd->routeType());
        if(sd->startDate() < si.startDate())
            si.setStartDate(sd->startDate());

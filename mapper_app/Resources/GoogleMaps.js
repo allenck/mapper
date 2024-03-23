@@ -439,7 +439,7 @@ var lineR = {
 };
 
 // class to contain segment info
-function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, dash, routeType, trackUsage )
+function SegmentInfo(SegmentId, routeName, segmentName, showArrow, Color, tracks, dash, routeType, trackUsage )
 {
     this.type = "SegmentInfo";
     this.line = null;
@@ -449,7 +449,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
     this.segmentId = SegmentId;
     this.routeName = routeName;
     this.segmentName = segmentName;
-    this.oneWay = oneWay;
+    this.showArrow = showArrow;
     this.Color = Color;
     this.arrow = null;
     this.routeType = routeType;
@@ -666,6 +666,11 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
 
     this.placeArrow = function (path)
     {
+     if(tracks ===2)
+     {
+      if(showArrow === false)
+         return;
+     }
      //var path = this.getPath();
      if(path.getLength() > 1)
      {
@@ -1091,7 +1096,7 @@ var arrowSymbol  = {
        path: 'M 0,-4 -3,-4 0,0 3,-4'
    };
 
-function createSegment(segmentId, routeName, segmentName, oneWay, color, tracks, dash, routeType, trackUsage, points )
+function createSegment(segmentId, routeName, segmentName, showArrow, color, tracks, dash, routeType, trackUsage, points )
 {
     webViewBridge.setDebug("SegmentId "+ segmentId + "usage: "+ trackUsage);
     var linePath = new google.maps.MVCArray();
@@ -1100,7 +1105,7 @@ function createSegment(segmentId, routeName, segmentName, oneWay, color, tracks,
         linePath.push(new google.maps.LatLng(arguments[i+10], arguments[i+11]));
     }
 
-    newSegment = new SegmentInfo(segmentId, routeName, segmentName, oneWay, color, tracks, dash, routeType, trackUsage );
+    newSegment = new SegmentInfo(segmentId, routeName, segmentName, showArrow, color, tracks, dash, routeType, trackUsage );
     // if(weight !== 0 && weight !==3)
     //  alert(newSegment.getInfo() + " args=" + arguments.length);
     line = newSegment.getLine();
@@ -1616,7 +1621,7 @@ var path;
           grayLine.setPath(path);
           grayLine = null;
       }
-      var oneWay = si.oneWay;
+      var showArrow = si.showArrow;
       Arrow = si.getArrow();
      // alert(Arrow.getInfo());
 

@@ -398,6 +398,7 @@ private:
     QAction* updateParametersAct;
     QAction* companyChangeRoutes;
     QAction* creditsAct;
+    QAction* displaySegmentArrows;
 
     QList<QAction*> cityActions;
     QList<QAction*> overlayActions;
