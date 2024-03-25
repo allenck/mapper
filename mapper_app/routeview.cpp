@@ -109,7 +109,8 @@ RouteView::RouteView(QObject* parent )
       SQL::instance()->deleteRoute(*sd);
       MainWindow::instance()->m_bridge->processScript("clearPolyline", QString("%1").arg(sd->segmentId()));
 
-     }    });
+     }
+    });
 
 //    unDeleteSegmentAct = new QAction(tr("Undo delete of segment"), this);
 //    unDeleteSegmentAct->setStatusTip(tr("Don't delete the segment from the route"));

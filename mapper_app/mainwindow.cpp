@@ -2340,7 +2340,8 @@ void MainWindow::On_displayRoute(RouteData rd)
   if(sd->trackUsage().isEmpty()) // fix for MySql not storing field correctly
    sd->setTrackUsage(" ");
   objArray.clear();
-  objArray <<   sd->segmentId() << rd.routeName() <<  sd->description() << config->bDisplaySegmentArrows
+  objArray <<   sd->segmentId() << rd.routeName() <<  sd->description()
+             << sd->oneWay() << config->bDisplaySegmentArrows
              << color << tracks
              << dash << sd->routeType() << sd->trackUsage() << points.count();
   objArray.append(points);
@@ -2516,7 +2517,7 @@ void MainWindow::displayAll()
    sd->setTrackUsage(" ");
   objArray.clear();
   objArray <<   sd->segmentId() << sd->routeName() <<  sd->description()
-             << config->bDisplaySegmentArrows
+             << sd->oneWay() << config->bDisplaySegmentArrows
              << color << tracks
              << dash << sd->routeType() << sd->trackUsage() << points.count();
   objArray.append(points);
@@ -4267,7 +4268,7 @@ void MainWindow::addSegment()
 
         QVariantList objArray;
         objArray << m_segmentId << segmentDlg->routeName()<<ui->txtSegment->text()
-                 <<sd.oneWay()<<getColor(segmentDlg->tractionType())<<sd.tracks()
+                 << sd.oneWay() <<true<<getColor(segmentDlg->tractionType())<<sd.tracks()
                  << dash << sd.routeType() << sd.trackUsage() << 0;
         m_bridge->processScript("createSegment",objArray);
 

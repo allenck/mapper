@@ -822,7 +822,7 @@ void SegmentInfo::displaySegment(QString date, QString color, QString trackUsage
  if(trackUsage.isEmpty()) // fix for MySql not storing field correctly
   trackUsage =" ";
  objArray.clear();
- objArray << _segmentId << routeNames<<_description << " " <<color<< tracks
+ objArray << _segmentId << routeNames<<_description << "N" << true <<color<< tracks
           << dash << _routeType << trackUsage << points.count();
  objArray.append(points);
  WebViewBridge::instance()->processScript("createSegment", objArray);
@@ -1059,7 +1059,8 @@ void SegmentData::displaySegment(QString date, QString color, QString trackUsage
  else if(routeType() == Subway)
   dash = 3;
  objArray.clear();
- objArray << _segmentId << routeNames<<_description<<_oneWay<<color<< _tracks << dash
+ objArray << _segmentId << routeNames<<_description << _oneWay <<true<<color
+          << _tracks << dash
           << _routeType << trackUsage << points.count();
  objArray.append(points);
  WebViewBridge::instance()->processScript("createSegment", objArray);
