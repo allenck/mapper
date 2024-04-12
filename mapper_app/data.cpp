@@ -1051,6 +1051,13 @@ void SegmentData::displaySegment(QString date, QString color, QString trackUsage
   points.append(((LatLng)pointList().at(i)).lat());
   points.append(((LatLng)pointList().at(i)).lon());
  }
+ int tracks = _tracks;
+ if(tracks == 2 && _doubleDate.isValid() && _endDate < _doubleDate)
+ {
+  tracks = 1;
+  _trackUsage = " ";
+ }
+
  int dash = 0;
  if(routeType() == Incline)
   dash = 1;
@@ -1060,7 +1067,7 @@ void SegmentData::displaySegment(QString date, QString color, QString trackUsage
   dash = 3;
  objArray.clear();
  objArray << _segmentId << routeNames<<_description << _oneWay <<true<<color
-          << _tracks << dash
+          << tracks << dash
           << _routeType << trackUsage << points.count();
  objArray.append(points);
  WebViewBridge::instance()->processScript("createSegment", objArray);

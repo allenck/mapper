@@ -3848,14 +3848,13 @@ bool SQL::updateSegment(SegmentInfo* si)
    + ", endLon= " + QString("%1").arg(si->_endLon,0,'f',8)
    + ", length= " + QString("%1").arg(si->_length)
    + ", points= " + QString("%1").arg(si->pointList().count())
-   + ", type= " + QString("%1").arg(si->_routeType)
+   + ", type= " + QString("%1").arg((int)si->_routeType)
    + ", direction = '" + si->_direction + "', "
    + "pointArray='" + si->pointsString() + "', "
    + "description='" + si->_description + "',"
    + "street='" + si->_streetName + "',"
    + "location='" + si->_location + "',"
    + "tracks="+ QString::number(si->_tracks) + ","
-   + "type="+QString::number((int)si->_routeType) + ","
    + "startDate='" + si->_startDate.toString("yyyy/MM/dd") + "', "
    + "DoubleDate='" + si->_doubleDate.toString("yyyy/MM/dd") + "', "
    + "endDate='" + si->_endDate.toString("yyyy/MM/dd") + "', "

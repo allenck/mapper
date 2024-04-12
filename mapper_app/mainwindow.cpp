@@ -1049,12 +1049,12 @@ void MainWindow::createActions()
       //updateRoute(sd);
       return;
      }
-        m_bridge->processScript("clearPolyline", QString("%1").arg(sd->segmentId()));
+     m_bridge->processScript("clearPolyline", QString("%1").arg(sd->segmentId()));
         //SegmentInfo si = sql->getSegmentInfo(segmentId);
-        displaySegment(sd->segmentId(), sd->description(),
+     displaySegment(sd->segmentId(), sd->description(),
                        getColor(sd->tractionType()),
                        sd->trackUsage(), true);
-        selectSegment(sd->segmentId());
+     selectSegment(sd->segmentId());
  });
 
  addSegmentViaUpdateRouteAct = new QAction(tr("Add segment via UpdateRoute"),this);
@@ -2328,7 +2328,10 @@ void MainWindow::On_displayRoute(RouteData rd)
   bBoundsValid = bounds.updateBounds(sd->bounds());
   int tracks = sd->tracks();
   if(tracks == 2 && sd->doubleDate().isValid() && rd.endDate() < sd->doubleDate())
+  {
    tracks = 1;
+   sd->setTrackUsage(" ");
+  }
 
   int dash = 0;
   if(sd->routeType() == Incline)

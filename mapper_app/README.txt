@@ -1,5 +1,6 @@
 **Recent Changes March 2024
-1.  Add option to show/hide arrows on two way segments
+1.  Add option to show/hide arrows on two way segments.
+
 **Recent Changes January 2024
 1.  A new column, 'DoubleDate' has been added to the Segments table. This date can be set via the edit
     segment dialog. The date defines the date upon which a segment was converted to double track. This

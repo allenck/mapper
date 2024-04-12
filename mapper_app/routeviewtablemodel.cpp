@@ -502,6 +502,10 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
    sd->setNeedsUpdate(true);
    bChangesMade = true;
 
+   // display the modified segment
+   QString c = MainWindow::instance()->getColor(sd->tractionType());
+   sd->displaySegment(MainWindow::instance()->ui->dateEdit->date().toString("yyyy/MM/dd"),c,sd->trackUsage(), true);
+
    //listOfSegments.replace(row, sd);
    SQL::instance()->updateRoute(oldSd,*sd);
 

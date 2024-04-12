@@ -13,8 +13,9 @@ ModifyRouteTractionTypeDlg::ModifyRouteTractionTypeDlg(RouteData rd,QWidget *par
   QDialog(parent),
   ui(new Ui::ModifyRouteTractionTypeDlg)
 {
+ common();
   _rd = rd;
-  common();
+  ui->dateEdit->setDate(_rd.startDate());
   ui->lblRoute->setText(rd.toString());
 }
 
@@ -82,30 +83,42 @@ void ModifyRouteTractionTypeDlg::btnOK_Click()      //SLOT
   ui->lblError->setText("");
   if(ui->dateEdit->date() < _rd.startDate())
   {
-     ui->lblError->setText(tr("New end date < route start date!"));
+     ui->lblError->setText(tr("New start date < route start date!"));
      QApplication::beep();
      return;
   }
+  if(ui->dateEdit->date() >= _rd.endDate())
+  {
+     ui->lblError->setText(tr("New end date > route end date!"));
+     QApplication::beep();
+     return;
+  }
+
   if(ui->comboBox->currentData().toInt()== _rd.tractionType())
   {
      ui->lblError->setText(tr("traction type must be changed!"));
      QApplication::beep();
      return;
   }
+
   QList<SegmentData*> sdList = sql->getSegmentDataList(_rd);
   if(sdList.count())
   {
     sql->beginTransaction("ModifyRouteTractionType");
     foreach(SegmentData* sd, sdList)
     {
-       if(ui->dateEdit->date() >= sd->startDate() && ui->dateEdit->date()< sd->endDate())
-       {
-        //if(!sql->deleteRouteSegment(sd._route, sd._name, sd._lineKey, sd._startDate.toString("yyyy/MM/dd"),sd._endDate.toString("yyyy/MM/dd")))
-//        if(!sql->deleteRouteSegment(*sd))
-//        {
-//         sql->rollbackTransaction("ModifyRouteTractionType");
-//         this->reject();
-//        }
+     if(ui->dateEdit->date() == sd->startDate())
+     {
+      SegmentData sd1(*sd);
+      sd1.setTractionType(ui->comboBox->currentData().toInt());
+      if(!sql->updateRoute(*sd, sd1))
+      {
+       sql->rollbackTransaction("ModifyRouteTractionType");
+       this->reject();
+      }
+     }
+     else  if(ui->dateEdit->date() > sd->startDate() && ui->dateEdit->date()< sd->endDate())
+     {
         SegmentData sd1(*sd);
         sd1.setEndDate(ui->dateEdit->date().addDays(-1));
         if(!sql->updateRoute(*sd, sd1))

@@ -53,6 +53,6 @@ void RTItemDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, co
         mModel = (QAbstractItemModel *)mIndex.model();
     }
      QComboBox *comboBox = static_cast<QComboBox*>(editor);
-     mModel->setData(index, comboBox->currentData().toInt(), Qt::EditRole);
+     mModel->setData(mIndex, comboBox->currentData().toInt(), Qt::EditRole);
 }
 
