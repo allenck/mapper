@@ -151,7 +151,7 @@ DEPENDPATH += $$PWD/.
 
 #unix:!macx: LIBS += -L$$PWD/../../../sqlite-amalgamation-3390400/ -lsqlite3
 
-VERSION=1.1.2
+VERSION=1.1.3
 MY_VERSION_STR = '\\"$${VERSION}\\"'
 DEFINES += MY_VERSION=\"$${MY_VERSION_STR}\"
 macx: {

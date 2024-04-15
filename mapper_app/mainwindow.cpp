@@ -1051,10 +1051,11 @@ void MainWindow::createActions()
      }
      m_bridge->processScript("clearPolyline", QString("%1").arg(sd->segmentId()));
         //SegmentInfo si = sql->getSegmentInfo(segmentId);
-     displaySegment(sd->segmentId(), sd->description(),
-                       getColor(sd->tractionType()),
-                       sd->trackUsage(), true);
-     selectSegment(sd->segmentId());
+//     displaySegment(sd->segmentId(), sd->description(),
+//                       getColor(sd->tractionType()),
+//                       sd->trackUsage(), true);
+     sd->displaySegment(sd->startDate().toString("yyyy/MM/dd"),getColor(sd->tractionType()),sd->trackUsage(),true);
+     //selectSegment(sd->segmentId());
  });
 
  addSegmentViaUpdateRouteAct = new QAction(tr("Add segment via UpdateRoute"),this);
@@ -2313,6 +2314,7 @@ void MainWindow::On_displayRoute(RouteData rd)
   SegmentData* sd = segmentDataList.at(i);
   if(sd->segmentId() == 367)
    qDebug() << "halt";
+#if 0
   objArray.clear();
   objArray << sd->segmentId();
   m_bridge->processScript("clearPolyline", objArray);
@@ -2360,6 +2362,9 @@ void MainWindow::On_displayRoute(RouteData rd)
   }
   else
    length += sd->length();
+#else
+  sd->displaySegment(ui->dateEdit->date().toString("yyyy/MM/dd"),getColor(sd->tractionType()), sd->trackUsage(),true);
+#endif
  }
  statusBar()->showMessage(tr("route length = %1 km, %2 miles").arg(length).arg(length*0.621371192));
 

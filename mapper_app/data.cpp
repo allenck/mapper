@@ -811,8 +811,11 @@ void SegmentInfo::displaySegment(QString date, QString color, QString trackUsage
  }
  int dash = 0;
  int tracks = _tracks;
- if(_tracks == 2 && _doubleDate.isValid() && _doubleDate < QDate::fromString(date, "yyyy/MM/dd"))
+ if(_tracks == 2 && _doubleDate.isValid() &&  QDate::fromString(date, "yyyy/MM/dd") < _doubleDate)
+ {
   tracks = 1;
+  trackUsage = ' ';
+ }
  if(_routeType == Incline)
   dash = 1;
  else if(_routeType == SurfacePRW)
@@ -1066,7 +1069,8 @@ void SegmentData::displaySegment(QString date, QString color, QString trackUsage
  else if(routeType() == Subway)
   dash = 3;
  objArray.clear();
- objArray << _segmentId << routeNames<<_description << _oneWay <<true<<color
+ objArray << _segmentId << routeNames <<_description << _oneWay
+          << Configuration::instance()->bDisplaySegmentArrows << color
           << tracks << dash
           << _routeType << trackUsage << points.count();
  objArray.append(points);

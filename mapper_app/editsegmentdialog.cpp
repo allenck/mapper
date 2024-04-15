@@ -5,6 +5,7 @@
 #include <sql.h>
 #include <QMessageBox>
 #include "webviewbridge.h"
+#include "mainwindow.h"
 
 EditSegmentDialog::EditSegmentDialog(QWidget *parent) :
   QDialog(parent),
@@ -21,6 +22,21 @@ EditSegmentDialog::EditSegmentDialog(SegmentInfo si, QWidget *parent) :
  common();
  segmentSelected(this->si);
 
+ QList<SegmentData*> listOfSegments = SQL::instance()->getRouteSegmentsInOrder(rd->route(),
+                                                                               rd->routeName(), rd->companyKey(), rd->endDate());
+ foreach (SegmentData* sd, listOfSegments) {
+  if(sd->segmentId() == si.segmentId())
+  {
+   _sd = sd;
+   oneWay = sd->oneWay();
+   direction = sd->direction();
+  break;
+
+
+  }
+ }
+
+
  //ui->ssw->initialize();
  //connect(ui->ssw, SIGNAL(segmentSelected(SegmentData)), this, SLOT(segmentSelected(SegmentData)));
 }
@@ -33,12 +49,19 @@ EditSegmentDialog::EditSegmentDialog(SegmentData *sd, QWidget *parent) :
  common();
  //this->si = sql->getSegmentInfo(sd->segmentId());
  segmentSelected(si);
+
+ _sd = sd;
+ oneWay = sd->oneWay();
+ direction = sd->direction();
 }
 
 void EditSegmentDialog::common()
 {
  ui->setupUi(this);
  sql = SQL::instance();
+
+ RouteData rd = MainWindow::instance()->routeList.at(MainWindow::instance()->ui->cbRoute->currentIndex());
+ this->rd = new RouteData(rd);
 
  ui->lblHelp->setText("");
  _locations = sql->getLocations();
@@ -391,25 +414,41 @@ void EditSegmentDialog::On_btnSave_clicked()
   if(si.tracks() == 2 && dupSegments.count() > 0)
   {
    QString infoText;
-   foreach (SegmentInfo si, dupSegments)
+   foreach (SegmentInfo siDup, dupSegments)
    {
-    if(this->si.segmentId() != si.segmentId() && si.tracks()==2)
+    if(this->si.segmentId() != siDup.segmentId() && siDup.tracks()==2)
     {
      // 2 track segment already exists!
      int ret = QMessageBox::question(nullptr, tr("Duplicate exists"), tr("A duplicate already exists. "
                                      "\nShould this route be changed to use it?"), QMessageBox::Yes | QMessageBox::No);
      if(ret == QMessageBox::Yes)
      {
-      QString txt = QString("update Routes set lineKey = %1 where lineKey = %2").arg(si.segmentId()).arg( this->si.segmentId());
+      QString trackUsage = " ";
+      if(_sd && _sd->tracks()==1 && _sd->oneWay()=="Y" && siDup.tracks()==2)
+      {
+       if(_sd->direction() == siDup.direction())
+        trackUsage = "R";
+       else
+        trackUsage = "L";
+      }
+      QString txt = QString("update Routes set lineKey = %1, trackUsage = '%3' where lineKey = %2").arg(siDup.segmentId()).arg( this->si.segmentId()).arg(trackUsage);
       bool rslt = sql->executeCommand(txt);
       if(rslt)
       {
-       sql->deleteSegment(this->si.segmentId());
-       return;
+       if(!sql->deleteSegment(this->si.segmentId()))
+        return;
       }
+//      SegmentData sd = SegmentData(siDup);
+//      sd.setRoute(rd->route());
+//      sd.setRouteName(rd->routeName());
+//      sd.setStartDate(rd->startDate());
+//      sd.setEndDate(rd->endDate());
+//      sd.displaySegment(ui->dtEnd->date().toString("yyyy/MM/dd"),m_segmentColor, "", true);
+
      }
+     break;
     }
-    infoText.append(tr("Segment %1 %2\n").arg(si.segmentId()).arg(si.description()));
+    infoText.append(tr("Segment %1 %2\n").arg(siDup.segmentId()).arg(siDup.description()));
    }
    QMessageBox* box = new QMessageBox(QMessageBox::Question, tr("Duplicates"),
                                       tr("Duplicate segments exist. Replace in routes with this segment?"),
@@ -456,6 +495,14 @@ void EditSegmentDialog::On_btnSave_clicked()
      sql->rollbackTransaction("updateSegment");
      return;
     }
+
+//    if(sd1.route()== rd->route() && sd1.routeName() == rd->routeName()
+//       && sd1.startDate()== rd->startDate())
+//    {
+//     sd1.displaySegment(ui->dtEnd->date().toString("yyyy/MM/dd"),m_segmentColor, sd1.trackUsage(), true);
+//     bSegmentDisplayed = true;
+//    }
+   //}
   }
   if(bReplaceDups)
   {
@@ -490,6 +537,7 @@ void EditSegmentDialog::On_btnSave_clicked()
         }
       }
        // TODO: delete fromId
+      break; // only use the first dup!
     }
     if(ui->chkDeleteUnused)
     {
@@ -511,11 +559,12 @@ void EditSegmentDialog::On_btnSave_clicked()
    m_bridge->processScript("isSegmentDisplayed", QString("%1").arg(si.segmentId()));
    while(!m_bridge->isResultReceived())
    {qApp->processEvents();}
-   if (m_segmentStatus == "Y")
-   {
-     si.displaySegment(ui->dtEnd->date().toString("yyyy/MM/dd"),m_segmentColor, "", true);
-   }
-
+//   if (m_segmentStatus == "Y" && !bSegmentDisplayed)
+//   {
+//    SegmentData sd = SegmentData(si);
+//     sd.displaySegment(ui->dtEnd->date().toString("yyyy/MM/dd"),m_segmentColor, "", true);
+//   }
+   MainWindow::instance()->On_displayRoute(*rd);
 }
 
 void EditSegmentDialog::On_segmentStatusSignal(QString txt, QString color)

@@ -49,6 +49,10 @@ private:
  QDate latestEndDate;
  QDate oldestDoubleTrackDate;
  QList<SegmentInfo>reversed;
+ //bool bSegmentDisplayed = false;
+ QString oneWay = " ";
+ SegmentData* _sd = nullptr;
+ QString direction = " ";
 
 private slots:
  //void fillSegments();

@@ -1,3 +1,7 @@
+**Recent Changes April 2024 VERSION=1.1.3
+1. Fix ModifyTractionTypeDlg.
+2. Fix RouteViewTbleModel selecting wrong segment. Redisplay segment after changes.
+
 **Recent Changes March 2024
 1.  Add option to show/hide arrows on two way segments.
 

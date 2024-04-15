@@ -676,7 +676,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, showArrow, Color
      //var path = this.getPath();
      if(path.getLength() > 1)
      {
-      if(this.arrow)
+      if(this.arrow && showArrow === true)
       {
           this.arrow.setMap(null);
           var poly = this.arrow.getPoly();
