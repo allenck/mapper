@@ -2364,6 +2364,7 @@ void MainWindow::On_displayRoute(RouteData rd)
    length += sd->length();
 #else
   sd->displaySegment(ui->dateEdit->date().toString("yyyy/MM/dd"),getColor(sd->tractionType()), sd->trackUsage(),true);
+  bBoundsValid = bounds.updateBounds(sd->bounds());
 #endif
  }
  statusBar()->showMessage(tr("route length = %1 km, %2 miles").arg(length).arg(length*0.621371192));

@@ -524,6 +524,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, showArrow, Color
     if(dash === 1) j = 1; // incline
     if(dash === 3) j = 5; // Subway
     if(routeType == 7) j = 10; // elevated
+    if(tracks ===1) trackUsage = " ";
     if(trackUsage === "L")
     {
         var iconIx = 7;
