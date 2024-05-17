@@ -28,7 +28,8 @@ struct routeView
 {
   QList<QVariant> hiddenColumns;
   QList<QVariant> movedColumns;
-  //QByteArray state;
+  QByteArray state;
+  int columnCount;
 };
 
 class Configuration : public QObject

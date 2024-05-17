@@ -15,16 +15,23 @@ class SplitSegmentDlg : public QDialog
 
  public:
   explicit SplitSegmentDlg(int segmentId, QWidget *parent = nullptr);
+  SplitSegmentDlg(SegmentData* sd, QWidget *parent = nullptr);
   ~SplitSegmentDlg();
   void setSegment(int segmentId);
 
  private:
   Ui::SplitSegmentDlg *ui;
   QMap<int, SegmentInfo> cbSegmentInfoList;
-  SegmentData sd;
-  void setupDates(SegmentData sd);
+  SegmentData* sd = nullptr;
+  void setupDates(SegmentData* sd);
   bool processChanges();
-  void refreshSegments();
+  //void refreshSegments();
+  void common(int segmentId);
+  QMap<int,CompanyData*> companyMap;
+  bool company1Valid();
+  bool company2Valid();
+  bool canBeChanged();
+  bool sdSpecified = false;
 };
 
 #endif // SPLITSEGMENTDLG_H

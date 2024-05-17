@@ -38,7 +38,7 @@ RouteView::RouteView(QObject* parent )
 //        });
     }
     ui->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
-    //ui->horizontalHeader()->restoreState(config->rv.state);
+    ui->horizontalHeader()->restoreState(config->rv.state);
     connect(ui->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), this,
             SLOT(hdr_customContextMenu(QPoint)));
 
@@ -50,7 +50,7 @@ RouteView::RouteView(QObject* parent )
      {
       config->rv.movedColumns.append(ui->horizontalHeader()->logicalIndex(i));
      }
-     //config->rv.state = ui->horizontalHeader()->saveState();
+     config->rv.state = ui->horizontalHeader()->saveState();
     });
 
     //m_myParent = myParent;
@@ -212,11 +212,11 @@ RouteView::RouteView(QObject* parent )
 //         SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId);
 //         SegmentData* sd = new SegmentData(si);
 //         sd->setRoute(rd.route());
-//         sd->setRouteName(rd.routeName());
-//         sd->setStartDate(rd.startDate());
-//         sd->setEndDate(rd.endDate());
+         sd->setRouteName(rd.routeName());
+         sd->setStartDate(rd.startDate());
+         sd->setEndDate(rd.endDate());
 //         sd->setTractionType(rd.tractionType());
-//         sd->setCompanyKey(rd.companyKey());
+         sd->setCompanyKey(rd.companyKey());
 //         sd->setSegmentId(segmentId);
          SQL::instance()->addSegmentToRoute(sd);
         }
@@ -256,11 +256,15 @@ RouteView::RouteView(QObject* parent )
     connect(splitSegmentAct, &QAction::triggered, [=]{
      QItemSelectionModel * model = ui->selectionModel();
      QModelIndexList indexes = model->selectedIndexes();
+     QModelIndex ix = proxymodel->mapToSource(indexes.at(RouteViewTableModel::SEGMENTID));
+     SegmentData* sd = sourceModel->listOfSegments.at(ix.row());
      qint32 segmentId = indexes.at(RouteViewTableModel::SEGMENTID).data().toInt();
-     SplitSegmentDlg* splitSegment = new SplitSegmentDlg(segmentId);
+     SplitSegmentDlg* splitSegment = new SplitSegmentDlg(sd);
      int ret = splitSegment->exec();
      if(ret == QDialog::Accepted)
-      //refreshSegmentCB();
+     {
+      //sourceModel->listOfSegments.removeAt(ix.row());
+     }
       myParent-> ui->ssw->refresh();
     });
 

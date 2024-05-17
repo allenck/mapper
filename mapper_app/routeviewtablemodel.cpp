@@ -126,7 +126,7 @@ int RouteViewTableModel::rowCount(const QModelIndex &parent) const
 int RouteViewTableModel::columnCount(const QModelIndex &parent) const
 {
  Q_UNUSED(parent);
- return ENDDATE+1;
+ return RSEQ+1;
 }
 
 QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
@@ -183,6 +183,11 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
   case RSEQ:
    if(sd->returnSeq() == -1 && sd->oneWay() != "Y")
     background = QColor(Qt::yellow);
+   break;
+  case COMPANYKEY:
+   CompanyData* cd = SQL::instance()->getCompany(sd->companyKey());
+   if(sd->startDate() < cd->startDate || sd->endDate() > cd->endDate)
+    background =  QVariant( QColor(Qt::magenta) );
    break;
   }
   return background;
@@ -259,6 +264,8 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
     return sd->bearingStart().angle();
    case ANGLEE:
     return sd->bearingEnd().angle();
+   case COMPANYKEY:
+    return sd->companyKey();
   }
  }
  return QVariant();
@@ -266,7 +273,7 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
 
 QVariant RouteViewTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
- if (role != Qt::DisplayRole)
+ if (role != Qt::DisplayRole || section < 0)
     return QVariant();
  if(orientation == Qt::Vertical && role == Qt::DisplayRole)
  {
@@ -341,6 +348,8 @@ QVariant RouteViewTableModel::headerData(int section, Qt::Orientation orientatio
      return tr("Start Angle");
     case ANGLEE:
      return tr("End Angle");
+    case COMPANYKEY:
+     return tr("Company");
     default:
         return QVariant();
     }
@@ -498,6 +507,9 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
      sd->setEndDate(value.toDate());
     }
     break;
+   case COMPANYKEY:
+    sd->setCompanyKey(value.toInt());
+    break;
    }
    sd->setNeedsUpdate(true);
    bChangesMade = true;
@@ -576,6 +588,7 @@ Qt::ItemFlags RouteViewTableModel::flags(const QModelIndex &index) const
 
     case STARTDATE: //start date
     case ENDDATE: // end date
+    case COMPANYKEY:
         return QAbstractTableModel::flags(index) | Qt::ItemIsEditable | Qt::ItemIsEnabled;
     }
     // all other columns non-editable

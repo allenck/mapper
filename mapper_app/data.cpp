@@ -190,6 +190,8 @@ bool RouteData::operator==(const RouteData& o )
   return true;
  return false;
 }
+
+
 //enum routeType { Surface, SurfacePRW, RapidTransit, Subway, Rail, Other };
 segmentGroup::segmentGroup()
 {

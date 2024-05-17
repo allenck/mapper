@@ -17,7 +17,6 @@
 #include "webviewbridge.h"
 #include "checkroute.h"
 
-
 class RouteView : public QObject
 {
     Q_OBJECT

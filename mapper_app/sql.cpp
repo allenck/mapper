@@ -4681,6 +4681,61 @@ QList<CompanyData*> SQL::getCompanies()
 }
 
 /// <summary>
+/// Get a list of companies in date range
+/// </summary>
+/// <returns></returns>
+QList<CompanyData*> SQL::getCompaniesInDateRange(QDate startDate, QDate endDate)
+{
+ QList<CompanyData*> myArray;
+ CompanyData* cd;
+ QSqlDatabase db = QSqlDatabase::database();
+
+ QString commandText;
+ if(config->currConnection->servertype() != "MsSql")
+     commandText = QString("select `key`, description, routePrefix, startDate, endDate,"
+                   " firstRoute, lastRoute from Companies"
+                   " where startDate between '%1' and '%2' or endDate between '%1' and '%2'")
+       .arg(startDate.toString("yyyy/MM/dd")).arg(endDate.toString("yyyy/MM/dd"));
+ else
+     commandText = QString("select [key], description, routePrefix, startDate, endDate,"
+                   " firstRoute, lastRoute from Companies"
+                   " where startDate between '%1' and '%2' or endDate between '%1' and '%2'")
+                   .arg(startDate.toString("yyyy/MM/dd"))
+                   .arg(endDate.toString("yyyy/MM/dd"));
+ QSqlQuery query = QSqlQuery(db);
+ bool bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+  SQLERROR(query);
+  //db.close();
+  //exit(EXIT_FAILURE);
+  sqlErrorMessage(query, QMessageBox::Ok);
+  return myArray;
+ }
+ while (query.next())
+ {
+     cd = new CompanyData();
+     cd->companyKey = query.value(0).toInt();
+     cd->name = query.value(1).toString();
+     cd->routePrefix = query.value(2).toString();
+     if(query.value(3).isNull())
+         cd->startDate = QDate();
+     else
+         cd->startDate = query.value(3).toDate();
+     if (query.value(4).isNull())
+         cd->endDate = QDate();
+     else
+         cd->endDate = query.value(4).toDate();
+     cd->firstRoute = query.value(5).toInt();
+     cd->lastRoute = query.value(6).toInt();
+     myArray.append(cd);
+ }
+ std::sort(myArray.begin(), myArray.end(), [](const CompanyData* a, const CompanyData* b) -> bool { return a->name < b->name; });
+
+ return myArray;
+}
+
+/// <summary>
 /// Get the data for a company
 /// </summary>
 /// <returns></returns>
@@ -9730,7 +9785,8 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd, bool notify)
      QSqlError err = query.lastError();
      qDebug() << err.text() + "\n";
      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     throw Exception(err.text());
+     //throw Exception(err.text());
+     return false;
  }
   //qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
  rows = query.numRowsAffected();

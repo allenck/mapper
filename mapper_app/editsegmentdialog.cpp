@@ -193,12 +193,6 @@ void EditSegmentDialog::segmentSelected(SegmentInfo si)
 {
  if(si.segmentId()<0)
   return;
- //this->si = SegmentInfo(*si);
- //ui->ssw->initialize();
-
- //SegmentInfo newSi = SegmentInfo(si);
-
- // btnUpdate->setEnabled(false);
  ui->btnSave->setEnabled(false);
  bStartDateEdited = false;
  bEndDateEdited = false;

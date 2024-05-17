@@ -342,7 +342,8 @@ void SegmentSelectionWidget::segmentSelected(int pt, int segmentId)
  m_SegmentId = segmentId;
  SegmentInfo si = sql->getSegmentInfo(segmentId);
  ui->cbLocation->setCurrentText(si.location());
- ui->cbStreets->setCurrentText(si.streetName());int ix = ui->cbSegments->findData(segmentId);
+ ui->cbStreets->setCurrentText(si.streetName());
+ int ix = ui->cbSegments->findData(segmentId);
  if(ix >=0)
   ui->cbSegments->setCurrentIndex(ix);
  else
@@ -353,6 +354,11 @@ void SegmentSelectionWidget::segmentSelected(int pt, int segmentId)
   ix = ui->cbSegments->findData(segmentId);
   if(ix >=0)
    ui->cbSegments->setCurrentIndex(ix);
+  else
+  {
+   ui->cbSegments->addItem(si.toString(), segmentId);
+   ui->rbBoth->setChecked(true);
+  }
  }
 }
 

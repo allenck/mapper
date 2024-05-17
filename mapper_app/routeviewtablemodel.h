@@ -42,6 +42,10 @@ public:
      COMBO,
      TRACTIONTYPE,
      DISTANCE,
+     COMPANYKEY,
+     STARTDATE,
+     DOUBLEDATE,
+     ENDDATE,
      ANGLES,
      ANGLEE,
      NE,
@@ -54,10 +58,7 @@ public:
      RL,
      DIR,
      SEQ,
-     RSEQ,
-     STARTDATE,
-     DOUBLEDATE,
-     ENDDATE
+     RSEQ
     };
     int getRow(int segmentId);
     SegmentData *segmentData(int row);
