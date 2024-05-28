@@ -3025,6 +3025,25 @@ void MainWindow::segmentSelected(qint32 pt, qint32 segmentId)
   ui->btnSplit->setDisabled(true);
  }
 
+ QString marker;
+ if (m_currPoint > 0 && (m_currPoint < (m_nbrPoints - 1)))
+ {
+  //marker = "3";  // 0= blank red marker
+  marker = getMarkerImagePath("redblank.png", QString("point%1.png").arg(m_currPoint),QString::number(m_currPoint), 2.0);
+  marker = "'" +marker.mid(marker.indexOf("images"))+"'";
+ }
+ else if(m_currPoint == 0)
+  marker = "1";
+ else
+  marker = "2";
+ QVariantList objArray;
+ m_bridge->processScript("addMarker",QString("%1").arg(m_currPoint)+","
+                         +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)+","
+                         +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8 ) +","
+                         +marker + ","
+                         +QString("'point%1'").arg(m_currPoint)+","
+                         + QString("%1").arg(m_segmentId));
+
  if(config->currCity->bGeocoderRequest)
      m_bridge->processScript("geocoderRequest", QString("%1").arg(m_latitude,0,'f',8)+ "," + QString("%1").arg(m_longitude,0,'f',8));
  //m_bridge->processScript("setCenter", QString("%1").arg(m_latitude,0,'f',8)+ "," + QString("%1").arg(m_longitude,0,'f',8));
@@ -3212,7 +3231,9 @@ void MainWindow::btnNextClicked()
     QString marker;
     if (m_currPoint > 0 && (m_currPoint < (m_nbrPoints - 1)))
     {
-        marker = "0";  // 0= red dot marker
+     //marker = "3";  // 0= blank red marker
+     marker = getMarkerImagePath("redblank.png", QString("point%1.png").arg(m_currPoint),QString::number(m_currPoint), 2.0);
+     marker = "'" +marker.mid(marker.indexOf("images"))+"'";
         ui->btnSplit->setEnabled(true);
         ui->btnPrev->setEnabled(true);
     }
@@ -3233,9 +3254,11 @@ void MainWindow::btnNextClicked()
         return;
     QVariantList objArray;
     m_bridge->processScript("addMarker",QString("%1").arg(m_currPoint)+","
-                            +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)
-                            +","+QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8 )
-                            +","+marker+",'point"+ QString("%1").arg(m_currPoint)+"',"+ QString("%1").arg(m_segmentId));
+                            +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)+","
+                            +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8 )+","
+                            +marker+","
+                            +QString("'point%1'").arg(m_currPoint)+","
+                            + QString("%1").arg(m_segmentId));
     if(!ui->chkNoPan->isChecked())
     {
         objArray.clear();
@@ -3355,7 +3378,9 @@ void MainWindow::btnPrevClicked()
     QString marker;
     if (m_currPoint > 0 && (m_currPoint < (m_nbrPoints - 1)))
     {
-        marker = "0";  // dot marker
+//     marker = "3";  // red blank marker
+     marker = getMarkerImagePath("redblank.png", QString("point%1.png").arg(m_currPoint),QString::number(m_currPoint), 2.0);
+     marker = "'" +marker.mid(marker.indexOf("images"))+"'";
         ui->btnSplit->setEnabled(true);
         ui->btnNext->setEnabled(true);
     }
@@ -3377,7 +3402,12 @@ void MainWindow::btnPrevClicked()
     if(m_currPoint < 0)
      m_currPoint = 0;
     QVariantList objArray;
-    m_bridge->processScript("addMarker",QString("%1").arg(m_currPoint)+","+QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)+","+QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8 ) +","+marker+",'point"+ QString("%1").arg(m_currPoint)+"',"+ QString("%1").arg(m_segmentId));
+    m_bridge->processScript("addMarker",QString("%1").arg(m_currPoint)+","
+                            +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)+","
+                            +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8 ) +","
+                            +marker + ","
+                            +QString("'point%1'").arg(m_currPoint)+","
+                            + QString("%1").arg(m_segmentId));
     if(!ui->chkNoPan->isChecked())
     {
         objArray.clear();
@@ -3741,30 +3771,37 @@ void MainWindow::cbRoutes_Leave()
 
 QString MainWindow::getRouteMarkerImagePath(QString route, bool isStart)
 {
+ QString tmplt ="";
+ QString name = "";
+ if(isStart)
+ {
+     name = "green"+ route+".png";
+     tmplt = "green00.png";
+ }
+ else
+ {
+     name = "red" + route + ".png";
+     tmplt = "red00.png";
+ }
+
+ return getMarkerImagePath(tmplt, name, route, 0);
+}
+
+QString MainWindow::getMarkerImagePath(QString tmplt, QString name, QString text, double offset)
+{
     QString work = m_resourcePath;
     QString str = "";
-    QString name = "";
-    QString tmplt ="";
+    //QString name = "";
     QDir dir(m_resourcePath);
     if(!dir.exists("images"))
         dir.mkdir("images");
 
     QBrush brBkgnd = QBrush(Qt::SolidPattern);
     QFont f;
-    if(isStart)
-    {
-        name = "green"+ route+".png";
-        tmplt = "green00.png";
-    }
-    else
-    {
-        name = "red" + route + ".png";
-        tmplt = "red00.png";
-    }
     QFile file(dir.filePath(work+ "/images/" + name));
     str = "file://" + work + "/images/" + name;
 
-    if (file.exists( ))
+    if (file.exists( ) && file.size() > 0)
     {
         return str;
     }
@@ -3774,7 +3811,6 @@ QString MainWindow::getRouteMarkerImagePath(QString route, bool isStart)
         qDebug() <<":/"+ tmplt +" resource not found " ;
         return "";
     }
-
 
     // need to make a new one
     QImage image = QImage(":/"+ tmplt);
@@ -3792,23 +3828,23 @@ QString MainWindow::getRouteMarkerImagePath(QString route, bool isStart)
 //        brBkgnd =  QBrush(Qt::green, Qt::SolidPattern);
 //    else
 //        brBkgnd = QBrush(Qt::red, Qt::SolidPattern);
-    if(route.length() == 3)
+    if(text.length() == 3)
         f =  QFont("Arial", 7, QFont::Bold, false);
     else
         f =  QFont("Arial", 6, QFont::Bold, false);
     painter.setFont(f);
 
-    QRect eRect =painter.boundingRect(r, Qt::AlignCenter, "000");
-    eRect.adjust(0, -3.0, 0, 0);
-    painter.fillRect(eRect, brBkgnd);
-    QRectF bRect = painter.boundingRect(r, Qt::AlignCenter, route); // bounding rectangle of text
+//    QRect eRect =painter.boundingRect(r, Qt::AlignCenter, "000");
+//    eRect.adjust(0, -3.0, 0, 0);
+//    painter.fillRect(eRect, brBkgnd);
+    QRectF bRect = painter.boundingRect(r, Qt::AlignCenter, text); // bounding rectangle of text
     bRect.adjust(0, -3.0, 0, 0);
+    bRect.moveTop(offset);
     painter.fillRect(bRect, brBkgnd);
     painter.setPen(Qt::white);
-    painter.drawText(bRect, Qt::AlignCenter, route);
+    painter.drawText(bRect, Qt::AlignCenter, text);
     painter.end();
     resultImage.save(work+ "/images/" + name, "PNG");
-
 
     return str;
 }

@@ -8199,6 +8199,11 @@ bool SQL::insertRouteSegment(SegmentData sd)
  QString commandText;
  if(!sd._startDate.isValid() || !sd._endDate.isValid() || sd._endDate < sd._startDate)
   throw IllegalArgumentException("Invalid dates ");
+ if(!isCompanyValid(sd))
+ {
+  qDebug() << "invalid companyKey " << sd.companyKey();
+  return false;
+ }
 
  commandText = "INSERT INTO Routes(Route, Name, StartDate, EndDate, LineKey, companyKey, tractionType, direction, "
                "next, prev, normalEnter, normalleave, reverseEnter, reverseLeave,sequence, reverseSeq, "
@@ -8231,43 +8236,43 @@ bool SQL::insertRouteSegment(SegmentData sd)
  return true;
 }
 
-bool SQL::insertRouteSegment(RouteData rd)
-{
- QSqlDatabase db = QSqlDatabase::database();
- QSqlQuery query = QSqlQuery(db);
- QString commandText;
- if(!rd._startDate.isValid() || !rd._endDate.isValid() || rd._endDate < rd._startDate)
-  throw IllegalArgumentException("Invalid dates ");
+//bool SQL::insertRouteSegment(RouteData rd)
+//{
+// QSqlDatabase db = QSqlDatabase::database();
+// QSqlQuery query = QSqlQuery(db);
+// QString commandText;
+// if(!rd._startDate.isValid() || !rd._endDate.isValid() || rd._endDate < rd._startDate)
+//  throw IllegalArgumentException("Invalid dates ");
 
- commandText = "INSERT INTO Routes(Route, Name, StartDate, EndDate, LineKey, companyKey, tractionType, direction, "
-               "next, prev, normalEnter, normalleave, reverseEnter, reverseLeave, sequence, reverseSeq,"
-               "oneWay, trackusage) "
-               "VALUES(" + QString("%1").arg(rd._route) + ", '"
-               + rd._name.trimmed() + "', '"
-               + rd._startDate.toString("yyyy/MM/dd") + "', '"
-               + rd._endDate.toString("yyyy/MM/dd") + "',"
-               + QString("%1").arg(rd._lineKey) + ", "
-               + QString("%1").arg(rd._companyKey)+","
-               + QString("%1").arg(rd._tractionType)+",'"
-               + rd._direction +"', "
-               + QString("%1").arg(rd._next) + ","
-               + QString("%1").arg(rd._prev) + ","
-               + QString("%1").arg(rd._normalEnter) + ","
-               + QString("%1").arg(rd._normalLeave) + ","
-               + QString("%1").arg(rd._reverseEnter) + ", "
-               + QString("%1").arg(rd._reverseLeave) + ", "
-               + QString("%1").arg(rd._sequence) + ", "
-               + QString("%1").arg(rd._returnSeq) + ", '"
-               + rd._oneWay + "', '"
-               + rd._trackUsage
-               + "')";
- if(!query.exec(commandText))
- {
-  SQLERROR(query);
-  return false;
- }
- return true;
-}
+// commandText = "INSERT INTO Routes(Route, Name, StartDate, EndDate, LineKey, companyKey, tractionType, direction, "
+//               "next, prev, normalEnter, normalleave, reverseEnter, reverseLeave, sequence, reverseSeq,"
+//               "oneWay, trackusage) "
+//               "VALUES(" + QString("%1").arg(rd._route) + ", '"
+//               + rd._name.trimmed() + "', '"
+//               + rd._startDate.toString("yyyy/MM/dd") + "', '"
+//               + rd._endDate.toString("yyyy/MM/dd") + "',"
+//               + QString("%1").arg(rd._lineKey) + ", "
+//               + QString("%1").arg(rd._companyKey)+","
+//               + QString("%1").arg(rd._tractionType)+",'"
+//               + rd._direction +"', "
+//               + QString("%1").arg(rd._next) + ","
+//               + QString("%1").arg(rd._prev) + ","
+//               + QString("%1").arg(rd._normalEnter) + ","
+//               + QString("%1").arg(rd._normalLeave) + ","
+//               + QString("%1").arg(rd._reverseEnter) + ", "
+//               + QString("%1").arg(rd._reverseLeave) + ", "
+//               + QString("%1").arg(rd._sequence) + ", "
+//               + QString("%1").arg(rd._returnSeq) + ", '"
+//               + rd._oneWay + "', '"
+//               + rd._trackUsage
+//               + "')";
+// if(!query.exec(commandText))
+// {
+//  SQLERROR(query);
+//  return false;
+// }
+// return true;
+//}
 
 /// <summary>
 /// Returns a list of route segments with dates that overlap the specified route segment.
@@ -9738,6 +9743,12 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd, bool notify)
   qDebug() << " date error ";
   return false;
  }
+ if(!isCompanyValid(sd))
+ {
+  qDebug() << "invalid companyKey " << sd.companyKey();
+  return false;
+ }
+
  if(sd._normalEnter > 2 || sd._normalEnter < 0
   || sd._normalLeave > 2 || sd._normalLeave < 0
   || sd._reverseEnter > 2 || sd._reverseEnter < 0
@@ -11823,3 +11834,12 @@ int SQL::displaySqlError(QSqlQuery query, QMessageBox::StandardButtons buttons, 
  return b;
 }
 
+bool SQL::isCompanyValid(SegmentData sd)
+{
+ CompanyData* cd = getCompany(sd.companyKey());
+ if(!cd)
+  return false;
+ if(sd.startDate() >= cd->startDate && sd.endDate()<= cd->endDate)
+  return true;
+ return false;
+}

@@ -42,7 +42,7 @@ console.log("Loading GoogleMaps.js");
 var image = ["http://maps.google.com/mapfiles/marker.png",
   "http://maps.google.com/mapfiles/dd-start.png",
   "http://maps.google.com/mapfiles/dd-end.png",
-  "http://maps.google.com/mapfiles/shadow50.png",
+  "redblank.png",
   "http://www.google.com/mapfiles/arrow.png",
   "http://www.google.com/mapfiles/arrowshadow.png",
   "http://maps.google.com/mapfiles/kml/paddle/grn-blank-lv.png",
@@ -1804,8 +1804,13 @@ function addMarker(i, lat, lon, icon, text, SegmentId)
  webViewBridge.setDebug("add marker at lat: " + lat + " lon: " + lon + " point: " + i);
  //window.external.showSegmentsAtPoint(lat,lon);
  webViewBridge.showSegmentsAtPoint(lat,lon, SegmentId);
- marker = new google.maps.Marker({map: map, position: new google.maps.LatLng(lat, lon),
+ if(typeof icon == "number")
+  marker = new google.maps.Marker({map: map, position: new google.maps.LatLng(lat, lon),
           draggable: true, icon:image[icon], title:text});
+ else
+  marker = new google.maps.Marker({map: map, position: new google.maps.LatLng(lat, lon),
+             draggable: true, icon:icon, title:text});
+
  marker.i = i;
 
  google.maps.event.addListener(marker, "drag", function(pt) {

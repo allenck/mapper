@@ -427,16 +427,17 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
      //menu.addAction(showColumnsAct);
      menu.addAction(updateRouteAct);
      menu.addAction(splitSegmentAct);
-     menu.addAction(addToAnotherRouteAct);
-     addToAnotherRouteAct->setEnabled(sourceModel->_selectedSegments.count());
-     {
-      QItemSelectionModel * model = ui->selectionModel();
-      QModelIndexList indexes = model->selectedIndexes();
-      qint32 segmentId = indexes.at(RouteViewTableModel::SEGMENTID).data().toInt();
-      SegmentInfo sd = SQL::instance()->getSegmentInfo(segmentId);
-      if(sd.tracks()==2)
-       menu.addAction(convertToSingleTrackAct);
-     }
+     if(selectedSegments().count())
+      menu.addAction(addToAnotherRouteAct);
+//     addToAnotherRouteAct->setEnabled(sourceModel->_selectedSegments.count());
+//     {
+//      QItemSelectionModel * model = ui->selectionModel();
+//      QModelIndexList indexes = model->selectedIndexes();
+//      qint32 segmentId = indexes.at(RouteViewTableModel::SEGMENTID).data().toInt();
+//      SegmentInfo sd = SQL::instance()->getSegmentInfo(segmentId);
+//      if(sd.tracks()==2)
+//       menu.addAction(convertToSingleTrackAct);
+//     }
      //if(sourceModel->changedMap.values().count() > 0)
      if(sourceModel->bChangesMade)
      {

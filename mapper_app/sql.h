@@ -258,6 +258,7 @@ public:
     void setForeignKeyCheck(bool b);
     int displaySqlError(QSqlQuery query, QMessageBox::StandardButtons buttons, QString func, QString file, int line);
     //static /*static*/ void distanceFunc(sqlite3_context, int argc, sqlite3_value **argv);
+    bool isCompanyValid(SegmentData sd);
 
 signals:
     void details(QString);
@@ -272,7 +273,7 @@ private:
    // bool compareSegmentData(const segmentData & sd1, const segmentData &sd2);
 //    QT_DEPRECATED void populatePointList(SegmentData sd);
     bool insertRouteSegment(SegmentData sd);
-    bool insertRouteSegment(RouteData sd);
+    //bool insertRouteSegment(RouteData sd);
     bool processFile(QTextStream* in, QSqlDatabase db, bool bIsInclude);
     QString scriptName;
 
