@@ -203,7 +203,7 @@ void JTextArea::common()
     }
     else
      setDocument(doc);
-    if (text != NULL) {
+    if (!text.isEmpty()) {
         setText(text);
 //        select(0, 0);
     }
@@ -269,7 +269,7 @@ void JTextArea::common()
 //        firePropertyChange("tabSize", old, size);
 //    }
 //}
-void JTextArea::setTabSize(int size) { setTabStopWidth(size);}
+void JTextArea::setTabSize(int size) { /*setTabStopWidth*/(size);}
 
 #if 0
 /**
@@ -609,7 +609,8 @@ void JTextArea::setTabSize(int size) { setTabStopWidth(size);}
 /*protected*/ int JTextArea::getColumnWidth() {
     if (columnWidth == 0) {
         QFontMetrics metrics = QFontMetrics(font());
-        columnWidth = metrics.charWidth(QString("m"),0);
+        //columnWidth = metrics.charWidth(QString("m"),0);
+        columnWidth = metrics.horizontalAdvance('m');
     }
     return columnWidth;
 }

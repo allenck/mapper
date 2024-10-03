@@ -18,10 +18,23 @@ public:
  bool checkValid();
  QString toString();
  QString str();
- bool operator ==(const LatLng pt);
+ void operator=(const LatLng& other)
+ {
+  setY(other.y());
+  setX(other.x());
+  latitude = other.latitude;
+  longitude= other.longitude;
+  bValid = other.bValid;
+ }
+
+ bool operator==(const LatLng &other)
+ {
+     return other.latitude == latitude && other.longitude == longitude;
+ }
 
 private:
  bool bValid;
+ double latitude, longitude;
 
 };
 Q_DECLARE_METATYPE(LatLng)

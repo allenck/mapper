@@ -4,53 +4,16 @@
 #include <QObject>
 #include "data.h"
 #include <QSettings>
-#include <iostream>
+//#include <iostream>
 #include <QDebug>
-#include "settingsdb.h"
 #include "city.h"
 #include "connection.h"
+#include "qapplication.h"
+#include <QFont>
 
 class Configuration;
 class SQL;
 
-class Overlay
-{
-public:
- //qint32 id;
- QString name;
- QString description;
- qint32 opacity;
- int minZoom;
- int maxZoom;
- QString source;
- bool bLocal;
- Bounds bounds; // west longitude, south Latitude, east longitude, north latitude
- QString sCenter; // longitude, latitude, zoom level
- QStringList urls;
- Overlay()
- {
-  source="acksoft";
-  bLocal = false;
-  bounds = Bounds();
- }
-
- Overlay(QString name, int opacity = 65)
- {
-  this->name = name;
-  this->opacity = opacity;
-  source="acksoft";
-  bLocal = false;
-  minZoom = 8;
-  maxZoom = 16;
-  bounds = Bounds();
- }
-
- bool operator==(const Overlay &ov)
- {
-  if(this->name == ov.name && this->source == ov.source) {return true;}
-  return false;
- }
-};
 
 
 struct query
@@ -61,32 +24,69 @@ struct query
  QByteArray geometry;
 };
 
+struct routeView
+{
+  QList<QVariant> hiddenColumns;
+  QList<QVariant> movedColumns;
+  QByteArray state;
+  int columnCount;
+};
+
 class Configuration : public QObject
 {
  Q_OBJECT
 public:
- City* currCity;
- Connection* currConnection;
+ City* currCity = nullptr;
+ Connection* currConnection = nullptr;
  void getSettings();
  void saveSettings();
  void setOverlay(Overlay* ov);
+ void addCity(City*);
  QList<City*> cityList;
- QMap<QString, Overlay*> overlayList;
+ QMap<QString, City*> cityMap;
+ QMap<QString, Overlay*>* overlayMap = new QMap<QString, Overlay*>();
  qint32 currentCityId;
  query q;
+ routeView rv;
  static Configuration* instance();
  bool bDisplayWebDebug = false;
  bool bRunInBrowser = false;
+ bool bShowGMFeatures =true;
+ bool bDisplayDebugMsgs = false;
+ bool bDisplaySegmentArrows = false;
  QStringList localOverlayList;
  QStringList georeferencedList;
  QString path;
+ QString saveImageDir;
+ QStringList cityNames();
+ QString lookupCityName(Bounds b);
+ QMap<QString, Bounds> cityBounds;
+ bool loggingOn() {return bLoggingOn;}
+ void setLoggingOn(bool b) {bLoggingOn = b;}
+ bool foreignKeyCheck() {return bForeignKeyCheck;}
+ void setForeignKeyCheck(bool b) {bForeignKeyCheck = b;}
+ QFont font = QApplication::font();
+ void changeFonts(QWidget *obj, QFont f );
+#ifdef Q_OS_MACOS
+ //bool bUseBundleResources = false;
+ QString startCwd;
+#endif
 
 private:
  static Configuration* _instance;
  explicit Configuration(QObject *parent = 0);
-
+ void createDefaultSettings();
+ bool bLoggingOn = false;
+ QUuid _connectionUniqueId;
+ bool bForeignKeyCheck = false;
+ QString cwd;
+ QString devEnv;
+ //bool copyFiles(QString from, QString to);
+// #ifdef Q_OS_MACOS
+//  bool processCopyList();
+// #endif
 signals:
-
+  void newCityCreated(City*);
 public slots:
 
 };

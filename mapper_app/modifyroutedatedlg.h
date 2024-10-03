@@ -18,9 +18,9 @@ class ModifyRouteDateDlg : public QDialog
 public:
     explicit ModifyRouteDateDlg(QWidget *parent = 0);
     ~ModifyRouteDateDlg();
-    void setConfiguration(Configuration *cfg);
+    //void setConfiguration(Configuration *cfg);
     //void setRouteData(routeData rd);
-    void setRouteData(QList<RouteData> routeList, int currentIx);
+    void setRouteData(RouteData* rd);
     RouteData* getRouteData();
 
 private:

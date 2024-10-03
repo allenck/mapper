@@ -9,19 +9,19 @@ TractionTypeView::TractionTypeView(Configuration *cfg, QObject *parent) :
     config = Configuration::instance();
     //sql->setConfig(config);
     sql = SQL::instance();
-    mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     tableView = myParent->ui->tblTractionTypes;
     tableView->verticalHeader()->resize(2,20);
 
     QSqlDatabase db = QSqlDatabase::database();
-    qDebug()<<db.databaseName();
+    //qDebug()<<db.databaseName();
     connect(tableView->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
     tableView->setAlternatingRowColors(true);
 
     model = new MyTractionTypesTableModel(this, db);
     model->setTable("TractionTypes");
     model->setEditStrategy(QSqlTableModel::OnFieldChange);
-    model->query().setForwardOnly(false);
+    //model->query().setForwardOnly(false);
     model->select();
     QString name = model->record(0).value("description").toString();
     tableView->setModel(model);
@@ -93,6 +93,11 @@ bool MyTractionTypesTableModel::setData(const QModelIndex &index, const QVariant
   }
  }
  return QSqlTableModel::setData( index, value, role );
+}
+
+Qt::ItemFlags MyTractionTypesTableModel::flags(const QModelIndex &index) const
+{
+ return Qt::ItemIsEnabled | Qt::ItemIsEditable;
 }
 
 void TractionTypeView::clear()

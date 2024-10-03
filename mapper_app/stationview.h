@@ -9,9 +9,7 @@
 #include <QAbstractTableModel>
 #include <QList>
 #include "data.h"
-
-
-
+#include <QSortFilterProxyModel>
 
 class StationViewSortProxyModel : public QSortFilterProxyModel
 {
@@ -33,6 +31,18 @@ class StationViewTableModel : public QAbstractTableModel
 public:
     explicit StationViewTableModel(QObject *parent = 0);
     StationViewTableModel(QList<StationInfo> stationList, QObject *parent=0);
+    enum COLUMNS
+    {
+     STATIONKEY,
+     NAME,
+     ROUTES,
+     STARTDATE,
+     ENDDATE,
+     LATITUDE,
+     LONGITUDE,
+     MARKER
+    };
+
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
@@ -42,12 +52,14 @@ public:
     bool insertRows(int position, int rows, const QModelIndex &index=QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index=QModelIndex());
     QList< StationInfo > getList();
-    void reset();
     void addStation(StationInfo sti);
     void changeStation(StationInfo sti);
+    void setStationList(QList<StationInfo> stationList);
+
 signals:
 
 public slots:
+    void reset();
 
 private:
     QList<StationInfo> listOfStations;
@@ -59,14 +71,16 @@ class StationView : public QObject
     Q_OBJECT
 public:
     StationView(Configuration *cfg, QObject *parent = 0);
-    void showStations();
+    void showStations(QList<StationInfo> stationList);
     static StationView* instance();
+
 
 signals:
 
 public slots:
     void itemSelectionChanged(QModelIndex index );
     void changeStation(QString typeOfChg, StationInfo sti);
+    StationViewTableModel* model() {return sourceModel;}
 
 private:
     QObject *m_parent;
@@ -80,6 +94,7 @@ private:
     QAction *pasteAction;
     QAction *displayAction;
     QAction *editAction;
+    QAction* deleteAction;
     int curRow;
     int curCol;
     QMenu menu;

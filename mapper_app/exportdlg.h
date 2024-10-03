@@ -22,12 +22,13 @@ private:
     Ui::ExportDlg *ui;
     Configuration * config;
     QTimer *timer;
-
+    bool stopEnabled = false;
+    Connection* currConnection = nullptr;
 
 private slots:
     void chkAll_changed(bool isChecked);
     void btnCancel_clicked();
-    void btnOK_clicked();
+    void btnGo_clicked();
     void quickProcess();
     void chkOverrideToggled(bool checked);
     void newProgressMsg(QString msg);
@@ -38,6 +39,7 @@ private slots:
     void on_chkTractionTypes_toggled(bool);
     void on_chkCompanies_toggled(bool);
     void on_chkAll_toggled(bool);
+    void on_chkRoutes_toggled(bool bChecked);
 };
 
 #endif // EXPORTDLG_H

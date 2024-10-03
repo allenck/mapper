@@ -50,7 +50,7 @@ void CombineRoutesDlg::on_txtNewRouteNbr_editingFinished()
     }
     bool bAlphaRoute = false;
     //bRouteChanging = false;
-    int companyKey = _rd1.companyKey;
+    int companyKey = _rd1.companyKey();
 
     qint32 newRoute = sql->getNumericRoute(ui->txtNewRouteNbr->text(), & _alphaRoute, & bAlphaRoute, companyKey);
 
@@ -81,7 +81,7 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
 
     if(ui->buttonBox->standardButton(button) == QDialogButtonBox::Cancel)
         return;
-    if(_rd1.route <0 || _rd2.route < 0 || ui->cbRoute1->currentIndex() == ui->cbRoute2->currentIndex())
+    if(_rd1.route() <0 || _rd2.route() < 0 || ui->cbRoute1->currentIndex() == ui->cbRoute2->currentIndex())
     {
         ui->lblHelp->setText(tr("Select 2 valid routes"));
         return;
@@ -102,8 +102,8 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
         return;
     }
 
-    sql->BeginTransaction("combineRoutes");
-    _routeNbr = sql->addAltRoute(ui->txtNewRouteNbr->text(), companyData.routePrefix);
+    sql->beginTransaction("combineRoutes");
+    _routeNbr = sql->addAltRoute(ui->txtNewRouteNbr->text(), companyData->routePrefix);
     _alphaRoute = ui->txtNewRouteNbr->text();
 
     QList<RouteData> myArray;
@@ -133,31 +133,41 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
 //        return;
 //    }
 
-    myArray = sql->getRouteSegmentsForDate(_rd1.route, _rd1.name, _rd1.endDate.toString("yyyy/MM/dd"));
+    myArray = sql->getRouteDatasForDate(_rd1.route(), _rd1.routeName(), _rd1.endDate().toString("yyyy/MM/dd"));
 
     foreach(RouteData rd1, myArray)
     {
-        if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->text(), ui->endDate->date().toString("yyyy/MM/dd"), rd1.lineKey, rd1.companyKey, rd1.tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave) == false)
+        if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->date(),
+                                   ui->endDate->date(), rd1.segmentId(), rd1.companyKey(),
+                                   rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
+                                   rd1.normalEnter(), rd1.normalLeave(), rd1.reverseEnter(), rd1.reverseLeave(),
+                                   rd1.sequence(), rd1.returnSeq(),
+                                   rd1.oneWay(), rd1.trackUsage(),rd1.doubleDate()) == false)
         {
             ui->lblHelp->setText(tr("add failed: route ")+ QString("%1").arg(_routeNbr));
             //System.Media.SystemSounds.Asterisk.Play();
-            sql->RollbackTransaction("combineRoutes");
+            sql->rollbackTransaction("combineRoutes");
             return;
         }
     }
-    myArray = sql->getRouteSegmentsForDate(_rd2.route, _rd2.name, _rd2.endDate.toString("yyyy/MM/dd"));
+    myArray = sql->getRouteDatasForDate(_rd2.route(), _rd2.routeName(), _rd2.endDate().toString("yyyy/MM/dd"));
 
     foreach(RouteData rd1, myArray)
     {
-        if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->text(), ui->endDate->date().toString("yyyy/MM/dd"), rd1.lineKey, rd1.companyKey, rd1.tractionType, rd1.direction, rd1.normalEnter, rd1.normalLeave, rd1.reverseEnter, rd1.reverseLeave) == false)
+        if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->date(),
+                                   ui->endDate->date(), rd1.segmentId(), rd1.companyKey(),
+                                   rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(), rd1.normalEnter(), rd1.normalLeave(),
+                                   rd1.reverseEnter(), rd1.reverseLeave(),
+                                   rd1.sequence(), rd1.returnSeq(),
+                                   rd1.oneWay(), rd1.trackUsage(), rd1.doubleDate()) == false)
         {
             ui->lblHelp->setText(tr("add failed"));
             //System.Media.SystemSounds.Asterisk.Play();
-            sql->RollbackTransaction("combineRoutes");
+            sql->rollbackTransaction("combineRoutes");
             return;
         }
     }
-    sql->CommitTransaction("combineRoutes");
+    sql->commitTransaction("combineRoutes");
 
     this->accept();
     this->close();
@@ -173,10 +183,10 @@ void CombineRoutesDlg:: on_cbRoute1_currentIndexChanged(int sel)
 //        return;
 //    }
     _rd1 = routeDataList.at(sel);
-    ui->dateEdit->setMinimumDate(_rd1.startDate);
-    ui->dateEdit->setMaximumDate(_rd1.endDate.addDays(1));
+    ui->dateEdit->setMinimumDate(_rd1.startDate());
+    ui->dateEdit->setMaximumDate(_rd1.endDate().addDays(1));
 
-    ui->endDate->setDate(_rd1.endDate);
+    ui->endDate->setDate(_rd1.endDate());
 }
 void CombineRoutesDlg:: on_cbRoute2_currentIndexChanged(int sel)
 {

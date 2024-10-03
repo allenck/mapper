@@ -109,6 +109,7 @@
  // Then redirect to it
  redirectSystemStreams();
 
+ ConsoleInterface::instance();
  connect(ConsoleInterface::instance(), SIGNAL(message(QString)), this, SLOT(On_appendText(QString)));
 }
 
@@ -194,7 +195,9 @@ void SystemConsole::On_appendText(QString text)
  frame->setMinimumSize(450,300);
  frame->resize(450,300);
  //BorderLayout* frameLayout = new BorderLayout(0,5);
+ QWidget* panel = new QWidget();
  QVBoxLayout* frameLayout = new QVBoxLayout;
+ panel->setLayout(frameLayout);
  //pref = (UserPreferencesManager*)InstanceManager::getDefault("UserPreferencesManager");
 
  // Grab a reference to the system clipboard
@@ -203,10 +206,10 @@ void SystemConsole::On_appendText(QString text)
  // Setup the scroll pane
  //QScrollArea* scroll = new QScrollArea(console);
  //frameLayout->addWidget(console, BorderLayout::Center);
- frameLayout->addWidget(console, 0, Qt::AlignVCenter);
- //console->resize(400, 100);
+ frameLayout->addWidget(console, 1);
  console->setVisible(true);
  console->setReadOnly(true);
+ console->resize(800, 600);
 
  // Add button to allow copy to clipboard
  QWidget* p = new QWidget();
@@ -355,7 +358,7 @@ On_alwaysOnTop_toggled(alwaysOnTop->isChecked());
  // Add the button panel to the frame & then arrange everything
  //frameLayout->addWidget(p, BorderLayout::South);
  frameLayout->addWidget(p, 0, Qt::AlignBottom);
- centralWidgetLayout->addLayout(frameLayout);
+ centralWidgetLayout->addWidget(panel,2);
  frame->adjustSize();
  //frame->pack();
  frame->setVisible(true);

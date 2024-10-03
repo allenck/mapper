@@ -15,12 +15,16 @@ QueryModel::QueryModel(QObject *parent, QSqlDatabase db, QString dbtype) :
 {
  driver=db.driverName();
  dbType = dbtype;
+ qDebug() << "connection name:" << db.connectionName();
+ qDebug() << "driver:" << db.driverName() << " database:" << db.databaseName();
 }
+
 void QueryModel::sort( int column, Qt::SortOrder order)
 {
  //table_blobs->on_init_list(-1);
  return QSqlQueryModel::sort(column, order);
 }
+
 QVariant QueryModel::data(const QModelIndex &index, int role = Qt::DisplayRole) const
 {
  if (!index.isValid())
@@ -84,7 +88,7 @@ QVariant QueryModel::data(const QModelIndex &index, int role = Qt::DisplayRole) 
    break;
   case Qt::TextAlignmentRole: // Qt::TextAlignmentRole 7
    break;
-  case Qt::BackgroundColorRole: // Qt::BackgroundColorRole  8
+  case Qt::BackgroundRole: // Qt::BackgroundColorRole  8
    break;
   case Qt::ForegroundRole: // Qt::ForegroundRole 9
    break;

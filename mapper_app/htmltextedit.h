@@ -2,10 +2,11 @@
 #define HTMLTEXTEDIT_H
 
 #include <QTextEdit>
+#include <QTextBrowser>
 #include <QAction>
 
 class Configuration;
-class HtmlTextEdit : public QTextEdit
+class HtmlTextEdit : public QTextBrowser
 {
  Q_OBJECT
 public:
@@ -22,7 +23,7 @@ private:
  QAction *underlineAct;
  QAction *textZoomAct;
  QAction *textUnzoomAct;
- QAction *setColorAct;
+ QAction *setColorRedAct;
  QAction *setColorGreenAct;
  QAction *setColorBlackAct;
  QAction *setColorGrayAct;
@@ -30,19 +31,21 @@ private:
  QAction *pasteHtmlAct;
  QAction *pasteSaved;
  QAction *copySaved;
+ QAction* setTextColorAct;
+ QAction *setBackgroundColorAct;
  bool bIsDirty;
  void setDirty(bool dirty);
  Configuration* config;
 
 private slots:
- void showContextMenu(const QPoint &pt);
+ void showContextMenu(QPoint pt);
  void OnBoldAction(bool checked);
  void OnItalicAction(bool checked);
  void OnUnderlineAct(bool checked);
  void OnSelectionChanged();
  void OnTextZoomAct();
  void OnTextUnzoomAct();
- void OnSetColorAct(bool checked);
+ void OnSetColorRedAct(bool checked);
  void OnSetColorGreenAct(bool checked);
  void OnSetColorBlackAct(bool checked);
  void OnSetColorGrayAct(bool checked);
@@ -51,6 +54,8 @@ private slots:
  void OnPasteSaved();
  void OnCopySaved();
  void OnTextChanged();
+ void OnSetTextColor(bool);
+ void OnSetBackgroundColor(bool);
 
 };
 

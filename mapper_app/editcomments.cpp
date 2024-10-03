@@ -9,7 +9,7 @@
 #include <QGroupBox>
 #include <QPushButton>
 
-editComments::editComments()
+EditComments::EditComments()
 {
     createMenu();
     createHorizontalGroupBox();
@@ -33,7 +33,7 @@ editComments::editComments()
 
     setWindowTitle(tr("Edit Comments"));
 }
-void editComments::createMenu()
+void EditComments::createMenu()
 {
     menuBar = new QMenuBar();
     fileMenu = new QMenu(tr("&File"), this);
@@ -55,7 +55,7 @@ void editComments::createMenu()
 
 
 }
-void editComments::createHorizontalGroupBox()
+void EditComments::createHorizontalGroupBox()
  {
      horizontalGroupBox = new QGroupBox(tr("Horizontal layout"));
      QHBoxLayout *layout = new QHBoxLayout;
@@ -66,30 +66,30 @@ void editComments::createHorizontalGroupBox()
      }
      horizontalGroupBox->setLayout(layout);
  }
-void editComments::setConfiguration(Configuration *cfg)
+void EditComments::setConfiguration(Configuration *cfg)
 {
     config = cfg;
 }
-void editComments::setHTMLText(QString html)
+void EditComments::setHTMLText(QString html)
 {
     txtEdit->setHtml(html);
 }
-void editComments::setTags(QString tags)
+void EditComments::setTags(QString tags)
 {
     txtTags->setText( tags);
 }
-QString editComments::HTML()
+QString EditComments::HTML()
 {
     QString str = txtEdit->toHtml();
     //qint32 count = str.length();
     return str;
 }
-QString editComments::Tags()
+QString EditComments::Tags()
 {
     return txtTags->text();
 }
 
-void editComments::OnBoldAction(bool checked)
+void EditComments::OnBoldAction(bool checked)
 {
     QTextCursor cur = txtEdit->textCursor();
     if(checked)
@@ -98,18 +98,18 @@ void editComments::OnBoldAction(bool checked)
         txtEdit->setFontWeight(50);
     boldAction->setChecked(!checked);
 }
-void editComments::OnItalicAction(bool checked)
+void EditComments::OnItalicAction(bool checked)
 {
     QTextCursor cur = txtEdit->textCursor();
     txtEdit->setFontItalic(!checked);
     italicAction->setChecked(!checked);
 }
-void editComments::OnUnderlineAct(bool checked)
+void EditComments::OnUnderlineAct(bool checked)
 {
     txtEdit->setFontUnderline(!checked);
     underlineAct->setChecked(!checked);
 }
-void editComments::OnSelectionChanged()
+void EditComments::OnSelectionChanged()
 {
     if(txtEdit->fontWeight()< 75)
         boldAction->setChecked(false);

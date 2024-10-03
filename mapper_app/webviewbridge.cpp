@@ -1,105 +1,152 @@
 #include "webviewbridge.h"
-#include "mainwindow.h"
 #include <QDebug>
+#include <QApplication>
+#include <QClipboard>
+#include "segmentview.h"
+#include <QFileDialog>
+#include "exceptions.h"
+#include "mainwindow.h"
 
-webViewBridge* webViewBridge::_instance = NULL;
+WebViewBridge* WebViewBridge::_instance = NULL;
 
-webViewBridge::webViewBridge(QObject *parent)
- : QObject(parent)
+WebViewBridge::WebViewBridge(MainWindow *parent)
+ : QObject()
 {
  m_parent = parent;
  _instance = this;
+ config = Configuration::instance();
 }
 
-webViewBridge::webViewBridge(LatLng latLng, int zoom, QString maptype, QObject *parent)
- : QObject(parent)
+WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString maptype, MainWindow *parent)
+ : QObject()
 {
  this->_latLng = latLng;
  this->_lat = latLng.lat();
  this->_lon = latLng.lon();
  this->_zoom = zoom;
  this->maptype = maptype;
+ m_parent = parent;
+
+
  _instance = this;
+ config = Configuration::instance();
 }
 
-webViewBridge::~webViewBridge()
+WebViewBridge::~WebViewBridge()
 {
     //
 }
 
-webViewBridge* webViewBridge::instance()
+WebViewBridge* WebViewBridge::instance()
 {
  if(_instance == NULL)
-  _instance = new webViewBridge();
+  _instance = new WebViewBridge();
  return _instance;
 }
 
-float webViewBridge::curLat() const {return _lat;}
-float webViewBridge::curLon(){return _lon;}
-LatLng webViewBridge::curLatLng(){return _latLng;}
-void webViewBridge::setLatLng(LatLng latlng){this->_latLng = latlng; emit latlngChanged(latlng);}
-int webViewBridge::curZoom(){return _zoom;}
-QVariant webViewBridge::getRslt(){return myRslt;}
-QString webViewBridge::curMaptype(){return maptype;}
-//int webViewBridge::curBrowseWindowWidth(){return browseWindowWidth;}
-//int webViewBridge::curBrowseWindowHeight(){return browseWindowHeight;}
-void webViewBridge::processScript(QString func, QString parms)
+float WebViewBridge::curLat() const {return _lat;}
+float WebViewBridge::curLon(){return _lon;}
+LatLng WebViewBridge::curLatLng(){return _latLng;}
+void WebViewBridge::setLatLng(LatLng latlng){this->_latLng = latlng; emit latlngChanged(latlng);}
+int WebViewBridge::curZoom(){return _zoom;}
+QVariant WebViewBridge::getRslt(){return myRslt;}
+QString WebViewBridge::curMaptype(){return maptype;}
+
+void WebViewBridge::processScript(QString func, QString parms)
 {
+ qDebug() << "processScript " << func << " " << parms;
+
  bResultReceived = false;
  emit executeScript( func,  parms);
  if(func == "loadOverlay")
   qDebug()<<func + " " + parms + "\n";
 }
-void webViewBridge::processScript(QString func)
+void WebViewBridge::processScript(QString func)
 {
+ qDebug() << "processScript " << func;
  bResultReceived = false;
- myRslt = QVariant();
+ //myRslt = QVariant();
  myList = QVariantList();
  emit executeScript( func, "");
 }
 
-void webViewBridge::processScript(QString func, QString parms, QString name, QString value)
+void WebViewBridge::processScript(QString func, QString parms, QString name, QString value)
 {
+ //qDebug() << "processScript " << func;
  bResultReceived = false;
  emit executeScript2( func,  parms, name, value);
  if(func == "loadOverlay")
   qDebug()<<func + " " + parms + "\n";
 }
 
-void webViewBridge::processScript(QString func, QVariantList objArray)
+void WebViewBridge::processScript(QString func, QVariantList objArray)
 {
+ qDebug() << "processScript " << func;
+
  bResultReceived = false;
  emit executeScript3(func, objArray, objArray.count() );
  if(func == "loadOverlay")
   qDebug()<<func + " + " + QString("%1").arg(objArray.count()) + " parameters";
 }
 
-void webViewBridge::selectSegment(qint32 i, qint32 SegmentId)
+void WebViewBridge::selectSegment(qint32 i, qint32 SegmentId)
 {
 //    //MainWindow::selectSegment(i, SegmentId);
 //    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-//    parent->selectSegment(i, SegmentId);
+    m_parent->segmentSelected(i, SegmentId);
  emit segmentSelected(i, SegmentId);
 }
 
-void webViewBridge::getInfoWindowComments(double lat, double lon, int route, QString date, int func)
+void WebViewBridge::selectSegmentX(qint32 i, qint32 SegmentId, QVariantList array)
 {
- mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
- parent->getInfoWindowComments(lat, lon, route, date, func);
+//    //MainWindow::selectSegment(i, SegmentId);
+//    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
+    m_parent->segmentSelected(i, SegmentId);
+ emit segmentSelectedX(i, SegmentId, buildPoints(array));
+}
+
+// Display a route comment for date.
+void WebViewBridge::getInfoWindowComments(double lat, double lon, int route, QString date, int func)
+{
+
+ m_parent->getInfoWindowComments(lat, lon, route, date, func);
 }
 
 // receive result of function
-void webViewBridge::scriptResult(QVariant value)
+void WebViewBridge::scriptResult(QVariant value)
 {
- qDebug() << "scriptResult" << value;
- if(value.isNull())
-  return;
- myRslt = value;
- bResultReceived = true;
- emit on_scriptResult(value);
+ try {
+  if(value != QVariant())
+   qDebug() << "scriptResult" << value;
+  myRslt = value;
+  bResultReceived = true;
+  emit on_scriptResult(value);
+ }
+ catch(Exception)
+ {
+  qDebug() << "bad script result";
+ }
 }
 
-void webViewBridge::scriptArrayResult(QVariantList value)
+// receive result of function
+void WebViewBridge::scriptFunctionResult(QVariant function, QVariant value)
+{
+    try {
+        qDebug() << "scriptFunctionResult" << function << value;
+        //  if(value.isNull())
+        //   return;
+        myRslt = value;
+        bResultReceived = true;
+        emit on_scriptFunctionResult(function,value);
+    }
+    catch(Exception)
+    {
+        qDebug() << "bad script result";
+    }
+}
+
+
+void WebViewBridge::scriptArrayResult(QVariantList value)
 {
     if(value.isEmpty()) return;
  myList = value;
@@ -107,142 +154,236 @@ void webViewBridge::scriptArrayResult(QVariantList value)
  emit on_scriptArrayResult(value);
 }
 
-bool webViewBridge::isResultReceived()
+bool WebViewBridge::isResultReceived()
 {
  return bResultReceived;
 }
 
-void webViewBridge::setPoint(qint32 i, double lat, double lon)
+void WebViewBridge::setPoint(qint32 i, double lat, double lon)
 {
-    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-    parent->SetPoint(i, lat, lon);
+
+    m_parent->SetPoint(i, lat, lon);
 }
 
-void webViewBridge::segmentStatus(QString txt, QString color)
+void WebViewBridge::segmentStatus(QString txt, QString color)
 {
 //    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-//    parent->segmentStatus(txt, color);
+//    m_parent->segmentStatus(txt, color);
  bResultReceived = true;
  emit segmentStatusSignal(txt, color);
 }
 
-void webViewBridge::setLat(double lat)
+void WebViewBridge::setLat(double lat)
 {
 //    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-//    parent->setLat(lat);
+//    m_parent->setLat(lat);
 }
-void webViewBridge::setLon(double lon)
+
+void WebViewBridge::setLon(double lon)
 {
 //    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-//    parent->setLat(lon);
+//    m_parent->setLat(lon);
 }
-void webViewBridge::setDebug(QString str)
+void WebViewBridge::setDebug(QString str)
 {
  emit outputSetDebug(str);
 }
-void webViewBridge::setLen(qint32 len)
+void WebViewBridge::setLen(qint32 len)
 {
-    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-    parent->setLen(len);
+
+    m_parent->setLen(len);
 }
-void webViewBridge::setCenter(double lat, double lon, int zoom, QString maptype)
+void WebViewBridge::setCenter(double lat, double lon, int zoom, QString maptype)
 {
-    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-    parent->m_latitude = lat;
-    parent->m_longitude = lon;
-    parent->m_zoom = zoom;
-    parent->m_maptype = maptype;
+    m_parent->m_latitude = lat;
+    m_parent->m_longitude = lon;
+    m_parent->m_zoom = zoom;
+    m_parent->m_maptype = maptype;
     bResultReceived = true;
 }
 
-void webViewBridge::addPoint(int pt, double lat, double lon)
+void WebViewBridge::addPoint(int pt, double lat, double lon)
 {
 //    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-//    parent->addPoint();
+//    m_parent->addPoint();
  emit addPointSignal(pt, lat, lon);
 }
+
+void WebViewBridge::addPointX(int pt, QVariantList array)
+{
+    //    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
+    //    m_parent->addPoint();
+    emit addPointSignalX(pt, buildPoints(array));
+}
+
+void WebViewBridge::addPointMode(bool bOn)
+{
+ m_parent->m_bAddMode = bOn;
+}
+
 //TODO
-void webViewBridge::moveRouteStartMarker(double lat, double lon, qint32 segmentId, qint32 i)
+void WebViewBridge::moveRouteStartMarker(double lat, double lon, qint32 segmentId, qint32 i)
 {
-    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-    parent->moveRouteStartMarker(lat, lon, segmentId, i);
+
+    m_parent->moveRouteStartMarker(lat, lon, segmentId, i);
 }
-void webViewBridge::moveRouteEndMarker(double lat, double lon, qint32 segmentId, qint32 i)
+void WebViewBridge::moveRouteEndMarker(double lat, double lon, qint32 segmentId, qint32 i)
 {
-    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-    parent->moveRouteEndMarker(lat, lon, segmentId, i);
+
+    m_parent->moveRouteEndMarker(lat, lon, segmentId, i);
 }
-QString webViewBridge::getImagePath(qint32 i)
+QString WebViewBridge::getImagePath(qint32 i)
 {
     Q_UNUSED(i)
     //mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-//TODO:    return parent->getImagePath(i);
+//TODO:    return m_parent->getImagePath(i);
     return "";  // remove when implemented.
 }
 
-void webViewBridge::movePoint(qint32 segmentId, qint32 i, double lat, double lng)
+void WebViewBridge::movePoint(qint32 segmentId, qint32 i, double lat, double lng)
 {
  emit movePointSignal(segmentId, i, lat, lng);
+ //m_parent->movePoint(segmentId, i, lat, lng);
 }
 
-void webViewBridge::insertPoint(int SegmentId, qint32 i, double newLat, double newLon)
+void WebViewBridge::movePointX(qint32 segmentId, qint32 i, QVariantList array)
+{
+    emit movePointSignalX(segmentId, i, buildPoints(array));
+    //m_parent->movePoint(segmentId, i, lat, lng);
+}
+
+void WebViewBridge::insertPoint(int SegmentId, qint32 i, double newLat, double newLon)
 {
  emit insertPointSignal(SegmentId, i, newLat, newLon);
 }
 
-void webViewBridge::updateIntersection(qint32 i, double newLat, double newLon)
+void WebViewBridge::insertPointX(int SegmentId, qint32 i, QVariantList array)
 {
-    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-    return parent->updateIntersection( i, newLat, newLon);
-}
-void webViewBridge::displayZoom(int zoom)
-{
-    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-    parent->getZoom(zoom);
+    emit insertPointSignalX(SegmentId, i, buildPoints(array));
 }
 
-void webViewBridge::showSegmentsAtPoint(double lat, double lon, qint32 segmentId)
+void WebViewBridge::updateIntersection(qint32 i, double newLat, double newLon)
 {
-    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-    parent->segmentView->showSegmentsAtPoint(lat, lon, segmentId);
+
+    return m_parent->updateIntersection( i, newLat, newLon);
 }
-void webViewBridge::queryOverlay()
+void WebViewBridge::displayZoom(int zoom)
+{
+
+    m_parent->getZoom(zoom);
+}
+
+void WebViewBridge::showSegmentsAtPoint(double lat, double lon, qint32 segmentId)
+{
+
+    m_parent->segmentView->showSegmentsAtPoint(lat, lon, segmentId);
+}
+
+void WebViewBridge::queryOverlay()
 {
 //    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-//    parent->queryOverlay();
+//    m_parent->queryOverlay();
  emit queryOverlaySignal();
 }
-void webViewBridge::opacityChanged(QString name, qint32 opacity)
-{
-    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-    parent->opacityChanged(name, opacity);
 
-}
-
-void webViewBridge::getGeocoderResults(QString text)
+void WebViewBridge::initialized()
 {
-    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-    parent->getGeocoderResults(text);
+ m_parent->showGoogleMapFeaturesAct->trigger();
 }
 
-void webViewBridge::setStation(double lat, double lon, qint32 SegmentId, qint32 i)
+void WebViewBridge::opacityChanged(QString name, qint32 opacity)
 {
-    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-    parent->setStation(lat, lon, SegmentId, i);
-}
-void webViewBridge::updateStation(qint32 stationKey, qint32 segmentId)
-{
-    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-    parent->updateStation(stationKey, segmentId);
-}
-void webViewBridge::moveStationMarker(qint32 stationKey, qint32 segmentId, double lat, double lng)
-{
-    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-    parent->moveStationMarker(stationKey, segmentId, lat, lng);
+    m_parent->opacityChanged(name, opacity);
 }
 
-void webViewBridge::mapInit()
+void WebViewBridge::getGeocoderResults(QString text)
 {
- mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
- parent->mapInit();
+    m_parent->getGeocoderResults(text);
+}
+
+void WebViewBridge::setStation(double lat, double lon, qint32 SegmentId, qint32 i)
+{
+    m_parent->setStation(lat, lon, SegmentId, i);
+}
+void WebViewBridge::updateStation(qint32 stationKey, qint32 segmentId)
+{
+
+    m_parent->updateStation(stationKey, segmentId);
+}
+void WebViewBridge::moveStationMarker(qint32 stationKey, qint32 segmentId, double lat, double lng)
+{
+
+    m_parent->moveStationMarker(stationKey, segmentId, lat, lng);
+}
+void WebViewBridge::moveRouteComment(qint32 route, QString date, double lat, double lng, int companyKey)
+{
+
+    m_parent->moveRouteComment(route, date, lat, lng, companyKey);
+}
+
+
+void WebViewBridge::mapInit()
+{
+
+ m_parent->mapInit();
+}
+
+void WebViewBridge::debug(QString text)
+{
+ qDebug() << text;
+}
+
+void WebViewBridge::cityBounds(double neLat, double neLng, double swLat, double swLng)
+{
+ Bounds bounds = Bounds(LatLng(swLat, swLng), LatLng(neLat, neLng));
+ qDebug() << "city bounds" << bounds.toString() << "valid=" << bounds.isValid();
+ config->currCity->setBounds(bounds);
+ LatLng center = bounds.center();
+ config->currCity->setCenter(center);
+ config->saveSettings();
+ processScript("closeCityBoundsButton");
+ emit on_cityBounds(bounds);
+
+ Parameters parms = SQL::instance()->getParameters();
+ parms.lat = center.lat();
+ parms.lon = center.lon();
+ SQL::instance()->updateParameters(parms);
+}
+
+void WebViewBridge::rightClicked(QString text)
+{
+    //_rightClickLoc = rightClickLoc;
+    qDebug() << "LatLng:"<< text;
+    QClipboard* clipBoard = QGuiApplication::clipboard();
+    clipBoard->setText(text);
+}
+
+void WebViewBridge::screenshot(QString base64image)
+{
+ QString saveFilename = QFileDialog::getSaveFileName(nullptr, "Save as", "Choose a filename", "PNG(*.png);; TIFF(*.tiff *.tif);; JPEG(*.jpg *.jpeg)");
+
+ QString saveExtension = "PNG";
+ int pos = saveFilename.lastIndexOf('.');
+ if (pos >= 0)
+     saveExtension = saveFilename.mid(pos + 1);
+ QString ext = "." + saveExtension.toLower();
+ if(!saveFilename.endsWith(ext))
+  saveFilename.append(ext);
+
+ QByteArray base64Data = base64image.toLatin1().mid(base64image.indexOf(",")+1);
+ QImage image;
+ if(image.loadFromData(QByteArray::fromBase64(base64Data)))
+ {
+  image.save(saveFilename, "PNG");
+ }
+}
+
+QList<LatLng> WebViewBridge::buildPoints(QVariantList array)
+{
+    QList<LatLng> points;
+    for(int i=0; i < array.count(); i+=2)
+    {
+        points.append(LatLng(array.at(i).toDouble(), array.at(i+1).toDouble()));
+    }
+    return points;
 }

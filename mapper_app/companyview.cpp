@@ -7,34 +7,39 @@ CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     m_parent = parent;
     config = Configuration::instance();
     //sql->setConfig(config);
-    mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     tableView = myParent->ui->tblCompanyView;
 #if QT_VERSION < 0x050000
     tableView->horizontalHeader()->setMovable(true);
 
     tableView->horizontalHeader()->setSectionsMovable(true);
 #endif
+    _instance = this;
 
     QSqlDatabase db = QSqlDatabase::database();
-    qDebug()<<db.databaseName();
+    //qDebug()<<db.databaseName();
     tableView->setAlternatingRowColors(true);
     connect(tableView->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
 
-    model = new QSqlTableModel(this, db);
-    model->setTable("Companies");
-    connect(model, SIGNAL(primeInsert(int,QSqlRecord&)), this, SLOT(On_primeInsert(int,QSqlRecord&)));
+    _model = new MyCompanyTableModel(this, db);
+    _model->setTable("Companies");
+    _model->setSort(1, Qt::AscendingOrder);
+    connect(_model, SIGNAL(primeInsert(int,QSqlRecord&)), this, SLOT(On_primeInsert(int,QSqlRecord&)));
     //model->setQuery("select * from Companies");
-    connect(model, SIGNAL(beforeUpdate(int,QSqlRecord&)), this, SLOT(On_primeInsert(int,QSqlRecord&)));
+    connect(_model, SIGNAL(beforeUpdate(int,QSqlRecord&)), this, SLOT(On_primeInsert(int,QSqlRecord&)));
 
-    model->setEditStrategy(QSqlTableModel::OnFieldChange);
-    model->query().setForwardOnly(false);
-    model->select();
-    QString name = model->record(0).value("description").toString();
-    tableView->setModel(model);
-
-    QSqlRecord r = model->record(0);
+    _model->setEditStrategy(QSqlTableModel::OnFieldChange);
+    //model->query().setForwardOnly(false);
+    _model->select();
+    QString name = _model->record(0).value("description").toString();
+    QSortFilterProxyModel* proxyModel = new QSortFilterProxyModel();
+    proxyModel->setSourceModel(_model);
+    tableView->setModel(proxyModel);
+    tableView->setSortingEnabled(true);
+    QSqlRecord r = _model->record(0);
     int ixRoutePrefix = r.indexOf("routePrefix");
     tableView->horizontalHeader()->moveSection(ixRoutePrefix,2);
+    tableView->resizeColumnsToContents();
 
     bNeedsRefresh = false;
     //connect(tableView, SIGNAL())
@@ -65,24 +70,38 @@ void CompanyView::Resize (int oldcount,int newcount)
 }
 void CompanyView::refresh()
 {
-    model->select();
+    _model->select();
     tableView->show();
+
+    // also refresh Mainwindow Company ComboBox
+    MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
+    myParent->refreshCompanies();
 }
 
 void CompanyView::clear()
 {
-    model->clear();
+    _model->clear();
 }
+
+CompanyView* CompanyView::_instance = nullptr;
+CompanyView* CompanyView::instance(){return _instance;}
 
 void CompanyView::newRecord()
 {
- QSqlRecord record = model->record();
- record.setValue(1,QVariant(tr("new description")));
- record.setValue(2,QVariant("1890/01/01"));
- record.setValue(3,QVariant(tr("1950/12/31")));
- record.setValue(6, QVariant(""));
- model->insertRecord(-1,record);
- currentIndex = model->index(model->rowCount()-1,0);
+// QSqlRecord record = model->record();
+// record.setValue(1, QVariant(tr("new description")));
+// record.setValue(2, QVariant("")); // info
+// record.setValue(3, QVariant("")); // prefix
+// record.setValue(4, QVariant("1870/01/01"));
+// record.setValue(5, QVariant("1950/12/31"));
+ bool rslt = SQL::instance()->addCompany("new company", -1, "1870/01/01", "1950/12/31");
+ if(!rslt)
+ {
+  QSqlDatabase db = QSqlDatabase::database();
+  QSqlError err = db.lastError();
+  QMessageBox::warning(nullptr, tr("Warning"), tr("no record was inserted.\n ")+err.text());
+ }
+ currentIndex = _model->index(_model->rowCount()-1,0);
  refresh();
 }
 
@@ -93,7 +112,7 @@ void CompanyView::delRecord()
  QModelIndexList indexes = selectionModel->selectedIndexes();
  QModelIndex Index = indexes.at(0);
 
- model->removeRow(Index.row());
+ _model->removeRow(Index.row());
 }
 
 //get QTableView selected item
@@ -126,6 +145,16 @@ void CompanyView::tablev_customContextMenu( const QPoint& pt)
  menu->exec(QCursor::pos());
 
 }
+
+QVariant MyCompanyTableModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+ QVariant value = QSqlTableModel::headerData(section, orientation,role);
+ if(orientation == Qt::Horizontal && role == Qt::DisplayRole)
+  return hdrMap.value(value.toString());
+ return value;
+}
+
+
 QVariant MyCompanyTableModel::data ( const QModelIndex & index, int role ) const
 {
  if (!index.isValid())
@@ -142,6 +171,7 @@ bool MyCompanyTableModel::setData(const QModelIndex &index, const QVariant &valu
  {
   hdr = headerData(index.column(), Qt::Horizontal, Qt::DisplayRole);
  }
+ emit companyChange();
  return QSqlTableModel::setData( index, value, role );
 }
 

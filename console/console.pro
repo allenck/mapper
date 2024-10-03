@@ -3,12 +3,13 @@
 # Project created by QtCreator 2016-02-23T15:06:32
 #
 #-------------------------------------------------
-greaterThan(QT_MAJOR_VERSION, 4):QT += widgets
+QT += core widgets gui
 
 TARGET = Console
 TEMPLATE = lib
 
 DEFINES += CONSOLE_LIBRARY
+DEFINES += QT_MESSAGELOGCONTEXT
 
 SOURCES += \
     consoleinterface.cpp \
@@ -19,7 +20,7 @@ SOURCES += \
     jtogglebutton.cpp
 
 HEADERS +=\
-        console_global.h \
+    console_global.h \
     consoleinterface.h \
     systemconsole.h \
     systemconsoleaction.h \
@@ -32,17 +33,17 @@ unix {
     target.path = /usr/lib
     INSTALLS += target
 }
-#win32: {
-# build_pass:CONFIG(debug, debug|release) {
-#  DESTDIR = ../mapper_app/debug
-# } else {
-# DESTDIR = ../mapper_app/release
-# }
-#}
-#unix: {
-# build_pass:CONFIG(debug, debug|release) {
-#  DESTDIR = ../mapper_app
-# } else {
-# DESTDIR = ../mapper_app
-# }
-#}
+win32: {
+ build_pass:CONFIG(debug, debug|release) {
+  DESTDIR = ../mapper_app/debug
+ } else {
+  DESTDIR = ../mapper_app/release
+ }
+}
+unix:macx: {
+ build_pass:CONFIG(debug, debug|release) {
+  DESTDIR = ../mapper_app
+ } else {
+ DESTDIR = ../mapper_app
+ }
+}

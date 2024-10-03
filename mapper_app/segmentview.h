@@ -17,18 +17,28 @@ public:
     QMenu menu;
 
     void showSegmentsAtPoint(double lat, double lon, qint32 SegmentId);
-    segmentViewTableModel *sourceModel;
+    SegmentViewTableModel *sourceModel;
     segmentViewSortProxyModel *proxymodel;
     QModelIndex currentIndex;
+    int selectedRow();
+    int selectedSegmentId();
+
 signals:
     void sendRows(int, int);
+    void selectSegment(int);
+
 public slots:
     void editSegment();
+    void on_segmentSelected(int, int segmentId);
+
 private:
-    QAction *copyAction;
-    QAction *pasteAction;
-    QAction *addToRouteAct;
+//    QAction *copyAction;
+//    QAction *pasteAction;
+    //QAction *addToRouteAct;
+    QAction *addInUpdateRoute;
     QAction *editSegmentAct;
+    QAction *selectSegmentAct;
+    QAction* removeFromRoute;
     qint32 curRow, curCol;
     QStringList headers;
     QTableView* ui;
@@ -41,8 +51,8 @@ private:
 private slots:
     void tablev_customContextMenu( const QPoint& pt);
 
-    void aCopy();
-    void aPaste();
+//    void aCopy();
+//    void aPaste();
     void addToRoute();
     void itemSelectionChanged(QModelIndex index );
     void Resize (int oldcount,int newcount);

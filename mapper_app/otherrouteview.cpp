@@ -10,9 +10,8 @@ OtherRouteView::OtherRouteView( QObject *parent) :
     config = Configuration::instance();
     //sql->setConfig(config);
     sql = SQL::instance();
-    mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow* myParent = MainWindow::instance();
     ui = myParent->ui->tblOtherRouteView;
-    connect(ui->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
 
     ui->setAlternatingRowColors(true);
     ui->resizeColumnsToContents();
@@ -26,6 +25,7 @@ OtherRouteView::OtherRouteView( QObject *parent) :
     proxymodel->setSourceModel(sourceModel);
     ui->setModel(proxymodel);
     //connect(this, SIGNAL(sendRows(int, int)), proxymodel, SLOT(getRows(int,int)));
+    connect(ui->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
 
     myParent->ui->tabWidget->setTabText(2, tr("Like Routes"));
     _instance = this;
@@ -33,11 +33,12 @@ OtherRouteView::OtherRouteView( QObject *parent) :
     ui->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
 }
-OtherRouteView* OtherRouteView::instance( QObject* parent)
+
+OtherRouteView* OtherRouteView::instance(/* QObject* parent*/)
 {
  if(_instance == NULL)
  {
-  _instance = new OtherRouteView(parent);
+  _instance = new OtherRouteView(/*parent*/);
  }
  return _instance;
 }
@@ -54,19 +55,19 @@ void OtherRouteView::Resize (int oldcount,int newcount)
 void OtherRouteView::showRoutesUsingSegment(qint32 segmentId)
 {
     //SQL sql;
-    mainWindow* myParent = qobject_cast<mainWindow*>(m_parent);
+    MainWindow* myParent = MainWindow::instance();
     //sql->setConfig(myParent->getConfiguration());
-    QList<RouteData> likeRoutes =   sql->getRoutes(segmentId);
+    QList<SegmentData*> likeRoutes =   sql->getRoutes(segmentId);
     if(likeRoutes.isEmpty())
         return;
     SegmentInfo si = sql->getSegmentInfo(segmentId);
-    if(si.segmentId<1)
+    if(si.segmentId()<1)
         return;
     ui->setSortingEnabled(false);
-    myParent->ui->label_7->setText(tr("Routes using segment #%1 %2").arg(si.segmentId).arg(si.description));
+    myParent->ui->likeRoutesLabel->setText(tr("Routes using segment #%1 %2").arg(si.segmentId()).arg(si.description()));
 
 
-    sourceModel = new OtherRouteViewTableModel(likeRoutes, si, this);
+    sourceModel = new OtherRouteViewTableModel(likeRoutes, sd, this);
     proxymodel->setSourceModel(sourceModel);
 
     ui->setModel(proxymodel);
@@ -102,8 +103,8 @@ void OtherRouteView::tablev_customContextMenu( const QPoint& pt)
         QModelIndex modelIndex = indexes.at(0);
         QModelIndex sourceModelIndex = ((QSortFilterProxyModel*)ui->model())->mapToSource(modelIndex);
         qint32 row = sourceModelIndex.row();
-        QList<RouteData> list = sourceModel->getList();
-        rd = list.at(row);
+        QList<SegmentData*> list = sourceModel->getList();
+        sd = list.at(row);
 
         menu.addAction(displayRouteAct);
         menu.exec(QCursor::pos());
@@ -127,6 +128,8 @@ bool OtherRouteView::boolGetItemTableView(QTableView *table)
 
 void OtherRouteView::On_displayRouteAct_triggered(bool)
 {
+ RouteData rd = RouteData(*sd);
+ MainWindow::instance()->selectRoute(rd);
  emit displayRoute(rd);
 }
 
@@ -182,11 +185,11 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QObject *parent) :
 {
 }
 
-OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeIntersectList, SegmentInfo siIn, QObject *parent)
+OtherRouteViewTableModel::OtherRouteViewTableModel(QList<SegmentData*> routeIntersectList, SegmentData *sdIn, QObject *parent)
      : QAbstractTableModel(parent)
  {
      listOfRoutes = routeIntersectList;
-     si = siIn;
+     sd = sdIn;
  }
 
  int OtherRouteViewTableModel::rowCount(const QModelIndex &parent) const
@@ -224,23 +227,23 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeInterse
 //         }
 //     }
 
-     RouteData rd = listOfRoutes.at(index.row());
+     SegmentData *sd = new SegmentData(*listOfRoutes.at(index.row()));
      if (role == Qt::DisplayRole) {
          switch(index.column())
          {
          case 0:
              //TODO setup checkbox if segment used in route.
-             return rd.alphaRoute;
+             return sd->alphaRoute();
          case 1:
-             return rd.name; // route name
+             return sd->routeName(); // route name
          case 2:
-             return rd.startDate.toString("yyyy/MM/dd");
+             return sd->startDate().toString("yyyy/MM/dd");
          case 3:
-             return rd.endDate.toString("yyyy/MM/dd");
+             return sd->endDate().toString("yyyy/MM/dd");
 //         case 4:
 //             return si.description; // segment name
          case 4:
-             switch(rd.normalEnter)
+             switch(sd->normalEnter())
              {
                 case 1:
                  return "left";
@@ -253,7 +256,7 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeInterse
              }
 
          case 5:
-             switch(rd.normalLeave)
+             switch(sd->normalLeave())
              {
                 case 1:
                  return "left";
@@ -265,9 +268,9 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeInterse
                  return "???";
              }
             case 6:
-             if(si.oneWay == "N")
+             if(sd->oneWay() == "N")
              {
-                 switch(rd.reverseEnter)
+                 switch(sd->reverseEnter())
                  {
                     case 1:
                      return "left";
@@ -281,9 +284,9 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeInterse
              }
              return "na";
             case 7:
-             if(si.oneWay == "N")
+             if(sd->oneWay() == "N")
              {
-                 switch(rd.reverseLeave)
+                 switch(sd->reverseLeave())
                  {
                     case 1:
                      return "left";
@@ -341,8 +344,8 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeInterse
 
      for (int row=0; row < rows; row++) {
          //QPair<QString, QString> pair(" ", " ");
-         RouteData rd;
-         listOfRoutes.insert(position, rd);
+         SegmentData* sd = nullptr;
+         listOfRoutes.insert(position, sd);
      }
 
      endInsertRows();
@@ -368,7 +371,7 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeInterse
      if (index.isValid() && role == Qt::EditRole) {
          int row = index.row();
 
-         RouteData rd = listOfRoutes.value(row);
+         SegmentData* rd = listOfRoutes.value(row);
 
 //         switch (index.column())
 //             p.first = value.toString();
@@ -401,7 +404,7 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QList<RouteData> routeInterse
      return QAbstractTableModel::flags(index);
  }
 
- QList< RouteData > OtherRouteViewTableModel::getList()
+ QList< SegmentData* > OtherRouteViewTableModel::getList()
  {
      return listOfRoutes;
  }
