@@ -1,6 +1,7 @@
-**Recent Changes September 2024 VERSION=1.1.4
+**Recent Changes September-October 2024 VERSION=1.1.4
 1. Additional routes for Berlin as of 1901 added based on information from
    https://www.berliner-linienchronik.de/lv-1901.html
+2. Implement feature where only routes for selected companies are showm in routes combobox.
 
 **Recent Changes April 2024 VERSION=1.1.3
 1. Fix ModifyTractionTypeDlg.
