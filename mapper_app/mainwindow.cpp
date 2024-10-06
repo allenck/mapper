@@ -2997,7 +2997,7 @@ void MainWindow::refreshCompanies()
             else
                 config->currCity->selectedCompanies.replace(","+companyId, "");
             if(config->currCity->selectedCompaniesList.contains(item->data().toInt()))
-                config->currCity->selectedCompaniesList.remove(item->data().toInt());
+                config->currCity->selectedCompaniesList.removeOne(item->data().toInt());
         }
         refreshRoutes();
     });
