@@ -524,6 +524,72 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
  }
  return list;;
 }
+QList<RouteData> SQL::getRoutesByEndDate(QString companyList)
+{
+ QList<RouteData> list;
+ QList<RouteInfo*> riList;
+ RouteData rd;
+ QSqlQuery query;
+ QString commandText;
+ if(!dbOpen())
+     throw Exception(tr("database not open: %1").arg(__LINE__));
+ QSqlDatabase db = QSqlDatabase::database();
+ QString where;
+ //if(companyKey >0)
+  where= " where r.companyKey in( " + companyList +")";
+ commandText = "Select distinct c.baseRoute, r.route, r.name, r.startDate, r.endDate, r.companyKey, "
+               "tractionType, routeAlpha  "
+               "from Routes r "
+               "join AltRoute c on r.route =  c.route "
+               + where +
+               " group by c.baseRoute, r.route, r.name, r.startDate, r.endDate, r.companykey,tractionType, c.routeAlpha "
+               " order by c.routeAlpha, r.name, r.endDate ";
+ query = QSqlQuery(db);
+ bool bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+  SQLERROR(query);
+  return list;
+ }
+ int ix =-1;
+ while (query.next())
+ {
+  ix++;
+  RouteInfo* ri = new RouteInfo();
+  ri->baseRoute = query.value(0).toInt();
+  ri->route = query.value(1).toInt();
+  ri->routeName = query.value(2).toString().trimmed();
+  ri->startDate = query.value(3).toDate();
+  if(ix > 0)
+  {
+   RouteInfo* riPrev = riList.at(ix - 1);
+   if(ri->route == riPrev->route && ri->routeName == riPrev->routeName && ri->startDate < riPrev->endDate)
+    riList.at(ix - 1)->endDate = ri->startDate.addDays(-1);
+  }
+  ri->endDate = query.value(4).toDate();
+  ri->companyKey = query.value(5).toInt();
+  ri->tractionType = query.value(6).toInt();
+  ri->alphaRoute = query.value(7).toString();
+  riList.append(ri);
+ }
+ for(RouteInfo* ri : riList)
+ {
+  if(ri->endDate < ri->startDate)
+   continue;
+  RouteData rd = RouteData();
+  rd.setRoute(ri->route);
+  rd.setRouteName(ri->routeName);
+  rd.setStartDate(ri->startDate);
+  rd.setEndDate(ri->endDate);
+  rd.setAlphaRoute(ri->alphaRoute);
+  rd.setCompanyKey(ri->companyKey);
+  rd.setTractionType(ri->tractionType);
+  rd.setBaseRoute(ri->baseRoute);
+  list.append(rd);
+ }
+ return list;;
+}
+
 #endif
 RouteSeq SQL::getRouteSeq(RouteData rd)
 {
@@ -3861,6 +3927,7 @@ bool SQL::updateSegment(SegmentInfo* si)
    + "where SegmentId = " + QString("%1").arg(si->segmentId());
  query.prepare(commandText);
  query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
+ qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
  bQuery = query.exec();
  if(!bQuery)
  {

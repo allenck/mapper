@@ -22,6 +22,16 @@ SplitRoute::SplitRoute( QWidget *parent) :
     connect(ui->dateTo2, SIGNAL(editingFinished()), this, SLOT(dateTo2_Leave()));
     connect(ui->btnOK, SIGNAL(clicked()), this, SLOT(btnOK_Click()));
     connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(Cancel_Click()));
+    connect(ui->cbCompany1, &QComboBox::currentTextChanged, [=] ()
+    {
+        int companyKey = ui->cbCompany1->currentData().toInt();
+        CompanyData* cd = _companyList.at(companyKey);
+        if(ui->dateTo1->date() > cd->endDate)
+        {
+            ui->dateTo1->setDate(cd->endDate);
+            ui->dateFrom2->setDate(cd->endDate.addDays(1));
+        }
+    });
 
     fillTractionTypes();
 
@@ -242,7 +252,8 @@ void SplitRoute::dateTo1_ValueChanged()
 void SplitRoute::dateTo1_Leave()
 {
     if (ui->dateTo1->dateTime() < ui->dateFrom1->dateTime() && !ui->chkAllowGap->isChecked())
-        ui->dateTo1->setDateTime( ui->dateFrom1->dateTime().addDays(1));
+        //ui->dateTo1->setDateTime( ui->dateFrom1->dateTime().addDays(1));
+        ui->dateFrom2->setDateTime( ui->dateTo1->dateTime().addDays(1));
 
 }
 
@@ -575,6 +586,7 @@ void SplitRoute::btnOK_Click()
      setCursor(Qt::ArrowCursor);
      return;
     }
+
 
     if(ui->chkAddComment->isChecked())
     {

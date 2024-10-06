@@ -287,6 +287,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui->cbRoute->addAction(updateRouteAct);
   ui->cbRoute->addAction(updateTerminalsAct);
   ui->cbRoute->addAction(describeRouteAct);
+  ui->cbCompany->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(ui->cbCompany, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(cbCompany_customContextMenu( const QPoint& )));
 
 //  ui->ssw->cbSegments()->setContextMenuPolicy(Qt::ActionsContextMenu);
 //  ui->ssw->cbSegments()->addAction(addSegmentToRouteAct);
@@ -504,8 +506,8 @@ void MainWindow::createBridge()
 // m_bridge->browseWindowWidth = webView->width();
 
  //connect( m_bridge, SIGNAL(movePointSignal(qint32, qint32,double,double)), this, SLOT(movePoint(qint32, qint32,double,double)));
- connect( m_bridge, SIGNAL(movePointSignalX(qint32, qint32,QList<LatLng>)), this, SLOT(movePointX(qint32, qint32,QList<LatLng>)));
- connect(m_bridge, SIGNAL(addPointSignal(int, double, double)), this, SLOT(addPoint(int, double, double)));
+ connect( m_bridge, SIGNAL(movePointSignalX(qint32,qint32,QList<LatLng>)), this, SLOT(movePointX(qint32,qint32,QList<LatLng>)));
+ connect(m_bridge, SIGNAL(addPointSignal(int,double,double)), this, SLOT(addPoint(int,double,double)));
  //connect(m_bridge, SIGNAL(addPointSignalX(int,double,double)), this, SLOT(addPointX(int,QList<LatLng>)));
  connect (m_bridge, SIGNAL(insertPointSignal(int,qint32,double,double)), this, SLOT(insertPoint(int,qint32,double,double)));
  //connect(m_bridge, SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(segmentSelected(qint32, qint32)));
@@ -1115,6 +1117,7 @@ void MainWindow::createActions()
 //  }
 
   updateRoute(sd);
+  ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(sd->companyKey()));
  });
 
  findDormantSegmentsAct = new QAction(tr("Find dormant segments"),this);
@@ -1252,51 +1255,33 @@ void MainWindow::createActions()
 //  }
  });
 
-// #ifdef Q_OS_MACOS
-//  testUseBundleResources = new QAction(tr("use Bundle Resources"),this);
-//  testUseBundleResources->setStatusTip(tr("use bundle resources instead of ones in build dir"));
-//  testUseBundleResources->setCheckable(true);
-//  testUseBundleResources->setChecked(config->bUseBundleResources);
-//  connect(testUseBundleResources, &QAction::triggered, [=](bool bUseBundleResources){
-//      if(bUseBundleResources)
-//      {
-//          if( config->startCwd.contains("/mapper.app/Contents/MacOS"))
-//          {
-//              //
-//              // QDir resources(cwd.remove("/mapper.app/Contents/MacOS") + "/Resources");
-//              //  if(resources.exists())
-//              //  {
-//              // running in development environment, set the cwd to that of the development.
-//              if(bUseBundleResources)
-//                  cwd = config->startCwd.remove("/mapper.app/Contents");
+ selAllCompaniesAct = new QAction(tr("All Companies"), this);
+ selAllCompaniesAct->setStatusTip(tr("Show routes for all companies"));
+ connect(selAllCompaniesAct, &QAction::triggered, [=]{
+     QStandardItemModel* mod = (QStandardItemModel*)ui->cbCompany->model();
+     config->currCity->selectedCompanies.clear();
+     for(int i=0; i < mod->columnCount(); i++)
+     {
+         QStandardItem* item = mod->item(i);
+         item->setCheckState(Qt::Checked);
+         if(config->currCity->selectedCompanies.isEmpty())
+             config->currCity->selectedCompanies.append(item->data().toString());
+         else
+             config->currCity->selectedCompanies.append(","+item->data().toString());
+     }
 
-//              cwd = config->startCwd.remove("/mapper.app/Contents/MacOS");
-//              QDir::setCurrent(cwd);
-
-//              // QDir pDir(QDir::homePath() +"/Public/Mapper/Resources");
-//              // if(!pDir.exists())
-//              //  copyFiles(cwd + "/Resources", QDir::homePath() +"/Public/Mapper/Resources");
-//              //}
-//          }
-//          else
-//          {
-//              //     {
-//              //         //processCopyList();
-//              cwd = config->startCwd.remove("/mapper.app/Contents");
-//              QDir::setCurrent(cwd);
-//              //     }
-//          }
-//      }
-//      QSqlDatabase db = QSqlDatabase();
-//      qDebug() << "close " << db.databaseName();
-//      db.close();
-//      Connection* c = config->currConnection;
-//      c->configure();
-//      qDebug() << "open " << db.databaseName();
-
-//      config->bUseBundleResources = bUseBundleResources;
-//  });
-// #endif
+ });
+ clearAllCompaniesAct = new QAction(tr("clear company selections"),this);
+ connect(clearAllCompaniesAct, &QAction::triggered, [=]{
+     QStandardItemModel* mod = (QStandardItemModel*)ui->cbCompany->model();
+     QStringList selectedCompanyList = config->currCity->selectedCompanies.split(",");
+     config->currCity->selectedCompanies.clear();
+     for(int i=0; i < mod->columnCount(); i++)
+     {
+         QStandardItem* item = mod->item(i);
+         item->setCheckState(Qt::Unchecked);
+     }
+ });
 
  combineRoutesAct = new QAction(tr("Combine two routes"), this);
  combineRoutesAct->setStatusTip(tr("Combine two routes into one"));
@@ -1742,6 +1727,14 @@ void MainWindow::cbRoute_customContextMenu( const QPoint& )
     cbRouteMenu->exec(QCursor::pos());
 }
 
+void MainWindow::cbCompany_customContextMenu( const QPoint& )
+{
+    cbCompanyMenu = new QMenu();
+    cbCompanyMenu->addAction(selAllCompaniesAct);
+    cbCompanyMenu->addAction(clearAllCompaniesAct);
+    cbCompanyMenu->exec(QCursor::pos());
+}
+
 void MainWindow::txtSegment_customContextMenu(const QPoint &)
 {
  if(ui->txtSegment->text().isEmpty()) return;
@@ -1900,9 +1893,8 @@ void MainWindow::newCity(QAction* act )
 
     //refreshSegmentCB();
     ui->ssw->refresh();
-    ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(config->currCity->companyKey));
     refreshCompanies();
-    //cbSort->setCurrentIndex(config->currCity->routeSortType);
+    ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(config->currCity->companyKey));
     refreshRoutes();
     //stationView->showStations();
     m_latitude = config->currCity->center.lat();
@@ -2155,7 +2147,8 @@ void MainWindow::refreshRoutes()
     QString currText = ui->cbRoute->currentText();
     ui->cbRoute->clear();
 
-    routeList = sql->getRoutesByEndDate(companyKey);
+    //routeList = sql->getRoutesByEndDate(companyKey);
+    routeList = sql->getRoutesByEndDate(config->currCity->selectedCompanies);
     if(routeList.isEmpty())
      qDebug() << "no routes selected for company " << companyKey;
 
@@ -2962,14 +2955,54 @@ QList<StationInfo> MainWindow::getStations(QList<SegmentData*> rsList)
 
 void MainWindow::refreshCompanies()
 {
+    //QStringList companies = config->selectedCompanies.split(",");
     ui->cbCompany->clear();
     ui->cbCompany->addItem(tr("All companies"),0);
+    QStandardItem* item;
+    QStandardItemModel* mod = new QStandardItemModel(1,0);
     companyList = sql->getCompanies();
     for(int i=0; i < companyList.count(); i++)
     {
         CompanyData* cd = companyList.at(i);
-        ui->cbCompany->addItem(cd->name, cd->companyKey);
+        //ui->cbCompany->addItem(cd->name, cd->companyKey);
+        item = new QStandardItem(cd->name);
+        item->setCheckable(true);
+        QString companyId = QString::number(cd->companyKey);
+        bool state = config->currCity->selectedCompanies.contains(","+companyId);
+        item->setCheckState(state?Qt::CheckState::Checked:Qt::CheckState::Unchecked);
+        item->setData(cd->companyKey);
+        mod->setItem(i,item);
     }
+    connect(mod, &QStandardItemModel::itemChanged, [=](QStandardItem * item){
+        QString companyId = item->data().toString();
+
+        if(item->checkState()==Qt::Checked)
+        {
+            if(config->currCity->selectedCompanies.isEmpty())
+            {
+                config->currCity->selectedCompanies.append(companyId);
+            }
+            else
+            {
+                config->currCity->selectedCompanies.append(","+companyId);
+            }
+            config->currCity->selectedCompaniesList.append(item->data().toInt());
+        }
+        else
+        {
+            if(config->currCity->selectedCompanies.size()== 1)
+            {
+                config->currCity->selectedCompanies.clear();
+            }
+            else
+                config->currCity->selectedCompanies.replace(","+companyId, "");
+            if(config->currCity->selectedCompaniesList.contains(item->data().toInt()))
+                config->currCity->selectedCompaniesList.remove(item->data().toInt());
+        }
+        refreshRoutes();
+    });
+
+    ui->cbCompany->setModel(mod);
     if(routeDlg != NULL)
      routeDlg->fillCompanies();
     ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(m_companyKey));
@@ -3459,7 +3492,7 @@ void MainWindow::btnLastClicked()
 //  return;
     //SQL sql;
 
-    getArray();
+    //getArray();
     m_currPoint = m_nbrPoints - 1;
     ui->lblPoint->setText(QString::number(m_currPoint));
 
@@ -4096,6 +4129,7 @@ void MainWindow::movePointX(qint32 segmentId, qint32 i, QList<LatLng> pointlist)
     //     sd.movePoint(i, LatLng(newLat, newLon));
     // }
     si.setPoints(pointlist);
+    m_points = pointlist;
     sql->updateSegment(&si);
     //SQL sql;
     LatLng oldPoint = sql->getPointOnSegment((int)i, m_segmentId);
@@ -4214,6 +4248,7 @@ void MainWindow::insertPointX(int segmentId, qint32 i, QList<LatLng> points)
     SegmentInfo si = sql->getSegmentInfo((int)segmentId);
     //si.insertPoint(i, LatLng(newLat, newLon));
     si.setPoints(points);
+    m_points = points;
 #if 0
     //SQL sql;
     sql->insertPoint(i, SegmentId, newLat, newLon);

@@ -117,10 +117,16 @@ void RouteNameWidget::txtRouteNbr_Leave()
                 bool bok;
                 _routeNbr = ui->txtRouteNbr->text().toInt(&bok);
                 if(!bok)
+                {
                  _routeNbr = sql->findNextRouteInRange("1000,1999");
+                 ui->cbRouteName->setCurrentIndex(-1);
+                }
                 break;
             case QMessageBox::No:
-                break;
+                ui->txtRouteNbr->setText("");
+                ui->txtRouteNbr->setPlaceholderText("Enter new route name");
+                ui->txtRouteNbr->setFocus();
+                return;
             default:
                 bRouteChanging=false;
                 return;

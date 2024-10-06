@@ -6,7 +6,7 @@
 MyApplication::MyApplication(int &argc, char *argv[]) :
   QApplication(argc, argv)
 {
-
+    //qApp->setStyleSheet("QWidget { background-color: #FFFDD0 }");
 }
 
 bool MyApplication::notify(QObject *receiver_, QEvent *event_)

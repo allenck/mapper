@@ -36,6 +36,8 @@ public:
  bool bDisplayRouteComments = false;
  bool bShowOverlay = false;
  qint32 companyKey=-1;
+ QString selectedCompanies; // comma separated list of companies selected to show in routes
+ QList<int> selectedCompaniesList;
  qint32 routeSortType = 0;
  QString savedClipboard;
  bool bUserMap = false;

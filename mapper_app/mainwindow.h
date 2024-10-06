@@ -219,6 +219,7 @@ private slots:
     void quit();
     void cbRoute_customContextMenu( const QPoint& );
     void txtSegment_customContextMenu(const QPoint&);
+    void cbCompany_customContextMenu( const QPoint& );
     void webView_customContextMenu(const QPoint&);
     //void tab1CustomContextMenu(const QPoint &);
     void btnClearClicked();
@@ -324,6 +325,7 @@ private:
     QMenu* cbRouteMenu;
     QMenu tab1Menu;
     QMenu *sortMenu;
+    QMenu* cbCompanyMenu;
 
 //    QAction *copyAction;
 //    QAction *pasteAction;
@@ -404,6 +406,8 @@ private:
     QAction* companyChangeRoutes;
     QAction* creditsAct;
     QAction* displaySegmentArrows;
+    QAction* selAllCompaniesAct;
+    QAction* clearAllCompaniesAct;
 
     QList<QAction*> cityActions;
     QList<QAction*> overlayActions;

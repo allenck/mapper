@@ -33,7 +33,7 @@ void SegmentSelectionWidget::initialize()
     ui->cbSegments->setItemText(ix, sd.toString());
   }
  });
- connect(WebViewBridge::instance(), SIGNAL(segmentSelected(int,int)), this, SLOT(segmentSelected(int,int)));
+ //connect(WebViewBridge::instance(), SIGNAL(segmentSelected(int,int)), this, SLOT(segmentSelected(int,int)));
  connect(WebViewBridge::instance(), SIGNAL(segmentSelectedX(int,int,QList<LatLng>)), this, SLOT(segmentSelected(int,int,QList<LatLng>)));
  connect(ui->cbSegments, SIGNAL(editTextChanged(QString)), this, SLOT(cbSegmentsTextChanged(QString)));
  //connect(ui->cbSegments, SIGNAL(signalFocusOut()), this, SLOT(cbSegments_editingFinished()));

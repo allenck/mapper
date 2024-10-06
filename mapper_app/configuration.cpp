@@ -55,7 +55,9 @@ void Configuration::saveSettings()
   settings->setValue("savedClipboard", c->savedClipboard);
   settings->setValue("userMap", c->bUserMap);
   settings->setValue("bounds", c->bounds().toString());
-  settings->setValue("currOverlay", c->curOverlayId);;
+  settings->setValue("currOverlay", c->curOverlayId);
+  settings->setValue("selectedCompanies",c->selectedCompanies);
+
   //settings.setValue("connection",c->curConnectionId);
   settings->beginWriteArray("connections");
   settings->remove("");
@@ -165,6 +167,7 @@ void Configuration::saveSettings()
  settings->setValue("displayDebugMsgs", bDisplayDebugMsgs);
  settings->setValue("displayArrows", bDisplaySegmentArrows);
  settings->setValue("font",font.toString());
+ //settings->setValue("selectedCompanies", selectedCompanies);
 // #ifdef Q_OS_MAC
 //  settings->setValue("useBundleResources", bUseBundleResources);
 // #endif
@@ -278,6 +281,13 @@ void Configuration::getSettings()
       nc->bUserMap = settings.value("userMap", false).toBool();
       if(nc->city_overlayMap->isEmpty())
          nc->bShowOverlay = false;
+      nc->selectedCompanies = settings.value("selectedCompanies").toString();
+      QStringList sl = nc->selectedCompanies.split(",");
+      nc->selectedCompaniesList.clear();
+      for(int i=0; i < sl.count(); i++ )
+      {
+          nc->selectedCompaniesList.append(sl.at(i).toInt());
+      }
 
       nc->setConnectionUniqueId(QUuid::fromString(settings.value("currConnectionUuid").toString()));
       QString baseAddr;
@@ -459,7 +469,6 @@ void Configuration::getSettings()
 // #ifdef Q_OS_MACOS
 //    macOSPublic = settings.value("macOsPublic", "").toString();
 // #endif
-
    settings.beginGroup("query");
    q.b_stop_query_on_error = settings.value("stop_query_on_error").toBool();
    q.b_sql_execute_after_loading = settings.value("sql_execute_after_loading").toBool();

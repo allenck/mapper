@@ -887,9 +887,9 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, showArrow, Color
         //addMarker(i, e.latLng.lat(), e.latLng.lng(), mIx, segmentName + " route:" + routeName);
         addMarker(i, begin.lat(), begin.lng(), mIx, si.segmentName + " route:" + si.routeName, si.segmentId);
         //OK            window.external.selectSegment(i, SegmentId);
-        webViewBridge.selectSegment(i, si.segmentId);
         //var objArray = getPointArray();
         webViewBridge.selectSegmentX(i, si.segmentId, si.getPointArray());
+        //webViewBridge.selectSegment(i, si.segmentId);
         addModeOff();
     });
 

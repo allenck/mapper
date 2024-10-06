@@ -53,6 +53,7 @@ public:
     QList<RouteData> routeList;
     QList<RouteData> getRoutesByEndDate();
     QList<RouteData> getRoutesByEndDate(qint32 companyKey);
+    QList<RouteData> getRoutesByEndDate(QString companyList);
     //QT_DEPRECATED RouteInfo getRoutePoints(qint32 route, QString name, QString date);
     TerminalInfo getTerminalInfo(qint32 route, QString name, QDate endDate);
     QList<TerminalInfo> getTerminalInfoUsingSegment(int segmentId);

@@ -486,8 +486,9 @@ void EditSegmentDialog::On_btnSave_clicked()
     if(!sql->updateRoute(*sd,sd1))
     {
      ui->lblHelp->setText(tr("update route failed"));
-     sql->rollbackTransaction("updateSegment");
-     return;
+     // sql->rollbackTransaction("updateSegment");
+     // return;
+     continue;
     }
 
 //    if(sd1.route()== rd->route() && sd1.routeName() == rd->routeName()
@@ -548,6 +549,7 @@ void EditSegmentDialog::On_btnSave_clicked()
      }
     }
    }
+
    sql->commitTransaction("updateSegment");
 
    m_bridge->processScript("isSegmentDisplayed", QString("%1").arg(si.segmentId()));
