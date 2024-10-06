@@ -11,26 +11,28 @@ greaterThan(QT_MAJOR_VERSION, 4): {
 }
 message(WEBENGINE  " = "  $$WEBENGINE)
 
-isEmpty(WEBENGINE) {
- QT       += core gui  webkit network sql xml
- greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport printsupport webkitwidgets gui
- message("not  using WebEngine")
-}
-else {
+#isEmpty(WEBENGINE) {
+# QT       += core gui  webkit network sql xml
+# greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport printsupport webkitwidgets gui
+# message("not  using WebEngine")
+#}
+#else {
  QT       += core gui  network sql xml widgets websockets webchannel
  greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport printsupport webenginewidgets gui
  DEFINES += USE_WEBENGINE
  message("using WebEngine")
-HEADERS += \
-    websocketclientwrapper.h \
-    websockettransport.h
 
-SOURCES += \
-    websocketclientwrapper.cpp \
-    websockettransport.cpp
-}
+RC_ICONS = Resources/tram-icon.ico
+
+#}
 
 DEFINES += "BUILD_DIR=\"\\\""$$OUT_PWD"\\\"\""
+DEFINES += QT_MESSAGELOGCONTEXT
+# enable NO_UDF to not use Sqlite User Defined functions
+#DEFINES += NO_UDF
+
+# enable to provide a console window to display debug and info messages
+DEFINES += HAVE_CONSOLE
 
 TARGET = mapper
 TEMPLATE = app
@@ -41,22 +43,14 @@ RCC_DIR = ui
 UI_DIR = ui
 UI_HEADERS_DIR = ui
 UI_SOURCES_DIR = ui
-SUBDIRS += ui
-    console #WebView
 
 CONFIG += embed_manifest_exe
-
-#DEFINES += MYPREFIX_RELEASE
-#debug{
-#  DEFINES += MYPREFIX_DEBUG
-#  DEFINES -= MYPREFIX_RELEASE
-#}
+CONFIG+=use_gold_linker
 
 include(mapper_app.pri)
 
 OTHER_FILES += \
-    Resources/GoogleMaps.htm \
-    Resources/sqlite3_create_tables.sql \
+    Resources/sql/sqlite3_create_tables.sql \
     Resources/arrow-right-double.png \
     Resources/gtk-add.png \
     Resources/list-add.png \
@@ -85,76 +79,157 @@ OTHER_FILES += \
     Resources/trolley-icon_78.gif \
     Resources/diropen.png \
     wiki/index.htm \
-    Resources/recreateAltRoute.sql \
-    Resources/CreateMySqlFunction.sql \
-    Resources/recreateStationTable.sql \
-    Resources/recreateTractionTypes.sql \
-    Resources/recreateCompanies.sql
+    Resources/sql/recreateAltRoute.sql \
+    Resources/sql/CreateMySqlFunction.sql \
+    Resources/sql/recreateStationTable.sql \
+    Resources/sql/recreateTractionTypes.sql \
+    Resources/sql/recreateCompanies.sql \
+    Resources/mapper.icns
 
 RESOURCES += \
+#    Resources/mapper.qrc \
+#    Resources/mapper.qrc \
     Resources/mapper.qrc
 
-win32:{
-#INCLUDEPATH += \
-#    C:/Program Files (x86)/SQLite3
-}
-
-
-
-#win32:CONFIG(release, debug|release): LIBS += -L'c:/Program Files (x86)/Sqlite3//' -lsqlite3
-#else:win32:CONFIG(debug, debug|release): LIBS += -L'c:/Program Files (x86)/Sqlite3//' -lsqlite3
-#else:unix:!macx: LIBS += -lsqlite3
-
-#win32: {
-#INCLUDEPATH += 'c:/Program Files (x86)/Sqlite3/source'
-#DEPENDPATH += 'c:/Program Files (x86)/Sqlite3/source'
-#}
 
 DISTFILES += \
+    README.txt \
+    Resources/GoogleMaps2n.htm \
+    Resources/copyList.txt \
+    Resources/initMap.js \
+    Resources/scripts/createMsSqlDistance.sql \
+    Resources/sql/addBiDirectionalToRoutes.sql \
+    Resources/sql/create_stations.sql \
+    Resources/sql/mssql_create_routeseq.sql \
+    Resources/sql/mssql_create_stations.sql \
+    Resources/sql/mysql_recreate_routes.sql \
+    Resources/sql/recreateRouteComments.sql \
+    Resources/sql/recreateSegmentsTable.sql \
+    Resources/sql/recreate_routes.sql \
     Resources/scripts \
+    Resources/scripts/opacity-slider2.png \
+    Resources/scripts/opacity-slider3d14.png \
+    Resources/scripts/opacity-slider3d6.png \
+    Resources/scripts/opacity-slider3d7.png \
     Resources/scripts/qwebchannel.js \
-    Resources/GoogleMaps2.htm \
     Resources/GoogleMaps2b.htm \
+    Resources/sql/updateOneWay.sql \
+    Resources/sql/updaterouteoneway.sql \
+    Resources/test.htm \
     Resources/white.png \
     Resources/orange.png \
     Resources/tram.png \
-    Resources/tram.shadow.png
+    Resources/tram.shadow.png \
+    Resources/wiki/Credits.html \
+    compile_MySql_plugin.sh \
+    html/.gitignore \
+    Resources/mapper.icns \
+    mysql-qt-driver.sh
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/release/ -lConsole
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/debug/ -lConsole
-else:unix: LIBS += -L$$PWD/../console/ -lConsole
+ICON = Resources/mapper.icns
+#CONFIG-=app_bundle
 
-INCLUDEPATH += $$PWD/../console
-DEPENDPATH += $$PWD/../console
+#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../console/release/ -lConsole
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../console/debug/ -lConsole
+#else:unix: LIBS += -L$$PWD/../console/ -lConsole
 
-#win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lWebView
-#else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/debug/ -lWebView
-#else:unix: LIBS += -L$$OUT_PWD/WebView/ -lWebView
+#INCLUDEPATH += $$PWD/../console/debug
+#DEPENDPATH += $$PWD/../console/debug
 
-#INCLUDEPATH += $$PWD/WebView
-#DEPENDPATH += $$PWD/WebView
+#unix:macx: LIBS += -L$$PWD/./ -lConsole
 
-
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/./release/ -lConsole
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/./debug/ -lConsole
-
-INCLUDEPATH += $$PWD/../console
-DEPENDPATH += $$PWD/../console
+INCLUDEPATH += $$PWD/.
+DEPENDPATH += $$PWD/.
 
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../Program Files/Sqlite3_3_13/' -lsqlite3
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../Program Files/Sqlite3_3_13/' -lsqlite3
-else:unix: LIBS += -L$$PWD/'../../../../Program Files/Sqlite3_3_13/' -lsqlite3
+#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400/' -lsqlite3
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400/' -lsqlite3
 
-INCLUDEPATH += $$PWD/'../../../../Program Files/Sqlite3_3_13/src'
-DEPENDPATH += $$PWD/'../../../../Program Files/Sqlite3_3_13/src'
+#INCLUDEPATH += $$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400'
+#DEPENDPATH += $$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400'
+
+
+#unix:!macx: LIBS += -L$$PWD/../../../sqlite-amalgamation-3390400/ -lsqlite3
+
+VERSION=1.1.4
+MY_VERSION_STR = '\\"$${VERSION}\\"'
+DEFINES += MY_VERSION=\"$${MY_VERSION_STR}\"
+macx: {
+# copy necessary resources to MacOS mapper.app/Contents/
+QMAKE_INFO_PLIST = $$PWD/myInfo.plist
+
+APP_DB_FILES.files += $$PWD/Resources/databases/StLouis.sqlite3 \
+        $$PWD/Resources/databases/berlinerstrassenbahn.sqlite3 \
+        $$PWD/Resources/databases/indianapolis.sqlite3 \
+        $$PWD/Resources/databases/louisville.sqlite3 \
+        $$PWD/Resources/databases/cincinnati.sqlite3
+APP_DB_FILES.path = Contents/Resources/databases
+QMAKE_BUNDLE_DATA +=APP_DB_FILES
+
+APP_WIKI_FILES.files = $$files($$PWD/Resources/wiki/*)
+APP_WIKI_FILES.path = Contents/Resources/wiki
+QMAKE_BUNDLE_DATA +=APP_WIKI_FILES
+
+APP_WIKI_IMAGES.files = $$files($$PWD/Resources/wiki/images/*)
+APP_WIKI_IMAGES.path = Contents/Resources/wiki/images
+QMAKE_BUNDLE_DATA +=APP_WIKI_IMAGES
+
+APP_RESOURCES.files += $$PWD/Resources/GoogleMaps.js \
+      $$PWD/Resources/GoogleMaps.js \
+      $$PWD/Resources/ExtDraggableObject.js \
+      $$PWD/Resources/opacityControl.js \
+      $$PWD/Resources/qwebchannel.js \
+      $$PWD/Resources/WebChannel.js \
+      $$PWD/Resources/GoogleMaps2b.htm \
+      $$PWD/Resources/GoogleMaps2n.htm \
+      $$PWD/Resources/apikey.js \
+      $$PWD/Resources/opacity-slider2.png \
+      $$PWD/Resources/S-Bahn-logo.svg \
+      $$PWD/Resources/sl-metro-logo.svg \
+      $$PWD/Resources/Strassenbahn-Haltestelle.svg \
+      $$PWD/Resources/U-Bahn.svg \
+      $$PWD/Resources/overlays.xml
+APP_RESOURCES.path = Contents/Resources
+QMAKE_BUNDLE_DATA +=APP_RESOURCES
+}
+include(sqlite.pri)
+
+#INCLUDEPATH += $$PWD/../../../sqlite-amalgamation-3390400
+#DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3390400
+
+INCLUDEPATH += $$PWD/debug
+DEPENDPATH += $$PWD/debug
 
 FORMS += \
-    addgeoreferenceddialog.ui
+  dialogeditparameters.ui \
+  routenamewidget.ui \
+  splitcompanyroutesdialog.ui \
+  systemconsole2.ui \
+  ui/dialogtextedit.ui
 
 HEADERS += \
-    addgeoreferenceddialog.h
+  dialogeditparameters.h \
+  routenamewidget.h \
+  splitcompanyroutesdialog.h \
+  systemconsole2.h \
+  ui/dialogtextedit.h
 
 SOURCES += \
-    addgeoreferenceddialog.cpp
+  dialogeditparameters.cpp \
+  routenamewidget.cpp \
+  splitcompanyroutesdialog.cpp \
+  systemconsole2.cpp \
+  ui/dialogtextedit.cpp
 
+
+
+#win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../sqlite3/release/ -lsqlite3
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../sqlite3/debug/ -lsqlite3
+#else:unix: LIBS += -L$$OUT_PWD/../sqlite3/ -lsqlite3
+
+#INCLUDEPATH += $$PWD/../sqlite3
+#DEPENDPATH += $$PWD/../sqlite3
+
+lessThan(QT_MAJOR_VERSION, 6): {
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lsqlite3
+}

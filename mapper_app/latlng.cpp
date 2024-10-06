@@ -1,21 +1,30 @@
 #include "latlng.h"
 
-LatLng::LatLng()
+LatLng::LatLng() : QPointF()
 {
  bValid=false;
-
+ setLon(0);
+ setLat(0);
 }
 LatLng::~LatLng() {}
-LatLng::LatLng(const LatLng& other) { setY(other.y()); setX(other.x());}
-/// <summary>
-/// Create new LatLng
-/// </summary>
-/// <param name="Lat"></param>
-/// <param name="Lon"></param>
+LatLng::LatLng(const LatLng& other) {
+ setY(other.y());
+ setX(other.x());
+ latitude = other.latitude;
+ longitude= other.longitude;
+ bValid = other.bValid;
+}
+
+
+// <summary>
+// Create new LatLng
+// </summary>
+// <param name="Lat"></param>
+// <param name="Lon"></param>
 LatLng::LatLng(double Lat, double Lon) : QPointF(Lon, Lat)
 {
-//    latitude = Lat;
-//    longitude = Lon;
+    latitude = Lat;
+    longitude = Lon;
     if(Lat==0 && Lon ==0)
      bValid = false;
     else
@@ -30,7 +39,7 @@ double LatLng::lat() const
 }
 void LatLng::setLat(double val)
 {
-    //latitude = val;
+    latitude = val;
     setY(val);
     bValid = checkValid();
 }
@@ -44,15 +53,20 @@ double LatLng::lon() const
 }
 void LatLng::setLon(double val)
 {
-    //longitude = val;
+    longitude = val;
     setX(val);
     bValid=checkValid();
 }
 
-bool LatLng::isValid(){return bValid;}
+bool LatLng::isValid(){
+ bValid = checkValid();
+ return bValid;
+}
 
 bool LatLng::checkValid()
 {
+ if(x() == 0 && y() == 0)
+  return false;
  if((y() > 90.0) || (y() < -90.))
   return false;
  if((x() < -180.) || (x() > 180.))
@@ -74,8 +88,3 @@ QString LatLng::str()
  return strLat + "," + strLon;
 }
 
-bool LatLng::operator ==(const LatLng pt)
-{
-    //return pt.latitude == this->latitude && pt.longitude == this->longitude;
-    return pt.y() == this->y() && pt.x() == this->x();
-}

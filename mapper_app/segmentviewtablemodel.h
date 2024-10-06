@@ -6,12 +6,12 @@
 #include "data.h"
 
 
-class segmentViewTableModel : public QAbstractTableModel
+class SegmentViewTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
-    explicit segmentViewTableModel(QObject *parent = 0);
-    segmentViewTableModel(QList<SegmentInfo> segmentDataList, double Lat, double Lon, qint32 route, QString date, QObject *parent=0);
+    explicit SegmentViewTableModel(QObject *parent = 0);
+    SegmentViewTableModel(QList<SegmentInfo> segmentDataList, double Lat, double Lon, qint32 route, QString date, QObject *parent=0);
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
@@ -20,8 +20,11 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role=Qt::EditRole);
     bool insertRows(int position, int rows, const QModelIndex &index=QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index=QModelIndex());
-    QList< SegmentInfo > getList();
+    QList<SegmentInfo> getList();
     void reset();
+    enum COLUMNS {SEGMENTID, DESCRIPTION, TRACKS, STREETNAME, DIRECTION, LAT, LON};
+    int getRow(int segmentId);
+    SegmentInfo selectedSegment(int row);
 
 signals:
 

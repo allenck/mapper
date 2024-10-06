@@ -15,12 +15,12 @@ class QMenuBar;
 class QPushButton;
 class QTextEdit;
 
-class editComments : public QDialog
+class EditComments : public QDialog
 {
     Q_OBJECT
 
 public:
-    editComments();
+    EditComments();
     void setConfiguration(Configuration *cfg);
     void setHTMLText(QString html);
     void setTags(QString tags);

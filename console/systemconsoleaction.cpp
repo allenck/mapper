@@ -3,60 +3,15 @@
 //#include "windowinterface.h"
 #include <QMainWindow>
 
-//SystemConsoleAction::SystemConsoleAction(QObject *parent) :
-//  QAction(parent)
-//{
-//}
-/**
- * Swing action to display the JMRI System Console
- * <hr>
- * This file is part of JMRI.
- * <P>
- * JMRI is free software; you can redistribute it and/or modify it under the
- * terms of version 2 of the GNU General Public License as published by the Free
- * Software Foundation. See the "COPYING" file for a copy of this license.
- * <P>
- * JMRI is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
- * <P>
- *
- * @author Matthew Harris copyright (c) 2010
- * @version $Revision: 28746 $
- */
-///*public*/  class SystemConsoleAction extends jmri.util.swing.JmriAbstractAction {
-
-/**
- *
- */
-//private static final long serialVersionUID = -5843920804488337948L;
-
-/*public*/  SystemConsoleAction::SystemConsoleAction(QString s, QObject* wi)
- : QAction(s, (QObject*)wi)
-{
-    //super(s, wi);
- common();
-}
-
-/*public*/  SystemConsoleAction::SystemConsoleAction(QString s, QIcon i, QObject* wi)
- : QAction(i, s, (QObject*)wi){
-    //super(s, i, wi);
-    common();
-}
 
 /*public*/  SystemConsoleAction::SystemConsoleAction(QObject *parent) :
   QAction(tr("System console"), parent){
     //super(tr("TitleConsole"));
- common();
-}
-void SystemConsoleAction::common()
-{
- SystemConsole::getInstance()->setParent(parent());
- connect(this, SIGNAL(triggered()), this, SLOT(actionPerformed()));
+    connect(this, SIGNAL(triggered()), this, SLOT(actionPerformed()));
 }
 
 //@Override
-/*public*/  void SystemConsoleAction::actionPerformed(ActionEvent* e) {
+/*public*/  void SystemConsoleAction::actionPerformed() {
     // Show system console
     SystemConsole::getInstance()->getFrame(parentWidget())->setVisible(true);
 }

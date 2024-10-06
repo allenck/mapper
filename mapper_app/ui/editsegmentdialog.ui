@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>719</width>
-    <height>298</height>
+    <width>814</width>
+    <height>301</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,35 +17,59 @@
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="2" column="3">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>SegmentId:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QLabel" name="label_segmentId">
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2" colspan="2">
+    <widget class="QLabel" name="label_12">
+     <property name="text">
+      <string>Location:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="4" colspan="3">
+    <widget class="QComboBox" name="cbLocation">
+     <property name="editable">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="7" colspan="2">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Description:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="9" colspan="9">
+    <widget class="QLineEdit" name="txtDescription">
+     <property name="placeholderText">
+      <string>enter segment description</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1" colspan="2">
     <widget class="QLabel" name="label_3">
      <property name="text">
-      <string>tracks:</string>
+      <string>#Tracks: </string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
    </item>
-   <item row="2" column="5">
-    <widget class="QLabel" name="label_9">
-     <property name="text">
-      <string>Points:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="9">
-    <widget class="QLabel" name="label_4">
-     <property name="text">
-      <string>Type:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="8" colspan="4">
-    <widget class="QDateEdit" name="dtEnd">
-     <property name="displayFormat">
-      <string>yyyy/MM/dd</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="4">
+   <item row="1" column="3">
     <widget class="QSpinBox" name="sbTracks">
      <property name="minimum">
       <number>1</number>
@@ -55,125 +79,47 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="3">
-    <widget class="QLineEdit" name="txtDirection">
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="4">
-    <widget class="QLineEdit" name="txtBearing">
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="label_2">
+   <item row="1" column="8" colspan="2">
+    <widget class="QLabel" name="label_9">
      <property name="text">
-      <string>Description:</string>
+      <string>Points: </string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
    </item>
-   <item row="4" column="0">
-    <widget class="QLabel" name="label_10">
-     <property name="text">
-      <string>Direction:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="9">
-    <widget class="QLabel" name="label_8">
-     <property name="text">
-      <string>Length(mi):</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="7">
+   <item row="1" column="10">
     <widget class="QLineEdit" name="txtPoints">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="readOnly">
       <bool>true</bool>
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="label_5">
+   <item row="1" column="11" colspan="2">
+    <widget class="QLabel" name="label_4">
      <property name="text">
-      <string>In Service:</string>
+      <string>Type: </string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
    </item>
-   <item row="3" column="2" colspan="3">
-    <widget class="QDateEdit" name="dtBegin">
-     <property name="displayFormat">
-      <string>yyyy/MM/dd</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="5" colspan="3">
-    <widget class="QLabel" name="label_6">
-     <property name="text">
-      <string>Out of Service:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="11">
-    <widget class="QLineEdit" name="txtMiles">
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="7">
-    <widget class="QLineEdit" name="txtKm">
-     <property name="readOnly">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="0" colspan="5">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="11">
+   <item row="1" column="13" colspan="2">
     <widget class="QComboBox" name="cbRouteType"/>
    </item>
-   <item row="2" column="0" colspan="3">
-    <widget class="QCheckBox" name="chkOneWay">
-     <property name="text">
-      <string>One Way</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Segment:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="5">
-    <widget class="QLabel" name="label_7">
-     <property name="text">
-      <string>Length (km):</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="12">
+   <item row="1" column="15" colspan="2">
     <widget class="QLabel" name="label_11">
      <property name="text">
       <string>Routes:</string>
      </property>
     </widget>
    </item>
-   <item row="2" column="13">
+   <item row="1" column="17">
     <widget class="QLineEdit" name="txtRoutes">
      <property name="toolTip">
       <string>Number of routes using this segment.</string>
@@ -183,50 +129,182 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="3" colspan="10">
-    <widget class="QLineEdit" name="txtDescription"/>
-   </item>
-   <item row="0" column="2" colspan="11">
-    <widget class="CComboBox" name="cbSegments">
-     <property name="toolTip">
-      <string>Select the desired segment or type in the numeric segment number.</string>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>In Service:</string>
      </property>
-     <property name="editable">
+    </widget>
+   </item>
+   <item row="2" column="1" colspan="3">
+    <widget class="QDateEdit" name="dtBegin">
+     <property name="displayFormat">
+      <string>yyyy/MM/dd</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="4" colspan="2">
+    <widget class="QLabel" name="label_14">
+     <property name="text">
+      <string>Double-tracked:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="6" colspan="3">
+    <widget class="QDateEdit" name="doubleTracked">
+     <property name="displayFormat">
+      <string>yyyy/MM/dd</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="10" colspan="3">
+    <widget class="QLabel" name="label_6">
+     <property name="text">
+      <string>Out of Service:  </string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="14" colspan="3">
+    <widget class="QDateEdit" name="dtEnd">
+     <property name="displayFormat">
+      <string>yyyy/MM/dd</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_10">
+     <property name="text">
+      <string>Direction:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1" colspan="2">
+    <widget class="QLineEdit" name="txtDirection">
+     <property name="readOnly">
       <bool>true</bool>
      </property>
     </widget>
    </item>
-   <item row="4" column="12" colspan="2">
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+   <item row="3" column="3" colspan="2">
+    <widget class="QLabel" name="label_13">
+     <property name="text">
+      <string>Bearing:</string>
      </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
+    </widget>
+   </item>
+   <item row="3" column="5" colspan="3">
+    <widget class="QLineEdit" name="txtBearing">
+     <property name="readOnly">
+      <bool>true</bool>
      </property>
-    </spacer>
+    </widget>
+   </item>
+   <item row="3" column="10" colspan="2">
+    <widget class="QLabel" name="label_7">
+     <property name="text">
+      <string>Length (km): </string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="12" colspan="2">
+    <widget class="QLineEdit" name="txtKm">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="14" colspan="2">
+    <widget class="QLabel" name="label_8">
+     <property name="text">
+      <string>Length(mi): </string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="16" colspan="2">
+    <widget class="QLineEdit" name="txtMiles">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0" colspan="5">
+    <widget class="QCheckBox" name="chkDeleteUnused">
+     <property name="text">
+      <string>Delete unused segments</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0" colspan="4">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="btnCancel">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnSave">
+       <property name="text">
+        <string>Save</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="4" column="0" colspan="18">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="label_15">
+       <property name="text">
+        <string>Duplicate Segments:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QListWidget" name="listWidget">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>1</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="7" column="0" colspan="18">
+    <widget class="QLabel" name="lblHelp">
+     <property name="styleSheet">
+      <string notr="true">color:rgb(246, 97, 81)</string>
+     </property>
+     <property name="text">
+      <string>error</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>CComboBox</class>
-   <extends>QComboBox</extends>
-   <header>ccombobox.h</header>
-  </customwidget>
- </customwidgets>
  <tabstops>
-  <tabstop>cbSegments</tabstop>
-  <tabstop>txtDescription</tabstop>
-  <tabstop>chkOneWay</tabstop>
   <tabstop>sbTracks</tabstop>
   <tabstop>cbRouteType</tabstop>
   <tabstop>dtBegin</tabstop>
   <tabstop>dtEnd</tabstop>
-  <tabstop>buttonBox</tabstop>
   <tabstop>txtDirection</tabstop>
   <tabstop>txtBearing</tabstop>
   <tabstop>txtMiles</tabstop>
@@ -235,38 +313,5 @@
   <tabstop>txtRoutes</tabstop>
  </tabstops>
  <resources/>
- <connections>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>EditSegmentDialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>rejected()</signal>
-   <receiver>EditSegmentDialog</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

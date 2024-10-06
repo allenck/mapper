@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>699</width>
-    <height>409</height>
+    <height>433</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Edit City Info</string>
+   <string>Manage Overlays</string>
   </property>
   <property name="sizeGripEnabled">
    <bool>true</bool>
@@ -92,7 +92,7 @@
     </widget>
    </item>
    <item>
-    <widget class="HtmlTextEdit" name="edDescription"/>
+    <widget class="MyTextEdit" name="edDescription"/>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -148,7 +148,7 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::Cancel</set>
      </property>
     </widget>
    </item>
@@ -156,9 +156,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>HtmlTextEdit</class>
+   <class>MyTextEdit</class>
    <extends>QTextEdit</extends>
-   <header>htmltextedit.h</header>
+   <header>mytextedit.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

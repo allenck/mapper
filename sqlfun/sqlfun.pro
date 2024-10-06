@@ -1,4 +1,5 @@
 TEMPLATE = lib
+TARGET = sqlfun
 
 SOURCES += \
     sqlite3ext_sqlfun.c

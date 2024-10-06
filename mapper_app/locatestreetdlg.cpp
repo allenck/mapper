@@ -73,7 +73,7 @@ void LocateStreetDlg::Resize (int oldcount,int newcount)
 }
 void LocateStreetDlg::itemSelectionChanged(QModelIndex index )
 {
-   mainWindow * parent = qobject_cast<mainWindow*>(this->m_parent);
+   MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
    QModelIndex sourceIndex;
    //qint32 row = index.row();
    double lat=0, lon =0;

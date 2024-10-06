@@ -19,9 +19,9 @@ public:
     QByteArray downloadedData() const;
     void setOverlay(Overlay* ov);
     Overlay* overlay();
-
+    QString error();
 signals:
-        void downloaded();
+    void downloaded(QString error);
 
 private slots:
 
@@ -33,6 +33,8 @@ private:
 
     QByteArray m_DownloadedData;
     Overlay* ov = nullptr;
+    QUrl imageUrl;
+    QString errorString;
 };
 
 #endif // FILEDOWNLOADER_H

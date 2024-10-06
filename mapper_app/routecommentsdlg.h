@@ -16,7 +16,7 @@ class RouteCommentsDlg : public QDialog
     Q_OBJECT
     
 public:
-    explicit RouteCommentsDlg(Configuration *cfg, QWidget *parent = 0);
+    explicit RouteCommentsDlg(QWidget *parent = 0);
     ~RouteCommentsDlg();
     void setRoute(qint32);
     void setDate(QDate);
@@ -28,7 +28,7 @@ private:
     qint32 _companyKey;
     QDate _date;
     SQL* sql;
-    routeComments _rc;
+    RouteComments _rc;
     Configuration *config;
 
     bool bIsDirty;
@@ -51,12 +51,13 @@ private slots:
     void OnTextChanged();
     void OnTagsLeave();
     void OnDateLeave();
-    void OnRouteTextChanged(QString text);
-    void OnAlphaRouteTextChanged(QString text);
-    void OnRouteLeave();
-    void OnAlphaRouteLeave();
+//    void OnRouteTextChanged(QString text);
+//    void OnAlphaRouteTextChanged(QString text);
+//    void OnRouteLeave();
+//    void OnAlphaRouteLeave();
     void OnBtnApply_clicked();
     void OnDirtySet(bool);
+    void OnAdditionalRoutesLeave();
 };
 
 #endif // ROUTECOMMENTSDLG_H

@@ -3,7 +3,8 @@
 #include <QObject>
 #include <QtGui>
 #include <QMainWindow>
-#include "mapview.h"
+//#include "mapview.h"
+#include "systemconsole2.h"
 #include "ui_mainwindow.h"
 #ifndef USE_WEBENGINE
 #include <QWebView>
@@ -11,32 +12,29 @@
 #include <QWebEngineView>
 #include <QWebSocketServer>
 #include <QWebChannel>
-//#include <WebSocketClientWrapper>
+#include <QWebEnginePage>
 #endif
 #include "data.h"
 #include "routeview.h"
 #include <QSettings>
-#include "ccombobox.h"
+//#include "ccombobox.h"
 #include <QMenu>
 #include "routeviewsortproxymodel.h"
 #include "routeviewtablemodel.h"
-#include "configuration.h"
+//#include "configuration.h"
 //#include "sql.h"
 #include "routedlg.h"
-#include "segmentview.h"
-#include "segmentviewsortproxymodel.h"
-#include "segmentviewtablemodel.h"
-#include "otherrouteview.h"
+//#include "segmentviewsortproxymodel.h"
+//#include "segmentviewtablemodel.h"
 #include "filedownloader.h"
-#include "splitroute.h"
-#include "editstation.h"
-#include "stationview.h"
-#include "companyview.h"
-#include "tractiontypeview.h"
-#include "dupsegmentview.h"
+//#include "splitroute.h"
+//#include "editstation.h"
 #include "routecommentsdlg.h"
 #include "querydialog.h"
 #include <QToolTip>
+#include <QPair>
+
+class RouteView;
 class SQL;
 class QWidgetAction;
 class RouteViewTableModel;
@@ -60,8 +58,8 @@ class MyWebEnginePage : public QWebEnginePage
 {
  Q_OBJECT
 public:
- MyWebEnginePage(QObject* parent = 0) : QWebEnginePage(parent){}
- bool acceptNavigationRequest(const QUrl &url, NavigationType type, bool )
+ MyWebEnginePage(QObject* parent = 0);
+ bool acceptNavigationRequest(const QUrl &url, NavigationType type, bool ) override
  {
   if(type == NavigationTypeLinkClicked)
   {
@@ -70,6 +68,21 @@ public:
   }
   return true;
  }
+ public slots:
+ void javaScriptConsoleMessage(QWebEnginePage::JavaScriptConsoleMessageLevel /*level*/, const QString &message, int lineNumber,
+                          const QString &sourceID)override
+ {
+  qDebug() << "javaScriptConsoleMessage:" << message << " at"<<lineNumber<<" source:"<<sourceID;
+ }
+
+ void loadProgress(int progress)
+ {
+  qDebug() << "progress "<< progress  << " loading " << requestedUrl().toString();
+  if(progress == 100)
+   emit pageLoaded(requestedUrl());
+ }
+ signals:
+ void pageLoaded(const QUrl);
 };
 
 #endif
@@ -77,7 +90,7 @@ class SystemConsoleAction;
 class WebViewAction;
 class QAction;
 class QMenu;
-class webViewBridge;
+class WebViewBridge;
 class SQL;
 class QLabel;
 class QSortFilterProxyModel;
@@ -95,18 +108,19 @@ class MainWindow;
 }
 
 //class webviewer;
-class mainWindow : public QMainWindow
+class ExportDlg;
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    mainWindow(int argc, char * argv[],QWidget *parent = 0);
+    MainWindow(int argc, char * argv[],QWidget *parent = 0);
     Ui::MainWindow *ui;
     QSqlDatabase db;
     SQL* sql;
     void setModel(QAbstractItemModel *model);
     //MapView *centralWidget;
-    webViewBridge *m_bridge;
+    WebViewBridge *m_bridge=nullptr;
     RouteView *routeView;
     SegmentView *segmentView;
     OtherRouteView *otherRouteView;
@@ -122,14 +136,19 @@ public:
     void setLen(qint32 len);
     QString ProcessScript(QString func, QString params);
     QString getRouteMarkerImagePath(QString route, bool isStart);
+    QString getMarkerImagePath(QString tmplt, QString name, QString text, double offset);
 
     QList<RouteData> routeList;
-    QAction *saveChangesAct;
+//    QAction *saveChangesAct;
+//    QAction *discardChangesAct;
+//    QAction* sortNameAct;
 
     double m_latitude, m_longitude;
     qint32 m_zoom;
     QString m_maptype;
-    QList<SegmentInfo> segmentInfoList;
+    //QList<SegmentInfo> segmentInfoList;
+    QList<SegmentData> segmentDataList;
+
     qint32 m_routeNbr;
     QString m_alphaRoute;
     QString m_currRouteStartDate, m_currRouteEndDate, m_routeName;
@@ -156,8 +175,10 @@ public:
     Q_DECL_DEPRECATED Configuration* getConfiguration();
     void updateStation(qint32 stationKey, qint32 segmentId);
     void moveStationMarker(qint32 stationKey, qint32 segmentId, double lat, double lon);
-    RouteViewTableModel *sourceModel;
-    void displaySegment(qint32 segmentId, QString segmentName, QString oneWay, QString color, bool bClearFirst);
+    void moveRouteComment(int route, QString date, double latitude, double longitude, int companyKey);
+
+    RouteViewTableModel *routeViewSourceModel;
+    void displaySegment(qint32 segmentId, QString segmentName, QString color, QString trackUsage, bool bClearFirst);
     static QString pwd;
     static QString pgmDir;
 #ifndef USE_WEBENGINE
@@ -170,6 +191,11 @@ public:
     QWebSocketServer* m_OverlayServer;
     WebSocketClientWrapper* m_overlayWrapper;
 #endif
+    int selectedSegment() {return m_segmentId;}
+    QDir htmlDir;
+    static MainWindow* _instance;
+    static MainWindow* instance();
+    QString getColor(qint32 tractionType);
 
 public slots:
     void copyRouteInfo_Click();
@@ -178,15 +204,24 @@ public slots:
     void mapInit();
     void refreshCompanies();
     void segmentStatus(QString str, QString color);
-    void saveChanges();
+    //void saveChanges();
+    void On_displayRoute(RouteData);
+    void addModeToggled(bool isChecked);
+    void showGoogleMapFeatures(bool);
+    void btnDisplayRouteClicked();
+    void segmentChanged(qint32 changedSegment, qint32 newSegment);
+    QMenu* addSegmentMenu(SegmentData* sd);
+    void getArrayResult(QVariant);
+    void selectRoute(RouteData rd);
 
 private slots:
     void about();
     void quit();
     void cbRoute_customContextMenu( const QPoint& );
     void txtSegment_customContextMenu(const QPoint&);
-    void tab1CustomContextMenu(const QPoint &);
-    void btnDisplayRouteClicked();
+    void cbCompany_customContextMenu( const QPoint& );
+    void webView_customContextMenu(const QPoint&);
+    //void tab1CustomContextMenu(const QPoint &);
     void btnClearClicked();
     void onCbRouteIndexChanged(int);
     void btnFirstClicked();
@@ -195,10 +230,10 @@ private slots:
     void btnLastClicked();
     void btnDeletePtClicked();
     //void onResize();
-    void cbSegmentsSelectedValueChanged(int row);
+    void cbSegmentsSelectedValueChanged(SegmentInfo sd);
     void cbSegmentsTextChanged(QString text);
     void cbRoutesTextChanged(QString text);
-    void cbSegments_Leave();
+//    void cbSegments_Leave();
     void cbRoutes_Leave();
     //void tblRouteView_selectionChanged(QTableWidgetItem * item);
     //void cbRoutes_contextMenu_requested(const QPoint& );
@@ -207,58 +242,59 @@ private slots:
     void txtStreetName_TextChanged(QString text);
     void txtStreetName_Leave();
     void txtSegment_Leave();
-    void newCity(int ix);
-    void newOverlay(int ix);
+    void newCity(QAction* act );
+    void newOverlay(QAction* act);
     void splitRoute_Click();
     void combineRoutes();
     void renameRoute_Click();
     void modifyRouteDate();
     void addSegment();
     void deleteRoute();
-    void updateRoute();
+    void updateRoute(SegmentData* sd = nullptr);
     void updateTerminals();
-    void segmentChanged(qint32 changedSegment, qint32 newSegment);
     void segmentDlg_routeChanged(RouteChangedEventArgs);
     void RouteChanged(RouteChangedEventArgs args);
     void btnDeleteSegment_Click();
     //void btnDisplay_Click();
     //void chkShowWindow_CheckedChanged();
-    void btnSplit_Click();
-    void selectSegment();
-    void AddRoute();
-    void addModeToggled(bool isChecked);
+    void btnSplit_Clicked();
+//    void selectSegment();
+    void addRoute();
     void reloadMap();
     void displayStationMarkersToggeled(bool bChecked);
     void displayTerminalMarkersToggeled(bool bChecked);
     void displayRouteCommentsToggled(bool bChecked);
     void chkShowOverlayChanged(bool bChecked);
-    void chkOneWay_Leave(bool bChecked);
     void sbRouteTriggered(int sliderAction);
     void txtRouteNbrLeave();
     void On_saveImage_clicked();
     void on_createKmlFile_triggered();
     void fillOverlayMenu();
     void queryOverlay();
-    void On_displayRoute(RouteData);
 
     // webViewBridge
     void addPoint(int pt, double lat, double lon);
-    void movePoint(qint32 segmentId, qint32 i, double newLat, double newLon);
-    void insertPoint(int SegmentId, qint32 i, double newLat, double newLon);
-    void segmentSelected(qint32 pt, qint32 SegmentId);
+    //void addPointX(int pt, QList<LatLng>);
+    QT_DEPRECATED void movePoint(qint32 segmentId, qint32 i, double newLat, double newLon);
+    void movePointX(qint32 segmentId, qint32 i, QList<LatLng> pointlist);
+    QT_DEPRECATED void insertPoint(int SegmentId, qint32 i, double newLat, double newLon);
+    void insertPointX(int segmentId, qint32 i, QList<LatLng>);
+    QT_DEPRECATED void segmentSelected(qint32 pt, qint32 SegmentId);
+    void segmentSelectedX(qint32 pt, qint32 segmentId, QList<LatLng> objArray);
 
     void addJSObject();
     void NotYetInplemented();
-    void loadAcksoftData();
+    void loadAcksoftData(QString err);
     void loadMbtilesData();
     void linkActivated();
     void pageBack();
     void exportDb();
     void editConnections();
     void cbCompanySelectionChanged(int sel);
-    void locateStreet();
+    //void locateStreet();
     void findDupSegments();
     void on_webView_statusBarMessage(QString text);
+    void on_selectSegment(int segmentId);
     void updateRouteComment();
     void geocoderRequestToggled(bool bChecked);
     void cbSortSelectionChanged(int sel);
@@ -275,20 +311,24 @@ private slots:
     void on_overlayHelp();
     void on_usingHelp();
     void processTileMapResource();
+    void onNewSegment_triggered();
 
 private:
     //Webviewer *centralWidget;
     QMenu *fileMenu;
     QMenu *helpMenu;
     QMenu *cityMenu;
-    QMenu *connectMenu;
+    //QMenu *connectMenu;
     QMenu *toolsMenu;
     QMenu* optionsMenu;
-    QMenu *overlayMenu;
-    QMenu cbRouteMenu;
+    QMenu *overlayMenu = nullptr;
+    QMenu* cbRouteMenu;
     QMenu tab1Menu;
     QMenu *sortMenu;
+    QMenu* cbCompanyMenu;
 
+//    QAction *copyAction;
+//    QAction *pasteAction;
     QAction *aboutAct;
     QAction *quitAct;
     QAction *displayAct;
@@ -296,17 +336,23 @@ private:
     QAction *renameRouteAct;
     QAction *splitRouteAct;
     QAction *modifyRouteDateAct;
+    QAction *modifyRouteTractionTypeAct;
     QAction *addSegmentAct;
     QAction *deleteRouteAct;
     QAction *updateRouteAct;
+    QAction *replaceSegments;
     QAction *updateTerminalsAct;
-    //QAction *displaySegmentAct;
-    QAction* addSegmentToRouteAct;
+    QAction *describeRouteAct;
+    QAction* addSegmentToRouteAct; // to current route
+    QAction* addSegmentViaUpdateRouteAct; // using RouteDlg
     QAction *deleteSegmentAct;
     QAction *findDupSegmentsAct;
+    QAction *queryRouteUsageAct;
     QAction *findDormantSegmentsAct;
     QAction *selectSegmentAct;
     QAction* editSegmentAct;
+    QAction* sswEditSegmentAct;
+    QAction* newSegmentAct;
     QAction *addRouteAct;
     QAction *addPointModeAct;
     QAction *reloadMapAct;
@@ -317,8 +363,15 @@ private:
     QAction* createKmlAct;
     QAction *exportDbAct;
     QAction *editConnectionsAct;
-    QAction* editCityAct;
-    QAction *locateStreetAct;
+    QAction* manageOverlaysAct;
+    //QAction *locateStreetAct;
+    // test functions
+    QAction* testUrlAct;
+    QAction* testScriptAct;
+    QAction* testLoadAct;
+    QAction* testRunJavaScriptAct;
+    //QAction* testUseBundleResources;
+    //
     QAction *combineRoutesAct;
     QAction *refreshRoutesAct;
     QAction *routeCommentsAct;
@@ -332,19 +385,39 @@ private:
     QAction* showDebugMessages;
     QAction* runInBrowserAct;
     QAction* addGeoreferencedOverlayAct;
+    QAction* browseCommentsAct;
     QAction* overlayHelp;
     QAction* usingMapper;
+    QAction* splitSegmentAct;
+    QAction* setInspectedPageAct = nullptr;
+    QAction* displayAllRoutesAct;
+    QAction* exportOverlaysAct;
+    QAction* setCityBoundsAct;
+    QAction* setLoggingAct;
+    QAction* newCityAct;
+    QAction* removeCityAct;
+    QAction* changeRouteNumberAct;
+    QAction* checkSegmentsAct;
+    QAction* saveSettingsAct;
+    QAction* showGoogleMapFeaturesAct;
+    QAction* foreignKeyCheckAct;
+    QAction* fontSizeChangeAct;
+    QAction* updateParametersAct;
+    QAction* companyChangeRoutes;
+    QAction* creditsAct;
+    QAction* displaySegmentArrows;
+    QAction* selAllCompaniesAct;
+    QAction* clearAllCompaniesAct;
 
     QList<QAction*> cityActions;
-    QSignalMapper *signalMapper;
-    QActionGroup  *actionGroup;
-
     QList<QAction*> overlayActions;
-    QSignalMapper *overlaySignalMapper;
+
+    //QSignalMapper *overlaySignalMapper;
     QActionGroup  *overlayActionGroup;
     QString  currentOverlay;
-    QList<tractionTypeInfo> tractionTypeList;
-    QList<CompanyData> companyList;
+    QMap<int,TractionTypeInfo> tractionTypeList;
+    QList<CompanyData*> companyList;
+    SystemConsole2* consoleDlg = nullptr;
 
     TerminalInfo m_terminalInfo;
     RouteData _rd;
@@ -361,33 +434,59 @@ private:
     bool bNoDisplay = false;
     bool bDisplayWebDebug = false;
     QStringList overlays;
+    bool bCbStreets_text_changed = false;
+    QString saveStreet = "";
+    bool bCbStreetsRefreshing = false;
+    //bool bFirstSegmentDisplayed = false;
 
     void createActions();
     void createMenus();
-    void refreshSegmentCB();
     void lookupStreetName(SegmentInfo sd);
-    QString getColor(qint32 tractionType);
+    QList<StationInfo> getStations(QList<SegmentData*>);
+
     void closeEvent(QCloseEvent *event);
     FileDownloader *m_dataCtrl;
     FileDownloader *m_overlays;
     FileDownloader *m_tilemapresource;
     Configuration* config;
+    MyWebEnginePage* myWebEnginePage = nullptr;
+    qint32 m_segmentId =-1;
+    //QT_DEPRECATED QList<SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
+    QMap<int, SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
 
-    qint32 m_SegmentId;
-    QList<SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
     qint32 m_currPoint, m_nbrPoints;
+    int m_companyKey;
     QList<LatLng> m_points;
     //segmentInfo si;
     SystemConsoleAction* systemConsoleAction;
-    WebViewAction* webViewAction;
-    void updateSegmentInfoDisplay(SegmentInfo si);
+    WebViewAction* webViewAction =nullptr;
+    void updateSegmentInfoDisplay(SegmentInfo sd);
     void createBridge();
-    bool openWebWindow();
+    bool openBrowserWindow();
+    bool openWebViewPanel();
+    bool setupbridge();
     void loadOverlay(Overlay* ov);
-    QString path, wikiRoot;
+    QString wikiRoot;
+    QString cwd;
     void loadData(QString data, QString source);
+//    void refreshStreetsCb();
+    bool copyAndUpdate(QString inFile, QString outDir, QString apiKey);
+    bool updateTarget(QString inDir, QString outDir);
+
+    QString tempDir;
+//    QStringList keyTokens;
+    QUrl fileUrl;
+    bool verifyAPIKey(QString path, QString apiKey);
+    ExportDlg* form = nullptr;
+    void enableControls( bool b);
+    QWidgetAction* createWidgetAction();
+    bool isStationOnSegment(StationInfo* sti, QList<SegmentData*> segmentDataList);
+    QString createSortString(QString alphaRoute);
+    int countDigits(QString str);
 
 private slots:
+//    void aCopy();
+//    void aPaste();
     void createCityMenu();
     void sbTracks_valueChanged(int);
     void on_showDebugMessages(bool);
@@ -396,13 +495,28 @@ private slots:
     void on_runInBrowser(bool);
     void onWebSocketClosed();
     void loadOverlayData();
+    void describeRoute();
+    void modifyRouteTractionType();
+    void on_updateRoute();
+    void changeFonts(QFont f);
+    void onCbSegmentsCustomContextMenu(const QPoint &pos);
+    void addSegmentToRoute(SegmentData *sd);
+    void loadRouteComment();
+    void initializeGoogleMaps(QUrl url);
+    void displayAll();
 
 protected:
     //void resizeEvent(QResizeEvent *event);
 signals:
     //void sendRows(int, int);
     void newCitySelected();
+    friend class RouteView;
+    friend class WebViewBridge;
+    friend class SegmentView;
+    friend class SegmentViewTableModel;
+    friend class ExportDlg;
 };
+
 class Menu : public QMenu
 {
     Q_OBJECT

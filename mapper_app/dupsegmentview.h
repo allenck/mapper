@@ -41,8 +41,9 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role=Qt::EditRole);
     bool insertRows(int position, int rows, const QModelIndex &index=QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index=QModelIndex());
-    QList< SegmentInfo > getList();
+    QList<SegmentInfo> getList();
     void reset();
+    void deleteRow(int row);
 
 signals:
 
@@ -59,7 +60,7 @@ class DupSegmentView : public QObject
     Q_OBJECT
 public:
     DupSegmentView(Configuration *cfg, QObject *parent = 0);
-    void showDupSegments(QList<SegmentInfo>dupSegmentList);
+    void showDupSegments(QList<SegmentInfo> dupSegmentList);
 
 
 signals:
@@ -75,13 +76,17 @@ private:
     QTableView* ui;
     dupSegmentViewTableModel *sourceModel;
     dupSegmentViewSortProxyModel *proxymodel;
-    qint32 segmentId;
+    qint32 segmentId, dupSegmentId;
+    SegmentData sd1;
+    SegmentData sd2;
     int curRow, curCol;
     bool boolGetItemTableView(QTableView *table);
     QModelIndex currentIndex;
     QMenu menu;
     QAction* selectSegmentAct;
-
+    QAction* deleteDuplicateAct;
+    SegmentData currSd;
+    qint32 modelRow = -1;
 private slots:
     void Resize (int oldcount,int newcount);
     void On_selectSegmentAct(bool);

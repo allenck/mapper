@@ -25,23 +25,25 @@ private:
     Ui::DialogCopyRoute *ui;
 
     QList<RouteData> routeDataList;
-    QList<CompanyData> _companyList;
-    QList<tractionTypeInfo> tractionList;
+    QList<CompanyData*> _companyList;
+    QMap<int, TractionTypeInfo> tractionList;
     SQL* sql;
-    int _routeNbr;
+    int _routeNbr=-1;
     QString _alphaRoute;
     bool bRouteChanged;
     Configuration *config;
     RouteData _rd;
-    CompanyData cd;
+    CompanyData* cd = nullptr;
     void refreshRoutes();
     void fillCompanies();
     void fillTractionTypes();
+    bool bNewRouteNbr=false;
+    bool bAddMode=false;
 
 private slots:
     void btnCancel_Click();
-    void txtRouteNbr_TextChanged(QString text);
-    void txtRouteNbr_Leave();
+//    void txtRouteNbr_TextChanged(QString text);
+//    void txtRouteNbr_Leave();
     void btnOK_Click();
     void cbCompany_SelectedIndexChanged(int row);
     void dateEnd_ValueChanged();

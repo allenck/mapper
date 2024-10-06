@@ -1,17 +1,25 @@
 #include "overlaytablemodel.h"
 #include "configuration.h"
 #include "sql.h"
+#include <QTextDocument>
+#include <overlay.h>
 
-OverlayTableModel::OverlayTableModel()
+OverlayTableModel::OverlayTableModel(int cityId, QObject *parent) : QAbstractTableModel(parent)
 {
  config = Configuration::instance();
- currCityId = config->currentCityId;
- overlayList = QList<Overlay*>(config->overlayList.values());
+ currCityId = cityId;
+ overlayMap = new QMap<QString, Overlay*>();
+ for(Overlay* ov : config->overlayMap->values())
+ {
+  if(ov->opacity > 65)
+   ov->opacity = 65;
+   overlayMap->insert(ov->cityName + "|" + ov->name, ov);
+ }
 }
 
 int OverlayTableModel::rowCount(const QModelIndex &parent) const
 {
- return overlayList.count();
+ return overlayMap->count();
 }
 
 int OverlayTableModel::columnCount(const QModelIndex &parent) const
@@ -30,7 +38,15 @@ QVariant OverlayTableModel::headerData(int section, Qt::Orientation orientation,
     return tr("Selected");
    case DESCRIPTION:
     return tr("Description");
-   case MINZOOM:
+  case CITYNAME:
+   return tr("City");
+  case BOUNDS:
+   return tr("Bounds");
+  case SOURCE:
+   return tr("Source");
+  case YEAR:
+   return tr("Year");
+  case MINZOOM:
     return tr("Min Zoom");
   case MAXZOOM:
     return tr("Max Zoom");
@@ -48,18 +64,22 @@ QVariant OverlayTableModel::headerData(int section, Qt::Orientation orientation,
 Qt::ItemFlags OverlayTableModel::flags(const QModelIndex &index) const
 {
  int row = index.row();
- Overlay* ov = overlayList.at(row);
+ Overlay* ov = overlayMap->values().at(row);
  City* c = config->cityList.at(currCityId);
- if(!ov->bounds.contains(c->center) && SQL::distance(ov->bounds.center(), c->center) > 10)
- {
-  qDebug() << c->name << " center: " << c->center.toString();
-  qDebug() << ov->name << " bounds: " << ov->bounds.toString() << "\n";
-  return  0;
- }
+// if(!ov->bounds().contains(c->center) && SQL::distance(ov->bounds().center(), c->center) > 10)
+// {
+//  qDebug() << c->name << " center: " << c->center.toString();
+//  qDebug() << ov->name << " bounds: " << ov->bounds().toString() << "\n";
+//  return  0;
+// }
 
  if(index.column() == SELECTED )
- {
   return Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
+ if( index.column() == NAME || index.column() == DESCRIPTION
+    || index.column() == CITYNAME || index.column() == YEAR
+    || index.column() == MINZOOM || index.column() == MAXZOOM || index.column() == URLS)
+ {
+  return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
  }
  if(index.column() == LOCAL)
  {
@@ -74,49 +94,116 @@ Qt::ItemFlags OverlayTableModel::flags(const QModelIndex &index) const
 
 QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
 {
+ int row = index.row();
+ Overlay* ov = overlayMap->values().at(row);
+ if(role == Qt::ToolTipRole)
+ {
+  if(index.column() == DESCRIPTION)
+   return ov->description;
+  if(index.column() == BOUNDS)
+   return ov->bounds().toString();
+ }
+
+ if(role == Qt::BackgroundRole)
+ {
+  QVariant background = QVariant();
+  switch(index.column())
+  {
+   case NAME:
+   if(ov->name.isEmpty())
+   {
+    background = QVariant( QColor(Qt::red) );
+   }
+   break;
+  case CITYNAME:
+   if(ov->cityName.isEmpty() )
+   {
+    background = QVariant( QColor(Qt::red) );
+    break;
+   }
+   if(!config->cityNames().contains(ov->cityName))
+   {
+    background = QVariant( QColor(Qt::yellow) );
+    break;
+
+   }
+   break;
+  case OPACITY:
+   if(ov->opacity > 65) background = QVariant( QColor(Qt::red) );
+   break;
+  case BOUNDS:
+   if(!ov->bounds().isValid())
+    background = QVariant( QColor(Qt::red) );
+   break;
+//  case CENTER:
+//   if(!ov->center().isValid())
+//    background = QVariant( QColor(Qt::red) );
+//   break;
+  case MINZOOM:
+   if(ov->minZoom < 1) background = QVariant( QColor(Qt::red) );
+   break;
+  case MAXZOOM:
+   if(ov->maxZoom > 21 || ov->maxZoom <1) background = QVariant( QColor(Qt::red) );
+   break;
+  case URLS:
+   if(ov->urls.isEmpty()) background = QVariant( QColor(Qt::red) );
+   break;
+  }
+  return background;
+ }
  if(role == Qt::DisplayRole)
  {
-  int row = index.row();
   switch(index.column()) {
   case NAME:
-   return overlayList.at(row)->name;
+   return ov->name;
    break;
+  case CITYNAME:
+   return ov->cityName;
   case DESCRIPTION:
-   return overlayList.at(row)->description;
+  {
+   QString text = ov->description;
+   if(!text.isEmpty())
+   {
+      QTextDocument td(text);
+      return td.toPlainText();
+   }
+   else
+    return "";
+  }
+  case BOUNDS:
+     return ov->bounds().isValid()?"valid":"invalid";
+//  case CENTER:
+//   return ov->center().isValid()?"valid":"invalid";
   case MINZOOM:
-   return overlayList.at(row)->minZoom;
+   return ov->minZoom;
   case MAXZOOM:
-   return overlayList.at(row)->maxZoom;
+   return ov->maxZoom;
   case OPACITY:
-   return overlayList.at(row)->opacity;
+   return ov->opacity;
 //  case LOCAL:
 //   return overlayList.at(row)->source == "mbtiles" || overlayList.at(row)->source == "tileserver";
   case SOURCE:
-      return overlayList.at(row)->source;
+      return ov->source;
   case URLS:
-      return overlayList.at(row)->urls.at(0);
-
+   if(ov->urls.count())
+      return ov->urls.at(0);
+   else return "";
+  case YEAR:
+   return ov->year();
   default:
    break;
   }
  }
  if(role == Qt::CheckStateRole)
  {
-  QString name = overlayList.at(index.row())->name;
-  Overlay* ov = overlayList.at(index.row());
+  QString name = overlayMap->values().at(index.row())->name;
+  Overlay* ov = overlayMap->values().at(index.row());
   if(index.column() == SELECTED)
   {
-   if(config->cityList.at(currCityId)->overlayList().contains(ov))
+   if(ov->isSelected)
     return Qt::Checked;
    else
     return Qt::Unchecked;
-  }
-  if(index.column() == LOCAL && overlayList.at(index.row()))
-  {
-   if(overlayList.at(index.row())->source == "acksoft" || overlayList.at(index.row())->source == "")
-    return Qt::Unchecked;
-   else
-    return Qt::Checked;
   }
  }
  return QVariant();
@@ -124,37 +211,114 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
 
 bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
- Overlay* ov = overlayList.at(index.row());
+ Overlay* ov = overlayMap->values().at(index.row());
+ QString oldName =ov->cityName +"." + ov->name;
+ QString newName;
  if(role == Qt::CheckStateRole)
  {
   if(index.column() == SELECTED)
   {
-   QString name = overlayList.at(index.row())->name;
-   if(value.toBool())
-   {
-    if(!config->cityList.at(currCityId)->overlayList().contains(ov))
-     config->cityList.at(currCityId)->addOverlay(ov);
-   }
-   else
-   {
-    if(config->cityList.at(currCityId)->overlayList().contains(ov))
-     config->cityList.at(currCityId)->removeOverlay(ov);
-   }
-   emit overlaySelectionChanged(index, value.toBool());
+    ov->isSelected = value.toBool();
+    emit overlaySelectionChanged(ov, ov->isSelected);
+    setDirty();
   }
   if(index.column() == LOCAL)
   {
    if(value.toBool())
    {
 #ifdef WIN32
-    overlayList.at(index.row())->source = "mbtiles";
+    overlayMap->values().at(index.row())->source = "mbtiles";
 #else
-    overlayList.at(index.row())->source = "tileserver";
+    overlayMap->values().at(index.row())->source = "tileserver";
 #endif
    }
    else
-    overlayList.at(index.row())->source = "acksoft";
+    overlayMap->values().at(index.row())->source = "acksoft";
   }
+  return true;
+ }
+ if(role == Qt::EditRole)
+ {
+  oldName = ov->cityName +"." + ov->name;
+  QString oldCityKey =ov->name;
+  newName = ov->cityName +"." + ov->name;
+  QString newCityKey = ov->name;
+  if(index.column() == NAME)
+  {
+   overlayMap->remove(oldName);
+   ov->name = newCityKey =value.toString();
+   newName = ov->cityName + "." +ov->name;
+  }
+  if(index.column() == CITYNAME)
+  {
+   newName = value.toString()+"."+ov->name;
+   newCityKey = value.toString();
+   newName = value.toString()+"." + ov->name;
+   QStringList cityList = config->cityNames();
+   if(!cityList.contains(newCityKey))
+    return false; // invalid city name
+   if(overlayMap->contains(newName))
+    return false;
+   overlayMap->remove(oldName);
+   ov->cityName = value.toString();
+   overlayMap->insert(newName,ov);
+   return true;
+  }
+  if(index.column() == DESCRIPTION)
+  {
+   ov->description = value.toString();
+  }
+  if(index.column()== YEAR)
+  {
+   ov->setYear(value.toString());
+  }
+  if(index.column() == URLS)
+  {
+   QString text = value.toString();
+   if(text.contains(","))
+   {
+    QStringList sl = text.split(",");
+    for(QString _url : sl){
+     QUrl url(_url);
+     if(!url.isValid())
+      return false;
+    }
+    ov->urls = sl;
+   }
+   else
+   {
+    QStringList sl;
+    sl.append(text);
+    QUrl url(text);
+    if(!url.isValid())
+     return false;
+    ov->urls = sl;
+   }
+  }
+  if(index.column() == MINZOOM)
+   ov->minZoom = value.toInt();
+  if(index.column() == MAXZOOM)
+   ov->maxZoom = value.toInt();
+
+  emit overlayChanged(oldName, newName, ov);
+  if(oldName == newName)
+  {
+   // do nothing if neither name or cityName changed!
+  }
+  else
+  {
+   if(oldName != newName)
+   {
+    overlayMap->remove(oldName);
+    overlayMap->insert(newName, ov);
+   }
+   else
+   {
+    config->currCity->city_overlayMap->remove(oldCityKey);
+    config->currCity->city_overlayMap->insert(newCityKey, ov);
+   }
+  }
+  setDirty();
   return true;
  }
  return false;
@@ -163,5 +327,33 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
 void OverlayTableModel::setCity(int c)
 {
  currCityId = c;
+}
+
+void OverlayTableModel::addOverlay(Overlay* ov)
+{
+ if(!overlayMap->contains(ov->cityName +"|" + ov->name))
+ {
+  beginResetModel();
+  overlayMap->insert(ov->cityName +"|" + ov->name, ov);
+  endResetModel();
+ }
+}
+
+QMap<QString, Overlay*>* OverlayTableModel::getOverlayMap()
+{
+ return overlayMap;
+}
+
+void OverlayTableModel::deleteRow(int row)
+{
+ Overlay* ov = overlayMap->values().at(row);
+ beginRemoveRows(QModelIndex(), row, row);
+ overlayMap->remove(ov->cityName+"|"+ov->name);
+ endRemoveRows();
+}
+
+Overlay* OverlayTableModel::selectedOverlay(int row)
+{
+ return overlayMap->values().at(row);
 }
 
