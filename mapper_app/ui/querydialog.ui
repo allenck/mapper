@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>702</width>
+    <width>752</width>
     <height>337</height>
    </rect>
   </property>
@@ -16,11 +16,14 @@
   <layout class="QGridLayout" name="gridLayout">
    <item row="3" column="9">
     <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Clck to hide this dialog. Select '&lt;span style=&quot; font-style:italic;&quot;&gt;SQL Query Dialog&lt;/span&gt;' from Tolls menue to restore.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Close</set>
+      <set>QDialogButtonBox::StandardButton::Close</set>
      </property>
     </widget>
    </item>
@@ -123,7 +126,7 @@
    <item row="0" column="0" colspan="10">
     <widget class="QSplitter" name="query_splitter">
      <property name="orientation">
-      <enum>Qt::Vertical</enum>
+      <enum>Qt::Orientation::Vertical</enum>
      </property>
      <widget class="QTextEdit" name="editQuery">
       <property name="toolTip">
