@@ -49,17 +49,20 @@ void Clipboard::setContextMenu(QLineEdit* tgt)
 
 QMenu* Clipboard::getMenu(QLineEdit* tgt)
 {
-    QMenu* menu = new QMenu(tr("Paste from clipboard history") ) ;
+    QMenu* menu = tgt->createStandardContextMenu();
+    QMenu* menu1 = new QMenu(tr("Paste from clipboard history") ) ;
     QAction* act;
     QActionGroup* group = new QActionGroup(this);
     QLineEdit* edit = tgt;
     connect(group, &QActionGroup::triggered, [=](QAction* selected){
         edit->insert(selected->text());
     });
+
     for (int i=0; i < list.count(); i++) {
         act = new QAction(list.at(i), this);
         group->addAction(act);
-        menu->addAction(act);
+        menu1->addAction(act);
     }
+    menu->addMenu(menu1);
     return menu;
 }
