@@ -51,7 +51,7 @@ signals:
     void executeScript2(QString func, QString parms, QString name, QString value);
     void executeScript3(QString func, QVariantList objArray, qint32 count);
     void movePointSignal(qint32 segmentId, qint32 i, double newLat, double newLon);
-    void movePointSignalX(qint32 segmentId, qint32 i, QList<LatLng> points);
+    //void movePointSignalX(qint32 segmentId, qint32 i, QList<LatLng> points);
     void addPointSignal(int pt, double lat, double lon);
     void addPointSignalX(int pt, QList<LatLng> points);
     void insertPointSignal(int SegmentId, qint32 i, double newLat, double newLon);
@@ -92,7 +92,7 @@ public slots:
     void moveRouteEndMarker(double lat, double lon, qint32 segmentId, qint32 i);
     QString getImagePath(qint32);
     void movePoint(qint32 segmentId, qint32 i, double lat, double lng);
-    void movePointX(qint32 segmentId, qint32 i, QVariantList array);
+    //void movePointX(qint32 segmentId, qint32 i, QVariantList array);
     void insertPoint(int SegmentId, qint32 i, double newLat, double newLon);
     void insertPointX(int SegmentId, qint32 i, QVariantList array);
     void updateIntersection(qint32 i, double newLat, double newLon);

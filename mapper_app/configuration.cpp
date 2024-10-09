@@ -6,12 +6,14 @@
 #include <QFileDialog>
 #include <QFile>
 #include "routeviewtablemodel.h"
+
+
 Configuration::Configuration(QObject *parent) :
     QObject(parent)
 {
  currentCityId = -1;
  qRegisterMetaType<Bounds>("Bounds");
-
+ clipboard = new Clipboard();
 }
 
 void Configuration::saveSettings()

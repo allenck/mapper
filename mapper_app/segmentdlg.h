@@ -65,6 +65,7 @@ private:
     void setSegmentId(qint32 value);
     void setRouteData(RouteData* value);
     void updateOtherRoutes();
+    QMenu* txtNewSegmentMenu(const QPoint&);
 
 private slots:
     void fillCompanies();

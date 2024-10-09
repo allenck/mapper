@@ -3900,6 +3900,8 @@ bool SQL::updateSegment(SegmentInfo* si)
  }
  if(si->pointList().count() <1)
   return false;
+ if(si->pointList().count() == 1)
+  qWarning() << "single point";
  Q_ASSERT(si->_startLat != 0);
  Q_ASSERT(si->_startLon != 0);
  if(si->pointList().count() > 1)

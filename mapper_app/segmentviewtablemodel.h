@@ -22,7 +22,7 @@ public:
     bool removeRows(int position, int rows, const QModelIndex &index=QModelIndex());
     QList<SegmentInfo> getList();
     void reset();
-    enum COLUMNS {SEGMENTID, DESCRIPTION, TRACKS, STREETNAME, DIRECTION, LAT, LON};
+    enum COLUMNS {SEGMENTID, DESCRIPTION, TRACKS, STREETNAME, DIRECTION, LAT, LON, WHICHEND};
     int getRow(int segmentId);
     SegmentInfo selectedSegment(int row);
 

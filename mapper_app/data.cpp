@@ -346,6 +346,7 @@ SegmentData::SegmentData(const SegmentInfo& o)
  if(_points == 0 && pointList().count() > 0 )
   _points = pointList().count();
  _location = o._location;
+ _whichEnd = o._whichEnd;
 }
 
 QString SegmentData::toString()
@@ -649,6 +650,7 @@ SegmentInfo::SegmentInfo(const SegmentData& o)
  _routeType = o._routeType;
  _location = o._location;
  _doubleDate = o._doubleDate;
+ _whichEnd = o._whichEnd;
 }
 
 #if 1
@@ -689,8 +691,19 @@ void SegmentInfo::insertPoint(int ptNum, LatLng pt)
 
 void SegmentInfo::movePoint(int ptNum, LatLng pt)
 {
-  if(ptNum >= _pointList.count()) return;
+  if(ptNum >= _pointList.count())
+        return;
   _pointList.replace(ptNum, pt);
+  if(ptNum == 0)
+  {
+      _startLat = pt.lat();
+      _startLon = pt.lon();
+  }
+  if(ptNum == _pointList.count()-1)
+  {
+      _endLat = pt.lat();
+      _endLon = pt.lon();
+  }
   //SQL sql;
   SQL::instance()->updateSegment(this);
 }

@@ -452,42 +452,64 @@ QMenu* MainWindow::addSegmentMenu(SegmentData *sd)
   case 0:
    sd->setOneWay(" ");
    sd->setTrackUsage(" ");
-   addSegmentToRoute(sd); // two tracks both used
-   if(sd->tracks()==2)
-   {
-    SegmentInfo si = sql->getSegmentInfo(sd->segmentId());
-    sd->setDoubleDate(si.doubleDate());
-
-    if(sd->startDate() < si.startDate())
-     si.setStartDate(sd->startDate() );
-    if(sd->endDate() > si.endDate())
-     si.setEndDate(sd->endDate());
-
-    if((sd->doubleDate() > sd->startDate()) || !sd->doubleDate().isValid())
-    {
-     sd->setDoubleDate(sd->startDate());
-     si.setDoubleDate(sd->startDate());
-     sql->updateSegment(sd);
-    }
-   }
+   //addSegmentToRoute(sd); // two tracks both used
    break;
   case 1:
    sd->setOneWay("Y");
    sd->setTrackUsage("R");
-   addSegmentToRoute(sd); // two tracks both used
+   //addSegmentToRoute(sd); // two tracks both used
    break;
   case 2:
    sd->setOneWay("Y");
    sd->setTrackUsage("L");
-   addSegmentToRoute(sd); // two tracks both used
+   //addSegmentToRoute(sd); // two tracks both used
    break;
   case -1:
    sd->setOneWay(act->isChecked()?"Y":"N");
-   addSegmentToRoute(sd); // single track oneway ot not
+   //addSegmentToRoute(sd); // single track oneway ot not
+   break;
   }
+  if(sd->tracks()==2)
+  {
+      SegmentInfo si = sql->getSegmentInfo(sd->segmentId());
+      sd->setDoubleDate(si.doubleDate());
+
+      if(sd->startDate() < si.startDate())
+          si.setStartDate(sd->startDate() );
+      if(sd->endDate() > si.endDate())
+          si.setEndDate(sd->endDate());
+
+      if((sd->doubleDate() > sd->startDate()) || !sd->doubleDate().isValid())
+      {
+          sd->setDoubleDate(sd->startDate());
+          si.setDoubleDate(sd->startDate());
+          sql->updateSegment(sd);
+      }
+  }
+  m_segmentId = sd->segmentId();
+  m_points = sd->pointList();
+  m_nbrPoints = sd->pointList().count();
+  m_currPoint = m_nbrPoints -1;
+  if(sd->whichEnd()== "E")
+     btnLastClicked();
+  else if(sd->whichEnd()== "S")
+     btnFirstClicked();
+  else
+      qDebug() << "whichEnd = " << sd->whichEnd();
+  selectSegment(sd->segmentId());
+  addSegmentToRoute(sd);
+
+  qDebug() << tr("adding segment %1 %2 to route %3 %4 %5 points %6 is current point whicend = ''%7'")
+                 .arg(sd->segmentId())
+                 .arg(sd->streetName())
+                 .arg(sd->route())
+                 .arg(sd->routeName())
+                 .arg(m_nbrPoints)
+                 .arg(m_currPoint)
+                 .arg(sd->whichEnd());
+
  });
- m_segmentId = sd->segmentId();
- selectSegment(sd->segmentId());
+
  return actMenu;
 }
 
@@ -505,8 +527,8 @@ void MainWindow::createBridge()
 // m_bridge->browseWindowHeight = webView->height();
 // m_bridge->browseWindowWidth = webView->width();
 
- //connect( m_bridge, SIGNAL(movePointSignal(qint32, qint32,double,double)), this, SLOT(movePoint(qint32, qint32,double,double)));
- connect( m_bridge, SIGNAL(movePointSignalX(qint32,qint32,QList<LatLng>)), this, SLOT(movePointX(qint32,qint32,QList<LatLng>)));
+ connect( m_bridge, SIGNAL(movePointSignal(qint32, qint32,double,double)), this, SLOT(movePoint(qint32, qint32,double,double)));
+ //connect( m_bridge, SIGNAL(movePointSignalX(qint32,qint32,QList<LatLng>)), this, SLOT(movePointX(qint32,qint32,QList<LatLng>)));
  connect(m_bridge, SIGNAL(addPointSignal(int,double,double)), this, SLOT(addPoint(int,double,double)));
  //connect(m_bridge, SIGNAL(addPointSignalX(int,double,double)), this, SLOT(addPointX(int,QList<LatLng>)));
  connect (m_bridge, SIGNAL(insertPointSignal(int,qint32,double,double)), this, SLOT(insertPoint(int,qint32,double,double)));
@@ -1479,30 +1501,31 @@ QWidgetAction *MainWindow::createWidgetAction()
 
 void MainWindow::addSegmentToRoute(SegmentData* sd)
 {
- QList<SegmentData*> conflicts
+    QList<SegmentData*> conflicts
          = sql->getConflictingRouteSegments(_rd.route(), _rd.routeName(),
                                             _rd.startDate().toString("yyyy/MM/dd"),
                                             _rd.endDate().toString("yyyy/MM/dd"),
                                             sd->segmentId());
- if(conflicts.count())
- {
+    if(conflicts.count())
+    {
      QMessageBox::critical(this, tr("Conflict"), tr("The segment is already present"
                            " or conflicts with the start or end date of an"
                            " existing segment. The segment will not be added!"));
      return;
- }
- if(!sd->doubleDate().isValid() || (sd->doubleDate() > sd->startDate() && sd->tracks()==2))
-  sd->setDoubleDate(sd->startDate());
- if(!sql->addSegmentToRoute(sd))
- {
-  //updateRoute(sd);
-  return;
- }
+    }
+    if(!sd->doubleDate().isValid() || (sd->doubleDate() > sd->startDate() && sd->tracks()==2))
+    sd->setDoubleDate(sd->startDate());
+    if(!sql->addSegmentToRoute(sd))
+    {
+        //updateRoute(sd);
+        return;
+    }
     m_bridge->processScript("clearPolyline", QString("%1").arg(sd->segmentId()));
     //SegmentInfo si = sql->getSegmentInfo(segmentId);
-    displaySegment(sd->segmentId(), sd->description(),
-                   getColor(sd->tractionType()),
-                   sd->trackUsage(), true);
+    // displaySegment(sd->segmentId(), sd->description(),
+    //                getColor(sd->tractionType()),
+    //                sd->trackUsage(), true);
+    sd->displaySegment(sd->startDate().toString("yyyy/MM/dd"),getColor(sd->tractionType()), sd->trackUsage(), true);
 }
 
 void MainWindow::changeFonts(QFont f)
@@ -1740,6 +1763,8 @@ void MainWindow::txtSegment_customContextMenu(const QPoint &)
  if(ui->txtSegment->text().isEmpty()) return;
  QMenu* menu = ui->txtSegment->createStandardContextMenu();
  menu->addSeparator();
+ if(config->clipboard->isActive())
+     menu->addMenu(config->clipboard->getMenu(ui->txtSegment));
  QAction* edit = new QAction(tr("Edit segment"), this);
  edit->setStatusTip(tr("Edit segment details such as tracks, route type, etc."));
  menu->addAction(edit);
@@ -3064,6 +3089,8 @@ void MainWindow::segmentSelected(qint32 pt, qint32 segmentId)
  }
  else
   m_currPoint = pt;
+ if(m_currPoint < 0)
+     qDebug() << "current point " << m_currPoint;
  ui->lblPoint->setText(QString::number(m_currPoint));
  m_latitude = ((LatLng)m_points.at(pt)).lat();
  m_longitude= ((LatLng)m_points.at(pt)).lon();
@@ -3140,13 +3167,14 @@ void MainWindow::segmentSelectedX(qint32 pt, qint32 segmentId, QList<LatLng> poi
 //  return;
  m_segmentId = segmentId;
  m_currPoint = pt;
- m_nbrPoints = pointArray.count()/2;
+ m_nbrPoints = pointArray.count();
  SegmentInfo si = sql->getSegmentInfo(m_segmentId);
  if (si.segmentId() == -1)
  {
   qDebug() <<"segment " + QString("%1").arg(segmentId) + " not found";
   return;
  }
+ m_points = pointArray;
  // update SegmenInfo with new points
  if(routeDlg)
  {
@@ -3176,6 +3204,8 @@ void MainWindow::segmentSelectedX(qint32 pt, qint32 segmentId, QList<LatLng> poi
  }
  else
   m_currPoint = pt;
+ if(m_currPoint < 0)
+     qDebug() << "current point " << m_currPoint;
  ui->lblPoint->setText(QString::number(m_currPoint));
  m_latitude = ((LatLng)m_points.at(pt)).lat();
  m_longitude= ((LatLng)m_points.at(pt)).lon();
@@ -3271,6 +3301,8 @@ void MainWindow::getArrayResult(QVariant v)
 {
     disconnect(m_bridge, SIGNAL(on_scriptResult(QVariant)), this, SLOT(getArrayResult(QVariant)));
 
+    if(v.toString() == "N")
+        return;
     QVariantList points;
     points = m_bridge->myList;
     m_nbrPoints = points.count()/2;
@@ -3333,6 +3365,8 @@ void MainWindow::getArrayResult(QVariant v)
 #endif
     if (m_currPoint > ((int)m_nbrPoints - 1))
         m_currPoint = (int)m_nbrPoints - 1;
+    if(m_currPoint < 0)
+        qDebug() << "current point " << m_currPoint;
     ui->lblPoint->setText(QString::number(m_currPoint));
 }
 
@@ -3350,13 +3384,14 @@ void MainWindow::setLen(qint32 len)
 {
     m_nbrPoints = len;
 }
+
 void MainWindow::btnFirstClicked()
 {
 // if(!bFirstSegmentDisplayed)
 //  return;
 
     //SQL sql;
-    getArray();
+    //getArray();
 //    Object[] objArray = new Object[6];
 //    objArray[0] = m_currPoint = 0;
     ui->btnSplit->setEnabled(false);
@@ -3395,7 +3430,7 @@ void MainWindow::btnNextClicked()
 // if(!bFirstSegmentDisplayed)
 //  return;
     //SQL sql;
-    getArray();
+    //getArray();
     if(m_currPoint < 0 || m_nbrPoints <2)
         return;
     if ((m_currPoint + 1) < m_nbrPoints)
@@ -3544,7 +3579,7 @@ void MainWindow::btnPrevClicked()
 // if(!bFirstSegmentDisplayed)
 //  return;
     //SQL sql;
-    getArray();
+    //getArray();
     if (m_currPoint > 0)
         m_currPoint--;
     ui->lblPoint->setText(QString::number(m_currPoint));
@@ -3775,7 +3810,7 @@ void MainWindow::displaySegment(qint32 segmentId, QString segmentName,
     ui->btnLast->setEnabled(true);
     ui->btnSplit->setEnabled(false);
     ui->btnDeletePt->setEnabled(true);
-    getArray();
+    //getArray();
     return;
 }
 
@@ -3791,6 +3826,7 @@ void MainWindow::cbSegmentsSelectedValueChanged(SegmentInfo si)
     m_segmentId = si.segmentId();
     updateSegmentInfoDisplay(si);
     m_points = si.pointList();
+    m_nbrPoints = si.pointList().count();
     //Q_ASSERT(m_points.count() !=1);
 
     //routeDlg->setSegmentId( m_segmentId);
@@ -4092,12 +4128,14 @@ void MainWindow::addPoint(int pt, double lat, double lon)
 void MainWindow::movePoint(qint32 segmentId, qint32 i, double newLat, double newLon)
 {
   m_segmentId = segmentId;
-  SegmentInfo sd = sql->getSegmentInfo(m_segmentId);
+  SegmentInfo si = sql->getSegmentInfo(m_segmentId);
 
-  if(sd.segmentId() == m_segmentId)
+  if(si.segmentId() == m_segmentId)
   {
-   sd.movePoint(i, LatLng(newLat, newLon));
+   si.movePoint(i, LatLng(newLat, newLon));
   }
+  m_points = si.pointList();
+  m_currPoint = i;
   //SQL sql;
   LatLng oldPoint = sql->getPointOnSegment((int)i, m_segmentId);
   //TODO what about multiple station records?
@@ -4293,7 +4331,7 @@ void MainWindow::btnDeletePtClicked()
     ui->lblPoint->setText(QString::number(m_currPoint));
 
     QString marker;
-    getArray();
+    //getArray();
     if(m_nbrPoints == 0)
     {
      m_points = sd.pointList();
@@ -4694,20 +4732,6 @@ void MainWindow::updateTerminals()
 
 void MainWindow::selectSegment(int seg)
 {
- //segmentChanged(seg, seg);
-
-// for(int i=0; i < cbSegmentInfoList.count(); i++)
-// {
-//  if(cbSegmentInfoList.at(i).segmentId == seg)
-//  {
-//      ui->cbSegments->setCurrentIndex(i);
-//      m_SegmentId = seg;
-//      cbSegmentsSelectedValueChanged(i);
-//      otherRouteView->showRoutesUsingSegment(seg);
-//      break;
-//  }
-// }
- //ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(seg));
  ui->ssw->setCurrentSegment(seg);
  m_segmentId = seg;
 }

@@ -1,5 +1,6 @@
 SOURCES += main.cpp\
     $$PWD/browsecommentsdialog.cpp \
+    $$PWD/clipboard.cpp \
     $$PWD/lineeditdelegate.cpp \
     $$PWD/logger.cpp \
     $$PWD/modifyroutedialog.cpp \
@@ -71,6 +72,7 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     $$PWD/browsecommentsdialog.h \
+    $$PWD/clipboard.h \
     $$PWD/lineeditdelegate.h \
     $$PWD/logger.h \
     $$PWD/modifyroutedialog.h \

@@ -143,14 +143,14 @@ bool SegmentView::boolGetItemTableView(QTableView *table)
 
 void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
 {
-    SegmentInfo sdIn;
+    SegmentInfo siIn;
     SegmentInfo si;
     //SQL sql;
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     double a1 = 0;
 
-    sdIn = sql->getSegmentInfo(SegmentId);
-    if (sdIn.segmentId() < 1)
+    siIn = sql->getSegmentInfo(SegmentId);
+    if (siIn.segmentId() < 1)
     {
         qDebug() << "segmentID " + QString("%1").arg(SegmentId) + " not found";
         return;
@@ -158,20 +158,20 @@ void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
 //    if (sdIn.bearingStart == null || sdIn.bearingEnd == null)
 //        return;
     //if (lat == sdIn.startLat && lon == sdIn.startLon)
-    if(qAbs(lat - sdIn.startLat())< .00000001 && qAbs(lon - sdIn.startLon()) < .00000001)
+    if(qAbs(lat - siIn.startLat())< .00000001 && qAbs(lon - siIn.startLon()) < .00000001)
     {
-        sdIn.whichEnd() = "S";
-        a1 = sdIn.bearingStart().angle();
+        siIn.whichEnd() = "S";
+        a1 = siIn.bearingStart().angle();
     }
     else
     {
-        sdIn.setWhichEnd("E");
-        a1 = sdIn.bearingEnd().angle();
+        siIn.setWhichEnd("E");
+        a1 = siIn.bearingEnd().angle();
     }
     // get all the points within .020km
     myParent->setCursor(QCursor(Qt::WaitCursor));
     sourceModel->reset();
-    myArray = sql->getIntersectingSegments(lat, lon, .020, sdIn.routeType());
+    myArray = sql->getIntersectingSegments(lat, lon, .020, siIn.routeType());
     myParent->setCursor(QCursor(Qt::ArrowCursor));
 
     if(myArray.count()== 0)
@@ -181,7 +181,7 @@ void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
 
     sourceModel = new SegmentViewTableModel(myArray, lat, lon, myParent->m_routeNbr, myParent->m_currRouteEndDate, this);
     proxymodel->setSourceModel(sourceModel);
-    myParent->ui->intersectingLabel->setText(tr("Segments connecting to %1").arg(sdIn.toString()));
+    myParent->ui->intersectingLabel->setText(tr("Segments connecting to %1").arg(siIn.toString()));
 
     // get the row of the start segment and the end segment
     int numRows = proxymodel->rowCount();

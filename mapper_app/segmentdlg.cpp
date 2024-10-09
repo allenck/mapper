@@ -32,6 +32,9 @@ SegmentDlg::SegmentDlg(QWidget *parent) :
 // infoLon = m_longitude;
  ui->gbUsage->setVisible(false);
  ui->rnw->configure(new RouteData(), ui->lblErrorText);
+ //ui->txtNewName->setContextMenuPolicy(Qt::CustomContextMenu);
+ config->clipboard->setContextMenu(ui->txtNewName);
+
 
  connect(ui->txtOriginalName, SIGNAL(textChanged(QString)), this, SLOT(txtOriginalName_TextChanged(QString)));
  connect(ui->txtOriginalName, SIGNAL(editingFinished()),this,SLOT(txtOriginalName_Leave()));
@@ -912,4 +915,11 @@ void SegmentDlg::updateOtherRoutes()
  {
   sql->addSegmenToRoutes(_newSegmentId, _segmentId);
  }
+}
+
+QMenu* SegmentDlg::txtNewSegmentMenu(const QPoint&)
+{
+    QMenu * m = config->clipboard->getMenu(ui->txtNewName);
+    m->exec();
+    return m;
 }

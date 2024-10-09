@@ -10,6 +10,7 @@
 #include "connection.h"
 #include "qapplication.h"
 #include <QFont>
+#include "clipboard.h"
 
 class Configuration;
 class SQL;
@@ -71,6 +72,7 @@ public:
  //bool bUseBundleResources = false;
  QString startCwd;
 #endif
+ Clipboard* clipboard= nullptr;
 
 private:
  static Configuration* _instance;
@@ -81,6 +83,8 @@ private:
  bool bForeignKeyCheck = false;
  QString cwd;
  QString devEnv;
+
+
  //bool copyFiles(QString from, QString to);
 // #ifdef Q_OS_MACOS
 //  bool processCopyList();
