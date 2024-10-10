@@ -4742,14 +4742,14 @@ void MainWindow::segmentChanged(qint32 changedSegment, qint32 newSegment)
     //Object[] objArray = new Object[1];
     //objArray[0] = e.ChangedSegment;
     //webBrowser1.Document.InvokeScript("isSegmentDisplayed", objArray); // check to see if it is displayed
-    m_bridge->processScript("isSegmentDisplayed", QString("%1").arg(changedSegment));
-    if (m_segmentStatus == "Y")
-    {
+    // m_bridge->processScript("isSegmentDisplayed", QString("%1").arg(changedSegment));
+    // if (m_segmentStatus == "Y")
+    // {
 //        objArray = new Object[1];
 //        objArray[0] = e.ChangedSegment;
 //        webBrowser1.Document.InvokeScript("clearPolyline", objArray); // clears the old line
         m_bridge->processScript("clearPolyline", QString("%1").arg(changedSegment));
-    }
+    // }
     if (newSegment > 0)
     {
      SegmentInfo si = sql->getSegmentInfo(newSegment);
