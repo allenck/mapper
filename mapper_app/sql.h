@@ -106,7 +106,7 @@ public:
     bool saveRouteSequence(RouteData rd, int firstSegment, QString whichEnd);
     bool doesAltRouteExist(int route, QString alphaRoute);
     qint32 addAltRoute(QString routeAlpha, QString routePrefix);
-    bool addAltRoute(int routeNum, QString routeAlpha);
+    bool addAltRoute(int routeNum, QString routeAlpha, QString prefix = "");
     bool updateAltRoute(int route, QString routeAlpha);
     bool deleteRouteSegment(SegmentData sd);
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate, QString routeStartDate, QString routeEndDate);

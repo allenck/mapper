@@ -4990,7 +4990,7 @@ qint32 SQL::addAltRoute(QString routeAlpha, QString routePrefix)
  return route;
 }
 
-bool SQL::addAltRoute(int routeNum, QString routeAlpha){
+bool SQL::addAltRoute(int routeNum, QString routeAlpha, QString prefix){
  QSqlDatabase db = QSqlDatabase::database();
  bool isNumeric;
  int baseRoute =routeAlpha.toInt(&isNumeric);

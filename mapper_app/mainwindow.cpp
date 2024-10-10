@@ -1974,6 +1974,13 @@ void MainWindow::newOverlay(QAction* act)
 {
  Overlay* cOv = VPtr<Overlay>::asPtr(act->data());
  cOv->isSelected = true;
+ qDebug() << "overlay selected: " << cOv->name << " bounds: " << cOv->bounds().toString() << " urls: " << cOv->urls;
+ Overlay* selected = config->currCity->city_overlayMap->value(cOv->name);
+ if(cOv->urls != selected->urls)
+ {
+     qDebug() << "updated";
+     cOv = selected;
+ }
 
  if(cOv->source == "")
  {
@@ -3022,7 +3029,7 @@ void MainWindow::refreshCompanies()
             else
                 config->currCity->selectedCompanies.replace(","+companyId, "");
             if(config->currCity->selectedCompaniesList.contains(item->data().toInt()))
-                config->currCity->selectedCompaniesList.remove(item->data().toInt());
+                config->currCity->selectedCompaniesList.removeOne(item->data().toInt());
         }
         refreshRoutes();
     });

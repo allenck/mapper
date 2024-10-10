@@ -57,6 +57,7 @@ class SegmentSelectionWidget : public QWidget
   QMap<QString, int> mapDescriptions;
   bool b_cbSegments_TextChanged = false;
   QStringList _locations;
+  Configuration* config;
 };
 
 #endif // SEGMENTSELECTIONWIDGET_H

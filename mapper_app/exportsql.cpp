@@ -3760,7 +3760,6 @@ bool ExportSql::createAltRouteTable(QSqlDatabase db, QString dbType)
     ") ENGINE=InnoDB DEFAULT CHARSET=latin1";
  else if(dbType == "MsSql")
  {
-
   /****** Object:  Table [dbo].[AltRoute]    Script Date: 03/21/2016 13:22:36 ******/
   commandText =
   "SET ANSI_NULLS ON;"\
