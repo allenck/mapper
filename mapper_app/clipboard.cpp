@@ -39,10 +39,11 @@ void Clipboard::setContextMenu(QLineEdit* tgt)
         QMenu * menu = tgt->createStandardContextMenu();
         if(history.size() >1)
         {
-            menu->addMenu(Clipboard::instance()->getHistoryMenu());
+            menu->addMenu(getHistoryMenu());
 
             connect(group, &QActionGroup::triggered, [=](QAction* act){
-                tgt->setText(act->data().toString());
+                tgt->insert(act->data().toString());
+                systemClipboard->setText(act->data().toString());
             });
         menu->popup(pt);
         }
@@ -64,4 +65,5 @@ QMenu *Clipboard::getHistoryMenu()
         group->addAction(act);
         menu1->addAction(act);
     }
+    return menu1;
 }

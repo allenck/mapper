@@ -429,7 +429,6 @@ QMenu* MainWindow::addSegmentMenu(SegmentData *sd)
   act->setData(0);
   ag->addAction(act);
   actMenu->addAction(act);
-
  }
  else
  {
@@ -1504,11 +1503,12 @@ void MainWindow::addSegmentToRoute(SegmentData* sd)
  m_segmentId = sd->segmentId();
  m_nbrPoints = sd->pointList().size();
  m_points = sd->pointList();
+ qDebug() << tr("adding segment %1 %2 to route %3 %4 connected at %5 end")
+                 .arg(sd->segmentId()).arg(sd->description()).arg(sd->route()).arg(sd->routeName()).arg(sd->whichEnd());
 
     m_bridge->processScript("clearPolyline", QString("%1").arg(sd->segmentId()));
     //SegmentInfo si = sql->getSegmentInfo(segmentId);
-    sd->displaySegment(sd->startDate().toString("yyyy/MM/dd"), getColor(sd->tractionType()),
-                   sd->trackUsage(), true);
+    sd->displaySegment( getColor(sd->tractionType()), true);
 }
 
 void MainWindow::changeFonts(QFont f)

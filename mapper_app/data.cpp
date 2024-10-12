@@ -346,6 +346,7 @@ SegmentData::SegmentData(const SegmentInfo& o)
  if(_points == 0 && pointList().count() > 0 )
   _points = pointList().count();
  _location = o._location;
+ _whichEnd = o._whichEnd;
 }
 
 QString SegmentData::toString()
@@ -1081,6 +1082,63 @@ void SegmentData::displaySegment(QString date, QString color, QString trackUsage
           << _routeType << trackUsage << points.count();
  objArray.append(points);
  WebViewBridge::instance()->processScript("createSegment", objArray);
+}
+
+void SegmentData::displaySegment( QString color,  bool bClearFirst)
+{
+    QVariantList points, objArray;
+    QList<RouteData> myArray ;
+    QString routeNames = "no route";
+    if(_startDate.isValid())
+    {
+        myArray = SQL::instance()->getRoutes(_segmentId, _startDate.toString("yyyy/MM/dd"));
+        if (myArray.count()== 0)
+        {
+            int i = 0;
+            routeNames = "";
+            //foreach (routeData rd in myArray)
+            for(i=0; i<myArray.count(); i++)
+            {
+                RouteData rd = (RouteData)myArray.at(i);
+                routeNames += rd.routeName();
+                //i++;
+                if (i+1 < myArray.count())
+                    routeNames += ",";
+            }
+        }
+    }
+    if (bClearFirst)
+    {
+        objArray << _segmentId;
+        WebViewBridge::instance()->processScript("clearPolyline",objArray);
+    }
+
+    for(int i=0; i < pointList().count(); i++)
+    {
+        points.append(((LatLng)pointList().at(i)).lat());
+        points.append(((LatLng)pointList().at(i)).lon());
+    }
+    int tracks = _tracks;
+    if(tracks == 2 && _doubleDate.isValid() && _startDate < _doubleDate)
+    {
+        tracks = 1;
+        _trackUsage = " ";
+    }
+
+    int dash = 0;
+    if(routeType() == Incline)
+        dash = 1;
+    else if(routeType() == SurfacePRW)
+        dash = 2;
+    else if(routeType() == Subway)
+        dash = 3;
+    objArray.clear();
+    objArray << _segmentId << routeNames <<_description << _oneWay
+             << Configuration::instance()->bDisplaySegmentArrows << color
+             << tracks << dash
+             << _routeType << _trackUsage << points.count();
+    objArray.append(points);
+    WebViewBridge::instance()->processScript("createSegment", objArray);
 }
 
 RouteSeq::RouteSeq(const RouteSeq& o){

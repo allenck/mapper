@@ -26,7 +26,7 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
  int SegmentViewTableModel::columnCount(const QModelIndex &parent) const
  {
      Q_UNUSED(parent);
-     return 7;
+     return 8;
  }
 
  QVariant SegmentViewTableModel::data(const QModelIndex &index, int role) const
@@ -99,6 +99,8 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
              else
                  return QString("%1").arg(sd.endLon(),0,'f',8);
              //TODO  Determine which segments can be safely selected
+         case WHICHEND:
+             return sd.whichEnd();
         }
      }
      return QVariant();
@@ -135,6 +137,8 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
                 return tr("Latitude");
              case 6:
                 return tr("Longitude");
+             case WHICHEND:
+                 return tr("Which end");
              default:
                  return QVariant();
          }

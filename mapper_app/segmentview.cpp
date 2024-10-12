@@ -243,7 +243,8 @@ void SegmentView::addToRoute()
  else
  {
   //SegmentInfo sd = sql->getSegmentInfo(segmentId);
-  parent->displaySegment(segmentId, sd->description(), /*sd->oneWay(),*/ /*sd->oneWay() == "N" ? "#00FF00" :*/ "#045fb4", " ", true);
+  //parent->displaySegment(segmentId, sd->description(), /*sd->oneWay(),*/ /*sd->oneWay() == "N" ? "#00FF00" :*/ "#045fb4", " ", true);
+     sd->displaySegment(sd->startDate().toString("yyyy/MM/dd"), "#045fb4",sd->trackUsage(), true);
  }
  parent->routeDlg->setSegmentData(sd); // do before setting route!
  int ix = parent->ui->cbRoute->currentIndex();

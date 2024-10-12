@@ -113,7 +113,8 @@ void RouteViewTableModel::segmentChanged(int segmentId)
   sd->setDirection(si.direction());
   sd->setStreetName(si.streetName());
   QString color = MainWindow::instance()->getColor(sd->tractionType());
-  MainWindow::instance()->displaySegment(sd->segmentId(),sd->description(), color, sd->trackUsage(), true);
+  //MainWindow::instance()->displaySegment(sd->segmentId(),sd->description(), color, sd->trackUsage(), true);
+  sd->displaySegment(sd->startDate().toString(), color, sd->trackUsage(), true);
  }
 }
 

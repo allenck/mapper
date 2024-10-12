@@ -29,7 +29,7 @@ public:
     Q_PROPERTY(int zoom READ curZoom NOTIFY onZoomChanged)
     Q_PROPERTY(QString maptype READ curMaptype NOTIFY onMapTypeChanged)
     Q_PROPERTY(LatLng latlng MEMBER _latLng WRITE setLatLng NOTIFY latlngChanged)
-    QT_DEPRECATED void processScript(QString func, QString parms);
+    void processScript(QString func, QString parms);
     void processScript(QString func);
     QT_DEPRECATED void processScript(QString func, QString parms, QString name, QString value);
     void processScript(QString func, QList<QVariant>objArray);

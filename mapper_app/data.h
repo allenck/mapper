@@ -279,7 +279,8 @@ class SegmentData
     void setStartDate(QDate dt) {_startDate = dt;}
     bool needsUpdate() {return _bNeedsUpdate;}
     void setNeedsUpdate(bool b){_bNeedsUpdate = b;}
-    void displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst);
+    QT_DEPRECATED void displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst);
+    void displaySegment( QString color,  bool bClearFirst);
     void checkTracks();
     int normalEnter() {return _normalEnter;}
     void setNormalEnter(int normalEnter) {_normalEnter = normalEnter;}
