@@ -143,7 +143,6 @@ void CompanyView::tablev_customContextMenu( const QPoint& pt)
   menu->addAction(refreshAct);
  }
  menu->exec(QCursor::pos());
-
 }
 
 QVariant MyCompanyTableModel::headerData(int section, Qt::Orientation orientation, int role) const
