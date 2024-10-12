@@ -239,7 +239,8 @@ void EditSegmentDialog::On_sbTracks_valueChanged(int v)
  ui->lblHelp->setText("");
  if(reversed.count() == 0)
  {
-  QMessageBox::warning(this, tr("Warning"), "There are no segments defined in the opposite direction");
+  //QMessageBox::warning(this, tr("Warning"), "There are no segments defined in the opposite direction");
+  ui->lblHelp->setText("There are no segments defined in the opposite direction");
  }
  si.setTracks(v);
  ui->doubleTracked->setVisible(v==2);

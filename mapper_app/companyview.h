@@ -12,12 +12,13 @@ class MyCompanyTableModel : public QSqlTableModel
 {
     Q_OBJECT
 public:
-  MyCompanyTableModel(QObject *parent = 0, QSqlDatabase db = QSqlDatabase()) : QSqlTableModel(parent){}
+    MyCompanyTableModel(QObject *parent = 0, QSqlDatabase db = QSqlDatabase());
 
 protected:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
     QVariant data(const QModelIndex &index, int role) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
+    Qt::ItemFlags flags(const QModelIndex &index) const;
 
  signals:
     void companyChange();
@@ -28,7 +29,10 @@ protected:
                                      {"firstRoute", "First Route"}, {"lastRoute", "Last Route"},
                                      {"lastUpdate", "Last updated"}, {"info", "Information"}
                                     };
+     Configuration * config;
+
 };
+
 class CompanyView : public QObject
 {
     Q_OBJECT
@@ -70,6 +74,7 @@ private:
     QAction* addAct;
     QAction* delAct;
     QAction* refreshAct;
+    QAction* toggleSelectionAct;
     int curRow, curCol;
     bool boolGetItemTableView(QTableView *table);
     QModelIndex currentIndex;

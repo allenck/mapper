@@ -53,11 +53,11 @@ public:
     QList<RouteData> routeList;
     QList<RouteData> getRoutesByEndDate();
     QList<RouteData> getRoutesByEndDate(qint32 companyKey);
-    QList<RouteData> getRoutesByEndDate(QString companyList);
+    QList<RouteData> getRoutesByEndDate(QList<int> compayList);
     //QT_DEPRECATED RouteInfo getRoutePoints(qint32 route, QString name, QString date);
     TerminalInfo getTerminalInfo(qint32 route, QString name, QDate endDate);
     QList<TerminalInfo> getTerminalInfoUsingSegment(int segmentId);
-    QString getAlphaRoute(qint32 route, qint32 company);
+    QString getAlphaRoute(qint32 route, QString routePrefix);
     QMap<int, TractionTypeInfo> getTractionTypes();
     //QT_DEPRECATED QList<SegmentInfo> getSegmentInfo();
     QMap<int, SegmentInfo> getSegmentInfoList(QString locality = " ");
@@ -122,7 +122,7 @@ public:
                            QDate doubleDate);
     bool addSegmenToRoutes(int _newSegmentId, int _segmentId);
 
-    qint32 getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * bAlphaRoute, int companyKey);
+    qint32 getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * bAlphaRoute, QString routePrefix);
     int findNextRouteInRange(QString txt);
     bool updateTerminals(TerminalInfo ti);
     bool updateTerminals(qint32 route, QString name, QDate startDate, QDate endDate, qint32 startSegment, QString startWhichEnd, qint32 endSegment, QString endWhichEnd);
@@ -261,6 +261,7 @@ public:
     int displaySqlError(QSqlQuery query, QMessageBox::StandardButtons buttons, QString func, QString file, int line);
     //static /*static*/ void distanceFunc(sqlite3_context, int argc, sqlite3_value **argv);
     bool isCompanyValid(SegmentData sd);
+    QString list2String(const QList<int> &list);
 
 signals:
     void details(QString);

@@ -101,8 +101,9 @@ void RouteNameWidget::txtRouteNbr_Leave()
         lblHelpText->setText(tr("select a company"));
         return;
     }
+    CompanyData* cd = sql->getCompany(companyKey);
 
-    _routeNbr = sql->getNumericRoute(ui->txtRouteNbr->text(), & _alphaRoute, & bAlphaRoute, companyKey);
+    _routeNbr = sql->getNumericRoute(ui->txtRouteNbr->text(), & _alphaRoute, & bAlphaRoute, cd->routePrefix);
     if(_routeNbr < 0)
     {
         QMessageBox::StandardButtons rslt;

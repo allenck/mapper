@@ -51,8 +51,9 @@ void CombineRoutesDlg::on_txtNewRouteNbr_editingFinished()
     bool bAlphaRoute = false;
     //bRouteChanging = false;
     int companyKey = _rd1.companyKey();
+    CompanyData* cd = sql->getCompany(companyKey);
 
-    qint32 newRoute = sql->getNumericRoute(ui->txtNewRouteNbr->text(), & _alphaRoute, & bAlphaRoute, companyKey);
+    qint32 newRoute = sql->getNumericRoute(ui->txtNewRouteNbr->text(), & _alphaRoute, & bAlphaRoute, cd->routePrefix);
 
     _routeNbr = newRoute;
     if (!config->currCity->bAlphaRoutes && bAlphaRoute)

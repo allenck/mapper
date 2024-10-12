@@ -178,7 +178,7 @@ public:
     void moveRouteComment(int route, QString date, double latitude, double longitude, int companyKey);
 
     RouteViewTableModel *routeViewSourceModel;
-    void displaySegment(qint32 segmentId, QString segmentName, QString color, QString trackUsage, bool bClearFirst);
+    Q_DECL_DEPRECATED void displaySegment(qint32 segmentId, QString segmentName, QString color, QString trackUsage, bool bClearFirst);
     static QString pwd;
     static QString pgmDir;
 #ifndef USE_WEBENGINE
@@ -417,6 +417,7 @@ private:
     QString  currentOverlay;
     QMap<int,TractionTypeInfo> tractionTypeList;
     QList<CompanyData*> companyList;
+    QList<CompanyData*> selectedComanyList;
     SystemConsole2* consoleDlg = nullptr;
 
     TerminalInfo m_terminalInfo;

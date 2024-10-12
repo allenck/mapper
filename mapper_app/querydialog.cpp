@@ -13,6 +13,7 @@
 #include "vptr.h"
 #include "mainwindow.h"
 #include "queryeditmodel.h"
+#include <QInputMethod>
 
 QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
     QDialog(parent),
@@ -206,6 +207,7 @@ QueryDialog::~QueryDialog()
 {
  delete ui;
 }
+
 
 void QueryDialog::showContextMenu(const QPoint &pt)
 {

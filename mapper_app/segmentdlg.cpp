@@ -3,6 +3,7 @@
 #include "webviewbridge.h"
 #include "mainwindow.h"
 #include "companyview.h"
+#include "clipboard.h"
 
 SegmentDlg::SegmentDlg(QWidget *parent) :
     QDialog(parent),
@@ -32,6 +33,8 @@ SegmentDlg::SegmentDlg(QWidget *parent) :
 // infoLon = m_longitude;
  ui->gbUsage->setVisible(false);
  ui->rnw->configure(new RouteData(), ui->lblErrorText);
+ Clipboard::instance()->setContextMenu(ui->txtOriginalName);
+ Clipboard::instance()->setContextMenu(ui->txtNewName);
 
  connect(ui->txtOriginalName, SIGNAL(textChanged(QString)), this, SLOT(txtOriginalName_TextChanged(QString)));
  connect(ui->txtOriginalName, SIGNAL(editingFinished()),this,SLOT(txtOriginalName_Leave()));
@@ -839,12 +842,11 @@ void SegmentDlg::btnOK_Click()  // SLOT
    if(!sql->doesRouteSegmentExist(*sd))
    {
     int companyKey= ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt();
+    CompanyData* cd = sql->getCompany(companyKey);
 
-    QString alpha = sql->getAlphaRoute(_routeNbr,companyKey);
+    QString alpha = sql->getAlphaRoute(_routeNbr,cd->routePrefix);
     if (alpha == "")
     {
-     CompanyData* cd = sql->getCompany(companyKey);
-
      _routeNbr = sql->addAltRoute(_alphaRoute, cd->routePrefix);
     }
     QString trackUsage = " ";

@@ -71,6 +71,7 @@
 #include <QTimer>
 #include "splitcompanyroutesdialog.h"
 #include <QSystemTrayIcon>
+#include "clipboard.h"
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -91,6 +92,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
  config = Configuration::instance();
  config->getSettings();
+
 
  cwd = QDir::currentPath();
 // config = Configuration::instance();
@@ -185,6 +187,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 #endif
  createActions();
  createMenus();
+
 
 // centralWidget = new MapView(this);
 // setCentralWidget(centralWidget);
@@ -1498,10 +1501,13 @@ void MainWindow::addSegmentToRoute(SegmentData* sd)
   //updateRoute(sd);
   return;
  }
+ m_segmentId = sd->segmentId();
+ m_nbrPoints = sd->pointList().size();
+ m_points = sd->pointList();
+
     m_bridge->processScript("clearPolyline", QString("%1").arg(sd->segmentId()));
     //SegmentInfo si = sql->getSegmentInfo(segmentId);
-    displaySegment(sd->segmentId(), sd->description(),
-                   getColor(sd->tractionType()),
+    sd->displaySegment(sd->startDate().toString("yyyy/MM/dd"), getColor(sd->tractionType()),
                    sd->trackUsage(), true);
 }
 
@@ -1745,7 +1751,11 @@ void MainWindow::txtSegment_customContextMenu(const QPoint &)
  menu->addAction(edit);
  connect(edit, SIGNAL(triggered(bool)), this, SLOT(On_editSegment_triggered()));
  menu->addAction(splitSegmentAct);
-
+ if(Clipboard::instance()->historyCount()>1)
+ {
+    menu->addSeparator();
+    menu->addMenu(Clipboard::instance()->getHistoryMenu());
+ }
  //menu->addAction(updateRouteAct);
  menu->exec(QCursor::pos());
 
@@ -2148,7 +2158,7 @@ void MainWindow::refreshRoutes()
     ui->cbRoute->clear();
 
     //routeList = sql->getRoutesByEndDate(companyKey);
-    routeList = sql->getRoutesByEndDate(config->currCity->selectedCompanies);
+    routeList = sql->getRoutesByEndDate(config->currCity->selectedCompaniesList);
     if(routeList.isEmpty())
      qDebug() << "no routes selected for company " << companyKey;
 
@@ -2225,8 +2235,9 @@ void MainWindow::txtRouteNbrLeave()
 //        //companyKey = ui->cbCompany->itemData(ixCompany).Int;
 //        companyKey = companyList.at(ixCompany-1)->companyKey;
     companyKey = ui->cbCompany->currentData().toInt();
+    CompanyData* cd = sql->getCompany(companyKey);
 //    }
-    qint32 newRoute = sql->getNumericRoute(txt, &txtAlpha, &bIsAlpha, companyKey);
+    qint32 newRoute = sql->getNumericRoute(txt, &txtAlpha, &bIsAlpha, cd->routePrefix);
     routeList = sql->getRoutesByEndDate(companyKey);
     for(int i = routeList.count()-1; i >= 0; i--)
     {
@@ -2311,7 +2322,9 @@ void MainWindow::On_displayRoute(RouteData rd)
  if (rd.route() < 1)
   return; // no data
     //string str = (m_routeNbr<10?"0":"")+ m_routeNbr;
- m_alphaRoute = sql->getAlphaRoute(m_routeNbr, rd.companyKey());
+ CompanyData* cd = sql->getCompany(rd.companyKey());
+
+ m_alphaRoute = sql->getAlphaRoute(m_routeNbr, cd->routePrefix);
  if(bDisplayTerminalMarkers)
  {
   TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, QDate::fromString(m_currRouteEndDate,"yyyy/MM/dd)"));
@@ -2729,7 +2742,9 @@ void MainWindow::onCbRouteIndexChanged(int row)
   ui->sbRoute->setSliderPosition(row);
   bNoDisplay = false;
  }
- ui->txtRouteNbr->setText(sql->getAlphaRoute(_rd.route(),_rd.companyKey()));
+ CompanyData* cd = sql->getCompany(_rd.companyKey());
+
+ ui->txtRouteNbr->setText(sql->getAlphaRoute(_rd.route(),cd->routePrefix));
  ui->dateEdit->setDate( _rd.endDate());
  m_currRouteStartDate = _rd.startDate().toString("yyyy/MM/dd");
  m_currRouteEndDate = _rd.endDate().toString("yyyy/MM/dd");
@@ -2958,51 +2973,56 @@ void MainWindow::refreshCompanies()
     //QStringList companies = config->selectedCompanies.split(",");
     ui->cbCompany->clear();
     ui->cbCompany->addItem(tr("All companies"),0);
-    QStandardItem* item;
-    QStandardItemModel* mod = new QStandardItemModel(1,0);
+    // QStandardItem* item;
+    // QStandardItemModel* mod = new QStandardItemModel(1,0);
     companyList = sql->getCompanies();
+    selectedComanyList.clear();
     for(int i=0; i < companyList.count(); i++)
     {
         CompanyData* cd = companyList.at(i);
-        //ui->cbCompany->addItem(cd->name, cd->companyKey);
-        item = new QStandardItem(cd->name);
-        item->setCheckable(true);
-        QString companyId = QString::number(cd->companyKey);
-        bool state = config->currCity->selectedCompanies.contains(","+companyId);
-        item->setCheckState(state?Qt::CheckState::Checked:Qt::CheckState::Unchecked);
-        item->setData(cd->companyKey);
-        mod->setItem(i,item);
+        if(config->currCity->selectedCompaniesList.isEmpty()
+            || config->currCity->selectedCompaniesList.contains(cd->companyKey)){
+        ui->cbCompany->addItem(cd->name, cd->companyKey);
+        selectedComanyList.append(cd);
+        // item = new QStandardItem(cd->name);
+        // item->setCheckable(true);
+        // QString companyId = QString::number(cd->companyKey);
+        // bool state = config->currCity->selectedCompanies.contains(","+companyId);
+        // item->setCheckState(state?Qt::CheckState::Checked:Qt::CheckState::Unchecked);
+        // item->setData(cd->companyKey);
+        // mod->setItem(i,item);
+        }
     }
-    connect(mod, &QStandardItemModel::itemChanged, [=](QStandardItem * item){
-        QString companyId = item->data().toString();
+    // connect(mod, &QStandardItemModel::itemChanged, [=](QStandardItem * item){
+    //     QString companyId = item->data().toString();
 
-        if(item->checkState()==Qt::Checked)
-        {
-            if(config->currCity->selectedCompanies.isEmpty())
-            {
-                config->currCity->selectedCompanies.append(companyId);
-            }
-            else
-            {
-                config->currCity->selectedCompanies.append(","+companyId);
-            }
-            config->currCity->selectedCompaniesList.append(item->data().toInt());
-        }
-        else
-        {
-            if(config->currCity->selectedCompanies.size()== 1)
-            {
-                config->currCity->selectedCompanies.clear();
-            }
-            else
-                config->currCity->selectedCompanies.replace(","+companyId, "");
-            if(config->currCity->selectedCompaniesList.contains(item->data().toInt()))
-                config->currCity->selectedCompaniesList.removeOne(item->data().toInt());
-        }
-        refreshRoutes();
-    });
+    //     if(item->checkState()==Qt::Checked)
+    //     {
+    //         if(config->currCity->selectedCompanies.isEmpty())
+    //         {
+    //             config->currCity->selectedCompanies.append(companyId);
+    //         }
+    //         else
+    //         {
+    //             config->currCity->selectedCompanies.append(","+companyId);
+    //         }
+    //         config->currCity->selectedCompaniesList.append(item->data().toInt());
+    //     }
+    //     else
+    //     {
+    //         if(config->currCity->selectedCompanies.size()== 1)
+    //         {
+    //             config->currCity->selectedCompanies.clear();
+    //         }
+    //         else
+    //             config->currCity->selectedCompanies.replace(","+companyId, "");
+    //         if(config->currCity->selectedCompaniesList.contains(item->data().toInt()))
+    //             config->currCity->selectedCompaniesList.removeOne(item->data().toInt());
+    //     }
+    //     refreshRoutes();
+    // });
 
-    ui->cbCompany->setModel(mod);
+    //ui->cbCompany->setModel(mod);
     if(routeDlg != NULL)
      routeDlg->fillCompanies();
     ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(m_companyKey));
@@ -4714,24 +4734,17 @@ void MainWindow::selectSegment(int seg)
 
 void MainWindow::segmentChanged(qint32 changedSegment, qint32 newSegment)
 {
-    //SQL sql;
-    //Object[] objArray = new Object[1];
-    //objArray[0] = e.ChangedSegment;
-    //webBrowser1.Document.InvokeScript("isSegmentDisplayed", objArray); // check to see if it is displayed
-    m_bridge->processScript("isSegmentDisplayed", QString("%1").arg(changedSegment));
-    if (m_segmentStatus == "Y")
-    {
-//        objArray = new Object[1];
-//        objArray[0] = e.ChangedSegment;
-//        webBrowser1.Document.InvokeScript("clearPolyline", objArray); // clears the old line
-        m_bridge->processScript("clearPolyline", QString("%1").arg(changedSegment));
-    }
+    m_bridge->processScript("clearPolyline", QString("%1").arg(changedSegment));
+
     if (newSegment > 0)
     {
      SegmentInfo si = sql->getSegmentInfo(newSegment);
+     QList<SegmentData> segments = sql->getRouteSegmentsBySegment(m_routeNbr, newSegment);
 
-     displaySegment(newSegment, si.description(), /*sd.oneWay(),*/
-                    m_segmentColor, " ", true);
+     // displaySegment(newSegment, si.description(), /*sd.oneWay(),*/
+     //                m_segmentColor, " ", true);
+     if(!segments.isEmpty())
+         si.displaySegment(segments.at(0).startDate().toString("yyyy/MM/dd"),m_segmentColor,segments.at(0).trackUsage(),true);
     }
 }
 
@@ -4762,6 +4775,7 @@ void MainWindow::segmentDlg_routeChanged(RouteChangedEventArgs args)
     //else
 //TODO        cbRoutes_SelectedIndexChanged(sender, e);
 }
+
 /// <summary>
 /// Event handler for routeChanged
 /// </summary>

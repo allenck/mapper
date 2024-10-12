@@ -179,7 +179,9 @@ void RouteDlg::setRouteNbr(qint32 rt)
     bRouteChanging = true;
     _routeNbr = rt;
     int companyKey= ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt();
-    _alphaRoute = sql->getAlphaRoute(_routeNbr, companyKey);
+    CompanyData* cd = sql->getCompany(companyKey);
+
+    _alphaRoute = sql->getAlphaRoute(_routeNbr, cd->routePrefix);
     //ui->txtRouteNbr->setText(  _alphaRoute);
     _routeNamesList = sql->getRouteNames(_routeNbr);
     if (_routeNamesList.count()==0)

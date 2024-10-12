@@ -524,7 +524,7 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
  }
  return list;;
 }
-QList<RouteData> SQL::getRoutesByEndDate(QString companyList)
+QList<RouteData> SQL::getRoutesByEndDate(QList<int> compayList)
 {
  QList<RouteData> list;
  QList<RouteInfo*> riList;
@@ -536,7 +536,7 @@ QList<RouteData> SQL::getRoutesByEndDate(QString companyList)
  QSqlDatabase db = QSqlDatabase::database();
  QString where;
  //if(companyKey >0)
-  where= " where r.companyKey in( " + companyList +")";
+  where= " where r.companyKey in( " + list2String(compayList) +")";
  commandText = "Select distinct c.baseRoute, r.route, r.name, r.startDate, r.endDate, r.companyKey, "
                "tractionType, routeAlpha  "
                "from Routes r "
@@ -913,7 +913,7 @@ QList<TerminalInfo> SQL::getTerminalInfoUsingSegment(int segmentId)
  return list;
 }
 
-QString SQL::getAlphaRoute(qint32 route, qint32 company)
+QString SQL::getAlphaRoute(qint32 route, QString routePrefix)
 {
  QString routeAlpha = "";
  QSqlDatabase db = QSqlDatabase::database();
@@ -921,10 +921,10 @@ QString SQL::getAlphaRoute(qint32 route, qint32 company)
  QString commandText;
  if(config->currConnection->servertype() != "MsSql")
   commandText = "select routeAlpha from AltRoute a " \
-   "where route = " + strRoute; // + " and c.`key` =" +QString::number(company) + "";
+   "where route = " + strRoute + " and routePrefix ='" +routePrefix + "'";
  else
    commandText = "select routeAlpha from AltRoute a " \
-   "where route = " + strRoute; // + " and c.[key] =" +QString::number(company) + "";
+                 "where route = " + strRoute + " and routePrefix ='" +routePrefix + "'";
 
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
@@ -5523,7 +5523,7 @@ bool SQL::updateTerminals(qint32 route, QString name, QDate startDate, QDate end
 /// </summary>
 /// <param name="route">alpha route </param>
 /// <returns>numeric route number or -1 if route not found</returns>
-qint32 SQL::getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * bAlphaRoute, int companyKey)
+qint32 SQL::getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * bAlphaRoute, QString routePrefix)
 {
     int route = -1;
     *bAlphaRoute = false;
@@ -5560,7 +5560,7 @@ qint32 SQL::getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * 
     }
     else
     {
-     QString alphaRoute = getAlphaRoute(route, companyKey);
+     QString alphaRoute = getAlphaRoute(route, routePrefix);
      if(!alphaRoute.isEmpty())
      {
       *newAlphaRoute = alphaRoute;
@@ -5577,14 +5577,12 @@ qint32 SQL::getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * 
     QString commandText ;
     if(config->currConnection->servertype() != "MsSql")
      commandText = "select route from AltRoute a"
-                   " join Companies c on c.routePrefix = a.routePrefix"
                    " where routeAlpha = '" + routeAlpha + "'"
-                   " and c.`Key` =" + QString::number(companyKey);
+                   " and routePrefix = '" + routePrefix + "'";
     else
      commandText = "select route from AltRoute a"
-                   " join Companies c on c.routePrefix = a.routePrefix"
                    " where routeAlpha = '" + routeAlpha + "'"
-                   " and c.[Key] =" + QString::number(companyKey);
+                   " and routePrefix = '" + routePrefix + "'";
     QSqlQuery query = QSqlQuery(db);
     bool bQuery = query.exec(commandText);
     if(!bQuery)
@@ -11909,4 +11907,21 @@ bool SQL::isCompanyValid(SegmentData sd)
  if(sd.startDate() >= cd->startDate && sd.endDate()<= cd->endDate)
   return true;
  return false;
+}
+
+// Assuming QList of integers
+QString SQL::list2String(const QList<int> &list)
+{
+    QString s = "";
+
+    for (auto &value : list)
+    {
+        s += QString("%1,").arg(value);
+    }
+
+    // Chop off the last comma
+    s.chop(1);
+
+    s += "";
+    return s;
 }

@@ -289,7 +289,7 @@ class SegmentData
     void setReturnSeq(int seq) {_returnSeq = seq;}
     int sequence() const {return _sequence;}
     int returnSeq() const {return _returnSeq;}
-    QString trackUsage() {return _trackUsage;}
+    QString trackUsage() const {return _trackUsage;}
     void setTrackUsage(QString s) {_trackUsage = s;}
     int tractionType() const {return _tractionType;}
     void setTractionType(int t) {_tractionType = t;}

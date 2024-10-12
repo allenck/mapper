@@ -2,6 +2,7 @@
 #include "ui_segmentselectionwidget.h"
 #include "webviewbridge.h"
 #include "otherrouteview.h"
+#include "clipboard.h"
 
 SegmentSelectionWidget::SegmentSelectionWidget(QWidget *parent) :
   QWidget(parent),
@@ -60,6 +61,8 @@ void SegmentSelectionWidget::initialize()
  // otherwise QComboBox::setModel() will delete it
  ui->cbStreets->model()->setParent(proxy);
  ui->cbStreets->setModel(proxy);
+ Clipboard::instance()->setContextMenu(ui->cbStreets->lineEdit());
+
 
 // QSortFilterProxyModel* proxy2 = new QSortFilterProxyModel(ui->cbSegments);
 // proxy2->setSourceModel(ui->cbSegments->model());

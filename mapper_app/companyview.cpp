@@ -58,6 +58,18 @@ CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     tableView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(tableView, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
 
+    toggleSelectionAct = new QAction(tr("toggle selection"),this);
+    connect(toggleSelectionAct, &QAction::triggered, [=]{
+        QModelIndex index = toggleSelectionAct->data().value<QModelIndex>();
+        qint32 companyKey = index.data().toInt();
+        if(config->currCity->selectedCompaniesList.contains(companyKey))
+            config->currCity->selectedCompaniesList.removeOne(companyKey);
+        else
+            config->currCity->selectedCompaniesList.append(companyKey);
+        model()->selectRow(index.row());
+        emit dataChanged();
+    });
+
     tableView->show();
 }
 
@@ -141,6 +153,8 @@ void CompanyView::tablev_customContextMenu( const QPoint& pt)
   menu->addAction(addAct);
   menu->addAction(delAct);
   menu->addAction(refreshAct);
+  toggleSelectionAct->setData(tableView->indexAt(pt));
+  menu->addAction(toggleSelectionAct);
  }
  menu->exec(QCursor::pos());
 }
@@ -152,12 +166,33 @@ QVariant MyCompanyTableModel::headerData(int section, Qt::Orientation orientatio
   return hdrMap.value(value.toString());
  return value;
 }
+MyCompanyTableModel::MyCompanyTableModel(QObject *parent, QSqlDatabase db) : QSqlTableModel(parent)
+{
+    config = Configuration::instance();
+}
+
+Qt::ItemFlags MyCompanyTableModel::flags(const QModelIndex &index) const
+{
+    if(index.column() == 0)
+        return Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsUserCheckable;
+    return QSqlTableModel::flags(index);
+}
 
 
 QVariant MyCompanyTableModel::data ( const QModelIndex & index, int role ) const
 {
  if (!index.isValid())
      return QVariant();
+ if(role == Qt::CheckStateRole and index.column()==0)
+ {
+     if(config->currCity->selectedCompaniesList.isEmpty() )
+         return Qt::Checked;
+     qint32 companyKey = data(index,Qt::DisplayRole).toInt();
+     if(config->currCity->selectedCompaniesList.contains(companyKey))
+         return Qt::Checked;
+     else
+         return Qt::Unchecked;
+ }
 
  // let the base class handle all other cases
  return QSqlTableModel::data( index, role );
