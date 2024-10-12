@@ -56,7 +56,7 @@ void Configuration::saveSettings()
   settings->setValue("userMap", c->bUserMap);
   settings->setValue("bounds", c->bounds().toString());
   settings->setValue("currOverlay", c->curOverlayId);
-  settings->setValue("selectedCompanies",c->selectedCompanies);
+  settings->setValue("selectedCompanies",SQL::instance()->list2String(c->selectedCompaniesList));
 
   //settings.setValue("connection",c->curConnectionId);
   settings->beginWriteArray("connections");
