@@ -117,7 +117,7 @@ void RouteNameWidget::txtRouteNbr_Leave()
                 bNewRouteNbr = true;
                 bool bok;
                 _routeNbr = ui->txtRouteNbr->text().toInt(&bok);
-                if(!bok)
+                if(!bok || cd->routePrefix != " " || !cd->routePrefix.isEmpty())
                 {
                  _routeNbr = sql->findNextRouteInRange("1000,1999");
                  ui->cbRouteName->setCurrentIndex(-1);
@@ -137,13 +137,13 @@ void RouteNameWidget::txtRouteNbr_Leave()
 //     _routeNbr = newRoute;
     emit routeNumberChange(_routeNbr);
 
-    if (!config->currCity->bAlphaRoutes && !isNumeric)
-    {
-        lblHelpText->setText(tr( "Alpha route not allowed; must be a number!"));
-        //System.Media.SystemSounds.Exclamation.Play();
-        ui->txtRouteNbr->setFocus();
-        return;
-    }
+    // if (!config->currCity->bAlphaRoutes && !isNumeric)
+    // {
+    //     lblHelpText->setText(tr( "Alpha route not allowed; must be a number!"));
+    //     //System.Media.SystemSounds.Exclamation.Play();
+    //     ui->txtRouteNbr->setFocus();
+    //     return;
+    // }
 
     if(sd)
     {

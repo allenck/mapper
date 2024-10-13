@@ -397,7 +397,7 @@ void SplitRoute::btnOK_Click()
     //_routeNbr1 = sql->addAltRoute(ui->rnw1->alphaRoute(), cd->routePrefix);
     if(ui->rnw1->routeNbrMustBeAdded())
     {
-     if(!sql->addAltRoute(ui->rnw1->newRoute(), ui->rnw1->alphaRoute()))
+     if(!sql->addAltRoute(ui->rnw1->newRoute(), ui->rnw1->alphaRoute(),cd->routePrefix))
      {
       QApplication::beep();
       setCursor(Qt::ArrowCursor);
@@ -433,7 +433,7 @@ void SplitRoute::btnOK_Click()
     //_routeNbr2 = sql->addAltRoute(ui->rnw2->alphaRoute(),cd->routePrefix);
     if(ui->rnw2->routeNbrMustBeAdded())
     {
-     if(!sql->addAltRoute(ui->rnw2->newRoute(), ui->rnw2->alphaRoute()))
+     if(!sql->addAltRoute(ui->rnw2->newRoute(), ui->rnw2->alphaRoute(),cd->routePrefix))
      {
       QApplication::beep();
       setCursor(Qt::ArrowCursor);

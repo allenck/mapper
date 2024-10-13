@@ -15,6 +15,8 @@ Clipboard::Clipboard(QObject *parent)
         const QMimeData* mimeData = systemClipboard->mimeData();
         if(mimeData->hasText())
         {
+            if(mimeData->text().trimmed().isEmpty())
+                return;
             if(history.contains(mimeData->text()))
                 return;
             history.prepend(mimeData->text());

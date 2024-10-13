@@ -4898,6 +4898,7 @@ bool SQL::doesAltRouteExist(int route, QString alphaRoute)
  }
  return ret;
 }
+
 /// <summary>
 /// Add a new route number.
 /// </summary>
@@ -4988,7 +4989,7 @@ qint32 SQL::addAltRoute(QString routeAlpha, QString routePrefix)
  return route;
 }
 
-bool SQL::addAltRoute(int routeNum, QString routeAlpha){
+bool SQL::addAltRoute(int routeNum, QString routeAlpha, QString routePrefix){
  QSqlDatabase db = QSqlDatabase::database();
  bool isNumeric;
  int baseRoute =routeAlpha.toInt(&isNumeric);
@@ -5005,7 +5006,7 @@ bool SQL::addAltRoute(int routeNum, QString routeAlpha){
  }
  QString commandText = "insert into AltRoute (route, routeAlpha, routePrefix, baseRoute)"
                        " values (" +QString::number(routeNum)
-                       + ", '" + routeAlpha + "',' '," + QString::number(baseRoute) +")";
+                       + ", '" + routeAlpha + "','" + routePrefix + "','" + QString::number(baseRoute) +"')";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -11384,7 +11385,7 @@ int SQL::nextRouteNumberInRange(int lowRange, int highRange){
  return lowRange;
 }
 
-bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute)
+bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute, QString routePrefix)
 {
  QSqlDatabase db = QSqlDatabase::database();
  QString commandText;
@@ -11417,7 +11418,7 @@ bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute)
    rollbackTransaction("renumber");
    return false;
   }
-  rslt = SQL::addAltRoute(newRoute, QString::number(newRoute));
+  rslt = SQL::addAltRoute(newRoute, QString::number(newRoute), routePrefix);
   if(!rslt)
   {
    rollbackTransaction("renumber");

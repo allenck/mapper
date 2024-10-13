@@ -96,7 +96,7 @@ void ModifyRouteDialog::btnOK_Click()
     if(ui->rnw->routeNbrMustBeAdded())
     {
       //sql->addAltRoute(ui->rnw->alphaRoute().toInt(), ui->rnw->alphaRoute());
-     _routeNbr = sql->addAltRoute(ui->rnw->newRoute(),ui->rnw->alphaRoute());
+     _routeNbr = sql->addAltRoute(ui->rnw->newRoute(),ui->rnw->alphaRoute(),cd->routePrefix);
     }
     //foreach (routeData rd1 in myArray)
     for(int i=0; i < myArray.count(); i++)

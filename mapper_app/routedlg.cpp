@@ -1764,7 +1764,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
    CompanyData* cd = sql->getCompany(companyKey);
    if (ui->rnw->routeNbrMustBeAdded())
    {
-    _routeNbr = sql->addAltRoute(ui->rnw->newRoute(), ui->rnw->alphaRoute());
+    _routeNbr = sql->addAltRoute(ui->rnw->newRoute(), ui->rnw->alphaRoute(), cd->routePrefix);
    }
    else
    {
@@ -1774,7 +1774,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
    sql->beginTransaction("addRouteSegment");
    if(!sql->doesAltRouteExist(sd->route(), sd->alphaRoute()))
    {
-    if(!sql->addAltRoute(sd->route(), sd->alphaRoute()))
+    if(!sql->addAltRoute(sd->route(), sd->alphaRoute(),cd->routePrefix))
     {
      sql->rollbackTransaction("addRouteSegment");
      return;
@@ -2224,6 +2224,7 @@ void RouteDlg::cbCompany_SelectedIndexChanged(int i)
      ui->lblHelpText->setText(tr("Select a company"));
      return;
  }
+ ui->rnw->setCompanyKey(cd->companyKey);
  if(!sd )
   return;
  if(ui->dateStart->date() > cd->endDate || ui->dateStart->date() < cd->startDate)

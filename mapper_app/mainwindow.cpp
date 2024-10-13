@@ -458,6 +458,7 @@ QMenu* MainWindow::addSegmentMenu(SegmentData *sd)
    if(sd->tracks()==2)
    {
     SegmentInfo si = sql->getSegmentInfo(sd->segmentId());
+    qDebug() << tr("sd whichend %1 si whichend %2").arg(sd->whichEnd()).arg(si.whichEnd());
     sd->setDoubleDate(si.doubleDate());
 
     if(sd->startDate() < si.startDate())
@@ -1387,12 +1388,13 @@ void MainWindow::createActions()
   int row =         ui->cbRoute->currentIndex();
   if(row < 0) return;
   RouteData rd = ((RouteData)routeList.at(row));
+  CompanyData* cd = sql->getCompany(rd.companyKey());
   DialogChangeRoute* dlg = new DialogChangeRoute();
   int rslt = dlg->exec();
   if(rslt == QDialog::DialogCode::Accepted )
   {
    int newRoute = dlg->getNumber();
-   bool rslt = sql->renumberRoute(rd.alphaRoute(), newRoute);
+   bool rslt = sql->renumberRoute(rd.alphaRoute(), newRoute, cd->routePrefix);
    if(rslt)
    {
     refreshRoutes();

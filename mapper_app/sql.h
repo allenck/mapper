@@ -106,7 +106,7 @@ public:
     bool saveRouteSequence(RouteData rd, int firstSegment, QString whichEnd);
     bool doesAltRouteExist(int route, QString alphaRoute);
     qint32 addAltRoute(QString routeAlpha, QString routePrefix);
-    bool addAltRoute(int routeNum, QString routeAlpha);
+    bool addAltRoute(int routeNum, QString routeAlpha, QString routePrefix);
     bool updateAltRoute(int route, QString routeAlpha);
     bool deleteRouteSegment(SegmentData sd);
     bool deleteRouteSegment(qint32 route, QString name, qint32 SegmentId, QString startDate, QString endDate, QString routeStartDate, QString routeEndDate);
@@ -243,7 +243,7 @@ public:
     int sqlErrorMessage(QSqlQuery query, QMessageBox::StandardButtons buttons);
     SegmentInfo convertSegment(int segmentId, int tracks);
     int nextRouteNumberInRange(int lowRange, int highRange);
-    bool renumberRoute(QString oldAlphaRoute, int newRoute);
+    bool renumberRoute(QString oldAlphaRoute, int newRoute, QString routePrefix);
     QList<RouteComments> commentsForRoute(int route);
     QList<TerminalInfo> terminalsForRoute(int route);
     bool updateRouteForStations(int oldRoute, int newRoute);
