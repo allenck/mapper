@@ -125,6 +125,7 @@ RouteData::RouteData(const RouteData& o)
  _seqList = o._seqList;
  _baseRoute = o._baseRoute;
  _doubleDate = o._doubleDate;
+ _companyMnemonic = o._companyMnemonic;
 }
 
 RouteData::RouteData(const SegmentData& o)
@@ -176,10 +177,10 @@ QString RouteData::toString()
  bool isNumeric;
  int num = _alphaRoute.toInt(&isNumeric);
  QString str;
- if(isNumeric)
-  str = _alphaRoute + " " + _name + " " + _startDate.toString("yyyy/MM/dd")+ "->"+ _endDate.toString("yyyy/MM/dd");
+ if(isNumeric && _routePrefix.trimmed().isEmpty())
+  str = _companyMnemonic + " " + _alphaRoute + " " + _name + " " + _startDate.toString("yyyy/MM/dd")+ "->"+ _endDate.toString("yyyy/MM/dd");
  else
-  str = _alphaRoute+"(" +QString::number(_route)+ ") " + _name + " " + _startDate.toString("yyyy/MM/dd")+ "->"+ _endDate.toString("yyyy/MM/dd");
+  str = _companyMnemonic + " " + _alphaRoute+"(" +QString::number(_route)+ ") " + _name + " " + _startDate.toString("yyyy/MM/dd")+ "->"+ _endDate.toString("yyyy/MM/dd");
 
  return str;
 }
@@ -387,13 +388,15 @@ QString SegmentData::reverseDescription()
  if(sl1.at(0).length()>0 && sl1.count()==2)
  {
   if(sl1.at(1).contains(" to "))
-   separator=" to";
+   separator=" to ";
+  else if(sl1.at(1).contains("-"))
+      separator = "-";
   else
    separator = " zur "; // German
   sl2 = sl1.at(1).split(separator);
   if(sl2.count()==2)
   {
-   return sl1.at(0) +","+sl2.at(1) + separator + sl2.at(0);
+   return sl1.at(0) +","+sl2.at(1).trimmed()+" " + separator+" " + sl2.at(0).trimmed();
   }
  }
  return "reverse: "+ _description;
@@ -555,8 +558,6 @@ void SegmentData::update(const SegmentInfo& si)
  }
 }
 
-
-#if 1
 RouteInfo::RouteInfo(QObject *parent)
 {
  route= -1;
@@ -589,12 +590,27 @@ RouteInfo::~RouteInfo()
 {
 
 }
-#endif
+
+RouteInfo::RouteInfo(RouteInfo& o)
+{
+    route=o.route;
+ routeName= o.routeName;
+ tractionType=o.tractionType;
+ length = o.length;
+ startDate = o.startDate;
+ endDate = o.endDate;
+ companyKey=o.companyKey;
+ alphaRoute = o.alphaRoute;
+ baseRoute= o.baseRoute;
+ routePrefix = o.routePrefix;
+ companyMnemonic = o.companyMnemonic;
+}
+
 SegmentInfo::SegmentInfo(const SegmentInfo& o)
 {
  _description = o._description;
  _segmentId = o._segmentId;
- lineSegments = o.lineSegments;
+ //lineSegments = o.lineSegments;
  _points = o._points;
  _length = o._length;
  _startDate = o._startDate;
@@ -615,10 +631,11 @@ SegmentInfo::SegmentInfo(const SegmentInfo& o)
  _bounds = o._bounds;
  _tracks = o._tracks;
  _bNeedsUpdate = o._bNeedsUpdate;
- //_next = o._next;
+ _next = o._next;
  _trackType = o._trackType;
  _location = o._location;
  _doubleDate = o._doubleDate;
+
 }
 
 SegmentInfo::SegmentInfo(const SegmentData& o)
@@ -646,7 +663,7 @@ SegmentInfo::SegmentInfo(const SegmentData& o)
  _bounds = o._bounds;
  _tracks = o._tracks;
  _bNeedsUpdate = o._bNeedsUpdate;
- //_next = o._next;
+ _next = o._next;
  _routeType = o._routeType;
  _location = o._location;
  _doubleDate = o._doubleDate;
@@ -683,7 +700,7 @@ void SegmentInfo::insertPoint(int ptNum, LatLng pt)
 {
  // insert ptNum AFTER that point.
  _pointList.insert(ptNum +1, pt);
- lineSegments = _pointList.count()-1;
+ //lineSegments = _pointList.count()-1;
  //SQL sql;
  SQL::instance()->updateSegment(this);
 }
@@ -741,7 +758,7 @@ void SegmentInfo::setPoints(QString sPoints)
   _points = _pointList.count();
   _bNeedsUpdate = true;
  }
- lineSegments=_pointList.count()-1;
+ //lineSegments=_pointList.count()-1;
 }
 
 QString SegmentInfo::pointsString()

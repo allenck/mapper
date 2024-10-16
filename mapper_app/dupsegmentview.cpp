@@ -2,6 +2,7 @@
 #include "sql.h"
 #include <QMessageBox>
 #include "exceptions.h"
+#include <QPair>
 
 DupSegmentView::DupSegmentView(Configuration *cfg, QObject *parent) :
     QObject(parent)
@@ -19,6 +20,7 @@ DupSegmentView::DupSegmentView(Configuration *cfg, QObject *parent) :
     //m_myParent = myParent;
     ui->setSelectionBehavior(QAbstractItemView::SelectRows );
     ui->setSelectionMode( QAbstractItemView::SingleSelection );
+    ui->resizeColumnsToContents();
 
     sourceModel = new dupSegmentViewTableModel();
     proxymodel = new dupSegmentViewSortProxyModel(this);
@@ -40,7 +42,7 @@ void DupSegmentView::Resize (int oldcount,int newcount)
     ui->resizeRowsToContents ();
 }
 
-void DupSegmentView::showDupSegments(QList<SegmentInfo> dupSegmentList)
+void DupSegmentView::showDupSegments(QList<QPair<SegmentInfo, SegmentInfo>> dupSegmentList)
 {
     //SQL sql;
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
@@ -65,9 +67,9 @@ void DupSegmentView::showDupSegments(QList<SegmentInfo> dupSegmentList)
     ui->horizontalHeader()->resizeSection(5,QHeaderView::ResizeToContents);
 
     myParent->ui->tabWidget->setTabText(6, tr("Duplicate Segments"));
-    selectSegmentAct = new QAction(tr("SelectSegment"),this);
-    connect(selectSegmentAct, SIGNAL(triggered(bool)), this, SLOT(On_selectSegmentAct(bool)));
-    deleteDuplicateAct = new QAction(tr("Delete dup segment"),this);
+    selectSegmentsAct = new QAction(tr("SelectSegments"),this);
+    connect(selectSegmentsAct, SIGNAL(triggered(bool)), this, SLOT(On_selectSegmentsAct(bool)));
+    deleteDuplicateAct = new QAction(tr("Delete dup segment 1"),this);
     connect(deleteDuplicateAct, &QAction::triggered, [=]{
      QString msg = tr("Do you want to delete segment %1 which is duplicate to segment %2"
         " and use %2 instead in Routes and Stations? Or delete %2 and use %1 instead?").arg(dupSegmentId).arg(segmentId);
@@ -112,7 +114,7 @@ void DupSegmentView::showDupSegments(QList<SegmentInfo> dupSegmentList)
      }
      msgBox.setDetailedText(detailedText);
 
-     if((sd1.tracks() == 1 && sd2.tracks() == sd1.tracks()) && (sd1.direction() != sd2.direction()) )
+     if((si1.tracks() == 1 && sd2.tracks() == si1.tracks()) && (si1.direction() != sd2.direction()) )
      {
       msgBox.setIcon(QMessageBox::Warning);
       msg = msg + tr("\n\nWarning: the two segments are single tracks in opposite directions.");
@@ -153,19 +155,13 @@ void DupSegmentView::tablev_customContextMenu( const QPoint& pt)
         QModelIndex modelIndex = indexes.at(0);
         QModelIndex sourceModelIndex = ((QSortFilterProxyModel*)ui->model())->mapToSource(modelIndex);
         qint32 row = modelRow = sourceModelIndex.row();
-        QList<SegmentInfo> list = sourceModel->getList();
-        segmentId = list.at(row).segmentId();
-        sd1 = list.at(row);
-        dupSegmentId = list.at(row).next();
-        for(int i = 0; i < list.size(); i++)
-         if(list.at(i).segmentId() == dupSegmentId)
-         {
-          sd2 = list.at(i);
-          break;
-         }
-        currSd = list.at(row);
+        QList<QPair<SegmentInfo,SegmentInfo>> list = sourceModel->getList();
+        QPair<SegmentInfo,SegmentInfo> pair = list.at(row);
+        segmentId = pair.first.segmentId();
+        si1 = pair.first;
+        dupSegmentId = pair.second.segmentId();
 
-        menu.addAction(selectSegmentAct);
+        menu.addAction(selectSegmentsAct);
         menu.addAction(deleteDuplicateAct);
         menu.exec(QCursor::pos());
     }
@@ -187,8 +183,10 @@ bool DupSegmentView::boolGetItemTableView(QTableView *table)
 
 void DupSegmentView::On_selectSegmentAct(bool)
 {
-  emit selectSegment(segmentId);
+    emit selectSegment(dupSegmentId);
+    emit selectSegment(segmentId);
 }
+
 
 dupSegmentViewSortProxyModel::dupSegmentViewSortProxyModel(QObject *parent) :
     QSortFilterProxyModel(parent)
@@ -239,7 +237,7 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
 }
-dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentInfo> dupSegmentList, QObject *parent)
+dupSegmentViewTableModel::dupSegmentViewTableModel(QList<QPair<SegmentInfo,SegmentInfo>> dupSegmentList, QObject *parent)
      : QAbstractTableModel(parent)
  {
      listOfSegments = dupSegmentList;
@@ -254,7 +252,7 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentInfo> dupSegment
  int dupSegmentViewTableModel::columnCount(const QModelIndex &parent) const
  {
      Q_UNUSED(parent);
-     return 6;
+     return 9;
  }
 
  QVariant dupSegmentViewTableModel::data(const QModelIndex &index, int role) const
@@ -280,27 +278,35 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentInfo> dupSegment
 //         }
 //     }
 
-     SegmentData sd = listOfSegments.at(index.row());
+     QPair<SegmentInfo, SegmentInfo> pair = listOfSegments.at(index.row());
+     SegmentInfo si = pair.first;
+     SegmentInfo si2 = pair.second;
      if (role == Qt::DisplayRole) {
          switch(index.column())
          {
          case 0:
              //TODO setup checkbox if segment used in route.
-             return QString("%1").arg(sd.segmentId());
+             return QString("%1").arg(si.segmentId());
          case 1:
-             return sd.description();
+             return si.description();
          case 2:
-             return sd.tracks();
+             return si.tracks();
          case 3:
-             return sd.streetName();
+             return si.streetName();
          case 4:
 //             if (si.oneWay == "Y")
 //                 return(si.bearing.strDirection());
 //            else
 //                 return (si.bearing.strDirection() + "-" + si.bearing.strReverseDirection());
-             return sd.direction();
+             return si.direction();
          case 5:
-             return sd.next();
+             return si.whichEnd();
+         case 6:
+             return si2.segmentId();
+         case 7:
+             return si2.description();
+         case 8:
+             return si2.tracks();
         }
      }
      return QVariant();
@@ -325,7 +331,13 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentInfo> dupSegment
              case 4:
                  return tr("Direction");
              case 5:
+                 return tr("Which end");
+             case 6:
                 return tr("Dup Segment");
+             case 7:
+                 return tr("Dup Description");
+             case 8:
+                 return tr("Tracks");
              default:
                  return QVariant();
          }
@@ -338,11 +350,11 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentInfo> dupSegment
      Q_UNUSED(index);
      beginInsertRows(QModelIndex(), position, position+rows-1);
 
-     for (int row=0; row < rows; row++) {
-         //QPair<QString, QString> pair(" ", " ");
-         SegmentInfo sd;
-         listOfSegments.insert(position, sd);
-     }
+     // for (int row=0; row < rows; row++) {
+     //     //QPair<QString, QString> pair(" ", " ");
+     //     SegmentInfo si;
+     //     listOfSegments.insert(position, sd);
+     // }
 
      endInsertRows();
      return true;
@@ -367,16 +379,16 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentInfo> dupSegment
      if (index.isValid() && role == Qt::EditRole) {
          int row = index.row();
 
-         SegmentData sd = listOfSegments.value(row);
+//          SegmentData sd = listOfSegments.value(row);
 
-//         switch (index.column())
-//             p.first = value.toString();
-//         else if (index.column() == 1)
-//             p.second = value.toString();
-//         else
-//             return false;
+// //         switch (index.column())
+// //             p.first = value.toString();
+// //         else if (index.column() == 1)
+// //             p.second = value.toString();
+// //         else
+// //             return false;
 
-         listOfSegments.replace(row, sd);
+//          listOfSegments.replace(row, sd);
          emit(dataChanged(index, index));
 
          return true;
@@ -400,7 +412,7 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentInfo> dupSegment
      return QAbstractTableModel::flags(index);
  }
 
- QList< SegmentInfo > dupSegmentViewTableModel::getList()
+ QList<QPair< SegmentInfo,SegmentInfo> > dupSegmentViewTableModel::getList()
  {
      return listOfSegments;
  }
@@ -409,15 +421,16 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QList<SegmentInfo> dupSegment
  {
   if(row >= listOfSegments.size())
    throw Exception(tr("invalid row %1").arg(row));
-  int otherSegment = listOfSegments.at(row).next();
-  listOfSegments.removeAt(row);
-  for(int i=0; i < listOfSegments.count(); i++)
-  {
-   if(listOfSegments.at(i).next() == otherSegment)
-   {
-    listOfSegments.removeAt(i);
-    break;
-   }
-  }
+  // int otherSegment = listOfSegments.at(row).next();
+  // listOfSegments.removeAt(row);
+  // for(int i=0; i < listOfSegments.count(); i++)
+  // {
+  //  if(listOfSegments.at(i).next() == otherSegment)
+  //  {
+  //   listOfSegments.removeAt(i);
+  //   break;
+  //  }
+  //}
   reset();
  }
+

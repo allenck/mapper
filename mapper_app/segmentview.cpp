@@ -1,6 +1,7 @@
 ﻿#include "segmentview.h"
 #include "editsegmentdialog.h"
 #include "webviewbridge.h"
+#include "dupsegmentview.h"
 
 SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
     QObject(parent)
@@ -172,11 +173,14 @@ void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
     myParent->setCursor(QCursor(Qt::WaitCursor));
     sourceModel->reset();
     myArray = sql->getIntersectingSegments(lat, lon, .020, sdIn.routeType());
+
     myParent->setCursor(QCursor(Qt::ArrowCursor));
 
     if(myArray.count()== 0)
         return;
-
+    QList<QPair<SegmentInfo,SegmentInfo>> dups = sql->getDupSegmentsInList(myArray);
+    if(dups.count()>0)
+        MainWindow::instance()->dupSegmentView->showDupSegments(dups);
     ui->setSortingEnabled(false);
 
     sourceModel = new SegmentViewTableModel(myArray, lat, lon, myParent->m_routeNbr, myParent->m_currRouteEndDate, this);

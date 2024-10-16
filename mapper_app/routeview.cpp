@@ -870,6 +870,7 @@ void RouteView::deleteSegment()
     //int row = proxymodel->mapToSource(ix).row();
     sourceModel->deleteRow(segmentId, proxymodel->mapToSource(ix));
     sourceModel->bChangesMade = true;
+    ui->clearSelection();
     MainWindow::instance()->segmentChanged(segmentId, 0);
 }
 

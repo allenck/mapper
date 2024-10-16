@@ -57,6 +57,7 @@ void Configuration::saveSettings()
   settings->setValue("bounds", c->bounds().toString());
   settings->setValue("currOverlay", c->curOverlayId);
   settings->setValue("selectedCompanies",SQL::instance()->list2String(c->selectedCompaniesList));
+  settings->setValue("displayRoutesForGroup", c->bDisplayRoutesForGroup);
 
   //settings.setValue("connection",c->curConnectionId);
   settings->beginWriteArray("connections");
@@ -288,6 +289,8 @@ void Configuration::getSettings()
       {
           nc->selectedCompaniesList.append(sl.at(i).toInt());
       }
+      nc->bDisplayRoutesForGroup = settings.value("displayRoutesForGroup",!nc->selectedCompaniesList.isEmpty()).toBool();
+
 
       nc->setConnectionUniqueId(QUuid::fromString(settings.value("currConnectionUuid").toString()));
       QString baseAddr;

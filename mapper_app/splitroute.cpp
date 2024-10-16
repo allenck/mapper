@@ -25,7 +25,7 @@ SplitRoute::SplitRoute( QWidget *parent) :
     connect(ui->cbCompany1, &QComboBox::currentTextChanged, [=] ()
     {
         int companyKey = ui->cbCompany1->currentData().toInt();
-        CompanyData* cd = _companyList.at(companyKey);
+        CompanyData* cd = sql->getCompany(companyKey);
         if(ui->dateTo1->date() > cd->endDate)
         {
             ui->dateTo1->setDate(cd->endDate);

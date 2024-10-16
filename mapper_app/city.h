@@ -34,6 +34,7 @@ public:
  bool bDisplayStationMarkers = false;
  bool bDisplayTerminalMarkers = false;
  bool bDisplayRouteComments = false;
+ bool bDisplayRoutesForGroup = false;
  bool bShowOverlay = false;
  qint32 companyKey=-1;
  QString selectedCompanies; // comma separated list of companies selected to show in routes

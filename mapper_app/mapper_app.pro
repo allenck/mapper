@@ -100,8 +100,11 @@ DISTFILES += \
     Resources/scripts/createMsSqlDistance.sql \
     Resources/sql/addBiDirectionalToRoutes.sql \
     Resources/sql/create_stations.sql \
+    Resources/sql/mssql_create_routes.sql \
     Resources/sql/mssql_create_routeseq.sql \
     Resources/sql/mssql_create_stations.sql \
+    Resources/sql/mssql_recreate_routes.sql \
+    Resources/sql/mysql_create_routes.sql \
     Resources/sql/mysql_recreate_routes.sql \
     Resources/sql/recreateRouteComments.sql \
     Resources/sql/recreateSegmentsTable.sql \
@@ -113,6 +116,7 @@ DISTFILES += \
     Resources/scripts/opacity-slider3d7.png \
     Resources/scripts/qwebchannel.js \
     Resources/GoogleMaps2b.htm \
+    Resources/sql/sqlite3_recreate_routes.sql \
     Resources/sql/updateOneWay.sql \
     Resources/sql/updaterouteoneway.sql \
     Resources/test.htm \

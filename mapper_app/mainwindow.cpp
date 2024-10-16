@@ -508,8 +508,8 @@ void MainWindow::createBridge()
 // m_bridge->browseWindowHeight = webView->height();
 // m_bridge->browseWindowWidth = webView->width();
 
- //connect( m_bridge, SIGNAL(movePointSignal(qint32, qint32,double,double)), this, SLOT(movePoint(qint32, qint32,double,double)));
- connect( m_bridge, SIGNAL(movePointSignalX(qint32,qint32,QList<LatLng>)), this, SLOT(movePointX(qint32,qint32,QList<LatLng>)));
+ connect( m_bridge, SIGNAL(movePointSignal(qint32, qint32,double,double)), this, SLOT(movePoint(qint32, qint32,double,double)));
+ //connect( m_bridge, SIGNAL(movePointSignalX(qint32,qint32,QList<LatLng>)), this, SLOT(movePointX(qint32,qint32,QList<LatLng>)));
  connect(m_bridge, SIGNAL(addPointSignal(int,double,double)), this, SLOT(addPoint(int,double,double)));
  //connect(m_bridge, SIGNAL(addPointSignalX(int,double,double)), this, SLOT(addPointX(int,QList<LatLng>)));
  connect (m_bridge, SIGNAL(insertPointSignal(int,qint32,double,double)), this, SLOT(insertPoint(int,qint32,double,double)));
@@ -1118,6 +1118,7 @@ void MainWindow::createActions()
 //   updateRoute(&sd);
 //   return;
 //  }
+  connect(routeDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs )), this, SLOT(RouteChanged(RouteChangedEventArgs )));
 
   updateRoute(sd);
   ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(sd->companyKey()));
@@ -1204,6 +1205,15 @@ void MainWindow::createActions()
     config->currCity->setNameOverride(dlg.parameters().city);
   }
  });
+ displayAllRoutesForGroupAct = new QAction(tr("Display all routes for group"),this);
+ displayAllRoutesForGroupAct->setStatusTip(tr("If checked routes will be displayed for all selected companies."));
+ displayAllRoutesForGroupAct->setCheckable(true);
+ displayAllRoutesForGroupAct->setChecked(config->currCity->bDisplayRoutesForGroup);
+ connect(displayAllRoutesForGroupAct, &QAction::toggled, [=](bool checked){
+     config->currCity->bDisplayRoutesForGroup = checked;
+     refreshCompanies();
+ });
+
 
  testUrlAct = new QAction(tr("test url"));
  connect(testUrlAct, &QAction::triggered, [=]{
@@ -1451,7 +1461,7 @@ QWidgetAction *MainWindow::createWidgetAction()
  cbSort->addItem("Name, Route, start date");
  cbSort->addItem("start date, name, route");
  cbSort->addItem("Base Route, start date");
-
+ cbSort->addItem("CompanyKey,Route, start date");
 
  cbSort->setCurrentIndex(config->currCity->routeSortType);
  //connect(cbSort, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSortSelectionChanged(int)));
@@ -1495,6 +1505,15 @@ void MainWindow::addSegmentToRoute(SegmentData* sd)
                            " existing segment. The segment will not be added!"));
      return;
  }
+
+ // QList<SegmentInfo> dups = sql->getDupSegments(SegmentInfo(*sd));
+ // if(dups.count()>0)
+ // {
+ //     qDebug() << tr("there are %1 duplicate segments.").arg(dups.count());
+ //     dupSegmentView->showDupSegments(dups);
+ //     QMessageBox::information(this, tr("Duplicates exist"),tr("Duplicates exist. Check the duplacate segments view"));
+ // }
+
  if(!sd->doubleDate().isValid() || (sd->doubleDate() > sd->startDate() && sd->tracks()==2))
   sd->setDoubleDate(sd->startDate());
  if(!sql->addSegmentToRoute(sd))
@@ -1502,6 +1521,7 @@ void MainWindow::addSegmentToRoute(SegmentData* sd)
   //updateRoute(sd);
   return;
  }
+
  m_segmentId = sd->segmentId();
  m_nbrPoints = sd->pointList().size();
  m_points = sd->pointList();
@@ -1511,6 +1531,10 @@ void MainWindow::addSegmentToRoute(SegmentData* sd)
     m_bridge->processScript("clearPolyline", QString("%1").arg(sd->segmentId()));
     //SegmentInfo si = sql->getSegmentInfo(segmentId);
     sd->displaySegment( getColor(sd->tractionType()), true);
+    if(sd->whichEnd()== "E")
+        btnFirstClicked();
+    if(sd->whichEnd()== "S")
+        btnLastClicked();
 }
 
 void MainWindow::changeFonts(QFont f)
@@ -1640,6 +1664,8 @@ void MainWindow::createMenus()
       optionsMenu->addAction(fontSizeChangeAct);
       optionsMenu->addAction(displaySegmentArrows);
       displaySegmentArrows->setChecked(config->bDisplaySegmentArrows);
+      optionsMenu->addAction(displayAllRoutesForGroupAct);
+
     // }
     //});
     menuBar()->addMenu(optionsMenu);
@@ -1698,6 +1724,10 @@ void MainWindow::createCityMenu()
    connect(actionGroup, SIGNAL(triggered(QAction*)), this, SLOT(newCity(QAction*)));
   }
   cityMenu->addMenu(connectMenu);
+  cityMenu->addAction(displayAllRoutesForGroupAct);
+  connect(displayAllRoutesForGroupAct, &QAction::toggled, [=]{
+      refreshCompanies();
+  });
  }
 }
 
@@ -2160,15 +2190,25 @@ void MainWindow::refreshRoutes()
     ui->cbRoute->clear();
 
     //routeList = sql->getRoutesByEndDate(companyKey);
-    routeList = sql->getRoutesByEndDate(config->currCity->selectedCompaniesList);
+    if(config->currCity->bDisplayRoutesForGroup)
+     routeList = sql->getRoutesByEndDate(config->currCity->selectedCompaniesList);
+    else
+    {
+     routeList = sql->getRoutesByEndDate(ui->cbCompany->currentData().toInt());
+    }
     if(routeList.isEmpty())
      qDebug() << "no routes selected for company " << companyKey;
 
     QMap<QString, RouteData> map;
     QString rSort;
+
     for(RouteData rd : routeList)
     {
-      rSort = createSortString(rd.alphaRoute());
+        QString companyKeyStr;
+        if(rd.companyKey() < 10)
+            companyKeyStr ="0";
+        companyKeyStr.append(QString::number(rd.companyKey()));
+        rSort = createSortString(rd.alphaRoute());
      switch(config->currCity->routeSortType)
      {
       case 0:
@@ -2191,13 +2231,17 @@ void MainWindow::refreshRoutes()
       break;
      case 6: // base route, start date
       map.insert(QStringLiteral("%1").arg(rd.baseRoute(),3,10,QLatin1Char('0'))+rd.startDate().toString("yyyy/MM/dd"),rd);
+      break;
+     case 7: // companykey, route, startdate
+      map.insert(companyKeyStr+rSort+rd.startDate().toString("yyyy/MM/dd"),rd);
+     break;
      }
     }
     //int len = routeList.count();
     routeList = map.values();
     for(int i=0; i<routeList.count(); i++)
     {
-         RouteData rd = (RouteData)routeList.at(i);
+         RouteData rd = routeList.at(i);
          QString rdStartDate = rd.startDate().toString("yyyy/MM/dd");
 //         if(ui->cbRoute->findText(rd.toString())< 0)
             ui->cbRoute->addItem(rd.toString(),QVariant::fromValue(rd));
@@ -2745,6 +2789,9 @@ void MainWindow::onCbRouteIndexChanged(int row)
   bNoDisplay = false;
  }
  CompanyData* cd = sql->getCompany(_rd.companyKey());
+ disconnect(ui->cbRoute, SIGNAL(currentIndexChanged(int)), this, SLOT(onCbRouteIndexChanged(int)));
+ ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(cd->companyKey));
+ connect(ui->cbRoute, SIGNAL(currentIndexChanged(int)), this, SLOT(onCbRouteIndexChanged(int)));
 
  ui->txtRouteNbr->setText(sql->getAlphaRoute(_rd.route(),cd->routePrefix));
  ui->dateEdit->setDate( _rd.endDate());
@@ -2806,169 +2853,6 @@ QList<StationInfo> MainWindow::getStations(QList<SegmentData*> rsList)
     }
     return stationMap.values();
 }
-//void MainWindow::onResize()
-//{
-//   m_bridge->processScript("resizeMap", "");
-//}
-//bool compareSegmentInfoByName(const SegmentInfo & s1, const SegmentInfo & s2)
-//{
-// return s1.description < s2.description;
-//}
-
-//void MainWindow::refreshSegmentCB()
-//{
-// QStringList streets;
-// QStringList tokens;
-// QStringList tokens2;
-// QString description;
-// QString selectedStreet =ui->cbStreets->currentText();
-
-// bRefreshingSegments = true;
-// if(!bCbStreetsRefreshing)
-//  refreshStreetsCb();
-// ui->cbSegments->clear();
-// cbSegmentInfoList = sql->getSegmentInfo();
-// cbSegmentDataList = sql->getSegmentDataList();
-// qSort(cbSegmentInfoList.begin(), cbSegmentInfoList.end(),compareSegmentInfoByName);
-// //foreach (segmentInfo sI in cbSegmentInfoList)
-// for(int i=0; i < cbSegmentInfoList.count(); i++)
-// {
-//  SegmentInfo sI = cbSegmentInfoList.at(i);
-//  description = sI.description;
-//  tokens = description.split(",");
-//  if(tokens.count() > 1)
-//  {
-//   QString street = tokens.at(0).trimmed();
-//   if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
-//   if(street == selectedStreet)
-//   {
-//    // populate streets
-//    if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
-//       (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
-//       ui->rbBoth->isChecked())
-//     ui->cbSegments->addItem(sI.toString(), sI.segmentId);
-//    continue;
-//   }
-//   else
-//   {
-//    if(selectedStreet.trimmed().isEmpty())
-//    {
-//     // populate streets
-//     if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
-//        (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
-//        ui->rbBoth->isChecked())
-//      ui->cbSegments->addItem(sI.toString(), sI.segmentId);
-//     continue;
-//    }
-//   }
-//   tokens2 = tokens.at(1).split("to");
-//   {
-//    for(int i=0; i < tokens2.count(); i++)
-//    {
-//     QString street = tokens2.at(i);
-//     street = tokens.at(0).trimmed();
-//     if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
-//     //if(street2.indexOf(" ")) street2= street2.mid(0, street2.indexOf(" "));
-//     if(street == selectedStreet)
-//     {
-//      // populate streets
-//      if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
-//         (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
-//         ui->rbBoth->isChecked())
-//       ui->cbSegments->addItem(sI.toString(), sI.segmentId);
-//      continue;
-//     }
-//     else
-//     {
-//      if(selectedStreet.trimmed().isEmpty())
-//      {
-//       // populate streets
-//       if((sI.tracks == 2 && ui->rbDouble->isChecked() ) ||
-//          (sI.tracks == 1 && ui->rbSingle->isChecked() )  ||
-//          ui->rbBoth->isChecked())
-//        ui->cbSegments->addItem(sI.toString(), sI.segmentId);
-//       continue;
-//      }
-//     }
-//    }
-//   }
-//  }
-// }
-// if(m_SegmentId >0)
-//  ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(m_SegmentId));
-// m_bridge->processScript("addModeOff");
-// addPointModeAct->setChecked(false);
-// bRefreshingSegments = false;
-//}
-
-//void MainWindow::refreshStreetsCb()
-//{
-// QStringList streets;
-// QStringList tokens;
-// QStringList tokens2;
-// QString description;
-// QString selectedStreet = ui->cbStreets->currentText();
-// bCbStreetsRefreshing = true;
-
-// ui->cbStreets->clear();
-// ui->cbStreets->addItem("");
-// cbSegmentInfoList = sql->getSegmentInfo();
-// for(int i=0; i < cbSegmentInfoList.count(); i++)
-// {
-//  SegmentInfo sI = cbSegmentInfoList.at(i);
-//  description = sI.description;
-//  tokens = description.split(",");
-//  if(tokens.count() > 1)
-//  {
-//   QString street = tokens.at(0).trimmed();
-//   if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
-//   if(!streets.contains(street))
-//   {
-//    streets.append(street);
-//   }
-//   tokens2 = tokens.at(1).split("to");
-//   {
-//    for(int i=0; i < tokens2.count(); i++)
-//    {
-//     QString street2 = tokens2.at(i);
-//     street2 = tokens.at(0).trimmed();
-//     if(street2.indexOf("(")) street2= street.mid(0, street2.indexOf("("));
-//     //if(street2.indexOf(" ")) street2= street2.mid(0, street2.indexOf(" "));
-//     if(!streets.contains(street2))
-//     {
-//      streets.append(street2);
-//     }
-//    }
-//   }
-//  }
-//  else
-//  {
-//   tokens = sI.description.split(" ");
-//  }
-// } // end for
-// streets.sort();
-// ui->cbStreets->addItems(streets);
-// ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(selectedStreet));
-// bCbStreetsRefreshing = false;
-//}
-
-//void MainWindow::cbStreets_editingFinished()
-//{
-// QString txt = ui->cbStreets->currentText();
-// //ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(txt));
-// if(bCbStreets_text_changed)
-// {
-//  ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(txt));
-// }
-// bCbStreets_text_changed = false;
-//}
-
-//void MainWindow::cbStreets_currentIndexChanged(int)
-//{
-// saveStreet = ui->cbStreets->currentText();
-// if(!bRefreshingSegments)
-// refreshSegmentCB();
-//}
 
 void MainWindow::refreshCompanies()
 {
@@ -2982,47 +2866,22 @@ void MainWindow::refreshCompanies()
     for(int i=0; i < companyList.count(); i++)
     {
         CompanyData* cd = companyList.at(i);
-        if(config->currCity->selectedCompaniesList.isEmpty()
-            || config->currCity->selectedCompaniesList.contains(cd->companyKey)){
-        ui->cbCompany->addItem(cd->name, cd->companyKey);
-        selectedComanyList.append(cd);
-        // item = new QStandardItem(cd->name);
-        // item->setCheckable(true);
-        // QString companyId = QString::number(cd->companyKey);
-        // bool state = config->currCity->selectedCompanies.contains(","+companyId);
-        // item->setCheckState(state?Qt::CheckState::Checked:Qt::CheckState::Unchecked);
-        // item->setData(cd->companyKey);
-        // mod->setItem(i,item);
+        if(config->currCity->bDisplayRoutesForGroup)
+        {
+            if(config->currCity->selectedCompaniesList.isEmpty()
+                || config->currCity->selectedCompaniesList.contains(cd->companyKey))
+            {
+                ui->cbCompany->addItem(cd->name, cd->companyKey);
+                selectedComanyList.append(cd);
+            }
+            else
+                ui->cbCompany->addItem(cd->name, cd->companyKey);
+        }
+        else
+        {
+            ui->cbCompany->addItem(cd->name, cd->companyKey);
         }
     }
-    // connect(mod, &QStandardItemModel::itemChanged, [=](QStandardItem * item){
-    //     QString companyId = item->data().toString();
-
-    //     if(item->checkState()==Qt::Checked)
-    //     {
-    //         if(config->currCity->selectedCompanies.isEmpty())
-    //         {
-    //             config->currCity->selectedCompanies.append(companyId);
-    //         }
-    //         else
-    //         {
-    //             config->currCity->selectedCompanies.append(","+companyId);
-    //         }
-    //         config->currCity->selectedCompaniesList.append(item->data().toInt());
-    //     }
-    //     else
-    //     {
-    //         if(config->currCity->selectedCompanies.size()== 1)
-    //         {
-    //             config->currCity->selectedCompanies.clear();
-    //         }
-    //         else
-    //             config->currCity->selectedCompanies.replace(","+companyId, "");
-    //         if(config->currCity->selectedCompaniesList.contains(item->data().toInt()))
-    //             config->currCity->selectedCompaniesList.removeOne(item->data().toInt());
-    //     }
-    //     refreshRoutes();
-    // });
 
     //ui->cbCompany->setModel(mod);
     if(routeDlg != NULL)
@@ -4732,6 +4591,8 @@ void MainWindow::selectSegment(int seg)
  //ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(seg));
  ui->ssw->setCurrentSegment(seg);
  m_segmentId = seg;
+ SegmentInfo si = sql->getSegmentInfo(seg);
+ QList<SegmentInfo> dups = sql->getDupSegments(si);
 }
 
 void MainWindow::segmentChanged(qint32 changedSegment, qint32 newSegment)
@@ -5138,7 +4999,7 @@ void MainWindow::findDupSegments()
     }
 //    if(ui->tabWidget->count() < 7)
 //     ui->tabWidget->addTab(ui->tblDupSegments,"DuplicateSegments");
-    dupSegmentView->showDupSegments(myArray);
+    // dupSegmentView->showDupSegments(myArray);
     this->setCursor(QCursor(Qt::ArrowCursor));
     //NotYetInplemented();
 

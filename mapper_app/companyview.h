@@ -24,10 +24,10 @@ protected:
     void companyChange();
 
  private:
-    QMap<QString, QString> hdrMap = {{"key", "Company Key"},{"Description", "Company Name"},
-                                     {"routePrefix", "Prefix"}, {"startDate", "Start"}, {"endDate", "End"},
+    QMap<QString, QString> hdrMap = {{"key", "Company Key"},{"Mnemonic", "Mnemonic"}, {"Description", "Company Name"},
+                                     {"routePrefix", "Prefix"}, {"info", "Information"},{"startDate", "Start"}, {"endDate", "End"},
                                      {"firstRoute", "First Route"}, {"lastRoute", "Last Route"},
-                                     {"lastUpdate", "Last updated"}, {"info", "Information"}
+                                     {"lastUpdate", "Last updated"}
                                     };
      Configuration * config;
 
@@ -43,6 +43,7 @@ public:
     enum COLUMNS
     {
      KEY,
+     MNEMONIC,
      NAME,
      ROUTEPREFIX,
      STARTDATE,

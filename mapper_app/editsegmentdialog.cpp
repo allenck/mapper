@@ -405,7 +405,7 @@ void EditSegmentDialog::On_btnSave_clicked()
   si.setStartDate(ui->dtBegin->date());
   si.setLocation(ui->cbLocation->currentText());
   si.setDoubleDate(ui->doubleTracked->date());
-  si.setRouteType((RouteType)ui->cbRouteType->currentData().toInt());
+  si.setRouteType((RouteType)ui->cbRouteType->currentIndex());
   if(si.tracks() == 2 && dupSegments.count() > 0)
   {
    QString infoText;

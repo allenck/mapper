@@ -401,6 +401,8 @@ public:
     void setDoubleDate(QDate date) {_doubleDate = date;}
     qint32 companyKey() {return _companyKey;}
     void setCompanyKey(int key) {_companyKey = key;}
+    QString companyMnemonic() {return _companyMnemonic;}
+    void setCompanyMnemonic(QString mnemonic){_companyMnemonic = mnemonic;}
     qint32 tractionType() {return _tractionType;}
     void setTractionType(int t) {_tractionType = t;}
     qint32 lineKey() {return _lineKey;}
@@ -423,8 +425,10 @@ public:
     QString seqToString();
     qint32 sequence() {return _sequence;}
     qint32 returnSeq() {return _returnSeq;}
-    quint32 baseRoute() {return _baseRoute;}
-    void setBaseRoute(int bastRoute) {_baseRoute = bastRoute;}
+    QString routePrefix() {return _routePrefix;}
+    void setRoutePrefix(QString routePrefix) {_routePrefix = routePrefix;}
+    int baseRoute() {return _baseRoute;}
+    void setBaseRoute(int baseRoute){_baseRoute = baseRoute;}
     RouteType routeType() {return _routeType;}
     bool operator==(const RouteData &o);
 
@@ -432,12 +436,14 @@ public:
     qint32 _route = -1;
     qint32 _baseRoute=0;
     QString _alphaRoute;
+    QString _routePrefix;
     QString _name;
     //QDate defaultDate;
     QDate _startDate;
     QDate _endDate;
     QDate _doubleDate;
     qint32 _companyKey;
+    QString _companyMnemonic;
     qint32 _tractionType;
     qint32 _lineKey = -1;
     QString _direction;
@@ -502,7 +508,7 @@ class segmentGroup
         QString Description;
         QString OneWay;
         double distance;
-        qint32	lineSegments;
+        //qint32	lineSegments;
         QString startDate;
         QString endDate;
         qint32	tractionType;
@@ -513,13 +519,13 @@ class segmentGroup
         ~segmentGroup();
 };
 
-#if 1
 class RouteInfo
 {
 	public:
         explicit RouteInfo(QObject *parent = 0);
         RouteInfo(qint32 route, QString name, QDate startDate, QDate endDate);
         RouteInfo(RouteData rd);
+        RouteInfo(RouteInfo& o);
         //QList<segmentGroup> segments;  // array of segmentGroup objects
  private:
         qint32	route=-1;
@@ -534,10 +540,10 @@ class RouteInfo
         int companyKey=0;
         QString alphaRoute;
         int baseRoute=0;
-
+        QString routePrefix;
+        QString companyMnemonic;
         friend class SQL;
 };
-#endif
 
 class TerminalInfo
 {
@@ -581,7 +587,7 @@ class SegmentInfo
  QString _description;
  //QString oneWay;
  qint32 _segmentId = -1;
- qint32 lineSegments;
+ //qint32 lineSegments;
  qint32 _points =0;
  double _length = 0;
  QDate _startDate = QDate::fromString("1880/01/01", "yyyy/MM/dd");
@@ -701,6 +707,9 @@ class SegmentInfo
  QString reverseDescription();
  QDate doubleDate() {return _doubleDate;}
  void setDoubleDate(QDate date){_doubleDate = date;}
+ bool operator==(const SegmentInfo& other) const{
+     return(other._segmentId == _segmentId);
+ }
 
  friend class SegmentData;
  friend class SQL;
@@ -759,6 +768,7 @@ class CompanyData
     QDate startDate, endDate;
     int firstRoute, lastRoute;
     QString routePrefix;
+    QString mnemonic;
 };
 class Parameters
 {

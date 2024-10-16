@@ -166,6 +166,7 @@ QVariant MyCompanyTableModel::headerData(int section, Qt::Orientation orientatio
   return hdrMap.value(value.toString());
  return value;
 }
+
 MyCompanyTableModel::MyCompanyTableModel(QObject *parent, QSqlDatabase db) : QSqlTableModel(parent)
 {
     config = Configuration::instance();

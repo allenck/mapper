@@ -472,13 +472,28 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
  QString where;
  if(companyKey >0)
   where= " where r.companyKey = " + QString("%1").arg(companyKey);
- commandText = "Select distinct c.baseRoute, r.route, r.name, r.startDate, r.endDate, r.companyKey, "
-               "tractionType, routeAlpha  "
+ if(config->currConnection->servertype() != "MsSql")
+
+    commandText = "Select distinct a.baseRoute, r.route, r.name, r.startDate, "
+               "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic  "
                "from Routes r "
-               "join AltRoute c on r.route =  c.route "
+               "join AltRoute a on r.route =  a.route "
+               "join Companies c on r.companyKey = c.`key` "
                + where +
-               " group by c.baseRoute, r.route, r.name, r.startDate, r.endDate, r.companykey,tractionType, c.routeAlpha "
-               " order by c.routeAlpha, r.name, r.endDate ";
+               " group by a.baseRoute, r.route, r.name, r.startDate, r.endDate, "
+               " r.companykey,tractionType, a.routeAlpha "
+               " order by a.routeAlpha, r.name, r.endDate ";
+ else
+     commandText = "Select distinct a.baseRoute, r.route, r.name, r.startDate, "
+                   "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic  "
+                   "from Routes r "
+                   "join AltRoute a on r.route =  a.route "
+                   "join Companies c on r.companyKey = c.[key] "
+                   + where +
+                   " group by a.baseRoute, r.route, r.name, r.startDate, r.endDate, "
+                   " r.companykey,tractionType, a.routeAlpha "
+                   " order by a.routeAlpha, r.name, r.endDate ";
+
  query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -505,6 +520,7 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
   ri->companyKey = query.value(5).toInt();
   ri->tractionType = query.value(6).toInt();
   ri->alphaRoute = query.value(7).toString();
+  ri->companyMnemonic = query.value(8).toString();
   riList.append(ri);
  }
  for(RouteInfo* ri : riList)
@@ -519,7 +535,8 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
   rd.setAlphaRoute(ri->alphaRoute);
   rd.setCompanyKey(ri->companyKey);
   rd.setTractionType(ri->tractionType);
-  rd.setBaseRoute(ri->baseRoute);
+  rd.setRoutePrefix(ri->routePrefix);
+  rd.setCompanyMnemonic(ri->companyMnemonic);
   list.append(rd);
  }
  return list;;
@@ -537,13 +554,15 @@ QList<RouteData> SQL::getRoutesByEndDate(QList<int> compayList)
  QString where;
  //if(companyKey >0)
   where= " where r.companyKey in( " + list2String(compayList) +")";
- commandText = "Select distinct c.baseRoute, r.route, r.name, r.startDate, r.endDate, r.companyKey, "
-               "tractionType, routeAlpha  "
+ commandText = "Select distinct a.baseRoute, r.route, r.name, r.startDate, r.endDate, r.companyKey, "
+               "tractionType, routeAlpha, c.routePrefix  "
                "from Routes r "
-               "join AltRoute c on r.route =  c.route "
+               "join AltRoute a on r.route =  a.route "
+               "join Companies c on r.companyKey = c.[key]"
                + where +
-               " group by c.baseRoute, r.route, r.name, r.startDate, r.endDate, r.companykey,tractionType, c.routeAlpha "
-               " order by c.routeAlpha, r.name, r.endDate ";
+               " group by a.baseRoute, r.route, r.name, r.startDate, r.endDate, r.companykey,"
+               " tractionType, a.routeAlpha "
+               " order by a.routeAlpha, r.name, r.endDate ";
  query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -570,6 +589,7 @@ QList<RouteData> SQL::getRoutesByEndDate(QList<int> compayList)
   ri->companyKey = query.value(5).toInt();
   ri->tractionType = query.value(6).toInt();
   ri->alphaRoute = query.value(7).toString();
+  ri->routePrefix = query.value(8).toString();
   riList.append(ri);
  }
  for(RouteInfo* ri : riList)
@@ -585,6 +605,7 @@ QList<RouteData> SQL::getRoutesByEndDate(QList<int> compayList)
   rd.setCompanyKey(ri->companyKey);
   rd.setTractionType(ri->tractionType);
   rd.setBaseRoute(ri->baseRoute);
+  rd._routePrefix = ri->routePrefix;
   list.append(rd);
  }
  return list;;
@@ -4696,6 +4717,34 @@ bool SQL::updateRecord(SegmentInfo sd)
     return ret;
 }
 
+void SQL::setDefaultCompanyMnemonic(CompanyData* cd)
+{
+    if(cd->mnemonic.isEmpty())
+    {
+      if(!cd->routePrefix.isEmpty())
+          cd->mnemonic = cd->routePrefix;
+      else if(cd->name.contains("(") and cd->name.contains(")"))
+      {
+       int first = cd->name.indexOf("(");
+       int last = cd->name.indexOf(")");
+       int size = last - first - 1;
+       cd->mnemonic = cd->name.mid(first+1,size);
+      }
+      else
+      {
+         QStringList sl = cd->name.split(" ");
+         foreach (QString token, sl) {
+            if(token.isEmpty())
+                continue;
+             if( token.at(0) == '(')
+                 break;
+             cd->mnemonic.append(token.at(0));
+         }
+      }
+    }
+    return;
+}
+
 /// <summary>
 /// Get a list of companies
 /// </summary>
@@ -4709,10 +4758,10 @@ QList<CompanyData*> SQL::getCompanies()
  QString commandText;
  if(config->currConnection->servertype() != "MsSql")
      commandText = "select `key`, description, routePrefix, startDate, endDate,"
-                   " firstRoute, lastRoute from Companies";
+                   " firstRoute, lastRoute, mnemonic from Companies";
  else
      commandText = "select [key], description, routePrefix, startDate, endDate,"
-                   " firstRoute, lastRoute from Companies";
+                   " firstRoute, lastRoute, mnemonic from Companies";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -4739,6 +4788,8 @@ QList<CompanyData*> SQL::getCompanies()
          cd->endDate = query.value(4).toDate();
      cd->firstRoute = query.value(5).toInt();
      cd->lastRoute = query.value(6).toInt();
+     cd->mnemonic = query.value(7).toString();
+     setDefaultCompanyMnemonic(cd);
      myArray.append(cd);
  }
  std::sort(myArray.begin(), myArray.end(), [](const CompanyData* a, const CompanyData* b) -> bool { return a->name < b->name; });
@@ -4759,12 +4810,12 @@ QList<CompanyData*> SQL::getCompaniesInDateRange(QDate startDate, QDate endDate)
  QString commandText;
  if(config->currConnection->servertype() != "MsSql")
      commandText = QString("select `key`, description, routePrefix, startDate, endDate,"
-                   " firstRoute, lastRoute from Companies"
+                   " firstRoute, lastRoute, mnemonic from Companies"
                    " where startDate between '%1' and '%2' or endDate between '%1' and '%2'")
        .arg(startDate.toString("yyyy/MM/dd")).arg(endDate.toString("yyyy/MM/dd"));
  else
      commandText = QString("select [key], description, routePrefix, startDate, endDate,"
-                   " firstRoute, lastRoute from Companies"
+                   " firstRoute, lastRoute, mnemonic from Companies"
                    " where startDate between '%1' and '%2' or endDate between '%1' and '%2'")
                    .arg(startDate.toString("yyyy/MM/dd"))
                    .arg(endDate.toString("yyyy/MM/dd"));
@@ -4794,6 +4845,8 @@ QList<CompanyData*> SQL::getCompaniesInDateRange(QDate startDate, QDate endDate)
          cd->endDate = query.value(4).toDate();
      cd->firstRoute = query.value(5).toInt();
      cd->lastRoute = query.value(6).toInt();
+     cd->mnemonic = query.value(7).toString();
+     setDefaultCompanyMnemonic(cd);
      myArray.append(cd);
  }
  std::sort(myArray.begin(), myArray.end(), [](const CompanyData* a, const CompanyData* b) -> bool { return a->name < b->name; });
@@ -4817,10 +4870,10 @@ CompanyData* SQL::getCompany(qint32 companyKey)
         QString commandText;
         if(config->currConnection->servertype() != "MsSql")
             commandText = "select `key`, description, startDate, endDate, firstRoute, lastRoute,"
-                          " routePrefix from Companies where `key` = " +QString("%1").arg(companyKey);
+                          " routePrefix, mnemonic from Companies where `key` = " +QString("%1").arg(companyKey);
         else
             commandText = "select [key], description, startDate, endDate, firstRoute, lastRoute,"
-                          " routePrefix from companies where [key] = " + QString("%1").arg(companyKey);
+                          " routePrefix,memonic from companies where [key] = " + QString("%1").arg(companyKey);
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -4849,6 +4902,8 @@ CompanyData* SQL::getCompany(qint32 companyKey)
             cd->firstRoute = query.value(4).toInt();
             cd->lastRoute = query.value(5).toInt();
             cd->routePrefix = query.value(6).toString();
+            cd->mnemonic = query.value(7).toString();
+            setDefaultCompanyMnemonic(cd);
         }
     }
     catch (Exception e)
@@ -5192,7 +5247,7 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate,
         qDebug()<<"Invalid route number";
         return ret;
     }
-    if (routeName == "" || routeName.length() > 100)
+    if (routeName == "" || routeName.length() > 125)
     {
         qDebug()<<"invalid route name";
         return ret;
@@ -6699,6 +6754,14 @@ QList<SegmentInfo> SQL::getSegmentsInSameDirection(SegmentInfo siIn, bool revers
   }
   return myArray;
  }
+
+QList<SegmentInfo> SQL::getDupSegments(SegmentInfo si)
+{
+   QList<SegmentInfo> list = getSegmentsInOppositeDirection(si);
+   QList<SegmentInfo> list2 = getSegmentsInSameDirection(si);
+   list.append(list2);
+   return list;
+}
 
 QList<SegmentInfo> SQL::getSegmentsInOppositeDirection(SegmentInfo sdIn)
 {
@@ -10492,6 +10555,16 @@ void SQL::checkTables(QSqlDatabase db)
   {
    addColumn("Companies", "info", "varchar(50)", "Description");
   }
+  if(!doesColumnExist("Companies", "Mnemonic"))
+  {
+      if(config->currConnection->servertype() == "MySql")
+          addColumn("Companies", "Mnemonic", "varchar(10)", "`key`");
+      else
+          addColumn("Companies", "Mnemonic", "varchar(10)");
+      if(config->currConnection->servertype() == "Sqlite")
+       executeScript(":/sql/sqlite3_recreateCompanies.sql",db);
+
+  }
 #if 0
   if(config->currConnection->servertype() == "Sqlite" )
   {
@@ -11925,4 +11998,58 @@ QString SQL::list2String(const QList<int> &list)
 
     s += "";
     return s;
+}
+
+QList<QPair<SegmentInfo, SegmentInfo> > SQL::getDupSegmentsInList(QList<SegmentInfo> list)
+{
+    QList<QPair<SegmentInfo, SegmentInfo>> result;
+    QList<QPair<int,int>> matchedList;
+    if(list.count()<2)
+        return result;
+
+    LatLng latlngStart;
+    LatLng latlngEnd;
+    foreach (SegmentInfo si , list) {
+            latlngStart = si.pointList().at(0); // will match to start
+            latlngEnd = si.pointList().at(si.pointList().count()-1);
+
+        //  now look at the other end of each other
+        LatLng latlng2Start;
+        LatLng latlng2End;
+        foreach (SegmentInfo si2 , list) {
+            if(si.segmentId() == si2.segmentId())
+                continue; // ignore ourself
+            latlng2Start = si2.pointList().at(0);
+            latlng2End = si2.pointList().at(si2.pointList().count()-1);
+            QPair<SegmentInfo,SegmentInfo> pair(si,si2);
+            int matched = 0;
+            QPair<int,int> segPairs;
+            if(si.segmentId() < si2.segmentId())
+                segPairs = QPair<int,int>(si.segmentId(), si2.segmentId() );
+            else
+                segPairs = QPair<int,int>(si2.segmentId(), si.segmentId() );
+
+            if(distance(latlngStart, latlng2Start) < .020){
+                matched++;
+            }
+            if(distance(latlngStart, latlng2End) < .020){
+                matched++;
+            }
+
+            if(distance(latlngEnd, latlng2Start) < .020){
+                matched++;
+            }
+            if(distance(latlngEnd, latlng2End) < .020){
+                matched++;
+            }
+            if(matched >1){
+                if(!matchedList.contains(segPairs))
+                {
+                    matchedList.append(segPairs);
+                    result.append(pair);
+                }
+            }
+        }
+    }
+    return result;
 }

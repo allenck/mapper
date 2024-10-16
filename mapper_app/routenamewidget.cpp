@@ -202,6 +202,7 @@ void RouteNameWidget::txtRouteNbr_Leave()
 
 void RouteNameWidget::txtRouteName_Leave()
 {
+    lblHelpText->clear();
 //    if(ui->cbRouteName->currentIndex() == 0)
 //        ui->btnAdd->setText(tr("Add"));
     if (ui->cbRouteName->currentText().length() == 0)
@@ -210,10 +211,10 @@ void RouteNameWidget::txtRouteName_Leave()
         //System.Media.SystemSounds.Beep.Play();
         return;
     }
-    if (ui->cbRouteName->currentText().length() > 75)
+    if (ui->cbRouteName->currentText().length() > 125)
     {
         ui->txtRouteNbr->setFocus();
-        lblHelpText->setText(tr("name > 75 characters!"));
+        lblHelpText->setText(tr("name > 125 characters!"));
         //System.Media.SystemSounds.Beep.Play();
         return;
     }

@@ -275,8 +275,8 @@ private slots:
     // webViewBridge
     void addPoint(int pt, double lat, double lon);
     //void addPointX(int pt, QList<LatLng>);
-    QT_DEPRECATED void movePoint(qint32 segmentId, qint32 i, double newLat, double newLon);
-    void movePointX(qint32 segmentId, qint32 i, QList<LatLng> pointlist);
+    void movePoint(qint32 segmentId, qint32 i, double newLat, double newLon);
+    QT_DEPRECATED void movePointX(qint32 segmentId, qint32 i, QList<LatLng> pointlist);
     QT_DEPRECATED void insertPoint(int SegmentId, qint32 i, double newLat, double newLon);
     void insertPointX(int segmentId, qint32 i, QList<LatLng>);
     QT_DEPRECATED void segmentSelected(qint32 pt, qint32 SegmentId);
@@ -408,6 +408,7 @@ private:
     QAction* displaySegmentArrows;
     QAction* selAllCompaniesAct;
     QAction* clearAllCompaniesAct;
+    QAction* displayAllRoutesForGroupAct;
 
     QList<QAction*> cityActions;
     QList<QAction*> overlayActions;

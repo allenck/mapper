@@ -3,6 +3,7 @@
    https://www.berliner-linienchronik.de/lv-1901.html
 2. Implement feature where only routes for selected companies are showm in routes combobox.
 3. Implement clipboard history for selected fields.
+4. Add mnemonic field to Companies table.
 
 **Recent Changes April 2024 VERSION=1.1.3
 1. Fix ModifyTractionTypeDlg.

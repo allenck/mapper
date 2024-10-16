@@ -174,6 +174,7 @@ public:
                                                    qint32 segmentId);
     QList<SegmentData *> getRoutes(qint32 segmentid);
     QList<RouteIntersects> updateLikeRoutes(qint32 segmentid, qint32 route, QString name, QString date, bool bAllRoutes = false);
+    QList<SegmentInfo> getDupSegments(SegmentInfo si);
     QList<SegmentInfo> getSegmentsInOppositeDirection(SegmentInfo siIn);
     bool isRouteUsedOnDate(qint32 route, qint32 segmentId,  QString date);
     CommentInfo getComments(qint32 infoKey);
@@ -262,6 +263,7 @@ public:
     //static /*static*/ void distanceFunc(sqlite3_context, int argc, sqlite3_value **argv);
     bool isCompanyValid(SegmentData sd);
     QString list2String(const QList<int> &list);
+    QList<QPair<SegmentInfo, SegmentInfo>> getDupSegmentsInList(QList<SegmentInfo> list);
 
 signals:
     void details(QString);
@@ -279,6 +281,7 @@ private:
     //bool insertRouteSegment(RouteData sd);
     bool processFile(QTextStream* in, QSqlDatabase db, bool bIsInclude);
     QString scriptName;
+    void setDefaultCompanyMnemonic(CompanyData* cd);
 
 };
 
