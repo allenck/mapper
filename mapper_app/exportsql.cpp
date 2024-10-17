@@ -3931,6 +3931,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
  if(dbType == "Sqlite")
   commandText = "CREATE TABLE if not exists `Companies` ( "\
           "`key` integer NOT NULL primary key AUTOINCREMENT,"\
+          "`mnemonic` varchar(10) not null default '', "\
           "`Description` varchar(60) NOT NULL default '', "\
           "`routePrefix` varchar(10) not null default '', "\
           "`info` varchar(60) not null default '',"
@@ -3943,6 +3944,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
  else if(dbType == "MySql")
   commandText = "CREATE TABLE `Companies` ("\
     "`key` int(11) NOT NULL AUTO_INCREMENT,"\
+    "`mnemonic` varchar(10) not null default '', "\
     "`Description` varchar(60) NOT NULL,"\
     "`routePrefix` varchar(10) DEFAULT '',"\
     "`info` varchar(60),"
@@ -3959,6 +3961,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
   "SET QUOTED_IDENTIFIER ON;"\
   "CREATE TABLE [dbo].[Companies]("\
         "[key] [int] IDENTITY(1,1) NOT NULL,"\
+        "[mnemonic] varchar(10) not null default '', "\
         "[Description] [varchar](60) NOT NULL,"\
         "[info] varchar(60),"
         "[routePrefix] [varchar](10) NOT NULL,"\

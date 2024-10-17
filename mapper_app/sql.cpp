@@ -10546,21 +10546,21 @@ void SQL::checkTables(QSqlDatabase db)
 
   if(!doesColumnExist("Companies", "RoutePrefix"))
   {
-   addColumn("Companies", "RoutePrefix", "varchar(10)");
+   addColumn("Companies", "RoutePrefix", "varchar(10 NOT NULL default '')");
    if(config->currConnection->servertype() == "Sqlite")
     executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
   }
 
   if(!doesColumnExist("Companies", "info"))
   {
-   addColumn("Companies", "info", "varchar(50)", "Description");
+   addColumn("Companies", "info", "varchar(50) NOT NULL default ''", "Description");
   }
   if(!doesColumnExist("Companies", "Mnemonic"))
   {
       if(config->currConnection->servertype() == "MySql")
-          addColumn("Companies", "Mnemonic", "varchar(10)", "`key`");
+          addColumn("Companies", "Mnemonic", "varchar(10) NOT NULL default '' ", "`key`");
       else
-          addColumn("Companies", "Mnemonic", "varchar(10)");
+          addColumn("Companies", "Mnemonic", "varchar(10) NOT NULL default ''");
       if(config->currConnection->servertype() == "Sqlite")
        executeScript(":/sql/sqlite3_recreateCompanies.sql",db);
 
