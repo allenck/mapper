@@ -37,19 +37,19 @@ void Clipboard::setContextMenu(QLineEdit* tgt)
 {
     tgt->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(tgt, &QLineEdit::customContextMenuRequested, [=](QPoint pt)
-    {
-        QMenu * menu = tgt->createStandardContextMenu();
-        if(history.size() >1)
-        {
-            menu->addMenu(getHistoryMenu());
+            {
+                QMenu * menu = tgt->createStandardContextMenu();
+                if(history.size() >1)
+                {
+                    menu->addMenu(getHistoryMenu());
 
-            connect(group, &QActionGroup::triggered, [=](QAction* act){
-                tgt->insert(act->data().toString());
-                systemClipboard->setText(act->data().toString());
+                    connect(group, &QActionGroup::triggered, [=](QAction* act){
+                        tgt->insert(act->data().toString());
+                        systemClipboard->setText(act->data().toString());
+                    });
+                    menu->popup(pt);
+                }
             });
-        menu->popup(pt);
-        }
-    });
 }
 
 int Clipboard::historyCount()

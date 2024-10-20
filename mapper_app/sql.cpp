@@ -1064,7 +1064,7 @@ QList<SegmentInfo> SQL::getSegmentInfo()
 {
  QList<SegmentInfo> myArray;
  SegmentInfo sI;
-            
+
  QSqlDatabase db = QSqlDatabase::database();
 
  QString commandText = "Select SegmentId, description, OneWay, startDate, endDate, length, points, "
@@ -1553,7 +1553,7 @@ SegmentInfo SQL::getSegmentInfo(qint32 segmentId)
  }
 
  return si;
-} 
+}
 
 SegmentInfo SQL::getSegmentIdForDescription(QString description)
 {
@@ -2384,45 +2384,15 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
 //   }
 
    distance = Distance(lat, lon, si._startLat, si._startLon);
-   if (distance < curSegmentDistance)
+   if (distance < radius)
    {
-//    sd._segmentId = segmentId;
-//    sd._startLat = startLat;
-//    sd._startLon = startLon;
-//    sd._endLat = endLat;
-//    sd._endLon = endLon;
-//    sd._length = distance;
-//    curSegmentDistance = distance;
-//    sd._streetName = streetName;
-//    sd._routeType = type;
     si._whichEnd = "S";
-//    sd._description = description;
-//    sd._bearing = Bearing(lat, lon, startLat, startLon);
-////    sd._oneWay = oneWay;
-//    sd._tracks = tracks;
-//    sd.setPoints(pointArray);
    }
    // check the ending point
    distance = Distance(lat, lon, si._endLat, si._endLon);
-   if (distance < curSegmentDistance)
+   if (distance < radius)
    {
-//    sd._segmentId = segmentId;
-//    sd._startLat = startLat;
-//    sd._startLon = startLon;
-//    sd._endLat = endLat;
-//    sd._endLon = endLon;
-//    sd._length = distance;
-//    curSegmentDistance = distance;
-//    sd._streetName = streetName;
-//    sd._routeType = (RouteType)type;
     si._whichEnd = "E";
-//    sd._description = description;
-//    sd._bearing = Bearing(lat, lon, endLat, endLon);
-//   //sd._oneWay = oneWay;
-//    sd._tracks = tracks;
-//    sd._routeType = type;
-//    sd.setPoints(pointArray);
-
    }
 //  }
 
@@ -5625,7 +5595,7 @@ qint32 SQL::getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * 
      }
     }
 
-    if (route != -1)
+    if (route != -1 && routePrefix.trimmed().isEmpty())
         *(newAlphaRoute) = (route < 10 ? "0" : "") + QString("%1").arg(route);
     else
         *(newAlphaRoute) = routeAlpha;
@@ -10563,7 +10533,6 @@ void SQL::checkTables(QSqlDatabase db)
           addColumn("Companies", "Mnemonic", "varchar(10) NOT NULL default ''");
       if(config->currConnection->servertype() == "Sqlite")
        executeScript(":/sql/sqlite3_recreateCompanies.sql",db);
-
   }
 #if 0
   if(config->currConnection->servertype() == "Sqlite" )

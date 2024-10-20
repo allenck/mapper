@@ -1,3 +1,4 @@
+update companies set info = '' where info is null;
 BEGIN TRANSACTION;
 CREATE TEMPORARY TABLE if not exists `t_companies` (`key`, mnemonic, Description, routePrefix, info, startDate, endDate, firstRoute, lastRoute, lastUpdate);
 INSERT INTO `t_companies`  (`key`, mnemonic, Description, routePrefix, info, startDate, endDate, firstRoute, lastRoute, lastUpdate) 

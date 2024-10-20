@@ -105,6 +105,7 @@ int main(int argc, char *argv[])
  QApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
  MyApplication a(argc, argv);
  MainWindow w(argc, argv);
+ a.setStyle("Fusion");
 
 #ifndef Q_OS_WIN
      //ConsoleInterface::instance(); // create singleton class.

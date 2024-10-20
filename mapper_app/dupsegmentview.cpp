@@ -68,7 +68,7 @@ void DupSegmentView::showDupSegments(QList<QPair<SegmentInfo, SegmentInfo>> dupS
 
     myParent->ui->tabWidget->setTabText(6, tr("Duplicate Segments"));
     selectSegmentsAct = new QAction(tr("SelectSegments"),this);
-    connect(selectSegmentsAct, SIGNAL(triggered(bool)), this, SLOT(On_selectSegmentsAct(bool)));
+    connect(selectSegmentsAct, SIGNAL(triggered(bool)), this, SLOT(On_selectSegmentAct(bool)));
     deleteDuplicateAct = new QAction(tr("Delete dup segment 1"),this);
     connect(deleteDuplicateAct, &QAction::triggered, [=]{
      QString msg = tr("Do you want to delete segment %1 which is duplicate to segment %2"

@@ -24,7 +24,7 @@ protected:
     void companyChange();
 
  private:
-    QMap<QString, QString> hdrMap = {{"key", "Company Key"},{"Mnemonic", "Mnemonic"}, {"Description", "Company Name"},
+    QMap<QString, QString> hdrMap = {{"key", "Company Key"},{"mnemonic", "Mnemonic"}, {"Description", "Company Name"},
                                      {"routePrefix", "Prefix"}, {"info", "Information"},{"startDate", "Start"}, {"endDate", "End"},
                                      {"firstRoute", "First Route"}, {"lastRoute", "Last Route"},
                                      {"lastUpdate", "Last updated"}

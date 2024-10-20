@@ -325,6 +325,8 @@ int SegmentView::selectedSegmentId()
 {
  QItemSelectionModel * model = ui->selectionModel();
  QModelIndexList indexes = model->selectedIndexes();
+ if(indexes.isEmpty())
+     return -1;
  QModelIndex Index = indexes.at(0);
  qint32 segmentId = Index.data().toInt();
  return  segmentId;

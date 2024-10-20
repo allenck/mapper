@@ -72,6 +72,7 @@
 #include "splitcompanyroutesdialog.h"
 #include <QSystemTrayIcon>
 #include "clipboard.h"
+#include <QWebEngineCertificateError>
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -3393,6 +3394,7 @@ void MainWindow::btnLastClicked()
 //    webBrowser1.Document.InvokeScript("addMarker", objArray);
     if(m_points.isEmpty())
         return;
+    m_currPoint = m_points.count()-1;
     QVariantList objArray;
     m_bridge->processScript("addMarker",QString("%1").arg(m_currPoint)+","
                             +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)
@@ -4429,6 +4431,13 @@ void MainWindow::addSegment()
     RouteData* rd = nullptr;
     if(ui->cbRoute->currentIndex() >= 0)
      rd = new RouteData(routeList.at(ui->cbRoute->currentIndex()));
+    if(!rd)
+    {
+        rd = new RouteData();
+        CompanyData* cd =sql->getCompany(ui->cbCompany->currentData().toInt());
+        rd->setStartDate(cd->startDate);
+        rd->setEndDate(cd->endDate);
+    }
     //segmentDlg.setRouteData (rd);
     segmentDlg->configure(rd, -1, m_currPoint);
     if (segmentDlg->exec() == QDialog::Accepted)
@@ -5244,6 +5253,12 @@ bool MainWindow::openWebViewPanel()
      webView->setContextMenuPolicy(Qt::CustomContextMenu);
      webView->setPage(myWebEnginePage = new MyWebEnginePage());
      webView->setMinimumWidth(400);
+     connect(myWebEnginePage, &QWebEnginePage::certificateError, [=](QWebEngineCertificateError error){
+         qDebug() << error.description();
+         if(error.type() == QWebEngineCertificateError::CertificateAuthorityInvalid)
+             return error.acceptCertificate();
+         return error.defer();
+     });
 #ifdef Q_OS_WINDOWS
      fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2n.htm");
 #else

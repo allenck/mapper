@@ -282,7 +282,7 @@ void Configuration::getSettings()
       nc->bUserMap = settings.value("userMap", false).toBool();
       if(nc->city_overlayMap->isEmpty())
          nc->bShowOverlay = false;
-      nc->selectedCompanies = settings.value("selectedCompanies").toString();
+      nc->selectedCompanies = settings.value("selectedCompanies","").toString();
       QStringList sl = nc->selectedCompanies.split(",");
       nc->selectedCompaniesList.clear();
       for(int i=0; i < sl.count(); i++ )

@@ -116,6 +116,7 @@ DISTFILES += \
     Resources/scripts/opacity-slider3d7.png \
     Resources/scripts/qwebchannel.js \
     Resources/GoogleMaps2b.htm \
+    Resources/sql/sqlite3_recreateCompanies.sql \
     Resources/sql/sqlite3_recreate_routes.sql \
     Resources/sql/updateOneWay.sql \
     Resources/sql/updaterouteoneway.sql \
@@ -237,3 +238,14 @@ SOURCES += \
 lessThan(QT_MAJOR_VERSION, 6): {
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lsqlite3
 }
+
+# Please download the SQLite amalgamation corresponding to the version of QT that you are using from https://www.sqlite.org/download.html
+#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../sqlite-amalgamation-3460100/release/ -lsqlite3
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../sqlite-amalgamation-3460100/debug/ -lsqlite3
+#else:unix:!macx: LIBS += -L$$PWD/../../../sqlite-amalgamation-3460100/ -lsqlite3
+
+INCLUDEPATH += $$PWD/../../../sqlite-amalgamation-3460100
+DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3460100
+
+
+unix|win32: LIBS += -ldl

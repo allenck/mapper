@@ -95,7 +95,7 @@ void RouteNameWidget::txtRouteNbr_Leave()
      }
     }
     ui->txtRouteNbr->text().toInt(&isNumeric);
-    if(companyKey == -1)
+    if(companyKey < 1)
     {
      //throw IllegalArgumentException("missing company key");
         lblHelpText->setText(tr("select a company"));

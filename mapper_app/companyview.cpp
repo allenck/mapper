@@ -1,5 +1,6 @@
 #include "companyview.h"
 #include <QMenu>
+#include <data.h>
 
 CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     QObject(parent)
@@ -120,11 +121,22 @@ void CompanyView::newRecord()
 void CompanyView::delRecord()
 {
  //mainWindow * myParent = qobject_cast<mainWindow*>(m_parent);
- QItemSelectionModel * selectionModel = tableView->selectionModel();
- QModelIndexList indexes = selectionModel->selectedIndexes();
- QModelIndex Index = indexes.at(0);
-
- _model->removeRow(Index.row());
+    QModelIndex ix = tableView->currentIndex();
+ // int companyKey;
+ // QItemSelectionModel * selectionModel = tableView->selectionModel();
+ // QModelIndexList indexes = selectionModel->selectedIndexes();
+ // if(indexes.empty())
+ //     return;
+ // QModelIndex Index = indexes.at(0);
+ int companyKey = ix.model()->index(ix.row(), 0).data().toInt();
+ CompanyData* cd = SQL::instance()->getCompany(companyKey);
+ if(QMessageBox::question(nullptr, tr("Confirm Delete"), tr("Are you sure you want to delete company #%1 '%2'?").arg(companyKey).arg(cd->name),
+                           QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes)
+ {
+    //_model->removeRow(ix.row());
+     if(SQL::instance()->executeCommand(tr("delete from Companies where [key] = %1").arg(companyKey)))
+        refresh();
+ }
 }
 
 //get QTableView selected item

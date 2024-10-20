@@ -37,6 +37,10 @@ RouteView::RouteView(QObject* parent )
 //         cornerButton->setText("Sort");
 //        });
     }
+    connect(ui, &QTableView::activated, [=](QModelIndex index){
+        ui->blockSignals(true);
+    });
+
     ui->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->horizontalHeader()->restoreState(config->rv.state);
     connect(ui->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), this,
@@ -678,6 +682,8 @@ void RouteView::itemSelectionChanged(QModelIndex index )
   qint32 segmentId = value.toInt();
 
   MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
+  if(parent->m_segmentId == segmentId)
+      return;
   parent->setCursor(QCursor(Qt::WaitCursor));
 //  if(parent->selectedSegment() == segmentId)
 //   return; // already selected
