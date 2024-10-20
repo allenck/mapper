@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+    <Name>Mapper Application</Name>
+    <Version>1.0.1</Version>
+    <Title>Mapper Installer</Title>
+    <Publisher>Allen Kempe</Publisher>
+    <InstallerWindowIcon>tram-icon</InstallerWindowIcon>
+    <InstallerApplicationIcon>tram-icon</InstallerApplicationIcon>
+    <StartMenuDir>Mapper Application</StartMenuDir>
+    <TargetDir>@HomeDir@\Mapper_App</TargetDir>
+</Installer>

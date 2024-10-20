@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Instructions for compiling SQLite</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8"><meta http-equiv="content-type" content="text/html; charset=utf-8"></head>
+ <body style="background-color:#faf0e6">
+<h1>&nbsp;Instructions for Compiling SQLite</h1>
+As of December 2023, Mapper no longer requires a special version of Sqlite3 that incorporates the <b>SQLITE_ENABLE_LOAD_EXTENSION</b> 
+option. The functionality of the Sqlite module in Qt is sufficient with out change. Previously, Mapper defined a 'distance' function by loading a C function defined in a library. However, since the calculations
+required to support this function do not require any external program access, the 'distance' function is now defined using Sqlite's 
+  <i>sqlite3_create_function</i> interface. It is possible, however, that future versions of Mapper may need to use the older technique so this information
+  is being retained for future use.
+
+<br>
+<h2>
+
+Compiling SQLite</h2>
+
+
+<ol>
+  <li>Download the latest SQLite Amalgamated source from <a href="https://www.sqlite.org/download.html">SQLite download page</a>. In this case, we will download sqlite-amalgamation-3270200.zip</li>
+  <li>Extract the zip file to a location of your choosing.</li>
+  <li>Open a terminal window (Linux)
+  <li>Compile the SQLite source files. Depending on which operating system you are on, follow the instructions explained <a href="https://www.sqlite.org/howtocompile.html">here</a>. In my case, I extracted the zip file into a directory called "Projects:.</li>
+  <li>In order for Mapper to work properly, SQLite must be compiled with the <span style="font-weight: bold;">SQLITE_ENABLE_LOAD_EXTENSION </span>specified. Since I am on linux, my compile&nbsp; command to compile and link the SQLite3 shared library, <span style="font-style: italic;">libsqlite3.so</span> looks like this:&nbsp;
+    <div class="post-body entry-content" id="post-body-3536462308028011752" itemprop="description articleBody"><div><span style="font-family: monospace;">gcc
+-c -fPIC -DSQLITE_ENABLE_LOAD_EXTENSION -DSQLITE_OMIT_COMPLETE
+-DSQLITE_ENABLE_FTS3 -DSQLITE_ENABLE_FTS3_PARENTHESIS
+-DSQLITE_ENABLE_RTREE sqlite3.c</span><br>
+</div><div style="font-family: monospace;">gcc -shared -o libsqlite3.so -fPIC sqlite3.o -ldl -lpthread</div></div>
+  </li>
+  <li>To create a command line app: <span style="font-family: monospace;">gcc -I ~/sqlite sqlite3.c shell.c -o sqlite3 -ldl -pthread</span><br>
+    <br>
+  </li>
+  <li>The output <span style="font-style: italic;">libsqlite3.so</span> library on linux should be copied to
+/usr/local/lib&nbsp; and the two .h files,&nbsp; sqlite3.h and
+sqlite3ext should be copied to /usr/local/include. Also copy the command line app, <span style="font-style: italic;">sqlite3</span> to /usr/local/bin<br>
+</li>
+</ol>
+<h2>
+Compiling the QT SQLite3 plugin. </h2>
+Instructions for compiling the QT SQLite3 as well as for MySQL or SQL Serverplugin can be found <a href="https://doc.qt.io/qt-5/sql-driver.html">at&nbsp; </a><br>
+<br>
+
+
+</body></html>

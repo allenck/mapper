@@ -40,6 +40,9 @@ RouteView::RouteView(QObject* parent )
     connect(ui, &QTableView::activated, [=](QModelIndex index){
         ui->blockSignals(true);
     });
+    connect(WebViewBridge::instance(), &WebViewBridge::segmentSelectedX, [=] (qint32 pt, qint32 segmentId, QList<LatLng> list){
+        on_segmentSelected(pt, segmentId,list);
+    });
 
     ui->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->horizontalHeader()->restoreState(config->rv.state);

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>databases</DisplayName>
+    <Description>Default databases for St Louis, Louisville, Cincinnati and Berlin are included.
+    These databases will replace any existing ones so
+    if you have previously made changes, you may not wish to install these.</Description>
+    <Version>0.1.0-1</Version>
+    <ReleaseDate>2022-11-29</ReleaseDate>
+    <SortingPriority>80</SortingPriority>
+    <default>true></default>
+    <ForcedInstallation>false</ForcedInstallation>
+    <script>installscript.qs</script>
+    <SortingPriority>20</SortingPriority>
+    <Operations>
+        <Operation name="Extract">
+                <Argument>@TargetDir@/Resources/databases/</Argument>
+                <Argument>mapper_databases.7z</Argument>
+        </Operation>
+    </Operations>
+</Package>

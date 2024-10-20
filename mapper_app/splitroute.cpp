@@ -25,16 +25,18 @@ SplitRoute::SplitRoute( QWidget *parent) :
     connect(ui->cbCompany1, &QComboBox::currentTextChanged, [=] ()
     {
         int companyKey = ui->cbCompany1->currentData().toInt();
-        CompanyData* cd = sql->getCompany(companyKey);
-        if(ui->dateTo1->date() > cd->endDate)
+        if(companyKey>0)
         {
-            ui->dateTo1->setDate(cd->endDate);
-            ui->dateFrom2->setDate(cd->endDate.addDays(1));
+            CompanyData* cd = sql->getCompany(companyKey);
+            if(ui->dateTo1->date() > cd->endDate)
+            {
+                ui->dateTo1->setDate(cd->endDate);
+                ui->dateFrom2->setDate(cd->endDate.addDays(1));
+            }
         }
     });
 
     fillTractionTypes();
-
 }
 
 SplitRoute::~SplitRoute()
@@ -47,14 +49,10 @@ void SplitRoute::setRouteData(RouteData rd)
     _rd = rd;
     if (rd.route() < 1)
         return;
-//    ui->txtNewRouteNbr1->setText( _rd.alphaRoute());
-//    ui->txtNewRouteNbr2->setText(_rd.alphaRoute());
-//    ui->txtNewRouteName1->setText( _rd.routeName());
-//    ui->txtNewRouteName2->setText( _rd.routeName());
-    ui->rnw1->configure(&rd, ui->lblHelp);
-    ui->rnw1->setCompanyKey(ui->cbCompany1->currentData().toInt());
-    ui->rnw2->configure(&rd, ui->lblHelp);
-    ui->rnw2->setCompanyKey(ui->cbCompany2->currentData().toInt());
+    // ui->rnw1->configure(&rd, ui->lblHelp);
+    // ui->rnw1->setCompanyKey(ui->cbCompany1->currentData().toInt());
+    // ui->rnw2->configure(&rd, ui->lblHelp);
+    // ui->rnw2->setCompanyKey(ui->cbCompany2->currentData().toInt());
 
     ui->dateFrom1->setDate( rd.startDate());
     QDate test = rd.startDate().addYears(1);
@@ -97,6 +95,21 @@ void SplitRoute::setRouteData(RouteData rd)
 #endif
     //CompanyData* cd = sql->getCompany(_rd.companyKey());
     fillCompanies();
+    if(rd.companyKey() > 0)
+    {
+        CompanyData* cd = sql->getCompany(rd.companyKey());
+        int ix = ui->cbCompany1->findData(cd->companyKey);
+        if(ix < 0)
+        {
+            ui->cbCompany1->addItem(cd->name, cd->companyKey);
+            ui->cbCompany2->addItem(cd->name, cd->companyKey);
+        }
+    }
+    ui->rnw1->configure(&rd, ui->lblHelp);
+    ui->rnw1->setCompanyKey(ui->cbCompany1->currentData().toInt());
+    ui->rnw2->configure(&rd, ui->lblHelp);
+    ui->rnw2->setCompanyKey(ui->cbCompany2->currentData().toInt());
+
     ui->cbCompany1->setCurrentIndex(ui->cbCompany1->findData(_rd.companyKey()));
     ui->cbCompany2->setCurrentIndex(ui->cbCompany2->findData(_rd.companyKey()));
     connect(ui->cbCompany1, &QComboBox::currentTextChanged, [=](){
@@ -291,7 +304,7 @@ void SplitRoute::dateTo2_Leave()
         ui->dateTo1->setFocus();;
         return;
     }
-    CompanyData* cd = _companyList.at(ui->cbCompany2->currentIndex());
+    CompanyData* cd = sql->getCompany(ui->cbCompany2->currentData().toInt());
     if(ui->dateTo2->date()> cd->endDate)
     {
         ui->dateTo2->setDate(cd->endDate);
@@ -341,7 +354,7 @@ void SplitRoute::btnOK_Click()
         ui->dateFrom1->setFocus();;
         return;
     }
-    CompanyData* cd = _companyList.at(ui->cbCompany1->currentIndex());
+    CompanyData* cd = sql->getCompany(ui->cbCompany1->currentData().toInt());
     if (cd->companyKey < 0)
     {
         ui->lblHelp->setText (tr("Select a company 1"));
@@ -355,7 +368,7 @@ void SplitRoute::btnOK_Click()
         ui->dateFrom1->setFocus();
         return;
     }
-    cd =  _companyList.at(ui->cbCompany2->currentIndex());
+    cd =  sql->getCompany(ui->cbCompany2->currentData().toInt());
     if (cd->companyKey < 0)
     {
         ui->lblHelp->setText (tr("Select a company 2"));
@@ -386,7 +399,7 @@ void SplitRoute::btnOK_Click()
     setCursor(Qt::WaitCursor);
     sql->beginTransaction("SplitRoute");
     //cd = sql->getCompany(ui->cbCompany1->itemData(ui->cbCompany1->currentIndex()).toInt());
-    cd = _companyList.at(ui->cbCompany1->currentIndex());
+    cd = sql->getCompany(ui->cbCompany1->currentData().toInt());
     if(cd->companyKey < 0)
     {
      sql->rollbackTransaction("SplitRoute");
@@ -525,7 +538,7 @@ void SplitRoute::btnOK_Click()
 
      if (sql->addSegmentToRoute(_routeNbr1, ui->rnw1->newRouteName(),
                                 ui->dateFrom1->date(), ui->dateTo1->date(),
-                                rd1.segmentId(), _companyList.at(ui->cbCompany1->currentIndex())->companyKey,
+                                rd1.segmentId(), ui->cbCompany1->currentData().toInt(),
                                 rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
                                 rd1.normalEnter(), rd1.normalLeave(),
                                 rd1.reverseEnter(), rd1.reverseLeave(),
@@ -558,7 +571,7 @@ void SplitRoute::btnOK_Click()
      _newRoute.setRouteName(ui->rnw2->newRouteName());
      _newRoute.setStartDate(ui->dateFrom2->date().addDays(0));
      _newRoute.setEndDate(ui->dateTo2->date());
-     _newRoute.setCompanyKey(_companyList.at(ui->cbCompany2->currentIndex())->companyKey);
+     _newRoute.setCompanyKey(ui->cbCompany2->currentData().toInt());
      _newRoute.setTractionType(rd1.tractionType());
 
     }
