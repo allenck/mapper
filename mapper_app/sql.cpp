@@ -811,6 +811,7 @@ TerminalInfo SQL::getTerminalInfo(qint32 route, QString name, QDate endDate)
           "where route = " + strRoute + " and a.endDate = '" + endDate.toString("yyyy/MM/dd") + "' and name = '" + name + "'";
   QSqlQuery query = QSqlQuery(db);
   bool bQuery = query.exec(commandText);
+  qDebug() << commandText;
   if(!bQuery)
   {
    SQLERROR(query);

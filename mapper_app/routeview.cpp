@@ -718,7 +718,9 @@ void RouteView::StartRoute_S()         //SLOT
 //    Object[] objArray = new Object[] { ti.startLatLng.lat, ti.startLatLng.lon, myParent->getRouteMarkerImagePath(myParent->m_alphaRoute, true) };
 //    webBrowser1.Document.InvokeScript("addRouteStartMarker", objArray);
     QVariantList objArray;
-    objArray << ti.startLatLng.lat()<< ti.startLatLng.lon()<<myParent->getRouteMarkerImagePath(alphaRoute, false);
+    objArray << ti.startLatLng.lat()<< ti.startLatLng.lon()<< //myParent->getRouteMarkerImagePath(alphaRoute, false);
+        "./green00.png" << "'" + alphaRoute + "'";
+
     WebViewBridge::instance()->processScript("addRouteStartMarker", objArray);
 
 }
@@ -743,7 +745,9 @@ void RouteView::EndRoute_S()           // SLOT
 //    Object[] objArray = new Object[] { ti.endLatLng.lat, ti.endLatLng.lon, myParent->getRouteMarkerImagePath(myParent->m_alphaRoute, false) };
 //    webBrowser1.Document.InvokeScript("addRouteEndMarker", objArray);
     QVariantList objArray;
-    objArray << ti.endLatLng.lat()<< ti.endLatLng.lon()<<myParent->getRouteMarkerImagePath(alphaRoute, false);
+    objArray << ti.endLatLng.lat()<< ti.endLatLng.lon()<< // <myParent->getRouteMarkerImagePath(alphaRoute, false);
+        "./red00.png" << "'" + alphaRoute + "'";
+
     WebViewBridge::instance()->processScript("addRouteEndMarker", objArray);
 
 }
@@ -768,7 +772,9 @@ void RouteView::StartRoute_E()         // SLOT
 //    Object[] objArray = new Object[] { ti.startLatLng.lat, ti.startLatLng.lon, getRouteMarkerImagePath(m_alphaRoute, true) };
 //    webBrowser1.Document.InvokeScript("addRouteStartMarker", objArray);
     QVariantList objArray;
-    objArray << ti.startLatLng.lat()<< ti.startLatLng.lon()<<myParent->getRouteMarkerImagePath(alphaRoute, false);
+    objArray << ti.startLatLng.lat()<< ti.startLatLng.lon()<< //myParent->getRouteMarkerImagePath(alphaRoute, false);
+        "./green00.png" << "'" + alphaRoute + "'";
+
     WebViewBridge::instance()->processScript("addRouteStartMarker", objArray);
 
 }
@@ -794,7 +800,9 @@ void RouteView::EndRoute_E()       // SLOT
 //    Object[] objArray = new Object[] { ti.endLatLng.lat, ti.endLatLng.lon, getRouteMarkerImagePath(m_alphaRoute, false) };
 //    webBrowser1.Document.InvokeScript("addRouteEndMarker", objArray);
     QVariantList objArray;
-    objArray << ti.endLatLng.lat()<< ti.endLatLng.lon()<<myParent->getRouteMarkerImagePath(alphaRoute, false);
+    objArray << ti.endLatLng.lat()<< ti.endLatLng.lon()<< //myParent->getRouteMarkerImagePath(alphaRoute, false);
+        "./red00.png" << "'" + alphaRoute + "'";
+
     WebViewBridge::instance()->processScript("addRouteEndMarker", objArray);
 
 }

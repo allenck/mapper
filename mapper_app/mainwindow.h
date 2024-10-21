@@ -135,8 +135,8 @@ public:
 //    void setLon(double lon);
     void setLen(qint32 len);
     QString ProcessScript(QString func, QString params);
-    QString getRouteMarkerImagePath(QString route, bool isStart);
-    QString getMarkerImagePath(QString tmplt, QString name, QString text, double offset);
+    // QString getRouteMarkerImagePath(QString route, bool isStart);
+    // QString getMarkerImagePath(QString tmplt, QString name, QString text, double offset);
 
     QList<RouteData> routeList;
 //    QAction *saveChangesAct;

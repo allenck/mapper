@@ -2346,8 +2346,8 @@ void MainWindow::btnDisplayRouteClicked()
  addModeToggled(false);
  int row =         ui->cbRoute->currentIndex();
  if(row < 0) return;
- RouteData rd = ((RouteData)routeList.at(row));
- rd.setEndDate(ui->dateEdit->date());
+ RouteData rd = routeList.at(row);
+ //rd.setEndDate(ui->dateEdit->date());
  On_displayRoute(rd);
 }
 
@@ -2374,7 +2374,7 @@ void MainWindow::On_displayRoute(RouteData rd)
  m_alphaRoute = sql->getAlphaRoute(m_routeNbr, cd->routePrefix);
  if(bDisplayTerminalMarkers)
  {
-  TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, QDate::fromString(m_currRouteEndDate,"yyyy/MM/dd)"));
+  TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, rd.endDate());
   if (ti.route >= 1 && ti.startLatLng.lat() > 0 && ti.startLatLng.lon() )
   {
    objArray <<ti.startLatLng.lat() <<ti.startLatLng.lon() << //getRouteMarkerImagePath(m_alphaRoute, true);
@@ -3812,6 +3812,7 @@ void MainWindow::cbRoutes_Leave()
  }
 }
 
+#if 0
 QString MainWindow::getRouteMarkerImagePath(QString route, bool isStart)
 {
  QString tmplt ="";
@@ -3891,7 +3892,7 @@ QString MainWindow::getMarkerImagePath(QString tmplt, QString name, QString text
 
     return str;
 }
-
+#endif
 QString MainWindow::ProcessScript(QString func, QString params)
 {
     m_bridge->processScript(func, params);
