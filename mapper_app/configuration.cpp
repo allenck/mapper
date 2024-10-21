@@ -150,7 +150,6 @@ void Configuration::saveSettings()
  settings->setValue("geometry", q.geometry);
  settings->endGroup();
 
-
  settings->beginGroup("routeView");
  settings->setValue("routeView_hidden_cols", rv.hiddenColumns);
  settings->setValue("routeView_moved_cols", rv.movedColumns);
@@ -158,6 +157,9 @@ void Configuration::saveSettings()
  settings->setValue("routeView_columnCount", rv.columnCount);
  settings->endGroup();
 
+ settings->beginGroup("dupSegmentView");
+ settings->setValue("dupSegmentViewState", dsv.state);
+ settings->endGroup();
 
  settings->setValue("currCity", currentCityId);
  settings->setValue("showDebugMessages", bDisplayWebDebug);
@@ -484,6 +486,10 @@ void Configuration::getSettings()
    rv.movedColumns = settings.value("routeView_moved_cols").toList();
    rv.state = settings.value("routeView_state").toByteArray();
    rv.columnCount = settings.value("routeview_columnCount",RouteViewTableModel::ENDDATE+1).toInt();
+   settings.endGroup();
+
+   settings.beginGroup("dupSegmentView");
+   dsv.state = settings.value("dupSegmentViewState").toByteArray();
    settings.endGroup();
 
 

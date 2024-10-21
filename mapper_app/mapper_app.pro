@@ -98,6 +98,7 @@ DISTFILES += \
     Resources/copyList.txt \
     Resources/initMap.js \
     Resources/scripts/createMsSqlDistance.sql \
+    Resources/sql/ sqlite3_create_route.sql \
     Resources/sql/addBiDirectionalToRoutes.sql \
     Resources/sql/create_stations.sql \
     Resources/sql/mssql_create_routes.sql \

@@ -68,7 +68,7 @@ private:
     QAction *startTerminalEndAct;
     QAction *endTerminalStartAct;
     QAction *endTerminalEndAct;
-    QAction *deleteSegmentAct;
+    QAction *removeSegmentAct;
     QAction* selectSegmentAct;
     QAction *editSegmentAct;
     //QAction* showColumnsAct;
@@ -112,7 +112,7 @@ private slots:
     void EndRoute_E();
     bool dataChanged(QModelIndex,QModelIndex);
     void Resize (int oldcount,int newcount);
-    void deleteSegment();
+    void removeSegment();
     //void unDeleteSegment();
     void on_selectSegment_triggered();
 

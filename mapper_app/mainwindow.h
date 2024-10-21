@@ -130,7 +130,7 @@ public:
     TractionTypeView * tractionTypeView;
     void getInfoWindowComments(double lat, double lon, int route, QString date, int func);
     void SetPoint(qint32 i, double lat, double lon);
-    void getArray();
+    QT_DEPRECATED void getArray();
 //    void setLat(double lat);
 //    void setLon(double lon);
     void setLen(qint32 len);
@@ -211,7 +211,7 @@ public slots:
     void btnDisplayRouteClicked();
     void segmentChanged(qint32 changedSegment, qint32 newSegment);
     QMenu* addSegmentMenu(SegmentData* sd);
-    void getArrayResult(QVariant);
+    QT_DEPRECATED void getArrayResult(QVariant);
     void selectRoute(RouteData rd);
 
 private slots:

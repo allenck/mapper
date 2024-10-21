@@ -32,6 +32,13 @@ struct routeView
   int columnCount;
 };
 
+struct dupSegmentView
+{
+    QByteArray state;
+};
+
+
+
 class Configuration : public QObject
 {
  Q_OBJECT
@@ -48,6 +55,7 @@ public:
  qint32 currentCityId;
  query q;
  routeView rv;
+ dupSegmentView dsv;
  static Configuration* instance();
  bool bDisplayWebDebug = false;
  bool bRunInBrowser = false;

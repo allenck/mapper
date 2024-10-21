@@ -59,7 +59,7 @@ class DupSegmentView : public QObject
 {
     Q_OBJECT
 public:
-    DupSegmentView(Configuration *cfg, QObject *parent = 0);
+    DupSegmentView(QObject *parent = 0);
     void showDupSegments(QList<QPair<SegmentInfo, SegmentInfo> > dupSegmentList);
 
 
@@ -88,7 +88,7 @@ private:
     SegmentData currSd;
     qint32 modelRow = -1;
 private slots:
-    void Resize (int oldcount,int newcount);
+    //void Resize (int oldcount,int newcount);
     void On_selectSegmentAct(bool);
 };
 #endif // DUPSEGMENTVIEW_H

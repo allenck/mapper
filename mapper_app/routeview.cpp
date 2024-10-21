@@ -102,9 +102,9 @@ RouteView::RouteView(QObject* parent )
     endTerminalEndAct->setStatusTip(tr("End terminal is at end of segment"));
     connect(endTerminalEndAct,SIGNAL(triggered()), this, SLOT(EndRoute_E()));
 
-    deleteSegmentAct = new QAction(tr("Remove from route"), this);
-    deleteSegmentAct->setStatusTip(tr("Delete the segment from the route"));
-    connect(deleteSegmentAct, SIGNAL(triggered()), this, SLOT(deleteSegment()));
+    removeSegmentAct = new QAction(tr("Remove from route"), this);
+    removeSegmentAct->setStatusTip(tr("Delete the segment from the route"));
+    connect(removeSegmentAct, SIGNAL(triggered()), this, SLOT(removeSegment()));
 
     deleteSelectedRowsAct = new QAction(tr("Delete selected rows"),this);
     connect(deleteSelectedRowsAct, &QAction::triggered, [=]{
@@ -386,7 +386,7 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
 //     if(sd->markedForDelete())
 //         menu.addAction(unDeleteSegmentAct);
 //     else
-     menu.addAction(deleteSegmentAct);
+     menu.addAction(removeSegmentAct);
      if(selectedSegments().count())
       menu.addAction(deleteSelectedRowsAct);
      //if(curRow == 0)
@@ -869,14 +869,13 @@ bool RouteView::dataChanged(QModelIndex oldIx,QModelIndex newIx )
     return true;
 }
 
-void RouteView::deleteSegment()
+void RouteView::removeSegment()
 {
     //mainWindow * myParent = qobject_cast<mainWindow*>(m_parent);
     QItemSelectionModel * model = ui->selectionModel();
     QModelIndexList indexes = model->selectedIndexes();
     QModelIndex ix = indexes.at(RouteViewTableModel::SEGMENTID);
     qint32 segmentId = ix.data().toInt();
-    //int row = proxymodel->mapToSource(ix).row();
     sourceModel->deleteRow(segmentId, proxymodel->mapToSource(ix));
     sourceModel->bChangesMade = true;
     ui->clearSelection();

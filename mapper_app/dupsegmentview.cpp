@@ -4,43 +4,48 @@
 #include "exceptions.h"
 #include <QPair>
 
-DupSegmentView::DupSegmentView(Configuration *cfg, QObject *parent) :
+DupSegmentView::DupSegmentView(QObject *parent) :
     QObject(parent)
 {
     m_parent = parent;
-    config = cfg;
-    //sql->setConfig(config);
+    config = Configuration::instance();
     sql = SQL::instance();
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     ui = myParent->ui->tblDupSegments;
-    connect(ui->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
-
     ui->setAlternatingRowColors(true);
     ui->setColumnWidth(0,25);
     //m_myParent = myParent;
     ui->setSelectionBehavior(QAbstractItemView::SelectRows );
     ui->setSelectionMode( QAbstractItemView::SingleSelection );
-    ui->resizeColumnsToContents();
+    //ui->resizeColumnsToContents();
 
     sourceModel = new dupSegmentViewTableModel();
     proxymodel = new dupSegmentViewSortProxyModel(this);
     proxymodel->setSourceModel(sourceModel);
     ui->setModel(proxymodel);
+    ui->horizontalHeader()->restoreState(config->dsv.state);
 
     myParent->ui->tabWidget->setTabText(6, tr("Duplicate Segments"));
 
     ui->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
+
+    connect(ui->horizontalHeader(), &QHeaderView::geometriesChanged, [=]{
+        config->dsv.state = ui->horizontalHeader()->saveState();
+    });
+    connect(ui->horizontalHeader(), &QHeaderView::sectionResized, [=]{
+        config->dsv.state = ui->horizontalHeader()->saveState();
+    });
 }
 
-void DupSegmentView::Resize (int oldcount,int newcount)
-{
-    Q_UNUSED(oldcount)
-    Q_UNUSED(newcount)
+// void DupSegmentView::Resize (int oldcount,int newcount)
+// {
+//     Q_UNUSED(oldcount)
+//     Q_UNUSED(newcount)
 
-    ui->resizeColumnsToContents ();
-    ui->resizeRowsToContents ();
-}
+//     ui->resizeColumnsToContents ();
+//     ui->resizeRowsToContents ();
+// }
 
 void DupSegmentView::showDupSegments(QList<QPair<SegmentInfo, SegmentInfo>> dupSegmentList)
 {

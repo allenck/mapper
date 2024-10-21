@@ -234,7 +234,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   stationView = new StationView(config, this);
   companyView = new CompanyView(config, this);
   tractionTypeView = new TractionTypeView(config, this);
-  dupSegmentView = new DupSegmentView(config, this);
+  dupSegmentView = new DupSegmentView(this);
   connect(routeView, SIGNAL(selectSegment(int)), this, SLOT(selectSegment(int)));
   connect(dupSegmentView, SIGNAL(selectSegment(int)), this, SLOT(selectSegment(int)));
 
@@ -3232,28 +3232,16 @@ void MainWindow::setLen(qint32 len)
 {
     m_nbrPoints = len;
 }
+
 void MainWindow::btnFirstClicked()
 {
-// if(!bFirstSegmentDisplayed)
-//  return;
-
-    //SQL sql;
-    getArray();
-//    Object[] objArray = new Object[6];
-//    objArray[0] = m_currPoint = 0;
+    // getArray();
     ui->btnSplit->setEnabled(false);
-//    objArray[1] = m_points[(int)m_currPoint * 2].ToString();
-//    objArray[2] = m_points[((int)m_currPoint * 2) + 1].ToString();
-//    objArray[3] = "1";  // start marker
-//    objArray[4] = "point "+ m_currPoint;
-//    objArray[5] = m_SegmentId.ToString();
-//    webBrowser1.Document.InvokeScript("addMarker", objArray);
     m_currPoint=0;
     ui->lblPoint->setText(QString::number(m_currPoint));
 
     if(m_points.isEmpty())
         return;
-    //m_bridge->processScript("addMarker","0,"+QString("%1").arg(((LatLng)m_points.at(0)).lat(),0,'f',8)+","+QString("%1").arg(((LatLng)m_points.at(0)).lon(),0,'f',8)  +",1,'point0'," + QString("%1").arg(m_SegmentId));
     QVariantList objArray;
     objArray << 0 << ((LatLng)m_points.at(0)).lat()<<((LatLng)m_points.at(0)).lon()<<1<<"pointO"<<m_segmentId;
      m_bridge->processScript("addMarker",objArray);
@@ -3274,10 +3262,7 @@ void MainWindow::btnFirstClicked()
 
 void MainWindow::btnNextClicked()
 {
-// if(!bFirstSegmentDisplayed)
-//  return;
-    //SQL sql;
-    getArray();
+    // getArray();
     if(m_currPoint < 0 || m_nbrPoints <2)
         return;
     if ((m_currPoint + 1) < m_nbrPoints)
@@ -3424,10 +3409,7 @@ void MainWindow::btnLastClicked()
 
 void MainWindow::btnPrevClicked()
 {
-// if(!bFirstSegmentDisplayed)
-//  return;
-    //SQL sql;
-    getArray();
+    // getArray();
     if (m_currPoint > 0)
         m_currPoint--;
     ui->lblPoint->setText(QString::number(m_currPoint));
@@ -3658,7 +3640,7 @@ void MainWindow::displaySegment(qint32 segmentId, QString segmentName,
     ui->btnLast->setEnabled(true);
     ui->btnSplit->setEnabled(false);
     ui->btnDeletePt->setEnabled(true);
-    getArray();
+    // getArray();
     return;
 }
 
@@ -3916,27 +3898,27 @@ void MainWindow::addPoint(int pt, double lat, double lon)
 {
     //SQL sql;
     //getArray(); // get points from display.
-    SegmentInfo sd = sql->getSegmentInfo(m_segmentId);
-    m_points = sd.pointList();
+    SegmentInfo si = sql->getSegmentInfo(m_segmentId);
+    m_points = si.pointList();
     m_points.append(LatLng(lat, lon));
     m_nbrPoints = m_points.size();
     //int begin = (int)m_nbrPoints - 2, End = (int)m_nbrPoints - 1;
 
-    if(m_nbrPoints == 2 && sd.startLat() == 0 && sd.startLon() == 0)
+    if(m_nbrPoints == 2 && si.startLat() == 0 && si.startLon() == 0)
     {
-     sd.addPoint(m_points.at(0));
-     sd.setStartLat(m_points.at(0).lat());
-     sd.setStartLon(m_points.at(1).lon());
+     si.addPoint(m_points.at(0));
+     si.setStartLat(m_points.at(0).lat());
+     si.setStartLon(m_points.at(1).lon());
     }
-    if(sd.segmentId() == m_segmentId && m_nbrPoints > 0)
+    if(si.segmentId() == m_segmentId && m_nbrPoints > 0)
     {
-     sd.addPoint(m_points.at(m_nbrPoints-1 ));
+     si.addPoint(m_points.at(m_nbrPoints-1 ));
     }
     else
     {
-     sd.addPoint(m_points.at(0));
+     si.addPoint(m_points.at(0));
     }
-    ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(sd.pointList().count()));
+    ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(si.pointList().count()));
 }
 
 // void MainWindow::addPointX(int pt, QList<LatLng> points)
@@ -4176,7 +4158,7 @@ void MainWindow::btnDeletePtClicked()
     ui->lblPoint->setText(QString::number(m_currPoint));
 
     QString marker;
-    getArray();
+    // getArray();
     if(m_nbrPoints == 0)
     {
      m_points = sd.pointList();
@@ -4607,6 +4589,7 @@ void MainWindow::selectSegment(int seg)
 void MainWindow::segmentChanged(qint32 changedSegment, qint32 newSegment)
 {
     m_bridge->processScript("clearPolyline", QString("%1").arg(changedSegment));
+    m_bridge->processScript("clearMarker");
 
     if (newSegment > 0)
     {
