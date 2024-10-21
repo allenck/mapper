@@ -2377,14 +2377,16 @@ void MainWindow::On_displayRoute(RouteData rd)
   TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, QDate::fromString(m_currRouteEndDate,"yyyy/MM/dd)"));
   if (ti.route >= 1 && ti.startLatLng.lat() > 0 && ti.startLatLng.lon() )
   {
-   objArray <<ti.startLatLng.lat() <<ti.startLatLng.lon() << getRouteMarkerImagePath(m_alphaRoute, true);
+   objArray <<ti.startLatLng.lat() <<ti.startLatLng.lon() << //getRouteMarkerImagePath(m_alphaRoute, true);
+          "./green00.png" << "'" + m_alphaRoute + "'";
    m_bridge->processScript("addRouteStartMarker", objArray);
    infoLat = ti.startLatLng.lat();
    infoLon = ti.startLatLng.lon();
    bFirst = false;
 
    objArray.clear();
-   objArray << ti.endLatLng.lat() << ti.endLatLng.lon()<<getRouteMarkerImagePath(m_alphaRoute, false);
+   objArray << ti.endLatLng.lat() << ti.endLatLng.lon()<<//getRouteMarkerImagePath(m_alphaRoute, false);
+       "./red00.png" << "'" + m_alphaRoute + "'";
    m_bridge->processScript("addRouteEndMarker", objArray);
   }
  }
@@ -2971,9 +2973,9 @@ void MainWindow::segmentSelected(qint32 pt, qint32 segmentId)
  QString marker;
  if (m_currPoint > 0 && (m_currPoint < (m_nbrPoints - 1)))
  {
-  //marker = "3";  // 0= blank red marker
-  marker = getMarkerImagePath("redblank.png", QString("point%1.png").arg(m_currPoint),QString::number(m_currPoint), 2.0);
-  marker = "'" +marker.mid(marker.indexOf("images"))+"'";
+  marker = "-1";  // 0= blank red marker
+  // marker = getMarkerImagePath("redblank.png", QString("point%1.png").arg(m_currPoint),QString::number(m_currPoint), 2.0);
+  // marker = "'" +marker.mid(marker.indexOf("images"))+"'";
  }
  else if(m_currPoint == 0)
   marker = "1";
@@ -2984,7 +2986,7 @@ void MainWindow::segmentSelected(qint32 pt, qint32 segmentId)
                          +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)+","
                          +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8 ) +","
                          +marker + ","
-                         +QString("'point%1'").arg(m_currPoint)+","
+                         +QString("'%1'").arg(m_currPoint)+","
                          + QString("%1").arg(m_segmentId));
 
  if(config->currCity->bGeocoderRequest)
@@ -3083,9 +3085,9 @@ void MainWindow::segmentSelectedX(qint32 pt, qint32 segmentId, QList<LatLng> poi
  QString marker;
  if (m_currPoint > 0 && (m_currPoint < (m_nbrPoints - 1)))
  {
-  //marker = "3";  // 0= blank red marker
-  marker = getMarkerImagePath("redblank.png", QString("point%1.png").arg(m_currPoint),QString::number(m_currPoint), 2.0);
-  marker = "'" +marker.mid(marker.indexOf("images"))+"'";
+  marker = "-1";  // 0= blank red marker
+  //marker = getMarkerImagePath("redblank.png", QString("point%1.png").arg(m_currPoint),QString::number(m_currPoint), 2.0);
+  //marker = "'" +marker.mid(marker.indexOf("images"))+"'";
  }
  else if(m_currPoint == 0)
   marker = "1";
@@ -3096,7 +3098,7 @@ void MainWindow::segmentSelectedX(qint32 pt, qint32 segmentId, QList<LatLng> poi
                          +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)+","
                          +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8 ) +","
                          +marker + ","
-                         +QString("'point%1'").arg(m_currPoint)+","
+                         +QString("'%1'").arg(m_currPoint)+","
                          + QString("%1").arg(m_segmentId));
 
  if(config->currCity->bGeocoderRequest)
@@ -3273,8 +3275,9 @@ void MainWindow::btnNextClicked()
     if (m_currPoint > 0 && (m_currPoint < (m_nbrPoints - 1)))
     {
      //marker = "3";  // 0= blank red marker
-     marker = getMarkerImagePath("redblank.png", QString("point%1.png").arg(m_currPoint),QString::number(m_currPoint), 2.0);
-     marker = "'" +marker.mid(marker.indexOf("images"))+"'";
+     marker = "-1"; // default marker
+     // marker = getMarkerImagePath("redblank.png", QString("point%1.png").arg(m_currPoint),QString::number(m_currPoint), 2.0);
+     // marker = "'" +marker.mid(marker.indexOf("images"))+"'";
         ui->btnSplit->setEnabled(true);
         ui->btnPrev->setEnabled(true);
     }
@@ -3298,7 +3301,7 @@ void MainWindow::btnNextClicked()
                             +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)+","
                             +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8 )+","
                             +marker+","
-                            +QString("'point%1'").arg(m_currPoint)+","
+                            +QString("'%1'").arg(m_currPoint)+","
                             + QString("%1").arg(m_segmentId));
     if(!ui->chkNoPan->isChecked())
     {
@@ -3417,9 +3420,10 @@ void MainWindow::btnPrevClicked()
     QString marker;
     if (m_currPoint > 0 && (m_currPoint < (m_nbrPoints - 1)))
     {
-//     marker = "3";  // red blank marker
-     marker = getMarkerImagePath("redblank.png", QString("point%1.png").arg(m_currPoint),QString::number(m_currPoint), 2.0);
-     marker = "'" +marker.mid(marker.indexOf("images"))+"'";
+    //marker = "3";  // red blank marker
+        marker = "-1"; // default marker
+     // marker = getMarkerImagePath("redblank.png", QString("point%1.png").arg(m_currPoint),QString::number(m_currPoint), 2.0);
+     // marker = "'" +marker.mid(marker.indexOf("images"))+"'";
         ui->btnSplit->setEnabled(true);
         ui->btnNext->setEnabled(true);
     }
@@ -3445,8 +3449,8 @@ void MainWindow::btnPrevClicked()
                             +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)+","
                             +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8 ) +","
                             +marker + ","
-                            +QString("'point%1'").arg(m_currPoint)+","
-                            + QString("%1").arg(m_segmentId));
+                            // +QString("'%1'").arg(m_currPoint)+","
+                            + QString("'%1'").arg(m_currPoint));
     if(!ui->chkNoPan->isChecked())
     {
         objArray.clear();

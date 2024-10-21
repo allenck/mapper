@@ -1816,8 +1816,14 @@ function addMarker(i, lat, lon, icon, text, SegmentId)
  //window.external.showSegmentsAtPoint(lat,lon);
  webViewBridge.showSegmentsAtPoint(lat,lon, SegmentId);
  if(typeof icon == "number")
-  marker = new google.maps.Marker({map: map, position: new google.maps.LatLng(lat, lon),
-          draggable: true, icon:image[icon], title:text});
+ {
+     if(icon == -1) // use default icon
+         marker = new google.maps.Marker({map: map, position: new google.maps.LatLng(lat, lon),
+                 draggable: true,  label:text});
+  else
+        marker = new google.maps.Marker({map: map, position: new google.maps.LatLng(lat, lon),
+          draggable: true, icon:image[icon]});
+ }
  else
   marker = new google.maps.Marker({map: map, position: new google.maps.LatLng(lat, lon),
              draggable: true, icon:icon, title:text});
@@ -1950,7 +1956,7 @@ function addMarker(i, lat, lon, icon, text, SegmentId)
       return null;
   }
 
-  function addRouteStartMarker( lat, lon, image)
+  function addRouteStartMarker( lat, lon, image, label)
   {
 //      this.lat = lat;
 //      this.lon = lon;
@@ -1959,7 +1965,8 @@ function addMarker(i, lat, lon, icon, text, SegmentId)
           rtStartMarker.setMap();
           rtStartMarker = null;
       }
-      rtStartMarker = new google.maps.Marker({map: map, position: new google.maps.LatLng(lat, lon),draggable: true, icon: image});
+      rtStartMarker = new google.maps.Marker({map: map, position: new google.maps.LatLng(lat, lon),
+                                                 draggable: true, icon: image, label: label});
       google.maps.event.addListener(rtStartMarker, "dragend", function(pt) {
           var found = false;
           siArray.forEach(function(si, ix)
@@ -1998,14 +2005,15 @@ function addMarker(i, lat, lon, icon, text, SegmentId)
       return null;
   }
 
-  function addRouteEndMarker( lat, lon, image)
+  function addRouteEndMarker( lat, lon, image, label)
   {
       if(rtEndMarker !== null)
       {
           rtEndMarker.setMap();
           rtEndMarker = null;
       }
-      rtEndMarker = new google.maps.Marker({map: map, position: new google.maps.LatLng(lat, lon),draggable: true, icon: image});
+      rtEndMarker = new google.maps.Marker({map: map, position: new google.maps.LatLng(lat, lon),
+                                               draggable: true, icon: image, label: label});
       google.maps.event.addListener(rtEndMarker, "dragend", function(pt) {
           var found = false;
           siArray.forEach(function(si, ix)
