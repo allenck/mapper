@@ -47,7 +47,8 @@ void Clipboard::setContextMenu(QLineEdit* tgt)
                         tgt->insert(act->data().toString());
                         systemClipboard->setText(act->data().toString());
                     });
-                    menu->popup(pt);
+                    //menu->popup(pt);
+                    menu->exec(QCursor::pos());
                 }
             });
 }

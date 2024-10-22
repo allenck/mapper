@@ -3968,6 +3968,7 @@ void MainWindow::movePoint(qint32 segmentId, qint32 i, double newLat, double new
   {
    sd.movePoint(i, LatLng(newLat, newLon));
   }
+  m_points = sd.pointList();
   //SQL sql;
   LatLng oldPoint = sql->getPointOnSegment((int)i, m_segmentId);
   //TODO what about multiple station records?
