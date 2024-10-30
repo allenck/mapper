@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>Mapper Application</DisplayName>
+    <Description>This is going to install the Mapper application.</Description>
+    <Version>0.1.0-1</Version>
+    <ReleaseDate>2022-11-28</ReleaseDate>
+    <Licenses>
+        <License name="Beer Public License Agreement" file="license.txt" />
+    </Licenses>
+    <Default>true</Default>
+    <Script>installscript.qs</Script>
+    <UserInterfaces>
+        <UserInterface>readmecheckboxform.ui</UserInterface>
+    </UserInterfaces>
+    <SortingPriority>80</SortingPriority>
+</Package>
+

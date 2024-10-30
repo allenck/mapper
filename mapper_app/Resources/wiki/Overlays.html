@@ -1,0 +1,238 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+ <head>
+   <title>Overlays</title>
+<style type="text/css">
+
+
+
+  img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+	}
+	* {
+  box-sizing: border-box;
+}
+
+/* Create two unequal columns that floats next to each other */
+.column {
+  float: left;
+  padding: 10px;
+
+}
+
+.left {
+  width: 25%;
+}
+
+.right {
+  width: 75%;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+</style>
+  
+</head>
+<body style="background-color:#faf0e6">
+<h1>Overlays</h1>
+
+When locating the route of a long-gone streetcar line, often the route
+traveled on private right of way which since has been obscured by
+subsequent construction. Also, street alignments may have been changed
+or eliminated due to highway construction, urban renewal or other
+activities. In such cases, having access to historical maps as an
+overlay will allow you to locate exactly where a route ran. <br>
+<p>An overlay is a map that can be displayed with variable transparency on top of the main map (in Mapper either Google Maps or Open Street Map).</p>
+
+<br>
+<div class="row">
+  <div class="column left" style="background-color:#EFDECD;">
+<h2>Overlay Management</h2>
+<p>Mappers overlays are managed with the <i>Manage Overlays</i> menu selection accessed from the <i>City</i> menu. This selection will display: 
+
+<p>In this dialog, you can:</p><ol>
+<li>alter the coordinates of the center</li>
+<li>alter properties on defined overlays</li>
+<li>select which overlay can be used for a city,</li>
+<li>add a new overlay by pressing the <i>Add Overlay</i> button</li>
+</ol>
+</div>
+  <div class="column right" style="background-color:#FAF0E6;">
+  <div style="text-align: center;"><img src="images/ManageOverlays.png" width="75%" height="75%" alt="Manage Overlays">
+  </div>
+</div>
+  
+<h2>Adding Overlays</h2>
+<p>There are three ways to acquire overlays to use in Mapper. <br></p>
+
+<ol>
+
+  <li>There are map servers such as the Georeferencer mentioned below
+which can be accessed via the Internet. <br>
+  </li>
+  <li>If you have a web server on&nbsp; your local network, you can
+have it serve map tiles.<br>
+  </li>
+  <li>You can install a web server on your PC to serve map tiles. <br>
+  </li>
+</ol>
+
+<h2>Using Georeferencer to serve overlay map tiles.<br>
+</h2>
+<p>
+One source of historical maps, in the US is the USGS. They have made
+many historical topographic maps available on-line, free of charge,<samp></samp>
+at&nbsp;&nbsp;&nbsp; <a href="http://ngmdb.usgs.gov/maps/TopoView/">USGS Map Store</a>.
+<p>
+While historical topographic maps may be very useful in locating
+abandoned private right of way, these maps often do not identify city streets
+(except for main thoroughfares). However, most cities over the years
+have had numerous maps published showing far more detail than is
+available on USGS topographic maps. 
+One source of such maps is the <a href="http://www.davidrumsey.com/view/georeferenced-maps">David Rumsey
+Map Collection</a>.
+This collection has thousands of maps. More importantly, they are
+georeferenced which means that any point on the map can be specified as
+
+a latitude and longitude coordinate. This in turn allows them to be
+displayed over Mapper's Google Maps or Open Street Map displays. <br>
+
+<br>
+
+Since these maps are available on line, it is possible to display them
+as an overlay in Mapper. In order to do this, you must gather some
+information and setup the map as an overlay in Mapper. <br>
+
+<br>
+
+<div class="row">
+  <div class="column left" style="background-color:#EFDECD;">
+<h2>Find a map</h2>  
+<p>The first thing to do is to find a suitable map. The David Rumsey Map
+Collection link has a feature, the <a href="https://www.davidrumsey.com/luna/servlet/view/search?search=SUBMIT&q=St+Louis%2C+Mo&dateRangeStart=&dateRangeEnd=&sort=Pub_List_No_InitialSort&QuickSearchA=QuickSearchA"> Luna Collection</a> that allows you to browse through the collection of georeferenced maps.
+In the box in the upper right corner you can enter a place name like "Cincinnati, OHIO" 
+Thumbnails of maps matching the search criteria will be displayed:<br>
+<p><br> As an example, a 1901 map of Cincinnati has been located. Note that the thumbnail is highlighted.<br>  
+</div>
+  <div class="column right" style="background-color:#FAF0E6;">
+	<img style="width: 50%;" alt="Results of search" src="images/DavidRumseyLunaCollection.png", class="center">
+   <p><br></p> 
+   </div>
+</div>
+<hr align="center" size="2" width="50%">
+<div class="row">
+  <div class="column left" style="background-color:#EFDECD;">
+ <h2>View Map</h2> 
+<p>Once you have located a suitable map, click on the thumbnail to select it then click on "VIEW IN GEOREFERENCER" to display the map as an overlay on an <i>Open Streetmap</i> base map.
+The selected map is displayed 
+as an overlay on top of the Google Maps or Open Street Map. 
+A slider control in the upper corner allows the opacity of the overlay to be varied. 
+This is what Mapper can likewise do with this map overlay once it is configured.
+</div>
+
+  <div class="column right" style="background-color:#FAF0E6;">
+   <img style="width: 50%;" alt="" src="images/CincinnatiMap2.png">
+  </div>
+  </div>
+  <hr align="center" size="2" width="50%">
+<div class="row"><div class="column left" style="background-color:#EFDECD;">
+<h2>Get Link</h2>
+    <p>Now in the bar at the top, click on "This map". On the 
+page that is displayed, there is a frame titled "Use in GIS apps" and click on "Get links".  Note you must have previously registered and are logged on.<br>
+  </div>
+
+  <div class="column right" style="background-color:#FAF0E6;">
+<img style="width: 50%;" alt="" src="images/CincinnatiMap3.png"><br>
+  </div>
+  </div>
+   <hr align="center" size="2" width="50%">
+<div class="row"> 
+ <div class="column left" style="background-color:#EFDECD;">
+ <h2>Paste Link data</h2>
+<p>In the box titled "Web Map Tile Service (WMTS)", copy the value to the clipboard. 
+<!-- https://maps.georeferencer.com/georeferences/152685741432/2017-02-20T14:25:19.132722Z/map/{z}/{x}/{y}.png?key=mpP5xNUZ8b1t9mFrcFfI-->
+This is the HTML code that we need to extract some information to be
+entered into the Update Overlay Information dialog. To open the dialog, select <i><b>Edit City Information</b></i> and click on <i><b>Add Overlay</b></i> button. The paste the clipboard data into the lower box titled "Url:"
+
+  </div>
+
+  <div class="column right" style="background-color:#FAF0E6;">
+<img style="width: 50%; " alt="" src="images/CincinnatiMap4.png", class="center"><br> 
+  </div>
+  </div>
+  <hr align="center" size="2" width="50%">
+<div class="row">
+<div class="column left" style="background-color:#EFDECD;">
+<h2>Edit Overlay Info</h2>
+<p>The dialog will now automatically fill in the other fields. If you wish, 
+you may paste html into the Description field and you may have to edit the name to make it unique.
+  </div>
+  <div class="column right" style="background-color:#FAF0E6;">
+ <img style="width: 50%; height:50%" alt="Update Overlay Information" src="images/Cincinnati4.png", class="center"><br>
+  <p>Press OK in the Update Overlay Information to save the overlay.
+   </div>
+<hr align="center" size="2" width="50%">
+  <div class="column left" style="background-color:#EFDECD;">
+<h2>Save Overlay Info</h2>
+ <p>Click on "OK" or "ADD" to add the new overlay to the list of
+overlays, The overlay can now be selected for a City in the Edit City
+Info dialog and then subsequently selected to be displayed from the
+Overlays.<br>
+  </div>
+  <div class="column right" style="background-color:#FAF0E6;">
+<img style="width: 405px; height: 500px;" alt="" src="images/CincinnatiMap5.png"><br>
+  </div>
+</div>
+
+<h2>Installing a map server on your PC.</h2>
+Although these instructions are for installing a web server on your PC, they are generally applicable to any PC that will host a web sever.
+Here is a tutorial on how to <a href="https://www.instructables.com/id/Set-up-your-very-own-Web-server/">Set Up Your Very Own Web Server!</a>
+
+<h3>Ubuntu (Linux)</h3>
+
+Here are instructions for creating a web server on your Ubuntu PC<span style="text-decoration: underline;">: </span><a href="https://www.vultr.com/docs/how-to-install-apache-mysql-and-php-on-ubuntu-16-04">How to Install Apache, MySQL and PHP on Ubuntu 16.04</a>.
+The step to install MySQL is not necessary for implementing a map
+server but the PHP is! However, installing MySQL does make it possible
+to store the Mapper database using a MySQL server. <br>
+<br>
+The instructions call for installing a number of PHP add-ons. One add-on that you will definitely have to add is: 
+<sudo apt-get install php7.0-sqlite3> which allows PHP to access SQLite3 databases.<br>
+<p>Once you have installed the web server, you must create a directory "map_tiles" in the web server's root directory, "/var/www/html"
+into this directory, copy the file "mbtiles.php" from the ../mapper_app/Resources" directory. This is the code that will 
+actually serve the map tiles.
+<h4>Downloading the overlays</h4>
+There are several ways to create overlay 'mbtiles' files including programs like 
+<a href="https://www.maptiler.com/">MapTiler</a>
+or mapping programs like 
+<a href="https://www.qgistutorials.com/en/docs/creating_basemaps_with_qtiles.html">QGIS</a> 
+or other mapping programs.
+However, I have already created a number of overlays for St Louis, Mo; Cincinnatti, OH; Louisville, KY and Berlin, Germany.
+They can be downloaded from Google Drive as zip files. They should be extracted into the "map_tiles" directory.
+<ol>
+<li><a href="https://drive.google.com/open?id=0B15wS9-3PzfYRHVDMEhYT1RLSDQ">St Louis</a></li>
+<li><a href="https://drive.google.com/open?id=0B15wS9-3PzfYOWtnS0s4YmU3YTg">St Louis 1912 topo</a></li>
+<li><a href="https://drive.google.com/open?id=0B15wS9-3PzfYYl9SaGNDbnQyREU">Cincinnatti, Ohio</a></li>
+<li><a href="https://drive.google.com/open?id=0B15wS9-3PzfYUTlvYlNXaVRIalk">Louisville, KY</a></li>
+</ol> 
+A work of caution: These files are very large, so make sure you have plenty of disk space. 
+<p>Once you have installed the mbtiles files in the "map_tiles"directory, enter this command in your web browser:
+"http://localhost/map_tiles/mbtiles.php"
+<p> This should result in a display like this: 
+<p>
+<code>St_Louis_1895|St Louis area in 1895|10|16|65|-90.2842,38.5711,-90.1617,38.6911|
+St_Louis_1903|St Louis area at the time of the 1904 Worlds Fair|10|16|65|-90.3291,38.5256,-90.1025,38.7623|
+St_Louis_historical_topo|St Louis area historical topo maps: Clayton 1933, Granite City 1940, St Charles 1927, Jefferson Barracks 1933, Columbia bottoms 1935, Creve Coeur 1933, Florissant 1935, Kirkwood 1940|8|17|65|-90.50056094676738,38.48416018141663,-90.12500117195425,39.00011566093108|
+</code><p>This is the metadata that Mapper will use to determine what maps are available and their properties.
+
+h<h4>Windows</h4>
+If your operating system is Windows, it is also possible to setup a web server using 
+Microsoft's Internet Information Server (IIS).
+Instructions on how to do this for Windows 8 or 10 can be found at <a href="https://www.howtogeek.com/112455/how-to-install-iis-8-on-windows-8/">here</a>
+As in the instructions above for Linux, you must enable PHP on the new server, Then create a "map_tiles" directory in the same manner. 
+</body></html>
