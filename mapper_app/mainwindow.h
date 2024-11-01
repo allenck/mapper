@@ -218,7 +218,7 @@ private slots:
     void about();
     void quit();
     void cbRoute_customContextMenu( const QPoint& );
-    void txtSegment_customContextMenu(const QPoint&);
+    QList<QAction*> txtSegment_customContextMenu();
     void cbCompany_customContextMenu( const QPoint& );
     void webView_customContextMenu(const QPoint&);
     //void tab1CustomContextMenu(const QPoint &);

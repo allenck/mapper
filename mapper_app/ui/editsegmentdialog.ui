@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>866</width>
+    <width>869</width>
     <height>308</height>
    </rect>
   </property>
@@ -49,13 +49,6 @@
     <widget class="QLabel" name="label_2">
      <property name="text">
       <string>Description:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="8" colspan="5">
-    <widget class="EditSegmentDescr" name="txtDescription">
-     <property name="placeholderText">
-      <string>enter segment description</string>
      </property>
     </widget>
    </item>
@@ -307,6 +300,13 @@
       </widget>
      </item>
     </layout>
+   </item>
+   <item row="0" column="8" colspan="9">
+    <widget class="EditSegmentDescr" name="txtDescription">
+     <property name="placeholderText">
+      <string>enter segment description</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

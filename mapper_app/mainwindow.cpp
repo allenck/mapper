@@ -257,9 +257,20 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 //  connect(ui->cbSegments, SIGNAL(editTextChanged(QString)), this, SLOT(cbSegmentsTextChanged(QString)));
   connect(ui->txtStreet, SIGNAL(textChanged(QString)), this, SLOT(txtStreetName_TextChanged(QString)));
   connect(ui->txtStreet, SIGNAL(editingFinished()), this, SLOT(txtStreetName_Leave()));
-  ui->txtSegment->setContextMenuPolicy(Qt::CustomContextMenu);
-  connect(ui->txtSegment, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(txtSegment_customContextMenu(const QPoint&)));
+  //ui->txtSegment->setContextMenuPolicy(Qt::CustomContextMenu);
+  //connect(ui->txtSegment, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(txtSegment_customContextMenu(const QPoint&)));
+  ui->txtSegment->setContextMenu(txtSegment_customContextMenu());
   //connect(ui->txtSegment, SIGNAL(textChanged(QString)), this, SLOT(txtSegment_TextChanged(QString)));
+  connect(ui->txtSegment, &EditSegmentDescr::descrUpdated, [=](QString descr, QString street){
+      SegmentInfo si = sql->getSegmentInfo(m_segmentId);
+      if(descr != si.description() || street != si.streetName())
+      {
+          si.setStreetName(street);
+          si.setDescription(descr);
+          si.setLocation(ui->txtLocation->text().trimmed());
+          sql->updateSegment(&si);
+      }
+  });
   connect(ui->txtSegment, SIGNAL(editingFinished()), this, SLOT(txtSegment_Leave()));
   connect(ui->btnSplit, SIGNAL(clicked()),this, SLOT(btnSplit_Clicked()));
   connect(ui->chkShowOverlay, SIGNAL(clicked(bool)),this, SLOT(chkShowOverlayChanged(bool)));
@@ -436,6 +447,8 @@ QMenu* MainWindow::addSegmentMenu(SegmentData *sd)
   //menu->addMenu(actMenu);
  }
  connect(ag, &QActionGroup::triggered,[=](QAction* act){
+     if(sd->segmentId() <=0)
+         return;
   switch(act->data().toInt())
   {
   case 0:
@@ -1770,24 +1783,17 @@ void MainWindow::cbCompany_customContextMenu( const QPoint& )
     cbCompanyMenu->exec(QCursor::pos());
 }
 
-void MainWindow::txtSegment_customContextMenu(const QPoint &)
+QList<QAction *> MainWindow::txtSegment_customContextMenu()
 {
- if(ui->txtSegment->text().isEmpty()) return;
- QMenu* menu = ui->txtSegment->createStandardContextMenu();
- menu->addSeparator();
- QAction* edit = new QAction(tr("Edit segment"), this);
- edit->setStatusTip(tr("Edit segment details such as tracks, route type, etc."));
- menu->addAction(edit);
- connect(edit, SIGNAL(triggered(bool)), this, SLOT(On_editSegment_triggered()));
- menu->addAction(splitSegmentAct);
- if(Clipboard::instance()->historyCount()>1)
- {
-    menu->addSeparator();
-    menu->addMenu(Clipboard::instance()->getHistoryMenu());
- }
- //menu->addAction(updateRouteAct);
- menu->exec(QCursor::pos());
-
+    // Define sub menues and actions to be added to the context menu.
+    QList<QAction*> list;
+     //menu->addSection(tr("More"));
+     QAction* edit = new QAction(tr("Edit segment"), this);
+     edit->setStatusTip(tr("Edit segment details such as tracks, route type, etc."));
+     list.append(edit);
+     connect(edit, SIGNAL(triggered(bool)), this, SLOT(On_editSegment_triggered()));
+     list.append(splitSegmentAct);
+   return list;
 }
 #if 0
 void MainWindow::tab1CustomContextMenu(const QPoint &)
@@ -2903,7 +2909,6 @@ void MainWindow::segmentSelected(qint32 pt, qint32 segmentId)
   qDebug() <<"segment " + QString("%1").arg(segmentId) + " not found";
   return;
  }
- ui->txtSegment->setText(si.description());
  if(routeDlg)
  {
   //routeDlg->setSegmentId(m_SegmentId);
@@ -2913,6 +2918,10 @@ void MainWindow::segmentSelected(qint32 pt, qint32 segmentId)
  //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
  lookupStreetName(si);
  ui->txtSegment->setText(si.description());
+ ui->txtLocation->setText(si.location());
+ ui->txtStreet->setText(si.streetName());
+ ui->txtNewerName->setText(si.newerName());
+ ui->sbTracks->setValue(si.tracks());
 
  ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(si.pointList().count()));
  //ui->cbSegments->findText(si.toString(), Qt::MatchExactly);
@@ -3027,6 +3036,10 @@ void MainWindow::segmentSelectedX(qint32 pt, qint32 segmentId, QList<LatLng> poi
  lookupStreetName(si);
  //txtSegment.Text = si.description;
  ui->txtSegment->setText(si.description());
+ ui->txtLocation->setText(si.location());
+ ui->txtStreet->setText(si.streetName());
+ ui->txtNewerName->setText(si.newerName());
+ ui->sbTracks->setValue(si.tracks());
  ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(si.pointList().count()));
  //ui->cbSegments->findText(si.toString(), Qt::MatchExactly);
 // int ix = ui->cbSegments->findData(SegmentId);
@@ -3540,9 +3553,6 @@ void MainWindow::btnSplit_Clicked()    // SLOT
   if(routeDlg)
    routeDlg->setSegmentId( m_segmentId);
 
-  // SegmentInfo si = sql->getSegmentInfo(m_segmentId);
-  // ui->txtSegment->setText(si.description());
-
   // Refresh the Segments combobox
   //refreshSegmentCB();
   ui->ssw->refresh();
@@ -3707,6 +3717,7 @@ void MainWindow::txtSegment_Leave( )
   si.setTracks(ui->sbTracks->value());
   si.setStreetName(ui->txtSegment->segmentDescription()->Street());
   si.setDescription(ui->txtSegment->text());
+  si.setTracks(ui->sbTracks->value());
   ui->txtStreet->setText(si.getStreetName());
   sql->updateSegment(&si);
   // bSegmentChanged = false;

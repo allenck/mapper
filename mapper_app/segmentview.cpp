@@ -78,10 +78,6 @@ void SegmentView::tablev_customContextMenu( const QPoint& pt)
     if(boolGetItemTableView(ui))
     {
         menu.clear();
-
-//        menu.addAction(copyAction);
-//        menu.addAction(pasteAction);
-        //int row = ui->rowAt(pt.y());
         QItemSelectionModel * model = ui->selectionModel();
         QModelIndexList indexes = model->selectedIndexes();
         if(indexes.size() > 0)
@@ -114,6 +110,7 @@ void SegmentView::tablev_customContextMenu( const QPoint& pt)
         menu.exec(QCursor::pos());
     }
 }
+
 //get QTableView selected item
 bool SegmentView::boolGetItemTableView(QTableView *table)
 {
@@ -202,7 +199,18 @@ void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
 //            endRow = i;
     }
     emit sendRows (startRow, endRow);
-    //proxyModel->setTerminals(startRow, endRow);
+    if(m_segmentId > 0)
+    {
+        int row = sourceModel->getRow(m_segmentId);
+        if(row >= 0)
+        {
+            QModelIndex modelIndex = proxymodel->mapFromSource(sourceModel->index(row,1));
+            //ui->setCurrentIndex(modelIndex);
+            ui->selectRow(modelIndex.row());
+        }
+        else
+            m_segmentId=-1;
+    }
     ui->setModel(proxymodel);
     ui->setSortingEnabled(true);
 
@@ -286,24 +294,17 @@ void SegmentView::itemSelectionChanged(QModelIndex index)
     QItemSelectionModel * model = ui->selectionModel();
     QModelIndexList indexes = model->selectedIndexes();
     qint32 segmentId =indexes.at(0).data().toInt();
+    m_segmentId = segmentId;
     MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
     if(parent->selectedSegment() == segmentId)
      return; // already selected
 
-//    parent->ProcessScript("isSegmentDisplayed", QString("%1").arg(segmentId));
-//    if(parent->m_segmentStatus == "Y")
-//        parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
-//    else
-//    {
-////        SegmentData si = sql->getSegmentData(segmentId);
-//        //parent->displaySegment(segmentId, si.description, si.oneWay, si.oneWay == "N" ? "#00FF00" : "#045fb4", true);
-//        parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
-//    }
     emit selectSegment(segmentId);
 }
 
 void SegmentView::on_segmentSelected(int, int segmentId, QList<LatLng>)
 {
+ m_segmentId = segmentId;
  int row = sourceModel->getRow(segmentId);
  if(row >= 0)
  {

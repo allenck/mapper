@@ -1,6 +1,9 @@
 #include "editsegmentdescr.h"
 #include "segmentdescription.h"
 #include "clipboard.h"
+#include <QContextMenuEvent>
+//#include <functional>
+#include <QMenu>
 
 EditSegmentDescr::EditSegmentDescr(QWidget *parent) : QLineEdit(parent) {
 
@@ -19,7 +22,24 @@ EditSegmentDescr::EditSegmentDescr(QWidget *parent) : QLineEdit(parent) {
     connect(this, &QLineEdit::editingFinished, [=]{
         on_editingFinished();
     });
+    setContextMenuPolicy(Qt::CustomContextMenu);
     Clipboard::instance()->setContextMenu(this);
+    //this->func = Clipboard::instance()->getContextMenu(this);
+    //connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(on_contextMenuEvent(QPoint)));
+    connect(this, &QLineEdit::customContextMenuRequested, [=](const QPoint pos){
+        QMenu* menu = this->createStandardContextMenu();
+        if(Clipboard::instance()->historyCount()>1)
+        {
+            menu->addMenu(Clipboard::instance()->getHistoryMenu());
+        }
+        if(!addMenu.isEmpty())
+        {
+            menu->addSeparator();
+            for(QAction* act : addMenu)
+                menu->addAction(act);
+        }
+        menu->exec(pos);
+    });
 }
 
 void EditSegmentDescr::setText(QString txt)
@@ -56,6 +76,7 @@ void EditSegmentDescr::on_editingFinished()
                                               .arg(defaultBgColor.red(),defaultBgColor.green(),defaultBgColor.blue()));
         setText(sd->replaceAbbreviations(descr));
         bTextEdited = false;
+        emit descrUpdated(descr, sd->Street());
     }
 }
 
@@ -73,3 +94,25 @@ QString EditSegmentDescr::streetName()
 {
     return sd->Street();
 }
+
+void EditSegmentDescr::setContextMenu(QList<QAction*> list)
+{
+    this->addMenu = list;
+}
+
+// void EditSegmentDescr::contextMenuEvent(QContextMenuEvent *event)
+// {
+//     if(func != nullptr)
+//         func(event->pos());
+//     else
+//         Clipboard::instance()->getContextMenu(this);
+// }
+
+// void EditSegmentDescr::on_contextMenuEvent(const QPoint& pt)
+// {
+//     if(func != nullptr)
+//         func(pt);
+//     else
+//         QMenu menu = Clipboard::instance()->getContextMenu(this);
+//     menu.exec(pt)
+// }

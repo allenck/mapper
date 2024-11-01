@@ -34,8 +34,8 @@ SegmentDlg::SegmentDlg(QWidget *parent) :
 // infoLon = m_longitude;
  ui->gbUsage->setVisible(false);
  ui->rnw->configure(new RouteData(), ui->lblErrorText);
- Clipboard::instance()->setContextMenu(ui->txtOriginalName);
- Clipboard::instance()->setContextMenu(ui->txtNewName);
+ //Clipboard::instance()->setContextMenu(ui->txtOriginalName);
+ //Clipboard::instance()->setContextMenu(ui->txtNewName);
  QPalette pal = ui->txtOriginalName->palette();
  txtSegment_color = pal.color(ui->txtOriginalName->backgroundRole());
 

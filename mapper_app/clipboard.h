@@ -17,6 +17,7 @@ public:
     void setContextMenu(QLineEdit* tgt);
     int historyCount();
     QMenu* getHistoryMenu();
+    QMenu* getContextMenu(QLineEdit* tgt);
 
 signals:
 private:

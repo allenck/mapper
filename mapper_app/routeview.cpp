@@ -227,6 +227,7 @@ RouteView::RouteView(QObject* parent )
 //         sd->setSegmentId(segmentId);
          SQL::instance()->addSegmentToRoute(sd);
         }
+        sourceModel->_selectedSegments.clear();
        }
       }
     });

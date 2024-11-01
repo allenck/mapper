@@ -32,9 +32,7 @@ public slots:
     void on_segmentSelected(int, int segmentId, QList<LatLng>);
 
 private:
-//    QAction *copyAction;
-//    QAction *pasteAction;
-    //QAction *addToRouteAct;
+    int m_segmentId = -1;
     QAction *addInUpdateRoute;
     QAction *editSegmentAct;
     QAction *selectSegmentAct;

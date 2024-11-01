@@ -3968,8 +3968,6 @@ bool SQL::updateSegment(SegmentData* sd)
  sd->_segmentEndDate = sd->endDate();
  if(sd->doubleDate() < si._doubleDate)
      si.setDoubleDate(sd->doubleDate());
- si._doubleDate = sd->doubleDate();
-
  for(int i=0; i < sd->pointList().count(); i++)
  {
   if(i == 0)
