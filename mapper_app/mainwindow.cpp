@@ -467,11 +467,11 @@ QMenu* MainWindow::addSegmentMenu(SegmentData *sd)
     if(sd->endDate() > si.endDate())
      si.setEndDate(sd->endDate());
 
-    if((sd->doubleDate() > sd->startDate()) || !sd->doubleDate().isValid())
+    if((si.doubleDate() > sd->startDate()) || !si.doubleDate().isValid())
     {
-     sd->setDoubleDate(sd->startDate());
+     //sd->setDoubleDate(sd->startDate());
      si.setDoubleDate(sd->startDate());
-     sql->updateSegment(sd);
+     sql->updateSegment(&si);
     }
    }
    break;

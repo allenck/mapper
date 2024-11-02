@@ -38,7 +38,7 @@ EditSegmentDescr::EditSegmentDescr(QWidget *parent) : QLineEdit(parent) {
             for(QAction* act : addMenu)
                 menu->addAction(act);
         }
-        menu->exec(pos);
+        menu->exec(QCursor::pos());
     });
 }
 
