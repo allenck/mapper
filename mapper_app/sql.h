@@ -99,6 +99,7 @@ public:
     bool updateSegmentDetails(qint32 SegmentId, QString description, int tracks, double length, RouteType type);
     QList<CompanyData *> getCompanies();
     QList<CompanyData*> getCompaniesInDateRange(QDate startDate, QDate endDate);
+    bool updateCompany(CompanyData* cd);
     CompanyData *getCompany(qint32 companyKey);
     QT_DEPRECATED QList<RouteData> getRouteDatasForDate(qint32 route, QString name, QString date);
     QList<SegmentData *> getRouteDatasForDate(int segmentId, QDate date);

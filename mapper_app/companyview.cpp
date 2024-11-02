@@ -1,12 +1,14 @@
 #include "companyview.h"
 #include <QMenu>
 #include <data.h>
+#include <QSortFilterProxyModel>
 
 CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     QObject(parent)
 {
     m_parent = parent;
     config = Configuration::instance();
+    sql = SQL::instance();
     //sql->setConfig(config);
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     tableView = myParent->ui->tblCompanyView;
@@ -22,24 +24,27 @@ CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     tableView->setAlternatingRowColors(true);
     connect(tableView->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
 
-    _model = new MyCompanyTableModel(this, db);
-    _model->setTable("Companies");
-    _model->setSort(1, Qt::AscendingOrder);
+    _model = new MyCompanyTableModel(this);
+    // _model->setTable("Companies");
+    // _model->setSort(1, Qt::AscendingOrder);
     connect(_model, SIGNAL(primeInsert(int,QSqlRecord&)), this, SLOT(On_primeInsert(int,QSqlRecord&)));
+    connect(_model, &QAbstractTableModel::dataChanged, [=](QModelIndex left, QModelIndex right, QList<int> roles){
+        emit dataChanged();
+    });
     //model->setQuery("select * from Companies");
     connect(_model, SIGNAL(beforeUpdate(int,QSqlRecord&)), this, SLOT(On_primeInsert(int,QSqlRecord&)));
 
-    _model->setEditStrategy(QSqlTableModel::OnFieldChange);
+    //_model->setEditStrategy(QSqlTableModel::OnFieldChange);
     //model->query().setForwardOnly(false);
-    _model->select();
-    QString name = _model->record(0).value("description").toString();
-    QSortFilterProxyModel* proxyModel = new QSortFilterProxyModel();
+    //_model->select();
+    //QString name = _model->record(0).value("description").toString();
+    proxyModel = new QSortFilterProxyModel();
     proxyModel->setSourceModel(_model);
     tableView->setModel(proxyModel);
     tableView->setSortingEnabled(true);
-    QSqlRecord r = _model->record(0);
-    int ixRoutePrefix = r.indexOf("routePrefix");
-    tableView->horizontalHeader()->moveSection(ixRoutePrefix,2);
+    //QSqlRecord r = _model->record(0);
+    // int ixRoutePrefix = r.indexOf("routePrefix");
+    // tableView->horizontalHeader()->moveSection(ixRoutePrefix,2);
     tableView->resizeColumnsToContents();
 
     bNeedsRefresh = false;
@@ -59,18 +64,6 @@ CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     tableView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(tableView, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
 
-    toggleSelectionAct = new QAction(tr("toggle selection"),this);
-    connect(toggleSelectionAct, &QAction::triggered, [=]{
-        QModelIndex index = toggleSelectionAct->data().value<QModelIndex>();
-        qint32 companyKey = index.data().toInt();
-        if(config->currCity->selectedCompaniesList.contains(companyKey))
-            config->currCity->selectedCompaniesList.removeOne(companyKey);
-        else
-            config->currCity->selectedCompaniesList.append(companyKey);
-        model()->selectRow(index.row());
-        emit dataChanged();
-    });
-
     tableView->show();
 }
 
@@ -83,7 +76,7 @@ void CompanyView::Resize (int oldcount,int newcount)
 }
 void CompanyView::refresh()
 {
-    _model->select();
+    //_model->select();
     tableView->show();
 
     // also refresh Mainwindow Company ComboBox
@@ -93,7 +86,7 @@ void CompanyView::refresh()
 
 void CompanyView::clear()
 {
-    _model->clear();
+    //_model->clear();
 }
 
 CompanyView* CompanyView::_instance = nullptr;
@@ -101,27 +94,24 @@ CompanyView* CompanyView::instance(){return _instance;}
 
 void CompanyView::newRecord()
 {
-// QSqlRecord record = model->record();
-// record.setValue(1, QVariant(tr("new description")));
-// record.setValue(2, QVariant("")); // info
-// record.setValue(3, QVariant("")); // prefix
-// record.setValue(4, QVariant("1870/01/01"));
-// record.setValue(5, QVariant("1950/12/31"));
- bool rslt = SQL::instance()->addCompany("new company", -1, "1870/01/01", "1950/12/31");
+ int rslt = SQL::instance()->addCompany("new company", -1, "1870/01/01", "1950/12/31");
  if(!rslt)
  {
   QSqlDatabase db = QSqlDatabase::database();
   QSqlError err = db.lastError();
   QMessageBox::warning(nullptr, tr("Warning"), tr("no record was inserted.\n ")+err.text());
  }
- currentIndex = _model->index(_model->rowCount()-1,0);
+ CompanyData* cd = sql->getCompany(rslt);
+ _model->insertRecord(cd);
+ //currentIndex = _model->index(_model->rowCount()-1,0);
  refresh();
 }
 
 void CompanyView::delRecord()
 {
  //mainWindow * myParent = qobject_cast<mainWindow*>(m_parent);
-    QModelIndex ix = tableView->currentIndex();
+ QModelIndex ix = tableView->currentIndex();
+ QModelIndex source = proxyModel->mapToSource(ix);
  // int companyKey;
  // QItemSelectionModel * selectionModel = tableView->selectionModel();
  // QModelIndexList indexes = selectionModel->selectedIndexes();
@@ -133,9 +123,7 @@ void CompanyView::delRecord()
  if(QMessageBox::question(nullptr, tr("Confirm Delete"), tr("Are you sure you want to delete company #%1 '%2'?").arg(companyKey).arg(cd->name),
                            QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes)
  {
-    //_model->removeRow(ix.row());
-     if(SQL::instance()->executeCommand(tr("delete from Companies where [key] = %1").arg(companyKey)))
-        refresh();
+    bool result = _model->removeRow(source.row());
  }
 }
 
@@ -151,8 +139,8 @@ bool CompanyView::boolGetItemTableView(QTableView *table)
  }
  else                //QTableView doesn't have selected data
      return (false);
-
 }
+
 //create table input context menu
 void CompanyView::tablev_customContextMenu( const QPoint& pt)
 {
@@ -165,30 +153,37 @@ void CompanyView::tablev_customContextMenu( const QPoint& pt)
   menu->addAction(addAct);
   menu->addAction(delAct);
   menu->addAction(refreshAct);
-  toggleSelectionAct->setData(tableView->indexAt(pt));
-  menu->addAction(toggleSelectionAct);
  }
  menu->exec(QCursor::pos());
 }
 
+// void CompanyView::On_primeInsert(int, QSqlRecord&)
+// {
+//     bNeedsRefresh = true;
+//     emit dataChanged();
+// }
+
 QVariant MyCompanyTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
- QVariant value = QSqlTableModel::headerData(section, orientation,role);
  if(orientation == Qt::Horizontal && role == Qt::DisplayRole)
-  return hdrMap.value(value.toString());
- return value;
+ {
+  return hdrMap.value(section);
+ }
+ return QVariant();
 }
 
-MyCompanyTableModel::MyCompanyTableModel(QObject *parent, QSqlDatabase db) : QSqlTableModel(parent)
+MyCompanyTableModel::MyCompanyTableModel(QObject *parent) : QAbstractTableModel(parent)
 {
     config = Configuration::instance();
+    sql= SQL::instance();
+    companyList = sql->getCompanies();
 }
 
 Qt::ItemFlags MyCompanyTableModel::flags(const QModelIndex &index) const
 {
-    if(index.column() == 0)
+    if(index.column() == KEY  || index.column() == LASTUPDATED)
         return Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsUserCheckable;
-    return QSqlTableModel::flags(index);
+    return Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsUserCheckable;
 }
 
 
@@ -196,34 +191,129 @@ QVariant MyCompanyTableModel::data ( const QModelIndex & index, int role ) const
 {
  if (!index.isValid())
      return QVariant();
+ CompanyData* cd = companyList.at(index.row());
  if(role == Qt::CheckStateRole and index.column()==0)
  {
      if(config->currCity->selectedCompaniesList.isEmpty() )
          return Qt::Checked;
-     qint32 companyKey = data(index,Qt::DisplayRole).toInt();
-     if(config->currCity->selectedCompaniesList.contains(companyKey))
+
+     if(config->currCity->selectedCompaniesList.contains(cd->companyKey))
          return Qt::Checked;
      else
          return Qt::Unchecked;
  }
+ if(role == Qt::DisplayRole)
+ {
+     switch (index.column()) {
+     case KEY:
+         return cd->companyKey;
+     case NAME:
+         return cd->name;
+     case ROUTEPREFIX:
+         return cd->routePrefix;
+     case STARTDATE:
+         return cd->startDate.toString("yyyy/MM/dd");
+     case ENDDATE:
+         return cd->endDate.toString("yyyy/MM/dd");
+     case FIRSTROUTE:
+         return cd->firstRoute;
+     case LASTROUTE:
+         return cd->lastRoute;
+     case LASTUPDATED:
+         return cd->lastUpdated.toString();
+     case INFO:
+         return cd->info;
+     }
+ }
 
  // let the base class handle all other cases
- return QSqlTableModel::data( index, role );
+ return QVariant();
 }
 
-bool MyCompanyTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
+bool MyCompanyTableModel::setData(const QModelIndex &mindex, const QVariant &value, int role)
 {
+ CompanyData* cd = companyList.at(mindex.row());
+
  QVariant hdr;
+ QList<int> roles;
+ QModelIndex left = index(mindex.row(), 0);
+ QModelIndex right = index(mindex.row(), LASTUPDATED-1);
+
+ if( role == Qt::CheckStateRole /*||role == Qt::EditRole) && index.column() == 0*/)
+ {
+     switch(mindex.column())
+     {
+        case 0:
+        {
+            qint32 companyKey = data(mindex,Qt::DisplayRole).toInt();
+
+            bool checked = value.toBool();
+            if(checked)
+            {
+                //if(!config->currCity->selectedCompaniesList.contains(companyKey))
+                    config->currCity->selectedCompaniesList.append(companyKey);
+            }
+            else
+            {
+                //if(config->currCity->selectedCompaniesList.contains(companyKey))
+                    config->currCity->selectedCompaniesList.removeOne(companyKey);
+            }
+            bDirty = true;
+            roles.append(role);
+        }
+    }
+ }
+
+
  if(role == Qt::EditRole)
  {
-  hdr = headerData(index.column(), Qt::Horizontal, Qt::DisplayRole);
+     switch (mindex.column()) {
+     case NAME:
+          cd->name = value.toString();
+         break;
+     case ROUTEPREFIX:
+         cd->routePrefix = value.toString();
+     case STARTDATE:
+         cd->startDate = QDate::fromString("yyyy/MM/dd");
+     case ENDDATE:
+         cd->endDate = QDate::fromString("yyyy/MM/dd");
+     case FIRSTROUTE:
+         cd->firstRoute = value.toInt();
+     case LASTROUTE:
+         cd->lastRoute = value.toInt();
+     // case LASTUPDATED:
+     //     cd->lastUpdated.toString();
+     case INFO:
+         cd->info = value.toString();
+     }
+     roles.append(role);
+
+     sql->updateCompany(cd);
  }
- emit companyChange();
- return QSqlTableModel::setData( index, value, role );
+ //emit dataChanged();
+ bDirty = true;
+ emit dataChanged(left, right,roles);
+ return false;
 }
 
-void CompanyView::On_primeInsert(int, QSqlRecord&)
+void MyCompanyTableModel::insertRecord(CompanyData* cd)
 {
- bNeedsRefresh = true;
- emit dataChanged();
+    int newRow = rowCount(QModelIndex());
+    beginInsertRows(QModelIndex(), newRow, newRow);
+    companyList.append(cd);
+    endInsertRows();
+    emit dataChanged(index(newRow, 0), index(newRow, LASTUPDATED));
+}
+
+bool MyCompanyTableModel::removeRow(int row, const QModelIndex& parent )
+{
+    CompanyData* cd = companyList.at(row);
+    if(SQL::instance()->executeCommand(tr("delete from Companies where [key] = %1").arg(cd->companyKey)))
+    {
+        beginRemoveRows(parent, row, row);
+        companyList.removeAt(row);
+        endRemoveRows();
+        return true;
+    }
+    return false;
 }

@@ -4748,10 +4748,10 @@ QList<CompanyData*> SQL::getCompanies()
  QString commandText;
  if(config->currConnection->servertype() != "MsSql")
      commandText = "select `key`, description, routePrefix, startDate, endDate,"
-                   " firstRoute, lastRoute, mnemonic from Companies";
+                   " firstRoute, lastRoute, mnemonic, info, lastUpdate from Companies";
  else
      commandText = "select [key], description, routePrefix, startDate, endDate,"
-                   " firstRoute, lastRoute, mnemonic from Companies";
+                   " firstRoute, lastRoute, mnemonic, info, lastUpdate from Companies";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -4779,12 +4779,71 @@ QList<CompanyData*> SQL::getCompanies()
      cd->firstRoute = query.value(5).toInt();
      cd->lastRoute = query.value(6).toInt();
      cd->mnemonic = query.value(7).toString();
+     cd->info = query.value(8).toString();
+     cd->lastUpdated = query.value(9).toDateTime();
      setDefaultCompanyMnemonic(cd);
      myArray.append(cd);
  }
  std::sort(myArray.begin(), myArray.end(), [](const CompanyData* a, const CompanyData* b) -> bool { return a->name < b->name; });
 
  return myArray;
+}
+
+bool SQL::updateCompany(CompanyData* cd)
+{
+    bool ret = false;
+    QString commandText;
+    QSqlDatabase db = QSqlDatabase::database();
+    QSqlQuery query = QSqlQuery(db);
+    bool bQuery;
+    int rows = 0;
+    if(config->currConnection->servertype() != "MsSql")
+        commandText = "update companies set "
+            "name = '" + cd->name + "',"
+            "description= '" + cd->name + "',"
+            "mnemonic= '" + cd->mnemonic + "',"
+            "routePrefix= '" + cd->routePrefix + "',"
+            "info= '" + cd->info + "',"
+            "startDate = '" + cd->startDate.toString("yyyy/MM/dd")+ ""
+            "endDate = '" + cd->endDate.toString("yyyy/MM/dd")+ "',"
+            "endDate = '" + cd->endDate.toString("yyyy/MM/dd")+ "',"
+            "firstroute = " +QString::number(cd->firstRoute) + ","
+            "lastroute = " + QString::number(cd->lastRoute) + " "
+            "where `key` = " +  QString::number(cd->companyKey);
+         else
+        commandText = "update companies set "
+            "name = '" + cd->name + "',"
+            "description= '" + cd->name + "',"
+            "mnemonic= '" + cd->mnemonic + "',"
+            "routePrefix= '" + cd->routePrefix + "',"
+            "info= '" + cd->info + "',"
+            "startDate = '" + cd->startDate.toString("yyyy/MM/dd")+ ""
+            "endDate = '" + cd->endDate.toString("yyyy/MM/dd")+ "',"
+            "endDate = '" + cd->endDate.toString("yyyy/MM/dd")+ "',"
+            "firstroute = " +QString::number(cd->firstRoute) + ","
+            "lastroute = " + QString::number(cd->lastRoute) + " "
+            "where [key] = " +  QString::number(cd->companyKey);
+
+    query.prepare(commandText);
+    query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
+    qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+    bQuery = query.exec();
+    if(!bQuery)
+    {
+         QSqlError err = query.lastError();
+         qDebug() << err.text() + "\n";
+         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+         db.close();
+         exit(EXIT_FAILURE);
+    }
+    rows = query.numRowsAffected();
+    if (rows == 0)
+    {
+     return ret;
+    }
+    ret = true;
+
+    return ret;
 }
 
 /// <summary>

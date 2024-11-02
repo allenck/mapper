@@ -776,6 +776,8 @@ class CompanyData
         endDate = o.endDate;
         firstRoute =o.firstRoute;
         lastRoute = o.lastRoute;
+        info = o.info;
+
     }
 
     QString toString()
@@ -789,7 +791,10 @@ class CompanyData
     int firstRoute, lastRoute;
     QString routePrefix;
     QString mnemonic;
+    QString info;
+    QDateTime lastUpdated;
 };
+
 class Parameters
 {
 public:

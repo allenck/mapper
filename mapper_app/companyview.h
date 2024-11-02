@@ -2,35 +2,54 @@
 #define COMPANYVIEW_H
 
 #include <QObject>
-#include <QSqlTableModel>
+#include <QAbstractTableModel>
 #include "data.h"
 #include "configuration.h"
+#include <QTableView>
 #include "mainwindow.h"
-#include "sql.h"
 
-class MyCompanyTableModel : public QSqlTableModel
+class MyCompanyTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
-    MyCompanyTableModel(QObject *parent = 0, QSqlDatabase db = QSqlDatabase());
+    MyCompanyTableModel(QObject *parent = 0);
+    bool isDirty() {return bDirty;}
+    void setDirty(bool b){bDirty = b;}
+    void insertRecord(CompanyData*cd);
+    void removeRecord(int row);
 
-protected:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
     QVariant data(const QModelIndex &index, int role) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
     Qt::ItemFlags flags(const QModelIndex &index) const;
-
- signals:
-    void companyChange();
+    int rowCount(const QModelIndex &parent) const {return companyList.count();}
+    int columnCount(const QModelIndex &parent) const {return LASTUPDATED+1;}
+    bool removeRow(int row, const QModelIndex &parent = QModelIndex());
 
  private:
-    QMap<QString, QString> hdrMap = {{"key", "Company Key"},{"mnemonic", "Mnemonic"}, {"Description", "Company Name"},
-                                     {"routePrefix", "Prefix"}, {"info", "Information"},{"startDate", "Start"}, {"endDate", "End"},
-                                     {"firstRoute", "First Route"}, {"lastRoute", "Last Route"},
-                                     {"lastUpdate", "Last updated"}
+    enum COLS
+    {
+        KEY,
+        MNEMONIC,
+        ROUTEPREFIX,
+        NAME,
+        STARTDATE,
+        ENDDATE,
+        FIRSTROUTE,
+        LASTROUTE,
+        INFO,
+        LASTUPDATED
+    };
+    QMap<int, QString> hdrMap = {{KEY, "Company Key"},{MNEMONIC, "Mnemonic"}, {NAME, "Company Name"},
+                                     {ROUTEPREFIX, "Prefix"}, {INFO, "Information"},{STARTDATE, "Start"},
+                                     {ENDDATE, "End"},
+                                     {FIRSTROUTE, "First Route"}, {LASTROUTE, "Last Route"},
+                                     {LASTUPDATED, "Last updated"}
                                     };
-     Configuration * config;
-
+    Configuration * config;
+    SQL* sql = nullptr;
+    QList<CompanyData*> companyList;
+    bool bDirty = false;
 };
 
 class CompanyView : public QObject
@@ -40,19 +59,7 @@ public:
     CompanyView(Configuration *cfg, QObject *parent = 0);
     QObject* m_parent;
     void clear();
-    enum COLUMNS
-    {
-     KEY,
-     MNEMONIC,
-     NAME,
-     ROUTEPREFIX,
-     STARTDATE,
-     ENDDATE,
-     FIRSTROUTE,
-     LASTROUTE,
-     LASTUPDATED,
-     INFO
-    };
+
     bool bUncomittedChanges();
     MyCompanyTableModel* model() {return _model;}
     static CompanyView* instance();
@@ -63,7 +70,7 @@ signals:
 public slots:
     void newRecord();
     void delRecord();
-    void On_primeInsert(int, QSqlRecord&);
+    //void On_primeInsert(int, QSqlRecord&);
     void refresh();
 
 private:
@@ -75,12 +82,12 @@ private:
     QAction* addAct;
     QAction* delAct;
     QAction* refreshAct;
-    QAction* toggleSelectionAct;
     int curRow, curCol;
     bool boolGetItemTableView(QTableView *table);
     QModelIndex currentIndex;
     bool bNeedsRefresh;
     static CompanyView* _instance;
+    QSortFilterProxyModel* proxyModel;
 
 private slots:
     void Resize (int oldcount,int newcount);

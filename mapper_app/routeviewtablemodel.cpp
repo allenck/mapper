@@ -427,6 +427,8 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
      }
     }
    }
+    reset();
+    return true;
   }
   if( role == Qt::EditRole )
   {

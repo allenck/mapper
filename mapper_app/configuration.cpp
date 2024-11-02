@@ -296,7 +296,9 @@ void Configuration::getSettings()
       nc->selectedCompaniesList.clear();
       for(int i=0; i < sl.count(); i++ )
       {
-          nc->selectedCompaniesList.append(sl.at(i).toInt());
+          int companyKey = sl.at(i).toInt();
+          if(companyKey > 0)
+            nc->selectedCompaniesList.append(sl.at(i).toInt());
       }
       nc->bDisplayRoutesForGroup = settings.value("displayRoutesForGroup",!nc->selectedCompaniesList.isEmpty()).toBool();
       // QString abbreviationsStr = settings.value("abbreviations").toString();

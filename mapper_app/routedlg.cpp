@@ -74,9 +74,9 @@ RouteDlg::RouteDlg(QWidget *parent) :
     connect(ui->dateStart, SIGNAL(editingFinished()), this, SLOT(dateStart_Leave()));
     myParent = (MainWindow*)parent;
     connect(myParent, SIGNAL(newCitySelected()), this, SLOT(OnNewCity()));
-    connect(CompanyView::instance()->model(), &MyCompanyTableModel::companyChange, [=]{
-     fillCompanies();
-    } );
+    // connect(CompanyView::instance()->model(), &MyCompanyTableModel::companyChange, [=]{
+    //  fillCompanies();
+    // } );
     fillCompanies();
     fillTractionTypes();
 

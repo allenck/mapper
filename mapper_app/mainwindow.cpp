@@ -279,6 +279,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   connect(ui->btnBack, SIGNAL(clicked()), this, SLOT(pageBack()));
   //connect(ui->chkOneWay, SIGNAL(clicked(bool)), this, SLOT(chkOneWay_Leave(bool)));
   connect(ui->cbCompany, SIGNAL(currentIndexChanged(int)), this, SLOT(cbCompanySelectionChanged(int)));
+  //connect(companyView->model(), SIGNAL(companyChange()), this, SLOT(refreshCompanies()));
   connect(ui->sbRoute, SIGNAL(actionTriggered(int)), this,  SLOT(sbRouteTriggered(int)));
   //connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbrLeave()) );
   connect(ui->sbTracks, SIGNAL(valueChanged(int)), this, SLOT(sbTracks_valueChanged(int)));
@@ -1046,7 +1047,7 @@ void MainWindow::createActions()
  });
 
  companyChangeRoutes = new QAction(tr("ChangeCompany for routes"),this);
- companyChangeRoutes->setStatusTip(tr("Change compay for all routes at a date"));
+ companyChangeRoutes->setStatusTip(tr("Change company for all routes at a date"));
  connect(companyChangeRoutes, &QAction::triggered, [=]{
   SplitCompanyRoutesDialog dlg;
   if(dlg.exec() == QDialog::Accepted)
@@ -2165,13 +2166,15 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
     }
 }
 
-
-
-
 void MainWindow::refreshRoutes()
 {
     //SQL sql;
     bCbRouteRefreshing = true;
+    if(companyView->model()->isDirty())
+    {
+        refreshCompanies();
+        companyView->model()->setDirty(false);
+    }
     int companyKey = ui->cbCompany->currentData().toInt();
     int ix = ui->cbRoute->currentIndex();
     QString currText = ui->cbRoute->currentText();
@@ -2179,7 +2182,21 @@ void MainWindow::refreshRoutes()
 
     //routeList = sql->getRoutesByEndDate(companyKey);
     if(config->currCity->bDisplayRoutesForGroup)
+    {
+        if(config->currCity->selectedCompaniesList.isEmpty() )
+        {
+            // QMessageBox::information(nullptr, tr("No companies selected."),
+            //     tr("No companies are checked in the Companies tab.\n"
+            //         "Either check one or more companies or turn off the <I>'Display all routes for group'</I> option"));
+            // bCbRouteRefreshing= false;
+            // return;
+            if(config->currCity->companyKey > 0 )
+                config->currCity->selectedCompaniesList.append(config->currCity->companyKey);
+            else
+                config->currCity->selectedCompaniesList.append(1);
+        }
      routeList = sql->getRoutesByEndDate(config->currCity->selectedCompaniesList);
+    }
     else
     {
      routeList = sql->getRoutesByEndDate(ui->cbCompany->currentData().toInt());
@@ -2849,7 +2866,8 @@ void MainWindow::refreshCompanies()
 {
     //QStringList companies = config->selectedCompanies.split(",");
     ui->cbCompany->clear();
-    ui->cbCompany->addItem(tr("All companies"),0);
+    if(!config->currCity->bDisplayRoutesForGroup)
+        ui->cbCompany->addItem(tr("All companies"),0);
     // QStandardItem* item;
     // QStandardItemModel* mod = new QStandardItemModel(1,0);
     companyList = sql->getCompanies();
@@ -2859,14 +2877,14 @@ void MainWindow::refreshCompanies()
         CompanyData* cd = companyList.at(i);
         if(config->currCity->bDisplayRoutesForGroup)
         {
-            if(config->currCity->selectedCompaniesList.isEmpty()
-                || config->currCity->selectedCompaniesList.contains(cd->companyKey))
+            if(config->currCity->bDisplayRoutesForGroup &&
+                config->currCity->selectedCompaniesList.contains(cd->companyKey))
             {
                 ui->cbCompany->addItem(cd->name, cd->companyKey);
                 selectedComanyList.append(cd);
             }
-            else
-                ui->cbCompany->addItem(cd->name, cd->companyKey);
+            // else
+            //     ui->cbCompany->addItem(cd->name, cd->companyKey);
         }
         else
         {
