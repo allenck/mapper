@@ -78,6 +78,7 @@ void CompanyView::refresh()
 {
     //_model->select();
     tableView->show();
+    _model->reset();
 
     // also refresh Mainwindow Company ComboBox
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
@@ -207,6 +208,8 @@ QVariant MyCompanyTableModel::data ( const QModelIndex & index, int role ) const
      switch (index.column()) {
      case KEY:
          return cd->companyKey;
+     case MNEMONIC:
+         return cd->mnemonic;
      case NAME:
          return cd->name;
      case ROUTEPREFIX:
@@ -271,28 +274,40 @@ bool MyCompanyTableModel::setData(const QModelIndex &mindex, const QVariant &val
      case NAME:
           cd->name = value.toString();
          break;
+     case MNEMONIC:
+         cd->mnemonic = value.toString();
+         break;
      case ROUTEPREFIX:
          cd->routePrefix = value.toString();
+         break;
      case STARTDATE:
          cd->startDate = QDate::fromString("yyyy/MM/dd");
+         break;
      case ENDDATE:
          cd->endDate = QDate::fromString("yyyy/MM/dd");
+         break;
      case FIRSTROUTE:
          cd->firstRoute = value.toInt();
+         break;
      case LASTROUTE:
          cd->lastRoute = value.toInt();
+         break;
      // case LASTUPDATED:
      //     cd->lastUpdated.toString();
      case INFO:
          cd->info = value.toString();
+         break;
      }
      roles.append(role);
 
-     sql->updateCompany(cd);
+     if(sql->updateCompany(cd))
+     {
+         bDirty = false;
+         emit dataChanged(left, right,roles);
+         return true;
+     }
  }
  //emit dataChanged();
- bDirty = true;
- emit dataChanged(left, right,roles);
  return false;
 }
 
@@ -316,4 +331,11 @@ bool MyCompanyTableModel::removeRow(int row, const QModelIndex& parent )
         return true;
     }
     return false;
+}
+
+void MyCompanyTableModel::reset()
+{
+    beginResetModel();
+    companyList = sql->getCompanies();
+    endResetModel();
 }

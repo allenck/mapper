@@ -16,7 +16,6 @@ SegmentSelectionWidget::SegmentSelectionWidget(QWidget *parent) :
  cbSegmentsGrp->addButton(ui->rbBoth);
  ui->rbBoth->setChecked(true);
  sql = SQL::instance();
-
 }
 
 void SegmentSelectionWidget::initialize()

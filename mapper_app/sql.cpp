@@ -4799,26 +4799,22 @@ bool SQL::updateCompany(CompanyData* cd)
     int rows = 0;
     if(config->currConnection->servertype() != "MsSql")
         commandText = "update companies set "
-            "name = '" + cd->name + "',"
             "description= '" + cd->name + "',"
             "mnemonic= '" + cd->mnemonic + "',"
             "routePrefix= '" + cd->routePrefix + "',"
             "info= '" + cd->info + "',"
-            "startDate = '" + cd->startDate.toString("yyyy/MM/dd")+ ""
-            "endDate = '" + cd->endDate.toString("yyyy/MM/dd")+ "',"
+            "startDate = '" + cd->startDate.toString("yyyy/MM/dd")+ "',"
             "endDate = '" + cd->endDate.toString("yyyy/MM/dd")+ "',"
             "firstroute = " +QString::number(cd->firstRoute) + ","
             "lastroute = " + QString::number(cd->lastRoute) + " "
             "where `key` = " +  QString::number(cd->companyKey);
-         else
+    else
         commandText = "update companies set "
-            "name = '" + cd->name + "',"
             "description= '" + cd->name + "',"
             "mnemonic= '" + cd->mnemonic + "',"
             "routePrefix= '" + cd->routePrefix + "',"
             "info= '" + cd->info + "',"
-            "startDate = '" + cd->startDate.toString("yyyy/MM/dd")+ ""
-            "endDate = '" + cd->endDate.toString("yyyy/MM/dd")+ "',"
+            "startDate = '" + cd->startDate.toString("yyyy/MM/dd")+ "',"
             "endDate = '" + cd->endDate.toString("yyyy/MM/dd")+ "',"
             "firstroute = " +QString::number(cd->firstRoute) + ","
             "lastroute = " + QString::number(cd->lastRoute) + " "
@@ -4833,8 +4829,9 @@ bool SQL::updateCompany(CompanyData* cd)
          QSqlError err = query.lastError();
          qDebug() << err.text() + "\n";
          qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-         db.close();
-         exit(EXIT_FAILURE);
+         // db.close();
+         // exit(EXIT_FAILURE);
+         return false;
     }
     rows = query.numRowsAffected();
     if (rows == 0)

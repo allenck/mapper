@@ -17,6 +17,8 @@ public:
     void setDirty(bool b){bDirty = b;}
     void insertRecord(CompanyData*cd);
     void removeRecord(int row);
+    void reset();
+
 
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
     QVariant data(const QModelIndex &index, int role) const;
