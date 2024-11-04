@@ -60,7 +60,8 @@ void SegmentSelectionWidget::initialize()
  // otherwise QComboBox::setModel() will delete it
  ui->cbStreets->model()->setParent(proxy);
  ui->cbStreets->setModel(proxy);
- Clipboard::instance()->setContextMenu(ui->cbStreets->lineEdit());
+
+ Clipboard::instance()->setContextMenu(ui->cbStreets);
 
 
 // QSortFilterProxyModel* proxy2 = new QSortFilterProxyModel(ui->cbSegments);

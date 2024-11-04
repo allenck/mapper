@@ -151,6 +151,7 @@ public:
     QDate getRoutesEarliestDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
     QDate getRoutesLatestDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
     QDate getRoutesNextDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
+    QDate getEarliestUseDateForSegment(int segmentId);
     bool doesRouteSegmentExist(SegmentData sd);
     bool doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QDate startDate, QDate endDate);
     QList<SegmentInfo> getSegmentsInSameDirection(SegmentInfo siIn, bool reverse = false);

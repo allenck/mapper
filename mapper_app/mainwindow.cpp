@@ -3727,6 +3727,8 @@ void MainWindow::txtSegment_Leave( )
  //SQL sql;
  // if (bSegmentChanged)
  // {
+    if(ui->txtSegment->text().isEmpty())
+     return;
   ui->txtSegment->on_editingFinished();
   SegmentInfo si = sql->getSegmentInfo(m_segmentId);
   si.setDescription(ui->txtSegment->replaceAbbreviations(ui->txtSegment->text()));

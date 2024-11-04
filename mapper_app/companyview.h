@@ -8,6 +8,7 @@
 #include <QTableView>
 #include "mainwindow.h"
 
+
 class MyCompanyTableModel : public QAbstractTableModel
 {
     Q_OBJECT
@@ -40,11 +41,12 @@ public:
         FIRSTROUTE,
         LASTROUTE,
         INFO,
+        URL,
         LASTUPDATED
     };
     QMap<int, QString> hdrMap = {{KEY, "Company Key"},{MNEMONIC, "Mnemonic"}, {NAME, "Company Name"},
                                      {ROUTEPREFIX, "Prefix"}, {INFO, "Information"},{STARTDATE, "Start"},
-                                     {ENDDATE, "End"},
+                                     {ENDDATE, "End"}, {URL,"Url"},
                                      {FIRSTROUTE, "First Route"}, {LASTROUTE, "Last Route"},
                                      {LASTUPDATED, "Last updated"}
                                     };
@@ -52,6 +54,7 @@ public:
     SQL* sql = nullptr;
     QList<CompanyData*> companyList;
     bool bDirty = false;
+    friend class CompanyView;
 };
 
 class CompanyView : public QObject
@@ -84,6 +87,7 @@ private:
     QAction* addAct;
     QAction* delAct;
     QAction* refreshAct;
+    QAction* urlAct;
     int curRow, curCol;
     bool boolGetItemTableView(QTableView *table);
     QModelIndex currentIndex;

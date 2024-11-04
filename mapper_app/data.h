@@ -10,6 +10,7 @@
 #include <QRectF>
 #include "latlng.h"
 #include <iostream>
+#include <QUrl>
 
 class LatLng;
 class SegmentInfo;
@@ -777,7 +778,7 @@ class CompanyData
         firstRoute =o.firstRoute;
         lastRoute = o.lastRoute;
         info = o.info;
-
+        url = o.url;
     }
 
     QString toString()
@@ -792,6 +793,7 @@ class CompanyData
     QString routePrefix;
     QString mnemonic;
     QString info;
+    QUrl url;
     QDateTime lastUpdated;
 };
 

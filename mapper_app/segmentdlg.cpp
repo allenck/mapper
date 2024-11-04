@@ -232,6 +232,10 @@ void SegmentDlg::setSegmentId(qint32 value)
   this->setWindowTitle(tr("Add Segment"));
   ui->gbOriginal->setTitle(tr("Street"));
   ui->chkOriginalOneWay->setVisible(false);
+  ui->lblNewLocation->setVisible(false);
+  ui->txtNewLocation->setVisible(false);
+  ui->lbl_newerName_2->setVisible(false);
+  ui->txtNewerName_2->setVisible(false);
   ui->gbNew->setTitle(tr("Segment Description"));
   connect(ui->txtOriginalName, &QLineEdit::editingFinished, [=] {
    if(ui->txtNewName->text().isEmpty())

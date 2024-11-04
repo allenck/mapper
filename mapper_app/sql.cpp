@@ -11,6 +11,7 @@
 #include <QRadioButton>
 //#include "sqlite3ext.h"
 #include <QtSql>
+#include <QUrl>
 
 SQL* SQL::_instance = NULL;
 SQL::SQL()
@@ -4748,10 +4749,10 @@ QList<CompanyData*> SQL::getCompanies()
  QString commandText;
  if(config->currConnection->servertype() != "MsSql")
      commandText = "select `key`, description, routePrefix, startDate, endDate,"
-                   " firstRoute, lastRoute, mnemonic, info, lastUpdate from Companies";
+                   " firstRoute, lastRoute, mnemonic, info, url, lastUpdate from Companies";
  else
      commandText = "select [key], description, routePrefix, startDate, endDate,"
-                   " firstRoute, lastRoute, mnemonic, info, lastUpdate from Companies";
+                   " firstRoute, lastRoute, mnemonic, info, url, lastUpdate from Companies";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -4780,7 +4781,8 @@ QList<CompanyData*> SQL::getCompanies()
      cd->lastRoute = query.value(6).toInt();
      cd->mnemonic = query.value(7).toString();
      cd->info = query.value(8).toString();
-     cd->lastUpdated = query.value(9).toDateTime();
+     cd->url = QUrl(query.value(9).toString());
+     cd->lastUpdated = query.value(10).toDateTime();
      setDefaultCompanyMnemonic(cd);
      myArray.append(cd);
  }
@@ -4803,6 +4805,7 @@ bool SQL::updateCompany(CompanyData* cd)
             "mnemonic= '" + cd->mnemonic + "',"
             "routePrefix= '" + cd->routePrefix + "',"
             "info= '" + cd->info + "',"
+            "url= '" + cd->url.toDisplayString() + "',"
             "startDate = '" + cd->startDate.toString("yyyy/MM/dd")+ "',"
             "endDate = '" + cd->endDate.toString("yyyy/MM/dd")+ "',"
             "firstroute = " +QString::number(cd->firstRoute) + ","
@@ -4814,6 +4817,7 @@ bool SQL::updateCompany(CompanyData* cd)
             "mnemonic= '" + cd->mnemonic + "',"
             "routePrefix= '" + cd->routePrefix + "',"
             "info= '" + cd->info + "',"
+            "url= '" + cd->url.toDisplayString() + "',"
             "startDate = '" + cd->startDate.toString("yyyy/MM/dd")+ "',"
             "endDate = '" + cd->endDate.toString("yyyy/MM/dd")+ "',"
             "firstroute = " +QString::number(cd->firstRoute) + ","
@@ -4916,10 +4920,10 @@ CompanyData* SQL::getCompany(qint32 companyKey)
         QString commandText;
         if(config->currConnection->servertype() != "MsSql")
             commandText = "select `key`, description, startDate, endDate, firstRoute, lastRoute,"
-                          " routePrefix, mnemonic from Companies where `key` = " +QString("%1").arg(companyKey);
+                          " routePrefix, mnemonic, info, url from Companies where `key` = " +QString("%1").arg(companyKey);
         else
             commandText = "select [key], description, startDate, endDate, firstRoute, lastRoute,"
-                          " routePrefix,memonic from companies where [key] = " + QString("%1").arg(companyKey);
+                          " routePrefix,memonic, info, url from companies where [key] = " + QString("%1").arg(companyKey);
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -4949,6 +4953,8 @@ CompanyData* SQL::getCompany(qint32 companyKey)
             cd->lastRoute = query.value(5).toInt();
             cd->routePrefix = query.value(6).toString();
             cd->mnemonic = query.value(7).toString();
+            cd->info = query.value(8).toString();
+            cd->url = QUrl(query.value(9).toString());
             setDefaultCompanyMnemonic(cd);
         }
     }
@@ -6718,6 +6724,44 @@ QDate SQL::getRoutesLatestDateForSegment(qint32 route, QString name, qint32 Segm
     }
 
     return dt;
+}
+
+QDate SQL::getEarliestUseDateForSegment(int segmentId)
+{
+    QDate result;
+    try
+    {
+        if(!dbOpen())
+            throw Exception(tr("database not open: %1").arg(__LINE__));
+        QSqlDatabase db = QSqlDatabase::database();
+
+        QString commandText = "Select min(startDate) from Routes where lineKey = " + QString::number(segmentId);
+        QSqlQuery query = QSqlQuery(db);
+        bool bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+            QSqlError err = query.lastError();
+            qDebug() << err.text() + "\n";
+            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+            db.close();
+            exit(EXIT_FAILURE);
+        }
+        if (!query.isActive())
+        {
+            return result;
+        }
+        while (query.next())
+        {
+            result = query.value(0).toDate();
+        }
+    }
+    catch (Exception e)
+    {
+        myExceptionHandler(e);
+
+    }
+
+    return result;
 }
 /// <summary>
 /// Returns the Earliest start date after the supplied end date for a route's segment
@@ -10739,6 +10783,16 @@ void SQL::checkTables(QSqlDatabase db)
       if(config->currConnection->servertype() == "Sqlite")
        executeScript(":/sql/sqlite3_recreateCompanies.sql",db);
   }
+  if(!doesColumnExist("Companies", "Url"))
+  {
+      if(config->currConnection->servertype() == "MySql")
+          addColumn("Companies", "Url", "varchar(100) NOT NULL default '' ", "`key`");
+      else
+          addColumn("Companies", "Url", "varchar(100) NOT NULL default ''");
+      if(config->currConnection->servertype() == "Sqlite")
+       executeScript(":/sql/sqlite3_recreateCompanies.sql",db);
+  }
+
 #if 0
   if(config->currConnection->servertype() == "Sqlite" )
   {

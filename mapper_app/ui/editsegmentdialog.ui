@@ -308,6 +308,13 @@
      </property>
     </widget>
    </item>
+   <item row="7" column="5" colspan="2">
+    <widget class="QPushButton" name="btnRecalc">
+     <property name="text">
+      <string>Recalculate dates </string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>

@@ -24,6 +24,7 @@ CREATE TABLE if not exists `Companies` (
   `mnemonic`  varchar(10) NOT NULL DEFAULT '',
   `Description` varchar(60) NOT NULL,
   `info` varchar(60) NOT NULL DEFAULT '',
+  `url` varchar(100) NOT NULL DEFAULT '',
   `routePrefix` varchar(10) NOT NULL DEFAULT '',
   `startDate` date DEFAULT NULL,
   `endDate` date DEFAULT NULL,

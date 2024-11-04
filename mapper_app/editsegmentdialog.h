@@ -31,7 +31,7 @@ private:
  SegmentInfo si;
  void setUpdate();
  //QPushButton* btnUpdate;
- QPushButton* btnVerifyDates;
+ //QPushButton* btnVerifyDates;
  bool b_cbSegments_TextChanged;
  void common();
  bool bStartDateEdited;

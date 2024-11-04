@@ -2,6 +2,7 @@
 #include <QMenu>
 #include <data.h>
 #include <QSortFilterProxyModel>
+#include <QDesktopServices>
 
 CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     QObject(parent)
@@ -17,6 +18,8 @@ CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
 
     tableView->horizontalHeader()->setSectionsMovable(true);
 #endif
+    tableView->setSelectionBehavior(QAbstractItemView::SelectRows );
+    tableView->setSelectionMode( QAbstractItemView::SingleSelection );
     _instance = this;
 
     QSqlDatabase db = QSqlDatabase::database();
@@ -27,12 +30,12 @@ CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     _model = new MyCompanyTableModel(this);
     // _model->setTable("Companies");
     // _model->setSort(1, Qt::AscendingOrder);
-    connect(_model, SIGNAL(primeInsert(int,QSqlRecord&)), this, SLOT(On_primeInsert(int,QSqlRecord&)));
+    //connect(_model, SIGNAL(primeInsert(int,QSqlRecord&)), this, SLOT(On_primeInsert(int,QSqlRecord&)));
     connect(_model, &QAbstractTableModel::dataChanged, [=](QModelIndex left, QModelIndex right, QList<int> roles){
         emit dataChanged();
     });
     //model->setQuery("select * from Companies");
-    connect(_model, SIGNAL(beforeUpdate(int,QSqlRecord&)), this, SLOT(On_primeInsert(int,QSqlRecord&)));
+    //connect(_model, SIGNAL(beforeUpdate(int,QSqlRecord&)), this, SLOT(On_primeInsert(int,QSqlRecord&)));
 
     //_model->setEditStrategy(QSqlTableModel::OnFieldChange);
     //model->query().setForwardOnly(false);
@@ -60,6 +63,15 @@ CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     refreshAct = new QAction(tr("Refresh "), this);
     refreshAct->setToolTip(tr("Refresh company list"));
     connect(refreshAct, SIGNAL(triggered(bool)), this, SLOT(refresh()));
+    urlAct = new QAction(tr("Open url in browser"),this);
+    connect(urlAct, &QAction::triggered, menu, [=](bool){
+        // QModelIndex ix = _model->index(urlAct->data().toInt(), MyCompanyTableModel::URL);
+        // QModelIndex source = proxyModel->mapToSource(ix);
+        QModelIndex ix = tableView->currentIndex();
+        QModelIndex source = proxyModel->mapToSource(ix);
+        QUrl url = QUrl(source.data().toString());
+        QDesktopServices::openUrl(url);
+    });
 
     tableView->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(tableView, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
@@ -154,6 +166,10 @@ void CompanyView::tablev_customContextMenu( const QPoint& pt)
   menu->addAction(addAct);
   menu->addAction(delAct);
   menu->addAction(refreshAct);
+  if(curCol == MyCompanyTableModel::URL)
+
+      menu->addAction(urlAct);
+  urlAct->setData(curRow)  ;
  }
  menu->exec(QCursor::pos());
 }
@@ -203,7 +219,7 @@ QVariant MyCompanyTableModel::data ( const QModelIndex & index, int role ) const
      else
          return Qt::Unchecked;
  }
- if(role == Qt::DisplayRole)
+ if(role == Qt::DisplayRole || role == Qt::EditRole)
  {
      switch (index.column()) {
      case KEY:
@@ -226,6 +242,8 @@ QVariant MyCompanyTableModel::data ( const QModelIndex & index, int role ) const
          return cd->lastUpdated.toString();
      case INFO:
          return cd->info;
+     case URL:
+         return cd->url.toDisplayString();
      }
  }
 
@@ -296,6 +314,11 @@ bool MyCompanyTableModel::setData(const QModelIndex &mindex, const QVariant &val
      //     cd->lastUpdated.toString();
      case INFO:
          cd->info = value.toString();
+         break;
+     case URL:
+         cd->url = QUrl(value.toString());
+         if(!cd->url.isValid())
+             return false;
          break;
      }
      roles.append(role);

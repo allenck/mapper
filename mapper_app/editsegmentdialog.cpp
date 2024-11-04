@@ -92,7 +92,6 @@ connect(ui->btnSave, &QPushButton::clicked, [=]{
   On_btnSave_clicked();
   accept();
  });
- btnVerifyDates = new QPushButton(tr("Verify dates"));
 
  connect(ui->cbRouteType, SIGNAL(currentIndexChanged(int)), this, SLOT(On_cbRouteType_currentIndexChanged(int)));
  //connect(ui->chkOneWay, SIGNAL(toggled(bool)), this, SLOT(On_chkOneWay_toggled(bool)));
@@ -106,18 +105,16 @@ connect(ui->btnSave, &QPushButton::clicked, [=]{
  connect(ui->doubleTracked, SIGNAL(editingFinished()), this, SLOT(On_doubleTrackedDate_editingFinished()) );
  //connect(ui->trackUsage, SIGNAL(currentIndexChanged(int)), this, SLOT(On_trackUsageChanged(int)));
 
-// if(sd)
-// {
-//  if(!si)
-//   si = new SegmentInfo(*sd);
-// }
-// else
-// {
-//  if(!si)
-//   si = new SegmentInfo();
-//  else
-//   sd = new SegmentData(*si);
-// }
+ connect(ui->btnRecalc, &QPushButton::clicked, [=]{
+     QDate dt = sql->getEarliestUseDateForSegment(si.segmentId());
+     if(dt.isValid() && (dt < ui->dtBegin->date()))
+     {
+         if(ui->dtBegin->date() == ui->doubleTracked->date())
+             ui->doubleTracked->setDate(dt);
+         ui->dtBegin->setDate(dt);
+     }
+ });
+
  oldestStartDate = si.endDate();
  latestEndDate = si.startDate();
  oldestDoubleTrackDate = si.endDate();
