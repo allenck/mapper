@@ -31,8 +31,9 @@ SplitRoute::SplitRoute( QWidget *parent) :
             if(ui->dateTo1->date() > cd->endDate)
             {
                 ui->dateTo1->setDate(cd->endDate);
-                ui->dateFrom2->setDate(cd->endDate.addDays(1));
+                ui->dateFrom2->setDate(cd->endDate.addDays(-1));
             }
+            ui->dateTo2->setDate(cd->endDate);
         }
     });
 
@@ -340,20 +341,6 @@ void SplitRoute::btnOK_Click()
         ui->dateFrom1->setFocus();;
         return;
     }
-//    if (ui->dateFrom1->dateTime() >= ui->dateTo1->dateTime())
-//    {
-//        ui->lblHelp->setText (tr("Date #1 from must be less than or equal To date"));
-//        QApplication::beep();
-//        ui->dateFrom1->setFocus();;
-//        return;
-//    }
-    if (ui->dateTo1->dateTime() >= ui->dateFrom2->dateTime())
-    {
-        ui->lblHelp->setText (tr("#1 dates overlap #2 dates"));
-        QApplication::beep();
-        ui->dateFrom1->setFocus();;
-        return;
-    }
     CompanyData* cd = sql->getCompany(ui->cbCompany1->currentData().toInt());
     if (cd->companyKey < 0)
     {
@@ -394,6 +381,13 @@ void SplitRoute::btnOK_Click()
         ui->lblHelp->setText (tr("Start date 2 after end date"));
         QApplication::beep();
         ui->dateFrom2->setFocus();
+        return;
+    }
+    if (ui->dateTo2->dateTime().date() > cd->endDate)
+    {
+        ui->lblHelp->setText (tr("end date 2 > company enddate"));
+        QApplication::beep();
+        ui->dateFrom1->setFocus();;
         return;
     }
     setCursor(Qt::WaitCursor);

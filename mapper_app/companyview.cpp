@@ -281,10 +281,10 @@ bool MyCompanyTableModel::setData(const QModelIndex &mindex, const QVariant &val
          cd->routePrefix = value.toString();
          break;
      case STARTDATE:
-         cd->startDate = QDate::fromString("yyyy/MM/dd");
+         cd->startDate = QDate::fromString(value.toString(), "yyyy/MM/dd");
          break;
      case ENDDATE:
-         cd->endDate = QDate::fromString("yyyy/MM/dd");
+         cd->endDate = QDate::fromString(value.toString(), "yyyy/MM/dd");
          break;
      case FIRSTROUTE:
          cd->firstRoute = value.toInt();

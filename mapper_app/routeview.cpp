@@ -676,6 +676,8 @@ void RouteView::reSequenceRoute(QString whichEnd)
 
 void RouteView::itemSelectionChanged(QModelIndex index )
 {
+    if(!index.isValid())
+        return;
   QString value = index.model()->index(index.row(),0).data().toString();
   if(value.contains(" "))
   {

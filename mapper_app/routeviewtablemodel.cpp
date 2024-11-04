@@ -499,27 +499,27 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
     sd->setReverseLeave(value.toInt());
     break;
    case STARTDATE:
-    dt = value.toDate();
+    dt = QDate::fromString(value.toString(), "yyyy/MM/dd");
     if(dt.isValid())
     {
         bSegmentNeedsUpdate = true;
-        sd->setStartDate(value.toDate());
+        sd->setStartDate(dt);
     }
     break;
    case DOUBLEDATE:
-       dt = value.toDate();
+       dt = QDate::fromString(value.toString(), "yyyy/MM/dd");
        if(dt.isValid())
        {
            bSegmentNeedsUpdate = true;
-           sd->setDoubleDate(value.toDate());
+           sd->setDoubleDate(dt);
        }
        break;
    case ENDDATE:
     dt = value.toDate();
-    if(dt.isValid())
+    if(dt.isValid())QDate::fromString(value.toString(), "yyyy/MM/dd");
     {
      bSegmentNeedsUpdate = true;
-     sd->setEndDate(value.toDate());
+     sd->setEndDate(dt);
     }
     break;
    case COMPANYKEY:
