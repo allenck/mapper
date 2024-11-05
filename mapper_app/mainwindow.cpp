@@ -253,14 +253,9 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   connect(ui->btnDeletePt, SIGNAL(clicked()), this, SLOT(btnDeletePtClicked()));
   connect(ui->cbRoute, SIGNAL(currentIndexChanged(int)), this, SLOT(onCbRouteIndexChanged(int)));
   connect(ui->cbRoute, SIGNAL(editTextChanged(QString)), this, SLOT(cbRoutesTextChanged(QString)));
-//  connect(ui->cbSegments, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSegmentsSelectedValueChanged(int)));
-//  connect(ui->cbSegments, SIGNAL(editTextChanged(QString)), this, SLOT(cbSegmentsTextChanged(QString)));
   connect(ui->txtStreet, SIGNAL(textChanged(QString)), this, SLOT(txtStreetName_TextChanged(QString)));
   connect(ui->txtStreet, SIGNAL(editingFinished()), this, SLOT(txtStreetName_Leave()));
-  //ui->txtSegment->setContextMenuPolicy(Qt::CustomContextMenu);
-  //connect(ui->txtSegment, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(txtSegment_customContextMenu(const QPoint&)));
   ui->txtSegment->setContextMenu(txtSegment_customContextMenu());
-  //connect(ui->txtSegment, SIGNAL(textChanged(QString)), this, SLOT(txtSegment_TextChanged(QString)));
   connect(ui->txtSegment, &EditSegmentDescr::descrUpdated, [=](QString descr, QString street){
       SegmentInfo si = sql->getSegmentInfo(m_segmentId);
       if(descr != si.description() || street != si.streetName())
@@ -904,27 +899,17 @@ void MainWindow::NotYetInplemented()
 
 void MainWindow::createActions()
 {
-// copyAction = new QAction(tr("&Copy"), this);
-// copyAction->setStatusTip(tr("Copy Table Location"));
-// copyAction->setShortcut(tr("Ctrl+C"));
-// connect(copyAction, SIGNAL(triggered()), this, SLOT(aCopy()));
+     aboutAct = new QAction(tr("&About"), this);
+     aboutAct->setStatusTip(tr("Show the application's About box"));
+     connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
 
-// pasteAction = new QAction(tr("&Paste"), this);
-// pasteAction->setStatusTip(tr("Paste"));
-// pasteAction->setShortcut(tr("Ctrl+V"));
-// connect(pasteAction, SIGNAL(triggered()), this, SLOT(aPaste()));
+     quitAct = new QAction(tr("&Quit"), this);
+     quitAct->setStatusTip(tr("Exit mapper"));
+     connect(quitAct, SIGNAL(triggered()), this, SLOT(quit()));
 
- aboutAct = new QAction(tr("&About"), this);
- aboutAct->setStatusTip(tr("Show the application's About box"));
- connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
-
- quitAct = new QAction(tr("&Quit"), this);
- quitAct->setStatusTip(tr("Exit mapper"));
- connect(quitAct, SIGNAL(triggered()), this, SLOT(quit()));
-
- newCityAct = new QAction(tr("New City"), this);
- newCityAct->setStatusTip(tr("Define a new city."));
- connect(newCityAct, &QAction::triggered, [=]{
+     newCityAct = new QAction(tr("New City"), this);
+     newCityAct->setStatusTip(tr("Define a new city."));
+     connect(newCityAct, &QAction::triggered, [=]{
      NewCityDialog* newCityDialog = new NewCityDialog(this);
      newCityDialog->show();
      connect(newCityDialog, &NewCityDialog::finished, [=](int result){
@@ -1766,7 +1751,6 @@ void MainWindow::cbRoute_customContextMenu( const QPoint& )
     cbRouteMenu->addAction(routeCommentsAct);
     cbRouteMenu->addAction(splitRouteAct);
     cbRouteMenu->addMenu(extendMenu);
-    //cbRouteMenu->addAction(updateRouteAct);
     extendMenu->addAction(replaceSegments);
     extendMenu->addAction(exportRouteAct);
     extendMenu->addAction(updateTerminalsAct);
@@ -3724,10 +3708,7 @@ void MainWindow::txtSegment_TextChanged(QString text)
 
 void MainWindow::txtSegment_Leave( )
 {
- //SQL sql;
- // if (bSegmentChanged)
- // {
-    if(ui->txtSegment->text().isEmpty())
+  if(ui->txtSegment->text().isEmpty())
      return;
   ui->txtSegment->on_editingFinished();
   SegmentInfo si = sql->getSegmentInfo(m_segmentId);
@@ -3735,13 +3716,11 @@ void MainWindow::txtSegment_Leave( )
   ui->txtSegment->setText(si.description());
   si.setFormatOK(ui->txtSegment->isValidFormat());
   si.setTracks(ui->sbTracks->value());
-  si.setStreetName(ui->txtSegment->segmentDescription()->Street());
+  si.setStreetName(ui->txtSegment->segmentDescription()->street());
+  ui->txtStreet->setText(ui->txtSegment->segmentDescription()->street());
   si.setDescription(ui->txtSegment->text());
   si.setTracks(ui->sbTracks->value());
-  ui->txtStreet->setText(si.getStreetName());
   sql->updateSegment(&si);
-  // bSegmentChanged = false;
- //}
 }
 
 
@@ -3750,36 +3729,6 @@ void MainWindow::cbSegmentsTextChanged(QString )
  b_cbSegments_TextChanged = true;
 }
 
-//void MainWindow::cbSegments_Leave()
-//{
-// if(b_cbSegments_TextChanged ==true)
-// {
-//  qint32 segmentId = -1;
-//  QString text = ui->ssw->cbSegments()->currentText();
-
-//  bool bOk=false;
-//  segmentId = text.toInt(&bOk, 10);
-
-////  if (bOk)
-////  {
-////   //foreach (segmentInfo sI in segmentInfoList)
-////   for(int i=0; i< cbSegmentInfoList.count(); i++)
-////   {
-////    SegmentInfo sI = (SegmentInfo)cbSegmentInfoList.at(i);
-
-////    if (sI.segmentId == segmentId)
-////    {
-////     //cbSegments.SelectedItem = sI;
-////     ui->cbSegments->setCurrentIndex(i);
-////     break;
-////    }
-////   }
-////  }
-//  ui->ssw->cbSegments()->setCurrentIndex(ui->ssw->cbSegments()->findData(segmentId));
-// }
-// b_cbSegments_TextChanged =false;
-
-//}
 
 void MainWindow::cbRoutesTextChanged(QString text)
 {
@@ -4311,6 +4260,7 @@ void MainWindow::copyRouteInfo_Click()
   }
  }
 }
+
 void MainWindow::splitRoute_Click()
 {
     //SplitRoute();
@@ -4612,7 +4562,7 @@ void MainWindow::selectSegment(int seg)
  Q_ASSERT(m_segmentId > 0);
  SegmentInfo si = sql->getSegmentInfo(seg);
  QList<SegmentInfo> dups = sql->getDupSegments(si);
- ui->txtStreet->setText(si.streetName());
+ //ui->txtStreet->setText(si.streetName());
  ui->txtNewerName->setText(si.newerName());
  ui->txtSegment->setText(si.description());
  ui->txtStreet->setText(ui->txtSegment->streetName());

@@ -14,12 +14,12 @@ class SegmentDescription : public QObject
 public:
     explicit SegmentDescription(QObject *parent = 0);
     SegmentDescription(QString Description, QObject *parent = 0);
-    QString NewDescription();
-    QString ReverseDescription();
-    QString Street();
-    QString FromStreet();
-    QString ToStreet();
-    bool IsValid();
+    QString newDescription();
+    QString reverseDescription();
+    QString street();
+    QString fromStreet();
+    QString toStreet();
+    bool isValid();
     static QList<QPair<QString,QString>> abbreviations;
     bool isValidFormat(SegmentInfo si);
     bool isValidFormat(QString str);
@@ -39,19 +39,10 @@ signals:
 public slots:
 private:
     QString work;
-    // QStringList sa;
-    // QStringList saFrom;
-    // QStringList saTo;
-    // QString street;
-    // QString fromStreet;
-    // QString toStreet;
-
-    // QString from;
-    // QString to;
-    QString newDescription;
+    QString _newDescription;
     QString newReverseDescription;
     int i, j;
-    bool isValid;
+    bool _isValid;
     bool isDirty;
     //static SegmentDescription* _instance;
     void common();

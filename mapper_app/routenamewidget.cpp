@@ -1,6 +1,7 @@
 #include "routenamewidget.h"
 #include "ui_routenamewidget.h"
 #include "mainwindow.h"
+#include "clipboard.h"
 
 RouteNameWidget::RouteNameWidget(QWidget *parent) :
   QWidget(parent),
@@ -9,6 +10,7 @@ RouteNameWidget::RouteNameWidget(QWidget *parent) :
  ui->setupUi(this);
  sql = SQL::instance();
  config = Configuration::instance();
+ Clipboard::instance()->setContextMenu( ui->cbRouteName->lineEdit());
  connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbr_Leave()));
  connect(ui->cbRouteName->lineEdit(), SIGNAL(editingFinished()),this, SLOT(txtRouteName_Leave()));
  connect(ui->cbRouteName, SIGNAL(currentTextChanged(QString)), this, SLOT(txtRouteName_Leave()));

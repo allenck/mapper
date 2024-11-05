@@ -1,5 +1,6 @@
 #include "dialogcopyroute.h"
 #include "ui_dialogcopyroute.h"
+#include "clipboard.h"
 
 DialogCopyRoute::DialogCopyRoute(RouteData rd,QWidget *parent) :
     QDialog(parent),
@@ -13,8 +14,13 @@ DialogCopyRoute::DialogCopyRoute(RouteData rd,QWidget *parent) :
     fillCompanies();
     _rd = rd;
     ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(rd.companyKey()));
-
+    cd = sql->getCompany(ui->cbCompany->currentData().toInt());
+    if(cd->companyKey > 0)
+    {
+        ui->dateEnd->setDate(cd->endDate);
+    }
     _rd2 = new RouteData();
+    _rd2->setCompanyKey(cd->companyKey);
     ui->rnw->configure(_rd2, ui->lblHelp);
 
     refreshRoutes();
@@ -266,7 +272,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
      ui->lblHelp->setText(tr("check that dates are valid for company!"));
      return;
     }
-    //qint32 newRoute = sql->getNumericRoute(ui->txtRouteNbr->text(), & _alphaRoute, & bAlphaRoute, companyKey);
+    //qint32 newRoute = sql->getNumericRoute(ui->rnw->txtRouteNbr->text(), & _alphaRoute, & bAlphaRoute, companyKey);
     qint32 newRoute = ui->rnw->newRoute();
 //    if(!bNewRouteNbr && newRoute <=0)
 //     return;
@@ -498,6 +504,7 @@ void DialogCopyRoute::cbCompany_SelectedIndexChanged(int row) // SLOT
     cd = _companyList.at(ui->cbCompany->currentIndex());
     if (cd->name == "")
         return;
+    ui->rnw->setCompanyKey(cd->companyKey);
 
 //    if (ui->dateStart->date() < cd->startDate)
      ui->dateStart->setDate(cd->startDate);

@@ -186,7 +186,7 @@ RouteView::RouteView(QObject* parent )
     });
 
     addToAnotherRouteAct = new QAction(tr("Add selected segments to Another Route"));
-    connect(addToAnotherRouteAct, &QAction::triggered, [=]{
+    connect(addToAnotherRouteAct, &QAction::triggered, myParent,[=]{
      QComboBox* cbCombo = new QComboBox();
      QList<RouteData> routeList = myParent->routeList;
      for(int i=0; i<routeList.count(); i++)
@@ -216,15 +216,12 @@ RouteView::RouteView(QObject* parent )
          return;
         for(SegmentData* sd : sourceModel->_selectedSegments)
         {
-//         SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId);
-//         SegmentData* sd = new SegmentData(si);
-//         sd->setRoute(rd.route());
          sd->setRouteName(rd.routeName());
          sd->setStartDate(rd.startDate());
          sd->setEndDate(rd.endDate());
-//         sd->setTractionType(rd.tractionType());
          sd->setCompanyKey(rd.companyKey());
-//         sd->setSegmentId(segmentId);
+         if(SQL::instance()->doesRouteSegmentExist(*sd))
+             continue;
          SQL::instance()->addSegmentToRoute(sd);
         }
         sourceModel->_selectedSegments.clear();

@@ -364,14 +364,10 @@ private:
     QAction *exportDbAct;
     QAction *editConnectionsAct;
     QAction* manageOverlaysAct;
-    //QAction *locateStreetAct;
-    // test functions
     QAction* testUrlAct;
     QAction* testScriptAct;
     QAction* testLoadAct;
     QAction* testRunJavaScriptAct;
-    //QAction* testUseBundleResources;
-    //
     QAction *combineRoutesAct;
     QAction *refreshRoutesAct;
     QAction *routeCommentsAct;
@@ -379,8 +375,6 @@ private:
     QAction *rerouteAct;
     QAction *newSqliteDbAct;
     QAction* queryDialogAct;
-    QWidgetAction *sortTypeAct;
-    QComboBox * cbSort;
     QAction* exportRouteAct;
     QAction* showDebugMessages;
     QAction* runInBrowserAct;
@@ -410,6 +404,9 @@ private:
     QAction* clearAllCompaniesAct;
     QAction* displayAllRoutesForGroupAct;
     QAction* editStreetsAct;
+
+    QWidgetAction *sortTypeAct;
+    QComboBox * cbSort;
 
     QList<QAction*> cityActions;
     QList<QAction*> overlayActions;

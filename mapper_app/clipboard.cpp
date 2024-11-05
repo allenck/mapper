@@ -36,6 +36,8 @@ Clipboard* Clipboard::instance()
 
 void Clipboard::setContextMenu(QWidget* tgt)
 {
+    if(tgt == nullptr)
+        return;
     int policy = tgt->contextMenuPolicy();
     // if the policy is already set, assume that this is a sub-menu to the overriding context menu,
     // s we won't execute it here!

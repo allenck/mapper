@@ -20,7 +20,7 @@ void SegmentDescription::common()
 {
     Parameters parms = sql->getParameters();
     abbreviations = parms.abbreviationsList;
-    newDescription = work;
+    _newDescription = work;
     newReverseDescription = "";
     setText(work);
 }
@@ -180,16 +180,16 @@ void SegmentDescription::setText(QString descr)
 /// <summary>
 /// gets the formatted description
 /// </summary>
-QString SegmentDescription::NewDescription() {
+QString SegmentDescription::newDescription() {
     if(isValidFormat(work))
     {
-        newDescription = buildDescription(tokens);
+        _newDescription = buildDescription(tokens);
     }
-    return newDescription;  }
+    return _newDescription;  }
 /// <summary>
 /// returns the new description with the to and from street reversed.
 /// </summary>
-QString SegmentDescription::ReverseDescription() {
+QString SegmentDescription::reverseDescription() {
     if(isValidFormat(work))
     {
         newReverseDescription =  QString("%1, %2 - %3").arg(tokens.at(0).trimmed(),tokens.at(1).trimmed(),tokens.at(2).trimmed());
@@ -199,15 +199,17 @@ QString SegmentDescription::ReverseDescription() {
 /// <summary>
 /// gets the street
 /// </summary>
-QString SegmentDescription::Street() {
+QString SegmentDescription::street() {
     if(tokens.size() > 0)
         return tokens.at(0);
+    if(!work.isEmpty())
+        return work;
     return "";
 }
 /// <summary>
 /// gets the 'to' intersecting street
 /// </summary>
-QString SegmentDescription::FromStreet() {
+QString SegmentDescription::fromStreet() {
     if(tokens.size() > 1)
         return tokens.at(1);
     return "";
@@ -215,7 +217,7 @@ QString SegmentDescription::FromStreet() {
 /// <summary>
 /// Gets the 'from' intersecting street.
 /// </summary>
-QString SegmentDescription::ToStreet() {
+QString SegmentDescription::toStreet() {
     if(tokens.size() > 2)
         return tokens.at(2);
     return "";
@@ -223,9 +225,9 @@ QString SegmentDescription::ToStreet() {
 /// <summary>
 /// Returns boolean value of True if the description is valid.
 /// </summary>
-bool SegmentDescription::IsValid() {
-    isValid = isValidFormat(work);
-    return isValid;  }
+bool SegmentDescription::isValid() {
+    _isValid = isValidFormat(work);
+    return _isValid;  }
 
 
 bool SegmentDescription::isValidFormat(SegmentInfo si)
@@ -248,10 +250,12 @@ QStringList SegmentDescription::tokenize(QString descr)
     QStringList rslt;
     QString tgt = descr.remove('.');
     QStringList sl1 = tgt.split(",");
+
     if(sl1.isEmpty() || sl1.count() !=2)
     {
         if(tokenizeAlternate(descr, "/").isEmpty())
             return tokenizeAlternate(descr, "&");
+        rslt.append(sl1.at(0));
         return rslt;
     }
     QStringList sl2 = sl1.at(1).split(" - ");

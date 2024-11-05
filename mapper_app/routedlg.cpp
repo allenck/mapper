@@ -1968,7 +1968,7 @@ void RouteDlg::checkDirection(QString routeDirection)
           for(int i = siReverse.pointList().count()-1; i >= 0; i --)
            siReverse.pointList().append(sd->pointList().at(i));
           // Parse out the description
-          siReverse.setDescription(SegmentDescription(sd->description()).ReverseDescription() + " (1 way) "
+          siReverse.setDescription(SegmentDescription(sd->description()).reverseDescription() + " (1 way) "
                                     +  siReverse.bearing().strDirection());
 
           bool bAlreadyExists = false;
@@ -2043,7 +2043,7 @@ void RouteDlg::checkDirection(QString routeDirection)
 //          siReverse.setBearing(Bearing(siReverse.startLat(), siReverse.startLon(), siReverse.endLat(), siReverse.endLon()));
 //          siReverse.setDirection(siReverse.bearing().strDirection());
           // Parse out the description
-          siReverse.setDescription(SegmentDescription(sd->description()).ReverseDescription() + " (1 way) " + siReverse.direction());
+          siReverse.setDescription(SegmentDescription(sd->description()).reverseDescription() + " (1 way) " + siReverse.direction());
 //          sdReverse.lineSegments = si.pointList.count();
 
           siReverse.pointList().clear();

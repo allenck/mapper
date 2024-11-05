@@ -76,7 +76,7 @@ void EditSegmentDescr::on_editingFinished()
                                               .arg(defaultBgColor.red(),defaultBgColor.green(),defaultBgColor.blue()));
         setText(sd->replaceAbbreviations(descr));
         bTextEdited = false;
-        emit descrUpdated(descr, sd->Street());
+        emit descrUpdated(descr, sd->street());
     }
 }
 
@@ -92,7 +92,7 @@ QString EditSegmentDescr::replaceAbbreviations(QString txt)
 
 QString EditSegmentDescr::streetName()
 {
-    return sd->Street();
+    return sd->street();
 }
 
 void EditSegmentDescr::setContextMenu(QList<QAction*> list)
