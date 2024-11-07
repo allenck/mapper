@@ -33,6 +33,7 @@ private:
     QString _alphaRoute;
     void refreshRoutes();
     QList<RouteData> routeDataList;
+    CompanyData* cd = nullptr;
 
 private slots:
     void cbRoutes_SelectedIndexChanged();

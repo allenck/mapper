@@ -12,6 +12,10 @@ RouteNameWidget::RouteNameWidget(QWidget *parent) :
  config = Configuration::instance();
  Clipboard::instance()->setContextMenu( ui->cbRouteName->lineEdit());
  connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbr_Leave()));
+ connect(ui->txtRouteNbr, &QLineEdit::textEdited, config,[=](QString text){
+     if(!text.isEmpty())
+         bNbrEdited = true;
+ });
  connect(ui->cbRouteName->lineEdit(), SIGNAL(editingFinished()),this, SLOT(txtRouteName_Leave()));
  connect(ui->cbRouteName, SIGNAL(currentTextChanged(QString)), this, SLOT(txtRouteName_Leave()));
  connect(ui->cbRouteName, SIGNAL(currentIndexChanged(int)), this, SLOT(routeChange(int)));
@@ -97,7 +101,10 @@ void RouteNameWidget::txtRouteNbr_Leave()
 {
     lblHelpText->clear();
     bNewRouteNbr = false;
+    if(!bNbrEdited)
+        return;
     bool isNumeric = false;
+    QString ar = ui->txtRouteNbr->text();
     if(ui->txtRouteNbr->text().contains(","))
     {
      int nxt = sql->findNextRouteInRange(ui->txtRouteNbr->text());
@@ -182,7 +189,12 @@ void RouteNameWidget::txtRouteNbr_Leave()
             QString str = (QString)_routeNamesList.at(i);
             ui->cbRouteName->addItem(str);
         }
-        ui->cbRouteName->setCurrentIndex(1);
+        //ui->cbRouteName->setCurrentIndex(1);
+
+            if((ar = ui->txtRouteNbr->text().trimmed()) == _rd.alphaRoute())
+        {
+            ui->cbRouteName->setCurrentText(_rd.routeName());
+        }
     }
     else
     {

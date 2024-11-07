@@ -46,6 +46,7 @@ class RouteNameWidget : public QWidget
   Ui::RouteNameWidget *ui;
   bool bNewRouteNbr = false;
   bool bAlphaRoute = false;
+  bool bNbrEdited = false;
   SQL* sql;
   QString _alphaRoute;
   int companyKey=-1;

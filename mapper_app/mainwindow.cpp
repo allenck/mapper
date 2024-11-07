@@ -465,7 +465,7 @@ QMenu* MainWindow::addSegmentMenu(SegmentData *sd)
     if((si.doubleDate() > sd->startDate()) || !si.doubleDate().isValid())
     {
      //sd->setDoubleDate(sd->startDate());
-     si.setDoubleDate(sd->startDate());
+     si.setDoubleDate(si.startDate());
      sql->updateSegment(&si);
     }
    }
@@ -1401,7 +1401,7 @@ void MainWindow::createActions()
  });
 
  checkSegmentsAct = new QAction(tr("Check segments"),this);
- checkSegmentsAct->setStatusTip(tr("update ditection, bounds, etc; Update routes usin segments"));
+ checkSegmentsAct->setStatusTip(tr("update direction, bounds, etc; Update routes using segments"));
  connect(checkSegmentsAct, &QAction::triggered, [=]{
   sql->checkSegments();
  });
@@ -1472,19 +1472,6 @@ QWidgetAction *MainWindow::createWidgetAction()
  return sortTypeAct;
 }
 
-//void MainWindow::aCopy()
-//{
-//    QClipboard *clipboard = QApplication::clipboard();
-////    if(currentIndex.isValid())
-////        clipboard->setText(currentIndex.data().toString());
-
-//}
-
-//void MainWindow::aPaste()
-//{
-
-//}
-
 void MainWindow::addSegmentToRoute(SegmentData* sd)
 {
  QList<SegmentData*> conflicts
@@ -1500,17 +1487,13 @@ void MainWindow::addSegmentToRoute(SegmentData* sd)
      return;
  }
 
- // QList<SegmentInfo> dups = sql->getDupSegments(SegmentInfo(*sd));
- // if(dups.count()>0)
- // {
- //     qDebug() << tr("there are %1 duplicate segments.").arg(dups.count());
- //     dupSegmentView->showDupSegments(dups);
- //     QMessageBox::information(this, tr("Duplicates exist"),tr("Duplicates exist. Check the duplacate segments view"));
- // }
-
- if(!sd->doubleDate().isValid() || (sd->doubleDate() > sd->startDate() && sd->tracks()==2))
-  sd->setDoubleDate(sd->startDate());
- if(!sql->addSegmentToRoute(sd))
+ if(sd->startDate() < sd->segmentStartDate())
+     sd->setSegmentStartDate(sd->startDate());
+ if(sd->endDate() > sd->segmentEndDate())
+     sd->setSegmentEndDate(sd->endDate());
+ if(!sd->doubleDate().isValid() && sd->tracks()==2)
+  sd->setDoubleDate(sd->segmentStartDate());
+ if(!sql->addSegmentToRoute(sd, true))
  {
   //updateRoute(sd);
   return;

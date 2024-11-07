@@ -276,8 +276,12 @@ class SegmentData
     }
     double getLength();
     QDate startDate() const {return _startDate;}
+    QDate segmentStartDate() const {return _segmentStartDate;}
     QDate endDate() const {return _endDate;}
+    QDate segmentEndDate() const {return _segmentEndDate;}
     void setEndDate(QDate endDate) {_endDate = endDate;}
+    void setSegmentStartDate(QDate dt) {_segmentStartDate =dt;}
+    void setSegmentEndDate(QDate dt) {_segmentEndDate =dt;}
     double length() {return _length;}
     void setRouteType(RouteType rt) {_routeType = rt;}
     void setStartDate(QDate dt) {_startDate = dt;}
@@ -331,6 +335,7 @@ class SegmentData
     void update(const SegmentInfo& si);
     QDate doubleDate() const {return _doubleDate;}
     void setDoubleDate(QDate date){_doubleDate = date;}
+    QString routePrefix() {return _routePrefix;}
 
  private:
     qint32 _segmentId=-1;
@@ -344,6 +349,7 @@ class SegmentData
     QString _streetName;
     QString _newerName;
     QString _description;
+    QString _routePrefix;
     QDate _startDate = QDate::fromString("1880/01/01", "yyyy/MM/dd");
     QDate _doubleDate;
     QDate _endDate = QDate::fromString("2050/12/31", "yyyy/MM/dd");

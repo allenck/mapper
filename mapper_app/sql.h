@@ -149,9 +149,9 @@ public:
                                                             QMap<int, SegmentData *> segMap,
                                                             int firstSegment, bool enableTurnCheck=true);
     QDate getRoutesEarliestDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
-    QDate getRoutesLatestDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
+    //QDate getRoutesLatestDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
     QDate getRoutesNextDateForSegment(qint32 route, QString name, qint32 SegmentId, QString date);
-    QDate getEarliestUseDateForSegment(int segmentId);
+    bool recalculateSegmentDates(SegmentInfo* si);
     bool doesRouteSegmentExist(SegmentData sd);
     bool doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QDate startDate, QDate endDate);
     QList<SegmentInfo> getSegmentsInSameDirection(SegmentInfo siIn, bool reverse = false);
@@ -159,7 +159,7 @@ public:
     qint32 getDefaultCompany(qint32 route, QString date);
     LatLng getPointInfo(qint32 pt, qint32 SegmentId);
     qint32 addCompany(QString name, qint32 route, QString startDate, QString endDate);
-    qint32 addSegment(QString Description, QString OneWay, int tracks, RouteType routeType, const QList<LatLng> pointList, QString Location, bool * bAlreadyExists, bool forceInsert= false);
+    QT_DEPRECATED qint32 addSegment(QString Description, QString OneWay, int tracks, RouteType routeType, const QList<LatLng> pointList, QString Location, bool * bAlreadyExists, bool forceInsert= false);
     qint32 addSegment(SegmentInfo sd, bool *bAlreadyExists, bool forceInsert);
     qint32 splitSegment(qint32 pt, qint32 SegmentId, QString oldDesc, QString oldOneWay, QString newDesc, QString newOneWay, RouteType routeType, RouteType newRouteType, int oldTracks, int newTracks, QString oldStreet, QString newStreet);
     SegmentData *getSegmentData(qint32 route, qint32 SegmentId, QString startDate, QString endDate);

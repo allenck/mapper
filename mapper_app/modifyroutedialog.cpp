@@ -37,6 +37,14 @@ void ModifyRouteDialog::routeData(RouteData value)
 //    if (value == null)
 //        return;
     _rd = value;
+    cd = sql->getCompany(_rd.companyKey());
+    if(cd==NULL)
+        ui->lblHelp->setText(tr("companyKey '%1' is invalis!").arg(_rd.companyKey()));
+    else
+    {
+        if(_rd.startDate() < cd->startDate || _rd.endDate()> cd->endDate)
+            ui->lblHelp->setText(tr("start or end dates are not valid for company"));
+    }
 
 //    ui->txtNewRouteNbr->setText( _rd.alphaRoute());
 //    ui->txtNewRouteName->setText(_rd.routeName());
@@ -61,10 +69,12 @@ RouteData ModifyRouteDialog::getRouteData()
 {
     return _rd;
 }
+
 qint32 ModifyRouteDialog::newRoute()
 {
     return _routeNbr;
 }
+
 QString ModifyRouteDialog::newName (){ return ui->rnw->newRouteName(); }
 
 void ModifyRouteDialog::btnOK_Click()

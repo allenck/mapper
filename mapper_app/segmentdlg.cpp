@@ -55,9 +55,6 @@ SegmentDlg::SegmentDlg(QWidget *parent) :
      ui->txtNewerName_2->setText(sdsc.replaceAbbreviations(ui->txtNewerName_2->text()));
  });
  Clipboard::instance()->setContextMenu(ui->txtNewerName_2);
- //connect(ui->txtRouteNbr, SIGNAL(textChanged(QString)), this,SLOT(txtRouteName_TextChanged(QString)));
-// connect(ui->txtRouteNbr, SIGNAL(editingFinished()),this, SLOT(txtRouteNbr_Leave()));
-// connect(ui->cbRouteName, SIGNAL(signalFocusOut()),this, SLOT(cbRouteName_Leave()));
  connect(ui->btnCancel,SIGNAL(clicked()), this, SLOT(btnCancel_click()));
  connect(ui->btnOK, SIGNAL(clicked()), this, SLOT(btnOK_Click()));
  connect(ui->rbUseNew, SIGNAL(clicked()), this, SLOT(rbUseNew_CheckedChanged()));
@@ -810,6 +807,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
   si.setRouteType(rt);
   si.setLocation(ui->cbLocation->currentText());
   si.setStartDate(ui->dateStart->date());
+  si.setDoubleDate(si.startDate());
   if(ui->sbTracks->value() == 2)
    si.setDoubleDate(ui->dateStart->date());
   si.setEndDate(ui->dateEnd->date());

@@ -1970,12 +1970,14 @@ void RouteDlg::checkDirection(QString routeDirection)
           // Parse out the description
           siReverse.setDescription(SegmentDescription(sd->description()).reverseDescription() + " (1 way) "
                                     +  siReverse.bearing().strDirection());
-
+          siReverse.setLocation(sd->location());
+          siReverse.setTracks(sd->tracks());
           bool bAlreadyExists = false;
           seq =0;
-          siReverse.setSegmentId(sql->addSegment(siReverse.description(), "Y", sd->tracks(),
-                                                 siReverse.routeType(), siReverse.pointList(),
-                                                 sd->location(), & bAlreadyExists));
+          // siReverse.setSegmentId(sql->addSegment(siReverse.description(), "Y", sd->tracks(),
+          //                                        siReverse.routeType(), siReverse.pointList(),
+          //                                        sd->location(), & bAlreadyExists));
+          siReverse.setSegmentId(sql->addSegment(siReverse, & bAlreadyExists, false));
 //          if (sdReverse.segmentId != -1 && !bAlreadyExists)
 //          {
 //              SegmentData sd = sql->getSegmentData(si.segmentId);

@@ -140,7 +140,10 @@ void SegmentSelectionWidget::refreshSegmentCB()
     }
     street= street.mid(0, street.indexOf("("));
    }
-   if(street == selectedStreet && ui->cbLocation->currentText() == si.location())
+   QString searchLoc = ui->cbLocation->currentText();
+
+   if((!searchLoc.isEmpty() && street == selectedStreet && ui->cbLocation->currentText() == si.location())
+       || street == selectedStreet)
    {
     // populate streets
     if((si.tracks() == 2 && ui->rbDouble->isChecked() ) ||

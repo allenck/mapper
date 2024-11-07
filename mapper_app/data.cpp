@@ -338,8 +338,10 @@ SegmentData::SegmentData(const SegmentInfo& o)
  _streetName = o._streetName;
  _newerName = o._newerStreetName;
  _description = o._description;
- _startDate = o._startDate;
- _endDate = o._endDate;
+ //_startDate = o._startDate;
+ //_endDate = o._endDate;
+ _segmentStartDate = o._startDate;
+ _segmentEndDate = o._endDate;
  _doubleDate = o._doubleDate;
  _direction  = o._direction;
  _bearing = o._bearing;

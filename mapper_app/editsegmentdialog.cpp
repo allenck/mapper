@@ -106,12 +106,13 @@ connect(ui->btnSave, &QPushButton::clicked, [=]{
  //connect(ui->trackUsage, SIGNAL(currentIndexChanged(int)), this, SLOT(On_trackUsageChanged(int)));
 
  connect(ui->btnRecalc, &QPushButton::clicked, [=]{
-     QDate dt = sql->getEarliestUseDateForSegment(si.segmentId());
-     if(dt.isValid() && (dt < ui->dtBegin->date()))
+     bool rslt = sql->recalculateSegmentDates(&si);
+     if(rslt && (si.startDate() < ui->dtBegin->date()))
      {
          if(ui->dtBegin->date() == ui->doubleTracked->date())
-             ui->doubleTracked->setDate(dt);
-         ui->dtBegin->setDate(dt);
+             ui->doubleTracked->setDate(si.startDate());
+         ui->dtBegin->setDate(si.startDate());
+         ui->dtEnd->setDate(si.endDate());
      }
  });
 
