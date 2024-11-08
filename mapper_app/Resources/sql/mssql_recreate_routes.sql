@@ -21,7 +21,7 @@ SELECT [Route],[name], [StartDate],[EndDate],
 DROP TABLE IF EXISTS [dbo].[Routes];
 CREATE TABLE [dbo].[Routes](
                    [Route] [int] NOT NULL,
-                   [name] [varchar](125) NOT NULL,
+                   [name] [varchar](140) NOT NULL,
                    [StartDate]  [date] NOT NULL,
                    [EndDate] [date] NOT NULL,
                    [LineKey] [int] NOT NULL,

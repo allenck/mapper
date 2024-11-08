@@ -5326,19 +5326,16 @@ bool SQL::addSegmentToRoute(SegmentData* sd, bool notify)
         qDebug()<<"Invalid route number";
         return ret;
     }
-    if (sd->routeName() == "" || sd->routeName().length() > 125)
+    if (sd->routeName() == "" || sd->routeName().length() > 140)
     {
         qDebug()<<"invalid route name";
         return ret;
     }
-//    QDateTime dtStart = QDateTime::fromString(startDate, "yyyy/MM/dd");
-//    QDateTime dtEnd = QDateTime::fromString(endDate, "yyyy/MM/dd");
 
     if (sd->endDate() < sd->startDate())
-    //    throw (new ApplicationException("Invalid end date" + endDate));
     {
         qDebug()<<"end date ("+ sd->endDate().toString("yyyy/MM/DD") +") before start date("+ sd->startDate().toString("yyyy/MM/DD")+")!";
-        return ret;
+        throw (new ApplicationException("Invalid end date" + sd->endDate().toString("yyyy/MM/dd")));
     }
     if (sd->segmentId() <= 0)
         throw (new ApplicationException("invalid segmentid:" + QString::number(sd->segmentId())));
@@ -5395,6 +5392,8 @@ bool SQL::addSegmentToRoute(SegmentData* sd, bool notify)
         updateSegment(sd);
 
         //CommitTransaction("addSegmentToRoute");
+        if(notify)
+            emit routeChange(NotifyRouteChange(SQL::ADDSEG, sd));
         ret = true;
     }
     catch (Exception e)
@@ -5420,7 +5419,7 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate,
         qDebug()<<"Invalid route number";
         return ret;
     }
-    if (routeName == "" || routeName.length() > 125)
+    if (routeName == "" || routeName.length() > 140)
     {
         qDebug()<<"invalid route name";
         return ret;
@@ -8004,7 +8003,7 @@ bool SQL::updateSegmentToRoute(qint32 routeNbr, QString routeName, QString start
     return ret;
 }
 
-SegmentData* SQL::getSegmentDataForRouteDates(qint32 route, QString name, qint32 segmentId,
+SegmentData* SQL::getConflictingSegmentDataForRoute(qint32 route, QString name, qint32 segmentId,
                                               QString startDate, QString endDate)
 {
  QString where = " where Route = " + QString("%1").arg(route) + ""

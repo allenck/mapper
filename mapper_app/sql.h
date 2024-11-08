@@ -165,7 +165,7 @@ public:
     SegmentData *getSegmentData(qint32 route, qint32 SegmentId, QString startDate, QString endDate);
     QList<SegmentData *> getSegmentDataList(RouteData rd);
     QT_DEPRECATED bool updateSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId, qint32 companyKey, qint32 tractionType, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString biDirectional, QString newerName);
-    SegmentData* getSegmentDataForRouteDates(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate);
+    SegmentData* getConflictingSegmentDataForRoute(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate);
     RouteData getRouteDataForRouteDates(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate);
     bool deleteRoute(qint32 route, QString name, QString startDate, QString endDate);
     bool modifyRouteDate(RouteData *rd, bool bStartDate, QDate dt);

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1014</width>
+    <width>1035</width>
     <height>606</height>
    </rect>
   </property>
@@ -723,7 +723,7 @@
             </property>
             <property name="maximumSize">
              <size>
-              <width>1000</width>
+              <width>800</width>
               <height>16777215</height>
              </size>
             </property>
@@ -955,7 +955,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1014</width>
+     <width>1035</width>
      <height>24</height>
     </rect>
    </property>
@@ -969,15 +969,15 @@
    <header>editsegmentdescr.h</header>
   </customwidget>
   <customwidget>
+   <class>CComboBox</class>
+   <extends>QComboBox</extends>
+   <header>ccombobox.h</header>
+  </customwidget>
+  <customwidget>
    <class>SegmentSelectionWidget</class>
    <extends>QWidget</extends>
    <header>segmentselectionwidget.h</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>CComboBox</class>
-   <extends>QComboBox</extends>
-   <header>ccombobox.h</header>
   </customwidget>
   <customwidget>
    <class>QWebEngineView</class>

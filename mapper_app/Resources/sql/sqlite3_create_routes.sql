@@ -1,7 +1,7 @@
 DROP TABLE if exists `Routes`;
 CREATE TABLE `Routes` (
              `Route` int(11) NOT NULL,
-             `Name` varchar(125) NOT NULL,
+             `Name` varchar(140) NOT NULL,
              `StartDate` date check(`StartDate` <= `EndDate`) NOT NULL,
              `EndDate` date NOT NULL,
              `LineKey` int(11) NOT NULL,

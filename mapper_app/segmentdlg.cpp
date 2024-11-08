@@ -74,7 +74,8 @@ SegmentDlg::SegmentDlg(QWidget *parent) :
  });
  connect(CompanyView::instance()->model(), SIGNAL(companyChange()), this, SLOT(fillCompanies()));
 
- _routeTypeList <<"0 - Surface in street"<< "1 - Surface PRW"<< "2 - Rapid Transit" << "3 - Subway/Metro/U-Bahn"<< "4 - Heavy Rail" <<  "5 - Incline" << "6 - Other";
+ //_routeTypeList <<"0 - Surface in street"<< "1 - Surface PRW"<< "2 - Rapid Transit" << "3 - Subway/Metro/U-Bahn"<< "4 - Heavy Rail" <<  "5 - Incline" << "6 - Other";
+ _routeTypeList = SegmentData::ROUTETYPES;
  ui->cbRouteType->addItems(_routeTypeList);
  normalEnter = 0, normalLeave = 0, reverseEnter = 0, reverseLeave = 0;
  ui->btnOK->setEnabled(false);
@@ -791,8 +792,8 @@ void SegmentDlg::btnOK_Click()  // SLOT
  if (_segmentId < 0)
  {
   newName = ui->txtNewName->text();
-  if (ui->chkNewOneWay->isChecked())
-   newName += " (1 way)";
+  // if (ui->chkNewOneWay->isChecked())
+  //  newName += " (1 way)";
   QString strOneWay = ui->chkNewOneWay->isChecked()?"Y":"N";
   QString strBiDirectional = ui->chkNewOneWay->isChecked()?"Y":"Y";
   RouteType rt = (RouteType)ui->cbRouteType->currentIndex();
@@ -842,11 +843,11 @@ void SegmentDlg::btnOK_Click()  // SLOT
  {
     // splitting
   newName = ui->txtNewName->text();
-  if (ui->chkNewOneWay->isChecked())
-   newName += " (1 way)";
+  // if (ui->chkNewOneWay->isChecked())
+  //  newName += " (1 way)";
   originalName = ui->txtOriginalName->text();
-  if (ui->chkOriginalOneWay->isChecked())
-   originalName += " (1 way)";
+  // if (ui->chkOriginalOneWay->isChecked())
+  //  originalName += " (1 way)";
   _newSegmentId = sql->splitSegment(_pt, _segmentId, originalName, ui->chkOriginalOneWay->isChecked()?"Y":"N",
                                     newName, ui->chkNewOneWay->isChecked()?"Y":"N", si.routeType(),
                                     (RouteType)ui->cbRouteType->currentIndex(),
@@ -895,6 +896,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
    sd->setCompanyKey(ui->cbCompany->currentData().toUInt());
    sd->setTractionType(ui->cbTractionType->currentData().toUInt());
    sd->setLocation(ui->txtNewLocation->text());
+   sd->setRouteType((RouteType)ui->cbRouteType->currentIndex());
    if(!sql->doesRouteSegmentExist(*sd))
    {
     int companyKey= ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt();

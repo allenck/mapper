@@ -237,10 +237,10 @@ void RouteNameWidget::txtRouteName_Leave()
         //System.Media.SystemSounds.Beep.Play();
         return;
     }
-    if (ui->cbRouteName->currentText().length() > 125)
+    if (ui->cbRouteName->currentText().length() > 140)
     {
         ui->txtRouteNbr->setFocus();
-        lblHelpText->setText(tr("name > 125 characters!"));
+        lblHelpText->setText(tr("name > 140 characters!"));
         //System.Media.SystemSounds.Beep.Play();
         return;
     }

@@ -27,6 +27,10 @@ RouteDlg::RouteDlg(QWidget *parent) :
     _alphaRoute="";
     bNewRouteNbr=false;
     strNoRoute = tr("New Route Name");
+    for(int i=0; i < SegmentData::ROUTETYPES.count(); i++)
+    {
+        ui->cbRouteType->addItem(SegmentData::ROUTETYPES.at(i),i);
+    }
     //connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbr_Leave()) );
     //connect(ui->rnw, SIGNAL(routeNumberChange(int)), this, SLOT(txtRouteNbr_Leave()) );
     //connect(ui->cbRouteName, SIGNAL(signalFocusOut()), this, SLOT(txtRouteName_Leave()));
@@ -102,7 +106,7 @@ void RouteDlg::setSegmentId(qint32 segmentid)
  if(qobject_cast<MainWindow*>(parent()))
  {
     MainWindow* main = qobject_cast<MainWindow*>(parent());
-    this->sd = sql->getSegmentDataForRouteDates(main->m_routeNbr, main->m_routeName, _segmentId,
+    this->sd = sql->getConflictingSegmentDataForRoute(main->m_routeNbr, main->m_routeName, _segmentId,
                                           main->m_currRouteStartDate, main->m_currRouteEndDate);
  }
  bSegmentChanging = false;
@@ -2018,6 +2022,7 @@ void RouteDlg::checkDirection(QString routeDirection)
             sd->setTractionType(tractionType);
             sd->setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
             sd->setTrackUsage(trackUsage);
+            sd->setRouteType((RouteType)ui->cbRouteType->currentData().toInt());
             if (!sql->addSegmentToRoute(sd))
             {
                 ui->lblHelpText->setText(tr( "Update Error"));

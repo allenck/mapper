@@ -99,7 +99,7 @@ CREATE TABLE if not exists `LineSegment` (
 
 CREATE TABLE if not exists `Routes` (
   `Route` int(11) NOT NULL,
-  `Name` varchar(125) NOT NULL,
+  `Name` varchar(140) NOT NULL,
   `StartDate` date NOT NULL,
   `EndDate` date NOT NULL,
   `LineKey` int(11) NOT NULL,

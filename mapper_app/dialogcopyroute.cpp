@@ -332,6 +332,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
         this->reject();
 
 //    sql->BeginTransaction("CopyRoute");
+    setCursor(Qt::WaitCursor);
     qint32  tractionType = (tractionList.values().at(ui->cbTractionType->currentIndex())).tractionType;
 
     if(ui->dateStart->date() > _rd.endDate() || ui->dateEnd->date() < _rd.startDate())
@@ -372,12 +373,12 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
 //        RouteData rd2 = sql->getRouteDataForRouteDates(rd.route(), ui->rnw->newRouteName(), rd1.segmentId(),
 //                                                           rd1.startDate().toString("yyyy/MM/dd"),
 //                                                           rd1.endDate().toString("yyyy/MM/dd"));
-     SegmentData* sd2 = sql->getSegmentDataForRouteDates(sd->route(),ui->rnw->newRouteName(),
+        SegmentData* sd2 = sql->getConflictingSegmentDataForRoute(_routeNbr,ui->rnw->newRouteName(),
                                                         sd->segmentId(),
-                                                        sd->startDate().toString("yyyy/MM/dd"),
-                                                        sd->endDate().toString("yyyy/MM/dd"));
-     if (sd2 == nullptr)
-     {
+                                                        ui->dateStart->date().toString("yyyy/MM/dd"),
+                                                        ui->dateEnd->date().toString("yyyy/MM/dd"));
+        if (sd2 == nullptr)
+        {
             if (sql->doesRouteSegmentExist(_routeNbr, ui->rnw->newRouteName(), sd->segmentId(),
                                            ui->dateStart->date(), ui->dateEnd->date()))
             {
@@ -438,10 +439,10 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
             // now add back any portion of the route after the current date range
             if (sd2->endDate() > ui->dateEnd->date())
             {
-//                if (sql->addSegmentToRoute(_routeNbr, ui->rnw->newRouteName(),
-//                    (ui->dateEnd->date().addDays(1)), rd2.endDate(),
-//                    rd2.segmentId(), rd2.companyKey(), rd2.tractionType(), rd2.direction(), rd2.next(), rd2.prev(),
-//                    rd2.normalEnter(), rd2.normalLeave(), rd2.reverseEnter(), rd2.reverseLeave(), rd2.oneWay(), rd2.trackUsage()) == false)
+    //                if (sql->addSegmentToRoute(_routeNbr, ui->rnw->newRouteName(),
+    //                    (ui->dateEnd->date().addDays(1)), rd2.endDate(),
+    //                    rd2.segmentId(), rd2.companyKey(), rd2.tractionType(), rd2.direction(), rd2.next(), rd2.prev(),
+    //                    rd2.normalEnter(), rd2.normalLeave(), rd2.reverseEnter(), rd2.reverseLeave(), rd2.oneWay(), rd2.trackUsage()) == false)
              sd2->setRoute(_routeNbr);
              sd2->setRouteName(ui->rnw->newRouteName());
              sd2->setStartDate(ui->dateEnd->date().addDays(1));
@@ -459,12 +460,12 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
                 sql->deleteRouteSegment(_routeNbr, ui->rnw->newRouteName(), sd2->segmentId(),
                                         ui->dateStart->text(), ui->dateEnd->text());
             }
-//            if (sql->addSegmentToRoute(_routeNbr, ui->rnw->newRouteName(), ui->dateStart->date(),
-//                                       ui->dateEnd->date(), rd1.segmentId(),
-//                     ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey,
-//                     /*cbTractionType.SelectedIndex + 1*/tractionType, rd1.direction(), rd1.next(), rd1.prev(),
-//                     rd1.normalEnter(), rd1.normalLeave(), rd1.reverseEnter(), rd1.reverseLeave(),
-//                                       rd1.oneWay(), rd1.trackUsage()) == false)
+    //            if (sql->addSegmentToRoute(_routeNbr, ui->rnw->newRouteName(), ui->dateStart->date(),
+    //                                       ui->dateEnd->date(), rd1.segmentId(),
+    //                     ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey,
+    //                     /*cbTractionType.SelectedIndex + 1*/tractionType, rd1.direction(), rd1.next(), rd1.prev(),
+    //                     rd1.normalEnter(), rd1.normalLeave(), rd1.reverseEnter(), rd1.reverseLeave(),
+    //                                       rd1.oneWay(), rd1.trackUsage()) == false)
             sd->setRoute(_routeNbr);
             sd->setRouteName(ui->rnw->newRouteName());
             sd->setStartDate(ui->dateStart->date());
@@ -493,6 +494,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     _rd.setTractionType( ((TractionTypeInfo)tractionList.values().at(ui->cbTractionType->currentIndex())).tractionType);
 
     this->accept();
+    setCursor(Qt::ArrowCursor);
     this->close();
 }
 
