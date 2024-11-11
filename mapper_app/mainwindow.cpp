@@ -373,6 +373,8 @@ void MainWindow::onCbSegmentsCustomContextMenu(const QPoint &pos)
 {
  //ui->ssw->cbSegments()->addAction(addSegmentToRouteAct);
  SegmentInfo si = sql->getSegmentInfo(ui->ssw->cbSegments()->currentData().toInt());
+ if(si.segmentId()< 1)
+     return;
  SegmentData* sd = new SegmentData(si);
  sd->setRoute(_rd.route());
  sd->setAlphaRoute(_rd.alphaRoute());

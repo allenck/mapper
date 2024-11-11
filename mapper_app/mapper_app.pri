@@ -1,6 +1,7 @@
 SOURCES += main.cpp\
     $$PWD/browsecommentsdialog.cpp \
     $$PWD/clipboard.cpp \
+    $$PWD/dateeditdelegate.cpp \
     $$PWD/editsegmentdescr.cpp \
     $$PWD/lineeditdelegate.cpp \
     $$PWD/logger.cpp \
@@ -80,6 +81,7 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     $$PWD/browsecommentsdialog.h \
     $$PWD/clipboard.h \
+    $$PWD/dateeditdelegate.h \
     $$PWD/editsegmentdescr.h \
     $$PWD/lineeditdelegate.h \
     $$PWD/logger.h \

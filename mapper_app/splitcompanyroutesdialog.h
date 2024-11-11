@@ -27,6 +27,8 @@ class SplitCompanyRoutesDialog : public QDialog
   Ui::SplitCompanyRoutesDialog *ui;
   QList<CompanyData*> _companyList;
   SQL* sql;
+  CompanyData* cd1;
+  CompanyData* cd2;
 };
 
 #endif // SPLITCOMPANYROUTESDIALOG_H

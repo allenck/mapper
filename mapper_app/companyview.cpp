@@ -3,6 +3,7 @@
 #include <data.h>
 #include <QSortFilterProxyModel>
 #include <QDesktopServices>
+#include "dateeditdelegate.h"
 
 CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     QObject(parent)
@@ -48,6 +49,8 @@ CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     //QSqlRecord r = _model->record(0);
     // int ixRoutePrefix = r.indexOf("routePrefix");
     // tableView->horizontalHeader()->moveSection(ixRoutePrefix,2);
+    tableView->setItemDelegateForColumn(MyCompanyTableModel::STARTDATE, new DateEditDelegate(this));
+    tableView->setItemDelegateForColumn(MyCompanyTableModel::ENDDATE, new DateEditDelegate(this));
     tableView->resizeColumnsToContents();
 
     bNeedsRefresh = false;

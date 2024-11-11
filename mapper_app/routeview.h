@@ -101,8 +101,8 @@ private slots:
     void hdr_customContextMenu(const QPoint pt );
     void tablev_customContextMenu( const QPoint& );
     void tab1CustomContextMenu(const QPoint &);
-    void aCopy();
-    void aPaste();
+    // void aCopy();
+    // void aPaste();
     void itemSelectionChanged(QModelIndex index );
     void reSequenceRouteFromStart();
     void reSequenceRouteFromEnd();

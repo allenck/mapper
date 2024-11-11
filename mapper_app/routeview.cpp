@@ -9,6 +9,7 @@
 #include "splitsegmentdlg.h"
 #include "turndelegate.h"
 #include "ttitemdelegate.h"
+#include "dateeditdelegate.h"
 
 RouteView::RouteView(QObject* parent )
 {
@@ -491,17 +492,17 @@ bool RouteView::boolGetItemTableView(QTableView *table)
 
 }
 
-void RouteView::aCopy()
-{
-    QClipboard *clipboard = QApplication::clipboard();
-    if(currentIndex.isValid())
-        clipboard->setText(currentIndex.data().toString());
-}
+// void RouteView::aCopy()
+// {
+//     QClipboard *clipboard = QApplication::clipboard();
+//     if(currentIndex.isValid())
+//         clipboard->setText(currentIndex.data().toString());
+// }
 
-void RouteView::aPaste()
-{
+// void RouteView::aPaste()
+// {
 
-}
+// }
 
 void RouteView::updateRouteView()
 {
@@ -533,6 +534,9 @@ void RouteView::updateRouteView()
     sourceModel->setSequenced(bIsSequenced);
 
     proxymodel->setSourceModel(sourceModel);
+
+    if(!(ui->contextMenuPolicy() == Qt::CustomContextMenu))
+        ui->setContextMenuPolicy(Qt::CustomContextMenu);
 
     // get the row of the start segment and the end segment
     int numRows = sourceModel->rowCount(QModelIndex());
@@ -572,6 +576,10 @@ void RouteView::updateRouteView()
     ui->setItemDelegateForColumn(sourceModel->RE, new TurnDelegate("back"));
     ui->setItemDelegateForColumn(sourceModel->RL, new TurnDelegate("ahead"));
     ui->setItemDelegateForColumn(sourceModel->COMBO, new UsageDelegate());
+    ui->setItemDelegateForColumn(sourceModel->STARTDATE, new DateEditDelegate());
+    ui->setItemDelegateForColumn(sourceModel->ENDDATE, new DateEditDelegate());
+    ui->setItemDelegateForColumn(sourceModel->DOUBLEDATE, new DateEditDelegate());
+
     //populateList();
 }
 
