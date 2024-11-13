@@ -1894,7 +1894,7 @@ QList<SegmentData*> SQL::getRouteSegmentsForDate(QDate date, int companyKey)
 
  QString where = "where '"+ date.toString("yyyy/MM/dd") + "' between StartDate and EndDate"
                   + company +
-                 " order by StartDate, EndDate, Segmentid";
+                 " order by RouteName, Segmentid";
 
  return segmentDataFromView(where);
 
@@ -10079,7 +10079,7 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd, bool notify)
      CompanyData* cd = getCompany(sd.companyKey());
      qWarning() << tr("Company key %1 %2 %3-%4 is invalid for segment %5 6 %7-%8")
                    .arg(cd->companyKey).arg(cd->name, cd->startDate.toString("yyyy/MM/dd"),cd->endDate.toString("yyyyMM/dd"))
-                   .arg(sd.segmentId()).arg(sd.description(),sd.startDate().toString("yyyy/MM/dd"),sd.endDate().toString("yyyyMM/dd"));
+                   .arg(sd.segmentId()).arg(sd.description(),sd.startDate().toString("yyyy/MM/dd"),sd.endDate().toString("yyyy/MM/dd"));
      return false;
  }
 

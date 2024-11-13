@@ -1,6 +1,7 @@
 #include "splitcompanyroutesdialog.h"
 #include "ui_splitcompanyroutesdialog.h"
 #include "companyview.h"
+#include <QApplication>
 
 SplitCompanyRoutesDialog::SplitCompanyRoutesDialog(QWidget *parent) :
   QDialog(parent),
@@ -17,10 +18,13 @@ SplitCompanyRoutesDialog::SplitCompanyRoutesDialog(QWidget *parent) :
  connect(ui->cbCompany1, &QComboBox::currentTextChanged, sql,[=](QString){
      cd1 = sql->getCompany(ui->cbCompany1->currentData().toInt());
      ui->dateEdit->setDate(cd1->endDate);
+     segmentList = sql->getRouteSegmentsForDate(ui->dateEdit->date(), ui->cbCompany1->currentData().toInt());
+     checkParameters();
  });
  connect(ui->cbCompany2, &QComboBox::currentTextChanged, sql, [=](QString){
      cd2 = sql->getCompany(ui->cbCompany2->currentData().toInt());
      ui->newEndDate->setDate(cd2->endDate);
+     checkParameters();
  });
 }
 
@@ -50,7 +54,16 @@ void SplitCompanyRoutesDialog::fillCompanies()
     }
 }
 
-void SplitCompanyRoutesDialog::btnApply_clicked()
+void SplitCompanyRoutesDialog::setOrginalCompany(int companyKey)
+{
+    cd1 = sql->getCompany(ui->cbCompany1->currentData().toInt());
+    ui->cbCompany1->setCurrentIndex(ui->cbCompany1->findData(companyKey));
+    ui->dateEdit->setDate(cd1->endDate);
+    segmentList = sql->getRouteSegmentsForDate(ui->dateEdit->date(), ui->cbCompany1->currentData().toInt());
+
+}
+
+bool SplitCompanyRoutesDialog::checkParameters()
 {
     cd1 = sql->getCompany(ui->cbCompany1->currentData().toInt());
 
@@ -58,71 +71,91 @@ void SplitCompanyRoutesDialog::btnApply_clicked()
     if(ui->cbCompany1->currentIndex() < 0)
     {
         ui->lblHelp->setText(tr("select the original company."));
-        return;
+        return false;
     }
     if(ui->cbCompany2->currentIndex() < 0)
     {
         ui->lblHelp->setText(tr("select the target company."));
-        return;
+        return false;
     }
 
     if(ui->cbCompany1->currentIndex() == ui->cbCompany2->currentIndex())
     {
         ui->lblHelp->setText(tr("select a different target company."));
-        return;
+        return false;
     }
     cd2 = sql->getCompany(ui->cbCompany2->currentData().toInt());
     if(ui->newEndDate->date() > cd2->endDate  || ui->newEndDate->date() < ui->dateEdit->date())
     {
         ui->lblHelp->setText(tr("select a new date valid for company!."));
-        return;
+        return false;
 
     }
     if(ui->dateEdit->date() < cd1->startDate  || ui->dateEdit->date() > cd1->endDate)
     {
         ui->lblHelp->setText(tr("date invalid for company1"));
-        return;
+        return false;
     }
     if(ui->newEndDate->date() < cd2->startDate  || ui->newEndDate->date() > cd2->endDate)
     {
         ui->lblHelp->setText(tr("date invalid for company2"));
-        return;
+        return false;
     }
 
-    QList<SegmentData*> segmentList = sql->getRouteSegmentsForDate(ui->dateEdit->date(),
-                                                               ui->cbCompany1->currentData().toInt());
- if(segmentList.isEmpty())
- {
-  ui->lblHelp->setText(tr("No route segments for '%1'.").arg(ui->cbCompany1->currentText()));
-  return;
- }
+    if(segmentList.isEmpty())
+    {
+        ui->lblHelp->setText(tr("No route segments for '%1'.").arg(ui->cbCompany1->currentText()));
+        return false;
+    }
+    ui->btnApply->setEnabled(true);
+    return true;
+}
 
- sql->beginTransaction("company split");
- foreach (SegmentData* sd, segmentList) {
-  SegmentData sdOld = SegmentData(*sd);
-  SegmentData sdNew = SegmentData(*sd);
-  // sdOld.setEndDate(ui->dateEdit->date().addDays(-1));
-  // if(!sql->updateRoute(*sd, sdOld, false)) // do not notify routeview of changes!
-  // {
-  //  ui->lblHelp->setText("Update failed");
-  //  sql->rollbackTransaction("company split");
-  //  return;
-  // }
-  sdNew.setStartDate(ui->dateEdit->date());
-  sdNew.setCompanyKey(ui->cbCompany2->currentData().toInt());
-  sdNew.setEndDate(ui->newEndDate->date());
-  if(sql->doesRouteSegmentExist(sdNew))
-  {
-   qDebug() << "segment " << sdNew.segmentId() << " already present, route " << sdNew.route();
-   continue;
-  }
-  if(!sql->addSegmentToRoute(&sdNew, false))
-  {
-   ui->lblHelp->setText("insert failed");
-   sql->rollbackTransaction("company split");
-   return;
-  }
- }
- sql->commitTransaction("company split");
- accepted();
+void SplitCompanyRoutesDialog::btnApply_clicked()
+{
+    if(!checkParameters())
+        return;
+
+    sql->beginTransaction("company split");
+    QString curName;
+    foreach (SegmentData* sd, segmentList)
+    {
+        qApp->processEvents();
+        SegmentData sdOld = SegmentData(*sd);
+        SegmentData sdNew = SegmentData(*sd);
+        sdNew.setStartDate(ui->dateEdit->date());
+        sdNew.setCompanyKey(ui->cbCompany2->currentData().toInt());
+        sdNew.setEndDate(ui->newEndDate->date());
+        if(sql->doesRouteSegmentExist(sdNew))
+        {
+            if(sd->routeName()!=curName)
+            {
+                ui->lblHelp->setStyleSheet("color: #FFFF00");
+                ui->lblHelp->setText("bypassing: "+ sd->routeName());
+                curName = sd->routeName();
+            }
+
+            continue;
+        }
+        if(sd->routeName() != curName)
+        {
+            ui->lblHelp->setStyleSheet("color: green");
+            ui->lblHelp->setText("copying: "+ sd->routeName());
+            curName = sd->routeName();
+        }
+        // if(sql->doesRouteSegmentExist(sdNew))
+        // {
+        //     qDebug() << "segment " << sdNew.segmentId() << " already present, route " << sdNew.route();
+        //     continue;
+        // }
+        if(!sql->addSegmentToRoute(&sdNew, false))
+        {
+            ui->lblHelp->setStyleSheet("color: red");
+            ui->lblHelp->setText("insert failed");
+            sql->rollbackTransaction("company split");
+            return;
+        }
+    }
+    sql->commitTransaction("company split");
+    accept();
 }

@@ -16,6 +16,7 @@ class SplitCompanyRoutesDialog : public QDialog
  public:
   explicit SplitCompanyRoutesDialog(QWidget *parent = nullptr);
   ~SplitCompanyRoutesDialog();
+  void setOrginalCompany(int companyKey);
 
  public slots:
   void fillCompanies();
@@ -29,6 +30,8 @@ class SplitCompanyRoutesDialog : public QDialog
   SQL* sql;
   CompanyData* cd1;
   CompanyData* cd2;
+  bool checkParameters();
+  QList<SegmentData*> segmentList;
 };
 
 #endif // SPLITCOMPANYROUTESDIALOG_H

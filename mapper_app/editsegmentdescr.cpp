@@ -67,10 +67,11 @@ void EditSegmentDescr::on_editingFinished()
         QString descr = text();
         if(!sd)
             sd = new SegmentDescription(descr);
-        if(!sd->isValidFormat(descr))
+        auto placeholder = "QLineEdit { background-color: #FFFF00 }";
+        if (!sd->isValidFormat(descr))
             QLineEdit::setStyleSheet("QLineEdit { background-color: #FFC0CB }");
         else if(descr.contains(" to ") || descr.contains(" zur ") || sd->hasAbbreviations(descr))
-            QLineEdit::setStyleSheet("QLineEdit { background-color: #FFFF00 }");
+            QLineEdit::setStyleSheet(placeholder);
         else
             QLineEdit::setStyleSheet(QString("QLineEdit { background-color: rgb(%1,%2,%3) }")
                                               .arg(defaultBgColor.red(),defaultBgColor.green(),defaultBgColor.blue()));

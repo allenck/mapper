@@ -1036,9 +1036,10 @@ void MainWindow::createActions()
  companyChangeRoutes = new QAction(tr("ChangeCompany for routes"),this);
  companyChangeRoutes->setStatusTip(tr("Change company for all routes at a date"));
  connect(companyChangeRoutes, &QAction::triggered, [=]{
-  SplitCompanyRoutesDialog dlg;
-  if(dlg.exec() == QDialog::Accepted)
-   refreshRoutes();
+    SplitCompanyRoutesDialog dlg;
+    dlg.setOrginalCompany(ui->cbCompany->currentData().toInt());
+    if(dlg.exec() == QDialog::Accepted)
+        refreshRoutes();
  });
 
  addSegmentToRouteAct = new QAction(tr("Add segment to route"), this);
