@@ -75,9 +75,10 @@ void DupSegmentView::showDupSegments(QList<QPair<SegmentInfo, SegmentInfo>> dupS
     selectSegmentsAct = new QAction(tr("SelectSegments"),this);
     connect(selectSegmentsAct, SIGNAL(triggered(bool)), this, SLOT(On_selectSegmentAct(bool)));
     deleteDuplicateAct = new QAction(tr("Delete dup segment 1"),this);
-    connect(deleteDuplicateAct, &QAction::triggered, [=]{
-     QString msg = tr("Do you want to delete segment %1 which is duplicate to segment %2"
-        " and use %2 instead in Routes and Stations? Or delete %2 and use %1 instead?").arg(dupSegmentId).arg(segmentId);
+    connect(deleteDuplicateAct, &QAction::triggered, this, [=]{
+     QString msg = tr("Do you want to delete segment %1 <B>(%2)</B>\nwhich is duplicate to segment %3 <B>(%4)</B>\n"
+        " and use %3 instead in Routes and Stations? Or delete %3 and use %1 instead?")
+                          .arg(dupSegmentId).arg(si2.description()).arg( segmentId).arg(si1.description());
      msg = msg + QString(tr("\nSegment %1 is used by %2 routes").arg(dupSegmentId).arg(sql->getCountOfRoutesUsingSegment(dupSegmentId)));
      msg = msg + QString(tr("\nSegment %1 is used by %2 routes").arg(segmentId).arg(sql->getCountOfRoutesUsingSegment(segmentId)));
 
@@ -119,7 +120,7 @@ void DupSegmentView::showDupSegments(QList<QPair<SegmentInfo, SegmentInfo>> dupS
      }
      msgBox.setDetailedText(detailedText);
 
-     if((si1.tracks() == 1 && sd2.tracks() == si1.tracks()) && (si1.direction() != sd2.direction()) )
+     if((si1.tracks() == 1 && si2.tracks() == si1.tracks()) && (si1.direction() != si2.direction()) )
      {
       msgBox.setIcon(QMessageBox::Warning);
       msg = msg + tr("\n\nWarning: the two segments are single tracks in opposite directions.");
@@ -163,9 +164,9 @@ void DupSegmentView::tablev_customContextMenu( const QPoint& pt)
         QList<QPair<SegmentInfo,SegmentInfo>> list = sourceModel->getList();
         QPair<SegmentInfo,SegmentInfo> pair = list.at(row);
         segmentId = pair.first.segmentId();
-        si1 = pair.first;
+        si1 = sql->getSegmentInfo(segmentId);
         dupSegmentId = pair.second.segmentId();
-
+        si2 = sql->getSegmentInfo(dupSegmentId);
         menu.addAction(selectSegmentsAct);
         menu.addAction(deleteDuplicateAct);
         menu.exec(QCursor::pos());
@@ -220,20 +221,6 @@ QVariant dupSegmentViewSortProxyModel::data ( const QModelIndex & index, int rol
         return QVariant();
 
     // We only wish to override the background role
-//    if (role == Qt::BackgroundRole )
-//    {
-//        sourceIndex = mapToSource(index);
-//        qint32 row = sourceIndex.row();
-//        if ( row == startRow)
-//        {
-//            return QVariant( Qt::green );
-//        }
-
-//        if ( row == endRow)
-//        {
-//            return QVariant( Qt::red );
-//        }
-//    }
     // let the base class handle all other cases
     return QSortFilterProxyModel::data( index, role );
 }

@@ -263,10 +263,32 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
           si.setStreetName(street);
           si.setDescription(descr);
           si.setLocation(ui->txtLocation->text().trimmed());
+          si.setNewerName(ui->txtNewerName->text());
           sql->updateSegment(&si);
       }
   });
   connect(ui->txtSegment, SIGNAL(editingFinished()), this, SLOT(txtSegment_Leave()));
+  connect(ui->txtNewerName, &QLineEdit::editingFinished, this,[=]{
+      SegmentInfo si = sql->getSegmentInfo(m_segmentId);
+      if(ui->txtNewerName->text() != si.newerName() )
+      {
+          if(!ui->txtNewerName->text().isEmpty())
+          {
+              ui->txtNewerName->setText(SegmentDescription::updateToken(ui->txtNewerName->text()));
+          }
+          si.setNewerName(ui->txtNewerName->text());
+          sql->updateSegment(&si);
+      }
+  });
+  connect(ui->txtLocation, &QLineEdit::editingFinished, this,[=]{
+      SegmentInfo si = sql->getSegmentInfo(m_segmentId);
+      if(ui->txtLocation->text() != si.location() )
+      {
+          si.setLocation(ui->txtLocation->text());
+          sql->updateSegment(&si);
+      }
+  });
+
   connect(ui->btnSplit, SIGNAL(clicked()),this, SLOT(btnSplit_Clicked()));
   connect(ui->chkShowOverlay, SIGNAL(clicked(bool)),this, SLOT(chkShowOverlayChanged(bool)));
   if(!config->bRunInBrowser)

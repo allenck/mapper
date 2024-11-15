@@ -8568,13 +8568,13 @@ bool SQL::insertRouteSegment(SegmentData sd)
   throw IllegalArgumentException("Invalid dates ");
  if(!isCompanyValid(sd))
  {
-  qDebug() << "invalid companyKey " << sd.companyKey();
-  return false;
+  qWarning() << "invalid companyKey " << sd.companyKey();
+  //return false;
  }
 
- commandText = "INSERT INTO Routes(Route, Name, StartDate, EndDate, LineKey, companyKey, tractionType, direction, "
+ commandText = "INSERT INTO Routes (Route, Name, StartDate, EndDate, LineKey, companyKey, tractionType, direction, "
                "next, prev, normalEnter, normalleave, reverseEnter, reverseLeave,sequence, reverseSeq, "
-               "oneWay, trackusage,) "
+               "oneWay, trackusage) "
                "VALUES(" + QString("%1").arg(sd._route) + ", '"
                + sd._routeName.trimmed() + "', '"
                + sd._startDate.toString("yyyy/MM/dd") + "', '"
@@ -10077,10 +10077,15 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd, bool notify)
  {
   //qDebug() << "invalid companyKey " << sd.companyKey();
      CompanyData* cd = getCompany(sd.companyKey());
+     if(cd)
      qWarning() << tr("Company key %1 %2 %3-%4 is invalid for segment %5 6 %7-%8")
                    .arg(cd->companyKey).arg(cd->name, cd->startDate.toString("yyyy/MM/dd"),cd->endDate.toString("yyyyMM/dd"))
                    .arg(sd.segmentId()).arg(sd.description(),sd.startDate().toString("yyyy/MM/dd"),sd.endDate().toString("yyyy/MM/dd"));
-     return false;
+     else
+         qWarning() << tr("Company key %1 %2 %3-%4 is invalid for segment %5 6 %7-%8")
+                       .arg(sd.companyKey()).arg("not found", "","")
+                       .arg(sd.segmentId()).arg(sd.description(),sd.startDate().toString("yyyy/MM/dd"),sd.endDate().toString("yyyy/MM/dd"));
+    //return false;
  }
 
  if(sd._normalEnter > 2 || sd._normalEnter < 0
@@ -10094,6 +10099,25 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd, bool notify)
 
  if(sd.trackUsage().isEmpty() )
   sd.setTrackUsage(" ");
+
+ // if any primary key fields are changing, delete and insert!
+ if(osd.startDate() != sd.startDate() || osd.endDate() != sd.endDate() || osd.companyKey() != sd.companyKey() ||
+         osd.route() != sd.route() || osd.routeName() != sd.routeName() || osd.segmentId() != sd.segmentId())
+ {
+     beginTransaction("routeKeyChange");
+     if(!deleteRouteSegment(osd))
+     {
+         rollbackTransaction("routeKeyChange");
+         return false;
+     }
+     if(!insertRouteSegment(sd))
+     {
+         rollbackTransaction("routeKeyChange");
+         return false;
+     }
+     commitTransaction("routeKeyChange");
+     return true;
+ }
 
  QString commandText = "update Routes "
              " set next = " + QString("%1").arg(sd.next())
@@ -11093,7 +11117,8 @@ bool SQL::deleteAndReplaceSegmentWith(int segmentId1, int segmentId2)
  int rows =0;
 
  beginTransaction("replaceSegment");
- QString commandText = "update Routes set lineKey = " + QString("%1").arg(segmentId2) + "  where linekey =" + QString("%1").arg(segmentId1) ;
+ QString commandText = "update Routes set lineKey = " + QString("%1").arg(segmentId2)
+         + "  where linekey =" + QString("%1").arg(segmentId1) ;
  if(!query.exec(commandText))
  {
   SQLERROR(query);

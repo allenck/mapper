@@ -523,6 +523,7 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
     }
     break;
    case COMPANYKEY:
+
     sd->setCompanyKey(value.toInt());
     break;
    case NEWERSTREET:

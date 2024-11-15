@@ -78,7 +78,7 @@ private:
     dupSegmentViewSortProxyModel *proxymodel;
     qint32 segmentId, dupSegmentId;
     SegmentInfo si1;
-    SegmentInfo sd2;
+    SegmentInfo si2;
     int curRow, curCol;
     bool boolGetItemTableView(QTableView *table);
     QModelIndex currentIndex;
