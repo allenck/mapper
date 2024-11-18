@@ -229,6 +229,10 @@ void RouteNameWidget::txtRouteName_Leave()
     if(lblHelpText == nullptr)
         return;
     lblHelpText->clear();
+    if(!sql->checkRouteName(ui->cbRouteName->currentText(), rd->startDate(), rd->endDate()).isEmpty())
+    {
+        lblHelpText->setText(tr("possible duplicate routes exist!"));
+    }
 //    if(ui->cbRouteName->currentIndex() == 0)
 //        ui->btnAdd->setText(tr("Add"));
     if (ui->cbRouteName->currentText().length() == 0)

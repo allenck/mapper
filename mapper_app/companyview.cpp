@@ -70,9 +70,10 @@ CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     connect(urlAct, &QAction::triggered, menu, [=](bool){
         // QModelIndex ix = _model->index(urlAct->data().toInt(), MyCompanyTableModel::URL);
         // QModelIndex source = proxyModel->mapToSource(ix);
-        QModelIndex ix = tableView->currentIndex();
-        QModelIndex source = proxyModel->mapToSource(ix);
-        QUrl url = QUrl(source.data().toString());
+        // QModelIndex ix = tableView->currentIndex();
+        // QModelIndex source = proxyModel->mapToSource(ix);
+        // QUrl url = QUrl(source.data().toString());
+        QUrl url = urlAct->data().toUrl();
         QDesktopServices::openUrl(url);
     });
 
@@ -169,12 +170,15 @@ void CompanyView::tablev_customContextMenu( const QPoint& pt)
   menu->addAction(addAct);
   menu->addAction(delAct);
   menu->addAction(refreshAct);
-  if(curCol == MyCompanyTableModel::URL)
-
-      menu->addAction(urlAct);
-  urlAct->setData(curRow)  ;
+  CompanyData* cd = _model->getCompanyAtRow(curRow);
+  if(cd)
+  {
+    menu->addAction(urlAct);
+      urlAct->setData(cd->url);
+  }
+  urlAct->setEnabled(cd->url.isValid());
+  menu->exec(QCursor::pos());
  }
- menu->exec(QCursor::pos());
 }
 
 // void CompanyView::On_primeInsert(int, QSqlRecord&)
@@ -364,4 +368,9 @@ void MyCompanyTableModel::reset()
     beginResetModel();
     companyList = sql->getCompanies();
     endResetModel();
+}
+
+CompanyData* MyCompanyTableModel::getCompanyAtRow(int row)
+{
+    return companyList.at(row);
 }

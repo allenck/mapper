@@ -108,9 +108,11 @@ void ModifyRouteDialog::btnOK_Click()
       //sql->addAltRoute(ui->rnw->alphaRoute().toInt(), ui->rnw->alphaRoute());
      _routeNbr = sql->addAltRoute(ui->rnw->newRoute(),ui->rnw->alphaRoute(),cd->routePrefix);
     }
+    setCursor(Qt::WaitCursor);
     //foreach (routeData rd1 in myArray)
     for(int i=0; i < myArray.count(); i++)
     {
+        qApp->processEvents();
 //        SegmentData d1 = myArray.at(i);
 //        if (!sql->deleteRouteSegment(rd1.route(), rd1.routeName(), rd1.segmentId(),rd1.startDate().toString("yyyy/MM/dd"),
 //                                     rd1.endDate().toString("yyyy/MM/dd")))
@@ -138,6 +140,7 @@ void ModifyRouteDialog::btnOK_Click()
      {
       sql->rollbackTransaction("RenameRoute");
       this->setResult(QDialog::Rejected);
+      setCursor(Qt::ArrowCursor);
      }
 
      TerminalInfo ti = sql->getTerminalInfo(rd.route(), rd.routeName(), rd.endDate());
@@ -161,6 +164,7 @@ void ModifyRouteDialog::btnOK_Click()
        {
         sql->rollbackTransaction("RenameRoute");
         this->setResult(QDialog::Rejected);
+        setCursor(Qt::ArrowCursor);
        }
       }
       else
@@ -182,6 +186,7 @@ void ModifyRouteDialog::btnOK_Click()
 //    this.DialogResult = DialogResult.OK;
 //    this.Close();
     this->setResult(QDialog::Accepted);
+    setCursor(Qt::ArrowCursor);
     accept();
 }
 

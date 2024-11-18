@@ -101,7 +101,7 @@ public:
     QList<CompanyData*> getCompaniesInDateRange(QDate startDate, QDate endDate);
     bool updateCompany(CompanyData* cd);
     CompanyData *getCompany(qint32 companyKey);
-    QT_DEPRECATED QList<RouteData> getRouteDatasForDate(qint32 route, QString name, QString date);
+    QT_DEPRECATED QList<RouteData> getRouteDatasForDate(qint32 route, QString name, int companyKey, QString date);
     QList<SegmentData *> getRouteDatasForDate(int segmentId, QDate date);
     QT_DEPRECATED QList<SegmentData> getRouteDatasForDate(qint32 segmentId, QString date);
     bool saveRouteSequence(RouteData rd, int firstSegment, QString whichEnd);
@@ -142,6 +142,7 @@ public:
     QList<SegmentData> getRouteSegmentsBySegment(int route, qint32 segmentId);
     QList<SegmentData> getRouteSegmentsForRouteNbr(QString route);
     QList<RouteData> getRouteDataForRouteName(qint32 route, QString name);
+    QList<RouteData> checkRouteName(QString name, QDate startDate, QDate endDate);
     double Distance(double Lat1, double Lon1, double Lat2, double Lon2);
     QT_DEPRECATED QList<SegmentData *> getIntersectingRouteSegmentsAtPoint(int ignore, double lat, double lon, double radius, qint32 route, QString routeName, QString date);
     QList<SegmentData*> getIntersectingRouteSegmentsAtPoint(SegmentData* sd, double radius,
@@ -172,8 +173,8 @@ public:
     //bool modifyCurrentRoute(RouteData *rd, bool bStartDate, QDate dt, QString name1, QString name2);
     bool modifyCurrentRoute(RouteData* rd, bool bStartDate, QDate dt);
     QList<SegmentData *> getConflictingRouteSegments(qint32 route, QString name,
-                                                   QString startDate, QString endDate,
-                                                   qint32 segmentId);
+                                                     QString startDate, QString endDate, int companyKey,
+                                                     qint32 segmentId);
     QList<SegmentData *> getRoutes(qint32 segmentid);
     QList<RouteIntersects> updateLikeRoutes(qint32 segmentid, qint32 route, QString name, QString date, bool bAllRoutes = false);
     QList<SegmentInfo> getDupSegments(SegmentInfo si);

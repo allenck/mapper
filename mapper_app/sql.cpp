@@ -1309,6 +1309,8 @@ bool SQL::updateSegmentDates(SegmentInfo* si)
   si->_startDate = query.value(0).toDate();
   si->_endDate = query.value(1).toDate();
  }
+ if(!si->_startDate.isValid() || !si->_endDate.isValid())
+     return false;
  commandText = "update Segments set startDate = '"
    + si->startDate().toString("yyyy/MM/dd")
    + "', enddate = '" + si->endDate().toString("yyyy/MM/dd")
@@ -1901,7 +1903,7 @@ QList<SegmentData*> SQL::getRouteSegmentsForDate(QDate date, int companyKey)
 }
 
 // List routes using a segment on a given date
-QList<RouteData> SQL::getRouteDatasForDate(qint32 route, QString name, QString date)
+QList<RouteData> SQL::getRouteDatasForDate(qint32 route, QString name, int companyKey, QString date)
 {
  QList<RouteData> myArray;
  QSqlDatabase db = QSqlDatabase::database();
@@ -1915,7 +1917,8 @@ QList<RouteData> SQL::getRouteDatasForDate(qint32 route, QString name, QString d
                        " join Segments s on r.lineKey = s.segmentId"
                        " where r.Route = " + QString("%1").arg(route) + ""
                        " and '" + date + "' between r.startDate and r.endDate"
-                       " and TRIM(r.name) = '" + name + "'";
+                       " and TRIM(r.name) = '" + name + "'"
+                       " and companyKey = " + QString::number(companyKey);
 
  QSqlQuery query = QSqlQuery(db);
  qDebug() << commandText;
@@ -3882,6 +3885,9 @@ bool SQL::updateSegment(SegmentInfo* si)
  si->_length = 0;
  int rows = 0;
 
+ if(si->pointList().isEmpty())
+     return false;
+
  si->_startLat = si->pointList().at(0).lat();
  si->_startLon = si->pointList().at(0).lon();
  for(int i=0; i < si->pointList().count(); i++)
@@ -3896,6 +3902,8 @@ bool SQL::updateSegment(SegmentInfo* si)
  }
  if(si->pointList().count() <1)
   return false;
+ if(!si->startDate().isValid() || !si->endDate().isValid())
+     throw IllegalArgumentException("invalid dates");
  if(si->doubleDate() > si->startDate())
      qDebug() << tr("segment %1 has doubledate > start date").arg(si->segmentId());
  Q_ASSERT(si->_startLat != 0);
@@ -4681,7 +4689,11 @@ bool SQL::updateRecord(SegmentInfo sd)
 
         QString commandText = "update Segments set street = '" + sd._streetName + "', "
                               "length= " + QString("%1").arg(sd._length) +
-            ", tracks="+ QString::number(sd._tracks) + ", startLat=" + QString::number(sd._startLat, 'g', 8) +",startLon=" + QString::number(sd._startLon,'g',8)+ + ", endLat=" + QString::number(sd._endLat, 'g', 8) +",endLon=" + QString::number(sd._endLon,'g',8)+
+            ", tracks="+ QString::number(sd._tracks) +
+            ", startLat=" + QString::number(sd._startLat, 'g', 8) +
+            ",startLon=" + QString::number(sd._startLon,'g',8)+
+            ", endLat=" + QString::number(sd._endLat, 'g', 8) +
+            ",endLon=" + QString::number(sd._endLon,'g',8)+
             ", type=" + QString::number((int)sd._routeType) + " " +
             ",lastUpdate=:lastUpdate where SegmentId = " + QString("%1").arg(sd.segmentId());
         QSqlQuery query = QSqlQuery(db);
@@ -5216,6 +5228,8 @@ bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 SegmentId,
         else
          commandText = "delete from Routes where route = " + QString("%1").arg(route) + " and TRIM(name) = '" + name + "' and LineKey = " + QString("%1").arg(SegmentId) + " and startDate = '" + startDate + "' and endDate = '" + endDate + "'";
         QSqlQuery query = QSqlQuery(db);
+        qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
@@ -8614,7 +8628,7 @@ bool SQL::insertRouteSegment(SegmentData sd)
 /// <param name="segmentId"></param>
 /// <returns></returns>
 QList<SegmentData*> SQL::getConflictingRouteSegments(qint32 route, QString name,
-                                                    QString startDate, QString endDate,
+                                                    QString startDate, QString endDate, int companyKey,
                                                     qint32 segmentId)
 {
     QList<SegmentData*> myArray;
@@ -8635,6 +8649,7 @@ QList<SegmentData*> SQL::getConflictingRouteSegments(qint32 route, QString name,
                               " and '" + endDate + "'))"
                               " and a.route = " + QString("%1").arg(route) + ""
                               " and name = '" + name + "' and endDate <> '" + endDate + "'"
+                              " and companyKey = " + QString::number(companyKey) +
                               " and lineKey = " + QString("%1").arg(segmentId);
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
@@ -10204,6 +10219,9 @@ int SQL::updateRouteSegment(int segmentId, QString startDate, QString endDate, i
   throw Exception("updateRouteSegment: invalid new segment");
  }
 
+ if(!QDate::fromString(startDate, "yyyy/MM/dd").isValid() || !QDate::fromString(endDate, "yyyy/MM/dd").isValid())
+     throw IllegalArgumentException("invalid dates");
+
  QSqlDatabase db = QSqlDatabase::database();
  QString commandText = "Update Routes set startDate = '" + startDate
              + "', endDate='" + endDate+ "'"
@@ -10462,6 +10480,14 @@ bool SQL::checkSegments()
  {
   if(si._bNeedsUpdate)
   {
+      if(si.needsUpdate())
+      {
+          if(updateSegmentDates(&si))
+          {
+              si.setNeedsUpdate(false);
+              continue;
+          }
+      }
    updateSegment(&si);
   }
 
@@ -12134,6 +12160,16 @@ QList<SegmentData*>  SQL::segmentDataFromView(QString where)
   sd->_segmentEndDate = query.value(38).toDate();
   sd->_newerName = query.value(39).toString();
   sd->_routePrefix = query.value(40).toString();
+  if(!sd->segmentStartDate().isValid() || !sd->segmentEndDate().isValid())
+  {
+      SegmentInfo si = SegmentInfo(*sd);
+      if(!updateSegmentDates(&si))
+      {
+          qDebug() << "failed to update segment dates";
+      }
+      sd->_segmentStartDate = si.startDate();
+      sd->_segmentEndDate = si.endDate();
+  }
   if(sd->_startDate < sd->segmentStartDate())
   {
       if(sd->_doubleDate == sd->_segmentStartDate)
@@ -12319,4 +12355,55 @@ QList<QPair<SegmentInfo, SegmentInfo> > SQL::getDupSegmentsInList(QList<SegmentI
         }
     }
     return result;
+}
+
+//Get list of possible conflicting routes with same name
+QList<RouteData> SQL:: checkRouteName(QString name, QDate startDate, QDate endDate)
+{
+   QList<RouteData> list;
+   RouteData rd = RouteData();
+   QString commandText;
+   try
+   {
+       if(!dbOpen())
+           throw Exception(tr("database not open: %1").arg(__LINE__));
+       QSqlDatabase db = QSqlDatabase::database();
+           commandText = "select distinct startDate, endDate, name, r.route, companyKey, tractionType, a.routeAlpha "
+                         "from routes r join altRoute a on r.route = a.route "
+                         "where name = '" +name + "' "
+                         "and '" + startDate.toString("yyyy/MM/dd") +"' between startDate and endDate "
+                         "and '" + endDate.toString("yyyy/MM/dd") + "' between startDate and endDate "
+                         "group by startDate, enddate";
+       QSqlQuery query = QSqlQuery(db);
+       bool bQuery = query.exec(commandText);
+       if(!bQuery)
+       {
+           QSqlError err = query.lastError();
+           qDebug() << err.text() + "\n";
+           qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+           db.close();
+           exit(EXIT_FAILURE);
+       }
+       if (!query.isActive())
+       {
+           return list;
+       }
+       while (query.next())
+       {
+           rd = RouteData();
+           rd._startDate =query.value(0).toDate();
+           rd._endDate = query.value(1).toDate();
+           rd._name = query.value(2).toString();
+           rd._route = query.value(3).toInt();
+           rd._companyKey = query.value(4).toInt();
+           rd._tractionType = query.value(5).toInt();
+           rd._alphaRoute = query.value(6).toString();
+           list.append(rd);
+       }
+   }
+   catch (Exception e)
+   {
+       myExceptionHandler(e);
+
+   }   return list;
 }

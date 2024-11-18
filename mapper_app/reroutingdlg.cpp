@@ -78,7 +78,8 @@ void ReroutingDlg::on_btnOk_clicked()
 
     setCursor(Qt::WaitCursor);
     sql->beginTransaction("reroute");
-    QList<RouteData> myArray = sql->getRouteDatasForDate(_rd.route(), _rd.routeName(), _rd.endDate().toString("yyyy/MM/dd"));
+    QList<RouteData> myArray = sql->getRouteDatasForDate(_rd.route(), _rd.routeName(), _rd.companyKey(),
+                                                         _rd.endDate().toString("yyyy/MM/dd"));
 
     foreach(RouteData rd, myArray)
     {

@@ -469,7 +469,7 @@ void SplitRoute::btnOK_Click()
      }
     }
 
-    QList<RouteData> myArray = sql->getRouteDatasForDate(_rd.route(), _rd.routeName(),
+    QList<RouteData> myArray = sql->getRouteDatasForDate(_rd.route(), _rd.routeName(), _rd.companyKey(),
                                                          _rd.endDate().toString("yyyy/MM/dd"));
 
     //sql->BeginTransaction("SplitRoute");

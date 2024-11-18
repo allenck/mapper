@@ -28,6 +28,7 @@ public:
     int rowCount(const QModelIndex &parent) const {return companyList.count();}
     int columnCount(const QModelIndex &parent) const {return LASTUPDATED+1;}
     bool removeRow(int row, const QModelIndex &parent = QModelIndex());
+    CompanyData* getCompanyAtRow(int row);
 
  private:
     enum COLS

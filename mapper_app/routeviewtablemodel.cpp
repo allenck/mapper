@@ -197,7 +197,7 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
   return background;
  }
 
- if (role == Qt::DisplayRole /*|| role == Qt::EditRole*/)
+ if (role == Qt::DisplayRole || role == Qt::EditRole)
  {
 
    switch(index.column())

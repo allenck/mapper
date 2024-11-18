@@ -134,7 +134,7 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
 //        return;
 //    }
 
-    myArray = sql->getRouteDatasForDate(_rd1.route(), _rd1.routeName(), _rd1.endDate().toString("yyyy/MM/dd"));
+    myArray = sql->getRouteDatasForDate(_rd1.route(), _rd1.routeName(), _rd1.companyKey(), _rd1.endDate().toString("yyyy/MM/dd"));
 
     foreach(RouteData rd1, myArray)
     {
@@ -151,7 +151,7 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
             return;
         }
     }
-    myArray = sql->getRouteDatasForDate(_rd2.route(), _rd2.routeName(), _rd2.endDate().toString("yyyy/MM/dd"));
+    myArray = sql->getRouteDatasForDate(_rd2.route(), _rd2.routeName(), _rd2.companyKey(), _rd2.endDate().toString("yyyy/MM/dd"));
 
     foreach(RouteData rd1, myArray)
     {

@@ -1080,7 +1080,7 @@ void MainWindow::createActions()
              = sql->getConflictingRouteSegments(_rd.route(), _rd.routeName(),
                                                 _rd.startDate().toString("yyyy/MM/dd"),
                                                 _rd.endDate().toString("yyyy/MM/dd"),
-                                                sd->segmentId());
+                                                _rd.companyKey(),sd->segmentId());
      if(conflicts.count())
      {
          QMessageBox::critical(this, tr("Conflict"), tr("The segment is already present"
@@ -1503,7 +1503,7 @@ void MainWindow::addSegmentToRoute(SegmentData* sd)
          = sql->getConflictingRouteSegments(_rd.route(), _rd.routeName(),
                                             _rd.startDate().toString("yyyy/MM/dd"),
                                             _rd.endDate().toString("yyyy/MM/dd"),
-                                            sd->segmentId());
+                                            _rd.companyKey(), sd->segmentId());
  if(conflicts.count())
  {
      QMessageBox::critical(this, tr("Conflict"), tr("The segment is already present"
@@ -2927,18 +2927,19 @@ void MainWindow::segmentSelected(qint32 pt, qint32 segmentId)
  }
  //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
  lookupStreetName(si);
- ui->txtSegment->setText(si.description());
- ui->txtLocation->setText(si.location());
- ui->txtStreet->setText(si.streetName());
- ui->txtNewerName->setText(si.newerName());
- ui->sbTracks->setValue(si.tracks());
+ //  ui->txtSegment->setText(si.description());
+ //  ui->txtLocation->setText(si.location());
+ //  ui->txtStreet->setText(si.streetName());
+ //  ui->txtNewerName->setText(si.newerName());
+ //  ui->sbTracks->setValue(si.tracks());
 
- ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(si.pointList().count()));
- //ui->cbSegments->findText(si.toString(), Qt::MatchExactly);
-// int ix = ui->cbSegments->findData(SegmentId);
-// ui->cbSegments->setCurrentIndex(ix);
- m_points = si.pointList();
- m_nbrPoints = m_points.size();
+ //  ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(si.pointList().count()));
+ //  //ui->cbSegments->findText(si.toString(), Qt::MatchExactly);
+ // // int ix = ui->cbSegments->findData(SegmentId);
+ // // ui->cbSegments->setCurrentIndex(ix);
+ //  m_points = si.pointList();
+ //  m_nbrPoints = m_points.size();
+ updateSegmentInfoDisplay(si);
  //Q_ASSERT(m_points.count() == 0 || m_points.count() >1);
 
  if (m_nbrPoints <= 0)
@@ -3018,13 +3019,8 @@ void MainWindow::segmentSelected(qint32 pt, qint32 segmentId)
 /// <param name="SegmentId"></param>
 void MainWindow::segmentSelectedX(qint32 pt, qint32 segmentId, QList<LatLng> pointArray)
 {
- //SQL sql;
- //webBrowser1.Document.InvokeScript("addModeOff");
- //m_bridge->processScript("addModeOff");
- //m_bAddMode = false;
- //addPointModeAct->setChecked(false);
-// if(m_segmentId == segmentId && m_currPoint == pt)
-//  return;
+    if(segmentId < 1)
+        return;
  m_segmentId = segmentId;
  Q_ASSERT(m_segmentId > 0);
  m_currPoint = pt;
@@ -3044,18 +3040,19 @@ void MainWindow::segmentSelectedX(qint32 pt, qint32 segmentId, QList<LatLng> poi
  }
  //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
  lookupStreetName(si);
- //txtSegment.Text = si.description;
- ui->txtSegment->setText(si.description());
- ui->txtLocation->setText(si.location());
- ui->txtStreet->setText(si.streetName());
- ui->txtNewerName->setText(si.newerName());
- ui->sbTracks->setValue(si.tracks());
- ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(si.pointList().count()));
- //ui->cbSegments->findText(si.toString(), Qt::MatchExactly);
-// int ix = ui->cbSegments->findData(SegmentId);
-// ui->cbSegments->setCurrentIndex(ix);
- m_points = si.pointList();
- m_nbrPoints = m_points.size();
+ //  //txtSegment.Text = si.description;
+ //  ui->txtSegment->setText(si.description());
+ //  ui->txtLocation->setText(si.location());
+ //  ui->txtStreet->setText(si.streetName());
+ //  ui->txtNewerName->setText(si.newerName());
+ //  ui->sbTracks->setValue(si.tracks());
+ //  ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(si.pointList().count()));
+ //  //ui->cbSegments->findText(si.toString(), Qt::MatchExactly);
+ // // int ix = ui->cbSegments->findData(SegmentId);
+ // // ui->cbSegments->setCurrentIndex(ix);
+ //  m_points = si.pointList();
+ //  m_nbrPoints = m_points.size();
+ updateSegmentInfoDisplay(si);
  //Q_ASSERT(m_points.count() == 0 || m_points.count() >1);
 
  if (m_nbrPoints <= 0)
@@ -3950,8 +3947,7 @@ void MainWindow::movePoint(qint32 segmentId, qint32 i, double newLat, double new
   if(segmentId == 0)
     return;
   LatLng oldPoint; // = sql->getPointOnSegment((int)i, m_segmentId);
-  m_segmentId = segmentId;
-  SegmentInfo si = sql->getSegmentInfo(m_segmentId);
+  SegmentInfo si = sql->getSegmentInfo(segmentId);
 
   if(si.segmentId() == m_segmentId)
   {
@@ -3959,6 +3955,11 @@ void MainWindow::movePoint(qint32 segmentId, qint32 i, double newLat, double new
    m_points = si.movePoint(i, LatLng(newLat, newLon));
    m_nbrPoints = m_points.count();
    m_currPoint = i;
+  }
+  else
+  {
+      updateSegmentInfoDisplay(si);
+      m_currPoint = i;
   }
   Q_ASSERT(si.segmentId() == m_segmentId);
   //SQL sql;
@@ -4079,6 +4080,8 @@ void MainWindow::updateIntersection(qint32 i, double newLat, double newLon)
 /// <param name="newLon">New longitude</param>
 void MainWindow::insertPoint(int segmentId, qint32 i, double newLat, double newLon)
 {
+    if(segmentId < 1)
+        return;
  segmentSelected(i,segmentId);
  SegmentInfo si = sql->getSegmentInfo((int)segmentId);
  si.insertPoint(i, LatLng(newLat, newLon));
@@ -4087,13 +4090,14 @@ void MainWindow::insertPoint(int segmentId, qint32 i, double newLat, double newL
     sql->insertPoint(i, SegmentId, newLat, newLon);
     m_currPoint++;
 #endif
-    m_currPoint = i+1;
+ m_currPoint = i+1;
     m_segmentId = segmentId;
     Q_ASSERT(m_segmentId > 0);
     //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
     si = sql->getSegmentInfo(m_segmentId);
     lookupStreetName(si);
-    ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(si.pointList().count()));
+    //ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(si.pointList().count()));
+    updateSegmentInfoDisplay(si);
     ui->btnSplit->setEnabled(true);
 }
 /// <summary>
@@ -5134,19 +5138,16 @@ void MainWindow::updateSegmentInfoDisplay(SegmentInfo si)
  if (si.segmentId() > 0)
  {
   ui->txtStreet->setText( si.streetName());
-  https://( si.description());
-  // if(si.description().contains(" to ") || si.description().contains(" zur "))
-  //     ui->txtSegment->setStyleSheet("QLineEdit { background-color: #FFFF00 }");
-  // if(!SegmentDescription::instance()->isValidFormat(si))
-  //     ui->txtSegment->setStyleSheet("QLineEdit { background-color: #FFC0CB }");
-  // else
-  //     ui->txtSegment->setStyleSheet(QString("QLineEdit { background-color: rgb(%1,%2,%3) }")
-  //                                       .arg(txtSegment_color.red(),txtSegment_color.green(),txtSegment_color.blue()));
-
+  ui->txtSegment->setText(si.description());
+  ui->txtLocation->setText(si.location());
+  ui->txtNewerName->setText(si.newerName());
   ui->sbTracks->setValue(si.tracks());
   //  }
   //txtOneWay.Text = sI.oneWay;
  }
+ m_segmentId = si.segmentId();
+ m_points = si.pointList();
+ m_nbrPoints = si.pointList().count();
  ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(si.pointList().count()));
 }
 

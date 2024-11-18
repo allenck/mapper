@@ -60,8 +60,8 @@ private:
     QTableView* ui;
     TerminalInfo ti;
     void populateList();
-    QAction *copyAction;
-    QAction *pasteAction;
+    // QAction *copyAction;
+    // QAction *pasteAction;
     QAction *reSequenceFromStartAct;
     QAction *reSequenceFromEndAct;
     QAction *startTerminalStartAct;

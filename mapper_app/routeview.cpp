@@ -67,15 +67,15 @@ RouteView::RouteView(QObject* parent )
     ui->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
 
     //create contextmenu
-    copyAction = new QAction(tr("&Copy"), this);
-    copyAction->setStatusTip(tr("Copy Table Location"));
-    copyAction->setShortcut(tr("Ctrl+C"));
-    connect(copyAction, SIGNAL(triggered()), this, SLOT(aCopy()));
+    // copyAction = new QAction(tr("&Copy"), this);
+    // copyAction->setStatusTip(tr("Copy Table Location"));
+    // copyAction->setShortcut(tr("Ctrl+C"));
+    // connect(copyAction, SIGNAL(triggered()), this, SLOT(aCopy()));
 
-    pasteAction = new QAction(tr("&Paste"), this);
-    pasteAction->setStatusTip(tr("Paste"));
-    pasteAction->setShortcut(tr("Ctrl+V"));
-    connect(pasteAction, SIGNAL(triggered()), this, SLOT(aPaste()));
+    // pasteAction = new QAction(tr("&Paste"), this);
+    // pasteAction->setStatusTip(tr("Paste"));
+    // pasteAction->setShortcut(tr("Ctrl+V"));
+    // connect(pasteAction, SIGNAL(triggered()), this, SLOT(aPaste()));
 
     reSequenceFromStartAct = new QAction(tr("&Start route at beginning"), this);
     reSequenceFromStartAct->setStatusTip(tr("Start route at this segment"));
