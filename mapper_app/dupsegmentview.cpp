@@ -413,16 +413,9 @@ dupSegmentViewTableModel::dupSegmentViewTableModel(QList<QPair<SegmentInfo,Segme
  {
   if(row >= listOfSegments.size())
    throw Exception(tr("invalid row %1").arg(row));
-  // int otherSegment = listOfSegments.at(row).next();
-  // listOfSegments.removeAt(row);
-  // for(int i=0; i < listOfSegments.count(); i++)
-  // {
-  //  if(listOfSegments.at(i).next() == otherSegment)
-  //  {
-  //   listOfSegments.removeAt(i);
-  //   break;
-  //  }
-  //}
+  beginRemoveRows(QModelIndex(), row, row);
+  listOfSegments.removeAt(row);
+  endRemoveRows();
   reset();
  }
 

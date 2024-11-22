@@ -350,12 +350,11 @@ void WebViewBridge::cityBounds(double neLat, double neLng, double swLat, double 
  SQL::instance()->updateParameters(parms);
 }
 
-void WebViewBridge::rightClicked(QString text)
+void WebViewBridge::rightClicked(double lat, double lon)
 {
     //_rightClickLoc = rightClickLoc;
-    qDebug() << "LatLng:"<< text;
-    QClipboard* clipBoard = QGuiApplication::clipboard();
-    clipBoard->setText(text);
+    qDebug() << "LatLng:"<< lat << " " << lon;
+    emit on_rightClicked(LatLng(lat, lon));
 }
 
 void WebViewBridge::screenshot(QString base64image)

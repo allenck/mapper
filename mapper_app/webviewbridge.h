@@ -69,7 +69,7 @@ signals:
     void on_scriptResult(QVariant);
     void on_scriptFunctionResult(QVariant, QVariant);
     void on_scriptArrayResult(QVariantList);
-    void on_rightClicked(LatLng pos);
+    void on_rightClicked(LatLng);
     void on_cityBounds(Bounds bounds);
 
 
@@ -109,7 +109,7 @@ public slots:
     void mapInit();
     void debug(QString text);
     void cityBounds(double neLat, double neLng, double swLat, double swLng);
-    void rightClicked(QString text);
+    void rightClicked(double lat, double lon);
     void screenshot(QString base64image);
     void initialized();
     void addPointMode(bool);

@@ -236,6 +236,9 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   dupSegmentView = new DupSegmentView(this);
   connect(routeView, SIGNAL(selectSegment(int)), this, SLOT(selectSegment(int)));
   connect(dupSegmentView, SIGNAL(selectSegment(int)), this, SLOT(selectSegment(int)));
+  connect(m_bridge, &WebViewBridge::on_rightClicked, this,[=](LatLng latLng){
+      segmentView->sourceModel->setList(sql->getIntersectingSegments(latLng.lat(), latLng.lon(), .020));
+  });
 
   // setup routeDlg
   routeDlg = new RouteDlg(this);
@@ -1131,7 +1134,7 @@ void MainWindow::createActions()
 //   updateRoute(&sd);
 //   return;
 //  }
-  connect(routeDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs )), this, SLOT(RouteChanged(RouteChangedEventArgs )));
+  connect(routeDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs )), this, SLOT(routeChanged(RouteChangedEventArgs )));
 
   updateRoute(sd);
   ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(sd->companyKey()));
@@ -3242,6 +3245,14 @@ void MainWindow::setLen(qint32 len)
 
 void MainWindow::btnFirstClicked()
 {
+    if(m_segmentId < 1)
+    {
+        ui->btnFirst->setEnabled(false);
+        ui->btnNext->setEnabled(false);
+        ui->btnPrev->setEnabled(false);
+        ui->btnLast->setEnabled(false);
+        return;
+    }
     // getArray();
     ui->btnSplit->setEnabled(false);
     m_currPoint=0;
@@ -3258,6 +3269,7 @@ void MainWindow::btnFirstClicked()
     //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
     SegmentInfo si = sql->getSegmentInfo(m_segmentId);
     lookupStreetName(si);
+    updateSegmentInfoDisplay(si);
     segmentView->showSegmentsAtPoint(((LatLng)m_points.at(0)).lat(), ((LatLng)m_points.at(0)).lon(),m_segmentId);
     if(!ui->chkNoPan->isChecked())
     {
@@ -4506,7 +4518,7 @@ void MainWindow::updateRoute(SegmentData* sd )
         //routeDlg->SegmentChanged += new segmentChangedEventHandler(segmentChanged);
         connect(routeDlg, SIGNAL(SegmentChangedEvent(qint32, qint32)),this, SLOT(segmentChanged(qint32,qint32)));
         //routeDlg->routeChanged += new routeChangedEventHandler(RouteChanged);
-        connect(routeDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs )), this, SLOT(RouteChanged(RouteChangedEventArgs )));
+        connect(routeDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs)), this, SLOT(routeChanged(RouteChangedEventArgs)));
     }
 
     if(sd)
@@ -4630,7 +4642,7 @@ void MainWindow::segmentDlg_routeChanged(RouteChangedEventArgs args)
 /// </summary>
 /// <param name="sender"></param>
 /// <param name="e"></param>
-void MainWindow::RouteChanged(RouteChangedEventArgs args)
+void MainWindow::routeChanged(RouteChangedEventArgs args)
 {
  //SQL sql;
  refreshRoutes();

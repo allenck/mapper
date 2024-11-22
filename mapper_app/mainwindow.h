@@ -253,7 +253,7 @@ private slots:
     void updateRoute(SegmentData* sd = nullptr);
     void updateTerminals();
     void segmentDlg_routeChanged(RouteChangedEventArgs);
-    void RouteChanged(RouteChangedEventArgs args);
+    void routeChanged(RouteChangedEventArgs args);
     void btnDeleteSegment_Click();
     //void btnDisplay_Click();
     //void chkShowWindow_CheckedChanged();

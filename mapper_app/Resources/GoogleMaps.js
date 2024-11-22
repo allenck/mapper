@@ -996,7 +996,8 @@ async function initMap() {
     google.maps.event.addListener(mapDiv, 'resize', function(){
      google.maps.event.trigger(map, 'resize');
     });
-     //new google.maps.LatLng(21.291982, -157.821856),
+
+    //new google.maps.LatLng(21.291982, -157.821856),
      siArray = new google.maps.MVCArray();
      map.disableDoubleClickZoom = true;
      google.maps.event.addListener(map, "dblclick", addNewPoint);
@@ -1056,6 +1057,7 @@ async function initMap() {
       var worldPoint = map.getProjection().fromLatLngToPoint(latLng);
       return new google.maps.Point((worldPoint.x - bottomLeft.x) * scale, (worldPoint.y - topRight.y) * scale);
     }
+
     function point2LatLng(point, map) {
       var topRight = map.getProjection().fromLatLngToPoint(map.getBounds().getNorthEast());
       var bottomLeft = map.getProjection().fromLatLngToPoint(map.getBounds().getSouthWest());
@@ -1068,6 +1070,11 @@ async function initMap() {
     google.maps.event.addListener(map, "zoom_changed", function() {
      webViewBridge.displayZoom(map.getZoom());
     });
+
+    google.maps.event.addListener(map, "rightclick", function(event) {
+     webViewBridge.rightClicked(event.latLng.lat(), event.latLng.lng());
+    });
+
     zoomIx = map.getZoom()-17;
     zoomOffset = offsets[zoomIx];
 

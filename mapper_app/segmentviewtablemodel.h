@@ -25,6 +25,7 @@ public:
     enum COLUMNS {SEGMENTID, DESCRIPTION, TRACKS, STREETNAME, DIRECTION, LAT, LON, WHICHEND};
     int getRow(int segmentId);
     SegmentInfo selectedSegment(int row);
+    void setList(QList<SegmentInfo> list);
 
 signals:
 

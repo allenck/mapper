@@ -121,7 +121,7 @@ public:
                            qint32 sequence, qint32 reverseSeq,
                            QString oneWay, QString trackUsage,
                            QDate doubleDate);
-    bool addSegmenToRoutes(int _newSegmentId, int _segmentId);
+    bool addSegmentToRoutes(int _newSegmentId, int _segmentId);
 
     qint32 getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * bAlphaRoute, QString routePrefix);
     int findNextRouteInRange(QString txt);

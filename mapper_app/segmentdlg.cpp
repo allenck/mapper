@@ -994,6 +994,6 @@ void SegmentDlg::updateOtherRoutes()
 {
  if(_newSegmentId >0 && _segmentId >0)
  {
-  sql->addSegmenToRoutes(_newSegmentId, _segmentId);
+  sql->addSegmentToRoutes(_newSegmentId, _segmentId);
  }
 }

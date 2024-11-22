@@ -2346,14 +2346,14 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
   if(config->currConnection->servertype() != "MsSql")
    commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon, "
         " a.length, a.street, "
-        " a.description, a.OneWay, a.pointArray, a.tracks, a.type"
+        " a.description, a.OneWay, a.pointArray, a.tracks, a.type, a.startDate, a.doubledate, a.enddate"
         " from Segments a "
         " where "+typeWhere  + distanceWhere +
         " order by a.segmentId";
    else
     commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon,"
         " a.length, a.street, a.description, a.OneWay, a.pointArray, a.tracks,"
-        " a.type"
+        " a.type, a.startDate, a.doubledate, a.enddate"
         " from Segments a "
         "where "+ typeWhere  + distanceWhere +
         "order by a.segmentId";
@@ -2382,6 +2382,9 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
    si.setPoints(query.value(9).toString());
    si._tracks = query.value(10).toInt();
    si._routeType = (RouteType)query.value(11).toInt();
+   si._startDate = query.value(12).toDate();
+   si._doubleDate = query.value(13).toDate();
+   si._endDate = query.value(14).toDate();
 #ifdef NO_UDF
    // eliminate segments not close
    if((Distance(lat, lon, si._startLat, si._startLon) > radius) &&
@@ -2668,7 +2671,8 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
   QString commandText;
   //if(config->currConnection->servertype() != "MsSql")
       commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon, a.length,"
-                    " a.streetName, a.type, a.description,  a.oneWay, a.pointArray"
+                    " a.street, a.type, a.description,  a.oneWay, a.pointArray,"
+                    " a.tracks, a.startDate, a.doubledate, a.endDate, a.location, a.newerName"
                     " from Segments a where " + distanceWhere +
                     " order by segmentId";
 //  else
@@ -2678,8 +2682,9 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
   if(!bQuery)
   {
    SQLERROR(query);
-   db.close();
-   exit(EXIT_FAILURE);
+   // db.close();
+   // exit(EXIT_FAILURE);
+   return myArray;
   }
   while (query.next())
   {
@@ -2715,6 +2720,12 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
    si._endLon = endLon;
    si._streetName = streetName;
    si._routeType = type;
+   si._tracks = query.value(11).toInt();
+   si._startDate = query.value(12).toDate();
+   si._doubleDate = query.value(13).toDate();
+   si._endDate = query.value(14).toDate();
+   si._location = query.value(15).toString();
+   si._newerStreetName = query.value(16).toString();
 #ifdef NO_UDF
    // eliminate segments not close
    if((Distance(lat, lon, si._startLat, si._startLon) > radius) &&
@@ -3903,7 +3914,7 @@ bool SQL::updateSegment(SegmentInfo* si)
  if(si->pointList().count() <1)
   return false;
  if(!si->startDate().isValid() || !si->endDate().isValid())
-     throw IllegalArgumentException("invalid dates");
+     qDebug() <<"invalid dates";
  if(si->doubleDate() > si->startDate())
      qDebug() << tr("segment %1 has doubledate > start date").arg(si->segmentId());
  Q_ASSERT(si->_startLat != 0);
@@ -5240,14 +5251,14 @@ bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 SegmentId,
             exit(EXIT_FAILURE);
         }
         rows = query.numRowsAffected();
-        if (rows == 0)
-        {
-            //
-            //ret = false;
-            qDebug() <<"deleteRoute: not found. " + commandText;
-            //exit(EXIT_FAILURE);
-            return false;
-        }
+        // if (rows == 0)
+        // {
+        //     //
+        //     //ret = false;
+        //     qDebug() <<"deleteRoute: not found. " + commandText;
+        //     //exit(EXIT_FAILURE);
+        //     return false;
+        // }
         SegmentData sd(route, name, SegmentId, QDate::fromString(startDate,"yyyy/MM/dd"),
                                                QDate::fromString(endDate,"yyyy/MM/dd"));
         emit routeChange(NotifyRouteChange(DELETESEG, &sd));
@@ -5517,7 +5528,7 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate,
 
 // if a segment is split, makesure that any route using the original
 // segment get the new segment added.
-bool SQL::addSegmenToRoutes(int _newSegmentId, int _segmentId)
+bool SQL::addSegmentToRoutes(int _newSegmentId, int _segmentId)
 {
  if(!dbOpen())
      throw Exception(tr("database not open: %1").arg(__LINE__));
@@ -11141,16 +11152,45 @@ bool SQL::deleteAndReplaceSegmentWith(int segmentId1, int segmentId2)
  QSqlDatabase db = QSqlDatabase();
  QSqlQuery query = QSqlQuery(db);
  int rows =0;
+ QString commandText;
 
  beginTransaction("replaceSegment");
- QString commandText = "update Routes set lineKey = " + QString("%1").arg(segmentId2)
-         + "  where linekey =" + QString("%1").arg(segmentId1) ;
- if(!query.exec(commandText))
+ QList< SegmentData*> list = getRouteSegmentsBySegment(segmentId1);
+ if(list.isEmpty())
  {
-  SQLERROR(query);
-  return false;
+     rollbackTransaction("replaceSegment");
+     return false;
  }
- rows = query.numRowsAffected();
+ foreach (SegmentData* sd, list) {
+     if( !deleteRouteSegment(*sd))
+     {
+         qCritical() << tr("delete segmentdata segmentid %1 failed").arg(sd->segmentId());
+         rollbackTransaction("replaceSegment");
+         return false;
+     }
+
+     sd->setSegmentId(segmentId2);
+     if(!doesRouteSegmentExist(*sd))
+     {
+         if(!addSegmentToRoute(sd))
+         {
+             qCritical() << tr("add segmentdata segmentid %1 failed").arg(sd->segmentId());
+             rollbackTransaction("replaceSegment");
+             return false;
+         }
+     }
+     rows ++;
+ }
+
+ // // to avoid sql error dont update if segmentId2 is already.
+ // commandText = "update Routes set lineKey = " + QString("%1").arg(segmentId2)
+ //         + "  where linekey = " + QString("%1").arg(segmentId1) + " and lineKey != " + QString("%1").arg(segmentId2);
+ // if(!query.exec(commandText))
+ // {
+ //  SQLERROR(query);
+ //  return false;
+ // }
+ // rows = query.numRowsAffected();
  if(rows)
  {
   if(!deleteSegment(segmentId1))
@@ -11199,6 +11239,7 @@ bool SQL::deleteAndReplaceSegmentWith(int segmentId1, int segmentId2)
  {
   if(!deleteSegment(segmentId1))
   {
+   qCritical() << tr("delete segment %1 failed").arg(segmentId1);
    rollbackTransaction("replaceSegment");
    return false;
   }
