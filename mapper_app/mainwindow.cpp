@@ -323,7 +323,10 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   connect(ui->cbCompany, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(cbCompany_customContextMenu( const QPoint& )));
   ui->ssw->cbSegments()->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(ui->ssw->cbSegments(), SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(onCbSegmentsCustomContextMenu(QPoint)));
+  connect(ui->ssw->cbSegments()->lineEdit(), &QLineEdit::textEdited, this, [=](QString txt){
+      ui->ssw->cbSegments()->lineEdit()->setText(SegmentDescription::updateToken(txt));
 
+  });
   connect(SQL::instance(), &SQL::segmentChanged, [=]{
    cbSegmentInfoList = sql->getSegmentInfoList();
   });
@@ -532,8 +535,8 @@ void MainWindow::createBridge()
 // m_bridge->browseWindowHeight = webView->height();
 // m_bridge->browseWindowWidth = webView->width();
 
- connect( m_bridge, SIGNAL(movePointSignal(qint32, qint32,double,double)), this, SLOT(movePoint(qint32, qint32,double,double)));
- //connect( m_bridge, SIGNAL(movePointSignalX(qint32,qint32,QList<LatLng>)), this, SLOT(movePointX(qint32,qint32,QList<LatLng>)));
+ //connect( m_bridge, SIGNAL(movePointSignal(qint32, qint32,double,double)), this, SLOT(movePoint(qint32, qint32,double,double)));
+ connect( m_bridge, SIGNAL(movePointSignalX(qint32,qint32,QList<LatLng>)), this, SLOT(movePointX(qint32,qint32,QList<LatLng>)));
  connect(m_bridge, SIGNAL(addPointSignal(int,double,double)), this, SLOT(addPoint(int,double,double)));
  //connect(m_bridge, SIGNAL(addPointSignalX(int,double,double)), this, SLOT(addPointX(int,QList<LatLng>)));
  connect (m_bridge, SIGNAL(insertPointSignal(int,qint32,double,double)), this, SLOT(insertPoint(int,qint32,double,double)));
@@ -2912,7 +2915,7 @@ void MainWindow::segmentSelected(qint32 pt, qint32 segmentId)
  //m_bridge->processScript("addModeOff");
  //m_bAddMode = false;
  //addPointModeAct->setChecked(false);
- if(m_segmentId == segmentId && m_currPoint == pt)
+    if((m_segmentId == segmentId && m_currPoint == pt) || segmentId<1)
   return;
  m_segmentId = segmentId;
  Q_ASSERT(m_segmentId > 0);
@@ -3997,13 +4000,16 @@ void MainWindow::movePoint(qint32 segmentId, qint32 i, double newLat, double new
 /// <param name="newLon"></param>
 void MainWindow::movePointX(qint32 segmentId, qint32 i, QList<LatLng> pointlist)
 {
-    m_segmentId = segmentId;
-    SegmentInfo si = sql->getSegmentInfo(m_segmentId);
+    //m_segmentId = segmentId;
+    if(segmentId < 1)
+        return;
+    SegmentInfo si = sql->getSegmentInfo(segmentId);
 
-    // if(sd.segmentId() == m_segmentId)
-    // {
-    //     sd.movePoint(i, LatLng(newLat, newLon));
-    // }
+    if(si.segmentId() >0)
+        updateSegmentInfoDisplay(si);
+    if(pointlist.count() != si.pointList().count())
+        return;
+
     si.setPoints(pointlist);
     m_points = pointlist;
     sql->updateSegment(&si);
@@ -5154,13 +5160,12 @@ void MainWindow::updateSegmentInfoDisplay(SegmentInfo si)
   ui->txtLocation->setText(si.location());
   ui->txtNewerName->setText(si.newerName());
   ui->sbTracks->setValue(si.tracks());
-  //  }
-  //txtOneWay.Text = sI.oneWay;
+  m_segmentId = si.segmentId();
+  m_points = si.pointList();
+  m_nbrPoints = si.pointList().count();
+  ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(si.pointList().count()));
  }
- m_segmentId = si.segmentId();
- m_points = si.pointList();
- m_nbrPoints = si.pointList().count();
- ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(si.pointList().count()));
+     return;
 }
 
 void MainWindow::On_editSegment_triggered()
