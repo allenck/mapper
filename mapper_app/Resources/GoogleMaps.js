@@ -72,6 +72,13 @@ var images = {"default":0, "start":1, "end":2, "shadow":3, "arrow":4, "arrowShad
   "blue-red":18,"orange":19, "bvgtram":20, "subway":21, "subwayshadow":22, "purple":23,
   "rail":24, "bus":25};
 
+// var pin = [{background: "#00FF00"},
+//            {background: "#00FF00", glyph:"0"},
+//            {background: "#FF0000" },
+//           ];
+var pin = null;
+var pins =null; //{"default":0, "start":1, "end":2};
+
 var connected = false;
 //We use this function because connect statements resolve their target once, immediately
 //not at signal emission so they must be connected once the webViewBridge object has been added to the frame
@@ -936,6 +943,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, showArrow, Color
 
 async function initMap() {
     const { Map } = await google.maps.importLibrary("maps");
+    const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
     if(bGoogleInit)
         return;
 
@@ -964,7 +972,8 @@ async function initMap() {
         overviewMapControl: true,
         scrollwheel: true,
         disableDoubleClickZoom: true,
-        mapTypeId: google.maps.MapTypeId.ROADMAP
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        mapId: 'DEMO_MAP_ID'
      });
     google.maps.event.addListenerOnce(map, 'idle', function(){
            //this part runs when the mapobject is created and rendered
@@ -1043,6 +1052,11 @@ async function initMap() {
 
      //google.maps.event.trigger(map, 'resize');
 
+     pin = [new google.map.marker.PinElement(),
+            new google.map.marker.PinElement({background: "#00FF00", glyph:"0"}),
+            new google.map.marker.PinElement({background: "#FF0000" }),
+           ];
+     pins ={"default":0, "start":1, "end":2};
 
      webViewBridge.queryOverlay();
 
@@ -1078,6 +1092,7 @@ async function initMap() {
     zoomIx = map.getZoom()-17;
     zoomOffset = offsets[zoomIx];
 
+
     webViewBridge.initialized();
     bGoogleInit = true;
     webViewBridge.debug("initMap complete");
@@ -1103,6 +1118,12 @@ window.initialize = function() // called by WebChannel .ie "onLoad()"
 {
 
     initMap();
+    // pin = [new google.map.marker.PinElement(),
+    //        new google.map.marker.PinElement({background: "#00FF00", glyph:"0"}),
+    //        new google.map.marker.PinElement({background: "#FF0000" }),
+    //       ];
+    // pins ={"default":0, "start":1, "end":2};
+
 }
 
 function resizeMap()
@@ -1825,11 +1846,34 @@ function addMarker(i, lat, lon, icon, text, SegmentId)
  if(typeof icon == "number")
  {
      if(icon == -1) // use default icon
-         marker = new google.maps.Marker({map: map, position: new google.maps.LatLng(lat, lon),
-                 draggable: true,  label:text});
-  else
-        marker = new google.maps.Marker({map: map, position: new google.maps.LatLng(lat, lon),
-          draggable: true, icon:image[icon]});
+     {
+         const pin = new google.maps.marker.PinElement({
+             scale: 1.0,
+            glyph:text,
+            background: "#FBBC04",
+        });
+
+         marker = new google.maps.marker.AdvancedMarkerElement({map: map, position: new google.maps.LatLng(lat, lon),
+                 gmpDraggable: true,  content: pin.element});
+     }
+     else
+     {
+         var pin = null;
+         switch(icon)
+         {
+         case 0:
+             pin = new google.maps.marker.PinElement();
+             break;
+         case 1:
+             pin = new google.maps.marker.PinElement({background: "#00FF00", glyph:"0"});
+             break;
+         case 2:
+             pin = new google.maps.marker.PinElement({background: "#FF0000" });
+         }
+
+         marker = new google.maps.marker.AdvancedMarkerElement({map: map, position: new google.maps.LatLng(lat, lon),
+           gmpDraggable: true, content: pin.element});
+     }
  }
  else
   marker = new google.maps.Marker({map: map, position: new google.maps.LatLng(lat, lon),
