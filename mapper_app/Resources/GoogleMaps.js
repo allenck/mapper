@@ -973,7 +973,7 @@ async function initMap() {
         scrollwheel: true,
         disableDoubleClickZoom: true,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
-        mapId: 'DEMO_MAP_ID'
+        mapId: webViewBridge.mapId
      });
     google.maps.event.addListenerOnce(map, 'idle', function(){
            //this part runs when the mapobject is created and rendered
@@ -1516,7 +1516,7 @@ function isSegmentDisplayed(segmentId)
 // Erase a line segment and remove it from the list
 function clearPolyline(segmentId)
 {
-//alert("polyline " + segmentId + " called");
+ //alert("polyline " + segmentId + " called");
  siArray.forEach(function(si, ix)
  {
   var txt="";

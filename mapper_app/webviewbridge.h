@@ -11,7 +11,7 @@ class WebViewBridge : public QObject
     Q_OBJECT
 public:
     WebViewBridge(MainWindow *parent = 0);
-    WebViewBridge(LatLng latLng, int zoom, QString maptype, MainWindow *parent = 0);
+    WebViewBridge(LatLng latLng, int zoom, QString maptype, QString mapId, MainWindow *parent = 0);
     MainWindow* m_parent = nullptr;
 //    int browseWindowWidth;
 //    int browseWindowHeight;
@@ -24,10 +24,12 @@ public:
     LatLng curLatLng();
     int curZoom();
     QString curMaptype();
+    QString curMapId();
     Q_PROPERTY(float lat READ curLat NOTIFY onLatChanged)
     Q_PROPERTY(float lng READ curLon NOTIFY onLngChanged)
     Q_PROPERTY(int zoom READ curZoom NOTIFY onZoomChanged)
     Q_PROPERTY(QString maptype READ curMaptype NOTIFY onMapTypeChanged)
+    Q_PROPERTY(QString mapId READ curMapId WRITE setMapId NOTIFY onMapIdChanged)
     Q_PROPERTY(LatLng latlng MEMBER _latLng WRITE setLatLng NOTIFY latlngChanged)
     void processScript(QString func, QString parms);
     void processScript(QString func);
@@ -43,6 +45,7 @@ public:
     void setLatLng(LatLng latlng);
     bool isResultReceived();
     LatLng rightClick() {return _rightClickLoc;}
+    void setMapId(QString);
 
     ~WebViewBridge();
 
@@ -71,7 +74,7 @@ signals:
     void on_scriptArrayResult(QVariantList);
     void on_rightClicked(LatLng);
     void on_cityBounds(Bounds bounds);
-
+    void onMapIdChanged(QString mapId);
 
 public slots:
     void selectSegment(qint32 i, qint32 SegmentId); //19
@@ -124,6 +127,7 @@ private:
     int _zoom;
     LatLng _latLng;
     QString maptype;
+    QString mapId;
     bool bResultReceived;
     Configuration* config;
     LatLng _rightClickLoc;

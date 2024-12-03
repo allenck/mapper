@@ -33,6 +33,8 @@ private:
     SQL* sql;
     int _currentIx;
     QList<RouteData> routeList;
+    QDate maxEndDate;
+    CompanyData* cd = nullptr;
 
 private slots:
     void dateTimePicker1_ValueChanged(QDate date);

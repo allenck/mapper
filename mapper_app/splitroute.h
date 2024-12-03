@@ -35,6 +35,7 @@ private:
     SQL* sql;
     QMap<int,TractionTypeInfo> _tractionList;
     void fillTractionTypes();
+    QDate maxEndDate;
 
 private slots:
 //    void txtNewRouteNbr1_TextChanged(QString text);

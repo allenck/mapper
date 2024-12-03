@@ -45,6 +45,20 @@ void ModifyRouteDateDlg::setRouteData(RouteData* rd)
  //ui->dateTimePicker1->setDateTime(_rd->endDate);
  ui->rbEnd->setChecked(true);
  rbStartToggled(false);
+ cd = sql->getCompany(_rd->companyKey());
+ if(cd)
+ {
+     maxEndDate = cd->endDate;
+ }
+ else {
+     throw IllegalArgumentException("invalid company");
+ }
+ QDate nextStartDate = sql->getNextStartOrEndDate(_rd->route(), _rd->startDate(), true);
+ if(nextStartDate.isValid() && nextStartDate < maxEndDate )
+ {
+     maxEndDate = nextStartDate.addDays(-1);
+     ui->dateTimePicker1->setDate(maxEndDate);
+ }
 }
 
 RouteData* ModifyRouteDateDlg::getRouteData()
@@ -78,6 +92,16 @@ void ModifyRouteDateDlg::dateTimePicker1_ValueChanged(QDate date) //SLOT
 
    ui->dateTimePicker1->setFocus();
    return;
+  }
+  if(date > maxEndDate)
+  {
+      ui->lblError->setText(tr("Invalid date: must be less or equal than %1")
+                                .arg(maxEndDate.toString("yyyy/MM/dd")));
+      //System.Media.SystemSounds.Exclamation.Play();
+      QApplication::beep();
+
+      ui->dateTimePicker1->setFocus();
+      return;
   }
  }
  else

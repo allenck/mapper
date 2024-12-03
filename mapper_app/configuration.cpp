@@ -177,6 +177,7 @@ void Configuration::saveSettings()
  settings->setValue("displayDebugMsgs", bDisplayDebugMsgs);
  settings->setValue("displayArrows", bDisplaySegmentArrows);
  settings->setValue("font",font.toString());
+ settings->setValue("mapId", mapId);
  //settings->setValue("selectedCompanies", selectedCompanies);
 // #ifdef Q_OS_MAC
 //  settings->setValue("useBundleResources", bUseBundleResources);
@@ -486,6 +487,7 @@ void Configuration::getSettings()
    bForeignKeyCheck = settings.value("foreignKeyCheck", true).toBool();
    bDisplayDebugMsgs = settings.value("displayDebugMsgs", false).toBool();
    bDisplaySegmentArrows = settings.value("displayArrows", false).toBool();
+   mapId = settings.value("mapId", "99f6ba1d184ea0b6").toString();
    QFont f;
    f.fromString(settings.value("font").toString());
    font =f;

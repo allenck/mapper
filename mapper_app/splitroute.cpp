@@ -25,7 +25,7 @@ SplitRoute::SplitRoute( QWidget *parent) :
     connect(ui->cbCompany1, &QComboBox::currentTextChanged, [=] ()
     {
         int companyKey = ui->cbCompany1->currentData().toInt();
-        if(companyKey>0)
+        if(companyKey > 0)
         {
             CompanyData* cd = sql->getCompany(companyKey);
             if(ui->dateTo1->date() > cd->endDate)
@@ -33,7 +33,10 @@ SplitRoute::SplitRoute( QWidget *parent) :
                 ui->dateTo1->setDate(cd->endDate);
                 ui->dateFrom2->setDate(cd->endDate.addDays(-1));
             }
-            ui->dateTo2->setDate(cd->endDate);
+            if(_rd.endDate() < cd->endDate)
+                ui->dateTo2->setDate(_rd.endDate() );
+            else
+                ui->dateTo2->setDate(cd->endDate);
         }
     });
 
@@ -50,10 +53,27 @@ void SplitRoute::setRouteData(RouteData rd)
     _rd = rd;
     if (rd.route() < 1)
         return;
-    // ui->rnw1->configure(&rd, ui->lblHelp);
-    // ui->rnw1->setCompanyKey(ui->cbCompany1->currentData().toInt());
-    // ui->rnw2->configure(&rd, ui->lblHelp);
-    // ui->rnw2->setCompanyKey(ui->cbCompany2->currentData().toInt());
+    CompanyData* cd = sql->getCompany(_rd.companyKey());
+    if(!cd)
+        throw IllegalArgumentException("invalid company");
+    maxEndDate = cd->endDate;
+    QDate nextStartDate = sql->getNextStartOrEndDate(_rd.route(), _rd.startDate(), true);
+    if(nextStartDate < maxEndDate)
+        maxEndDate = nextStartDate.addDays(-1);
+    if(maxEndDate.isValid())
+    {
+
+        if(rd.endDate() > maxEndDate)
+        {
+            QMessageBox::critical(this, tr("Error"), tr("The end date for this route %1\n"
+                                                        "overlaps a succeding route starting on %2\n"
+                                                        "This route's end date must be less than or equal to %3")
+                                                         .arg(_rd.endDate().toString("yyyy/MM/dd"),
+                                                              nextStartDate.toString("yyyy/MM/dd"),
+                                                              maxEndDate.toString("yyyy/MM/dd")));
+            reject();
+        }
+    }
 
     ui->dateFrom1->setDate( rd.startDate());
     QDate test = rd.startDate().addYears(1);

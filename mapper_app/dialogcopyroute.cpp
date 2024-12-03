@@ -367,6 +367,9 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
         for(SegmentData* sd : segmentDataList)
         {
             qApp->processEvents();
+            QDate nextStartDate = sql->getNextStartOrEndDate(sd->route(), sd->startDate(), true);
+            if(nextStartDate.isValid() && nextStartDate> sd->endDate())
+                sd->setEndDate(nextStartDate.addDays(-1));
             SegmentData* sd2 = sql->getConflictingSegmentDataForRoute(_routeNbr,ui->rnw->newRouteName(),
                                                         sd->segmentId(),
                                                         ui->dateStart->date().toString("yyyy/MM/dd"),

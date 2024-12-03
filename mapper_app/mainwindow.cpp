@@ -179,12 +179,6 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  m_dataCtrl = new FileDownloader(dataUrl, this);
  connect (m_dataCtrl, SIGNAL(downloaded(QString)), this, SLOT(loadAcksoftData(QString)));
 
-#if 0
- // get list of localhost's mbtiles overlays
- m_overlays = new FileDownloader(QUrl("http://localhost/map_tiles/mbtiles.php"),this);
- //m_overlays = new FileDownloader(QUrl("http://localhost/tileserver/"),this);connect(m_overlays, SIGNAL(downloaded()), this, SLOT(loadMbtilesData()));
- connect(m_overlays, SIGNAL(downloaded(QString)), this, SLOT(loadMbtilesData()));
-#endif
  createActions();
  createMenus();
 
@@ -527,7 +521,7 @@ QMenu* MainWindow::addSegmentMenu(SegmentData *sd)
 void MainWindow::createBridge()
 {
  //! The object we will expose to JavaScript engine:
- m_bridge = new WebViewBridge(LatLng(m_latitude, m_longitude), m_zoom, "roadmap", this);
+ m_bridge = new WebViewBridge(LatLng(m_latitude, m_longitude), m_zoom, "roadmap", config->mapId, this);
 // m_bridge->_lat = m_latitude;
 // m_bridge->_lon = m_longitude;
 // m_bridge->_zoom = m_zoom;
@@ -566,17 +560,15 @@ Configuration* MainWindow::getConfiguration()
 
 void MainWindow::reloadMap()
 {
- if(webView == NULL)
- {
-  webView = new QWebEngineView(this);
-  ui->horizontalLayout->addWidget(webView);
-  webView->setObjectName(QStringLiteral("webEngineView"));
-  webView->setContextMenuPolicy(Qt::NoContextMenu);
-  webView->setPage(new MyWebEnginePage());
-  //QUrl fileUrl = QUrl::fromLocalFile(htmlDir.path() + QDir::separator()+"GoogleMaps2.htm");
-  //webView->setUrl(fileUrl);
- }
- webView->setUrl(fileUrl);
+ disconnect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
+
+     if(!QDesktopServices::openUrl(fileUrl))
+     {
+         qCritical() << "open webbrowser failed " << fileUrl.toDisplayString();
+         QMessageBox::critical(nullptr, tr("Error"), "open webbrowser failed ");
+     }
+     connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
+
  QVariantList objArray;
  objArray << m_latitude << m_longitude;
  m_bridge->processScript("setCenter", objArray);
@@ -592,7 +584,7 @@ void MainWindow::reloadMap()
  objArray << m_maptype;
  m_bridge->processScript("setMapType", objArray);
 
- showGoogleMapFeatures(false);
+ //showGoogleMapFeatures(false);
 
 }
 
@@ -1472,6 +1464,7 @@ void MainWindow::createActions()
       DialogEditStreets dlg = DialogEditStreets(this) ;
       dlg.exec();
   });
+
 }
 
 QWidgetAction *MainWindow::createWidgetAction()
@@ -5498,18 +5491,17 @@ void MainWindow::on_usingHelp()
   QDesktopServices::openUrl(QUrl::fromLocalFile(wikiRoot+"/Documentation.htm"));
  }
 }
-#if 0
-void MainWindow::saveChanges()
-{
- routeView->model()->commitChanges();
-}
-#endif
+
 void MainWindow::showGoogleMapFeatures( bool bShow)
 {
  if(!bShow)
-  m_bridge->processScript("setOption", "{ styles: styles[\"hide\"] }");
+  //m_bridge->processScript("setOption", "{ styles: styles[\"hide\"] }");
+     config->mapId = "99f6ba1d184ea0b6";
  else
-  m_bridge->processScript("setOption", "{ styles: styles[\"default\"] }");
+  //m_bridge->processScript("setOption", "{ styles: styles[\"default\"] }");
+     config->mapId = "DEMO_MAP_ID";
+ m_bridge->setMapId(config->mapId);
+ reloadMap();
  config->bShowGMFeatures = bShow;
 }
 

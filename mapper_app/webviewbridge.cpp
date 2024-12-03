@@ -17,7 +17,7 @@ WebViewBridge::WebViewBridge(MainWindow *parent)
  config = Configuration::instance();
 }
 
-WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString maptype, MainWindow *parent)
+WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString maptype, QString mapId, MainWindow *parent)
  : QObject()
 {
  this->_latLng = latLng;
@@ -25,6 +25,7 @@ WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString maptype, MainWindo
  this->_lon = latLng.lon();
  this->_zoom = zoom;
  this->maptype = maptype;
+ this->mapId = mapId;
  m_parent = parent;
 
 
@@ -51,6 +52,8 @@ void WebViewBridge::setLatLng(LatLng latlng){this->_latLng = latlng; emit latlng
 int WebViewBridge::curZoom(){return _zoom;}
 QVariant WebViewBridge::getRslt(){return myRslt;}
 QString WebViewBridge::curMaptype(){return maptype;}
+QString WebViewBridge::curMapId(){return mapId;}
+void WebViewBridge::setMapId(QString mapid){this->mapId = mapid;}
 
 void WebViewBridge::processScript(QString func, QString parms)
 {

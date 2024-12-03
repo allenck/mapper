@@ -267,6 +267,7 @@ public:
     bool isCompanyValid(SegmentData sd);
     QString list2String(const QList<int> &list);
     QList<QPair<SegmentInfo, SegmentInfo>> getDupSegmentsInList(QList<SegmentInfo> list);
+    QDate getNextStartOrEndDate(int route, QDate dt, bool bStart=true);
 
 signals:
     void details(QString);

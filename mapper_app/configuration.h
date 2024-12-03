@@ -62,6 +62,7 @@ public:
  bool bShowGMFeatures =true;
  bool bDisplayDebugMsgs = false;
  bool bDisplaySegmentArrows = false;
+ QString mapId;
  QStringList localOverlayList;
  QStringList georeferencedList;
  QString path;

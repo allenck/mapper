@@ -12446,5 +12446,51 @@ QList<RouteData> SQL:: checkRouteName(QString name, QDate startDate, QDate endDa
    {
        myExceptionHandler(e);
 
-   }   return list;
+   }
+   return list;
+}
+
+// return next start or end date for route after given date
+QDate SQL::getNextStartOrEndDate(int route, QDate dt, bool bStart)
+{
+    QString commandText;
+    QDate date;
+    try
+    {
+        if(!dbOpen())
+            throw Exception(tr("database not open: %1").arg(__LINE__));
+        QSqlDatabase db = QSqlDatabase::database();
+        if(bStart)
+            commandText = "select min(startDate) from Routes"
+                    " where route = " + QString::number(route)
+                   + " and startDate > '" + dt.toString("yyyy/MM/dd") + "'";
+        else
+            commandText = "select min(endDate) from Routes"
+                    " where route = " + QString::number(route)
+                   + " and endDate > '" + dt.toString("yyyy/MM/dd") + "'"
+                   + " and startDate > '" + dt.toString("yyyy/MM/dd") + "'";
+        QSqlQuery query = QSqlQuery(db);
+        bool bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+            QSqlError err = query.lastError();
+            qDebug() << err.text() + "\n";
+            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+            db.close();
+            exit(EXIT_FAILURE);
+        }
+        if (!query.isActive())
+        {
+            return date;
+        }
+        while (query.next())
+        {
+           return query.value(0).toDate();
+        }
+    }
+    catch (Exception e)
+    {
+        myExceptionHandler(e);
+
+    }   return date;
 }
