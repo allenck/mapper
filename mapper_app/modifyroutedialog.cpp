@@ -96,7 +96,9 @@ void ModifyRouteDialog::btnOK_Click()
     QList<SegmentData*> myArray = sql->getSegmentDataList(rd);
     if (myArray.count()==0)
     {
-        ui->lblHelp->setText(tr("No routes"));
+        ui->lblHelp->setText(tr("No data: %1 %2 %3 %4").arg(rd.route()).arg(rd.routeName(),
+                                                            rd.startDate().toString("yyyy/MM/dd"),
+                                                            rd.endDate().toString("yyyy/MM/dd")));
         //System.Media.SystemSounds.Asterisk.Play();
         return;
     }

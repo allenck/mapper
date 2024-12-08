@@ -45,6 +45,16 @@ RouteView::RouteView(QObject* parent )
         on_segmentSelected(pt, segmentId,list);
     });
 
+    connect(SQL::instance(), &SQL::segmentChanged, this, [=](int segmentId){
+        // SegmentInfo has changed, refresh the SegmentData record/
+        SegmentData* sd = SQL::instance()->getSegmentData(rd.route(), segmentId,
+                                                          rd.startDate().toString("yyyy/MM/dd"),
+                                                          rd.endDate().toString("yyyy/MM/dd"));
+        if(sd->segmentId()  == segmentId)
+        {
+            sourceModel->segmentChanged(segmentId);
+        }
+    });
     ui->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->horizontalHeader()->restoreState(config->rv.state);
     connect(ui->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), this,

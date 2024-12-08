@@ -8649,17 +8649,19 @@ QList<SegmentData*> SQL::getConflictingRouteSegments(qint32 route, QString name,
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
-        QString commandText = "Select a.route, name, startDate, endDate, "
-                              "lineKey, tractionType, companyKey, direction,"
+        QString commandText = "Select a.route, name, a.startDate, a.endDate, "
+                              "lineKey, tractionType, companyKey, a.direction,"
                               " normalEnter, normalLeave, reverseEnter, reverseLeave,"
-                              " routeAlpha, OneWay"
+                              " routeAlpha, a.OneWay, s.description, s.length, s.startDate, s.endDate"
                               " from Routes a"
                               " join AltRoute b on a.route = b.route"
-                              " where ((startDate between '" + startDate + "'"
-                              " and '" + endDate + "') or (endDate between '" + startDate + "'"
+                              " join Segments s on a.linekey = s.segmentid"
+                              " where ((a.startDate between '" + startDate + "'"
+                              " and '" + endDate + "') or (a.endDate between '" + startDate + "'"
                               " and '" + endDate + "'))"
                               " and a.route = " + QString("%1").arg(route) + ""
-                              " and name = '" + name + "' and endDate <> '" + endDate + "'"
+                              //" and name = '" + name + "' and a.endDate <> '" + endDate + "'"
+                              " and a.endDate <> '" + endDate + "'"
                               " and companyKey = " + QString::number(companyKey) +
                               " and lineKey = " + QString("%1").arg(segmentId);
         QSqlQuery query = QSqlQuery(db);
@@ -8674,21 +8676,25 @@ QList<SegmentData*> SQL::getConflictingRouteSegments(qint32 route, QString name,
         }
         while (query.next())
         {
-            SegmentData sd = SegmentData();
-            sd._route = query.value(0).toInt();
-            sd._routeName = query.value(1).toString();
-            sd._startDate = query.value(2).toDate();
-            sd._endDate = query.value(3).toDate();
-            sd._segmentId = query.value(4).toInt();
-            sd._tractionType =query.value(5).toInt();
-            sd._companyKey = query.value(6).toInt();
-            sd._direction = query.value(7).toString();
-            sd._normalEnter = query.value(8).toInt();
-            sd._normalLeave = query.value(9).toInt();
-            sd._reverseEnter = query.value(10).toInt();
-            sd._reverseLeave = query.value(11).toInt();
-            sd._oneWay = query.value(12).toString();
-            myArray.append(&sd);
+            SegmentData* sd = new SegmentData();
+            sd->_route = query.value(0).toInt();
+            sd->_routeName = query.value(1).toString();
+            sd->_startDate = query.value(2).toDate();
+            sd->_endDate = query.value(3).toDate();
+            sd->_segmentId = query.value(4).toInt();
+            sd->_tractionType =query.value(5).toInt();
+            sd->_companyKey = query.value(6).toInt();
+            sd->_direction = query.value(7).toString();
+            sd->_normalEnter = query.value(8).toInt();
+            sd->_normalLeave = query.value(9).toInt();
+            sd->_reverseEnter = query.value(10).toInt();
+            sd->_reverseLeave = query.value(11).toInt();
+            sd->_oneWay = query.value(12).toString();
+            sd->_description = query.value(13).toString();
+            sd->_length = query.value(14).toInt();
+            sd->_segmentStartDate = query.value(15).toDate();
+            sd->_segmentEndDate = query.value(16).toDate();
+            myArray.append(sd);
         }
     }
     catch (Exception e)
@@ -12493,4 +12499,70 @@ QDate SQL::getNextStartOrEndDate(int route, QDate dt, bool bStart)
         myExceptionHandler(e);
 
     }   return date;
+}
+
+//return list of any segments for other routes that conflict
+QList<SegmentData*> SQL::getConflicingRouteSegments(RouteData rd)
+{
+    QList<SegmentData*> myArray;
+    QString startDate = rd.startDate().toString("yyyy/MM/dd");
+    QString endDate = rd.endDate().toString("yyyy/MM/dd");
+    try
+    {
+        if(!dbOpen())
+            throw Exception(tr("database not open: %1").arg(__LINE__));
+        QSqlDatabase db = QSqlDatabase::database();
+        QString commandText = "Select a.route, name, a.startDate, a.endDate, "
+                              "lineKey, tractionType, companyKey, a.direction,"
+                              " normalEnter, normalLeave, reverseEnter, reverseLeave,"
+                              " routeAlpha, a.OneWay, s.description, s.length, s.startDate, s.endDate"
+                              " from Routes a"
+                              " join AltRoute b on a.route = b.route"
+                              " join Segments s on a.linekey = s.segmentid"
+                              " where ((a.startDate between '" + startDate + "'"
+                              " and '" + endDate + "') or (a.endDate between '" + startDate + "'"
+                              " and '" + endDate + "'))"
+                              " and a.route = " + QString("%1").arg(rd.route()) + ""
+                              //" and name = '" + name + "' and a.endDate <> '" + endDate + "'"
+                              " and a.endDate <> '" + endDate + "'"
+                              " and companyKey = " + QString::number(rd.companyKey());
+        QSqlQuery query = QSqlQuery(db);
+        bool bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+            QSqlError err = query.lastError();
+            qDebug() << err.text() + "\n";
+            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+            db.close();
+            exit(EXIT_FAILURE);
+        }
+        while (query.next())
+        {
+            SegmentData* sd = new SegmentData();
+            sd->_route = query.value(0).toInt();
+            sd->_routeName = query.value(1).toString();
+            sd->_startDate = query.value(2).toDate();
+            sd->_endDate = query.value(3).toDate();
+            sd->_segmentId = query.value(4).toInt();
+            sd->_tractionType =query.value(5).toInt();
+            sd->_companyKey = query.value(6).toInt();
+            sd->_direction = query.value(7).toString();
+            sd->_normalEnter = query.value(8).toInt();
+            sd->_normalLeave = query.value(9).toInt();
+            sd->_reverseEnter = query.value(10).toInt();
+            sd->_reverseLeave = query.value(11).toInt();
+            sd->_oneWay = query.value(12).toString();
+            sd->_description = query.value(13).toString();
+            sd->_length = query.value(14).toInt();
+            sd->_segmentStartDate = query.value(15).toDate();
+            sd->_segmentEndDate = query.value(16).toDate();
+            myArray.append(sd);
+        }
+    }
+    catch (Exception e)
+    {
+        myExceptionHandler(e);
+    }
+
+    return myArray;
 }

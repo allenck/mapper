@@ -17,7 +17,7 @@ class SplitRoute : public QDialog
 public:
     explicit SplitRoute(QWidget *parent = 0);
     ~SplitRoute();
-    void setRouteData(RouteData rd);
+    bool setRouteData(RouteData rd);
     RouteData getRoute();
     RouteData getNewRoute();
 

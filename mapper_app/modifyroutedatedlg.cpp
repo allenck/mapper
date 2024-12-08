@@ -58,6 +58,8 @@ void ModifyRouteDateDlg::setRouteData(RouteData* rd)
  {
      maxEndDate = nextStartDate.addDays(-1);
      ui->dateTimePicker1->setDate(maxEndDate);
+     ui->lblError->setText(tr("Default end date set to %1 because \n"
+                              "routes are already present after that date").arg(maxEndDate.toString("yyyy/MM/dd")));
  }
 }
 

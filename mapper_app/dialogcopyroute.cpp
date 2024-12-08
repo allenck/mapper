@@ -315,6 +315,27 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     else
      _routeNbr = ui->rnw->newRoute();
 
+    RouteData rd;
+    rd.setRoute(_routeNbr);
+    rd.setRouteName(ui->rnw->newRouteName());
+    rd.setStartDate(ui->dateStart->date());
+    rd.setEndDate(ui->dateEnd->date());
+    rd.setCompanyKey(ui->cbCompany->currentData().toInt());
+    QList<SegmentData*> conflicts = sql->getConflicingRouteSegments(rd);
+    if(!conflicts.isEmpty())
+    {
+        SegmentData* sd = conflicts.at(0);
+        ui->lblHelp->setText(tr("dates conflict with route %1 %2 %3-%4").arg(sd->route())
+                                 .arg(sd->routeName(), sd->startDate().toString("yyyy/MM/dd"),
+                                     sd->endDate().toString("yyy/MM/dd")));
+        //System.Media.SystemSounds.Asterisk.Play();
+        ui->dateStart->setFocus();
+        QApplication::beep();
+
+        return;
+
+    }
+
 
     //qint32 ix = ui->cbRoutes->currentIndex();
     //rd = routeDataList.at(ix);
@@ -532,8 +553,8 @@ void DialogCopyRoute::dateEnd_ValueChanged()   //SLOT
         ui->lblHelp->setText(tr("start date is after end date"));
         QApplication::beep();
         ui->dateStart->setFocus();
-
     }
+
 }
 
 void DialogCopyRoute::btnCancel_Click()      // SLOT

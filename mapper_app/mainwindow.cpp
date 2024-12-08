@@ -277,6 +277,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
           sql->updateSegment(&si);
       }
   });
+  Clipboard::instance()->setContextMenu(ui->txtNewerName);
   connect(ui->txtLocation, &QLineEdit::editingFinished, this,[=]{
       SegmentInfo si = sql->getSegmentInfo(m_segmentId);
       if(ui->txtLocation->text() != si.location() )
@@ -1506,8 +1507,8 @@ void MainWindow::addSegmentToRoute(SegmentData* sd)
  if(conflicts.count())
  {
      QMessageBox::critical(this, tr("Conflict"), tr("The segment is already present"
-                           " or conflicts with the start or end date of an"
-                           " existing segment. The segment will not be added!"));
+                        " or conflicts with the start or end date of an"
+                        " existing segment %1. The segment will not be added!").arg(conflicts.at(0)->toString2()));
      return;
  }
 
@@ -4289,7 +4290,8 @@ void MainWindow::splitRoute_Click()
     //SplitRoute();
     SplitRoute splitRouteDlg(this);
     //splitRouteDlg.setConfiguration (config);
-    splitRouteDlg.setRouteData (routeList.at(ui->cbRoute->currentIndex()));
+    if(!splitRouteDlg.setRouteData (routeList.at(ui->cbRoute->currentIndex())))
+        return;
     if (splitRouteDlg.exec() == QDialog::Accepted)
     {
         RouteData newRoute = splitRouteDlg.getNewRoute();
@@ -4584,6 +4586,7 @@ void MainWindow::selectSegment(int seg)
  m_segmentId = seg;
  Q_ASSERT(m_segmentId > 0);
  SegmentInfo si = sql->getSegmentInfo(seg);
+ updateSegmentInfoDisplay(si);
  QList<SegmentInfo> dups = sql->getDupSegments(si);
  //ui->txtStreet->setText(si.streetName());
  ui->txtNewerName->setText(si.newerName());

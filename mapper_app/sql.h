@@ -268,6 +268,7 @@ public:
     QString list2String(const QList<int> &list);
     QList<QPair<SegmentInfo, SegmentInfo>> getDupSegmentsInList(QList<SegmentInfo> list);
     QDate getNextStartOrEndDate(int route, QDate dt, bool bStart=true);
+    QList<SegmentData*> getConflicingRouteSegments(RouteData rd);
 
 signals:
     void details(QString);

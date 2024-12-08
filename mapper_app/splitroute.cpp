@@ -48,11 +48,11 @@ SplitRoute::~SplitRoute()
     delete ui;
 }
 
-void SplitRoute::setRouteData(RouteData rd)
+bool SplitRoute::setRouteData(RouteData rd)
 {
     _rd = rd;
     if (rd.route() < 1)
-        return;
+        return false;
     CompanyData* cd = sql->getCompany(_rd.companyKey());
     if(!cd)
         throw IllegalArgumentException("invalid company");
@@ -71,7 +71,8 @@ void SplitRoute::setRouteData(RouteData rd)
                                                          .arg(_rd.endDate().toString("yyyy/MM/dd"),
                                                               nextStartDate.toString("yyyy/MM/dd"),
                                                               maxEndDate.toString("yyyy/MM/dd")));
-            reject();
+
+            return false;
         }
     }
 
@@ -148,6 +149,7 @@ void SplitRoute::setRouteData(RouteData rd)
     });
 
     ui->cbTractionType->setCurrentIndex(ui->cbTractionType->findData(_rd.tractionType()));
+    return true;
 }
 
 void SplitRoute::refreshRoutes()
