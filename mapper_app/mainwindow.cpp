@@ -4263,6 +4263,7 @@ void MainWindow::getZoom(int zoom)
 
 void MainWindow::copyRouteInfo_Click()
 {
+    setCursor(Qt::WaitCursor);
  DialogCopyRoute form(routeList.at(ui->cbRoute->currentIndex()), this);
  //form.Configuration = config;
  //form.setRouteData( (RouteData)routeList.at(ui->cbRoute->currentIndex()));
@@ -4283,6 +4284,7 @@ void MainWindow::copyRouteInfo_Click()
    }
   }
  }
+ setCursor(Qt::ArrowCursor);
 }
 
 void MainWindow::splitRoute_Click()

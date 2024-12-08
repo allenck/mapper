@@ -6,6 +6,7 @@ DialogCopyRoute::DialogCopyRoute(RouteData rd,QWidget *parent) :
     QDialog(parent),
     ui(new Ui::DialogCopyRoute)
 {
+    setCursor(Qt::WaitCursor);
     config = Configuration::instance();
     //sql->setConfig(cfg);
     sql = SQL::instance();
@@ -19,10 +20,18 @@ DialogCopyRoute::DialogCopyRoute(RouteData rd,QWidget *parent) :
     {
         ui->dateEnd->setDate(cd->endDate);
     }
-    _rd2 = new RouteData();
+    ui->dateStart->setDate(_rd.endDate().addDays(1));
+    QDate nextEndDate = sql->getNextStartOrEndDate(_rd.route(), ui->dateStart->date(), true);
+
+    if(nextEndDate < cd->endDate)
+    {
+        maxEndDate = nextEndDate.addDays(-1);
+        ui->dateEnd->setDate(maxEndDate);
+    }
+    _rd2 = new RouteData(_rd);
     _rd2->setCompanyKey(cd->companyKey);
     ui->rnw->configure(_rd2, ui->lblHelp);
-
+    ui->rnw->setRouteName(_rd.routeName());
     refreshRoutes();
     // int ix = ui->cbRoutes->findData(QVariant::fromValue(_rd));
     // ui->cbRoutes->setCurrentIndex(ix);
@@ -36,6 +45,17 @@ DialogCopyRoute::DialogCopyRoute(RouteData rd,QWidget *parent) :
     connect(ui->dateStart, SIGNAL(dateChanged(QDate)), this, SLOT(dateStart_ValueChanged()));
     connect(ui->dateEnd, SIGNAL(dateChanged(QDate)), this, SLOT(dateEnd_ValueChanged()));
     connect(ui->rnw, SIGNAL(rdSelected(RouteData)), this, SLOT(on_rdSelected(RouteData)));
+    connect(ui->rnw, &RouteNameWidget::routeNumberChange, this, [=](int newRoute){
+        maxEndDate = cd->endDate;
+        QDate nextStartDate = sql->getNextStartOrEndDate(newRoute, ui->dateStart->date(), true);
+        if(nextStartDate < cd->endDate)
+        {
+            maxEndDate = nextStartDate.addDays(-1);
+            ui->dateEnd->setDate(maxEndDate);
+        }
+
+    });
+    setCursor(Qt::ArrowCursor);
 }
 
 DialogCopyRoute::~DialogCopyRoute()
@@ -270,6 +290,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     if(ui->dateStart->date() < cd->startDate || ui->dateEnd->date() > cd->endDate)
     {
      ui->lblHelp->setText(tr("check that dates are valid for company!"));
+        QApplication::beep();
      return;
     }
     //qint32 newRoute = sql->getNumericRoute(ui->rnw->txtRouteNbr->text(), & _alphaRoute, & bAlphaRoute, companyKey);
@@ -292,22 +313,28 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
 
     //     return;
     // }
-    if(ui->rnw->newRouteName() == "")
-    {
-        ui->lblHelp->setText(tr("Enter a route number"));
-        //System.Media.SystemSounds.Asterisk.Play();
-        ui->txtRouteName->setFocus();
-        QApplication::beep();
-
-        return;
-    }
+    // if(ui->rnw->newRouteName() == "")
+    // {
+    //     ui->lblHelp->setText(tr("Enter a route number"));
+    //     //System.Media.SystemSounds.Asterisk.Play();
+    //     ui->txtRouteName->setFocus();
+    //     QApplication::beep();
+    //     return;
+    // }
     if(ui->dateStart->date() > ui->dateEnd->date())
     {
         ui->lblHelp->setText(tr("Date error. Start date after end date"));
         //System.Media.SystemSounds.Asterisk.Play();
         ui->dateStart->setFocus();
         QApplication::beep();
-
+        return;
+    }
+    if(ui->dateEnd->date() > maxEndDate)
+    {
+        ui->lblHelp->setText(tr("Date error. End date must not be ;ater than %1").arg(maxEndDate.toString("yyyy/MM/dd")));
+        //System.Media.SystemSounds.Asterisk.Play();
+        ui->dateStart->setFocus();
+        QApplication::beep();
         return;
     }
     if(ui->rnw->routeNbrMustBeAdded())
@@ -328,12 +355,12 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
         ui->lblHelp->setText(tr("dates conflict with route %1 %2 %3-%4").arg(sd->route())
                                  .arg(sd->routeName(), sd->startDate().toString("yyyy/MM/dd"),
                                      sd->endDate().toString("yyy/MM/dd")));
+        qCritical() << ui->lblHelp->text();
+
         //System.Media.SystemSounds.Asterisk.Play();
         ui->dateStart->setFocus();
         QApplication::beep();
-
         return;
-
     }
 
 
@@ -510,6 +537,7 @@ void DialogCopyRoute::cbCompany_SelectedIndexChanged(int row) // SLOT
      ui->dateStart->setDate(cd->startDate);
 //    if (ui->dateEnd->date() > cd->endDate)
      ui->dateEnd->setDate(cd->endDate);
+     maxEndDate = cd->endDate;
 
      refreshRoutes();
 }

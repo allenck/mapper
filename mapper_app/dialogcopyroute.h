@@ -35,6 +35,7 @@ private:
     Configuration *config;
     RouteData _rd;
     RouteData* _rd2;
+    QDate maxEndDate;
 
     CompanyData* cd = nullptr;
     void refreshRoutes();

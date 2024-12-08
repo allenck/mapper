@@ -50,7 +50,7 @@ RouteView::RouteView(QObject* parent )
         SegmentData* sd = SQL::instance()->getSegmentData(rd.route(), segmentId,
                                                           rd.startDate().toString("yyyy/MM/dd"),
                                                           rd.endDate().toString("yyyy/MM/dd"));
-        if(sd->segmentId()  == segmentId)
+        if(sd  && sd->segmentId()  == segmentId)
         {
             sourceModel->segmentChanged(segmentId);
         }
