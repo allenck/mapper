@@ -15,6 +15,8 @@ SOURCES += main.cpp\
     $$PWD/segmentselectionwidget.cpp \
     $$PWD/splitsegmentdlg.cpp \
     #$$PWD/streetname.cpp \
+    $$PWD/streetstablemodel.cpp \
+    $$PWD/streetview.cpp \
     $$PWD/ttitemdelegate.cpp \
     $$PWD/turncombo.cpp \
     $$PWD/turndelegate.cpp \
@@ -95,6 +97,8 @@ HEADERS  += mainwindow.h \
     $$PWD/segmentselectionwidget.h \
     $$PWD/splitsegmentdlg.h \
     #$$PWD/streetname.h \
+    $$PWD/streetstablemodel.h \
+    $$PWD/streetview.h \
     $$PWD/ttitemdelegate.h \
     $$PWD/turncombo.h \
     $$PWD/turndelegate.h \

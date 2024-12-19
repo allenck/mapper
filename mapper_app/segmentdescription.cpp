@@ -346,6 +346,8 @@ QStringList SegmentDescription::tokenizeAlternate(QString text, QString sep)
 
 QString SegmentDescription::buildDescription(QStringList tokens)
 {
+    if(tokens.count() != 3)
+        return work;
     work = QString("%1, %2 - %3").arg(tokens.at(0).trimmed(),tokens.at(1).trimmed(),tokens.at(2).trimmed());
     return work;
 }
@@ -363,6 +365,12 @@ QString SegmentDescription::replaceAbbreviations(QString descr)
 
 QString SegmentDescription::updateToken(QString str){
     QString result = str;
+    if(SegmentDescription::abbreviations.isEmpty())
+    {
+        Parameters parms = SQL::instance()->getParameters();
+        SegmentDescription::abbreviations = parms.abbreviationsList;
+    }
+
     for(const QPair<QString,QString>& pair : SegmentDescription::abbreviations)
     {
         if(result.endsWith(pair.second))

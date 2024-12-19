@@ -1,16 +1,19 @@
 #include "segmentviewtablemodel.h"
 #include "sql.h"
 #include "mainwindow.h"
+#include "segmentdescription.h"
 
 SegmentViewTableModel::SegmentViewTableModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
+
 }
 
 SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList, double Lat, double Lon, qint32 route, QString date, QObject *parent)
      : QAbstractTableModel(parent)
  {
      listOfSegments = segmentDataList;
+     checkList(listOfSegments);
      lat= Lat;
      lon = Lon;
      m_routeNbr = route;
@@ -56,7 +59,7 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
          }
      }
 
-     if (role == Qt::DisplayRole) {
+     if (role == Qt::DisplayRole || role == Qt::EditRole) {
          SegmentData sd = listOfSegments.at(index.row());
 
          //segmentInfo si = sql->getSegmentInfo(sd.SegmentId);
@@ -86,19 +89,27 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
              return sd.tracks();
          case STREETNAME:
              return sd.streetName();
+         case LOCATION:
+             return sd.location();
+         case STREETID:
+             return sd.streetId();
          case DIRECTION:
           return sd.direction();
-         case LAT:
-             if(sd.whichEnd() == "S")
-                 return QString("%1").arg(sd.startLat(),0,'f',8);
-             else
-                 return QString("%1").arg(sd.endLat(),0,'f',8);
-         case LON:
-             if(sd.whichEnd()=="S")
-                 return QString("%1").arg(sd.startLon(),0,'f',8);
-             else
-                 return QString("%1").arg(sd.endLon(),0,'f',8);
-             //TODO  Determine which segments can be safely selected
+         // case LAT:
+         //     if(sd.whichEnd() == "S")
+         //         return QString("%1").arg(sd.startLat(),0,'f',8);
+         //     else
+         //         return QString("%1").arg(sd.endLat(),0,'f',8);
+         // case LON:
+         //     if(sd.whichEnd()=="S")
+         //         return QString("%1").arg(sd.startLon(),0,'f',8);
+         //     else
+         //         return QString("%1").arg(sd.endLon(),0,'f',8);
+          case LATLNG:
+                if(sd.whichEnd() == "S")
+                  return sd.startLatLng().str();
+                else
+                    return sd.endLatLng().str();
          case WHICHEND:
              return sd.whichEnd();
         }
@@ -117,26 +128,28 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
 
  QVariant SegmentViewTableModel::headerData(int section, Qt::Orientation orientation, int role) const
  {
-     if (role != Qt::DisplayRole)
+     if (role != Qt::DisplayRole || role == Qt::EditRole)
          return QVariant();
      if (orientation == Qt::Horizontal)
      {
          switch (section)
          {
-             case 0:
+             case SEGMENTID:
                  return tr("SegId");
-             case 1:
+             case DESCRIPTION:
                  return tr("Name");
-             case 2:
+             case TRACKS:
                  return tr("Tracks");
-             case 3:
+             case STREETNAME:
                  return tr("Street");
-             case 4:
+             case LOCATION:
+                 return tr("Location");
+             case STREETID:
+                 return tr("Street Id");
+             case DIRECTION:
                  return tr("Dir");
-             case 5:
-                return tr("Latitude");
-             case 6:
-                return tr("Longitude");
+             case LATLNG:
+                 return tr("LatLng");
              case WHICHEND:
                  return tr("Which end");
              default:
@@ -176,12 +189,12 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
      return true;
  }
 
- bool SegmentViewTableModel::removeRows(int position, int rows, const QModelIndex &index)
+ bool SegmentViewTableModel::removeRows(int position, int nbrRows, const QModelIndex &index)
  {
      Q_UNUSED(index);
-     beginRemoveRows(QModelIndex(), position, position+rows-1);
+     beginRemoveRows(QModelIndex(), position, position+nbrRows-1);
 
-     for (int row=0; row < rows; ++row) {
+     for (int row=0; row < nbrRows; ++row) {
          listOfSegments.removeAt(position);
      }
 
@@ -196,13 +209,13 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
          int row = index.row();
 
          SegmentData sd = listOfSegments.value(row);
-
-//         switch (index.column())
-//             p.first = value.toString();
-//         else if (index.column() == 1)
-//             p.second = value.toString();
-//         else
-//             return false;
+         switch(index.column())
+         {
+         case LOCATION:
+             sd.setLocation(value.toString());
+             SQL::instance()->updateSegment(&sd);
+             break;
+         }
 
          listOfSegments.replace(row, sd);
          emit(dataChanged(index, index));
@@ -221,20 +234,24 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
 
  Qt::ItemFlags SegmentViewTableModel::flags(const QModelIndex &index) const
  {
-     if (!index.isValid())
-         return Qt::ItemIsEnabled;
-
+     switch (index.column()) {
+     case LOCATION:
+         return Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsSelectable;
+     default:
+         break;
+     }
      //return QAbstractTableModel::flags(index) | Qt::ItemIsEditable;
      return QAbstractTableModel::flags(index);
  }
 
- QList< SegmentInfo > SegmentViewTableModel::getList()
+ QList< SegmentInfo >* SegmentViewTableModel::getList()
  {
-     return listOfSegments;
+     return &listOfSegments;
  }
 
  void SegmentViewTableModel::setList(QList<SegmentInfo> list)
  {
+     checkList(list);
      beginResetModel();
      listOfSegments = list;
      endResetModel();
@@ -245,3 +262,17 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
   return listOfSegments.at(row);
  }
 
+ void SegmentViewTableModel::checkList(QList<SegmentInfo> segmentDataList)
+ {
+     for(int i =0; i < segmentDataList.count(); i++)
+     {
+         SegmentInfo si = segmentDataList.at(i);
+         sd = new SegmentDescription(si.description());
+         if(si.streetName() != sd->street() && sd->isValid())
+         {
+             si.setDescription(sd->newDescription());
+             segmentDataList.replace(i, si);
+             SQL::instance()->updateSegment(&si,false);
+         }
+     }
+ }

@@ -143,6 +143,7 @@ public:
     QList<SegmentData> getRouteSegmentsForRouteNbr(QString route);
     QList<RouteData> getRouteDataForRouteName(qint32 route, QString name);
     QList<RouteData> checkRouteName(QString name, QDate startDate, QDate endDate);
+    double Distance(LatLng latLng1, LatLng latLng2);
     double Distance(double Lat1, double Lon1, double Lat2, double Lon2);
     QT_DEPRECATED QList<SegmentData *> getIntersectingRouteSegmentsAtPoint(int ignore, double lat, double lon, double radius, qint32 route, QString routeName, QString date);
     QList<SegmentData*> getIntersectingRouteSegmentsAtPoint(SegmentData* sd, double radius,
@@ -217,7 +218,7 @@ public:
     bool doesConstraintExist(QString tbName, QString name);
     bool addColumn(QString table, QString name, QString type, QString after = "");
     bool updateSegmentsTable();
-    bool updateSegment(SegmentInfo *sd);
+    bool updateSegment(SegmentInfo *sd, bool bNotify = true);
     bool updateSegment(SegmentData* sd);
     //QT_DEPRECATED bool updateSegment(SegmentInfo* );
     bool updateTractionType(qint32 tractionType, QString description, QString displayColor, int routeType, QSqlDatabase db = QSqlDatabase());

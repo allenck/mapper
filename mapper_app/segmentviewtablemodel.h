@@ -5,7 +5,7 @@
 #include <QList>
 #include "data.h"
 
-
+class SegmentDescription;
 class SegmentViewTableModel : public QAbstractTableModel
 {
     Q_OBJECT
@@ -20,12 +20,13 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role=Qt::EditRole);
     bool insertRows(int position, int rows, const QModelIndex &index=QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index=QModelIndex());
-    QList<SegmentInfo> getList();
+    QList<SegmentInfo> *getList();
     void reset();
-    enum COLUMNS {SEGMENTID, DESCRIPTION, TRACKS, STREETNAME, DIRECTION, LAT, LON, WHICHEND};
+    enum COLUMNS {SEGMENTID, DESCRIPTION, TRACKS, STREETNAME, LOCATION, STREETID, DIRECTION, LATLNG, WHICHEND};
     int getRow(int segmentId);
     SegmentInfo selectedSegment(int row);
     void setList(QList<SegmentInfo> list);
+    void checkList(QList<SegmentInfo> segmentDataList);
 
 signals:
 
@@ -34,8 +35,9 @@ private:
     QList<SegmentInfo> listOfSegments;
     double lat, lon;
     double angleDiff(double A1, double A2);
-    qint32 m_routeNbr;
+    qint32 m_routeNbr=-1;
     QString m_date;
+    SegmentDescription* sd = nullptr;
 };
 
 #endif // SEGMENTVIEWTABLEMODEL_H

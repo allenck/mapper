@@ -75,6 +75,7 @@ signals:
     void on_rightClicked(LatLng);
     void on_cityBounds(Bounds bounds);
     void onMapIdChanged(QString mapId);
+    void clickLatLng(LatLng);
 
 public slots:
     void selectSegment(qint32 i, qint32 SegmentId); //19
@@ -94,6 +95,7 @@ public slots:
     void moveRouteStartMarker(double lat, double lon, qint32 segmentId, qint32 i);
     void moveRouteEndMarker(double lat, double lon, qint32 segmentId, qint32 i);
     QString getImagePath(qint32);
+    void clickPoint(double lat, double lng);
     void movePoint(qint32 segmentId, qint32 i, double lat, double lng);
     void movePointX(qint32 segmentId, qint32 i, QVariantList array);
     void insertPoint(int SegmentId, qint32 i, double newLat, double newLon);

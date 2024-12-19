@@ -9,7 +9,6 @@
 #include "mainwindow.h"
 #include "exportsql.h"
 #include <QRadioButton>
-//#include "sqlite3ext.h"
 #include <QtSql>
 #include <QUrl>
 
@@ -1110,6 +1109,7 @@ QList<SegmentInfo> SQL::getSegmentInfo()
  return myArray;
 }
 #endif
+
 QMap<int, SegmentInfo> SQL::getSegmentInfoList(QString location)
 {
  QMap<int, SegmentInfo> myArray;
@@ -1122,14 +1122,14 @@ QMap<int, SegmentInfo> SQL::getSegmentInfoList(QString location)
  {
   commandText= "Select SegmentId, description, OneWay, startDate, endDate,"
                        " length, points, startLat, startLon, endLat, EndLon, type, street,"
-                       " location, pointArray, tracks, direction, DoubleDate "
+                       " location, pointArray, tracks, direction, DoubleDate, newerName "
                        " from Segments where location = '" + location + "' "
                        + "order by description";
  }
  else {
    commandText= "Select SegmentId, description, OneWay, startDate, endDate,"
                         " length, points, startLat, startLon, endLat, EndLon, type, street,"
-                        " location, pointArray, tracks, direction, DoubleDate"
+                        " location, pointArray, tracks, direction, DoubleDate, newerName"
                         " from Segments order by description";
 
   }
@@ -1166,6 +1166,7 @@ QMap<int, SegmentInfo> SQL::getSegmentInfoList(QString location)
   si._tracks = query.value(15).toInt();
   si.direction() = query.value(16).toString();
   si._doubleDate = query.value(17).toDate();
+  si._newerStreetName = query.value(18).toString();
 
   si.setPoints(pointArray);  // initialize array of points (i.e pointList)
   if(si.pointList().count() > 1)
@@ -1484,16 +1485,16 @@ SegmentInfo SQL::getSegmentInfo(qint32 segmentId)
   if(config->currConnection->servertype() != "MsSql")
        commandText = "Select `SegmentId`, Description, tracks, type,"
                      " StartLat, StartLon, EndLat, EndLon, length, StartDate, EndDate, Direction,"
-                     " Street, location, pointArray, DoubleDate, FormatOK, NewerName from Segments"
+                     " Street, location, pointArray, DoubleDate, FormatOK, NewerName, StreetId from Segments"
                      " where SegmentId = " + QString("%1").arg(segmentId);
   else
        commandText = "Select `SegmentId`, Description, tracks, type,"
                      " StartLat, StartLon, EndLat, EndLon, length, StartDate, EndDate, Direction,"
-                     " Street, location, pointArray, DoubleDate, FormatOK, NewerName from Segments"
+                     " Street, location, pointArray, DoubleDate, FormatOK, NewerName,StreetId from Segments"
                      " where SegmentId = " + QString("%1").arg(segmentId);
   QSqlQuery query = QSqlQuery(db);
   bool bQuery = query.exec(commandText);
-  bQuery = query.exec(commandText);
+  //bQuery = query.exec(commandText);
   if(!bQuery)
   {
       QSqlError err = query.lastError();
@@ -1527,6 +1528,7 @@ SegmentInfo SQL::getSegmentInfo(qint32 segmentId)
    si._doubleDate = query.value(15).toDate();
    si._formatOK = query.value(16).toBool();
    si._newerStreetName = query.value(17).toString();
+   si._streetId = query.value(18).toInt();
   }
 
   si._points = si._pointList.count();
@@ -2672,7 +2674,8 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
   //if(config->currConnection->servertype() != "MsSql")
       commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon, a.length,"
                     " a.street, a.type, a.description,  a.oneWay, a.pointArray,"
-                    " a.tracks, a.startDate, a.doubledate, a.endDate, a.location, a.newerName"
+                    " a.tracks, a.startDate, a.doubledate, a.endDate, a.location, a.newerName, "
+                    " a.streetId"
                     " from Segments a where " + distanceWhere +
                     " order by segmentId";
 //  else
@@ -2726,6 +2729,7 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
    si._endDate = query.value(14).toDate();
    si._location = query.value(15).toString();
    si._newerStreetName = query.value(16).toString();
+   si._streetId = query.value(17).toInt();
 #ifdef NO_UDF
    // eliminate segments not close
    if((Distance(lat, lon, si._startLat, si._startLon) > radius) &&
@@ -3818,6 +3822,12 @@ double /*static*/ SQL::distance(LatLng latlng1, LatLng latlng2)
  double d = R * c;
  return d; // distance in kilometers
 }
+
+double SQL::Distance(LatLng latLng1, LatLng latLng2)
+{
+    return Distance(latLng1.lat(),latLng1.lon(), latLng2.lat(),latLng2.lon());
+}
+
 /// <summary>
 /// Calculate distance in km between two points
 /// </summary>
@@ -3886,7 +3896,7 @@ bool SQL::updateSegmentDetails(qint32 SegmentId, QString description, int tracks
 }
 
 
-bool SQL::updateSegment(SegmentInfo* si)
+bool SQL::updateSegment(SegmentInfo* si, bool bNotify)
 {
  bool ret = false;
  QString commandText;
@@ -3931,6 +3941,7 @@ bool SQL::updateSegment(SegmentInfo* si)
    + ", length= " + QString("%1").arg(si->_length)
    + ", points= " + QString("%1").arg(si->pointList().count())
    + ", type= " + QString("%1").arg((int)si->_routeType)
+   + ", StreetId = " + QString("%1").arg(si->_streetId)
    + ", direction = '" + si->_direction + "', "
    + "pointArray='" + si->pointsString() + "', "
    + "description='" + si->_description + "',"
@@ -3962,7 +3973,8 @@ bool SQL::updateSegment(SegmentInfo* si)
   return ret;
  }
  ret = true;
- emit segmentChanged(si->segmentId());
+ if(bNotify)
+    emit segmentChanged(si->segmentId());
 
  return ret;
 }
@@ -4702,11 +4714,11 @@ bool SQL::updateRecord(SegmentInfo sd)
                               "length= " + QString("%1").arg(sd._length) +
             ", tracks="+ QString::number(sd._tracks) +
             ", startLat=" + QString::number(sd._startLat, 'g', 8) +
-            ",startLon=" + QString::number(sd._startLon,'g',8)+
+            ", startLon=" + QString::number(sd._startLon,'g',8)+
             ", endLat=" + QString::number(sd._endLat, 'g', 8) +
-            ",endLon=" + QString::number(sd._endLon,'g',8)+
+            ", endLon=" + QString::number(sd._endLon,'g',8)+
             ", type=" + QString::number((int)sd._routeType) + " " +
-            ",lastUpdate=:lastUpdate where SegmentId = " + QString("%1").arg(sd.segmentId());
+            ", lastUpdate=:lastUpdate where SegmentId = " + QString("%1").arg(sd.segmentId());
         QSqlQuery query = QSqlQuery(db);
         query.prepare(commandText);
         query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
@@ -10756,7 +10768,7 @@ bool SQL::updateTractionType(qint32 tractionType, QString description, QString d
 // check tables to see if alterations need to be made
 void SQL::checkTables(QSqlDatabase db)
 {
-    QDir rsrc(":/sql");
+ QDir rsrc(":/sql");
  QList<QFileInfo> sqlfiles = rsrc.entryInfoList();
  // check for presence of Parameters table.
  QStringList tableList;
@@ -10775,6 +10787,17 @@ void SQL::checkTables(QSqlDatabase db)
 
   //tableList = getTableList(db, config->currConnection->servertype());
   tableList = db.tables();
+
+  if(!tableList.contains("Streets", Qt::CaseInsensitive))
+  {
+      if(config->currConnection->servertype() == "Sqlite")
+       executeScript(":/sql/sqlite3_create_streets.sql",db);
+  }
+  if(!tableList.contains("StreetDef"))
+  {
+      if(config->currConnection->servertype() == "Sqlite")
+       executeScript(":/sql/sqlite3_create_streetsdef_streetname.sql",db);
+  }
 
   if(!tableList.contains("RouteSeq", Qt::CaseInsensitive))
   {
@@ -10824,6 +10847,15 @@ void SQL::checkTables(QSqlDatabase db)
       if(config->currConnection->servertype() == "Sqlite")
        executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
   }
+
+  if(!doesColumnExist("Segments", "StreetId"))
+  {
+      addColumn("Segments", "StreetId", "integer NOT NULL Default -1");
+      if(config->currConnection->servertype() == "Sqlite")
+       executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
+  }
+
+
 
   if(!doesColumnExist("Companies", "RoutePrefix"))
   {
@@ -12207,6 +12239,7 @@ QList<SegmentData*>  SQL::segmentDataFromView(QString where)
   sd->_segmentEndDate = query.value(38).toDate();
   sd->_newerName = query.value(39).toString();
   sd->_routePrefix = query.value(40).toString();
+  sd->_streetId = query.value(41).toInt();
   if(!sd->segmentStartDate().isValid() || !sd->segmentEndDate().isValid())
   {
       SegmentInfo si = SegmentInfo(*sd);

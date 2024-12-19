@@ -48,7 +48,10 @@ WebViewBridge* WebViewBridge::instance()
 float WebViewBridge::curLat() const {return _lat;}
 float WebViewBridge::curLon(){return _lon;}
 LatLng WebViewBridge::curLatLng(){return _latLng;}
-void WebViewBridge::setLatLng(LatLng latlng){this->_latLng = latlng; emit latlngChanged(latlng);}
+void WebViewBridge::setLatLng(LatLng latlng){
+    this->_latLng = latlng;
+    emit latlngChanged(latlng);
+}
 int WebViewBridge::curZoom(){return _zoom;}
 QVariant WebViewBridge::getRslt(){return myRslt;}
 QString WebViewBridge::curMaptype(){return maptype;}
@@ -241,6 +244,18 @@ QString WebViewBridge::getImagePath(qint32 i)
     //mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
 //TODO:    return m_parent->getImagePath(i);
     return "";  // remove when implemented.
+}
+void WebViewBridge::clickPoint(double lat, double lng)
+{
+    LatLng latlng = LatLng(lat, lng);
+    emit clickLatLng(latlng );
+    QClipboard *clip = QApplication::clipboard();
+    QVariant v = QVariant::fromValue(latlng);
+    QMimeData* mimeData = new QMimeData;
+    QByteArray ba = v.toByteArray();
+    mimeData->setData("latlng", ba);
+    clip->setMimeData(mimeData);
+    clip->setText(latlng.str());
 }
 
 void WebViewBridge::movePoint(qint32 segmentId, qint32 i, double lat, double lng)

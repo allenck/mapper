@@ -1,4 +1,5 @@
 // Do not save this file on GITHUB
+// NOTE obsolete. see apikey.js for current keys
 
 API key 4 when using browser key=AIzaSyBzVTsnTa40PtKnKd7eDuMqutlA7LQdGOQ
 

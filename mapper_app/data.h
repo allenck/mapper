@@ -336,6 +336,7 @@ class SegmentData
     QDate doubleDate() const {return _doubleDate;}
     void setDoubleDate(QDate date){_doubleDate = date;}
     QString routePrefix() {return _routePrefix;}
+    int streetId(){return _streetId;}
 
  private:
     qint32 _segmentId=-1;
@@ -347,6 +348,7 @@ class SegmentData
     double _length=0;
     qint32	_points=0;
     QString _streetName;
+    int _streetId;
     QString _newerName;
     QString _description;
     QString _routePrefix;
@@ -623,6 +625,7 @@ class SegmentInfo
  Bounds _bounds;
  qint8 _tracks;
  bool _bNeedsUpdate;
+ int _streetId =-1;
  //int routeCount;
  //QString trackUsage;
  int _next = -1; // needed for DupSegmentView
@@ -695,6 +698,7 @@ class SegmentInfo
  void setNeedsUpdate(bool b) {_bNeedsUpdate = b;}
  LatLng getStartLatLng() {return LatLng(_startLat, _startLon);}
  LatLng getEndLatLng() {return LatLng(_endLat, _endLon);}
+ void setBounds(Bounds b){_bounds = b;}
  Bearing bearingStart() {
   if(_pointList.count() > 1)
    _bearingStart = Bearing(_startLat, _startLon, _pointList.at(1).lat(), _pointList.at(1).lon());
@@ -722,12 +726,16 @@ class SegmentInfo
  void setDoubleDate(QDate date){_doubleDate = date;}
  void setFormatOK(bool b){_formatOK = b;}
  bool formatOK(){return _formatOK;}
+ int streetId(){return _streetId;}
+ void setStreetId(int streetId){_streetId = streetId;}
  bool operator==(const SegmentInfo& other) const{
      return(other._segmentId == _segmentId);
+
  }
 
  friend class SegmentData;
  friend class SQL;
+ friend class StreetsTableModel;
 };
 
 class RouteIntersects
@@ -936,4 +944,32 @@ struct FKInfo
 };
 
 Q_DECLARE_METATYPE(RouteType)
+
+class StreetInfo
+{
+public:
+    QString street;
+    QString olderName;
+    QString newerName;
+    LatLng startLatLng;
+    LatLng endLatLng;
+    double length = 0;
+    QDate startDate;
+    QDate endDate;
+    QDate sortDate;
+    QList<int> segments;
+    QString comment;
+    Bounds bounds;
+    int streetId = -1;
+    QString location;
+    int sequence = 0;
+    int rowid =-1;
+    StreetInfo() {}
+    ~StreetInfo() {}
+    StreetInfo(const StreetInfo&);
+    QList<int> setSegments(const QString);
+    QString segmentsToString();
+    void updateBounds(SegmentInfo si);
+
+};
 #endif // DATA_H

@@ -32,11 +32,23 @@ struct routeView
   int columnCount;
 };
 
+struct streetView
+{
+    QByteArray state;
+    QList<int> colWidths;
+};
+
 struct dupSegmentView
 {
     QByteArray state;
 };
 
+struct dlgUpdateStreets
+{
+    QByteArray state;
+    QList<int> colWidths;
+    QByteArray geometry;
+};
 
 
 class Configuration : public QObject
@@ -49,13 +61,17 @@ public:
  void saveSettings();
  void setOverlay(Overlay* ov);
  void addCity(City*);
+ QString listToString(QList<int>);
+ QList<int> stringToList(QString);
  QList<City*> cityList;
  QMap<QString, City*> cityMap;
  QMap<QString, Overlay*>* overlayMap = new QMap<QString, Overlay*>();
  qint32 currentCityId;
  query q;
+ streetView sv;
  routeView rv;
  dupSegmentView dsv;
+ dlgUpdateStreets dus;
  static Configuration* instance();
  bool bDisplayWebDebug = false;
  bool bRunInBrowser = false;

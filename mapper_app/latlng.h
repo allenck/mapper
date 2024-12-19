@@ -18,6 +18,8 @@ public:
  bool checkValid();
  QString toString();
  QString str();
+ static LatLng fromString(QString str);
+
  void operator=(const LatLng& other)
  {
   setY(other.y());
@@ -33,8 +35,8 @@ public:
  }
 
 private:
- bool bValid;
- double latitude, longitude;
+ bool bValid=false;
+ double latitude=0, longitude=0;
 
 };
 Q_DECLARE_METATYPE(LatLng)

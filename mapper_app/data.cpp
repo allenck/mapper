@@ -255,7 +255,7 @@ SegmentData::SegmentData(const SegmentData& o)
  _prev = o._prev;
  _nextR = o._nextR;
  _prevR = o._prevR;
-
+ _streetId = o._streetId;
  _sequence = o._sequence;
  _returnSeq = o._returnSeq;
  _reverseEnter = o._reverseEnter;
@@ -352,6 +352,7 @@ SegmentData::SegmentData(const SegmentInfo& o)
   _points = pointList().count();
  _location = o._location;
  _whichEnd = o._whichEnd;
+ _streetId = o._streetId;
 }
 
 QString SegmentData::toString()
@@ -636,6 +637,7 @@ SegmentInfo::SegmentInfo(const SegmentInfo& o)
  _routeType = o._routeType;
  _tractionType = o._tractionType;
  _streetName = o._streetName;
+ _newerStreetName = o._newerStreetName;
  _pointList= o._pointList;
  _bounds = o._bounds;
  _tracks = o._tracks;
@@ -644,7 +646,7 @@ SegmentInfo::SegmentInfo(const SegmentInfo& o)
  _trackType = o._trackType;
  _location = o._location;
  _doubleDate = o._doubleDate;
-
+ _streetId = o._streetId;
 }
 
 SegmentInfo::SegmentInfo(const SegmentData& o)
@@ -668,6 +670,7 @@ SegmentInfo::SegmentInfo(const SegmentData& o)
  _routeType = o._routeType;
  _tractionType = o._tractionType;
  _streetName = o._streetName;
+ _newerStreetName = o._newerName;
  _pointList= o._pointList;
  _bounds = o._bounds;
  _tracks = o._tracks;
@@ -1191,4 +1194,60 @@ StationInfo::StationInfo(const StationInfo& o)
  markerType = o.markerType;
  segmentId = o.segmentId;
  segments = o.segments;
+}
+
+StreetInfo::StreetInfo(const StreetInfo& o)
+{
+    street = o.street;
+    olderName = o.olderName;
+    newerName = o.newerName;
+    startLatLng = o.startLatLng;
+    endLatLng = o.endLatLng;
+    length = o.length;
+    startDate = o.startDate;
+    endDate= o.endDate;
+    segments = o.segments;
+    comment = o.comment;
+    location = o.location;
+    streetId = o.streetId;
+    bounds = o.bounds;
+    sequence = o.sequence;
+    sortDate = o.sortDate;
+    rowid = o.rowid;
+
+}
+QList<int> StreetInfo::setSegments(const QString text)
+{
+    QStringList sl = text.split(",");
+    QList<int> list;
+    foreach (QString s, sl) {
+        if(!list.contains(s.toInt()))
+            list.append(s.toInt());
+    }
+    return list;
+}
+
+QString StreetInfo::segmentsToString()
+{
+    QString result;
+    foreach (int i, segments) {
+        if(i > 0)
+            result.append(QString::number(i)+",");
+    }
+    result.chop(1);
+    return result;
+}
+
+void StreetInfo::updateBounds(SegmentInfo si)
+{
+    bounds.updateBounds(LatLng(si.startLat(), si.startLon()));
+    bounds.updateBounds(LatLng(si.endLat(), si.endLon()));
+    if(bounds.isValid())
+    {
+        startLatLng = bounds.swPt();
+        endLatLng = bounds.nePt();
+        length = SQL::instance()->Distance(startLatLng.lat(), startLatLng.lon(),
+                                           endLatLng.lat(), endLatLng.lon());
+        //qDebug() << bounds.toString();
+    }
 }

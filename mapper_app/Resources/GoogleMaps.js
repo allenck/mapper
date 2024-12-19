@@ -16,6 +16,7 @@ var mapDiv;
 var bGoogleInit = false;
 var newSegment, segmentId, arrow,lat=0,lon=0;
 var marker = null;
+var myRect = null;
 var selectedLine = null;
 var hiLitedSegment = null;
 var geocoder;
@@ -1712,7 +1713,7 @@ var path;
           infowindow.marker.setMap();
       infowindow = null;
   }
-
+  clearRectangle();
   selectedLine = null;
 
   if(stationArray)
@@ -2999,6 +3000,32 @@ function screenshot()
     });
 }
 
+function showRectangle(pt1,pt2,pt3,pt4, color)
+{
+    myRect = new google.maps.Rectangle({
+        strokeColor: color,
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: color,
+        fillOpacity: 0.25,
+        map,
+        bounds: {
+          north: pt1,
+          south: pt2,
+          east: pt3,
+          west: pt4,
+        },
+      });
+}
+
+function clearRectangle()
+{
+    if(myRect)
+    {
+        myRect.setMap(null);
+        myRect = null;
+    }
+}
 
 function alertClose()
 {

@@ -230,10 +230,13 @@ DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3460100
 unix|win32: LIBS += -ldl
 
 FORMS += \
-    dialogeditstreets.ui
+    dialogeditstreets.ui \
+    dialogupdatestreets.ui
 
 HEADERS += \
-    dialogeditstreets.h
+    dialogeditstreets.h \
+    dialogupdatestreets.h
 
 SOURCES += \
-    dialogeditstreets.cpp
+    dialogeditstreets.cpp \
+    dialogupdatestreets.cpp

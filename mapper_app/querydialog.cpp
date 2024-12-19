@@ -46,6 +46,11 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
    replaceWithInclude();
   });
 
+  ui->widget_query_view->setTabsClosable(true);
+  connect(ui->widget_query_view, &QTabWidget::tabCloseRequested, this,[=](int tab){
+      ui->widget_query_view->removeTab(tab);
+  });
+
   menuBar = new QMenuBar();
   toolsMenu = new QMenu(tr("Tools"));
   layout()->setMenuBar(menuBar);
@@ -103,7 +108,13 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
       txt = "EXEC sp_help " + tableName;
      processALine(txt, tableName);
     });
-   }
+    act = new QAction(tr("select table"),this);
+    act->setData(tableName);
+    tableMenu->addAction(act);
+    connect(act, &QAction::triggered, [=]{
+        QString txt = "select * from " + tableName;
+        processALine(txt, tableName);
+    }); }
    toolsMenu->addSeparator();
    QMenu* viewsMenu = new QMenu(tr("Views"));
    QStringList views = SQL::instance()->listViews();
@@ -736,6 +747,7 @@ void QueryDialog::on_saveAs_QueryButton_clicked()
  if (s_File_Name.isEmpty()) return;
  saveFile(s_File_Name);
  currQueryFilename = s_File_Name;
+ saveFileAct->setEnabled(true);
  setTitle();
 }
 
@@ -759,7 +771,15 @@ void QueryDialog::saveFile(QString s_File_Name)
  config->q.s_query_path = this_fi.dir().absolutePath();
  QTextStream out(&this_file);
  //out << ui->editQuery->toPlainText();
- QString text = ui->editQuery->toPlainText();
+ QString text; //= ui->editQuery->toPlainText();
+ QTextCursor cur = ui->editQuery->textCursor();
+ if (cur.hasSelection())
+ {
+     text = cur.selectedText();
+     //text = cur.selection().toRawText();
+ }
+ else
+     text = ui->editQuery->toPlainText(); // select all lines
  QStringList sl = text.split("\n");
  for(int i=0; i < sl.count(); i++)
  {
@@ -858,15 +878,17 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 //   QAction *copyBlobAct = new QAction(tr("Copy blob to clipboard"),this);
 //   connect(copyBlobAct, SIGNAL(triggered()),this,SLOT(on_copyBlob()));
    QAction* insertAction = new QAction(tr("insert row"),this);
-   connect(insertAction, &QAction::triggered, [=]{
+   connect(insertAction, &QAction::triggered, this,[=]{
     on_insertRow();
-
    });
    QAction* deleteAction = new QAction(tr("delete row"),this);
-   connect(deleteAction, &QAction::triggered, [=]{
+   connect(deleteAction, &QAction::triggered, this, [=]{
     on_deleteRow();
    });
-
+   QAction* sortAction = new QAction(tr("sort on column"),this);
+   connect(sortAction, &QAction::triggered, this, [=]{
+       on_sortAction();
+   });
    //QClipboard *clip = QApplication::clipboard();
    QMenu menu;
 
@@ -879,6 +901,8 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 //    qDebug()<<"Is blob "+ s_currBlobType;
 //    menu.addAction(copyBlobAct);
 //   }
+   menu.addAction(sortAction);
+
    QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
    QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel *>(view->model());
    if(qobject_cast<QueryEditModel*>(proxyModel->sourceModel()))
@@ -934,6 +958,20 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 
   }
  }
+ void QueryDialog::on_sortAction()
+ {
+     qint32 currTabIndex = ui->widget_query_view->currentIndex();
+     if(currTabIndex<1)
+         return;   // no results present
+     QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
+     view->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+     QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel *>(view->model());
+
+     ((QSqlTableModel*)proxyModel->sourceModel())->setSort(currentIndexQueryView.column(),Qt::SortOrder::AscendingOrder);
+     ((QSqlTableModel*)proxyModel->sourceModel())->select();
+ }
+
+
 
  void QueryDialog::on_deleteRow()
  {

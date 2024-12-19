@@ -17,13 +17,8 @@ Configuration::Configuration(QObject *parent) :
 void Configuration::saveSettings()
 {
 
-    QSettings* settings;
-//#ifndef Q_OS_MAC
+ QSettings* settings;
     settings = new QSettings();
-// #else
-//     settings = new QSettings("Mapper.ini", QSettings::IniFormat);
-// #endif
- //settingsDb settings;
  settings->beginWriteArray("cities");
  settings->remove("");
  for(int i=0; i< cityList.count(); i++)
@@ -164,8 +159,19 @@ void Configuration::saveSettings()
  settings->setValue("routeView_columnCount", rv.columnCount);
  settings->endGroup();
 
+ settings->beginGroup("streetView");
+ settings->setValue("routeView_state", sv.state);
+ settings->setValue("columnWidths", listToString( sv.colWidths));
+ settings->endGroup();
+
  settings->beginGroup("dupSegmentView");
  settings->setValue("dupSegmentViewState", dsv.state);
+ settings->endGroup();
+
+ settings->beginGroup("dlgUpdateStreets");
+ settings->setValue("state", dus.state);
+ settings->setValue("columnWidths", listToString( dus.colWidths));
+ settings->setValue("geometry", dus.geometry);
  settings->endGroup();
 
  settings->setValue("currCity", currentCityId);
@@ -508,10 +514,20 @@ void Configuration::getSettings()
    rv.columnCount = settings.value("routeview_columnCount",RouteViewTableModel::ENDDATE+1).toInt();
    settings.endGroup();
 
+   settings.beginGroup("streetView");
+   sv.state = settings.value("streetView_state").toByteArray();
+   sv.colWidths = stringToList(settings.value("columnWidths").toString());
+   settings.endGroup();
+
    settings.beginGroup("dupSegmentView");
    dsv.state = settings.value("dupSegmentViewState").toByteArray();
    settings.endGroup();
 
+   settings.beginGroup("dlgUpdateStreets");
+   dus.state = settings.value("state").toByteArray();
+   dus.colWidths = stringToList(settings.value("columnWidths").toString());
+   dus.geometry = settings.value("geometry").toByteArray();
+   settings.endGroup();
 
    for(Overlay* ov : Overlay::overlayList)
    {
@@ -793,6 +809,32 @@ void Configuration::changeFonts(QWidget* obj,QFont f)
         QWidget *temp = objlistChildren[iIndex];
         temp->setFont(f);
     }
+}
+QString Configuration::listToString(QList<int> list)
+{
+    QString rslt;
+    if(list.isEmpty())
+        return rslt;
+    foreach (int i, list) {
+        rslt = rslt + QString::number(i)+ ",";
+    }
+    rslt.chop(1);
+    return rslt;
+}
+
+QList<int> Configuration::stringToList(QString str)
+{
+    QList<int> rslt;
+    QStringList sl = str.split(",");
+    bool ok;
+    foreach (QString s, sl) {
+        int i = s.toInt(&ok);
+        if(ok)
+            rslt.append(i);
+        else
+            return rslt;
+    }
+    return rslt;
 }
 
 // bool Configuration::copyFiles(QString from, QString to)

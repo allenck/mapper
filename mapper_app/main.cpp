@@ -106,6 +106,7 @@ int main(int argc, char *argv[])
  MyApplication a(argc, argv);
  MainWindow w(argc, argv);
  a.setStyle("Fusion");
+ qRegisterMetaType<LatLng>("LatLng");
 
 #ifndef Q_OS_WIN
      //ConsoleInterface::instance(); // create singleton class.

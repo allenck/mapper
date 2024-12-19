@@ -151,11 +151,11 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
  }
  if(role == Qt::BackgroundRole)
  {
-  QVariant background = QVariant();
-  if ( index.row() == startRow)
-  {
-   background = QVariant( QColor(Qt::green));
-  }
+     QVariant background = QVariant();
+     if ( index.row() == startRow)
+     {
+         background = QVariant( QColor(Qt::green));
+     }
 
   if ( index.row() == endRow)
   {

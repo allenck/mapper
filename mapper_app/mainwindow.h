@@ -34,6 +34,7 @@
 #include <QToolTip>
 #include <QPair>
 
+class StreetView;
 class RouteView;
 class SQL;
 class QWidgetAction;
@@ -102,7 +103,7 @@ class StationView;
 class CompanyView;
 class TractionTypeView;
 class DupSegmentView;
-
+class DialogUpdateStreets;
 namespace Ui {
 class MainWindow;
 }
@@ -142,6 +143,7 @@ public:
 //    QAction *saveChangesAct;
 //    QAction *discardChangesAct;
 //    QAction* sortNameAct;
+    StreetView* streetView = nullptr;
 
     double m_latitude, m_longitude;
     qint32 m_zoom;
@@ -157,7 +159,8 @@ public:
 
     RouteDlg *routeDlg;
     RouteCommentsDlg *routeCommentsDlg;
-    QueryDialog* queryDlg;
+    QueryDialog* queryDlg = nullptr;
+    DialogUpdateStreets* dialogUpdateStreets = nullptr;
 
     //QMenu cbRouteContextMenu;
     //QMenu menu;
@@ -404,6 +407,7 @@ private:
     QAction* clearAllCompaniesAct;
     QAction* displayAllRoutesForGroupAct;
     QAction* editStreetsAct;
+    QAction* updateStreetsAct;
 
     QWidgetAction *sortTypeAct;
     QComboBox * cbSort;

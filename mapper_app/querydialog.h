@@ -67,7 +67,7 @@ private:
  QAction* makeSelectedIncludeAct;
  QAction* replaceWithIncludeAct;
  void setTitle();
-
+ void on_sortAction();
 
 private slots:
  void on_go_QueryButton_clicked();

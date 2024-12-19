@@ -72,6 +72,8 @@
 #include "clipboard.h"
 #include <QWebEngineCertificateError>
 #include "dialogeditstreets.h"
+#include "streetview.h"
+#include "dialogupdatestreets.h"
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -80,7 +82,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui(new Ui::MainWindow)
 {
  ui->setupUi(this);
-    ui->setupUi(this);
+    //ui->setupUi(this);
     QSystemTrayIcon * sys = new QSystemTrayIcon(this);
     sys->setIcon(QIcon(":/gui/tram-icon.ico"));
     sys->show();
@@ -92,7 +94,6 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
  config = Configuration::instance();
  config->getSettings();
-
 
  cwd = QDir::currentPath();
 // config = Configuration::instance();
@@ -139,6 +140,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  statusBar()->addPermanentWidget(geocoderRslt);
 
  ui->ssw->initialize();
+ streetView = new StreetView();
+ ui->tabWidget->addTab(streetView, tr("Streets"));
 
  cwd = QDir::currentPath();
  qDebug() << "starting with CWD = '" << cwd;
@@ -1466,6 +1469,14 @@ void MainWindow::createActions()
       dlg.exec();
   });
 
+  updateStreetsAct = new QAction(tr("Update streets dialog"),this);
+  connect(updateStreetsAct, &QAction::triggered, [=]{
+      if(!dialogUpdateStreets)
+        dialogUpdateStreets = new DialogUpdateStreets(this) ;
+      dialogUpdateStreets->raise();
+      dialogUpdateStreets->show();
+      //dlg.exec();
+  });
 }
 
 QWidgetAction *MainWindow::createWidgetAction()
@@ -1622,11 +1633,12 @@ void MainWindow::createMenus()
     toolsMenu->addAction(setCityBoundsAct);
     toolsMenu->addAction(setLoggingAct);
     //toolsMenu->addAction(setInspectedPageAct);
-    connect(toolsMenu, &QMenu::aboutToShow, [=]{
+    connect(toolsMenu, &QMenu::aboutToShow,this, [=]{
      addPointModeAct->setChecked(m_bAddMode);
     });
     toolsMenu->addAction(companyChangeRoutes);
     toolsMenu->addAction(editStreetsAct);
+    toolsMenu->addAction((updateStreetsAct));
 
     toolsMenu->addSeparator();
     toolsMenu->addSection("Debug");
