@@ -29,12 +29,12 @@ signals:
 public slots:
     
 };
-class myHeaderView : public QHeaderView
+class MyHeaderView : public QHeaderView
 {
  Q_OBJECT
 public:
- myHeaderView(Qt::Orientation orientation, QWidget * parent = 0);
- virtual ~myHeaderView();
+ MyHeaderView(Qt::Orientation orientation, QWidget * parent = 0);
+ virtual ~MyHeaderView();
  void setMoveAllowed(bool b);
  bool bAllowSortColumns;
 
@@ -56,6 +56,7 @@ private slots:
  void on_queryView_show_columns();
  void onMoveOrRezize_columns();
  void onResizeToData();
+ void on_sortAction();
 
 };
 

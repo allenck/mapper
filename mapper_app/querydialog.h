@@ -20,6 +20,7 @@ public:
  explicit QueryDialog(Configuration* cfg, QWidget *parent = 0);
  ~QueryDialog();
  void setMaxTabResults(int num);
+ static QueryDialog* instance();
 
 public slots:
  void executeQuery(QString commandText);
@@ -68,6 +69,7 @@ private:
  QAction* replaceWithIncludeAct;
  void setTitle();
  void on_sortAction();
+ static QueryDialog* _instance;
 
 private slots:
  void on_go_QueryButton_clicked();
@@ -92,7 +94,6 @@ private slots:
  void showContextMenu(const QPoint &pt);
  void replaceWithInclude();
  void makeSelectedInclude();
-
 };
 
 #endif // QUERYDIALOG_H

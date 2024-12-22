@@ -15,10 +15,14 @@
 #include "queryeditmodel.h"
 #include <QInputMethod>
 
+/*static*/ QueryDialog* QueryDialog::instance(){return _instance;}
+/*static*/ QueryDialog* QueryDialog::_instance = nullptr;
+
 QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::QueryDialog)
 {
+  _instance = this;
   ui->setupUi(this);
   config = cfg;
   config->changeFonts(this, config->font);
@@ -608,7 +612,7 @@ bool QueryDialog::processALine(QString txt, QString tabName)
     connect(query_view,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(slot_queryView_row_DoubleClicked(QModelIndex)));
     query_view->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(query_view,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(tablev_customContextMenu(QPoint)));
-    myHeaderView *hv = new myHeaderView(Qt::Horizontal, query_view);
+    MyHeaderView *hv = new MyHeaderView(Qt::Horizontal, query_view);
     query_view->setHorizontalHeader(hv);
 //     query_view->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
 //     connect(query_view->horizontalHeader(),SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(queryViewHeaderContextMenuRequested(const QPoint)));
@@ -682,7 +686,7 @@ void QueryDialog::processSelect(QString table, QString commandLine)
   connect(query_view,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(slot_queryView_row_DoubleClicked(QModelIndex)));
   query_view->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(query_view,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(tablev_customContextMenu(QPoint)));
-  myHeaderView *hv = new myHeaderView(Qt::Horizontal, query_view);
+  MyHeaderView *hv = new MyHeaderView(Qt::Horizontal, query_view);
   query_view->setHorizontalHeader(hv);
   query_view->setSortingEnabled(false);
   QSortFilterProxyModel *sm = new QSortFilterProxyModel(query_view);

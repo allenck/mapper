@@ -15,23 +15,24 @@ StreetView::StreetView() {
     horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
     setContextMenuPolicy(Qt::CustomContextMenu);
     setSortingEnabled(true);
-    resizeColumnsToContents();
+
     setItemDelegateForColumn(StreetsTableModel::STARTDATE, new DateEditDelegate());
     setItemDelegateForColumn(StreetsTableModel::ENDDATE, new DateEditDelegate());
     sourceModel = new StreetsTableModel();
     proxyModel = new QSortFilterProxyModel();
     proxyModel->setSourceModel(sourceModel);
     setModel(proxyModel);
-
+    resizeColumnsToContents();
+    horizontalHeader()->stretchLastSection();
     //connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tablev_CustomContextMenu(QPoint)));
     connect(this, &QTableView::customContextMenuRequested, this,[=](const QPoint& pt){
         tablev_CustomContextMenu(pt);
     });
-    // connect(sourceModel, &StreetsTableModel::streetUpdated, this, [=](int row, QString street){
-    //     sourceModel->streetChanged(street);
-    // });
-    connect(sourceModel, &StreetsTableModel::streetInfoChanged, this,[=](StreetInfo sti){
-        sourceModel->streetChanged(sti);
+    connect(sourceModel, &StreetsTableModel::streetInfoChanged, this,[=](StreetInfo sti, StreetsTableModel::Action act){
+        //sourceModel->streetChanged(sti);
+        int row =sourceModel->findRow(sti.rowid);
+        QModelIndex srcIndex = sourceModel->index(row,0);
+        scrollTo(proxyModel->mapFromSource(srcIndex));
     });
     if(config->sv.colWidths.count() != sourceModel->columnCount(QModelIndex()))
     {
@@ -77,7 +78,7 @@ void StreetView::tablev_CustomContextMenu(const QPoint &pt)
     QString street = Index.data().toString();
     QString location =indexes.at(StreetsTableModel::LOCATION).data().toString();
     int streetId = indexes.at(StreetsTableModel::STREETID).data().toInt();
-    QAction* act = new QAction(tr("update %1 bounds").arg(street),this);
+    QAction* act = new QAction(tr("Update %1 bounds").arg(street),this);
     //StreetInfo* sti = sourceModel->getStreet(street);
     StreetInfo* sti = sourceModel->getStreetName(street, location);
     if(!sti)
@@ -94,11 +95,7 @@ void StreetView::tablev_CustomContextMenu(const QPoint &pt)
                 sti->segments.append(si.segmentId());
             sti->updateBounds(si);
         }
-        // if(!sti->newerName.isEmpty())
-        // {
-        //     StreetInfo* sti2 = sourceModel->getStreet(sti->newerName);
-        // }
-        // sourceModel->updateStreet(*sti);
+        sourceModel->updateStreetName(*sti);
 
     });
     tablMenu.addAction(act);

@@ -1204,15 +1204,15 @@ StreetInfo::StreetInfo(const StreetInfo& o)
     startLatLng = o.startLatLng;
     endLatLng = o.endLatLng;
     length = o.length;
-    startDate = o.startDate;
-    endDate= o.endDate;
+    dateStart = o.dateStart;
+    dateEnd= o.dateEnd;
     segments = o.segments;
     comment = o.comment;
     location = o.location;
     streetId = o.streetId;
     bounds = o.bounds;
     sequence = o.sequence;
-    sortDate = o.sortDate;
+    dateSort = o.dateSort;
     rowid = o.rowid;
 
 }
@@ -1250,4 +1250,22 @@ void StreetInfo::updateBounds(SegmentInfo si)
                                            endLatLng.lat(), endLatLng.lon());
         //qDebug() << bounds.toString();
     }
+}
+bool StreetInfo::inDateRange(QDate dt)
+{
+    if( dt.isNull())
+        throw IllegalArgumentException("date is null!");
+    if(dateStart.isNull()  || dateEnd.isNull())
+        return false;
+    if(dateEnd < dateStart)
+        throw IllegalArgumentException("end date not after start!");
+
+    if(dt >= dateStart && dt <= dateEnd)
+        return true;
+    return false;
+}
+
+bool StreetInfo::encompasses(StreetInfo sti)
+{
+    return sti.street == street && sti.location == location && inDateRange(sti.dateStart);
 }

@@ -48,6 +48,9 @@ struct dlgUpdateStreets
     QByteArray state;
     QList<int> colWidths;
     QByteArray geometry;
+    QString text1;
+    QString text2;
+    QDate date;
 };
 
 

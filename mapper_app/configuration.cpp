@@ -172,6 +172,9 @@ void Configuration::saveSettings()
  settings->setValue("state", dus.state);
  settings->setValue("columnWidths", listToString( dus.colWidths));
  settings->setValue("geometry", dus.geometry);
+ settings->setValue("text1", dus.text1);
+ settings->setValue("text2", dus.text2);
+ settings->setValue("date", dus.date.toString("yyyy/MM/dd"));
  settings->endGroup();
 
  settings->setValue("currCity", currentCityId);
@@ -527,6 +530,9 @@ void Configuration::getSettings()
    dus.state = settings.value("state").toByteArray();
    dus.colWidths = stringToList(settings.value("columnWidths").toString());
    dus.geometry = settings.value("geometry").toByteArray();
+   dus.text1 = settings.value("text1").toString();
+   dus.text2 = settings.value("text2").toString();
+   dus.date = settings.value("date").toDate();
    settings.endGroup();
 
    for(Overlay* ov : Overlay::overlayList)

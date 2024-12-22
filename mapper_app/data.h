@@ -954,9 +954,9 @@ public:
     LatLng startLatLng;
     LatLng endLatLng;
     double length = 0;
-    QDate startDate;
-    QDate endDate;
-    QDate sortDate;
+    QDate dateStart;
+    QDate dateEnd;
+    QDate dateSort;
     QList<int> segments;
     QString comment;
     Bounds bounds;
@@ -970,6 +970,8 @@ public:
     QList<int> setSegments(const QString);
     QString segmentsToString();
     void updateBounds(SegmentInfo si);
+    bool inDateRange(QDate dt);
+    bool encompasses(StreetInfo sti);
 
 };
 #endif // DATA_H

@@ -10788,15 +10788,15 @@ void SQL::checkTables(QSqlDatabase db)
   //tableList = getTableList(db, config->currConnection->servertype());
   tableList = db.tables();
 
-  if(!tableList.contains("Streets", Qt::CaseInsensitive))
-  {
-      if(config->currConnection->servertype() == "Sqlite")
-       executeScript(":/sql/sqlite3_create_streets.sql",db);
-  }
+//  if(!tableList.contains("Streets", Qt::CaseInsensitive))
+//  {
+//      if(config->currConnection->servertype() == "Sqlite")
+//       executeScript(":/sql/sqlite3_create_streets.sql",db);
+//  }
   if(!tableList.contains("StreetDef"))
   {
       if(config->currConnection->servertype() == "Sqlite")
-       executeScript(":/sql/sqlite3_create_streetsdef_streetname.sql",db);
+       executeScript(":/sql/sqlite3_create_streetdef.sql",db);
   }
 
   if(!tableList.contains("RouteSeq", Qt::CaseInsensitive))

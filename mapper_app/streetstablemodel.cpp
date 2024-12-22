@@ -10,7 +10,7 @@ StreetsTableModel::StreetsTableModel(QObject *parent)
     : QAbstractTableModel{parent}
 {
     config = Configuration::instance();
-    fixDates();
+    //fixDates();
     //streetsList = getStreets();
     streetsList = getStreetInfoList();
 #if 0
@@ -156,9 +156,9 @@ QVariant StreetsTableModel::data(const QModelIndex &index, int role) const
         case LENGTH:
             return si.length;
         case STARTDATE:
-            return si.startDate.toString("yyyy/MM/dd");
+            return si.dateStart.toString("yyyy/MM/dd");
         case ENDDATE:
-            return si.endDate.toString("yyyy/MM/dd");
+            return si.dateEnd.toString("yyyy/MM/dd");
         case SEGMENTS:
             return si.segmentsToString();
         case COMMENT:
@@ -287,7 +287,7 @@ bool StreetsTableModel::setData(const QModelIndex &index, const QVariant &value,
             si.length = value.toDouble();
             break;
         case STARTDATE:
-            si.startDate = value.toDate();
+            si.dateStart = value.toDate();
             // if(!si.olderName.isEmpty())
             // {
             //     int row = findRow(si.olderName);
@@ -301,7 +301,7 @@ bool StreetsTableModel::setData(const QModelIndex &index, const QVariant &value,
             // }
             break;
         case ENDDATE:
-            si.endDate = value.toDate();
+            si.dateEnd = value.toDate();
             break;
         case SEGMENTS:
             si.segments = si.setSegments(value.toString());
@@ -415,7 +415,7 @@ StreetInfo* StreetsTableModel::getStreetDef(int streetId)
         si->segments = si->setSegments(query.value(6).toString());
         si->comment = query.value(7).toString();
         si->streetId = query.value(8).toInt();
-        si->startDate = query.value(9).toDate();
+        si->dateStart = query.value(9).toDate();
         si->sequence = query.value(10).toInt();
         si->rowid = query.value(11).toInt();
         return si;
@@ -451,8 +451,8 @@ StreetInfo* StreetsTableModel::getStreetName(QString street, QString location)
         si->comment = query.value(7).toString();
         si->streetId = query.value(8).toInt();
         si->sequence = query.value(9).toInt();
-        si->startDate = query.value(10).toDate();
-        si->endDate = query.value(11).toDate();
+        si->dateStart = query.value(10).toDate();
+        si->dateEnd = query.value(11).toDate();
         si->rowid = query.value(12).toInt();
         return si;
     }
@@ -466,7 +466,7 @@ bool StreetsTableModel::getStreetName(StreetInfo* sti )
                           "`Bounds`,`Segments`,`Comment`, `StreetId`, `Seq`, `startDate`, `endDate`, rowid"
                           " from StreetDef "
                           " where `street` = '" + sti->street + "' and `Location` = '" + sti->location + "'"
-                          " and startDate = '" + sti->startDate.toString("yyyy/MM/dd") +"'";
+                          " and startDate = '" + sti->dateStart.toString("yyyy/MM/dd") +"'";
     QSqlQuery query = QSqlQuery(db);
     bool bQuery = query.exec(commandText);
     if(!bQuery)
@@ -487,8 +487,8 @@ bool StreetsTableModel::getStreetName(StreetInfo* sti )
         sti->comment = query.value(7).toString();
         sti->streetId = query.value(8).toInt();
         sti->sequence = query.value(9).toInt();
-        sti->startDate = query.value(10).toDate();
-        sti->endDate = query.value(11).toDate();
+        sti->dateStart = query.value(10).toDate();
+        sti->dateEnd = query.value(11).toDate();
         sti->rowid = query.value(12).toInt();
         return true;
     }
@@ -524,8 +524,8 @@ QList<StreetInfo> StreetsTableModel::getStreetInfoList()
         si.comment = query.value(7).toString();
         si.streetId = query.value(8).toInt();
         si.sequence = query.value(9).toInt();
-        si.startDate = query.value(10).toDate();
-        si.endDate = query.value(11).toDate();
+        si.dateStart = query.value(10).toDate();
+        si.dateEnd = query.value(11).toDate();
         si.rowid = query.value(12).toInt();
         myArray.append( si);
     }
@@ -582,7 +582,7 @@ int StreetsTableModel::newStreetDef(QString street, QString location, QDate date
     si.streetId = streetId;
     si.street = street;
     si.location = location;
-    si.startDate = date;
+    si.dateStart = date;
 
     return streetId;
 }
@@ -591,12 +591,16 @@ bool StreetsTableModel::newStreetDef(StreetInfo* sti)
 {
     if(sti->street.length() > 30)
         qDebug() << "street size?";
+    if(sti->dateEnd.isValid())
+        qDebug() << "newStreetDef end date not null " << sti->dateEnd.toString("yyyy/MM/dd");
+
     sti->streetId = getNextStreetId();
     QSqlDatabase db = QSqlDatabase::database();
-    QString commandText = "insert into StreetDef (`Street`, `Location`, `startDate`, `Seq`, `StreetId`) values ("
+    QString commandText = "insert into StreetDef (`Street`, `Location`, `startDate`, `endDate`,`Seq`, `StreetId`) values ("
                           "'" + sti->street + "',"
                           "'" + sti->location + "',"
-                          "'" + sti->startDate.toString("yyyy/MM/dd") +"',"
+                          "'" + sti->dateStart.toString("yyyy/MM/dd") +"',"
+                          " '',"
                           "0," + QString::number(sti->streetId) +")";
 
     QSqlQuery query = QSqlQuery(db);
@@ -620,11 +624,17 @@ bool StreetsTableModel::newStreetDef(StreetInfo* sti)
     return true;
 }
 
-// streetid, street, location, startDate, endDate must be populated
+// streetid, street, location, dateStart, endDate must be populated
 bool StreetsTableModel::newStreetName(StreetInfo* info)
 {
-    if(info->streetId < 1 || info->street.isEmpty() || !info->startDate.isValid())
+    if(info->streetId < 1 || info->street.isEmpty() || !info->dateStart.isValid())
         throw IllegalArgumentException(tr("newStreetName: invalid parameters."));
+    if(info->dateEnd.isValid() && info->dateStart > info->dateEnd)
+        qDebug() << "newStreetName " <<info->street << " end date " <<info->dateEnd.toString("yyyy/MM/dd")
+                 << " < start date " << info->dateStart.toString("yyyy/MM/dd");
+
+    if(info->sequence ==0)
+        info->sequence =1;
 
     QSqlDatabase db = QSqlDatabase::database();
     QString commandText = "insert into StreetDef (`StreetId`, `Street`, `Location`,`startDate`, "
@@ -633,8 +643,8 @@ bool StreetsTableModel::newStreetName(StreetInfo* info)
                           + QString::number(info->streetId) + ","
                           "'" + info->street.trimmed() + "',"
                           "'" + info->location.trimmed() + "',"
-                          "'" + info->startDate.toString("yyyy/MM/dd") + "',"
-                          "'" + info->endDate.toString("yyyy/MM/dd")  + "',"
+                          "'" + info->dateStart.toString("yyyy/MM/dd") + "',"
+                          "'" + info->dateEnd.toString("yyyy/MM/dd")  + "',"
                           "'" + info->comment + "',"
                           + QString::number(info->sequence) +")";
 
@@ -704,8 +714,8 @@ StreetInfo* StreetsTableModel::getEarlierStreetName(int streetId, QDate date)
         si->comment = query.value(7).toString();
         si->streetId = query.value(8).toInt();
         si->sequence = query.value(9).toInt();
-        si->startDate = query.value(10).toDate();
-        si->endDate = query.value(11).toDate();
+        si->dateStart = query.value(10).toDate();
+        si->dateEnd = query.value(11).toDate();
         si->rowid = query.value(12).toInt();
         return si;
     }
@@ -784,8 +794,8 @@ bool StreetsTableModel::updateStreetName(StreetInfo si)
     QString commandText = " Update StreetDef set"
                           " `Street` ='" + si.street+ "',"
                           " `Location` = '" + si.location+ "',"
-                          " `startDate` = '" + si.startDate.toString("yyyy/MM/dd")+ "',"
-                          " `endDate` = '" + si.endDate.toString("yyyy/MM/dd")+ "',"
+                          " `startDate` = '" + si.dateStart.toString("yyyy/MM/dd")+ "',"
+                          " `endDate` = '" + si.dateEnd.toString("yyyy/MM/dd")+ "',"
                           " `StartLatLng` = '" + si.startLatLng.str() +"',"
                           " `EndLatLng` = '" + si.endLatLng.str() +"',"
                           " `Bounds` = '" + si.bounds.toString() + "',"
@@ -818,8 +828,8 @@ bool StreetsTableModel::updateStreetDef(StreetInfo sti)
     commandText = " Update StreetDef set"
                           " `Street` ='" + sti.street+ "',"
                           " `Location` = '" + sti.location+ "',"
-                          " `startDate` = '" + sti.startDate.toString("yyyy/MM/dd")+ "',"
-                          " `endDate` = '" + sti.endDate.toString("yyyy/MM/dd")+ "',"
+                          " `startDate` = '" + sti.dateStart.toString("yyyy/MM/dd")+ "',"
+                          " `endDate` = '" + sti.dateEnd.toString("yyyy/MM/dd")+ "',"
                           " `StartLatLng` = '" + sti.startLatLng.str() +"',"
                           " `EndLatLng` = '" + sti.endLatLng.str() +"',"
                           " `Bounds` = '" + sti.bounds.toString() + "',"
@@ -1069,19 +1079,20 @@ bool StreetsTableModel::fixDates()
             bMustUpdate=false;
             StreetInfo* sti = list->at(j);
 
-            if(sti->sequence == 0 &&  sti->endDate == maxDate)
+            if(sti->sequence == 0 &&  sti->dateEnd == maxDate)
             {
-                sti->endDate = QDate();
+                sti->dateEnd = QDate();
                 bMustUpdate=true;
             }
             if(j+1 < list->count())
             {
                 StreetInfo* nxtSti = list->at(j+1);
-                if(!(sti->startDate >  nxtSti->startDate))
+
+                if(!(sti->dateStart >  nxtSti->dateStart))
                 {
-                    sti->startDate = maxDate;
+                    nxtSti->dateStart = sti->dateStart.addDays(-1);
                     bMustUpdate=true;
-                    nxtSti->endDate = maxDate.addDays(-1);
+                    nxtSti->dateEnd = maxDate.addDays(-1);
                     if(!updateStreetName(*nxtSti))
                     {
                         qDebug() << "updateStreetName failed";
@@ -1091,6 +1102,15 @@ bool StreetsTableModel::fixDates()
             }
             if((bMustUpdate))
             {
+                if(sti->sequence == 0)
+                {
+                    if(!updateStreetDef(*sti))
+                    {
+                        qDebug() << "updateStreetName failed";
+                        return false;
+                    }
+                }
+                else
                 if(!updateStreetName(*sti))
                 {
                     qDebug() << "updateStreetName failed";
@@ -1192,9 +1212,9 @@ QList<StreetInfo*>* StreetsTableModel::getStreetNames(int streetId, QStringList 
         si->segments = si->setSegments(query.value(6).toString());
         si->comment = query.value(7).toString();
         si->streetId = query.value(8).toInt();
-        si->sortDate = query.value(9).toDate();
-        si->startDate = query.value(10).toDate();
-        si->endDate = query.value(11).toDate();
+        si->dateSort = query.value(9).toDate();
+        si->dateStart = query.value(10).toDate();
+        si->dateEnd = query.value(11).toDate();
         si->sequence = query.value(12).toInt();
         si->rowid = query.value(13).toInt();
         if(nameList)
@@ -1208,11 +1228,11 @@ QList<StreetInfo*>* StreetsTableModel::getStreetNames(int streetId, QStringList 
         StreetInfo* sti = myArray->at(i);
         QDate prevStartDate;
         if(i > 0)
-             prevStartDate = myArray->at(i-1)->startDate;
+             prevStartDate = myArray->at(i-1)->dateStart;
         bool bUpdateNeeded = false;
-        if(sti->endDate != prevStartDate.addDays(-1))
+        if(sti->dateEnd != prevStartDate.addDays(-1))
         {
-            sti->endDate = prevStartDate.addDays(-1);
+            sti->dateEnd = prevStartDate.addDays(-1);
             bUpdateNeeded = true;
         }
         if(sti->sequence != i && sti->sequence > 0)
@@ -1254,9 +1274,9 @@ bool StreetsTableModel::addOldStreetName(StreetInfo* sti)
         for(int i=0; i< streetNames->count(); i++)
         {
           stiExisting = streetNames->at(i);
-          if(sti->startDate < stiExisting->startDate)
+          if(sti->dateStart < stiExisting->dateStart)
               continue;
-          sti->endDate = stiExisting->startDate.addDays(-1);
+          sti->dateEnd = stiExisting->dateStart.addDays(-1);
           sti->sequence = i;
           if(newStreetName(sti))
           {
@@ -1267,7 +1287,7 @@ bool StreetsTableModel::addOldStreetName(StreetInfo* sti)
         }
         if(sti)
         {
-            sti->endDate = stiExisting->startDate.addDays(-1);
+            sti->dateEnd = stiExisting->dateStart.addDays(-1);
             sti->sequence =streetNames->count();
             if(newStreetName(sti))
             {
@@ -1279,26 +1299,46 @@ bool StreetsTableModel::addOldStreetName(StreetInfo* sti)
     }
     else
     {
+        // special case to determine whether the current street's start date needs to be altered
+        StreetInfo* currentSti = streetNames->at(0);
+        StreetInfo* newSti = streetNames->at(1);
+        if(sti->street == currentSti->street && !currentSti->encompasses(*sti))
+        {
+            //currentSti can't contain this date. We must lower start date and newSti's end date
+            currentSti->dateStart = sti->dateStart;
+            newSti->dateEnd = sti->dateStart.addDays(-1);
+
+            updateStreetDef(*currentSti);
+            updateStreetName(*newSti);
+
+            // get he list again because some dates may have benn corrected
+            streetNames = getStreetNames(sti->streetId, &names);
+            return true;
+        }
+
         for(int i=0; i< streetNames->count(); i++)
         {
             StreetInfo* stiExisting = streetNames->at(i);
-            if(sti->street == stiExisting->street  && sti->startDate >= stiExisting->startDate
-                && sti->startDate < sti->endDate)
+            if(!(sti->street == stiExisting->street && sti->location == stiExisting->location))
+                continue;
+            if( stiExisting->encompasses(*sti))
             {
-                if(sti->startDate < stiExisting->startDate)
-                {
-                    stiExisting->startDate = sti->startDate;
-                    if(i >0)
-                    {
-                        // update the prior name's end date
-                        StreetInfo* prior = streetNames->at(i-1);
-                        prior->endDate = sti->startDate.addDays(-1);
-                        sti->olderName = prior->street;
-                        if(!updateStreetName(*prior))
-                            return false;
-                    }
-                }
+                // already exists
+                return false;
+            }
+            if(sti->dateStart < stiExisting->dateStart)
+                continue;
+            if(stiExisting->inDateRange(sti->dateStart))
+            {
+                sti->dateEnd =stiExisting->dateEnd;
+                stiExisting->dateEnd = sti->dateStart.addDays(-1);
+
                 if(!updateStreetName(*stiExisting))
+                {
+                    return false;
+                }
+                //sti falls within date range of existing street record
+                if(!newStreetName(sti))
                 {
                     return false;
                 }
@@ -1324,7 +1364,7 @@ bool StreetsTableModel::addOldStreetName(StreetInfo* sti)
         return newStreetName(sti);
 #endif
     }
-    return false;
+    return true;
 }
 
 int StreetsTableModel::getNextStreetId()
