@@ -5,6 +5,7 @@
 #include "qmenu.h"
 #include "sql.h"
 #include "streetstablemodel.h"
+#include "webviewbridge.h"
 
 StreetView::StreetView() {
     config = Configuration::instance();
@@ -18,9 +19,10 @@ StreetView::StreetView() {
 
     setItemDelegateForColumn(StreetsTableModel::STARTDATE, new DateEditDelegate());
     setItemDelegateForColumn(StreetsTableModel::ENDDATE, new DateEditDelegate());
-    sourceModel = new StreetsTableModel();
+    sourceModel = new StreetsTableModel(this);
     proxyModel = new QSortFilterProxyModel();
     proxyModel->setSourceModel(sourceModel);
+
     setModel(proxyModel);
     resizeColumnsToContents();
     horizontalHeader()->stretchLastSection();
@@ -32,7 +34,8 @@ StreetView::StreetView() {
         //sourceModel->streetChanged(sti);
         int row =sourceModel->findRow(sti.rowid);
         QModelIndex srcIndex = sourceModel->index(row,0);
-        scrollTo(proxyModel->mapFromSource(srcIndex));
+        QModelIndex srtIndex = proxyModel->mapFromSource(srcIndex);
+        scrollTo(srtIndex);
     });
     if(config->sv.colWidths.count() != sourceModel->columnCount(QModelIndex()))
     {
@@ -129,5 +132,36 @@ void StreetView::tablev_CustomContextMenu(const QPoint &pt)
             QList<StreetInfo*>* list = sourceModel->getStreetNames(sti->streetId,&names);
         }
     });
+    if(sti->startLatLng.isValid() && sti->endLatLng.isValid())
+    {
+        act = new QAction(tr("Show ends"), this);
+        tablMenu.addAction(act);
+        connect(WebViewBridge::instance(), &WebViewBridge::on_pinClicked,this,[=](int pinId, LatLng latLng,
+              QString street, int streetid, int seq){
+            if(streetId < 0)
+                return;
+            if(pinId == 0)
+            {
+                sti->startLatLng = latLng;
+            }
+            else
+            {
+                sti->endLatLng = latLng;
+            }
+            sti->bounds = Bounds();
+            sti->updateBounds();
+            sourceModel->updateStreetName(*sti);
+        });
+
+        connect(act, &QAction::triggered,this, [=]{
+
+            WebViewBridge::instance()->processScript("clearPinMarker");
+            QVariantList objArray;
+            objArray << sti->startLatLng.lat() << sti->startLatLng.lon() << sti->endLatLng.lat()
+                     << sti->endLatLng.lon() << sti->street << sti->streetId << sti->sequence;
+            WebViewBridge::instance()->processScript("showStreetPins",objArray);
+            qApp->processEvents();
+        });
+    }
     tablMenu.exec(QCursor::pos());
 }

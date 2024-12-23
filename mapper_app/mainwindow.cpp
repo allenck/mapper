@@ -572,6 +572,8 @@ void MainWindow::reloadMap()
          QMessageBox::critical(nullptr, tr("Error"), "open webbrowser failed ");
      }
      connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
+     if(!channel)
+         setupbridge();
 
  QVariantList objArray;
  objArray << m_latitude << m_longitude;
@@ -5483,6 +5485,7 @@ void MainWindow::onWebSocketClosed()
    mbox->setText("The browser window has closed");
    mbox->show();
    QTimer::singleShot(2000, mbox, SLOT(hide()));
+   channel = nullptr;
   }
 }
 

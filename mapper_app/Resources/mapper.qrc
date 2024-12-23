@@ -86,5 +86,6 @@
         <file>sl-metro-logo.svg</file>
         <file>sql/create_routeView.sql</file>
         <file>sql/sqlite3_recreate_parameters.sql</file>
+        <file>sql/sqlite3_create_streetdef.sql</file>
     </qresource>
 </RCC>

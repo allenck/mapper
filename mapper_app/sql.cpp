@@ -2348,14 +2348,16 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
   if(config->currConnection->servertype() != "MsSql")
    commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon, "
         " a.length, a.street, "
-        " a.description, a.OneWay, a.pointArray, a.tracks, a.type, a.startDate, a.doubledate, a.enddate"
+        " a.description, a.OneWay, a.pointArray, a.tracks, a.type, a.startDate, a.doubledate, a.enddate,"
+        " a.streetId, a.rowid"
         " from Segments a "
         " where "+typeWhere  + distanceWhere +
         " order by a.segmentId";
    else
     commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon,"
         " a.length, a.street, a.description, a.OneWay, a.pointArray, a.tracks,"
-        " a.type, a.startDate, a.doubledate, a.enddate"
+        " a.type, a.startDate, a.doubledate, a.enddate,"
+        " a.streetId, a.rowid"
         " from Segments a "
         "where "+ typeWhere  + distanceWhere +
         "order by a.segmentId";
@@ -2364,9 +2366,10 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
   bool bQuery = query.exec(commandText);
   if(!bQuery)
   {
-   SQLERROR(query);
+   SQLERROR(std::move(query));
    db.close();
    //exit(EXIT_FAILURE);
+   return myArray;
   }
 
   while(query.next())
@@ -2387,6 +2390,8 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
    si._startDate = query.value(12).toDate();
    si._doubleDate = query.value(13).toDate();
    si._endDate = query.value(14).toDate();
+   si._streetId = query.value(15).toInt();
+   si._rowid = query.value(16).toInt();
 #ifdef NO_UDF
    // eliminate segments not close
    if((Distance(lat, lon, si._startLat, si._startLon) > radius) &&
@@ -10793,6 +10798,21 @@ void SQL::checkTables(QSqlDatabase db)
 //      if(config->currConnection->servertype() == "Sqlite")
 //       executeScript(":/sql/sqlite3_create_streets.sql",db);
 //  }
+  if(tableList.contains("Streets", Qt::CaseInsensitive))
+  {
+
+  }
+
+  if(tableList.contains("Streets2", Qt::CaseInsensitive))
+  {
+
+  }
+
+  if(tableList.contains("StreetName", Qt::CaseInsensitive))
+  {
+
+  }
+
   if(!tableList.contains("StreetDef"))
   {
       if(config->currConnection->servertype() == "Sqlite")

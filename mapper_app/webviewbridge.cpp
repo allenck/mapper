@@ -306,7 +306,7 @@ void WebViewBridge::queryOverlay()
 
 void WebViewBridge::initialized()
 {
- m_parent->showGoogleMapFeaturesAct->trigger();
+ //m_parent->showGoogleMapFeaturesAct->trigger();
 }
 
 void WebViewBridge::opacityChanged(QString name, qint32 opacity)
@@ -375,6 +375,23 @@ void WebViewBridge::rightClicked(double lat, double lon)
     emit on_rightClicked(LatLng(lat, lon));
 }
 
+void WebViewBridge::pinClicked(int pinId, double lat, double lon, QString street, int streetId, int seq)
+{
+    emit on_pinClicked(pinId, LatLng(lat, lon), street, streetId, seq);
+}
+
+void WebViewBridge::pinMarkerMoved(double lat, double lon)
+{
+    LatLng latlng = LatLng(lat,lon);
+    emit on_pinMarkerMoved(latlng);
+    QClipboard *clip = QApplication::clipboard();
+    QVariant v = QVariant::fromValue(latlng);
+    QMimeData* mimeData = new QMimeData;
+    QByteArray ba = v.toByteArray();
+    mimeData->setData("latlng", ba);
+    clip->setMimeData(mimeData);
+    clip->setText(latlng.str());}
+
 void WebViewBridge::screenshot(QString base64image)
 {
  QString saveFilename = QFileDialog::getSaveFileName(nullptr, "Save as", "Choose a filename", "PNG(*.png);; TIFF(*.tiff *.tif);; JPEG(*.jpg *.jpeg)");
@@ -404,3 +421,4 @@ QList<LatLng> WebViewBridge::buildPoints(QVariantList array)
     }
     return points;
 }
+

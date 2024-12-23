@@ -32,6 +32,10 @@ var overlay=null;
 var opacityControl = null;
 var bGeocoderRequest = false;
 var User_MapType = null;
+var pinArray = null;
+var pins = null;
+var pinMarker =null;
+var markerPins = null;
 
 function echoText(text)
 {
@@ -73,12 +77,6 @@ var images = {"default":0, "start":1, "end":2, "shadow":3, "arrow":4, "arrowShad
   "blue-red":18,"orange":19, "bvgtram":20, "subway":21, "subwayshadow":22, "purple":23,
   "rail":24, "bus":25};
 
-// var pin = [{background: "#00FF00"},
-//            {background: "#00FF00", glyph:"0"},
-//            {background: "#FF0000" },
-//           ];
-var pin = null;
-var pins =null; //{"default":0, "start":1, "end":2};
 
 var connected = false;
 //We use this function because connect statements resolve their target once, immediately
@@ -1015,6 +1013,7 @@ async function initMap() {
      map.mapTypes.set('UserMap',User_MapType);
      map.setMapTypeId(mapTypeId);
 
+     markerPins = new google.maps.MVCArray();
 
      defaultOptions = /** @type {google.maps.MapTypeControlOptions} */(
      {
@@ -1053,34 +1052,10 @@ async function initMap() {
 
      //google.maps.event.trigger(map, 'resize');
 
-     pin = [new google.map.marker.PinElement(),
-            new google.map.marker.PinElement({background: "#00FF00", glyph:"0"}),
-            new google.map.marker.PinElement({background: "#FF0000" }),
-           ];
-     pins ={"default":0, "start":1, "end":2};
+    webViewBridge.queryOverlay();
 
-     webViewBridge.queryOverlay();
-
-     //OK    window.external.displayZoom(map.getZoom());
-     webViewBridge.displayZoom(map.getZoom());
-
-
-    function latLng2Point(latLng, map) {
-      var topRight = map.getProjection().fromLatLngToPoint(map.getBounds().getNorthEast());
-      var bottomLeft = map.getProjection().fromLatLngToPoint(map.getBounds().getSouthWest());
-      var scale = Math.pow(2, map.getZoom());
-      var worldPoint = map.getProjection().fromLatLngToPoint(latLng);
-      return new google.maps.Point((worldPoint.x - bottomLeft.x) * scale, (worldPoint.y - topRight.y) * scale);
-    }
-
-    function point2LatLng(point, map) {
-      var topRight = map.getProjection().fromLatLngToPoint(map.getBounds().getNorthEast());
-      var bottomLeft = map.getProjection().fromLatLngToPoint(map.getBounds().getSouthWest());
-      var scale = Math.pow(2, map.getZoom());
-      var worldPoint = new google.maps.Point(point.x / scale + bottomLeft.x, point.y / scale + topRight.y);
-      return map.getProjection().fromPointToLatLng(worldPoint);
-    }
-
+    //OK    window.external.displayZoom(map.getZoom());
+    webViewBridge.displayZoom(map.getZoom());
 
     google.maps.event.addListener(map, "zoom_changed", function() {
      webViewBridge.displayZoom(map.getZoom());
@@ -1090,13 +1065,58 @@ async function initMap() {
      webViewBridge.rightClicked(event.latLng.lat(), event.latLng.lng());
     });
 
+    google.maps.event.addListener(map, "click", function(event) {
+     webViewBridge.clickPoint(event.latLng.lat(), event.latLng.lng());
+    });
+
+    google.maps.event.addListener(map, "dblclick", function(event) {
+        //addPinMarker(event.latLng, "");
+        clearPinMarker();
+
+        var pin = new google.maps.marker.PinElement();
+        pinMarker = new google.maps.marker.AdvancedMarkerElement({map: map, position: event.latLng,
+                    gmpDraggable: true,  content: pin.element});
+
+        google.maps.event.addListener(pinMarker, "dragend", function(latLng) {
+
+            webViewBridge.pinMarkerMoved(latLng.lat(), latLng.lng());
+        });
+        webViewBridge.clickPoint(event.latLng.lat(), event.latLng.lng());
+    });
+
+
     zoomIx = map.getZoom()-17;
     zoomOffset = offsets[zoomIx];
 
-
-    webViewBridge.initialized();
+    //webViewBridge.initialized();
     bGoogleInit = true;
     webViewBridge.debug("initMap complete");
+
+     pinArray = [new google.maps.marker.PinElement(),
+            new google.maps.marker.PinElement({background: "#00FF00", glyph:"0"}),
+            new google.maps.marker.PinElement({background: "#FF0000" }),
+            new google.maps.marker.PinElement({background: "#FFFF00", glyph:"0"}),
+           ];
+     pins ={"default":0, "start":1, "end":2, "yellow":3};
+
+
+
+    // function latLng2Point(latLng, map) {
+    //   var topRight = map.getProjection().fromLatLngToPoint(map.getBounds().getNorthEast());
+    //   var bottomLeft = map.getProjection().fromLatLngToPoint(map.getBounds().getSouthWest());
+    //   var scale = Math.pow(2, map.getZoom());
+    //   var worldPoint = map.getProjection().fromLatLngToPoint(latLng);
+    //   return new google.maps.Point((worldPoint.x - bottomLeft.x) * scale, (worldPoint.y - topRight.y) * scale);
+    // }
+
+    // function point2LatLng(point, map) {
+    //   var topRight = map.getProjection().fromLatLngToPoint(map.getBounds().getNorthEast());
+    //   var bottomLeft = map.getProjection().fromLatLngToPoint(map.getBounds().getSouthWest());
+    //   var scale = Math.pow(2, map.getZoom());
+    //   var worldPoint = new google.maps.Point(point.x / scale + bottomLeft.x, point.y / scale + topRight.y);
+    //   return map.getProjection().fromPointToLatLng(worldPoint);
+    // }
+
 } // end initMap2()
 
 
@@ -1119,12 +1139,6 @@ window.initialize = function() // called by WebChannel .ie "onLoad()"
 {
 
     initMap();
-    // pin = [new google.map.marker.PinElement(),
-    //        new google.map.marker.PinElement({background: "#00FF00", glyph:"0"}),
-    //        new google.map.marker.PinElement({background: "#FF0000" }),
-    //       ];
-    // pins ={"default":0, "start":1, "end":2};
-
 }
 
 function resizeMap()
@@ -1715,6 +1729,7 @@ var path;
   }
   clearRectangle();
   selectedLine = null;
+  clearPinMarker();
 
   if(stationArray)
       while(stationArray.getLength() > 0)
@@ -3025,6 +3040,82 @@ function clearRectangle()
         myRect.setMap(null);
         myRect = null;
     }
+}
+
+function addPinMarker(latLng, title)
+{
+    var pinId = markerPins.length;
+    var pin = new google.maps.marker.PinElement({background: "#FFFF00", glyph:pinId.toString()});
+    var pinMarker = new google.maps.marker.AdvancedMarkerElement({map: map, position: latLng,
+            gmpDraggable: true,  content: pin.element, title:title});
+
+    markerPins.push(pinMarker);
+
+    google.maps.event.addListener(marker, "dragend", function(latLng, pinId) {
+
+        webViewBridge.pinClicked(pinId, latLng.lat(), event.latLng.lng(), title,-1,0);
+    });
+
+}
+
+function getPinLocations()
+{
+    const pointsArray = [];
+    markerPins.forEach(function(pinMarker, index)
+    {
+       pointsArray.push(pinMarker.position);
+       console.log(pinMarker.position);
+    });
+
+    var array = new Array(0,0);
+    pointsArray.forEach(function(latLng, ix)
+    {
+     array[ix*2] = latLng.lat;
+     array[(ix*2)+1] = latLng.lng;
+    });
+    return array;
+}
+
+function clearPinMarker()
+{
+    if(pinMarker)
+    {
+        pinMarker.setMap(null);
+        pinMarker = null;
+    }
+}
+
+function showStreetPins(firstlat, firstlon, secondlat, secondlon, title, streetid, seq)
+{
+    clearPins();
+    latLng1 = new google.maps.LatLng(firstlat, firstlon);
+    latLng2 = new google.maps.LatLng(secondlat, secondlon);
+    var pin1 = new google.maps.marker.PinElement({background: "#FFFF00", glyph:"1"});
+    var pinMarker1 = new google.maps.marker.AdvancedMarkerElement({map: map, position: latLng1,
+            gmpDraggable: true,  content: pin1.element, title: title});
+    google.maps.event.addListener(pinMarker1, "dragend", function(pt) {
+
+        webViewBridge.pinClicked(0, pt.latLng.lat(), pt.latLng.lng(), title, streetid, seq);
+    });
+
+    markerPins.push(pinMarker1);
+    var pin2 = new google.maps.marker.PinElement({background: "#FFFF00", glyph:"2"});
+    var pinMarker2 = new google.maps.marker.AdvancedMarkerElement({map: map, position: latLng2,
+            gmpDraggable: true,  content: pin2.element});
+    google.maps.event.addListener(pinMarker2, "dragend", function(pt) {
+
+        webViewBridge.pinClicked(1, pt.latLng.lat(), pt.latLng.lng(), title, streetid, seq);
+    });
+    markerPins.push(pinMarker2);
+}
+
+function clearPins()
+{
+    markerPins.forEach(function(pinMarker, index)
+    {
+     pinMarker.setMap(null);
+    });
+    markerPins.clear();
 }
 
 function alertClose()

@@ -140,7 +140,7 @@ bool SegmentView::boolGetItemTableView(QTableView *table)
 
 //}
 
-void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
+void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 segmentId)
 {
     SegmentInfo sdIn;
     SegmentInfo si;
@@ -148,10 +148,10 @@ void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     double a1 = 0;
 
-    sdIn = sql->getSegmentInfo(SegmentId);
+    sdIn = sql->getSegmentInfo(segmentId);
     if (sdIn.segmentId() < 1)
     {
-        qDebug() << "segmentID " + QString("%1").arg(SegmentId) + " not found";
+        qDebug() << "segmentID " + QString("%1").arg(segmentId) + " not found";
         return;
     }
 //    if (sdIn.bearingStart == null || sdIn.bearingEnd == null)

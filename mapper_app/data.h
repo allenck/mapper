@@ -626,6 +626,7 @@ class SegmentInfo
  qint8 _tracks;
  bool _bNeedsUpdate;
  int _streetId =-1;
+ int _rowid = -1;
  //int routeCount;
  //QString trackUsage;
  int _next = -1; // needed for DupSegmentView
@@ -633,6 +634,7 @@ class SegmentInfo
  QString _trackType = " ";
  QString _location;
  QString _newerStreetName;
+
  public:
  static QStringList ROUTETYPES;// = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
 
@@ -970,6 +972,7 @@ public:
     QList<int> setSegments(const QString);
     QString segmentsToString();
     void updateBounds(SegmentInfo si);
+    void updateBounds();
     bool inDateRange(QDate dt);
     bool encompasses(StreetInfo sti);
 

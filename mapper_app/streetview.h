@@ -9,6 +9,7 @@ class StreetsTableModel;
 class QSortFilterProxyModel;
 class StreetView : public QTableView
 {
+    Q_OBJECT
 public:
     StreetView();
     StreetsTableModel* model();
@@ -23,6 +24,7 @@ private:
     int curRow, curCol;
     Configuration* config = nullptr;
     SQL* sql = nullptr;
+    friend class StreetsTableModel;
 };
 
 #endif // STREETVIEW_H

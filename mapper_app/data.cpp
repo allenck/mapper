@@ -647,6 +647,7 @@ SegmentInfo::SegmentInfo(const SegmentInfo& o)
  _location = o._location;
  _doubleDate = o._doubleDate;
  _streetId = o._streetId;
+ _rowid = o._rowid;
 }
 
 SegmentInfo::SegmentInfo(const SegmentData& o)
@@ -1251,6 +1252,24 @@ void StreetInfo::updateBounds(SegmentInfo si)
         //qDebug() << bounds.toString();
     }
 }
+void StreetInfo::updateBounds()
+{
+    if(startLatLng.isValid() && endLatLng.isValid())
+    {
+        bounds.updateBounds(startLatLng);
+        bounds.updateBounds(endLatLng);
+        if(bounds.isValid())
+        {
+            startLatLng = bounds.swPt();
+            endLatLng = bounds.nePt();
+            length = SQL::instance()->Distance(startLatLng.lat(), startLatLng.lon(),
+                                               endLatLng.lat(), endLatLng.lon());
+            //qDebug() << bounds.toString();
+        }
+
+    }
+}
+
 bool StreetInfo::inDateRange(QDate dt)
 {
     if( dt.isNull())

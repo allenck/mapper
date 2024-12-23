@@ -4,7 +4,7 @@
 #include "qsqlquery.h"
 #include "sql.h"
 #include "configuration.h"
-
+#include "streetview.h"
 
 StreetsTableModel::StreetsTableModel(QObject *parent)
     : QAbstractTableModel{parent}
@@ -73,11 +73,15 @@ StreetsTableModel::StreetsTableModel(QObject *parent)
 #endif
     connect(this, &StreetsTableModel::streetInfoChanged, this, [=](StreetInfo si, Action act){
         int row = findRow(si.rowid);
+        //QModelIndex srcIndex = index(row, 0);
+        //StreetView* view = qobject_cast<StreetView*>(parent);
+        //QModelIndex index =view->proxyModel->mapFromSource(srcIndex);
+        //int sRow = index.row();
         switch (act) {
         case UPDATE:
             if(row >= 0)
             {
-              dataChanged(index(row, STREETID), index(row, COMMENT));
+                dataChanged(index(row, STREETID), index(row, COMMENT));
               return;
             }
             break;
@@ -247,21 +251,6 @@ bool StreetsTableModel::setData(const QModelIndex &index, const QVariant &value,
             break;
         case NEWERNAME:
             si.newerName = value.toString();
-#if 0
-            if(findRow(si.newerName)<0)
-            {
-                StreetInfo sti = StreetInfo(si);
-                sti.street = si.newerName;
-                sti.olderName = si.street;
-                sti.newerName = "";
-                sti.startDate = QDate();
-                sti.endDate = QDate();
-                newStreet(sti);
-                beginInsertRows(QModelIndex(), rowCount(QModelIndex()), rowCount(QModelIndex()));
-                streetsList.append(sti);
-                endInsertRows();
-            }
-#endif
             break;
         case STARTLATLNG:
         {
@@ -269,6 +258,8 @@ bool StreetsTableModel::setData(const QModelIndex &index, const QVariant &value,
             if(newLatLng.isValid())
             {
                 si.startLatLng = newLatLng;
+                si.bounds = Bounds();
+                si.updateBounds();
                 break;
             }
             return false;
@@ -279,6 +270,8 @@ bool StreetsTableModel::setData(const QModelIndex &index, const QVariant &value,
             if(newLatLng.isValid())
             {
                 si.endLatLng = newLatLng;
+                si.bounds = Bounds();
+                si.updateBounds();
                 break;
             }
             return false;
