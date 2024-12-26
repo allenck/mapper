@@ -1607,14 +1607,16 @@ void RouteDlg::btnAdd_Click()         // SLOT
   return;
  }
  _routeNbr = ui->rnw->newRoute();
+ ui->lblHelpText->setText("");
+
  try
  {
-  //sql->BeginTransaction("add/update");
-
-//  int ixo = ui->cbSegments->currentIndex();
-//  if(ixo >= 0)
-//      oldSd = new SegmentData(*_segmentDataList.at(ixo));
-  ui->lblHelpText->setText("");
+     QDate nextStartDate = sql->getNextStartOrEndDate(_routeNbr, ui->dateStart->date(), true);
+     if(nextStartDate.isValid() && ui->dateEnd->date() >= nextStartDate)
+     {
+        ui->lblHelpText->setText( tr("end date must be before %1").arg(maxDate.toString("yyyy/MM/dd")));
+        return;
+     }
   if (ui->dateStart->dateTime() > ui->dateEnd->dateTime())
   {
    ui->lblHelpText->setText(tr( "Start date must be < end date!"));
@@ -1699,6 +1701,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
 
         }
     }
+
     if (csd->startDate() <= ui->dateEnd->date())
     {
      QMessageBox::StandardButtons rslt;
@@ -1896,12 +1899,12 @@ void RouteDlg::btnAdd_Click()         // SLOT
   fillSegmentsComboBox();
   this->setVisible(false);
  }
- catch(Exception)
+ catch(Exception e)
  {
   //sql->RollbackTransaction("add/update");
   if(!sql->currentTransaction.isEmpty())
    sql->rollbackTransaction(sql->currentTransaction);
-  ui->lblHelpText->setText("changes abandoned");
+  ui->lblHelpText->setText(tr("changes abandoned: %1").arg(e.msg));
   return;
  }
  //sql->CommitTransaction("add/Update");

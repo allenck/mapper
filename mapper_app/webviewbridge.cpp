@@ -264,9 +264,10 @@ void WebViewBridge::movePoint(qint32 segmentId, qint32 i, double lat, double lng
  //m_parent->movePoint(segmentId, i, lat, lng);
 }
 
-void WebViewBridge::movePointX(qint32 segmentId, qint32 i, QVariantList array)
+void WebViewBridge::movePointX(qint32 segmentId, qint32 i, double lat, double lon, QVariantList array)
 {
-    emit movePointSignalX(segmentId, i, buildPoints(array));
+    LatLng pt = LatLng(lat,lon);
+    emit movePointSignalX(segmentId, i, pt, buildPoints(array));
     //m_parent->movePoint(segmentId, i, lat, lng);
 }
 

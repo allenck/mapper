@@ -221,7 +221,8 @@ Qt::ItemFlags StreetsTableModel::flags(const QModelIndex &index) const
     // case DEF:
     //     return Qt::ItemIsEnabled | Qt::ItemIsUserCheckable;
     case STREET:
-        return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+    case LOCATION:
+        return Qt::ItemIsEnabled | Qt::ItemIsSelectable| Qt::ItemIsEditable;
     case OLDERNAME:
     case NEWERNAME:
     case LENGTH:
@@ -245,7 +246,7 @@ bool StreetsTableModel::setData(const QModelIndex &index, const QVariant &value,
     {
     switch (index.column()) {
         case STREET:
-            return false;
+        si.street = value.toString();
         case OLDERNAME:
             si.olderName = value.toString();
             break;
@@ -1241,121 +1242,127 @@ QList<StreetInfo*>* StreetsTableModel::getStreetNames(int streetId, QStringList 
 
 bool StreetsTableModel::addOldStreetName(StreetInfo* sti)
 {
-    // streetid, street, StartDate must be populated. If added, StreetInfo will be updated with enddate.
-    QStringList names;
-    QList<StreetInfo*>* streetNames = getStreetNames(sti->streetId, &names);
-    int streetId = sti->streetId;
-    //StreetInfo* currentSti = getStreetDef(sti->streetId);
-    //QList<SegmentInfo> segList = getSegmentsForStreet(names);
-    if(!streetNames)
-        return false;
-    // foreach (SegmentInfo si, segList) {
-    //     currentSti->updateBounds(si);
-    //     if(!sti->segments.contains(si.segmentId()))
-    //         sti->segments.append(si.segmentId());
-    // }
-    // if(!updateStreetDef(*currentSti))
-    //     return false;
-    if(names.isEmpty())
-    {
-        return newStreetName(sti); // just add it
-    }
-    // See if this is a new street
-    if(!names.contains(sti->street))
-    {
-        StreetInfo* stiExisting = nullptr;
-        for(int i=0; i< streetNames->count(); i++)
+    try {
+
+        // streetid, street, StartDate must be populated. If added, StreetInfo will be updated with enddate.
+        QStringList names;
+        QList<StreetInfo*>* streetNames = getStreetNames(sti->streetId, &names);
+        int streetId = sti->streetId;
+        //StreetInfo* currentSti = getStreetDef(sti->streetId);
+        //QList<SegmentInfo> segList = getSegmentsForStreet(names);
+        if(!streetNames)
+            return false;
+        // foreach (SegmentInfo si, segList) {
+        //     currentSti->updateBounds(si);
+        //     if(!sti->segments.contains(si.segmentId()))
+        //         sti->segments.append(si.segmentId());
+        // }
+        // if(!updateStreetDef(*currentSti))
+        //     return false;
+        if(names.isEmpty())
         {
-          stiExisting = streetNames->at(i);
-          if(sti->dateStart < stiExisting->dateStart)
-              continue;
-          sti->dateEnd = stiExisting->dateStart.addDays(-1);
-          sti->sequence = i;
-          if(newStreetName(sti))
-          {
-              return false;
-          }
-          streetNames->insert(i, sti);
-          sti = nullptr;
+            return newStreetName(sti); // just add it
         }
-        if(sti)
+        // See if this is a new street
+        if(!names.contains(sti->street))
         {
-            sti->dateEnd = stiExisting->dateStart.addDays(-1);
-            sti->sequence =streetNames->count();
-            if(newStreetName(sti))
+            StreetInfo* stiExisting = nullptr;
+            for(int i=0; i< streetNames->count(); i++)
             {
-                return false;
+              stiExisting = streetNames->at(i);
+              if(sti->dateStart < stiExisting->dateStart)
+                  continue;
+              sti->dateEnd = stiExisting->dateStart.addDays(-1);
+              sti->sequence = i;
+              if(newStreetName(sti))
+              {
+                  return false;
+              }
+              streetNames->insert(i, sti);
+              sti = nullptr;
             }
-            streetNames->append(sti);
-        }
-        streetNames = getStreetNames(streetId, &names); // this will take care of resequencing etc.
-    }
-    else
-    {
-        // special case to determine whether the current street's start date needs to be altered
-        StreetInfo* currentSti = streetNames->at(0);
-        StreetInfo* newSti = streetNames->at(1);
-        if(sti->street == currentSti->street && !currentSti->encompasses(*sti))
-        {
-            //currentSti can't contain this date. We must lower start date and newSti's end date
-            currentSti->dateStart = sti->dateStart;
-            newSti->dateEnd = sti->dateStart.addDays(-1);
-
-            updateStreetDef(*currentSti);
-            updateStreetName(*newSti);
-
-            // get he list again because some dates may have benn corrected
-            streetNames = getStreetNames(sti->streetId, &names);
-            return true;
-        }
-
-        for(int i=0; i< streetNames->count(); i++)
-        {
-            StreetInfo* stiExisting = streetNames->at(i);
-            if(!(sti->street == stiExisting->street && sti->location == stiExisting->location))
-                continue;
-            if( stiExisting->encompasses(*sti))
+            if(sti)
             {
-                // already exists
-                return false;
-            }
-            if(sti->dateStart < stiExisting->dateStart)
-                continue;
-            if(stiExisting->inDateRange(sti->dateStart))
-            {
-                sti->dateEnd =stiExisting->dateEnd;
-                stiExisting->dateEnd = sti->dateStart.addDays(-1);
-
-                if(!updateStreetName(*stiExisting))
+                sti->dateEnd = stiExisting->dateStart.addDays(-1);
+                sti->sequence =streetNames->count();
+                if(newStreetName(sti))
                 {
                     return false;
                 }
-                //sti falls within date range of existing street record
-                if(!newStreetName(sti))
-                {
-                    return false;
-                }
+                streetNames->append(sti);
+            }
+            streetNames = getStreetNames(streetId, &names); // this will take care of resequencing etc.
+        }
+        else
+        {
+            // special case to determine whether the current street's start date needs to be altered
+            StreetInfo* currentSti = streetNames->at(0);
+            StreetInfo* newSti = streetNames->at(1);
+            if(sti->street == currentSti->street && !currentSti->encompasses(*sti))
+            {
+                //currentSti can't contain this date. We must lower start date and newSti's end date
+                currentSti->dateStart = sti->dateStart;
+                newSti->dateEnd = sti->dateStart.addDays(-1);
+
+                updateStreetDef(*currentSti);
+                updateStreetName(*newSti);
+
+                // get he list again because some dates may have benn corrected
+                streetNames = getStreetNames(sti->streetId, &names);
                 return true;
             }
+
+            for(int i=0; i< streetNames->count(); i++)
+            {
+                StreetInfo* stiExisting = streetNames->at(i);
+                if(!(sti->street == stiExisting->street && sti->location == stiExisting->location))
+                    continue;
+                if( stiExisting->encompasses(*sti))
+                {
+                    // already exists
+                    return false;
+                }
+                if(sti->dateStart < stiExisting->dateStart)
+                    continue;
+                if(stiExisting->inDateRange(sti->dateStart))
+                {
+                    sti->dateEnd =stiExisting->dateEnd;
+                    stiExisting->dateEnd = sti->dateStart.addDays(-1);
+
+                    if(!updateStreetName(*stiExisting))
+                    {
+                        return false;
+                    }
+                    //sti falls within date range of existing street record
+                    if(!newStreetName(sti))
+                    {
+                        return false;
+                    }
+                    return true;
+                }
+            }
+    #if 0
+            // need to create a new one
+            if(i >0)
+            {
+                // update the prior name's end date
+                StreetInfo* prior = streetNames->at(i-1);
+                prior->endDate = sti->startDate.addDays(-1);
+                if(!updateStreetName(*prior))
+                    return false;
+            }
+            if((i+1) < streetNames->count() )
+            {
+               StreetInfo* next = streetNames->at(i*1);
+               sti->endDate = next->startDate.addDays(-1);
+               sti->newerName = next->street;
+            }
+            return newStreetName(sti);
+    #endif
         }
-#if 0
-        // need to create a new one
-        if(i >0)
-        {
-            // update the prior name's end date
-            StreetInfo* prior = streetNames->at(i-1);
-            prior->endDate = sti->startDate.addDays(-1);
-            if(!updateStreetName(*prior))
-                return false;
-        }
-        if((i+1) < streetNames->count() )
-        {
-           StreetInfo* next = streetNames->at(i*1);
-           sti->endDate = next->startDate.addDays(-1);
-           sti->newerName = next->street;
-        }
-        return newStreetName(sti);
-#endif
+    } catch (IllegalArgumentException e) {
+        QMessageBox::critical(nullptr, "Error", tr("An error has occurred %1\n"
+                                                   " Check streetid %2").arg(e.msg).arg(sti->streetId));
     }
     return true;
 }

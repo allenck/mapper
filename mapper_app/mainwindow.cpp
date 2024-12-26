@@ -534,7 +534,7 @@ void MainWindow::createBridge()
 // m_bridge->browseWindowWidth = webView->width();
 
  //connect( m_bridge, SIGNAL(movePointSignal(qint32, qint32,double,double)), this, SLOT(movePoint(qint32, qint32,double,double)));
- connect( m_bridge, SIGNAL(movePointSignalX(qint32,qint32,QList<LatLng>)), this, SLOT(movePointX(qint32,qint32,QList<LatLng>)));
+ connect( m_bridge, SIGNAL(movePointSignalX(qint32,qint32,LatLng,QList<LatLng>)), this, SLOT(movePointX(qint32,qint32,LatLng,QList<LatLng>)));
  connect(m_bridge, SIGNAL(addPointSignal(int,double,double)), this, SLOT(addPoint(int,double,double)));
  //connect(m_bridge, SIGNAL(addPointSignalX(int,double,double)), this, SLOT(addPointX(int,QList<LatLng>)));
  connect (m_bridge, SIGNAL(insertPointSignal(int,qint32,double,double)), this, SLOT(insertPoint(int,qint32,double,double)));
@@ -3461,8 +3461,8 @@ void MainWindow::btnPrevClicked()
                             +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)+","
                             +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8 ) +","
                             +marker + ","
-                            // +QString("'%1'").arg(m_currPoint)+","
-                            + QString("'%1'").arg(m_currPoint));
+                            +QString("'%1'").arg(m_currPoint)+","
+                            + QString("%1").arg(m_segmentId));
     if(!ui->chkNoPan->isChecked())
     {
         objArray.clear();
@@ -4006,23 +4006,27 @@ void MainWindow::movePoint(qint32 segmentId, qint32 i, double newLat, double new
 /// <param name="i"></param>
 /// <param name="newLat"></param>
 /// <param name="newLon"></param>
-void MainWindow::movePointX(qint32 segmentId, qint32 i, QList<LatLng> pointlist)
+void MainWindow::movePointX(qint32 segmentId, qint32 i, LatLng newPt, QList<LatLng> pointlist)
 {
     //m_segmentId = segmentId;
     if(segmentId < 1)
         return;
     SegmentInfo si = sql->getSegmentInfo(segmentId);
+    LatLng oldPoint = si.pointList().at(i);
 
     if(si.segmentId() >0)
-        updateSegmentInfoDisplay(si);
-    if(pointlist.count() != si.pointList().count())
-        return;
+    {
+        if(pointlist.count() != si.pointList().count())
+            return;
 
-    si.setPoints(pointlist);
-    m_points = pointlist;
-    sql->updateSegment(&si);
+        si.setPoints(pointlist);
+        m_points = pointlist;
+        sql->updateSegment(&si);
+        updateSegmentInfoDisplay(si);
+    }
+    SegmentInfo newSi = sql->getSegmentInfo(segmentId);
+
     //SQL sql;
-    LatLng oldPoint = sql->getPointOnSegment((int)i, m_segmentId);
     //TODO what about multiple station records?
     QList<StationInfo> stiList = sql->getStationAtPoint(oldPoint);
     for(StationInfo sti : stiList)

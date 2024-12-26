@@ -1920,7 +1920,13 @@ function addMarker(i, lat, lon, icon, text, SegmentId)
 
   webViewBridge.movePoint(SegmentId, i, pt.latLng.lat(), pt.latLng.lng());
   var si = getSegmentInfo(segmentId);
-  webViewBridge.movePointX(SegmentId, i, si.getPointArray());
+  var array = new Array(0,0);
+  path.forEach(function(pt, ix)
+  {
+   array[ix*2] = pt.lat();
+   array[(ix*2)+1] = pt.lng();
+  });
+  webViewBridge.movePointX(SegmentId, i, pt.latLng.lat(), pt.latLng.lng(), array);
 
   //TODO                window.external.showSegmentsAtPoint(lat,lon, SegmentId);
   webViewBridge.showSegmentsAtPoint(lat,lon, SegmentId);
