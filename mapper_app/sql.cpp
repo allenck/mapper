@@ -7348,7 +7348,6 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
   // Now get the SegmentId (identity) value so it can be returned.
   if(config->currConnection->servertype() == "Sqlite")
     commandText = "SELECT LAST_INSERT_ROWID()";
-
   else
  if(config->currConnection->servertype() != "MsSql")
     commandText = "SELECT LAST_INSERT_ID()";

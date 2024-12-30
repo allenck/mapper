@@ -20,11 +20,24 @@ DialogUpdateStreets::DialogUpdateStreets(QWidget *parent)
         restoreGeometry(config->dus.geometry);
 
     connect(ui->textEdit, &QTextEdit::textChanged, this, [=]{
-        textEditChanged();
+        try{
+            textEditChanged();
+        }
+    catch(Exception e)
+        {
+            ui->textEdit->setText("");
+            ui->lblHelp->setText("Invalid input. Please re-enter");
+        }
     });
 
     connect(ui->textEdit_2, &QTextEdit::textChanged, this, [=]{
-        footnotesChanged();
+        try {
+            footnotesChanged();
+        }
+    catch(IllegalArgumentException e)
+        {
+            ui->lblHelp->setText(tr(" error: %1").arg(e.msg));
+        }
     });
     if(!config->dus.text1.isEmpty())
     {
@@ -64,28 +77,37 @@ DialogUpdateStreets::DialogUpdateStreets(QWidget *parent)
             setCursor(Qt::WaitCursor);
             ui->lblHelp->clear();
             ui->lblInfo->clear();
+            ui->lblInfo->setStyleSheet("color: green");
 
             QList<SegmentInfo>* list = segmentViewSourceModel->getList();
             int updated = 0;
+            StreetInfo* sti = nullptr;
+            int streetId = -1;
             for (int row =0; row < list->count(); row++) {
                 SegmentInfo si = list->at(row);
                 if(si.streetId() < 0)
                 {
-                    si.setStreetId(streetsTableModel->findStreetId(si.streetName(), si.location()));
-                }
-                if(si.streetId() >= 0)
-                {
-                    StreetInfo* sti = streetsTableModel->getStreetDef(si.streetId());
-                    sti->updateBounds(si);
-                    sti->startLatLng = sti->bounds.swPt();
-                    sti->endLatLng = sti->bounds.nePt();
-                    sti->length = SQL::instance()->Distance(sti->startLatLng, sti->endLatLng);
-                    if(!sti->segments.contains(si.segmentId()))
-                        sti->segments.append(si.segmentId());
-                    SQL::instance()->updateSegment(&si);
-                    streetsTableModel->updateStreetDef(*sti);
-                    list->replace(row, si);
-                    updated++;
+                    streetId = streetsTableModel->findStreetId(si.streetName(), si.location());
+                    if(streetId && si.streetId() == -1)
+                    {
+                        si.setStreetId(streetId);
+                        sti = streetsTableModel->getStreetDef(si.streetId());
+                        if(sti)
+                        {
+                            si.setNewerName(sti->street);
+                            sti->updateBounds(si);
+                            sti->startLatLng = sti->bounds.swPt();
+                            sti->endLatLng = sti->bounds.nePt();
+                            sti->length = SQL::instance()->Distance(sti->startLatLng, sti->endLatLng);
+                            if(!sti->segments.contains(si.segmentId()))
+                                sti->segments.append(si.segmentId());
+                            SQL::instance()->updateSegment(&si);
+                            streetsTableModel->updateStreetDef(*sti);
+                            list->replace(row, si);
+                            updated++;
+                        }
+                        SQL::instance()->updateSegment(&si);
+                    }
                 }
             }
             if(updated ==list->count())
@@ -286,14 +308,17 @@ void DialogUpdateStreets::textEditChanged()
                         ss1.prepend(c);
                 }
                 streetMap.insert(SegmentDescription::updateToken(sl.at(0).trimmed()), ss1.toInt());
-                lookupStreet(ui->textEdit, sl.at(0).trimmed());
+                abbrevMap.insert(SegmentDescription::updateToken(sl.at(0).trimmed()),sl.at(0));
+                lookupStreet(ui->textEdit, abbrevMap.value(sl.at(0).trimmed()));
                 streetMap.insert(SegmentDescription::updateToken(sl.at(1).trimmed()), ss.toInt());
-                lookupStreet(ui->textEdit, sl.at(1).trimmed());
+                abbrevMap.insert(SegmentDescription::updateToken(sl.at(1).trimmed()),sl.at(1));
+                lookupStreet(ui->textEdit, abbrevMap.value(sl.at(1).trimmed()));
             }
             else
             {
                 streetMap.insert(SegmentDescription::updateToken(st.trimmed()), ss.toInt());
-                lookupStreet(ui->textEdit, st.trimmed());
+                abbrevMap.insert(SegmentDescription::updateToken(st.trimmed()),st.trimmed());
+                lookupStreet(ui->textEdit, abbrevMap.value(st.trimmed()));
             }
             if(ssn > 0)
                 qDebug() << st << " " << ssn;
@@ -309,6 +334,8 @@ void DialogUpdateStreets::textEditChanged()
 
 void DialogUpdateStreets::lookupStreet(QTextEdit* edit,QString st)
 {
+    if(st.isEmpty())
+        return;
     QString fullName = SegmentDescription::updateToken(st);
     QTextCursor currCursor = edit->textCursor();
     if(streetsTableModel->findStreetId(fullName) < 0)
@@ -328,6 +355,7 @@ void DialogUpdateStreets::lookupStreet(QTextEdit* edit,QString st)
             edit->setTextColor(Qt::black);
     }
     edit->setTextCursor(currCursor);
+    qApp->processEvents();
 }
 
 void DialogUpdateStreets::footnotesChanged()
@@ -359,6 +387,8 @@ void DialogUpdateStreets::footnotesChanged()
         if(c.isDigit())
         {
             digits.append(c);
+            if(digits.length()>2)
+                throw IllegalArgumentException(tr("bad input %1").arg(text));
             continue;
         }
         iy = indexOfDigit(text, ix);
@@ -418,14 +448,105 @@ void DialogUpdateStreets::pbUpdateClicked()
         iter->next();
         int fn = iter->value();
         QString street = iter->key();
-        streetid = streetsTableModel->findStreetId(street);
+        if(street == "Umgehungsstraße")
+            qDebug() << "debug halt";
+        StreetInfo* curSti = nullptr;
         QString curStreet;
-        int curr_streetId = -1;
+        StreetInfo* olderSti = nullptr;
+
+        // see if any record of this street exists!
         if(fn > 0)
+            streetid = streetsTableModel->findStreetId(SegmentDescription::updateToken(footnoteMap.value(fn)));
+        else
+            streetid = streetsTableModel->findStreetId(street);
+        if(streetid > 0)
         {
-            curStreet = footnoteMap.value(fn);
-            curr_streetId = streetsTableModel->findStreetId(curStreet);
+            curSti = streetsTableModel->getStreetDef(streetid);
+            curStreet = curSti->street;
+            //StreetInfo* sti = streetsTableModel->getStreetName(street, "");
+            StreetInfo* sti = nullptr;
+            QList<StreetInfo*>myArray = streetsTableModel->getStreetName(street, "");
+            if(!myArray.isEmpty())
+            {
+                foreach (StreetInfo* si, myArray) {
+                    if(si->street == street && si->streetId == streetid && si->sequence > 0)
+                    {
+                       olderSti = si;
+
+                        if(ui->dateEdit->date() < olderSti->dateStart)
+                        {
+                            ui->lblInfo->setText(QString("id %1 %2 change older startDate from %3 to %4")
+                                            .arg(olderSti->streetId).arg(olderSti->street)
+                                            .arg(olderSti->dateStart.toString("yyyy/MM/dd"))
+                                                     .arg(ui->dateEdit->date().toString("yyyy/MM/dd")));
+                            olderSti->dateStart =  ui->dateEdit->date();
+                            streetsTableModel->updateStreetName(*olderSti);
+                        }
+                        else
+                        {
+                            if(ui->dateEdit->date() > olderSti->dateEnd)
+                            {
+                                ui->lblInfo->setText(QString("id %1 %2 change older endDate from %3 to %4")
+                                .arg(olderSti->streetId).arg(olderSti->street)
+                                    .arg(olderSti->dateEnd.toString("yyyy/MM/dd"))
+                                             .arg(ui->dateEdit->date().toString("yyyy/MM/dd")));
+                                olderSti->dateEnd = ui->dateEdit->date();
+                                streetsTableModel->updateStreetName(*olderSti);
+                            }
+
+                            if(ui->dateEdit->date() < curSti->dateStart)
+                            {
+                                ui->lblInfo->setText(QString("id %1 %2 change current startDate from %3 to %4")
+                                .arg(curSti->streetId).arg(curSti->street)
+                                    .arg(curSti->dateStart.toString("yyyy/MM/dd"))
+                                             .arg(ui->dateEdit->date().addDays(1).toString("yyyy/MM/dd")));
+                                curSti->dateStart = ui->dateEdit->date().addDays(1);
+                                streetsTableModel->updateStreetName(*curSti);
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                StreetInfo sti = StreetInfo();
+                sti.streetId = streetid;
+                sti.street = street;
+                sti.dateStart = ui->dateEdit->date();
+                sti.dateEnd = ui->dateEdit->date().addDays(1);
+                sti.newerName = curStreet;
+                sti.sequence = 1;
+                if(streetsTableModel->addOldStreetName(&sti))
+                {
+                    lookupStreet(ui->textEdit, abbrevMap.value(street));
+                }
+            }
         }
+        else
+        {
+            // no record exists
+
+            // must add a record for a current streetname
+            curSti = new StreetInfo();
+            curSti->street = fn==0?street:footnoteMap.value(fn);
+            curSti->dateStart = ui->dateEdit->date().addDays(2);
+            curSti->sequence =0;
+            if(streetsTableModel->newStreetDef(curSti))
+                streetid = curSti->streetId;
+            lookupStreet(ui->textEdit, abbrevMap.value(street));
+
+            if(fn>0)
+            {
+                olderSti = new StreetInfo();
+                olderSti->street = street;
+                olderSti->dateStart = ui->dateEdit->date().addDays(2);
+                olderSti->sequence =1;
+                olderSti->streetId = streetid;
+                streetsTableModel->newStreetName(olderSti);
+            }
+        }
+
+
         QStringList names;
         names.append(street);
         if(!curStreet.isEmpty())
@@ -436,39 +557,13 @@ void DialogUpdateStreets::pbUpdateClicked()
             if(si.streetId() < 0)
                 bSegmentNeedsUpdate = true;
         }
-        if(fn >0)
-        {
-            curStreet =SegmentDescription::updateToken( footnoteMap.value(fn)); // current street name
-            curr_streetId = streetsTableModel->findStreetId(curStreet);
-        }
         if(ui->checkBox->isChecked())
         {
-            if(streetid > 0  && (fn > 0 && curr_streetId > 0 ) &&!bSegmentNeedsUpdate)
+            if(streetid > 0  && (fn > 0  ) &&!bSegmentNeedsUpdate)
                 continue;
         }
          if(fn == 0)
         {
-            if(!(streetid >= 0))
-            {
-                //streetid = streetsTableModel->newStreetDef(street, "", ui->dateEdit->date());
-                StreetInfo sti = StreetInfo();
-                sti.street = street;
-                sti.dateStart = ui->dateEdit->date();
-                if(!streetsTableModel->newStreetDef(&sti))
-                {
-                    throw Exception();
-                }
-                streetid = sti.streetId;
-            }
-            else
-            {
-                StreetInfo* sti = streetsTableModel->getStreetDef(streetid);
-                if(ui->dateEdit->date() < sti->dateStart)
-                {
-                    sti->dateStart = ui->dateEdit->date();
-                    streetsTableModel->updateStreetDef(*sti);
-                }
-            }
 
             // QList<StreetInfo*>* namesList = streetsTableModel->getStreetNames(streetid, &names);
             // Q_UNUSED(namesList);
@@ -569,7 +664,8 @@ void DialogUpdateStreets::pbUpdateClicked()
             }
             //}
         }
-        else
+#if 0
+        else // fn != 0
         {
             ui->lblInfo->clear();
 
@@ -617,7 +713,8 @@ void DialogUpdateStreets::pbUpdateClicked()
             }
 
         }
-        lookupStreet(ui->textEdit, street);
+#endif
+        lookupStreet(ui->textEdit, abbrevMap.value(street));
         if(fn > 0)
         {
             lookupStreet(ui->textEdit_2, footnoteMap.value(fn));

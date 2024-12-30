@@ -1,4 +1,5 @@
 #include "segmentselectionwidget.h"
+#include "segmentdescription.h"
 #include "ui_segmentselectionwidget.h"
 #include "webviewbridge.h"
 #include "otherrouteview.h"
@@ -16,6 +17,8 @@ SegmentSelectionWidget::SegmentSelectionWidget(QWidget *parent) :
  cbSegmentsGrp->addButton(ui->rbBoth);
  ui->rbBoth->setChecked(true);
  sql = SQL::instance();
+ QCompleter* completer = ui->cbStreets->completer();
+
 }
 
 void SegmentSelectionWidget::initialize()
@@ -37,6 +40,14 @@ void SegmentSelectionWidget::initialize()
  connect(WebViewBridge::instance(), SIGNAL(segmentSelectedX(int,int,QList<LatLng>)), this, SLOT(segmentSelected(int,int,QList<LatLng>)));
  connect(ui->cbSegments, SIGNAL(editTextChanged(QString)), this, SLOT(cbSegmentsTextChanged(QString)));
  connect(ui->cbSegments->lineEdit(), SIGNAL(editingFinished()), this, SLOT(cbSegments_editingFinished()));
+ connect(ui->cbStreets->lineEdit(), &QLineEdit::textChanged,this, [=](QString text){
+     if(text.length()> 4)
+     {
+        QString fullName = SegmentDescription::updateToken(text);
+        if(text != fullName)
+            ui->cbStreets->setCurrentText(fullName);
+     }
+ });
  connect(ui->rbSingle, &QRadioButton::clicked, [=]{
   saveStreet = ui->cbStreets->currentText();
   refreshSegmentCB();
@@ -413,7 +424,8 @@ void SegmentSelectionWidget::setCurrentSegment(int segmentId)
 
 void SegmentSelectionWidget::cbSegmentsTextChanged(QString txt)
 {
- b_cbSegments_TextChanged = true;
+    b_cbSegments_TextChanged = true;
+    QString curText = ui->cbSegments->currentText();
 }
 
 void SegmentSelectionWidget::cbSegments_editingFinished()

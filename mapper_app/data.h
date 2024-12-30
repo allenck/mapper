@@ -598,7 +598,7 @@ class TractionTypeInfo
 class SegmentInfo
 {
  QString _description;
- bool _formatOK;
+ bool _formatOK = false;
  qint32 _segmentId = -1;
  //qint32 lineSegments;
  qint32 _points =0;

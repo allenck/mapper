@@ -26,6 +26,7 @@ private:
     QStringList streets;
     Configuration* config = nullptr;
     QMap<int, QString> footnoteMap;
+    QMap<QString, QString> abbrevMap; // full name, abbreviated name
     QMap<QString,int> streetMap;
     int footnotedStreets;
     int maxFootnote;

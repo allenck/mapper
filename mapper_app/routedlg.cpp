@@ -1612,9 +1612,9 @@ void RouteDlg::btnAdd_Click()         // SLOT
  try
  {
      QDate nextStartDate = sql->getNextStartOrEndDate(_routeNbr, ui->dateStart->date(), true);
-     if(nextStartDate.isValid() && ui->dateEnd->date() >= nextStartDate)
+     if(nextStartDate.isValid() && ui->dateEnd->date() > nextStartDate)
      {
-        ui->lblHelpText->setText( tr("end date must be before %1").arg(maxDate.toString("yyyy/MM/dd")));
+        ui->lblHelpText->setText( tr("end date must be before %1").arg(nextStartDate.toString("yyyy/MM/dd")));
         return;
      }
   if (ui->dateStart->dateTime() > ui->dateEnd->dateTime())

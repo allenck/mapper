@@ -29,7 +29,7 @@ public:
         STARTDATE,
         ENDDATE,
         SEQUENCE,
-        OLDERNAME,
+        // OLDERNAME,
         NEWERNAME,
         STARTLATLNG,
         ENDLATLNG,
@@ -60,7 +60,7 @@ public:
     int findStreetId(QString street, QString location="");
     bool updateStreetDef(StreetInfo);
     StreetInfo* getStreetDef(int streetId);
-    StreetInfo* getStreetName(QString street, QString location = "");
+    QList<StreetInfo *> getStreetName(QString street, QString location = "", int streetId =-1);
     bool getStreetName(StreetInfo* sti );
     bool updateStreetName(StreetInfo si);
     StreetInfo* getEarlierStreetName(int streetid, QDate date);
@@ -70,6 +70,7 @@ public:
     QList<StreetInfo> getStreetInfoList();
     int getNextStreetId();
     bool fixDates();
+    StreetInfo *getOlderStreet(int streetid, QString Street, QString location, QDate date);
 
 signals:
     void streetUpdated(int row, QString street);

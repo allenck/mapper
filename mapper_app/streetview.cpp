@@ -83,9 +83,10 @@ void StreetView::tablev_CustomContextMenu(const QPoint &pt)
     int streetId = indexes.at(StreetsTableModel::STREETID).data().toInt();
     QAction* act = new QAction(tr("Update %1 bounds").arg(street),this);
     //StreetInfo* sti = sourceModel->getStreet(street);
-    StreetInfo* sti = sourceModel->getStreetName(street, location);
-    if(!sti)
-        StreetInfo* sti = sourceModel->getStreetDef(streetId);
+    StreetInfo* sti = nullptr;
+    QList<StreetInfo*> stiList = sourceModel->getStreetName(street, location);
+    if(!stiList.isEmpty())
+        sti = stiList.at(0);
     if(!sti)
         return;
 
@@ -162,6 +163,24 @@ void StreetView::tablev_CustomContextMenu(const QPoint &pt)
             WebViewBridge::instance()->processScript("showStreetPins",objArray);
             qApp->processEvents();
         });
+        if(curCol == StreetsTableModel::ENDDATE)
+        {
+            QModelIndex ix = sourceModel->index(srcRow,StreetsTableModel::ENDDATE );
+            int seq = ix.data().toInt();
+            if(seq == 0)
+            {
+                tablMenu.addSeparator();
+                act = new QAction(tr("remove end date"),this);
+                connect(act, &QAction::triggered,this,[=]{
+                    int streetid = sourceModel->index(srcRow,StreetsTableModel::STREETID).data().toInt();
+                    StreetInfo* sti = sourceModel->getStreetDef(streetId);
+                    sti->dateEnd = QDate();
+                    sourceModel->updateStreetDef(*sti);
+                });
+                tablMenu.addAction(act);
+
+            }
+        }
     }
     tablMenu.exec(QCursor::pos());
 }

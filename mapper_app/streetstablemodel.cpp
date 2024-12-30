@@ -149,8 +149,8 @@ QVariant StreetsTableModel::data(const QModelIndex &index, int role) const
             return si.street;
         case LOCATION:
             return si.location;
-        case OLDERNAME:
-            return si.olderName;
+        // case OLDERNAME:
+        //     return si.olderName;
         case NEWERNAME:
             return si.newerName;
         case STARTLATLNG:
@@ -188,8 +188,8 @@ QVariant StreetsTableModel::headerData(int section, Qt::Orientation orientation,
             return tr("Street");
         case LOCATION:
             return tr("Location");
-        case OLDERNAME:
-            return tr("Older Name");
+        // case OLDERNAME:
+        //     return tr("Older Name");
         case NEWERNAME:
             return tr("Newer Name");
         case STARTLATLNG:
@@ -221,12 +221,13 @@ Qt::ItemFlags StreetsTableModel::flags(const QModelIndex &index) const
     // case DEF:
     //     return Qt::ItemIsEnabled | Qt::ItemIsUserCheckable;
     case STREET:
+    case STREETID:
     case LOCATION:
+    case SEGMENTS:
         return Qt::ItemIsEnabled | Qt::ItemIsSelectable| Qt::ItemIsEditable;
-    case OLDERNAME:
+    // case OLDERNAME:
     case NEWERNAME:
     case LENGTH:
-    case SEGMENTS:
         return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
     case SEQUENCE:
     case STARTDATE:
@@ -241,26 +242,27 @@ Qt::ItemFlags StreetsTableModel::flags(const QModelIndex &index) const
 }
 bool StreetsTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    StreetInfo  si = streetsList.at(index.row());
+    StreetInfo  sti = streetsList.at(index.row());
     if( role == Qt::EditRole)
     {
     switch (index.column()) {
         case STREET:
-        si.street = value.toString();
-        case OLDERNAME:
-            si.olderName = value.toString();
+            sti.street = value.toString();
             break;
-        case NEWERNAME:
-            si.newerName = value.toString();
-            break;
+        // case OLDERNAME:
+        //     si.olderName = value.toString();
+        //     break;
+        // case NEWERNAME:
+        //     si.newerName = value.toString();
+        //     break;
         case STARTLATLNG:
         {
             LatLng newLatLng = LatLng::fromString(value.toString());
             if(newLatLng.isValid())
             {
-                si.startLatLng = newLatLng;
-                si.bounds = Bounds();
-                si.updateBounds();
+                sti.startLatLng = newLatLng;
+                sti.bounds = Bounds();
+                sti.updateBounds();
                 break;
             }
             return false;
@@ -270,18 +272,18 @@ bool StreetsTableModel::setData(const QModelIndex &index, const QVariant &value,
             LatLng newLatLng = LatLng::fromString(value.toString());
             if(newLatLng.isValid())
             {
-                si.endLatLng = newLatLng;
-                si.bounds = Bounds();
-                si.updateBounds();
+                sti.endLatLng = newLatLng;
+                sti.bounds = Bounds();
+                sti.updateBounds();
                 break;
             }
             return false;
         }
         case LENGTH:
-            si.length = value.toDouble();
+            sti.length = value.toDouble();
             break;
         case STARTDATE:
-            si.dateStart = value.toDate();
+            sti.dateStart = value.toDate();
             // if(!si.olderName.isEmpty())
             // {
             //     int row = findRow(si.olderName);
@@ -295,22 +297,39 @@ bool StreetsTableModel::setData(const QModelIndex &index, const QVariant &value,
             // }
             break;
         case ENDDATE:
-            si.dateEnd = value.toDate();
+            sti.dateEnd = value.toDate();
             break;
         case SEGMENTS:
-            si.segments = si.setSegments(value.toString());
+        {
+            QStringList sl = value.toString().split(",");
+            for(int i = sl.length()-1; i> 0; i--)
+            {
+                int segmentId = sl.at(i).toInt();
+                SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId);
+                if(si.segmentId() != segmentId)
+                    sl.removeAt(i);
+                else
+                {
+                    si.setStreetId(sti.streetId);
+                    si.setNewerName(sti.newerName);
+                    SQL::instance()->updateSegment(&si);
+                }
+            }
+            QString newList = sl.join(",");
+            sti.segments = sti.setSegments(newList);
             break;
+        }
         case COMMENT:
-            si.comment = value.toString();
+            sti.comment = value.toString();
             break;
         case SEQUENCE:
-            si.sequence = value.toInt();
+            sti.sequence = value.toInt();
         default:
             break;
         }
-        streetsList.replace(index.row(), si);
+        streetsList.replace(index.row(), sti);
         //updateStreet(si);
-        updateStreetDef(si);
+        updateStreetDef(sti);
         return true;
     }
     return false;
@@ -385,7 +404,7 @@ StreetInfo* StreetsTableModel::getStreet(QString street)
 #endif
 StreetInfo* StreetsTableModel::getStreetDef(int streetId)
 {
-    StreetInfo* si = new StreetInfo();
+    StreetInfo* si = nullptr;
     QSqlDatabase db = QSqlDatabase::database();
     QString commandText = "Select `Street`, `Location`,`StartLatLng`,`EndLatLng`, `Length`, "
                           "`Bounds`,`Segments`,`Comment`, `StreetId`, `startDate`, `seq`,rowid "
@@ -400,6 +419,7 @@ StreetInfo* StreetsTableModel::getStreetDef(int streetId)
     }
     while (query.next())
     {
+        si = new StreetInfo();
         si->street = query.value(0).toString();
         si->location = query.value(1).toString();
         si->startLatLng = LatLng::fromString( query.value(2).toString());
@@ -417,24 +437,28 @@ StreetInfo* StreetsTableModel::getStreetDef(int streetId)
     return si;
 }
 
-StreetInfo* StreetsTableModel::getStreetName(QString street, QString location)
+QList<StreetInfo*> StreetsTableModel::getStreetName(QString street, QString location, int streetId)
 {
-    StreetInfo* si = new StreetInfo();
+    QList<StreetInfo*> myArray;
+    StreetInfo* si = nullptr;
     QSqlDatabase db = QSqlDatabase::database();
     QString commandText = "Select `Street`, `Location`,`StartLatLng`,`EndLatLng`, `Length`, "
                           "`Bounds`,`Segments`,`Comment`, `StreetId`, `Seq`, `startDate`, `endDate`, rowid"
                           " from StreetDef "
                           " where `street` = '" + street + "' and `Location` = '" + location + "'";
+    if(streetId >0)
+        commandText.append(QString(" and `streetId` = %1").arg(streetId));
     QSqlQuery query = QSqlQuery(db);
     bool bQuery = query.exec(commandText);
     if(!bQuery)
     {
         SQLERROR(std::move(query));
         //throw Exception();
-        return nullptr;
+        return myArray;
     }
     while (query.next())
     {
+        si = new StreetInfo();
         si->street = query.value(0).toString();
         si->location = query.value(1).toString();
         si->startLatLng = LatLng::fromString( query.value(2).toString());
@@ -448,9 +472,9 @@ StreetInfo* StreetsTableModel::getStreetName(QString street, QString location)
         si->dateStart = query.value(10).toDate();
         si->dateEnd = query.value(11).toDate();
         si->rowid = query.value(12).toInt();
-        return si;
+        myArray.append(si);
     }
-    return nullptr;
+    return myArray;
 }
 
 bool StreetsTableModel::getStreetName(StreetInfo* sti )
@@ -489,6 +513,49 @@ bool StreetsTableModel::getStreetName(StreetInfo* sti )
     return false;
 }
 
+StreetInfo* StreetsTableModel::getOlderStreet(int streetid, QString street, QString location, QDate date)
+{
+    StreetInfo* sti = nullptr;
+    QSqlDatabase db = QSqlDatabase::database();
+    QString commandText = "Select `Street`, `Location`,`StartLatLng`,`EndLatLng`, `Length`, "
+                          "`Bounds`,`Segments`,`Comment`, `StreetId`, `Seq`, `startDate`, `endDate`, rowid"
+                          " from StreetDef "
+                          " where `street` = '" + street + "' and `Location` = '" + location + "'"
+                          " and `streetId` = " +QString::number(streetid) + ""
+                          " and seq > 0 ";
+    if(date.isValid())
+        commandText.append(" and '" + date.toString("yyyy/MM/dd") +"' between startDate and endDate");
+    QSqlQuery query = QSqlQuery(db);
+    bool bQuery = query.exec(commandText);
+    if(!bQuery)
+    {
+        SQLERROR(std::move(query));
+        //throw Exception();
+        return nullptr;
+    }
+    while (query.next())
+    {
+        sti= new StreetInfo();
+        sti->street = query.value(0).toString();
+        sti->location = query.value(1).toString();
+        sti->startLatLng = LatLng::fromString( query.value(2).toString());
+        sti->endLatLng = LatLng::fromString(query.value(3).toString());
+        sti->length = query.value(4).toDouble();
+        sti->bounds = Bounds(query.value(5).toString());
+        sti->segments = sti->setSegments(query.value(6).toString());
+        sti->comment = query.value(7).toString();
+        sti->streetId = query.value(8).toInt();
+        sti->sequence = query.value(9).toInt();
+        sti->dateStart = query.value(10).toDate();
+        sti->dateEnd = query.value(11).toDate();
+        sti->rowid = query.value(12).toInt();
+        if(sti->dateEnd < sti->dateStart)
+            sti->dateEnd = sti->dateStart.addDays(1);
+        return sti;
+    }
+    return nullptr;
+}
+
 QList<StreetInfo> StreetsTableModel::getStreetInfoList()
 {
     QList<StreetInfo> myArray;
@@ -506,6 +573,7 @@ QList<StreetInfo> StreetsTableModel::getStreetInfoList()
         //throw Exception();
         return myArray;
     }
+    QString curr_streetName;
     while (query.next())
     {
         si.street = query.value(0).toString();
@@ -521,6 +589,13 @@ QList<StreetInfo> StreetsTableModel::getStreetInfoList()
         si.dateStart = query.value(10).toDate();
         si.dateEnd = query.value(11).toDate();
         si.rowid = query.value(12).toInt();
+        if(si.sequence == 0)
+        {
+            si.newerName.clear();
+            curr_streetName = si.street;
+        }
+        else
+            si.newerName = curr_streetName;
         myArray.append( si);
     }
 
@@ -615,7 +690,7 @@ bool StreetsTableModel::newStreetDef(StreetInfo* sti)
         return false;
     }
     emit streetInfoChanged(*sti, ADD);
-    return true;
+    return sti->streetId;
 }
 
 // streetid, street, location, dateStart, endDate must be populated
@@ -1007,6 +1082,8 @@ void StreetsTableModel::deleteStreetDef(int row)
     if(row >=0)
     {
         beginRemoveRows(QModelIndex(), row,row);
+        SQL::instance()->executeCommand(QString("delete from streetDef where rowid = %1")
+                                            .arg(streetsList.at(row).rowid));
         streetsList.removeAt(row);
         endRemoveRows();
     }
@@ -1019,7 +1096,8 @@ int StreetsTableModel::findStreetId(QString street, QString location)
     QString commandText;
     commandText = "select d.`street`, d.`streetId` from `StreetDef` d "
                   "where d.`street` = '" + street + "' "
-                  "and d.`location` = '" + location + "'";
+                  "and d.`location` = '" + location + "' ";
+                  // "and d.seq = 0";
     QSqlQuery query = QSqlQuery(db);
     bool bQuery = query.exec(commandText);
     if(!bQuery)
