@@ -364,26 +364,31 @@ QString SegmentDescription::replaceAbbreviations(QString descr)
 }
 
 QString SegmentDescription::updateToken(QString str){
-    QString result = str;
-    if(SegmentDescription::abbreviations.isEmpty())
+    QStringList sl = str.split(" ");
+    for(int i=0; i < sl.count(); i++)
     {
-        Parameters parms = SQL::instance()->getParameters();
-        SegmentDescription::abbreviations = parms.abbreviationsList;
-    }
-
-    for(const QPair<QString,QString>& pair : SegmentDescription::abbreviations)
-    {
-        if(result.endsWith(pair.second))
-            break;
-        if(result.endsWith(pair.first))
+        QString result = sl.at(i);
+        if(SegmentDescription::abbreviations.isEmpty())
         {
-            int loc = result.lastIndexOf(pair.first);
-            QString remainder = str.mid(0,loc );
-            result = remainder.append(pair.second);
-            break;
+            Parameters parms = SQL::instance()->getParameters();
+            SegmentDescription::abbreviations = parms.abbreviationsList;
         }
+
+        for(const QPair<QString,QString>& pair : SegmentDescription::abbreviations)
+        {
+            if(result.endsWith(pair.second))
+                break;
+            if(result.endsWith(pair.first))
+            {
+                int loc = result.lastIndexOf(pair.first);
+                QString remainder = result.mid(0,loc );
+                result = remainder.append(pair.second);
+                break;
+            }
+        }
+        sl.replace(i,result);
     }
-    return result;
+    return sl.join(" ");
 }
 
 bool SegmentDescription::hasAbbreviations(QString descr)

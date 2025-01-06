@@ -21,7 +21,7 @@ DialogCopyRoute::DialogCopyRoute(RouteData rd,QWidget *parent) :
         ui->dateEnd->setDate(cd->endDate);
     }
     ui->dateStart->setDate(_rd.endDate().addDays(1));
-    QDate nextEndDate = sql->getNextStartOrEndDate(_rd.route(), ui->dateStart->date(), true);
+    QDate nextEndDate = sql->getNextStartOrEndDate(_rd.route(), ui->dateStart->date(), _rd.segmentId(),true);
 
     if(nextEndDate < cd->endDate)
     {
@@ -47,7 +47,7 @@ DialogCopyRoute::DialogCopyRoute(RouteData rd,QWidget *parent) :
     connect(ui->rnw, SIGNAL(rdSelected(RouteData)), this, SLOT(on_rdSelected(RouteData)));
     connect(ui->rnw, &RouteNameWidget::routeNumberChange, this, [=](int newRoute){
         maxEndDate = cd->endDate;
-        QDate nextStartDate = sql->getNextStartOrEndDate(newRoute, ui->dateStart->date(), true);
+        QDate nextStartDate = sql->getNextStartOrEndDate(newRoute, ui->dateStart->date(),0, true);
         if(nextStartDate < cd->endDate)
         {
             maxEndDate = nextStartDate.addDays(-1);
@@ -348,7 +348,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     rd.setStartDate(ui->dateStart->date());
     rd.setEndDate(ui->dateEnd->date());
     rd.setCompanyKey(ui->cbCompany->currentData().toInt());
-    QList<SegmentData*> conflicts = sql->getConflicingRouteSegments(rd);
+    QList<SegmentData*> conflicts = sql->getConflictingRouteSegments(rd);
     if(!conflicts.isEmpty())
     {
         SegmentData* sd = conflicts.at(0);
@@ -415,7 +415,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
         for(SegmentData* sd : segmentDataList)
         {
             qApp->processEvents();
-            QDate nextStartDate = sql->getNextStartOrEndDate(sd->route(), sd->startDate(), true);
+            QDate nextStartDate = sql->getNextStartOrEndDate(sd->route(), sd->startDate(), sd->segmentId(), true);
             if(nextStartDate.isValid() && nextStartDate> sd->endDate())
                 sd->setEndDate(nextStartDate.addDays(-1));
             SegmentData* sd2 = sql->getConflictingSegmentDataForRoute(_routeNbr,ui->rnw->newRouteName(),

@@ -6,7 +6,7 @@
 SegmentViewTableModel::SegmentViewTableModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
-
+    common();
 }
 
 SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList, double Lat, double Lon, qint32 route, QString date, QObject *parent)
@@ -18,6 +18,19 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
      lon = Lon;
      m_routeNbr = route;
      m_date = date;
+     common();
+ }
+
+ void SegmentViewTableModel::common()
+ {
+     connect(SQL::instance(), &SQL::segmentChanged, this, [=](const SegmentInfo si){
+         int row = getRow(si.segmentId());
+         if(row > 0)
+         {
+             listOfSegments.replace(row, si);
+             dataChanged(index(row, SEGMENTID), index(row, WHICHEND), QList<int>());
+         }
+     });
  }
 
  int SegmentViewTableModel::rowCount(const QModelIndex &parent) const
@@ -164,11 +177,12 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
   int row = -1;
   if(listOfSegments.isEmpty())
    return row;
-  for (row = 0; row < listOfSegments.count(); row++)
+  for (int i = 0; i < listOfSegments.count(); i++)
   {
-   if(listOfSegments.at(row).segmentId() == segmentId)
+   if(listOfSegments.at(i).segmentId() == segmentId)
    {
-    break;
+        row = i;
+        break;
    }
   }
   return row;
@@ -276,3 +290,10 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
          }
      }
  }
+
+ void SegmentViewTableModel::updateRow(int row, SegmentInfo si)
+ {
+     listOfSegments.replace(row, si);
+     dataChanged(index(row, SEGMENTID), index(row,WHICHEND ),QList<int>());
+ }
+

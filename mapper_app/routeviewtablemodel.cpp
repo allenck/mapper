@@ -190,7 +190,7 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
    break;
   case COMPANYKEY:
    CompanyData* cd = SQL::instance()->getCompany(sd->companyKey());
-   if(sd->startDate() < cd->startDate || sd->endDate() > cd->endDate)
+      if(cd==0 ||(sd->startDate() < cd->startDate || sd->endDate() > cd->endDate))
     background =  QVariant( QColor(Qt::magenta) );
    break;
   }

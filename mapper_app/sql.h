@@ -268,12 +268,15 @@ public:
     bool isCompanyValid(SegmentData sd);
     QString list2String(const QList<int> &list);
     QList<QPair<SegmentInfo, SegmentInfo>> getDupSegmentsInList(QList<SegmentInfo> list);
-    QDate getNextStartOrEndDate(int route, QDate dt, bool bStart=true);
-    QList<SegmentData*> getConflicingRouteSegments(RouteData rd);
+    QDate getNextStartOrEndDate(int route, QDate dt, int segmentId, bool bStart=true);
+    QList<SegmentData*> getConflictingRouteSegments(RouteData rd);
+    QList<SegmentInfo> getSegmentsForStreet(QString street, QString location);
+    //bool splitSegmentDataForCompany(SegmentData sd);
+    bool scanRoutes(QList<RouteData> routes);
 
 signals:
     void details(QString);
-    void segmentChanged(int segmentId);
+    void segmentChanged(const SegmentInfo si);
     void routeChange(NotifyRouteChange rc);
 
 private:
@@ -283,7 +286,7 @@ private:
     Configuration *config =nullptr;
    // bool compareSegmentData(const segmentData & sd1, const segmentData &sd2);
 //    QT_DEPRECATED void populatePointList(SegmentData sd);
-    bool insertRouteSegment(SegmentData sd);
+    bool insertRouteSegment(SegmentData sd, bool bNotify = true);
     //bool insertRouteSegment(RouteData sd);
     bool processFile(QTextStream* in, QSqlDatabase db, bool bIsInclude);
     QString scriptName;

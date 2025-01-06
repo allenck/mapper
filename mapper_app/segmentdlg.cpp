@@ -207,6 +207,8 @@ void SegmentDlg::setSegmentId(qint32 value)
   ui->gbNew->setTitle(tr("New segment:"));
   ui->txtOriginalName->setText( sql->getSegmentDescription(_segmentId));
   ui->cbLocation->setCurrentText(si.location());
+  ui->dateStart->setDate(si.startDate());
+  ui->dateEnd->setDate(si.endDate());
 
   ui->txtNewName->setText( ui->txtOriginalName->text());
   ui->chkNewOneWay->setChecked(ui->chkOriginalOneWay->isChecked());

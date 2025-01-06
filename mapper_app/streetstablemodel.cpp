@@ -249,6 +249,9 @@ bool StreetsTableModel::setData(const QModelIndex &index, const QVariant &value,
         case STREET:
             sti.street = value.toString();
             break;
+        case LOCATION:
+            sti.location = value.toString();
+            break;
         // case OLDERNAME:
         //     si.olderName = value.toString();
         //     break;
@@ -556,7 +559,7 @@ StreetInfo* StreetsTableModel::getOlderStreet(int streetid, QString street, QStr
     return nullptr;
 }
 
-QList<StreetInfo> StreetsTableModel::getStreetInfoList()
+QList<StreetInfo> StreetsTableModel::getStreetInfoList(QString street)
 {
     QList<StreetInfo> myArray;
     StreetInfo si = StreetInfo();
@@ -564,7 +567,10 @@ QList<StreetInfo> StreetsTableModel::getStreetInfoList()
     QString commandText = "Select `Street`, `Location`,`StartLatLng`,`EndLatLng`, `Length`, "
                           "`Bounds`,`Segments`,`Comment`, `StreetId`, `Seq`, `startDate`, "
                           "`endDate`, rowid "
-                          " from StreetDef  order by streetid, seq";
+                          " from StreetDef ";
+    if(!street.isEmpty())
+        commandText.append(QString(" where street = '%1'").arg(street));
+    commandText.append(" order by streetid, seq");
     QSqlQuery query = QSqlQuery(db);
     bool bQuery = query.exec(commandText);
     if(!bQuery)
@@ -721,7 +727,7 @@ bool StreetsTableModel::newStreetName(StreetInfo* info)
     bool bQuery = query.exec(commandText);
     if(!bQuery)
     {
-        SQLERROR(query);
+        SQLERROR(std::move(query));
         //throw Exception();
         return false;
     }
@@ -877,7 +883,7 @@ bool StreetsTableModel::updateStreetName(StreetInfo si)
     bool bQuery = query.exec(commandText);
     if(!bQuery)
     {
-        SQLERROR(query);
+        SQLERROR(std::move(query));
         //throw Exception();
         return false;
     }
@@ -912,7 +918,7 @@ bool StreetsTableModel::updateStreetDef(StreetInfo sti)
     bool bQuery = query.exec(commandText);
     if(!bQuery)
     {
-        SQLERROR(query);
+        SQLERROR(std::move(query));
         //throw Exception();
         return false;
     }
@@ -956,8 +962,8 @@ QList<SegmentInfo> StreetsTableModel::getSegmentsForStreet(QStringList nameList)
         si._segmentId = query.value(0).toInt();
         si._description = query.value(1).toString();
         //si._oneWay = query.value(2).toString();
-        si._startDate = query.value(3).toDate();
-        si._endDate = query.value(4).toDate();
+        si._dateBegin = query.value(3).toDate();
+        si._dateEnd = query.value(4).toDate();
         si._length = query.value(5).toDouble();
         si._points = query.value(6).toInt();
         si._startLat = query.value(7).toDouble();
@@ -972,7 +978,7 @@ QList<SegmentInfo> StreetsTableModel::getSegmentsForStreet(QStringList nameList)
         QString pointArray = query.value(14).toString();
         si._tracks = query.value(15).toInt();
         si.direction() = query.value(16).toString();
-        si._doubleDate = query.value(17).toDate();
+        si._dateDoubled = query.value(17).toDate();
         si._newerStreetName = query.value(18).toString();
         si._streetId = query.value(19).toInt();
 
@@ -1463,4 +1469,29 @@ int StreetsTableModel::getNextStreetId()
         streetId = query.value(0).toInt();
     }
     return streetId +1;
+}
+
+QStringList StreetsTableModel::getStreetnamesList(QString location)
+{
+    QSqlDatabase db = QSqlDatabase::database();
+    QString commandText;
+    QStringList list;
+    if(location.isEmpty())
+        commandText = "select distinct street from StreetDef order by street";
+    else
+        commandText = "select distinct street from StreetDef "
+                      "where location = '" + location + "' order by street";
+    QSqlQuery query = QSqlQuery(db);
+    bool bQuery = query.exec(commandText);
+    if(!bQuery)
+    {
+        SQLERROR(std::move(query));
+        //throw Exception();
+        return list;
+    }
+    while (query.next())
+    {
+        list.append(query.value(0).toString());
+    }
+    return list;
 }

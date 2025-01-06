@@ -22,23 +22,23 @@ SplitRoute::SplitRoute( QWidget *parent) :
     connect(ui->dateTo2, SIGNAL(editingFinished()), this, SLOT(dateTo2_Leave()));
     connect(ui->btnOK, SIGNAL(clicked()), this, SLOT(btnOK_Click()));
     connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(Cancel_Click()));
-    connect(ui->cbCompany1, &QComboBox::currentTextChanged, [=] ()
-    {
-        int companyKey = ui->cbCompany1->currentData().toInt();
-        if(companyKey > 0)
-        {
-            CompanyData* cd = sql->getCompany(companyKey);
-            if(ui->dateTo1->date() > cd->endDate)
-            {
-                ui->dateTo1->setDate(cd->endDate);
-                ui->dateFrom2->setDate(cd->endDate.addDays(-1));
-            }
-            if(_rd.endDate() < cd->endDate)
-                ui->dateTo2->setDate(_rd.endDate() );
-            else
-                ui->dateTo2->setDate(cd->endDate);
-        }
-    });
+    // connect(ui->cbCompany1, &QComboBox::currentTextChanged, [=] ()
+    // {
+    //     int companyKey = ui->cbCompany1->currentData().toInt();
+    //     if(companyKey > 0)
+    //     {
+    //         CompanyData* cd = sql->getCompany(companyKey);
+    //         if(ui->dateTo1->date() > cd->endDate)
+    //         {
+    //             ui->dateTo1->setDate(cd->endDate);
+    //             ui->dateFrom2->setDate(cd->endDate.addDays(-1));
+    //         }
+    //         if(_rd.endDate() < cd->endDate)
+    //             ui->dateTo2->setDate(_rd.endDate() );
+    //         else
+    //             ui->dateTo2->setDate(cd->endDate);
+    //     }
+    // });
 
     fillTractionTypes();
 }
@@ -57,24 +57,26 @@ bool SplitRoute::setRouteData(RouteData rd)
     if(!cd)
         throw IllegalArgumentException("invalid company");
     maxEndDate = cd->endDate;
-    QDate nextStartDate = sql->getNextStartOrEndDate(_rd.route(), _rd.startDate(), true);
+    QDate nextStartDate = sql->getNextStartOrEndDate(_rd.route(), _rd.startDate(), _rd.segmentId(), true);
     if(nextStartDate < maxEndDate)
         maxEndDate = nextStartDate.addDays(-1);
     if(maxEndDate.isValid())
     {
-
         if(rd.endDate() > maxEndDate)
         {
-            QMessageBox::critical(this, tr("Error"), tr("The end date for this route %1\n"
-                                                        "overlaps a succeding route starting on %2\n"
-                                                        "This route's end date must be less than or equal to %3")
-                                                         .arg(_rd.endDate().toString("yyyy/MM/dd"),
-                                                              nextStartDate.toString("yyyy/MM/dd"),
-                                                              maxEndDate.toString("yyyy/MM/dd")));
+            if(QMessageBox::critical(this, tr("Error"),
+                                  tr("The end date for this route %1\n"
+                                     "overlaps a succeding route starting on %2\n"
+                                     "This route's end date must be less than or equal to %3")
+                                        .arg(_rd.endDate().toString("yyyy/MM/dd"),
+                                        nextStartDate.toString("yyyy/MM/dd"),
+                                        maxEndDate.toString("yyyy/MM/dd")),QMessageBox::Cancel |
+                                          QMessageBox::Ignore) == QMessageBox::Cancel)
 
-            return false;
+                return false;
         }
     }
+    bIgnoreDateCheck = true;
 
     ui->dateFrom1->setDate( rd.startDate());
     QDate test = rd.startDate().addYears(1);
@@ -145,7 +147,9 @@ bool SplitRoute::setRouteData(RouteData rd)
     });
     connect(ui->cbCompany2, &QComboBox::currentTextChanged, [=](){
      ui->rnw2->setCompanyKey(ui->cbCompany2->currentData().toInt());
-     CompanyData* cd = sql->getCompany(ui->cbCompany1->currentData().toInt());
+     CompanyData* cd = sql->getCompany(ui->cbCompany2->currentData().toInt());
+     if(cd->companyKey != ui->cbCompany1->currentData().toInt())
+         ui->dateFrom2->setDate(cd->startDate);
     });
 
     ui->cbTractionType->setCurrentIndex(ui->cbTractionType->findData(_rd.tractionType()));
@@ -386,7 +390,8 @@ void SplitRoute::btnOK_Click()
     }
     if (ui->dateTo2->date() < cd->startDate || ui->dateFrom2->date() > cd->endDate)
     {
-        ui->lblHelp->setText (tr("Company 2 not valid for specified dates!"));
+        ui->lblHelp->setText (tr("Company 2 not valid for specified dates! Must be > %1")
+                                 .arg(cd->startDate.toString("yyyy/MM/dd")));
         QApplication::beep();
         ui->dateFrom2->setFocus();
         return;
@@ -517,7 +522,7 @@ void SplitRoute::btnOK_Click()
      {
       if (sql->addSegmentToRoute(_routeNbr1, ui->rnw1->newRouteName(),
                                  rd1.startDate(), ui->dateTo1->date(),
-                                 rd1.segmentId(), _companyList.at(ui->cbCompany1->currentIndex())->companyKey,
+                                 rd1.segmentId(), ui->cbCompany1->currentData().toInt(),
                                  rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(), rd1.normalEnter(),
                                  rd1.normalLeave(), rd1.reverseEnter(), rd1.reverseLeave(),
                                  rd1.sequence(), rd1.returnSeq(), rd1.oneWay(), rd1.trackUsage(),
@@ -536,7 +541,7 @@ void SplitRoute::btnOK_Click()
      {
       if (sql->addSegmentToRoute(_routeNbr1, ui->rnw1->newRouteName(),
                                  ui->dateTo2->date(), rd1.endDate(),
-                                 rd1.segmentId(), _companyList.at(ui->cbCompany2->currentIndex())->companyKey,
+                                 rd1.segmentId(), ui->cbCompany2->currentData().toInt(),
                                  ui->cbTractionType->currentData().toInt(), rd1.direction(), rd1.next(), rd1.prev(),
                                  rd1.normalEnter(), rd1.normalLeave(),
                                  rd1.reverseEnter(), rd1.reverseLeave(),
@@ -570,7 +575,7 @@ void SplitRoute::btnOK_Click()
 
      if (sql->addSegmentToRoute(_routeNbr2, ui->rnw2->newRouteName(),
                                 ui->dateFrom2->date().addDays(0), ui->dateTo2->date(),
-                                rd1.segmentId(), rd1.companyKey(),
+                                rd1.segmentId(), ui->cbCompany2->currentData().toInt(),
                                 ui->cbTractionType->currentData().toInt(), rd1.direction(), rd1.next(), rd1.prev(),
                                 rd1.normalEnter(), rd1.normalLeave(),
                                 rd1.reverseEnter(), rd1.reverseLeave(),

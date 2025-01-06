@@ -67,10 +67,11 @@ public:
     //bool fixStreetName();
     QList<StreetInfo *> *getStreetNames(int streetId, QStringList *nameList=nullptr);
     bool addOldStreetName(StreetInfo* sti);
-    QList<StreetInfo> getStreetInfoList();
+    QList<StreetInfo> getStreetInfoList(QString street = "");
     int getNextStreetId();
     bool fixDates();
     StreetInfo *getOlderStreet(int streetid, QString Street, QString location, QDate date);
+    QStringList getStreetnamesList(QString location);
 
 signals:
     void streetUpdated(int row, QString street);

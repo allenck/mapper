@@ -275,16 +275,16 @@ class SegmentData
      return _bearingEnd;
     }
     double getLength();
-    QDate startDate() const {return _startDate;}
-    QDate segmentStartDate() const {return _segmentStartDate;}
-    QDate endDate() const {return _endDate;}
-    QDate segmentEndDate() const {return _segmentEndDate;}
-    void setEndDate(QDate endDate) {_endDate = endDate;}
-    void setSegmentStartDate(QDate dt) {_segmentStartDate =dt;}
-    void setSegmentEndDate(QDate dt) {_segmentEndDate =dt;}
+    QDate startDate() const {return _dateBegin;}
+    QDate segmentStartDate() const {return _segmentDateStart;}
+    QDate endDate() const {return _dateEnd;}
+    QDate segmentEndDate() const {return _segmentDateEnd;}
+    void setEndDate(QDate endDate) {_dateEnd = endDate;}
+    void setSegmentStartDate(QDate dt) {_segmentDateStart =dt;}
+    void setSegmentEndDate(QDate dt) {_segmentDateEnd =dt;}
     double length() {return _length;}
     void setRouteType(RouteType rt) {_routeType = rt;}
-    void setStartDate(QDate dt) {_startDate = dt;}
+    void setStartDate(QDate dt) {_dateBegin = dt;}
     bool needsUpdate() {return _bNeedsUpdate;}
     void setNeedsUpdate(bool b){_bNeedsUpdate = b;}
     QT_DEPRECATED void displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst);
@@ -325,7 +325,7 @@ class SegmentData
     bool operator==(const SegmentData o)
     {
      return _route == o._route && _alphaRoute == o._alphaRoute && _routeName == o._routeName
-       && _startDate == o.startDate() && _endDate == o._endDate && _segmentId == o._segmentId;
+       && _dateBegin == o.startDate() && _dateEnd == o._dateEnd && _segmentId == o._segmentId;
     }
     void markForDelete(bool b) {_markedForDelete = b;}
     bool markedForDelete() {return _markedForDelete;}
@@ -333,10 +333,11 @@ class SegmentData
     void updateRouteInfo(RouteData rd);
     quint32 baseRoute() const {return _baseRoute;}
     void update(const SegmentInfo& si);
-    QDate doubleDate() const {return _doubleDate;}
-    void setDoubleDate(QDate date){_doubleDate = date;}
+    QDate doubleDate() const {return _dateDoubled;}
+    void setDoubleDate(QDate date){_dateDoubled = date;}
     QString routePrefix() {return _routePrefix;}
     int streetId(){return _streetId;}
+    void setStreetId(int streetId){_streetId = streetId;}
 
  private:
     qint32 _segmentId=-1;
@@ -352,11 +353,11 @@ class SegmentData
     QString _newerName;
     QString _description;
     QString _routePrefix;
-    QDate _startDate = QDate::fromString("1880/01/01", "yyyy/MM/dd");
-    QDate _doubleDate;
-    QDate _endDate = QDate::fromString("2050/12/31", "yyyy/MM/dd");
-    QDate _segmentStartDate;
-    QDate _segmentEndDate;
+    QDate _dateBegin = QDate::fromString("1880/01/01", "yyyy/MM/dd");
+    QDate _dateDoubled;
+    QDate _dateEnd = QDate::fromString("2050/12/31", "yyyy/MM/dd");
+    QDate _segmentDateStart;
+    QDate _segmentDateEnd;
     QString _direction = " ";
     Bearing _bearing;      // bearing from start to end
     Bearing _bearingStart; // bearing of first portion from point(first +1) to point(first)
@@ -383,6 +384,8 @@ class SegmentData
 //      _bounds = bounds;
 //    }
     int _companyKey = -1;
+    int _rowid = -1;
+    int _segRowid = -1;
     QString _routeName;
     QString _location;
     QString _alphaRoute;
@@ -406,11 +409,11 @@ public:
     void setAlphaRoute(QString alphaRoute) {_alphaRoute = alphaRoute;}
     QString routeName() const {return _name;}
     void setRouteName(QString name) {_name = name;}
-    QDate startDate() const {return _startDate;}
+    QDate startDate() const {return _dateBegin;}
     QDate doubleDate() const {return _doubleDate;}
-    void setStartDate(QDate date) {_startDate = date;}
-    QDate endDate() const {return _endDate;}
-    void setEndDate(QDate date) {_endDate = date;}
+    void setStartDate(QDate date) {_dateBegin = date;}
+    QDate endDate() const {return _dateEnd;}
+    void setEndDate(QDate date) {_dateEnd = date;}
     void setDoubleDate(QDate date) {_doubleDate = date;}
     qint32 companyKey() {return _companyKey;}
     void setCompanyKey(int key) {_companyKey = key;}
@@ -452,8 +455,8 @@ public:
     QString _routePrefix;
     QString _name;
     //QDate defaultDate;
-    QDate _startDate;
-    QDate _endDate;
+    QDate _dateBegin;
+    QDate _dateEnd;
     QDate _doubleDate;
     qint32 _companyKey;
     QString _companyMnemonic;
@@ -600,21 +603,14 @@ class SegmentInfo
  QString _description;
  bool _formatOK = false;
  qint32 _segmentId = -1;
- //qint32 lineSegments;
  qint32 _points =0;
  double _length = 0;
- QDate _startDate = QDate::fromString("1880/01/01", "yyyy/MM/dd");
- QDate _doubleDate;
- QDate _endDate= QDate::fromString("2050/12/31", "yyyy/MM/dd");
+ QDate _dateBegin = QDate::fromString("1880/01/01", "yyyy/MM/dd");
+ QDate _dateDoubled;
+ QDate _dateEnd= QDate::fromString("2050/12/31", "yyyy/MM/dd");
  Bearing _bearing;
  double _startLat, _startLon, _endLat, _endLon;
  QString _direction = " ";
-// qint32 sequence, returnSeq;
-// qint32 prev, next;
-// qint32 normalEnter;
-// qint32 normalLeave;
-// qint32 reverseEnter;        // Not defined for one Way
-// qint32 reverseLeave;        // Not defined for one Way
  Bearing _bearingStart;
  Bearing _bearingEnd;
  QString _whichEnd;
@@ -658,11 +654,11 @@ class SegmentInfo
  void checkTracks();
  void clearList() {_pointList.clear();}
  void displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst);
- QString toString();
+ QString toString() const;
  qint32 segmentId() const {return _segmentId;}
  void setSegmentId(int segmentId) {_segmentId = segmentId;}
- QDate startDate() {return _startDate;}
- QDate endDate() {return _endDate;}
+ QDate startDate() {return _dateBegin;}
+ QDate endDate() {return _dateEnd;}
  double startLat() {return _startLat;}
  double startLon() {return _startLon;}
  double endLat() {return _endLat;}
@@ -688,8 +684,8 @@ class SegmentInfo
  void setEndLon(double lon) {_endLon = lon;}
  QString getStreetName() {return _streetName;}
  QString whichEnd() {return _whichEnd;}
- void setEndDate(QDate date) {_endDate = date;}
- void setStartDate(QDate date) {_startDate = date;}
+ void setEndDate(QDate date) {_dateEnd = date;}
+ void setStartDate(QDate date) {_dateBegin = date;}
  void setRouteType(RouteType routeType) {_routeType = routeType;}
  void setDescription(QString description) {_description = description;}
  void setTracks(int tracks) {_tracks = tracks;}
@@ -724,8 +720,8 @@ class SegmentInfo
  void setNext(int next){_next = next;}
  int next() const {return _next;}
  QString reverseDescription();
- QDate doubleDate() {return _doubleDate;}
- void setDoubleDate(QDate date){_doubleDate = date;}
+ QDate doubleDate() {return _dateDoubled;}
+ void setDoubleDate(QDate date){_dateDoubled = date;}
  void setFormatOK(bool b){_formatOK = b;}
  bool formatOK(){return _formatOK;}
  int streetId(){return _streetId;}

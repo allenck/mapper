@@ -53,7 +53,7 @@ void ModifyRouteDateDlg::setRouteData(RouteData* rd)
  else {
      throw IllegalArgumentException("invalid company");
  }
- QDate nextStartDate = sql->getNextStartOrEndDate(_rd->route(), _rd->startDate(), true);
+ QDate nextStartDate = sql->getNextStartOrEndDate(_rd->route(), _rd->startDate(), _rd->segmentId(), true);
  if(nextStartDate.isValid() && nextStartDate < maxEndDate )
  {
      maxEndDate = nextStartDate.addDays(-1);

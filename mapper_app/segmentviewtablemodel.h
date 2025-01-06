@@ -27,6 +27,7 @@ public:
     SegmentInfo selectedSegment(int row);
     void setList(QList<SegmentInfo> list);
     void checkList(QList<SegmentInfo> segmentDataList);
+    void updateRow(int row, SegmentInfo si);
 
 signals:
 
@@ -38,6 +39,7 @@ private:
     qint32 m_routeNbr=-1;
     QString m_date;
     SegmentDescription* sd = nullptr;
+    void common();
 };
 
 #endif // SEGMENTVIEWTABLEMODEL_H

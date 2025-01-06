@@ -105,8 +105,8 @@ RouteData::RouteData(const RouteData& o)
  //baseRoute = o.baseRoute;
  _name = o._name;
  //defaultDate = o.defaultDate;
- _startDate = o._startDate;
- _endDate = o._endDate;
+ _dateBegin = o._dateBegin;
+ _dateEnd = o._dateEnd;
  _companyKey = o._companyKey;
  _lineKey = o._lineKey;
  _tractionType = o._tractionType;
@@ -135,8 +135,8 @@ RouteData::RouteData(const SegmentData& o)
  //baseRoute = o.baseRoute;
  _name = o.routeName();
  //defaultDate = o.defaultDate;
- _startDate = o.startDate();
- _endDate = o.endDate();
+ _dateBegin = o.startDate();
+ _dateEnd = o.endDate();
  _companyKey = o.companyKey();
  _lineKey = o.segmentId();
  _tractionType = o.tractionType();
@@ -178,17 +178,17 @@ const QString RouteData::toString()
  int num = _alphaRoute.toInt(&isNumeric);
  QString str;
  if(isNumeric && _routePrefix.trimmed().isEmpty())
-  str = _companyMnemonic + " " + _alphaRoute + " " + _name + " " + _startDate.toString("yyyy/MM/dd")+ "->"+ _endDate.toString("yyyy/MM/dd");
+  str = _companyMnemonic + " " + _alphaRoute + " " + _name + " " + _dateBegin.toString("yyyy/MM/dd")+ "->"+ _dateEnd.toString("yyyy/MM/dd");
  else
-  str = _companyMnemonic + " " + _alphaRoute+"(" +QString::number(_route)+ ") " + _name + " " + _startDate.toString("yyyy/MM/dd")+ "->"+ _endDate.toString("yyyy/MM/dd");
+  str = _companyMnemonic + " " + _alphaRoute+"(" +QString::number(_route)+ ") " + _name + " " + _dateBegin.toString("yyyy/MM/dd")+ "->"+ _dateEnd.toString("yyyy/MM/dd");
 
  return str;
 }
 
 bool RouteData::operator==(const RouteData& o )
 {
- if(o._route == _route && o._name == _name && o._endDate == _endDate
-    && o._startDate == _startDate)
+ if(o._route == _route && o._name == _name && o._dateEnd == _dateEnd
+    && o._dateBegin == _dateBegin)
   return true;
  return false;
 }
@@ -213,8 +213,8 @@ segmentGroup::~segmentGroup()
  _route = route;
  _routeName = name;
  _segmentId = segmentId;
- _startDate = startDate;
- _endDate = endDate;
+ _dateBegin = startDate;
+ _dateEnd = endDate;
 }
 
 //}
@@ -242,8 +242,8 @@ SegmentData::SegmentData(const SegmentData& o)
  _streetName = o._streetName;
  _newerName = o._newerName;
  _description = o._description;
- _startDate = o._startDate;
- _endDate = o._endDate;
+ _dateBegin = o._dateBegin;
+ _dateEnd = o._dateEnd;
  _direction  = o._direction;
  _bearing = o._bearing;
  _bearingStart = o._bearingStart;
@@ -274,6 +274,8 @@ SegmentData::SegmentData(const SegmentData& o)
  _location = o._location;
  _alphaRoute = o._alphaRoute;
  _whichEnd = o._whichEnd;
+ _rowid = o._rowid;
+ _segRowid = o._segRowid;
 }
 
 SegmentData::SegmentData(const RouteData& o)
@@ -289,8 +291,8 @@ SegmentData::SegmentData(const RouteData& o)
 // _points = o._points;
 // _streetName = o._streetName;
  _description = o._name;
- _startDate = o._startDate;
- _endDate = o._endDate;
+ _dateBegin = o._dateBegin;
+ _dateEnd = o._dateEnd;
  _direction  = o._direction;
 // _bearing = o._bearing;
 // _bearingStart = o._bearingStart;
@@ -340,9 +342,9 @@ SegmentData::SegmentData(const SegmentInfo& o)
  _description = o._description;
  //_startDate = o._startDate;
  //_endDate = o._endDate;
- _segmentStartDate = o._startDate;
- _segmentEndDate = o._endDate;
- _doubleDate = o._doubleDate;
+ _segmentDateStart = o._dateBegin;
+ _segmentDateEnd = o._dateEnd;
+ _dateDoubled = o._dateDoubled;
  _direction  = o._direction;
  _bearing = o._bearing;
  _bearingStart = o._bearingStart;
@@ -353,6 +355,7 @@ SegmentData::SegmentData(const SegmentInfo& o)
  _location = o._location;
  _whichEnd = o._whichEnd;
  _streetId = o._streetId;
+ _segRowid = o._rowid;
 }
 
 QString SegmentData::toString()
@@ -410,8 +413,8 @@ QString SegmentData::reverseDescription()
 void SegmentData::updateRouteInfo(RouteData rd){
  _route = rd.route();
  _routeName = rd.routeName();
- _startDate = rd.startDate();
- _endDate = rd.endDate();
+ _dateBegin = rd.startDate();
+ _dateEnd = rd.endDate();
  _companyKey = rd.companyKey();
  _tractionType = rd.tractionType();
  _baseRoute = rd.baseRoute();
@@ -564,7 +567,7 @@ void SegmentData::update(const SegmentInfo& si)
   _tracks = si._tracks;
   _location = si._location;
   _routeType = si._routeType;
-  _doubleDate = si._doubleDate;
+  _dateDoubled = si._dateDoubled;
  }
 }
 
@@ -623,8 +626,8 @@ SegmentInfo::SegmentInfo(const SegmentInfo& o)
  //lineSegments = o.lineSegments;
  _points = o._points;
  _length = o._length;
- _startDate = o._startDate;
- _endDate = o._endDate;
+ _dateBegin = o._dateBegin;
+ _dateEnd = o._dateEnd;
  _bearing = o._bearing;
  _startLat = o._startLat;
  _startLon = o._startLon;
@@ -645,7 +648,7 @@ SegmentInfo::SegmentInfo(const SegmentInfo& o)
  _next = o._next;
  _trackType = o._trackType;
  _location = o._location;
- _doubleDate = o._doubleDate;
+ _dateDoubled = o._dateDoubled;
  _streetId = o._streetId;
  _rowid = o._rowid;
 }
@@ -657,8 +660,8 @@ SegmentInfo::SegmentInfo(const SegmentData& o)
  //lineSegments = o.lineSegments;
  _points = o._points;
  _length = o._length;
- _startDate = o._segmentStartDate;
- _endDate = o._segmentEndDate;
+ _dateBegin = o._segmentDateStart;
+ _dateEnd = o._segmentDateEnd;
  _bearing = o._bearing;
  _startLat = o._startLat;
  _startLon = o._startLon;
@@ -679,18 +682,19 @@ SegmentInfo::SegmentInfo(const SegmentData& o)
  _next = o._next;
  _routeType = o._routeType;
  _location = o._location;
- _doubleDate = o._doubleDate;
+ _dateDoubled = o._dateDoubled;
+ _streetId = o._streetId;
 }
 
 #if 1
-QString SegmentInfo::toString()
+QString SegmentInfo::toString() const
 {
  QString str;
  //QStringList routeTypes = QStringList() << "Surface" << "Surface PRW" << "Rapid Transit" << "Subway" << "Rail"  << "Incline" << "Other";
-
- if(_routeType < 0 || _routeType>= SegmentData::ROUTETYPES.count())
-  _routeType = (RouteType)0;
- QString trackType = SegmentData::ROUTETYPES.at(_routeType);
+ RouteType rt = _routeType;
+ if(rt < 0 || rt>= SegmentData::ROUTETYPES.count())
+  rt = (RouteType)0;
+ QString trackType = SegmentData::ROUTETYPES.at(rt);
  QString strSegment = QString("%1").arg(_segmentId);
   if (_tracks == 1)
       str = _description + QString("(single/%2) Seg=%1").arg(_segmentId).arg(_trackType);
@@ -850,7 +854,7 @@ void SegmentInfo::displaySegment(QString date, QString color, QString trackUsage
  int dash = 0;
  int tracks = _tracks;
  //if(_tracks == 2 && _doubleDate.isValid() &&  QDate::fromString(date, "yyyy/MM/dd") < _doubleDate)
- if(tracks == 2 && _doubleDate.isValid() && _startDate < _doubleDate)
+ if(tracks == 2 && _dateDoubled.isValid() && _dateBegin < _dateDoubled)
  {
   tracks = 1;
   trackUsage = ' ';
@@ -1094,7 +1098,7 @@ void SegmentData::displaySegment(QString date, QString color, QString trackUsage
   points.append(((LatLng)pointList().at(i)).lon());
  }
  int tracks = _tracks;
- if(tracks == 2 && _doubleDate.isValid() && _startDate < _doubleDate)
+ if(tracks == 2 && _dateDoubled.isValid() && _dateBegin < _dateDoubled)
  {
   tracks = 1;
   _trackUsage = " ";
@@ -1121,9 +1125,9 @@ void SegmentData::displaySegment( QString color,  bool bClearFirst)
     QVariantList points, objArray;
     QList<RouteData> myArray ;
     QString routeNames = "no route";
-    if(_startDate.isValid())
+    if(_dateBegin.isValid())
     {
-        myArray = SQL::instance()->getRoutes(_segmentId, _startDate.toString("yyyy/MM/dd"));
+        myArray = SQL::instance()->getRoutes(_segmentId, _dateBegin.toString("yyyy/MM/dd"));
         if (myArray.count()== 0)
         {
             int i = 0;
@@ -1151,7 +1155,7 @@ void SegmentData::displaySegment( QString color,  bool bClearFirst)
         points.append(((LatLng)pointList().at(i)).lon());
     }
     int tracks = _tracks;
-    if(tracks == 2 && _doubleDate.isValid() && _startDate < _doubleDate)
+    if(tracks == 2 && _dateDoubled.isValid() && _dateBegin < _dateDoubled)
     {
         tracks = 1;
         _trackUsage = " ";

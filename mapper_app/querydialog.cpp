@@ -877,8 +877,8 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    //menu = QMenu(m_parent*);
    QAction * copyAction = new QAction("Copy cell text", this);
    connect(copyAction,SIGNAL(triggered()),this,SLOT(on_copyCellText()));
-   QAction * pasteAction = new QAction("Paste",this);
-   connect(pasteAction,SIGNAL(triggered()),this,SLOT(queryViewPaste()));
+   // QAction * pasteAction = new QAction("Paste",this);
+   // connect(pasteAction,SIGNAL(triggered()),this,SLOT(queryViewPaste()));
 //   QAction *copyBlobAct = new QAction(tr("Copy blob to clipboard"),this);
 //   connect(copyBlobAct, SIGNAL(triggered()),this,SLOT(on_copyBlob()));
    QAction* insertAction = new QAction(tr("insert row"),this);
@@ -914,7 +914,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
     QueryEditModel * model = qobject_cast<QueryEditModel*>(proxyModel->sourceModel());
     if(model)
     {
-     menu.addAction(pasteAction);
+     //menu.addAction(pasteAction);
      menu.addAction(insertAction);
      menu.addAction(deleteAction);
     }

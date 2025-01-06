@@ -1611,7 +1611,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
 
  try
  {
-     QDate nextStartDate = sql->getNextStartOrEndDate(_routeNbr, ui->dateStart->date(), true);
+     QDate nextStartDate = sql->getNextStartOrEndDate(_routeNbr, ui->dateStart->date(), 0, true);
      if(nextStartDate.isValid() && ui->dateEnd->date() > nextStartDate)
      {
         ui->lblHelpText->setText( tr("end date must be before %1").arg(nextStartDate.toString("yyyy/MM/dd")));
@@ -1764,7 +1764,9 @@ void RouteDlg::btnAdd_Click()         // SLOT
    CompanyData* cd = sql->getCompany(companyKey);
    if (ui->rnw->routeNbrMustBeAdded())
    {
-    _routeNbr = sql->addAltRoute(ui->rnw->newRoute(), ui->rnw->alphaRoute(), cd->routePrefix);
+       _routeNbr = ui->rnw->newRoute();
+       if(!sql->addAltRoute(_routeNbr, ui->rnw->alphaRoute(), cd->routePrefix))
+           throw Exception("sql err");
    }
    else
    {

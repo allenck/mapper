@@ -2,6 +2,7 @@
 #include "mainwindow.h"
 #include "removecitydialog.h"
 #include <QWebEngineHistory>
+#include "streetstablemodel.h"
 #include "websocketclientwrapper.h"
 //#include <QWebEnginePage>
 #include <QWebSocketServer>
@@ -305,7 +306,18 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   // Context menus
   ui->cbRoute->lineEdit()->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(ui->cbRoute->lineEdit(), SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(cbRoute_customContextMenu( const QPoint& )));
-  //connect(ui->tab, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tab1CustomContextMenu(QPoint)));
+  connect(ui->cbRoute, &QComboBox::currentIndexChanged, this,[=](int index){
+      const QModelIndex idx = ui->cbRoute->model()->index(index,0);
+      QColor bkColor = ui->cbRoute->model()->data(idx, Qt::BackgroundRole).value<QColor>();
+      if(bkColor != Qt::red)
+      {
+          bkColor = Qt::white;
+      }
+      QPalette p = ui->cbRoute->lineEdit()->palette();
+      p.setColor(ui->cbRoute->lineEdit()->backgroundRole(),bkColor);
+      ui->cbRoute->lineEdit()->setPalette(p);
+  });
+  connect(ui->tab, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tab1CustomContextMenu(QPoint)));
   ui->cbRoute->addAction(addSegmentAct);
   ui->cbRoute->addAction(copyRouteAct);
   ui->cbRoute->addAction(displayAct);
@@ -325,7 +337,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
       ui->ssw->cbSegments()->lineEdit()->setText(SegmentDescription::updateToken(txt));
 
   });
-  connect(SQL::instance(), &SQL::segmentChanged, [=]{
+  connect(SQL::instance(), &SQL::segmentChanged, [=](const SegmentInfo si){
    cbSegmentInfoList = sql->getSegmentInfoList();
   });
 
@@ -1432,7 +1444,13 @@ void MainWindow::createActions()
  checkSegmentsAct = new QAction(tr("Check segments"),this);
  checkSegmentsAct->setStatusTip(tr("update direction, bounds, etc; Update routes using segments"));
  connect(checkSegmentsAct, &QAction::triggered, [=]{
-  sql->checkSegments();
+     setCursor(Qt::WaitCursor);
+     try {
+        sql->checkSegments();
+     }
+     catch (Exception e){
+     }
+     setCursor(Qt::ArrowCursor);
  });
 
  showGoogleMapFeaturesAct = new QAction(tr("Show Google Map Features"), this);
@@ -1531,6 +1549,30 @@ void MainWindow::addSegmentToRoute(SegmentData* sd)
      sd->setSegmentEndDate(sd->endDate());
  if(!sd->doubleDate().isValid() && sd->tracks()==2)
   sd->setDoubleDate(sd->segmentStartDate());
+ if(sd->streetId() == -1)
+ {
+     if(!sd->streetName().isEmpty())
+     {
+         QList<StreetInfo*> list = StreetsTableModel::instance()->getStreetName(sd->streetName());
+         if(list.length() == 1)
+         {
+             StreetInfo* sti = list.at(0);
+             sd->setStreetId(sti->streetId);
+             sd->setNewerName(sti->newerName);
+             if(!sti->startLatLng.isValid())
+                 sti->startLatLng = sd->startLatLng();
+             if(!sti->endLatLng.isValid())
+                 sti->endLatLng = sd->endLatLng();
+             if(!sti->segments.contains(sd->segmentId()))
+             {
+                 sti->segments.append(sd->segmentId());
+                 sti->updateBounds();
+                 StreetsTableModel::instance()->updateStreetName(*sti);
+             }
+             sti->updateBounds(SegmentInfo(*sd));
+         }
+     }
+ }
  if(!sql->addSegmentToRoute(sd, true))
  {
   //updateRoute(sd);
@@ -1682,7 +1724,7 @@ void MainWindow::createMenus()
       optionsMenu->addAction(fontSizeChangeAct);
       optionsMenu->addAction(displaySegmentArrows);
       displaySegmentArrows->setChecked(config->bDisplaySegmentArrows);
-      optionsMenu->addAction(displayAllRoutesForGroupAct);
+      //optionsMenu->addAction(displayAllRoutesForGroupAct);
 
     // }
     //});
@@ -2251,12 +2293,19 @@ void MainWindow::refreshRoutes()
     }
     //int len = routeList.count();
     routeList = map.values();
+
     for(int i=0; i<routeList.count(); i++)
     {
          RouteData rd = routeList.at(i);
+        CompanyData* rcd = sql->getCompany(rd.companyKey());
+
          QString rdStartDate = rd.startDate().toString("yyyy/MM/dd");
-//         if(ui->cbRoute->findText(rd.toString())< 0)
-            ui->cbRoute->addItem(rd.toString(),QVariant::fromValue(rd));
+         ui->cbRoute->addItem(rd.toString(),QVariant::fromValue(rd));
+         if(!(rd.startDate()>=rcd->startDate && rd.endDate()<= rcd->endDate))
+         {
+             const QModelIndex idx = ui->cbRoute->model()->index(i, 0);
+             ui->cbRoute->model()->setData(idx, QColor(255,0,0), Qt::BackgroundRole);
+         }
          if( rd.toString() == currText)
             ui->cbRoute->setCurrentIndex(i);
     }

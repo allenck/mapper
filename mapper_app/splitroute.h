@@ -36,6 +36,7 @@ private:
     QMap<int,TractionTypeInfo> _tractionList;
     void fillTractionTypes();
     QDate maxEndDate;
+    bool bIgnoreDateCheck = false;
 
 private slots:
 //    void txtNewRouteNbr1_TextChanged(QString text);

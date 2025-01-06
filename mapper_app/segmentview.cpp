@@ -2,6 +2,7 @@
 #include "editsegmentdialog.h"
 #include "webviewbridge.h"
 #include "dupsegmentview.h"
+#include "sql.h"
 
 SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
     QObject(parent)
@@ -43,10 +44,8 @@ SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
     selectSegmentAct->setStatusTip(tr("Select this segment for further use."));
     connect(selectSegmentAct, &QAction::triggered, [=]{
      qint32 segmentId = selectedSegmentId();
-
      emit selectSegment(segmentId);
     });
-
 
     ui->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
@@ -54,8 +53,6 @@ SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
     proxymodel = new segmentViewSortProxyModel(this);
     proxymodel->setSourceModel(sourceModel);
     ui->setModel(proxymodel);
-    //connect(this, SIGNAL(sendRows(int, int)), proxymodel, SLOT(getRows(int,int)));
-
     connect(ui, SIGNAL(clicked(QModelIndex)), this, SLOT(itemSelectionChanged(QModelIndex)));
 
     myParent->ui->tabWidget->setTabText(1, "Intersecting Segments");

@@ -4,6 +4,7 @@
 #include "webviewbridge.h"
 #include "otherrouteview.h"
 #include "clipboard.h"
+#include "streetstablemodel.h"
 
 SegmentSelectionWidget::SegmentSelectionWidget(QWidget *parent) :
   QWidget(parent),
@@ -27,26 +28,26 @@ void SegmentSelectionWidget::initialize()
 
  refreshSegmentCB();
 
- connect(SQL::instance(), &SQL::segmentChanged, [=](int segmentId){
-  if(ui->cbSegments->findData(segmentId) >= 0)
+ connect(SQL::instance(), &SQL::segmentChanged, [=](const SegmentInfo si){
+     if(ui->cbSegments->findData(si.segmentId()) >= 0)
   {
-   SegmentInfo si = sql->getSegmentInfo(segmentId);
-   int  ix = ui->cbSegments->findData(segmentId);
+   //SegmentInfo si = sql->getSegmentInfo(segmentId);
+         int  ix = ui->cbSegments->findData(si.segmentId());
    if(ui->cbSegments->itemText(ix) != si.toString())
     ui->cbSegments->setItemText(ix, si.toString());
   }
  });
+
  //connect(WebViewBridge::instance(), SIGNAL(segmentSelected(int,int)), this, SLOT(segmentSelected(int,int)));
  connect(WebViewBridge::instance(), SIGNAL(segmentSelectedX(int,int,QList<LatLng>)), this, SLOT(segmentSelected(int,int,QList<LatLng>)));
  connect(ui->cbSegments, SIGNAL(editTextChanged(QString)), this, SLOT(cbSegmentsTextChanged(QString)));
  connect(ui->cbSegments->lineEdit(), SIGNAL(editingFinished()), this, SLOT(cbSegments_editingFinished()));
- connect(ui->cbStreets->lineEdit(), &QLineEdit::textChanged,this, [=](QString text){
-     if(text.length()> 4)
-     {
-        QString fullName = SegmentDescription::updateToken(text);
-        if(text != fullName)
-            ui->cbStreets->setCurrentText(fullName);
-     }
+ connect(ui->cbStreets->lineEdit(), &QLineEdit::editingFinished, this, [=]{
+     QString text = ui->cbStreets->currentText();
+     QString fullName = SegmentDescription::updateToken(text);
+     if(text != fullName)
+         ui->cbStreets->setCurrentText(fullName);
+     refreshSegmentCB();
  });
  connect(ui->rbSingle, &QRadioButton::clicked, [=]{
   saveStreet = ui->cbStreets->currentText();
@@ -117,6 +118,8 @@ void SegmentSelectionWidget::refreshSegmentCB()
  QStringList tokens2;
  QString description;
  QString selectedStreet =ui->cbStreets->currentText();
+ QList<SegmentInfo> segList = sql->getSegmentsForStreet(selectedStreet,ui->cbLocation->currentText() );
+
 
  QMutexLocker locker(&mutex);
  bRefreshingSegments = true;
@@ -125,8 +128,15 @@ void SegmentSelectionWidget::refreshSegmentCB()
  ui->cbSegments->clear();
  mapDescriptions.clear();
  cbSegmentInfoMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
- //qSort(cbSegmentDataList.begin(), cbSegmentDataList.end(),compareSegmentDataByName);
- //foreach (segmentInfo sI in cbSegmentInfoList)
+ if(!segList.isEmpty())
+ {
+     foreach(SegmentData si, segList)
+     {
+         if(!si.toString().isEmpty())
+            ui->cbSegments->addItem(si.toString(), si.segmentId());
+     }
+     return;
+ }
  foreach(SegmentData si, cbSegmentInfoMap.values())
  {
   description = si.description();
@@ -269,7 +279,10 @@ void SegmentSelectionWidget::refreshSegmentCB()
  while(iter.hasNext())
  {
   iter.next();
-  ui->cbSegments->addItem(iter.key(), iter.value());
+     if(iter.key().isEmpty())
+      continue;
+     if(!iter.key().isEmpty())
+       ui->cbSegments->addItem(iter.key(), iter.value());
  }
 // ui->cbLocation->clear();
 // ui->cbLocation->addItems(_locations);
@@ -278,62 +291,35 @@ void SegmentSelectionWidget::refreshSegmentCB()
 
 void SegmentSelectionWidget::refreshStreetsCb()
 {
- //QMutexLocker locker(&mutex2);
-
- QStringList streets;
- QStringList tokens;
- QStringList tokens2;
- QString description;
- QString selectedStreet = ui->cbStreets->currentText();
- bCbStreetsRefreshing = true;
-
- ui->cbStreets->clear();
- streets.clear();
- ui->cbStreets->addItem("");
- cbSegmentInfoMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
- foreach(SegmentData sd, cbSegmentInfoMap.values())
- {
-#if 0
-  description = sd.description();
-  tokens = description.split(",");
-  if(tokens.count() > 1)
-  {
-   QString street = tokens.at(0).trimmed();
-   if(street.indexOf("(")) street= street.mid(0, street.indexOf("("));
-   if(!streets.contains(street))
-   {
-    streets.append(street);
-   }
-   tokens2 = tokens.at(1).split("to");
-   {
-    for(int i=0; i < tokens2.count(); i++)
-    {
-     QString street2 = tokens2.at(i);
-     street2 = tokens.at(0).trimmed();
-     if(street2.indexOf("(")) street2= street.mid(0, street2.indexOf("("));
-     //if(street2.indexOf(" ")) street2= street2.mid(0, street2.indexOf(" "));
-     if(!streets.contains(street2))
-     {
-      streets.append(street2);
-     }
-    }
-   }
-  }
-  else
-  {
-   tokens = description.split(" ");
-  }
+    bCbStreetsRefreshing = true;
+    QString selectedStreet = ui->cbStreets->currentText();
+    ui->cbStreets->clear();
+    QStringList streets;
+#if 1
+    streets = StreetsTableModel::instance()->getStreetnamesList(ui->cbLocation->currentText());
 #else
-  if(!streets.contains(sd.streetName()))
-  {
-   streets.append(sd.streetName());
-  }
+    QStringList tokens;
+    QStringList tokens2;
+    QString description;
+    QString selectedStreet = ui->cbStreets->currentText();
+
+    streets.clear();
+    cbSegmentInfoMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
+    foreach(SegmentData sd, cbSegmentInfoMap.values())
+    {
+      if(!streets.contains(sd.streetName()))
+      {
+        if(!sd.streetName().isEmpty())
+            streets.append(sd.streetName());
+      }
+    } // end for
+
+
+    streets.sort();
 #endif
- } // end for
- streets.sort();
- ui->cbStreets->addItems(streets);
- ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(selectedStreet));
- bCbStreetsRefreshing = false;
+    ui->cbStreets->addItems(streets);
+    ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(selectedStreet));
+    bCbStreetsRefreshing = false;
 }
 
 void SegmentSelectionWidget::cbStreets_editingFinished()
@@ -373,8 +359,9 @@ void SegmentSelectionWidget::segmentSelected(int pt, int segmentId, QList<LatLng
    ui->cbSegments->setCurrentIndex(ix);
   else
   {
-   ui->cbSegments->addItem(si.toString(), segmentId);
-   ui->rbBoth->setChecked(true);
+    if(!si.toString().isEmpty())
+        ui->cbSegments->addItem(si.toString(), segmentId);
+    ui->rbBoth->setChecked(true);
   }
  }
 }
@@ -434,6 +421,7 @@ void SegmentSelectionWidget::cbSegments_editingFinished()
  {
   qint32 segmentId = -1;
   QString text = ui->cbSegments->currentText();
+
 
   bool bOk=false;
   segmentId = text.toInt(&bOk, 10);
