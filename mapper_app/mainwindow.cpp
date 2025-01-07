@@ -1009,6 +1009,19 @@ void MainWindow::createActions()
  modifyRouteTractionTypeAct->setStatusTip(tr("Modify the tractionn type on a date"));
  connect(modifyRouteTractionTypeAct, SIGNAL(triggered()), this, SLOT(modifyRouteTractionType()));
 
+ editRouteSqlAct = new QAction(tr("Edit Route Sql"),this);
+ editRouteSqlAct->setStatusTip(tr("edit sql rot route in SQL Query dialog."));
+ connect(editRouteSqlAct, &QAction::triggered, this,[=]{
+     if(!queryDlg)
+     {
+         queryDlg = new QueryDialog(config, this);
+     }
+     queryDlg->raise();
+     queryDlg->show();
+
+     queryDlg->processSelect("Routes", tr("select * from Routes where route=%1"
+                                          " and startdate = '%2'").arg(_rd.route()).arg(_rd.startDate().toString("yyyy/MM/dd")));
+ });
 
  routeCommentsAct = new QAction(tr("Route Comment"), this);
  routeCommentsAct->setStatusTip(tr("Update route comment"));
@@ -1841,6 +1854,7 @@ void MainWindow::cbRoute_customContextMenu( const QPoint& )
     extendMenu->addAction(updateTerminalsAct);
     cbRouteMenu->addAction(describeRouteAct);
     cbRouteMenu->addAction(displayAllRoutesAct);
+    cbRouteMenu->addAction(editRouteSqlAct);
     updateTerminalsAct->setEnabled(routeView->isSequenced());
     cbRouteMenu->exec(QCursor::pos());
 }

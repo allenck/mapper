@@ -408,6 +408,7 @@ private:
     QAction* displayAllRoutesForGroupAct;
     QAction* editStreetsAct;
     QAction* updateStreetsAct;
+    QAction* editRouteSqlAct;
 
     QWidgetAction *sortTypeAct;
     QComboBox * cbSort;

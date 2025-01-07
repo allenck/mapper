@@ -21,6 +21,7 @@ public:
  ~QueryDialog();
  void setMaxTabResults(int num);
  static QueryDialog* instance();
+ void processSelect(QString table, QString commandLine);
 
 public slots:
  void executeQuery(QString commandText);
@@ -41,7 +42,6 @@ private:
  Connection* tgtConn;
  QString tgtDbType;
  bool bChanging;
- void processSelect(QString table, QString commandLine);
  QWidget *tab_First_Result=0;
  QStringList sa_Message_Text;
  int i_Message_Error=0;
