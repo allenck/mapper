@@ -307,8 +307,12 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui->cbRoute->lineEdit()->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(ui->cbRoute->lineEdit(), SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(cbRoute_customContextMenu( const QPoint& )));
   connect(ui->cbRoute, &QComboBox::currentIndexChanged, this,[=](int index){
-      const QModelIndex idx = ui->cbRoute->model()->index(index,0);
-      QColor bkColor = ui->cbRoute->model()->data(idx, Qt::BackgroundRole).value<QColor>();
+      QColor bkColor = Qt::white;
+      if(index >=0)
+      {
+          const QModelIndex idx = ui->cbRoute->model()->index(index,0);
+          bkColor = ui->cbRoute->model()->data(idx, Qt::BackgroundRole).value<QColor>();
+      }
       if(bkColor != Qt::red)
       {
           bkColor = Qt::white;
@@ -317,6 +321,23 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
       p.setColor(ui->cbRoute->lineEdit()->backgroundRole(),bkColor);
       ui->cbRoute->lineEdit()->setPalette(p);
   });
+  connect(ui->cbRoute, &QComboBox::currentTextChanged, this,[=](QString  text){
+      int index = ui->cbRoute->currentIndex();
+      QColor bkColor = Qt::white;
+      if(index >=0)
+      {
+          const QModelIndex idx = ui->cbRoute->model()->index(index,0);
+          bkColor = ui->cbRoute->model()->data(idx, Qt::BackgroundRole).value<QColor>();
+      }
+      if(bkColor == Qt::black)
+      {
+          bkColor = Qt::white;
+      }
+      QPalette p = ui->cbRoute->lineEdit()->palette();
+      p.setColor(ui->cbRoute->lineEdit()->backgroundRole(),bkColor);
+      ui->cbRoute->lineEdit()->setPalette(p);
+  });
+
   connect(ui->tab, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tab1CustomContextMenu(QPoint)));
   ui->cbRoute->addAction(addSegmentAct);
   ui->cbRoute->addAction(copyRouteAct);

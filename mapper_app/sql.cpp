@@ -5466,6 +5466,8 @@ bool SQL::deleteRouteSegment(qint32 route, QString name, qint32 SegmentId,
 //   return false;
 // }
 
+// NOTE: except for pointer ref to SegmentData this function is the same as insertRouteSegment()
+// except that SegmentInfo fields are updated in SegmentData
 bool SQL::addSegmentToRoute(SegmentData* sd, bool notify)
 {
     if(sd->startDate().isNull() || sd->endDate().isNull() || !sd->startDate().isValid()
@@ -5534,8 +5536,20 @@ bool SQL::addSegmentToRoute(SegmentData* sd, bool notify)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-         SQLERROR(std::move(query));
-         qDebug() << query.lastError().text() << commandText;
+            qDebug() << query.lastError().text() << commandText;
+            QString text;
+            SQLERROR1(std::move(query), QMessageBox::Ignore | QMessageBox::Ok, text);
+            switch(errReturn)
+            {
+            case QMessageBox::Abort:
+                EXIT_FAILURE;
+            case QMessageBox::Ignore:
+                return true;
+            case QMessageBox::Ok:
+                return false;
+            default:
+                break;
+            }
          //db.close();
          return ret;
         }
@@ -5631,9 +5645,19 @@ bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate,
         if(!bQuery)
         {
          qDebug() << query.lastError().text() << commandText;
-         SQLERROR(std::move(query));
-         //db.close();
-         return ret;
+         QString text;
+         SQLERROR1(std::move(query), QMessageBox::Ignore | QMessageBox::Ok, text);
+         switch(errReturn)
+         {
+         case QMessageBox::Abort:
+             EXIT_FAILURE;
+         case QMessageBox::Ignore:
+             return true;
+         case QMessageBox::Ok:
+             return false;
+         default:
+             break;
+         }
         }
         rows = query.numRowsAffected();
 //        if (rows == 0)
@@ -8754,8 +8778,19 @@ bool SQL::insertRouteSegment(SegmentData sd, bool bNotify)
                + "')";
  if(!query.exec(commandText))
  {
-  SQLERROR(std::move(query));
-  return false;
+  QString text;
+  SQLERROR1(std::move(query), QMessageBox::Ignore | QMessageBox::Ok, text);
+  switch(errReturn)
+  {
+  case QMessageBox::Abort:
+      EXIT_FAILURE;
+  case QMessageBox::Ignore:
+      return true;
+  case QMessageBox::Ok:
+      return false;
+  default:
+      break;
+  }
  }
  if(bNotify)
     emit routeChange(NotifyRouteChange(ADDSEG, &sd));
@@ -12617,29 +12652,29 @@ void SQL::setForeignKeyCheck(bool b)
  return;
 }
 
-int SQL::displaySqlError(QSqlQuery query, QMessageBox::StandardButtons buttons, QString func, QString file, int line)
+int SQL::displaySqlError(QSqlQuery query, QMessageBox::StandardButtons buttons, QString text, QString func, QString file, int line)
 {
  QSqlError err = query.lastError();
  QString msg = "An SQL error has occurred:\n";
  if(!scriptName.isEmpty())
   msg.append(tr("The error occured processing Sql script: '%1'\n").arg(scriptName));
  msg = msg.append(tr("reported in %1 at %2 line %3")).arg(func, file).arg(line);
+ msg = msg.append(tr("\n<B>Abort</B> closes the app. "));
+ if(buttons  &  QMessageBox::Ignore)
+ msg = msg.append(tr("<B>Ignore</b> will return true ."));
+ msg = msg.append(text);
  QString details = QString("%1\n%2").arg(err.text(), query.lastQuery());
- QMessageBox box(QMessageBox::Critical, tr("Sql Error"),msg,buttons );
+ QMessageBox box(QMessageBox::Critical, tr("Sql Error"), msg, buttons );
  box.setInformativeText(details);
  if(buttons == QMessageBox::NoButton)
  {
      box.addButton(QMessageBox::Abort);
-     box.addButton(QMessageBox::Cancel);
      box.addButton(QMessageBox::Ok);
  }
  int b = box.exec();
- if(buttons)
-     return b;
  if(b == QMessageBox::Abort)
      exit(EXIT_FAILURE);
- if(b== QMessageBox::Cancel)
-     throw Exception("cancelled");
+ errReturn = (QMessageBox::StandardButton)b;
  return b;
 }
 

@@ -25,16 +25,16 @@ do \
  QSqlError err = query.lastError(); \
  qCritical() << "Sql error:" << err.text(); \
  qCritical() << query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n"; \
- (QMessageBox::StandardButton)SQL::instance()->displaySqlError(query, QMessageBox::NoButton,__FUNCTION__, __FILE__, __LINE__); \
+ (QMessageBox::StandardButton)SQL::instance()->displaySqlError(query, QMessageBox::NoButton,"",__FUNCTION__, __FILE__, __LINE__); \
 } while (0)
 
-#define SQLERROR1(query, buttons) \
+#define SQLERROR1(query, buttons, text) \
 do \
 { \
  QSqlError err = query.lastError(); \
  qCritical() << "Sql error:" << err.text(); \
  qCritical() << query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n"; \
- SQL::instance()->displaySqlError(query, buttons, __FUNCTION__, __FILE__, __LINE__); \
+ SQL::instance()->displaySqlError(query, buttons,text,__FUNCTION__, __FILE__, __LINE__); \
 } while (0)
 
 
@@ -263,7 +263,7 @@ public:
     QStringList listPkColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase());
     bool getForeignKeyCheck();
     void setForeignKeyCheck(bool b);
-    int displaySqlError(QSqlQuery query, QMessageBox::StandardButtons buttons, QString func, QString file, int line);
+    int displaySqlError(QSqlQuery query, QMessageBox::StandardButtons buttons, QString text, QString func, QString file, int line);
     //static /*static*/ void distanceFunc(sqlite3_context, int argc, sqlite3_value **argv);
     bool isCompanyValid(SegmentData sd);
     QString list2String(const QList<int> &list);
@@ -291,9 +291,9 @@ private:
     bool processFile(QTextStream* in, QSqlDatabase db, bool bIsInclude);
     QString scriptName;
     void setDefaultCompanyMnemonic(CompanyData* cd);
+    QMessageBox::StandardButton errReturn;
 
 };
-
 class NotifyRouteChange
 {
  public:
