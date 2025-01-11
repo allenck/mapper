@@ -2,6 +2,8 @@
 #define STREETVIEW_H
 
 #include <QTableView>
+#include "data.h"
+#include "sql.h"
 
 class SQL;
 class Configuration;
@@ -24,6 +26,8 @@ private:
     int curRow, curCol;
     Configuration* config = nullptr;
     SQL* sql = nullptr;
+    void segmentChanged(SegmentInfo si, SQL::CHANGETYPE t);
+
     friend class StreetsTableModel;
 };
 

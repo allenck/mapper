@@ -1127,7 +1127,7 @@ QList<SegmentInfo> SQL::getSegmentsForStreet(QString street, QString location)
                        " s.location, pointArray, tracks, direction, DoubleDate, newerName, s.streetid "
                        " from Segments s"
                        " join `StreetDef`  on streetdef.StreetId = s.streetId  "
-                       " where streetdef.Street = '" + street + "' and location = '" + location + "'"
+                       " where streetdef.Street = '" + street + "' and streetdef.location = '" + location + "'"
                        " and  s.streetId > 0 "
                        + "order by description";
  }
@@ -4092,7 +4092,7 @@ bool SQL::updateSegment(SegmentInfo* si, bool bNotify)
  }
  ret = true;
  if(bNotify)
-    emit segmentChanged(*si);
+    emit segmentChanged(*si, CHANGETYPE::MODIFYSEG);
 
  return ret;
 }
@@ -4186,7 +4186,7 @@ bool SQL::updateSegment(SegmentData* sd)
   return ret;
  }
  ret = true;
- emit segmentChanged(SegmentInfo(*sd));
+ emit segmentChanged(*sd, CHANGETYPE::MODIFYSEG);
 
  return ret;
 }
@@ -4289,7 +4289,7 @@ bool SQL::updateSegment(qint32 SegmentId)
  }
  ret = true;
  commitTransaction("UpdateSegment");
- emit segmentChanged(SegmentInfo(sd));
+ emit segmentChanged(SegmentInfo(sd), CHANGETYPE::MODIFYSEG);
 
  return ret;
 }
@@ -7181,10 +7181,11 @@ QList<SegmentInfo> SQL::getSegmentsInOppositeDirection(SegmentInfo sdIn)
  return getSegmentsInSameDirection(sdIn,true);
 }
 
-bool SQL::deleteSegment(qint32 SegmentId)
+bool SQL::deleteSegment(qint32 segmentId)
 {
     bool ret = false;
     int rows = 0;
+    SegmentInfo si = getSegmentInfo(segmentId);
     try
     {
         if(!dbOpen())
@@ -7197,7 +7198,7 @@ bool SQL::deleteSegment(qint32 SegmentId)
         QSqlQuery query = QSqlQuery(db);
 
         // delete any Line Segments using this segment
-        commandText = "delete from LineSegment where segmentid = " + QString("%1").arg(SegmentId);
+        commandText = "delete from LineSegment where segmentid = " + QString("%1").arg(segmentId);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
@@ -7209,7 +7210,7 @@ bool SQL::deleteSegment(qint32 SegmentId)
         }
         rows = query.numRowsAffected();
         // delete any routes referencing the segment
-        commandText = "delete from Routes where LineKey = " + QString("%1").arg(SegmentId);
+        commandText = "delete from Routes where LineKey = " + QString("%1").arg(segmentId);
         bQuery = query.exec(commandText);
         if(!bQuery)
         {
@@ -7221,7 +7222,7 @@ bool SQL::deleteSegment(qint32 SegmentId)
         }
         rows = query.numRowsAffected();
 
-        commandText = "delete from Segments where segmentid = " + QString("%1").arg(SegmentId);
+        commandText = "delete from Segments where segmentid = " + QString("%1").arg(segmentId);
         bQuery = query.exec(commandText);
         if(!bQuery)
         {
@@ -7235,7 +7236,7 @@ bool SQL::deleteSegment(qint32 SegmentId)
         if (rows == 0)
         {
             //throw( new ApplicationException("deleteSegment, segmentID " + SegmentId + " not found"));
-            qDebug()<< "deleteSegment, SegmentId " + QString("%1").arg(SegmentId) + " not found";
+            qDebug()<< "deleteSegment, SegmentId " + QString("%1").arg(segmentId) + " not found";
             //
             //ret = false;
             exit(EXIT_FAILURE);
@@ -7247,6 +7248,7 @@ bool SQL::deleteSegment(qint32 SegmentId)
         myExceptionHandler(e);
     }
     commitTransaction("deleteSegment");
+    emit segmentChanged(si, CHANGETYPE::DELETESEG);
     return ret;
 }
 /// <summary>
@@ -7514,7 +7516,7 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
  commitTransaction("addSegment");
 
  SegmentInfo si = getSegmentInfo(SegmentId);
- emit segmentChanged(si);
+ emit segmentChanged(si,CHANGETYPE::ADDSEG);
  return SegmentId;
 }
 
@@ -7640,7 +7642,7 @@ qint32 SQL::addSegment(SegmentInfo si, bool *bAlreadyExists, bool forceInsert)
  commitTransaction("addSegment");
 
  si._segmentId = segmentId;
- emit segmentChanged(si);
+ emit segmentChanged(si, CHANGETYPE::ADDSEG);
  return segmentId;
 }
 
@@ -11097,16 +11099,17 @@ void SQL::checkTables(QSqlDatabase db)
 //  }
   if(tableList.contains("Streets", Qt::CaseInsensitive))
   {
-
+   executeCommand("drop table Streets");
   }
 
   if(tableList.contains("Streets2", Qt::CaseInsensitive))
   {
-
+      executeCommand("drop table Streets2");
   }
 
   if(tableList.contains("StreetName", Qt::CaseInsensitive))
   {
+      executeCommand("drop table StreetName");
 
   }
 

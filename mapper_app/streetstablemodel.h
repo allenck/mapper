@@ -48,7 +48,7 @@ public:
     //bool newStreet(StreetInfo si);
     //bool updateStreet(StreetInfo si);
     static StreetsTableModel* instance();
-    QList<SegmentInfo> getSegmentsForStreet(QStringList nameList);
+    QList<SegmentInfo> getSegmentsForStreet(QStringList names);
     void streetChanged(StreetInfo info);
     void setList(QList<StreetInfo> streets);
     //void deleteStreet(QString street);

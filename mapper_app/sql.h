@@ -44,7 +44,7 @@ class SQL : public QObject
 public:
  static SQL* instance();
     bool dbOpen();
-    enum ROUTECHANGETYPE {
+    enum CHANGETYPE {
      ADDSEG,
      DELETESEG,
      MODIFYSEG
@@ -276,7 +276,7 @@ public:
 
 signals:
     void details(QString);
-    void segmentChanged(const SegmentInfo si);
+    void segmentChanged(const SegmentInfo si, CHANGETYPE t);
     void routeChange(NotifyRouteChange rc);
 
 private:
@@ -297,15 +297,15 @@ private:
 class NotifyRouteChange
 {
  public:
-  NotifyRouteChange(SQL::ROUTECHANGETYPE t, SegmentData* sd)
+  NotifyRouteChange(SQL::CHANGETYPE t, SegmentData* sd)
   {
    _t = t;
    _sd = sd;
   }
-  SQL::ROUTECHANGETYPE type() {return _t;}
+  SQL::CHANGETYPE type() {return _t;}
   SegmentData* sd() {return _sd;}
  private:
-  SQL::ROUTECHANGETYPE _t;
+  SQL::CHANGETYPE _t;
   SegmentData* _sd;
 
 };

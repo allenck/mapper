@@ -96,7 +96,11 @@ DISTFILES += \
     README.txt \
     Resources/GoogleMaps2n.htm \
     Resources/copyList.txt \
+    Resources/dump_databases.cmd \
+    Resources/dump_databases.sh \
     Resources/initMap.js \
+    Resources/restore_databases.cmd \
+    Resources/restore_databases.sh \
     Resources/scripts/createMsSqlDistance.sql \
     Resources/sql/ sqlite3_create_route.sql \
     Resources/sql/addBiDirectionalToRoutes.sql \

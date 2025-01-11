@@ -95,7 +95,7 @@ void ModifyRouteDateDlg::dateTimePicker1_ValueChanged(QDate date) //SLOT
    ui->dateTimePicker1->setFocus();
    return;
   }
-  if(date > maxEndDate)
+  if(maxEndDate.isValid() && date > maxEndDate)
   {
       ui->lblError->setText(tr("Invalid date: must be less or equal than %1")
                                 .arg(maxEndDate.toString("yyyy/MM/dd")));

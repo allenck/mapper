@@ -28,7 +28,7 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
          if(row > 0)
          {
              listOfSegments.replace(row, si);
-             dataChanged(index(row, SEGMENTID), index(row, WHICHEND), QList<int>());
+             emit dataChanged(index(row, SEGMENTID), index(row, WHICHEND), QList<int>());
          }
      });
  }
@@ -294,6 +294,6 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
  void SegmentViewTableModel::updateRow(int row, SegmentInfo si)
  {
      listOfSegments.replace(row, si);
-     dataChanged(index(row, SEGMENTID), index(row,WHICHEND ),QList<int>());
+     emit dataChanged(index(row, SEGMENTID), index(row,WHICHEND ),QList<int>());
  }
 

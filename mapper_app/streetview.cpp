@@ -62,6 +62,10 @@ StreetView::StreetView() {
         }
     }
 
+    connect(SQL::instance(), &SQL::segmentChanged,this,[=](SegmentInfo si, SQL::CHANGETYPE t){
+        segmentChanged(si, t);
+    });
+
 }
 
 StreetsTableModel* StreetView::model()
@@ -138,31 +142,31 @@ void StreetView::tablev_CustomContextMenu(const QPoint &pt)
         act = new QAction(tr("Show ends"), this);
         tablMenu.addAction(act);
         connect(WebViewBridge::instance(), &WebViewBridge::on_pinClicked,this,[=](int pinId, LatLng latLng,
-              QString street, int streetid, int seq){
+              QString street, int streetid, QString location, int seq){
             if(streetId < 0)
                 return;
             if(pinId == 0)
-            {
                 sti->startLatLng = latLng;
-            }
             else
-            {
                 sti->endLatLng = latLng;
-            }
             sti->bounds = Bounds();
             sti->updateBounds();
             sourceModel->updateStreetName(*sti);
         });
-
         connect(act, &QAction::triggered,this, [=]{
 
-            WebViewBridge::instance()->processScript("clearPinMarker");
+            WebViewBridge::instance()->processScript("clearPins");
+            QString title = sti->street;
+            if(!location.isEmpty())
+                title.append(QString("(%1").arg(sti->location));
             QVariantList objArray;
             objArray << sti->startLatLng.lat() << sti->startLatLng.lon() << sti->endLatLng.lat()
-                     << sti->endLatLng.lon() << sti->street << sti->streetId << sti->sequence;
+                     << sti->endLatLng.lon() << title << sti->streetId << sti->location
+                     << true << sti->sequence;
             WebViewBridge::instance()->processScript("showStreetPins",objArray);
             qApp->processEvents();
         });
+
         if(curCol == StreetsTableModel::ENDDATE)
         {
             QModelIndex ix = sourceModel->index(srcRow,StreetsTableModel::ENDDATE );
@@ -181,6 +185,60 @@ void StreetView::tablev_CustomContextMenu(const QPoint &pt)
 
             }
         }
+
+        act = new QAction(tr("Show all segment's ends"), this);
+        tablMenu.addAction(act);
+        connect(act, &QAction::triggered,this, [=]{
+            QStringList names;
+            QList<StreetInfo*>* list = sourceModel->getStreetNames(sti->streetId,&names);
+            QList<SegmentInfo> segments = sourceModel->getSegmentsForStreet(names);
+            WebViewBridge::instance()->processScript("clearPins");
+            QString title;
+            QVariantList objArray;
+            int seq =0;
+            foreach (SegmentInfo si, segments) {
+                title = si.streetName();
+                if(!location.isEmpty())
+                    title.append(QString("(%1").arg(si.location()));
+
+                objArray.clear();
+                objArray << si.startLat() << si.startLon() << si.endLat() << si.endLon()
+                         << title << si.segmentId() << si.location() << false << seq++ ;
+                WebViewBridge::instance()->processScript("showStreetPins",objArray);
+                qApp->processEvents();
+            }
+        });
     }
     tablMenu.exec(QCursor::pos());
+}
+
+void StreetView::segmentChanged(SegmentInfo si, SQL::CHANGETYPE t)
+{
+    if(si.streetId()> 0)
+    {
+        QList<StreetInfo*>* streets = StreetsTableModel::instance()->getStreetNames(si.streetId());
+        foreach (StreetInfo* sti, *streets) {
+            switch (t) {
+            case SQL::MODIFYSEG:
+            case SQL::ADDSEG:
+                sti->location = si.location();
+                sti->startLatLng = si.getStartLatLng();
+                sti->endLatLng =si.getEndLatLng();
+
+                if(!sti->segments.contains(si.segmentId()))
+                    sti->segments.append(si.segmentId());
+
+                break;
+            case SQL::DELETESEG:
+                if(sti->segments.contains(si.segmentId()))
+                    sti->segments.removeOne(si.segmentId());
+                break;
+            default:
+                break;
+            }
+            sti->bounds = Bounds();
+            sti->updateBounds();
+            StreetsTableModel::instance()->updateStreetName(*sti);
+        }
+    }
 }

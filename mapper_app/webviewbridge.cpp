@@ -376,9 +376,9 @@ void WebViewBridge::rightClicked(double lat, double lon)
     emit on_rightClicked(LatLng(lat, lon));
 }
 
-void WebViewBridge::pinClicked(int pinId, double lat, double lon, QString street, int streetId, int seq)
+void WebViewBridge::pinClicked(int pinId, double lat, double lon, QString street, int streetId, QString location, int seq)
 {
-    emit on_pinClicked(pinId, LatLng(lat, lon), street, streetId, seq);
+    emit on_pinClicked(pinId, LatLng(lat, lon), street, streetId, location, seq);
 }
 
 void WebViewBridge::pinMarkerMoved(double lat, double lon)
