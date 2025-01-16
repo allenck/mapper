@@ -252,7 +252,7 @@ private slots:
     void renameRoute_Click();
     void modifyRouteDate();
     void addSegment();
-    void deleteRoute();
+    bool deleteRoute();
     void updateRoute(SegmentData* sd = nullptr);
     void updateTerminals();
     void segmentDlg_routeChanged(RouteChangedEventArgs);

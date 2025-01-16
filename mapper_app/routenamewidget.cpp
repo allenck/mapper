@@ -334,3 +334,8 @@ void RouteNameWidget::routeChange(int )
         emit rdSelected(v.value<RouteData>());
     }
 }
+
+int RouteNameWidget::getRouteId()
+{
+    return sd->routeId();
+}

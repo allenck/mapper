@@ -427,7 +427,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
                 if (sql->doesRouteSegmentExist(_routeNbr, ui->rnw->newRouteName(), sd->segmentId(),
                                                ui->dateStart->date(), ui->dateEnd->date()))
                 {
-                    sql->deleteRouteSegment(_routeNbr, ui->rnw->newRouteName(), sd->segmentId(), ui->dateStart->text(), ui->dateEnd->text());
+                    sql->deleteRouteSegment(_routeNbr, /*ui->rnw->newRouteName()*/sd->routeId(), sd->segmentId(), ui->dateStart->text(), ui->dateEnd->text());
                 }
                 sd->setRoute(_routeNbr);
                 sd->setRouteName(ui->rnw->newRouteName());
@@ -447,7 +447,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
             {
                 // an existing segment exists for this date range.
                 // first, delete the existing segment from the route
-                if (!sql->deleteRouteSegment(_routeNbr, ui->rnw->newRouteName(), sd2->segmentId(),
+                if (!sql->deleteRouteSegment(_routeNbr, /*ui->rnw->newRouteName()*/sd2->routeId(), sd2->segmentId(),
                                              sd2->startDate().toString("yyyy/MM/dd"),
                                              sd2->endDate().toString("yyyy/MM/dd")))
                 {
@@ -488,7 +488,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
                 if (sql->doesRouteSegmentExist(_routeNbr, ui->rnw->newRouteName(), sd->segmentId(),
                                                ui->dateStart->date(), ui->dateEnd->date()))
                 {
-                    sql->deleteRouteSegment(_routeNbr, ui->rnw->newRouteName(), sd2->segmentId(),
+                    sql->deleteRouteSegment(_routeNbr, /*ui->rnw->newRouteName()*/sd2->routeId(), sd2->segmentId(),
                                             ui->dateStart->text(), ui->dateEnd->text());
                 }
                 sd->setRoute(_routeNbr);

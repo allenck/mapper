@@ -2160,7 +2160,7 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
                        for(int i =0; i< segmentDataList.count(); i++)
                            {
                            SegmentData *sd = new SegmentData(*segmentDataList.at(i));
-                           if (sql->deleteRouteSegment(sd->route(), sd->routeName(), sd->segmentId(),
+                           if (sql->deleteRouteSegment(sd->route(), sd->routeId(), sd->segmentId(),
                                                        sd->startDate().toString("yyyy/MM/dd"),
                                                        sd->endDate().toString("yyyy/MM/dd")) != true)
                                {
@@ -4580,10 +4580,9 @@ void MainWindow::addSegment()
         //refreshSegmentCB();
     }
 }
-void MainWindow::deleteRoute()
+bool MainWindow::deleteRoute()
 {
     //SQL sql;
-#if 1 // TODO
     RouteData rd = routeList.at(ui->cbRoute->currentIndex());
 
     QMessageBox::StandardButton reply;
@@ -4593,10 +4592,19 @@ void MainWindow::deleteRoute()
         //"Confirm Delete", MessageBoxButtons.YesNo);
     if(reply== QMessageBox::Yes)
     {
-        sql->deleteRoute(rd.route(), rd.routeName(), rd.startDate().toString("yyyy/MM/dd"), rd.endDate().toString("yyyy/MM/dd"));
+        sql->beginTransaction("deleteRoute");
+        if(sql->deleteRoute(rd.route(), rd.routeId(), rd.startDate().toString("yyyy/MM/dd"), rd.endDate().toString("yyyy/MM/dd")))
+        {
+            if(!sql->executeCommand(QString("delete from RouteName where routeId = %1").arg(rd.routeId())))
+            {
+                sql->rollbackTransaction("deleteRoute");
+                return false;
+            }
+            sql->commitTransaction("deleteRoute");
+        }
     }
     refreshRoutes();
-#endif
+    return true;
 }
 
 void MainWindow::on_updateRoute()

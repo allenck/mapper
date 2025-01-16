@@ -1,8 +1,9 @@
 DROP TABLE if exists `Routes`;
 CREATE TABLE `Routes` (
              `Route` int(11) NOT NULL,
+             `RouteId`  int(11) NOT NULL,
              `Name` varchar(140) NOT NULL,
-             `StartDate` date check(`StartDate` <= `EndDate`) NOT NULL,
+             `StartDate`  NOT NULL,
              `EndDate` date NOT NULL,
              `LineKey` int(11) NOT NULL,
              `OneWay` char(1) check(`oneWay` in ('Y','N',' ')) default ' ' NOT NULL,
@@ -25,4 +26,5 @@ CREATE TABLE `Routes` (
              CONSTRAINT `Routes_ibfk_1` FOREIGN KEY (`LineKey`) REFERENCES `Segments` (`SegmentId`) ON UPDATE RESTRICT ON DELETE RESTRICT,
              CONSTRAINT `Routes_ibfk_3` FOREIGN KEY (`CompanyKey`) REFERENCES `Companies` (`key`),
              CONSTRAINT `Routes_ibfk_4` FOREIGN KEY (`tractionType`) REFERENCES `TractionTypes` (`tractionType`),
-             CONSTRAINT `Routes_ibfk_5` FOREIGN KEY (`Route`) REFERENCES `AltRoute` (`route`));
+             CONSTRAINT `Routes_ibfk_5` FOREIGN KEY (`Route`) REFERENCES `AltRoute` (`route`),
+             CONSTRAINT `Routes_ibfk_6` FOREIGN KEY (`RouteId`) REFERENCES `RouteName` (`routeId`));

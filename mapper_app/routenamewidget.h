@@ -29,6 +29,7 @@ class RouteNameWidget : public QWidget
   void setRouteName(RouteData rd);
   void setAlphaRoute(QString);
   void clear();
+  int getRouteId();
 
  private slots:
   void txtRouteNbr_Leave();

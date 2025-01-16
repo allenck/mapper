@@ -322,6 +322,8 @@ class SegmentData
     void setLocation(QString loc) {_location = loc;}
     void setAlphaRoute(QString alphaRoute) {_alphaRoute = alphaRoute;}
     QString alphaRoute() const {return _alphaRoute;}
+    int routeId() const {return _routeId;}
+    void setRouteId(int routeId){this->_routeId = routeId;}
     bool operator==(const SegmentData o)
     {
      return _route == o._route && _alphaRoute == o._alphaRoute && _routeName == o._routeName
@@ -389,6 +391,7 @@ class SegmentData
     QString _routeName;
     QString _location;
     QString _alphaRoute;
+    int _routeId = -1;
     friend class SQL;
     friend class SegmentInfo;
 };
@@ -405,6 +408,7 @@ public:
     const QString toString();
     int route() {return _route;}
     void setRoute(int route) {_route = route;}
+    void setRouteId(int routeId) {_routeId = routeId;}
     QString alphaRoute() const {return _alphaRoute;}
     void setAlphaRoute(QString alphaRoute) {_alphaRoute = alphaRoute;}
     QString routeName() const {return _name;}
@@ -446,10 +450,12 @@ public:
     int baseRoute() {return _baseRoute;}
     void setBaseRoute(int baseRoute){_baseRoute = baseRoute;}
     RouteType routeType() {return _routeType;}
+    int routeId(){return _routeId;}
     bool operator==(const RouteData &o);
 
  private:
     qint32 _route = -1;
+    qint32 _routeId = -1;
     qint32 _baseRoute=0;
     QString _alphaRoute;
     QString _routePrefix;
@@ -539,16 +545,21 @@ class RouteInfo
 {
 	public:
         explicit RouteInfo(QObject *parent = 0);
-        RouteInfo(qint32 route, QString name, QDate startDate, QDate endDate);
+        RouteInfo(qint32 route, QString name, QDate startDate, QDate endDate, int companyKey,
+                  QString alphaRoute, int routeId = -1);
+        ~RouteInfo() {}
         RouteInfo(RouteData rd);
         RouteInfo(RouteInfo& o);
+        RouteInfo(const SegmentData &o);
+
         //QList<segmentGroup> segments;  // array of segmentGroup objects
+        void setRouteId(int routeId){_routeId = routeId;}
+        int routeId()const {return _routeId;}
  private:
         qint32	route=-1;
         QString routeName;
         qint32	tractionType;
         QList<SegmentData*> segmentDataList;
-        ~RouteInfo();
         double length;
         RouteData rd;
         QDate startDate;
@@ -558,6 +569,7 @@ class RouteInfo
         int baseRoute=0;
         QString routePrefix;
         QString companyMnemonic;
+        int _routeId = -1;
         friend class SQL;
 };
 

@@ -87,5 +87,6 @@
         <file>sql/create_routeView.sql</file>
         <file>sql/sqlite3_recreate_parameters.sql</file>
         <file>sql/sqlite3_create_streetdef.sql</file>
+        <file>sql/create_routeName.sql</file>
     </qresource>
 </RCC>

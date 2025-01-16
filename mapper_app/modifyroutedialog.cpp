@@ -103,12 +103,31 @@ void ModifyRouteDialog::btnOK_Click()
         return;
     }
     sql->beginTransaction("RenameRoute");
+    //sql->executeCommand("PRAGMA defer_foreign_keys = 1");
+
     CompanyData* cd = sql->getCompany(rd.companyKey());
 
     if(ui->rnw->routeNbrMustBeAdded())
     {
       //sql->addAltRoute(ui->rnw->alphaRoute().toInt(), ui->rnw->alphaRoute());
      _routeNbr = sql->addAltRoute(ui->rnw->newRoute(),ui->rnw->alphaRoute(),cd->routePrefix);
+    }
+    RouteInfo ri = RouteInfo(_routeNbr, ui->rnw->newRouteName(),rd.startDate(), rd.endDate(),
+                             rd.companyKey(),rd.alphaRoute(), rd.routeId() );
+    if(!sql->executeCommand(QString("delete from routes where routeid = %1").arg(ri.routeId())))
+    {
+        qDebug() << "delete failed";
+        {
+            ui->lblHelp->setText(tr("delete failed for routeid %1").arg(ri.routeId()));
+            sql->rollbackTransaction("RenameRoute");
+            return;
+        }
+    }
+    if(!sql->updateRouteName(ri))
+    {
+        ui->lblHelp->setText(tr("updateRouteName failed"));
+        sql->rollbackTransaction("RenameRoute");
+        return;
     }
     setCursor(Qt::WaitCursor);
     //foreach (routeData rd1 in myArray)
@@ -138,6 +157,7 @@ void ModifyRouteDialog::btnOK_Click()
      sdNew->setRoute(_routeNbr);
      sdNew->setRouteName(ui->rnw->newRouteName());
      sdNew->setAlphaRoute(ui->rnw->alphaRoute());
+     sdNew->setRouteId(ri.routeId());
      if(!sql->updateRoute(*sd, *sdNew))
      {
       sql->rollbackTransaction("RenameRoute");

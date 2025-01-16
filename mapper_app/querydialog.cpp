@@ -437,6 +437,7 @@ bool QueryDialog::processStream(QTextStream* in)
   if (query.lastError().isValid())
   {
    errors++;
+   QSqlRecord rec = query.record();
    ui->queryResultText->append(QString("<FONT COLOR=\"#FF0000\">%1<BR>%2<FONT COLOR=\"#000000\"><BR>")
                                .arg(query.lastError().driverText(),query.lastError().databaseText())+"<BR>");
    ui->queryResultText->append(QString(tr("Line %1 ")).arg(linesRead--)+" " +query.lastQuery()+"<BR>");

@@ -78,18 +78,23 @@ void ReroutingDlg::on_btnOk_clicked()
 
     setCursor(Qt::WaitCursor);
     sql->beginTransaction("reroute");
-    QList<RouteData> myArray = sql->getRouteDatasForDate(_rd.route(), _rd.routeName(), _rd.companyKey(),
-                                                         _rd.endDate().toString("yyyy/MM/dd"));
+    // QList<RouteData> myArray = sql->getRouteDatasForDate(_rd.route(), _rd.routeName(), _rd.companyKey(),
+    //                                                      _rd.endDate().toString("yyyy/MM/dd"));
+    QList<SegmentData*> myArray = sql->getSegmentDatasForDate(_rd.route(), _rd.routeName(), _rd.companyKey(),
+                                                         _rd.endDate());
 
-    foreach(RouteData rd, myArray)
+    foreach(SegmentData* sd, myArray)
     {
         // copy original route before from date
-        if (sql->addSegmentToRoute(rd.route(), rd.routeName(), rd.startDate(),
-                                   ui->fromDate->date().addDays(-1), rd.segmentId(), rd.companyKey(),
-                                   rd.tractionType(), rd.direction(), rd.next(), rd.prev(),
-                                   rd.normalEnter(), rd.normalLeave(), rd.reverseEnter(), rd.reverseLeave(),
-                                   rd.sequence(), rd.returnSeq(),
-                                   rd.oneWay(), rd.trackUsage(),rd.doubleDate()) == false)
+        // if (sql->addSegmentToRoute(rd.route(), rd.routeName(), rd.startDate(),
+        //                            ui->fromDate->date().addDays(-1), rd.segmentId(), rd.companyKey(),
+        //                            rd.tractionType(), rd.direction(), rd.next(), rd.prev(),
+        //                            rd.normalEnter(), rd.normalLeave(), rd.reverseEnter(), rd.reverseLeave(),
+        //                            rd.sequence(), rd.returnSeq(),
+        //                            rd.oneWay(), rd.trackUsage(),rd.doubleDate()) == false)
+        SegmentData sd1 = SegmentData(*sd);
+        sd1.setSegmentStartDate(ui->fromDate->date().addDays(-1));
+        if (sql->addSegmentToRoute(&sd1))
         {
             ui->lblHelp->setText(tr("add failed"));
             //System.Media.SystemSounds.Asterisk.Play();
@@ -98,13 +103,16 @@ void ReroutingDlg::on_btnOk_clicked()
             return;
         }
         // create new route uing new name and fromDate to toDate
-        if (sql->addSegmentToRoute(rd.route(), ui->txtRoute->text(), ui->fromDate->date(),
-                                   ui->toDate->date().addDays(-1), rd.segmentId(), rd.companyKey(),
-                                   rd.tractionType(), rd.direction(), rd.next(), rd.prev(), rd.normalEnter(),
-                                   rd.normalLeave(), rd.reverseEnter(), rd.reverseLeave(),
-                                   rd.sequence(), rd.returnSeq(),
-                                   rd.oneWay(), rd.trackUsage(), rd.doubleDate()) == false)
-        {
+        // if (sql->addSegmentToRoute(rd.route(), ui->txtRoute->text(), ui->fromDate->date(),
+        //                            ui->toDate->date().addDays(-1), rd.segmentId(), rd.companyKey(),
+        //                            rd.tractionType(), rd.direction(), rd.next(), rd.prev(), rd.normalEnter(),
+        //                            rd.normalLeave(), rd.reverseEnter(), rd.reverseLeave(),
+        //                            rd.sequence(), rd.returnSeq(),
+        //                            rd.oneWay(), rd.trackUsage(), rd.doubleDate()) == false)
+        sd1 = SegmentData(*sd);
+        sd1.setStartDate(ui->fromDate->date());
+        sd1.setEndDate(ui->toDate->date().addDays(-1));
+        if (sql->addSegmentToRoute(&sd1)) {
             ui->lblHelp->setText(tr("add failed"));
             //System.Media.SystemSounds.Asterisk.Play();
             QApplication::beep();
@@ -113,12 +121,15 @@ void ReroutingDlg::on_btnOk_clicked()
             return;
         }
         // copy old route back after toDate
-        if (sql->addSegmentToRoute(rd.route(), rd.routeName(),  ui->toDate->date(), rd.endDate(),
-                                   rd.segmentId(), rd.companyKey(), rd.tractionType(), rd.direction(),
-                                   rd.next(), rd.prev(),
-                                   rd.normalEnter(), rd.normalLeave(), rd.reverseEnter(), rd.reverseLeave(),
-                                   rd.sequence(), rd.returnSeq(),
-                                   rd.oneWay(), rd.trackUsage(), rd.doubleDate()) == false)
+        // if (sql->addSegmentToRoute(rd.route(), rd.routeName(),  ui->toDate->date(), rd.endDate(),
+        //                            rd.segmentId(), rd.companyKey(), rd.tractionType(), rd.direction(),
+        //                            rd.next(), rd.prev(),
+        //                            rd.normalEnter(), rd.normalLeave(), rd.reverseEnter(), rd.reverseLeave(),
+        //                            rd.sequence(), rd.returnSeq(),
+        //                            rd.oneWay(), rd.trackUsage(), rd.doubleDate()) == false)
+        sd1 = SegmentData(*sd);
+        sd1.setStartDate(ui->fromDate->date());
+        if (!sql->addSegmentToRoute(&sd1))
         {
             ui->lblHelp->setText(tr("add failed"));
             //System.Media.SystemSounds.Asterisk.Play();
@@ -127,8 +138,9 @@ void ReroutingDlg::on_btnOk_clicked()
 
             return;
         }
-        if(!sql->deleteRouteSegment(rd.route(), rd.routeName(), rd.segmentId(), rd.startDate().toString("yyyy/MM/dd"),
-                                                                                             rd.endDate().toString("yyyy/MM/dd")))
+
+        if(!sql->deleteRouteSegment(sd->route(), sd->routeId(), sd->segmentId(), sd->startDate().toString("yyyy/MM/dd"),
+                                                                                             sd->endDate().toString("yyyy/MM/dd")))
         {
             ui->lblHelp->setText(tr("delete failed"));
             //System.Media.SystemSounds.Asterisk.Play();

@@ -126,6 +126,7 @@ RouteData::RouteData(const RouteData& o)
  _baseRoute = o._baseRoute;
  _doubleDate = o._doubleDate;
  _companyMnemonic = o._companyMnemonic;
+ _routeId = o._routeId;
 }
 
 RouteData::RouteData(const SegmentData& o)
@@ -142,6 +143,7 @@ RouteData::RouteData(const SegmentData& o)
  _tractionType = o.tractionType();
  _baseRoute = o.baseRoute();
  _doubleDate = o.doubleDate();
+ _routeId = o.routeId();
 }
 
 
@@ -276,6 +278,7 @@ SegmentData::SegmentData(const SegmentData& o)
  _whichEnd = o._whichEnd;
  _rowid = o._rowid;
  _segRowid = o._segRowid;
+ _routeId = o._routeId;
 }
 
 SegmentData::SegmentData(const RouteData& o)
@@ -584,29 +587,43 @@ RouteInfo::RouteInfo(RouteData rd)
  this->rd = rd;
  this->route = rd.route();
  this->routeName = rd.routeName();
+ this->_routeId = rd.routeId();
  length = 0;
  segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(),
                                                             rd.companyKey(), rd.endDate());
 }
+RouteInfo::RouteInfo(const SegmentData& sd)
+{
+    //this->rd = rd;
+    this->route = sd.route();
+    this->routeName = sd.routeName();
+    this->startDate = sd.startDate();
+    this->endDate = sd.endDate();
+    this->alphaRoute = sd.alphaRoute();
+    this->companyKey = sd.companyKey();
+    this->_routeId = sd.routeId();
+    length = 0;
+    // segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(),
+    //                                                            rd.companyKey(), rd.endDate());
+}
 
-RouteInfo::RouteInfo(qint32 route, QString name, QDate startDate, QDate endDate)
+RouteInfo::RouteInfo(qint32 route, QString name, QDate startDate, QDate endDate, int companyKey, QString alphaRoute, int routeId)
 {
  length = 0;
  this->route = route;
  this->routeName = name;
  this->startDate = startDate;
  this->endDate = endDate;
- segmentDataList = SQL::instance()->getRouteSegmentsInOrder(route, name, 0, endDate);
+ this->companyKey = companyKey;
+ this->alphaRoute = alphaRoute;
+ this->_routeId = routeId;
+ //segmentDataList = SQL::instance()->getRouteSegmentsInOrder(route, name, 0, endDate);
 }
 
-RouteInfo::~RouteInfo()
-{
-
-}
 
 RouteInfo::RouteInfo(RouteInfo& o)
 {
-    route=o.route;
+ route=o.route;
  routeName= o.routeName;
  tractionType=o.tractionType;
  length = o.length;
@@ -617,6 +634,7 @@ RouteInfo::RouteInfo(RouteInfo& o)
  baseRoute= o.baseRoute;
  routePrefix = o.routePrefix;
  companyMnemonic = o.companyMnemonic;
+ _routeId = o._routeId;
 }
 
 SegmentInfo::SegmentInfo(const SegmentInfo& o)

@@ -249,15 +249,17 @@ RouteView::RouteView(QObject* parent )
      SegmentData* sd = sourceModel->listOfSegments.at(ix.row());
      SegmentInfo si = SQL::instance()->convertSegment(segmentId, 1);
      if(si.segmentId() > 0 && si.segmentId() != sd->segmentId()){
-      bool ok = SQL::instance()->deleteRouteSegment(sd->route(), sd->routeName(),sd->segmentId(),
+      bool ok = SQL::instance()->deleteRouteSegment(sd->route(), sd->routeId(),sd->segmentId(),
                                                     sd->startDate().toString("yyyy/MM/dd"),
                                                     sd->endDate().toString("yyyy/MM/dd"));
       qDebug() << "old segment deleted " << sd->segmentId() << ok;
-      ok = SQL::instance()->addSegmentToRoute(sd->route(),sd->routeName(), sd->startDate(),sd->endDate(),
-                                              si.segmentId(),sd->companyKey(),
-                                         sd->tractionType(),sd->direction(), -1, -1, 0,0,0,0,
-                                              sd->sequence(), sd->returnSeq(),
-                                              "N", " ", sd->doubleDate());
+      // ok = SQL::instance()->addSegmentToRoute(sd->route(),sd->routeName(), sd->startDate(),sd->endDate(),
+      //                                         si.segmentId(),sd->companyKey(),
+      //                                    sd->tractionType(),sd->direction(), -1, -1, 0,0,0,0,
+      //                                         sd->sequence(), sd->returnSeq(),
+      //                                         "N", " ", sd->doubleDate());
+      sd->setOneWay("N");
+      ok = SQL::instance()->addSegmentToRoute(sd);
       qDebug() << "new segment added " << si.segmentId() << ok;
      }
     });

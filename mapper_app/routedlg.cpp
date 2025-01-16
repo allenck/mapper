@@ -1453,7 +1453,7 @@ void RouteDlg::btnDelete_Click()              // SLOT
 //    sql->OpenConnection();
  sql->beginTransaction("deleteSegment");
 
- if (!sql->deleteRouteSegment(_routeNbr, ui->rnw->alphaRoute(), _segmentId, ui->dateStart->text(), ui->dateEnd->text()) == true)
+ if (!sql->deleteRouteSegment(_routeNbr, ui->rnw->getRouteId(), _segmentId, ui->dateStart->text(), ui->dateEnd->text()) == true)
  {
   ui->lblHelpText->setText(tr("deleteRoute failed!"));
   //System.Media.SystemSounds.Beep.Play();
@@ -1470,12 +1470,19 @@ void RouteDlg::btnDelete_Click()              // SLOT
  if (_rd.route() >0 && ui->dateStart->date() < _rd.startDate())
  {
   int tractionType = _tractionList.values().at(ui->cbTractionType->currentIndex()).tractionType;
-  if (!sql->addSegmentToRoute(_routeNbr, ui->rnw->alphaRoute(), ui->dateStart->date(),
-                              sd->startDate().addDays(-1), sd->segmentId(), sd->companyKey(), sd->tractionType(),
-                              sd->direction(), sd->next(), sd->prev(), sd->normalEnter(), sd->normalLeave(),
-                              sd->reverseEnter(), sd->reverseLeave(),
-                              sd->sequence(), sd->returnSeq(),
-                              ui->cbOneWay->isChecked()?"Y":"N", sd->trackUsage(), sd->doubleDate()))
+  // if (!sql->addSegmentToRoute(_routeNbr, ui->rnw->alphaRoute(), ui->dateStart->date(),
+  //                             sd->startDate().addDays(-1), sd->segmentId(), sd->companyKey(), sd->tractionType(),
+  //                             sd->direction(), sd->next(), sd->prev(), sd->normalEnter(), sd->normalLeave(),
+  //                             sd->reverseEnter(), sd->reverseLeave(),
+  //                             sd->sequence(), sd->returnSeq(),
+  //                             ui->cbOneWay->isChecked()?"Y":"N", sd->trackUsage(), sd->doubleDate()))
+  SegmentData sd1 = SegmentData(*sd);
+  sd1.setRoute(_routeNbr);
+  sd1.setRouteName(ui->rnw->newRouteName());
+  sd1.setStartDate(ui->dateStart->date());
+  sd1.setEndDate( sd->startDate().addDays(-1));
+  sd1.setOneWay(ui->cbOneWay->isChecked()?"Y":"N");
+  if (!sql->addSegmentToRoute(&sd1))
   {
       ui->lblHelpText->setText(tr("deleteRoute failed!"));
       //System.Media.SystemSounds.Beep.Play();
@@ -1681,7 +1688,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
         switch (rslt)
         {
             case QMessageBox::Yes:
-                if(!sql->deleteRouteSegment(csd->route(), csd->routeName(), csd->segmentId()
+                if(!sql->deleteRouteSegment(csd->route(), csd->routeId(), csd->segmentId()
                                             ,oldSd->startDate().toString("yyyy/MM/dd"),
                                             oldSd->endDate().toString("yyyy/MM/dd")))
                 {
@@ -1720,7 +1727,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
      switch (rslt)
      {
       case QMessageBox::Yes:
-      if(!sql->deleteRouteSegment(csd->route(), csd->routeName(), csd->segmentId(), csd->startDate().toString("yyyy/MM/dd"),
+      if(!sql->deleteRouteSegment(csd->route(), csd->routeId(), csd->segmentId(), csd->startDate().toString("yyyy/MM/dd"),
                               csd->endDate().toString("yyyy/MM/dd")))
       {
        ui->lblHelpText->setText(tr("delete failed"));
@@ -1993,7 +2000,7 @@ void RouteDlg::checkDirection(QString routeDirection)
            sd = _segmentDataList.at(ix);
            if (sql->doesRouteSegmentExist(_routeNbr, ui->rnw->alphaRoute(), _segmentId, sd->startDate(), sd->endDate()))
            {
-            if (sql->deleteRouteSegment(_routeNbr, ui->rnw->alphaRoute(), _segmentId,  sd->startDate().toString("yyyy/MM/dd"), sd->endDate().toString("yyyy/MM/dd")) != true)
+            if (sql->deleteRouteSegment(_routeNbr, sd->routeId(), _segmentId,  sd->startDate().toString("yyyy/MM/dd"), sd->endDate().toString("yyyy/MM/dd")) != true)
             {
                 ui->lblHelpText->setText(tr("Delete Error"));
                 //System.Media.SystemSounds.Beep.Play();
@@ -2085,7 +2092,7 @@ void RouteDlg::checkDirection(QString routeDirection)
              if (sql->doesRouteSegmentExist(_routeNbr, ui->rnw->alphaRoute(),
                                             _segmentId, sd->startDate(), sd->endDate()))
              {
-                 if (sql->deleteRouteSegment(_routeNbr, ui->rnw->alphaRoute(),
+                 if (sql->deleteRouteSegment(_routeNbr,sd->routeId(),
                                              _segmentId, sd->startDate().toString("yyyy/MM/dd"),
                                              sd->endDate().toString("yyyy/MM/dd")) == false)
                  {
