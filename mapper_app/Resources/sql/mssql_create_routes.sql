@@ -2,7 +2,8 @@ SET ANSI_PADDING ON;
 DROP TABLE IF EXISTS [dbo].[Routes];
 CREATE TABLE [dbo].[Routes](
                    [Route] [int] NOT NULL,
-                   [name] [varchar](125) NOT NULL, 
+                   [RouteId] int,
+                   [name] [varchar](140) NOT NULL,
                    [StartDate]  [date] NOT NULL,
                    [EndDate] [date] NOT NULL,
                    [LineKey] [int] NOT NULL,
@@ -49,4 +50,5 @@ ALTER TABLE [dbo].[Routes] ADD  CONSTRAINT [DF_Routes_CompanyKey]  DEFAULT ((-1)
 ALTER TABLE [dbo].[Routes] ADD  CONSTRAINT [[DF_Routes_tractionType]]]  DEFAULT ((1)) FOR [tractionType];
 ALTER TABLE [dbo].[Routes] ADD  CONSTRAINT [[DF_Routes_Direction]]]  DEFAULT ('') FOR [Direction];
 ALTER TABLE [dbo].[Routes] ADD  CONSTRAINT [DF_Routes_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];
- 
+ALTER TABLE [dbo].[Routes]  WITH CHECK ADD  CONSTRAINT [FK_Routes_RouteName_routeId] FOREIGN KEY([RouteId])
+                   REFERENCES [dbo].[RouteName] ([routeId]);

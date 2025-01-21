@@ -1,4 +1,5 @@
 #include "segmentselectionwidget.h"
+#include "qcompleter.h"
 #include "segmentdescription.h"
 #include "ui_segmentselectionwidget.h"
 #include "webviewbridge.h"
@@ -119,7 +120,6 @@ void SegmentSelectionWidget::refreshSegmentCB()
  QString description;
  QString selectedStreet =ui->cbStreets->currentText();
  QList<SegmentInfo> segList = sql->getSegmentsForStreet(selectedStreet,ui->cbLocation->currentText() );
-
 
  QMutexLocker locker(&mutex);
  bRefreshingSegments = true;
@@ -297,13 +297,13 @@ void SegmentSelectionWidget::refreshStreetsCb()
     QStringList streets;
 #if 1
     streets = StreetsTableModel::instance()->getStreetnamesList(ui->cbLocation->currentText());
-#else
+//#else
     QStringList tokens;
     QStringList tokens2;
     QString description;
-    QString selectedStreet = ui->cbStreets->currentText();
+    //selectedStreet = ui->cbStreets->currentText();
 
-    streets.clear();
+    //streets.clear();
     cbSegmentInfoMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
     foreach(SegmentData sd, cbSegmentInfoMap.values())
     {
@@ -313,11 +313,11 @@ void SegmentSelectionWidget::refreshStreetsCb()
             streets.append(sd.streetName());
       }
     } // end for
-
-
     streets.sort();
 #endif
     ui->cbStreets->addItems(streets);
+    ui->cbStreets->setCompleter(new QCompleter(streets,this));
+    ui->cbStreets->completer()->setCaseSensitivity(Qt::CaseInsensitive);
     ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(selectedStreet));
     bCbStreetsRefreshing = false;
 }

@@ -102,7 +102,7 @@ bool ExportSql::openDb()
 
       if(!query->exec(cmd))
       {
-       SQLERROR_E(query);
+       SQLERROR_E(std::move(query));
        _targetDb.close();
        return false;
       }
@@ -112,7 +112,7 @@ bool ExportSql::openDb()
        cmd = "select Database()";
       if(!query->exec(cmd))
       {
-       SQLERROR_E(query);
+       SQLERROR_E(std::move(query));
        _targetDb.close();
        return false;
       }
@@ -159,8 +159,10 @@ bool ExportSql::exportAll()
  exportTable("TractionTypes");
  exportTable("AltRoute");
  exportTable("Intersections");
- exportLineSegments();
+ //exportLineSegments();
+ exportTable("StreetDef");
  exportTable("Segments");
+ exportTable("RouteName");
  exportTable("Routes");
  exportTable("Terminals");
  exportTable("Comments");
@@ -206,7 +208,7 @@ bool ExportSql::exportAltRoute()
     bQuery = query->exec();
     if(!bQuery)
     {
-        SQLERROR_E(query);
+        SQLERROR_E(std::move(query));
         //db.close();
         exit(EXIT_FAILURE);
     }
@@ -228,7 +230,7 @@ bool ExportSql::exportAltRoute()
         bQuery = query2->exec(commandText);
         if(!bQuery)
         {
-            SQLERROR_E(query2);
+            SQLERROR_E(std::move(query2));
             //db.close();
             exit(EXIT_FAILURE);
         }
@@ -260,7 +262,7 @@ bool ExportSql::exportAltRoute()
             bQuery = query2->exec();
             if(!bQuery)
             {
-                SQLERROR_E(query2);
+                SQLERROR_E(std::move(query2));
                 //db.close();
                 //exit(EXIT_FAILURE);
                 errors++;
@@ -280,7 +282,7 @@ bool ExportSql::exportAltRoute()
             bQuery = query2->exec();
             if(!bQuery)
             {
-             SQLERROR_E(query2);
+             SQLERROR_E(std::move(query2));
                 //db.close();
                 //exit(EXIT_FAILURE);
                 errors++;
@@ -340,7 +342,7 @@ bool ExportSql::exportComments()
       bQuery = query->exec();
      if(!bQuery)
      {
-        SQLERROR_E(query);
+        SQLERROR_E(std::move(query));
         //db.close();
         exit(EXIT_FAILURE);
     }
@@ -365,7 +367,7 @@ bool ExportSql::exportComments()
         bQuery = query2->exec(commandText);
         if(!bQuery)
         {
-            SQLERROR_E(query2);
+            SQLERROR_E(std::move(query2));
             //db.close();
             exit(EXIT_FAILURE);
         }
@@ -503,7 +505,7 @@ bool ExportSql::exportCompanies()
     bQuery = query->exec();
     if(!bQuery)
     {
-        SQLERROR_E(query);
+        SQLERROR_E(std::move(query));
         //db.close();
         exit(EXIT_FAILURE);
     }
@@ -534,7 +536,7 @@ bool ExportSql::exportCompanies()
         bQuery = query2->exec(commandText);
         if(!bQuery)
         {
-            SQLERROR_E(query2);
+            SQLERROR_E(std::move(query2));
             //db.close();
             exit(EXIT_FAILURE);
         }
@@ -731,7 +733,7 @@ bool ExportSql::exportIntersections()
     bQuery = query->exec();
     if(!bQuery)
     {
-        SQLERROR_E(query);
+        SQLERROR_E(std::move(query));
         //db.close();
         exit(EXIT_FAILURE);
     }
@@ -871,7 +873,7 @@ bool ExportSql::exportTractionTypes()
     bool bQuery = query->exec();
     if(!bQuery)
     {
-        SQLERROR_E(query);
+        SQLERROR_E(std::move(query));
         //db.close();
         exit(EXIT_FAILURE);
     }
@@ -1021,7 +1023,7 @@ bool ExportSql::exportParameters()
     bQuery = query->exec();
     if(!bQuery)
     {
-        SQLERROR_E(query);
+        SQLERROR_E(std::move(query));
         //db.close();
         exit(EXIT_FAILURE);
     }
@@ -1474,7 +1476,7 @@ bool ExportSql::exportSegments()
   bool bQuery = query->exec();
   if(!bQuery)
   {
-   SQLERROR_E(query);
+   SQLERROR_E(std::move(query));
       //db.close();
       exit(EXIT_FAILURE);
   }
@@ -1516,7 +1518,7 @@ bool ExportSql::exportSegments()
     bQuery = query2->exec(commandText);
     if(!bQuery)
     {
-     SQLERROR_E(query2);
+     SQLERROR_E(std::move(query2));
      //db.close();
      if(!Retry(&_targetDb, query2, commandText))
          exit(EXIT_FAILURE);
@@ -1570,7 +1572,7 @@ bool ExportSql::exportSegments()
     bQuery = query2->exec();
     if(!bQuery)
     {
-     SQLERROR_E(query2);
+     SQLERROR_E(std::move(query2));
      //db.close();
      //exit(EXIT_FAILURE);
      if(!Retry(&_targetDb, query2, ""))
@@ -1587,7 +1589,7 @@ bool ExportSql::exportSegments()
      bQuery = query2->exec(commandText);
      if(!bQuery)
      {
-      SQLERROR_E(query2);
+      SQLERROR_E(std::move(query2));
       //db.close();
       //exit(EXIT_FAILURE);
 //                    if(!Retry(&targetDb, query2, commandText))
@@ -1634,13 +1636,13 @@ bool ExportSql::exportSegments()
     bQuery = query2->prepare(commandText);
     if(!bQuery)
     {
-     SQLERROR_E(query2);
+     SQLERROR_E(std::move(query2));
     }
     query2->bindValue(":lastUpdate",lastUpdate);
     bQuery = query2->exec();
     if(!bQuery)
     {
-     SQLERROR_E(query2);
+     SQLERROR_E(std::move(query2));
      QSqlError err = query2->lastError();
      qDebug() << err.databaseText() + "\n";
      qDebug() << err.driverText() + "\n";
@@ -1671,7 +1673,7 @@ bool ExportSql::exportSegments()
    bQuery = query2->exec(commandText);
    if(!bQuery)
    {
-    SQLERROR_E(query2);
+    SQLERROR_E(std::move(query2));
        //db.close();
        if(!Retry(&_targetDb, query2, commandText))
            exit(EXIT_FAILURE);
@@ -1693,7 +1695,7 @@ bool ExportSql::exportSegments()
     bool bQuery = query->exec(commandText);
     if(!bQuery)
     {
-     SQLERROR_E(query);
+     SQLERROR_E(std::move(query));
      //db.close();
      exit(EXIT_FAILURE);
     }
@@ -1713,7 +1715,7 @@ bool ExportSql::exportSegments()
     bQuery = query2->exec(commandText);
     if(!bQuery)
     {
-     SQLERROR_E(query2);
+     SQLERROR_E(std::move(query2));
      //db.close();
      if(!Retry(&_targetDb, query2, commandText))
          exit(EXIT_FAILURE);
@@ -1729,7 +1731,7 @@ bool ExportSql::exportSegments()
     bQuery = query2->exec(commandText);
     if(!bQuery)
     {
-     SQLERROR_E(query2);
+     SQLERROR_E(std::move(query2));
      //db.close();
      if(!Retry(&_targetDb, query2, commandText))
          exit(EXIT_FAILURE);
@@ -1747,7 +1749,7 @@ bool ExportSql::exportSegments()
     bQuery = query2->exec(commandText);
     if(!bQuery)
     {
-     SQLERROR_E(query2);
+     SQLERROR_E(std::move(query2));
      //db.close();
      if(!Retry(&_targetDb, query2, commandText))
          exit(EXIT_FAILURE);
@@ -1825,7 +1827,7 @@ bool ExportSql::exportSegments()
   bool bQuery = query->exec();
   if(!bQuery)
   {
-   SQLERROR_E(query);
+   SQLERROR_E(std::move(query));
       QSqlError err = query->lastError();
       qDebug() << err.text() + "\n";
       qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
@@ -2502,7 +2504,7 @@ bool ExportSql::exportStations()
     bool bQuery = query->exec();
     if(!bQuery)
     {
-     SQLERROR_E(query);
+     SQLERROR_E(std::move(query));
      //db.close();
      exit(EXIT_FAILURE);
     }
@@ -2687,7 +2689,7 @@ bool ExportSql::exportTerminals()
         bQuery = query2->exec(commandText);
         if(!bQuery)
         {
-            SQLERROR_E(query2);
+            SQLERROR_E(std::move(query2));
             //db.close();
             exit(EXIT_FAILURE);
         }
@@ -2721,7 +2723,7 @@ bool ExportSql::exportTerminals()
             bQuery = query2->exec();
             if(!bQuery)
             {
-                SQLERROR_E(query2);
+                SQLERROR_E(std::move(query2));
                 //db.close();
                 //exit(EXIT_FAILURE);
                 errors++;
@@ -2740,7 +2742,7 @@ bool ExportSql::exportTerminals()
             bQuery = query2->exec();
             if(!bQuery)
             {
-               SQLERROR_E(query2);
+               SQLERROR_E(std::move(query2));
                 //db.close();
                 //exit(EXIT_FAILURE);
                 errors++;
@@ -2775,7 +2777,7 @@ bool ExportSql::getCount(QString table, bool bDropTable)
 //            "AND TABLE_NAME='" +table +"'";
 //    if(!query2->exec(commandText))
 //    {
-//        SQLERROR_E(query2);
+//        SQLERROR_E(std::move(query2));
 //    }
 //    if(!query2->isValid())
 //    {
@@ -2790,7 +2792,7 @@ bool ExportSql::getCount(QString table, bool bDropTable)
    bool bQuery = query2->exec(commandText);
    if(!bQuery)
    {
-    SQLERROR_E(query2);
+    SQLERROR_E(std::move(query2));
     //db.close();
     //if(!Retry(&targetDb, query2, commandText))
      //exit(EXIT_FAILURE);
@@ -3184,12 +3186,14 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
 
  if(dbType == "Sqlite")
  {
-  commandText = "CREATE TABLE `Segments` (  `SegmentId` integer NOT NULL primary key AUTOINCREMENT,"
+  commandText = "CREATE TABLE `Segments` (  "
+                "`SegmentId` integer NOT NULL primary key AUTOINCREMENT,"
                 " `Description` varchar(100) NOT NULL,"
                 " `FormatOK` int(1) NOT NULL DEFAULT FALSE"
                 " `Tracks` int(2) check(`tracks` in (1,2)) NOT NULL DEFAULT 1,"
                 " `Street` 'text' NOT NULL DEFAULT '',"
-                " `NewerStreet` 'text' NOT NULL DEFAULT '',"
+                " `StreetId` int(11),"
+                " `NewerName` 'text' NOT NULL DEFAULT '',"
                 " `Location` 'text' NOT NULL DEFAULT '',"
                 " `Type` int(11) NOT NULL DEFAULT 0,"
                 " `StartLat` decimal(15,13) NOT NULL DEFAULT 0.0,"
@@ -3199,21 +3203,25 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `Length` decimal(15,5) NOT NULL DEFAULT 0,"
                 " `Points` int(11) NOT NULL default 0,"
                 " `StartDate` date NOT NULL DEFAULT '1800-01-01',"
-                " `DoubleDate` date NOT NULL DEFAULT '1800-01-01',"
+                " `DoubleDate` date ,"
                 " `EndDate` date NOT NULL DEFAULT '1800-01-01',"
-                " `Direction` varchar(6) NOT NULL DEFAULT ' ',"
+                " `Direction` varchar(6) ,"
                 " `OneWay` char(1) NOT NULL DEFAULT 'N',"
                 " `Points` int(11) NOT NULL default 0,"
                 " `PointArray` 'text',"
-                " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP)";
+                " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP),"
+                " CONSTRAINT `Segments_ibfk_1` FOREIGN KEY (`StreetId`) REFERENCES `StreetDef` (`StreetId`))";
  }
  else if(dbType == "MySql")
   commandText = "CREATE TABLE IF NOT EXISTS `Segments` ("
                 "`SegmentId` int(11) NOT NULL AUTO_INCREMENT,"
                 " `Description` varchar(100) NOT NULL,"
-                " `OneWay` char(1) NOT NULL,"
+                " `FormatOK` int(1) NOT NULL DEFAULT FALSE,"
+                " `OneWay` char(1) ,"
                 " `Tracks` int(2) NOT NULL DEFAULT 2,"
                 " `Street` text,"
+                " `StreetId` int(11),"
+                " `NewerName` text NOT NULL,"
                 " `Location` text,"
                 " `Type` int NOT NULL Default 0,"
                 " `StartLat` decimal(15,13) NOT NULL,"
@@ -3223,8 +3231,9 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `Length` decimal(15,5) NOT NULL,"
                 " `Points` int(11) NOT NULL default 0,"
                 " `StartDate` date NOT NULL,"
-                " `DoubleDate` date NOT NULL,"
-                " `EndDate` date NOT NULL, `Direction` varchar(6) NOT NULL,"
+                " `DoubleDate` date,"
+                " `EndDate` date NOT NULL, "
+                " `Direction` varchar(6),"
                 " `pointArray` text NOT NULL,"
                 " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,PRIMARY KEY (`SegmentId`)) ENGINE=InnoDB AUTO_INCREMENT=1116 DEFAULT CHARSET=latin1";
  else if(dbType == "MsSql")
@@ -3233,10 +3242,13 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
   commandText.append("CREATE TABLE [dbo].[Segments]("\
     "[SegmentId] [int] IDENTITY(1,1) NOT NULL,"\
     "[Description] [varchar](100) NOT NULL,"\
-    "[OneWay] [char](1) NOT NULL,"\
+    "[FormatOK] int NOT NULL DEFAULT 0,"
+    "[OneWay] [char](1),"\
     "[Tracks] [int] NOT NULL,"\
-    "[Location] [varchar](30),"\
     "[Street] [text] NULL,"\
+    "[StreetId] [int]," \
+    "[NewerName] text,"
+    "[Location] text,"
     "[Type] [int] NOT NULL,"\
     "[StartLat] [decimal](15, 13) NOT NULL,"\
     "[StartLon] [decimal](15, 13) NOT NULL,"\
@@ -3247,7 +3259,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
     "[StartDate] [date] NOT NULL,"\
     "[DoubleDate] [date] NOT NULL,"\
     "[EndDate] [date] NOT NULL,"\
-    "[Direction] [varchar](6) NOT NULL,"\
+    "[Direction] [varchar](6),"\
     "[PointArray] [text] NULL,"\
     "[lastUpdate] [datetime] NOT NULL,"\
  "CONSTRAINT [pk_Segments] PRIMARY KEY CLUSTERED"\
@@ -3278,7 +3290,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
  bQuery = query->exec();
  if(!bQuery)
  {
-  SQLERROR_E(query);
+  SQLERROR_E(std::move(query));
   throw Exception(tr("SQL Error creating Segments: %1").arg(query->lastError().text()));
 
  }
@@ -3308,7 +3320,7 @@ bool ExportSql::dropTable(QString table, QSqlDatabase db, QString dbType)
  bQuery = query->exec(commandText);
  if(!bQuery)
  {
-  SQLERROR_E(query);
+  SQLERROR_E(std::move(query));
   return false;
  }
  return true;
@@ -3471,7 +3483,7 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
  bQuery = query->exec();
  if(!bQuery)
  {
-  SQLERROR_E(query);
+  SQLERROR_E(std::move(query));
   QSqlError err = query->lastError();
   qDebug() << err.text() + "\n";
   qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
@@ -3479,7 +3491,17 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
  }
  return true;
 }
-#else
+#endif
+bool ExportSql::createRouteNameTable(QSqlDatabase db, QString dbType)
+{
+    if(dbType == "Sqlite")
+        return SQL::instance()->executeScript(":/sql/create_routeName.sql", db);
+    if(dbType == "MySql")
+        return SQL::instance()->executeScript(":/sql/mySql_create_routeName.sql", db);
+    if(dbType == "MsSql")
+        return SQL::instance()->executeScript(":/sql/mssql_create_routeName.sql", db);
+    return false;
+}
 bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
 {
  if(dbType == "Sqlite")
@@ -3490,7 +3512,7 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
   return SQL::instance()->executeScript(":/sql/mssql_create_routes.sql", db);
  return false;
 }
-#endif
+
 bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
 {
  QSqlQuery* query = new QSqlQuery(db);
@@ -3667,7 +3689,7 @@ bool ExportSql::createTerminalsTable(QSqlDatabase db, QString dbType)
  else if(dbType == "MySql")
   commandText = "CREATE TABLE `Terminals` ("\
     "`Route` int(11) NOT NULL,"\
-    "`Name` varchar(125) CHARACTER SET latin1 COLLATE latin1_german1_ci NOT NULL,"\
+    "`Name` varchar(140) CHARACTER SET latin1 COLLATE latin1_german1_ci NOT NULL,"\
     "`StartDate` date NOT NULL,"\
     "`EndDate` date NOT NULL,"\
     "`StartSegment` int(11) NOT NULL,"\
@@ -3789,7 +3811,7 @@ bool ExportSql::createAltRouteTable(QSqlDatabase db, QString dbType)
  bQuery = query->exec();
  if(!bQuery)
  {
-  SQLERROR_E(query);
+  SQLERROR_E(std::move(query));
   throw Exception(tr("SQL Error creating altRoute: %1").arg(query->lastError().text()));
 
  }
@@ -3813,6 +3835,7 @@ bool ExportSql::createParametersTable(QSqlDatabase db, QString dbType)
           "`minDate` date NOT NULL,"\
           "`maxDate` date NOT NULL,"\
           "`alphaRoutes` char(1) NOT NULL default ('Y'),"\
+          "`abbreviationsList` VARCHAR(200) NOT NULL DEFAULT '',"
           "`lastUpdate` timestamp NOT NULL DEFAULT (CURRENT_TIMESTAMP));";
  else if(dbType == "MySql")
   commandText = "CREATE TABLE `Parameters` ("\
@@ -3824,6 +3847,7 @@ bool ExportSql::createParametersTable(QSqlDatabase db, QString dbType)
     "`minDate` date NOT NULL,"\
     "`maxDate` date NOT NULL,"\
     "`alphaRoutes` char(1) NOT NULL,"\
+    "`abbreviationsList` VARCHAR(200) NOT NULL DEFAULT '',"
     "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"\
     "UNIQUE KEY `key` (`key`)"\
   ") ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1";
@@ -3841,6 +3865,7 @@ bool ExportSql::createParametersTable(QSqlDatabase db, QString dbType)
         "[minDate] [date] NOT NULL,"\
         "[maxDate] [date] NOT NULL,"\
         "[alphaRoutes] [char](1) NOT NULL,"\
+        "[abbreviationsList] VARCHAR(200) NOT NULL DEFAULT '',"
         "[lastUpdate] [datetime] NOT NULL"\
     ") ON [PRIMARY];"\
    "SET ANSI_PADDING OFF;"\
@@ -3917,7 +3942,7 @@ bool ExportSql::createTractionTypesTable(QSqlDatabase db, QString dbType)
  bQuery = query->exec();
  if(!bQuery)
  {
-  SQLERROR_E(query);
+  SQLERROR_E(std::move(query));
   throw Exception(tr("SQL Error creating TractionTypes: %1").arg(query->lastError().text()));
   ;
  }
@@ -3934,9 +3959,10 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
   commandText = "CREATE TABLE if not exists `Companies` ( "\
           "`key` integer NOT NULL primary key AUTOINCREMENT,"\
           "`mnemonic` varchar(10) not null default '', "\
-          "`Description` varchar(60) NOT NULL default '', "\
+          "`Description` varchar(100) NOT NULL default '', "\
           "`routePrefix` varchar(10) not null default '', "\
           "`info` varchar(60) not null default '',"
+          "`Url` varchar(150),"
           "`startDate` date DEFAULT NULL," \
           "`endDate` date DEFAULT NULL," \
           "`firstRoute` int(11) DEFAULT NULL," \
@@ -3947,9 +3973,10 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
   commandText = "CREATE TABLE `Companies` ("\
     "`key` int(11) NOT NULL AUTO_INCREMENT,"\
     "`mnemonic` varchar(10) not null default '', "\
-    "`Description` varchar(60) NOT NULL,"\
+    "`Description` varchar(100) NOT NULL,"\
     "`routePrefix` varchar(10) DEFAULT '',"\
     "`info` varchar(60),"
+    "`Url` varchar(150),"
     "`startDate` date DEFAULT NULL,"\
     "`endDate` date DEFAULT NULL,"\
     "`firstRoute` int(11) DEFAULT NULL,"\
@@ -3964,8 +3991,9 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
   "CREATE TABLE [dbo].[Companies]("\
         "[key] [int] IDENTITY(1,1) NOT NULL,"\
         "[mnemonic] varchar(10) not null default '', "\
-        "[Description] [varchar](60) NOT NULL,"\
+        "[Description] [varchar](100) NOT NULL,"\
         "[info] varchar(60),"
+        "[Url] varchar(150),"
         "[routePrefix] [varchar](10) NOT NULL,"\
         "[startDate] [date] NULL,"\
         "[endDate] [date] NULL,"\
@@ -3985,7 +4013,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
  bQuery = query->exec();
  if(!bQuery)
  {
-  SQLERROR_E(query);
+  SQLERROR_E(std::move(query));
   throw Exception(tr("SQL Error creating Companies: %1").arg(query->lastError().text()));
 
  }
@@ -4040,7 +4068,7 @@ bool ExportSql::createIntersectionsTable(QSqlDatabase db, QString dbType)
  bQuery = query->exec();
  if(!bQuery)
  {
-  SQLERROR_E(query);
+  SQLERROR_E(std::move(query));
   throw Exception(tr("SQL Error creating Intersections: %1").arg(query->lastError().text()));
 
  }
@@ -4100,14 +4128,14 @@ bool ExportSql::createRouteSeqTable(QSqlDatabase db, QString dbType)
         "[endDate] ASC" \
     ")WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]"\
     ") ON [PRIMARY];" \
-    "SET ANSI_PADDING OFF;"\
-    "ALTER TABLE [dbo].[Intersections] ADD  CONSTRAINT [DF_Intersections_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];";
+         "SET ANSI_PADDING OFF;";
+    //"ALTER TABLE [dbo].[Intersections] ADD  CONSTRAINT [DF_Intersections_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];";
  }
  query->prepare(commandText);
  bQuery = query->exec();
  if(!bQuery)
  {
-  SQLERROR_E(query);
+  SQLERROR_E(std::move(query));
   throw Exception(tr("SQL Error creating RouteSeq: %1").arg(query->lastError().text()));
 
  }
@@ -4162,11 +4190,28 @@ bool ExportSql::createCommentsTable(QSqlDatabase db, QString dbType)
  bQuery = query->exec();
  if(!bQuery)
  {
-  SQLERROR_E(query);
+  SQLERROR_E(std::move(query));
   throw Exception(tr("SQL Error creating Comments: %1").arg(query->lastError().text()));
 
  }
  return true;
+}
+bool ExportSql::createStreetDefTable(QSqlDatabase db, QString dbType)
+{
+    if(dbType == "MsSql")
+    {
+        return SQL::instance()->executeScript(":/sql/mssql_create_streetdef.sql",db);
+    }
+    else if(dbType == "MySql")
+    {
+        return SQL::instance()->executeScript(":/sql/mysql_create_streetdef.sql",db);
+    }
+    else
+    {
+        return SQL::instance()->executeScript(":/sql/sqlite3_create_streetdef.sql",db);
+    }
+    return false;
+
 }
 bool ExportSql::createMySqlFunctions(QSqlDatabase db)
 {
@@ -4227,7 +4272,7 @@ bool ExportSql::createMsSqlFunctions(QSqlDatabase db)
     bQuery = query->exec();
     if(!bQuery)
     {
-     SQLERROR_E(query);
+     SQLERROR_E(std::move(query));
      throw Exception(tr("SQL Error creating Comments: %1").arg(query->lastError().text()));
 
     }
@@ -4267,7 +4312,7 @@ bool ExportSql::exportTable(QString table)
   return false;
  ignoreList.clear();
 
- //SQL::instance()->useDatabase(tgtConn->defaultSqlDatabase(), _targetDb);
+ SQL::instance()->useDatabase(tgtConn->database(), tgtConn->servertype(), _targetDb);
 
  QStringList tables = targetDb().tables();
  if(tables.contains(table,Qt::CaseInsensitive))
@@ -4308,8 +4353,12 @@ bool ExportSql::exportTable(QString table)
    if(!createRouteCommentsTable(_targetDb, tgtConn->servertype())) return false;
   if(table.compare("Routes", Qt::CaseInsensitive)==0)
    if(!createRouteTable(_targetDb, tgtConn->servertype())) return false;
+  if(table.compare("RouteName", Qt::CaseInsensitive)==0)
+    if(!createRouteNameTable(_targetDb, tgtConn->servertype())) return false;
   if(table.compare("RouteSeq", Qt::CaseInsensitive)==0)
    if(!createRouteSeqTable(_targetDb, tgtConn->servertype())) return false;
+  if(table.compare("StreetDef",Qt::CaseInsensitive)==0)
+   if(!createStreetDefTable(_targetDb,tgtConn->servertype())) return false;
   if(table.compare("Segments", Qt::CaseInsensitive)==0)
    if(!createSegmentsTable(_targetDb, tgtConn->servertype())) return false;
   if(table.compare("Stations", Qt::CaseInsensitive)==0)
@@ -4322,7 +4371,7 @@ bool ExportSql::exportTable(QString table)
    if(!createTractionTypesTable(_targetDb, tgtConn->servertype())) return false;
  }
  if(tgtDbType == "MsSql" && table != "Terminals" && table != "RouteComments"
-    && table != "Routes")
+    && table != "Routes" && table != "RouteSeq")
   setIdentityInsert(table, true);
  QString commandText;
  QString selectText = "Select ";
@@ -4352,14 +4401,15 @@ bool ExportSql::exportTable(QString table)
  bool bQuery = query->exec();
  if(!bQuery)
  {
-  SQLERROR_E(query);
      QSqlError err = query->lastError();
+     SQLERROR_E(std::move(query));
      qDebug() << err.text() + "\n";
      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
      //db.close();
      return false;
  }
- QStringList keys = SQL::instance()->listPkColumns(table, tgtDbType, _targetDb);
+ QStringList types;
+ QStringList keys = SQL::instance()->listPkColumns(table, tgtDbType, _targetDb, &types);
  while(query->next())
  {
   bool bFound = false;
@@ -4377,14 +4427,16 @@ bool ExportSql::exportTable(QString table)
    for(int i=0; i< keys.count(); i++)
    {
     QString col = keys.at(i);
+    QString type = types.at(i);
+    QVariant v = query->value(i);
     query2->bindValue(":"+ col, query->value(i) );
    }
 
    bQuery = query2->exec();
    if(!bQuery)
    {
-    SQLERROR_E(query2);
        QSqlError err = query2->lastError();
+       SQLERROR_E(std::move(query2));
        qDebug() << err.text() + "\n";
        qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
        return false;
@@ -4444,8 +4496,8 @@ bool ExportSql::exportTable(QString table)
    bQuery = query2->exec();
    if(!bQuery)
    {
-    SQLERROR_E(query2);
     QSqlError err = query2->lastError();
+    SQLERROR_E(std::move(query2));
     qDebug() << err.text() + "\n";
     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
     errors++;
@@ -4493,14 +4545,20 @@ bool ExportSql::exportTable(QString table)
      query2->bindValue(":"+ col, dt);
     }
     else
-     query2->bindValue(":"+ col, query->value(i) );
+    {
+        QVariant v = query->value(i);
 
+        if(types.at(i)== "date" && v.toString().trimmed().isEmpty())
+            query2->bindValue(":"+ col, QVariant(QMetaType::fromType<QString>()) );
+        else
+            query2->bindValue(":"+ col, query->value(i) );
+    }
    }
    bQuery = query2->exec();
    if(!bQuery)
    {
-    SQLERROR_E(query2);
     QSqlError err = query2->lastError();
+    SQLERROR_E(std::move(query2));
     qDebug() << "error code:" << err.nativeErrorCode() << " " << err.text() + "\n";
     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
     qDebug() << "values: " << displayQueryValues(query);

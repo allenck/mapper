@@ -11,12 +11,6 @@ greaterThan(QT_MAJOR_VERSION, 4): {
 }
 message(WEBENGINE  " = "  $$WEBENGINE)
 
-#isEmpty(WEBENGINE) {
-# QT       += core gui  webkit network sql xml
-# greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport printsupport webkitwidgets gui
-# message("not  using WebEngine")
-#}
-#else {
  QT       += core gui  network sql xml widgets websockets webchannel
  greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport printsupport webenginewidgets gui
  DEFINES += USE_WEBENGINE
@@ -24,7 +18,11 @@ message(WEBENGINE  " = "  $$WEBENGINE)
 
 RC_ICONS = Resources/tram-icon.ico
 
-#}
+# greaterThan(QT_MAJOR_VERSION, 5): {
+#  greaterThan(QT_MINOR_VERSION, 7): {
+#   DEFINES += USE_QTCONCURRENT
+#  }
+# }
 
 DEFINES += "BUILD_DIR=\"\\\""$$OUT_PWD"\\\"\""
 DEFINES += QT_MESSAGELOGCONTEXT
@@ -231,7 +229,8 @@ INCLUDEPATH += $$PWD/../../../sqlite-amalgamation-3460100
 DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3460100
 
 
-unix|win32: LIBS += -ldl
+#unix|win32: LIBS += -ldl
+unix: LIBS += -ldl
 
 FORMS += \
     dialogeditstreets.ui \

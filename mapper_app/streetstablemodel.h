@@ -37,9 +37,10 @@ public:
         SEGMENTS,
         COMMENT
     };
-    enum Action{
+    enum Action
+    {
         ADD,
-        DELETE,
+        DELETE_,
         UPDATE,
     };
     QStringList actStr = {"Add", "Delete", "Update"};
@@ -55,7 +56,7 @@ public:
     void deleteStreetDef(int row);
     int findRow(int rowid);
     QT_DEPRECATED int newStreetDef(QString street, QString location = "", QDate date = QDate::fromString("2050/01/01"));
-    bool newStreetDef(StreetInfo* sti);
+    int newStreetDef(StreetInfo* sti);
     bool newStreetName(StreetInfo *info);
     int findStreetId(QString street, QString location="");
     bool updateStreetDef(StreetInfo);

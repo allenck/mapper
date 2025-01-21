@@ -979,7 +979,7 @@ public:
     StreetInfo(const StreetInfo&);
     QList<int> setSegments(const QString);
     QString segmentsToString();
-    void updateBounds(SegmentInfo si);
+    void updateSegmentInfo(SegmentInfo si);
     void updateBounds();
     bool inDateRange(QDate dt);
     bool encompasses(StreetInfo sti);

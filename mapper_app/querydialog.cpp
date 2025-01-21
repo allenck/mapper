@@ -41,6 +41,25 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   connect(clearAct, &QAction::triggered, [=]{
    ui->editQuery->clear();
   });
+
+  ui->cbConnections->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(ui->cbConnections, &QComboBox::customContextMenuRequested, this,[=](QPoint pt){
+      QMenu menu;
+      QAction* act = new QAction(tr("Refresh connections"),this);
+      menu.addAction(act);
+      menu.exec(QCursor::pos());
+      connect(act, &QAction::triggered,this,[=]{
+      ui->cbConnections->clear();
+      for(int i=0; i<config->currCity->connections.count(); i++)
+      {
+          Connection* c = config->currCity->connections.at(i);
+          ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
+          if(c->id() == config->currConnection->id())
+              ui->cbConnections->setCurrentIndex(i);
+      }
+
+    });
+  });
   makeSelectedIncludeAct = new QAction(tr("Make include file of selection"), this);
   connect(makeSelectedIncludeAct, &QAction::triggered, [=]{
    makeSelectedInclude();
@@ -109,7 +128,12 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
      else if(c->servertype() == "MySql")
       txt = "describe " + tableName;
      else // SQL Server
-      txt = "EXEC sp_help " + tableName;
+     {
+      //txt = "EXEC sp_help " + tableName;
+      txt = "select *"
+         " from INFORMATION_SCHEMA.COLUMNS"
+         " where TABLE_NAME='" + tableName + "'";
+     }
      processALine(txt, tableName);
     });
     act = new QAction(tr("select table"),this);
@@ -1054,15 +1078,15 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
       tgtConn->setSqliteUserFunctionLoaded( SQL::instance()->loadSqlite3Functions(db));
 #endif
     }
-    else if(tgtDbType == "MsSql")
+    else if(tgtConn->servertype() == "MsSql")
     {
-#if 0
-    if(tgtConn->useDatabase() != "default" || tgtConn->useDatabase() != "")
+#if 1
+    if(tgtConn->database() != "default" || tgtConn->database() != "")
     {
      QSqlQuery query = QSqlQuery(db);
-     if(!query.exec(tr("use [%1]").arg(tgtConn->useDatabase())))
+     if(!query.exec(tr("use [%1]").arg(tgtConn->database())))
      {
-      SQLERROR(query);
+      SQLERROR(std::move(query));
         db.close();
         return;
      }

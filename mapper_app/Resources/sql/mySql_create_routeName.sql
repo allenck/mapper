@@ -1,7 +1,7 @@
 BEGIN;
 drop table if exists RouteName;
 CREATE TABLE if not exists `RouteName` (
-  `RouteId` integer NOT NULL primary key AUTOINCREMENT,
+  `RouteId` integer NOT NULL primary key AUTO_INCREMENT,
   `Name` varchar(140) NOT NULL,
   `StartDate` date NOT NULL DEFAULT '1800-01-01',
   `endDate` date NOT NULL DEFAULT '1800-01-01',
@@ -10,8 +10,6 @@ CREATE TABLE if not exists `RouteName` (
   `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE (routeAlpha, `Name`,`StartDate`, enddate, companykey));
 
-  insert into RouteName (Name, startdate, enddate, routealpha, companyKey)
-      select distinct name, startDate, enddate, routeAlpha, companyKey from routes r
-      join altRoute  a on r.route = a.route;
+  
 
 COMMIT;

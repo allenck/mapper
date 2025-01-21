@@ -413,7 +413,7 @@ QList<RouteData> SQL::getRoutesByEndDate(QList<int> compayList)
  //if(companyKey >0)
   where= " where r.companyKey in( " + list2String(compayList) +")";
  commandText = "Select distinct a.baseRoute, r.route, n.name, r.startDate, r.endDate, r.companyKey, "
-               "tractionType, routeAlpha, c.routePrefix, r.routeId  "
+               "tractionType, a.routeAlpha, c.routePrefix, r.routeId  "
                "from Routes r "
                "join AltRoute a on r.route =  a.route "
                "join Companies c on r.companyKey = c.[key] "
@@ -876,20 +876,20 @@ QList<SegmentInfo> SQL::getSegmentsForStreet(QString street, QString location)
                        " s.length, points, s.startLat, s.startLon, s.endLat, s.EndLon, type, s.street,"
                        " s.location, pointArray, tracks, direction, DoubleDate, newerName, s.streetid "
                        " from Segments s"
-                       " join `StreetDef`  on streetdef.StreetId = s.streetId  "
-                       " where streetdef.Street = '" + street + "' and streetdef.location = '" + location + "'"
-                       " and  s.streetId > 0 "
-                       + "order by description";
+                       //" join `StreetDef`  on streetdef.StreetId = s.streetId  "
+                       " where s.Street = '" + street + "' and s.location = '" + location + "'"
+                       //" and  s.streetId > 0 " +
+                       "order by description";
  }
  else {
    commandText= "Select SegmentId, description, OneWay, s.startDate, s.endDate,"
                         " s.length, points, s.startLat, s.startLon, s.endLat, s.EndLon, type, s.street,"
                         " s.location, pointArray, tracks, direction, DoubleDate, newerName, s.streetid"
                 " from Segments s"
-                " join `StreetDef`  on streetdef.StreetId = s.streetId  "
-                " where streetdef.Street = '" + street + "' "
-                " and  s.streetId > 0 "
-                + "order by description";
+                //" join `StreetDef`  on streetdef.StreetId = s.streetId  "
+                " where s.Street = '" + street + "' "
+                //" and  s.streetId > 0 " +
+                "order by description";
 
   }
  QSqlQuery query = QSqlQuery(db);
@@ -6241,7 +6241,8 @@ Parameters SQL::getParameters(QSqlDatabase db)
                 if(aPair.isEmpty())
                     continue;
                 QStringList values = aPair.split(":");
-                parms.abbreviationsList.append(QPair<QString, QString>(values.at(0),values.at(1)));
+                if(values.count()>1)
+                    parms.abbreviationsList.append(QPair<QString, QString>(values.at(0),values.at(1)));
             }        }
     }
     catch (Exception e)
@@ -10049,7 +10050,7 @@ bool SQL::checkSegments()
              if(!sti.segments.contains(si.segmentId()))
              {
                  sti.segments.append(si.segmentId());
-                 sti.updateBounds(si);
+                 sti.updateSegmentInfo(si);
                  StreetsTableModel::instance()->updateStreetName(sti);
              }
          }
@@ -10472,8 +10473,14 @@ void SQL::checkTables(QSqlDatabase db)
 
   if(!tableList.contains("RouteName",Qt::CaseInsensitive))
   {
-      executeScript(":/sql/create_routeName.sql", db);
-    populateRouteId();
+      executeCommand("begin");
+      if(!executeScript(":/sql/create_routeName.sql", db))
+         exit(EXIT_FAILURE);
+      if(!executeScript(":/sql/create_routeView", db))
+          exit(EXIT_FAILURE);
+    if(!populateRouteId())
+        exit(EXIT_FAILURE);
+    executeCommand("commit");
   }
 
   if(!tableList.contains("RouteSeq", Qt::CaseInsensitive))
@@ -11785,7 +11792,7 @@ QStringList SQL::listColumns(QString table, QString serverType, QSqlDatabase db)
  return columns;
 }
 
-QStringList SQL::listPkColumns(QString table, QString serverType, QSqlDatabase db)
+QStringList SQL::listPkColumns(QString table, QString serverType, QSqlDatabase db, QStringList* types)
 {
  QStringList columns;
 // Connection* c = config->currConnection;
@@ -11796,7 +11803,13 @@ QStringList SQL::listPkColumns(QString table, QString serverType, QSqlDatabase d
  else if(serverType == "MySql")
   commandText = "describe " + table;
  else // SQL Server
-  commandText = "EXEC sp_help " + table;
+ {
+  //commandText = "EXEC sp_help " + table;
+     commandText = "select *"
+             " from INFORMATION_SCHEMA.COLUMNS"
+             " where TABLE_NAME='" + table + "'";
+ }
+
  //processALine(txt, v);
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
@@ -11813,15 +11826,22 @@ QStringList SQL::listPkColumns(QString table, QString serverType, QSqlDatabase d
   {
    if(query.value("pk").toUInt() > 0)
     columns.append(query.value("name").toString());
+   if(types)
+       types->append(query.value("type").toString());
   }
   else if(serverType == "MySql")
   {
    if(query.value("Key").toString()== "PRI")
     columns.append(query.value("Field").toString());
+   if(types)
+       types->append(query.value("Type").toString());
   }
   else // SQL Server
-   // TODO:
-   columns.append(query.value("Name").toString());
+  {
+   columns.append(query.value("COLUMN_NAME").toString());
+   if(types)
+       types->append(query.value("DATA_TYPE").toString());
+  }
  }
  return columns;
 }

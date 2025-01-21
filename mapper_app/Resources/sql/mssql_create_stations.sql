@@ -3,14 +3,14 @@ SET QUOTED_IDENTIFIER ON;
 SET ANSI_PADDING ON;
 CREATE TABLE  [dbo].[Stations](
       [stationKey] [int] IDENTITY(1,1) NOT NULL,
-      [routes] [varchar](50) NOT NULL DEFAULT '',
-      [name] [varchar](75) NOT NULL,
+      [routes] [varchar](250) NOT NULL DEFAULT '',
+      [name] [varchar](140) NOT NULL,
       [latitude] [decimal](15, 13) NOT NULL,
       [longitude] [decimal](15, 13) NOT NULL,
       [startDate] [date] NOT NULL,
       [endDate] [date] NOT NULL,
       [segmentId] int NOT NULL,
-      [segments] varchar(50) NOT NULL DEFAULT '',
+      [segments] varchar(100) NOT NULL DEFAULT '',
       [infoKey] int NOT NULL DEFAuLT -1,
       [markerType] varchar(15) default '',
       [routeType] int NOT NULL DEFAULT -1,

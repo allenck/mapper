@@ -81,6 +81,8 @@ void StreetView::tablev_CustomContextMenu(const QPoint &pt)
     int srcRow = proxyModel->mapToSource(proxyModel-> index(curRow, curCol)).row();
     QItemSelectionModel * selModel = selectionModel();
     QModelIndexList indexes = selModel->selectedIndexes();
+    if(indexes.isEmpty())
+        return;
     QModelIndex Index = indexes.at(StreetsTableModel::STREET);
     QString street = Index.data().toString();
     QString location =indexes.at(StreetsTableModel::LOCATION).data().toString();
@@ -101,7 +103,7 @@ void StreetView::tablev_CustomContextMenu(const QPoint &pt)
         foreach (SegmentInfo si , segments) {
             if(!sti->segments.contains(si.segmentId()))
                 sti->segments.append(si.segmentId());
-            sti->updateBounds(si);
+            sti->updateSegmentInfo(si);
         }
         sourceModel->updateStreetName(*sti);
 

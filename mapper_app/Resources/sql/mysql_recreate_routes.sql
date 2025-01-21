@@ -18,7 +18,7 @@ INSERT INTO  `t_routes` (`Route` ,  `Name` ,  `StartDate`, `EndDate` ,   `LineKe
 DROP TABLE `Routes`;
 CREATE TABLE `Routes` (
    `Route` int NOT NULL,
-   `Name` varchar(125) CHARACTER SET latin1 COLLATE latin1_german1_ci NOT NULL,
+   `Name` varchar(140) CHARACTER SET latin1 COLLATE latin1_german1_ci NOT NULL,
    `StartDate` date NOT NULL,
    `EndDate` date NOT NULL,
    `LineKey` int NOT NULL,

@@ -409,6 +409,7 @@ private:
     QAction* editStreetsAct;
     QAction* updateStreetsAct;
     QAction* editRouteSqlAct;
+    QAction* populateRouteIdAct;
 
     QWidgetAction *sortTypeAct;
     QComboBox * cbSort;
@@ -423,6 +424,7 @@ private:
     QList<CompanyData*> companyList;
     QList<CompanyData*> selectedComanyList;
     SystemConsole2* consoleDlg = nullptr;
+    QStringList currentStreetNames;
 
     TerminalInfo m_terminalInfo;
     //QString m_mapid = "99f6ba1d184ea0b6"; //"DEMO_MAP_ID";
@@ -489,6 +491,7 @@ private:
     bool isStationOnSegment(StationInfo* sti, QList<SegmentData*> segmentDataList);
     QString createSortString(QString alphaRoute);
     int countDigits(QString str);
+    void processDescriptionChange(QString descr, QString street);
 
 private slots:
 //    void aCopy();

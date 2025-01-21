@@ -15,6 +15,7 @@ do \
  QSqlError err = query->lastError(); \
  qCritical() << "Sql error:" << err.text(); \
  qCritical() << query->lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n"; \
+    QApplication::beep();\
     switch (errSqlMessage(query, __LINE__)) {\
     case QMessageBox::Abort:\
      emit ExportSql::requestStop();\
@@ -56,6 +57,7 @@ public:
     bool exportRoutes(RouteData rd);
     bool createSegmentsTable(QSqlDatabase db, QString dbType);
     bool dropTable(QString table, QSqlDatabase db, QString dbType);
+    bool createRouteNameTable(QSqlDatabase db, QString dbType);
     bool createRouteTable(QSqlDatabase db, QString dbType);
     bool createRouteCommentsTable(QSqlDatabase db, QString dbType);
     bool createStationsTable(QSqlDatabase db, QString dbType);
@@ -67,6 +69,7 @@ public:
     bool createRouteSeqTable(QSqlDatabase db, QString dbType);
     bool createCommentsTable(QSqlDatabase db, QString dbType);
     bool createTractionTypesTable(QSqlDatabase db, QString dbType);
+    bool createStreetDefTable(QSqlDatabase db, QString dbType);
     bool dropRoutes();
     bool dropStations();
     bool dropRouteComments();

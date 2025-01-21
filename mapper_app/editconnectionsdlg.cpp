@@ -610,7 +610,8 @@ void EditConnectionsDlg::setControls(QString txt)
 #  else
   // location of unixODBC config files
   findODBCDsn(QDir::home().absolutePath() + QDir::separator()+ ".odbc.ini", &databases);
-  findODBCDsn("/usr/local/etc/odbc.ini", &databases);
+  //findODBCDsn("/usr/local/etc/odbc.ini", &databases);
+  findODBCDsn("/etc/odbc.ini", &databases);
 #  endif
 #endif
   // use database (required for ODBC)
@@ -1256,7 +1257,14 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
  {
   //createSqliteTables(db);
   ExportSql* expSql = new ExportSql(Configuration::instance(), false);
-  expSql->createParametersTable(db, ui->cbDbType->currentText());
+  if(ui->cbDbType->currentText() == "Sqlite")
+      expSql->createParametersTable(db, ui->cbDbType->currentText());
+  else
+  {
+      QMessageBox::information(nullptr, tr("Setup database"), tr("No tables exist in this database. "
+                                                                 "The database administrator must create the database and users."));
+      return false;
+  }
  }
 
  QString odbcDsn = db.databaseName();
@@ -1377,6 +1385,7 @@ bool EditConnectionsDlg::openTestDb()
       {
        ui->txtHost->setEnabled(true);
        db.setHostName(ui->txtHost->text());
+       qDebug() << db.hostName();
       }
       if(db.port()< 1)
       {

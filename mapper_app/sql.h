@@ -261,7 +261,7 @@ public:
     QStringList listViews();
     QList<SegmentData *> segmentDataFromView(QString where);
     QStringList listColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase());
-    QStringList listPkColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase());
+    QStringList listPkColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase(), QStringList *types=nullptr);
     bool getForeignKeyCheck();
     void setForeignKeyCheck(bool b);
     int displaySqlError(QSqlQuery query, QMessageBox::StandardButtons buttons, QString text, QString func, QString file, int line);

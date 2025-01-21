@@ -136,7 +136,7 @@ void RouteNameWidget::txtRouteNbr_Leave()
                 bNewRouteNbr = true;
                 bool bok;
                 _routeNbr = ui->txtRouteNbr->text().toInt(&bok);
-                if(!bok || cd->routePrefix != " " || !cd->routePrefix.isEmpty())
+                if(!bok ||  (!cd->routePrefix.isEmpty() && cd->routePrefix != " "))
                 {
                  _routeNbr = sql->findNextRouteInRange("1000,1999");
                  ui->cbRouteName->setCurrentIndex(-1);

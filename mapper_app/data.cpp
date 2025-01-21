@@ -1261,8 +1261,13 @@ QString StreetInfo::segmentsToString()
     return result;
 }
 
-void StreetInfo::updateBounds(SegmentInfo si)
+void StreetInfo::updateSegmentInfo(SegmentInfo si)
 {
+    if(!dateStart.isValid() || si.startDate() < dateStart)
+        dateStart = si.startDate();
+    if(!dateEnd.isValid() || si.endDate() > dateEnd)
+        dateEnd = si.endDate();
+
     bounds.updateBounds(LatLng(si.startLat(), si.startLon()));
     bounds.updateBounds(LatLng(si.endLat(), si.endLon()));
     if(bounds.isValid())

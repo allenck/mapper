@@ -3,6 +3,12 @@
 #include <QCloseEvent>
 #include "vptr.h"
 #include "mainwindow.h"
+#include "exportsql.h"
+
+#ifdef USE_QTCONCURRENT
+#include <QtConcurrent/QtConcurrentRun>
+#include <QFuture>
+#endif
 
 ExportDlg::ExportDlg(Configuration *cfg, QWidget *parent) :
     QDialog(parent),
@@ -12,16 +18,16 @@ ExportDlg::ExportDlg(Configuration *cfg, QWidget *parent) :
  this->setWindowTitle(tr("Export Database"));
  config = cfg;
 
- timer = new QTimer(this);
- timer->setInterval(1000);
- connect(timer, SIGNAL(timeout()), this, SLOT(quickProcess()));
- timer->start();
+ // timer = new QTimer(this);
+ // timer->setInterval(1000);
+ // connect(timer, SIGNAL(timeout()), this, SLOT(quickProcess()));
+ // timer->start();
 
  connect(ui->chkAll, SIGNAL(clicked(bool)), this, SLOT(chkAll_changed(bool)));
  connect(ui->btnGo, SIGNAL(clicked()), this, SLOT(btnGo_clicked()));
  connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(btnCancel_clicked()) );
  connect(ui->btnFinish, &QPushButton::clicked, [=]{
-     timer->stop();
+     // timer->stop();
      MainWindow::instance()->form = nullptr;
      close();
  });
@@ -80,7 +86,7 @@ void ExportDlg::chkAll_changed(bool isChecked)
     ui->chkComments->setChecked(isChecked);
     ui->chkCompanies->setChecked(isChecked);
     ui->chkIntersections->setChecked(isChecked);
-    ui->chkLineSegments->setChecked(isChecked);
+    ui->chkRouteName->setChecked(isChecked);
     ui->chkParameters->setChecked(isChecked);
     ui->chkRoutes->setChecked(isChecked);
     ui->chkSegments->setChecked(isChecked);
@@ -88,6 +94,7 @@ void ExportDlg::chkAll_changed(bool isChecked)
     ui->chkTerminals->setChecked(isChecked);
     ui->chkTractionTypes->setChecked(isChecked);
     ui->chkRouteComments->setChecked(isChecked);
+    ui->chkStreetDef->setChecked(isChecked);
     on_chkAll_toggled(isChecked);
 }
 
@@ -98,14 +105,16 @@ void ExportDlg::btnCancel_clicked()
 
 void ExportDlg::btnGo_clicked()
 {
- ui->btnGo->setEnabled(false);
- ExportSql* exprt = new ExportSql(config, ui->chkDrop->isChecked(), this);
- if(ui->chkOverride->isChecked())
- {
-  exprt->setOverride(ui->exportDate->dateTime());
- }
- exprt->setNoDelete(ui->chkNoDelete->checkState());
- timer->start();
+    ui->btnGo->setEnabled(false);
+    ui->cbConnections->setEnabled(false);
+
+     ExportSql* exprt = new ExportSql(config, ui->chkDrop->isChecked(), this);
+     if(ui->chkOverride->isChecked())
+     {
+      exprt->setOverride(ui->exportDate->dateTime());
+     }
+     exprt->setNoDelete(ui->chkNoDelete->checkState());
+ //timer->start();
  for(int i=0; i<config->currCity->connections.count(); i++)
  {
   Connection* c = config->currCity->connections.at(i);
@@ -136,6 +145,7 @@ void ExportDlg::btnGo_clicked()
  stopEnabled = true;
  // if(currConnection->servertype() == "MsSql")
  //     SQL::instance()->useDatabase(currConnection->defaultSqlDatabase(), exprt->targetDb());
+
  while(stopEnabled)
  {
   if(ui->chkParameters->isChecked())
@@ -221,24 +231,40 @@ void ExportDlg::btnGo_clicked()
       ui->lblHelp->setText(tr("Intersections"));
       qApp->processEvents();
       ui->progressBar->setValue(0);
+#ifndef USE_QTCONCURRENT
       if(!exprt->exportTable("Intersections"))
       {
        ui->lblHelp->setText("Export of Intersections has errors");
        ui->btnGo->setEnabled(true);
        return;
       }
+#else
+      QFuture<bool> future = QtConcurrent::run(std::bind1st(std::mem_fun( &ExportSql::exportTable), exprt),"Intersections");
+      int result = future.result();
+      if(!result)
+      {
+          ui->lblHelp->setText("Export of Intersections has errors");
+          ui->btnGo->setEnabled(true);
+          return;
+      }
+#endif
       ui->chkIntersections->setChecked(false);
       qApp->processEvents();
   }
-//     if(ui->chkLineSegments->isChecked())
-//     {
-//         ui->label->setText(tr("Line Segments"));
-//         qApp->processEvents();
-//         ui->progressBar->setValue(0);
-//         exprt->exportLineSegments();
-//         ui->chkLineSegments->setChecked(false);
-//         qApp->processEvents();
-//     }
+  if(ui->chkStreetDef->isChecked())
+  {
+      ui->lblHelp->setText(tr("StreetDef"));
+      qApp->processEvents();
+      ui->progressBar->setValue(0);
+      if(!exprt->exportTable("StreetDef"))
+      {
+          ui->lblHelp->setText("Export of StreetDef has errors");
+          ui->btnGo->setEnabled(true);
+          return;
+      }
+      ui->chkStreetDef->setChecked(false);
+      qApp->processEvents();
+  }
   if(ui->chkSegments->isChecked())
   {
       ui->lblHelp->setText(tr("Segments"));
@@ -255,6 +281,20 @@ void ExportDlg::btnGo_clicked()
        return;
       }
       ui->chkSegments->setChecked(false);
+      qApp->processEvents();
+  }
+  if(ui->chkRouteName->isChecked())
+  {
+      ui->lblHelp->setText(tr("RouteName"));
+      qApp->processEvents();
+      ui->progressBar->setValue(0);
+      if(!exprt->exportTable("RouteName"))
+      {
+          ui->lblHelp->setText("Export of RouteName has errors");
+          ui->btnGo->setEnabled(true);
+          return;
+      }
+      ui->chkRouteName->setChecked(false);
       qApp->processEvents();
   }
   if(ui->chkRoutes->isChecked())
@@ -334,17 +374,18 @@ void ExportDlg::btnGo_clicked()
   if(stopEnabled)
       break;
  }
- timer->stop();
- this->close();
+ // timer->stop();
+ // this->close();
  ui->btnGo->setEnabled(true);
+ ui->cbConnections->setEnabled(true);
 }
 
-void ExportDlg::quickProcess()
-{
-    QApplication::processEvents();
+// void ExportDlg::quickProcess()
+// {
+//     QApplication::processEvents();
 
-    show();
-}
+//     show();
+// }
 
 void ExportDlg::chkOverrideToggled(bool checked)
 {
@@ -387,6 +428,7 @@ void ExportDlg::on_chkCompanies_toggled(bool bChecked)
   {
    // foreign key refereces this table
    ui->chkRoutes->setChecked(true);
+   ui->chkRouteName->setChecked(true);
   }
  }
 }
@@ -398,6 +440,7 @@ void ExportDlg::on_chkSegments_toggled(bool bChecked)
   {
    // foreign key refereces this table
    ui->chkRoutes->setChecked(true);
+   ui->chkRouteName->setChecked(true);
   }
  }
 }
@@ -412,6 +455,7 @@ void ExportDlg::on_chkRoutes_toggled(bool bChecked)
    ui->chkSegments->setChecked(true);
    ui->chkCompanies->setChecked(true);
    ui->chkAltRoute->setChecked(true);
+   ui->chkRouteName->setChecked(true);
   }
  }
 }

@@ -95,7 +95,7 @@ DialogUpdateStreets::DialogUpdateStreets(QWidget *parent)
                         if(sti)
                         {
                             si.setNewerName(sti->street);
-                            sti->updateBounds(si);
+                            sti->updateSegmentInfo(si);
                             sti->startLatLng = sti->bounds.swPt();
                             sti->endLatLng = sti->bounds.nePt();
                             sti->length = SQL::instance()->Distance(sti->startLatLng, sti->endLatLng);

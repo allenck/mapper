@@ -117,6 +117,11 @@ QSqlDatabase Connection::configure(const QString cName)
         if(!eSql->createRouteCommentsTable(db, config->currConnection->servertype()))
           throw Exception();
        }
+       if(!tableList.contains("StreetDef", Qt::CaseInsensitive))
+       {
+           if(!eSql->createStreetDefTable(db, config->currConnection->servertype()))
+               throw Exception();
+       }
        if(!tableList.contains("Segments",Qt::CaseInsensitive))
        {
         if(!eSql->createSegmentsTable(db, config->currConnection->servertype()))

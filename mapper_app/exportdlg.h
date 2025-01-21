@@ -4,7 +4,6 @@
 #include <QDialog>
 #include "sql.h"
 #include "configuration.h"
-#include "exportsql.h"
 
 namespace Ui {
     class ExportDlg;
@@ -21,7 +20,7 @@ public:
 private:
     Ui::ExportDlg *ui;
     Configuration * config;
-    QTimer *timer;
+    //QTimer *timer;
     bool stopEnabled = false;
     Connection* currConnection = nullptr;
 
@@ -29,7 +28,7 @@ private slots:
     void chkAll_changed(bool isChecked);
     void btnCancel_clicked();
     void btnGo_clicked();
-    void quickProcess();
+    //void quickProcess();
     void chkOverrideToggled(bool checked);
     void newProgressMsg(QString msg);
     void uncheckControl(QString control);

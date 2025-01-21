@@ -1,5 +1,6 @@
 #include <QtGui>
 #include "mainwindow.h"
+#include "qcompleter.h"
 #include "removecitydialog.h"
 #include <QWebEngineHistory>
 #include "streetstablemodel.h"
@@ -258,16 +259,100 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   connect(ui->txtStreet, SIGNAL(editingFinished()), this, SLOT(txtStreetName_Leave()));
   ui->txtSegment->setContextMenu(txtSegment_customContextMenu());
   connect(ui->txtSegment, &EditSegmentDescr::descrUpdated, [=](QString descr, QString street){
-      SegmentInfo si = sql->getSegmentInfo(m_segmentId);
-      if(descr != si.description() || street != si.streetName())
-      {
-          si.setStreetName(street);
-          si.setDescription(descr);
-          si.setLocation(ui->txtLocation->text().trimmed());
-          si.setNewerName(ui->txtNewerName->text());
-          sql->updateSegment(&si);
-      }
+      processDescriptionChange(descr, street);
+      // SegmentInfo si = sql->getSegmentInfo(m_segmentId);
+      // if(descr != si.description() || street != si.streetName())
+      // {
+      //     si.setStreetName(street);
+      //     si.setDescription(descr);
+      //     si.setLocation(ui->txtLocation->text().trimmed());
+      //     si.setNewerName(ui->txtNewerName->text());
+      //     sql->updateSegment(&si);
+
+      //     if(!ui->txtNewerName->text().isEmpty())
+      //     {
+      //         QList<StreetInfo*> list = StreetsTableModel::instance()->getStreetName(ui->txtNewerName->text(),
+      //                                         ui->txtLocation->text()  ) ;
+      //         if(list.isEmpty())
+      //         {
+      //             StreetInfo sti;
+      //             sti.street = ui->txtNewerName->text();
+      //             sti.location = ui->txtLocation->text();
+      //             sti.sequence = 0;
+      //             sti.segments.append(si.segmentId());
+      //             sti.updateSegmentInfo(si);
+      //             int streetId =StreetsTableModel::instance()->newStreetDef(&sti);
+      //             if(streetId > 0)
+      //             {
+      //                 sti.street = ui->txtStreet->text();
+      //                 sti.sequence = 1;
+      //                 sti.dateStart = si.startDate();
+      //                 sti.dateEnd = si.endDate();
+      //                 sti.newerName = ui->txtNewerName->text().trimmed();
+      //                 if(StreetsTableModel::instance()->newStreetName(&sti))
+      //                 {
+      //                     si.setStreetId(streetId);
+      //                     sql->updateSegment(&si);
+      //                 }
+      //             }
+      //         }
+      //         else
+      //         {
+      //             foreach (StreetInfo* sti, list) {
+      //                 if(sti->sequence == 0)
+      //                 {
+      //                     if(!sti->segments.contains(si.segmentId()))
+      //                         sti->updateSegmentInfo(si);
+      //                     QStringList names;
+      //                     QList<StreetInfo*>* list2 =StreetsTableModel::instance()->getStreetNames(sti->streetId, &names);
+      //                     if(!names.contains(ui->txtStreet->text().trimmed()))
+      //                     {
+      //                         StreetInfo sti2 = StreetInfo(*sti);
+      //                         sti2.street = ui->txtStreet->text().trimmed();
+      //                         sti2.sequence = 1;
+      //                         sti2.dateStart = si.startDate();
+      //                         sti2.dateEnd = si.endDate();
+      //                         sti2.segments.append(si.segmentId());
+      //                         sti2.updateBounds();
+      //                         if(StreetsTableModel::instance()->newStreetName(&sti2))
+      //                         {
+      //                             si.setStreetId(sti->streetId);
+      //                             si.setNewerName(sti->street);
+      //                             sql->updateSegment(&si);
+      //                         }
+      //                     }
+      //                     else
+      //                     {
+      //                         if(names.contains(ui->txtStreet->text().trimmed()))
+      //                         {
+      //                             StreetInfo* sti2 = list2->at(names.indexOf(ui->txtStreet->text()));
+      //                             sti->segments.append(si.segmentId());
+      //                             if(StreetsTableModel::instance()->updateStreetName(*sti2))
+      //                             {
+      //                                 sti2->segments.append(si.segmentId());
+      //                                 sti2->updateBounds();
+      //                                 si.setStreetId(sti->streetId);
+      //                                 si.setNewerName(sti->street);
+      //                                 sql->updateSegment(&si);
+      //                             }
+      //                         }
+      //                     }
+      //                 }
+      //                 StreetsTableModel::instance()->updateStreetDef(*sti);
+      //             }
+      //         }
+      //     }
+
+      // }
   });
+  currentStreetNames = StreetsTableModel::instance()->getStreetnamesList(ui->txtLocation->text());
+  QCompleter* nnC = new QCompleter(currentStreetNames, this);
+  nnC->setCaseSensitivity(Qt::CaseInsensitive);
+  ui->txtNewerName->setCompleter(nnC);
+  connect(StreetsTableModel::instance(), &StreetsTableModel::streetInfoChanged,this,[=]{
+      currentStreetNames = StreetsTableModel::instance()->getStreetnamesList(ui->txtLocation->text());
+  });
+
   connect(ui->txtSegment, SIGNAL(editingFinished()), this, SLOT(txtSegment_Leave()));
   connect(ui->txtNewerName, &QLineEdit::editingFinished, this,[=]{
       SegmentInfo si = sql->getSegmentInfo(m_segmentId);
@@ -279,6 +364,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
           }
           si.setNewerName(ui->txtNewerName->text());
           sql->updateSegment(&si);
+
       }
   });
   Clipboard::instance()->setContextMenu(ui->txtNewerName);
@@ -1331,6 +1417,12 @@ void MainWindow::createActions()
 //  }
  });
 
+ populateRouteIdAct = new QAction(tr("populate Routeid"),this);
+ connect(populateRouteIdAct, &QAction::triggered,this,[=]{
+     sql->populateRouteId();
+ });
+
+
  selAllCompaniesAct = new QAction(tr("All Companies"), this);
  selAllCompaniesAct->setStatusTip(tr("Show routes for all companies"));
  connect(selAllCompaniesAct, &QAction::triggered, [=]{
@@ -1603,7 +1695,7 @@ void MainWindow::addSegmentToRoute(SegmentData* sd)
                  sti->updateBounds();
                  StreetsTableModel::instance()->updateStreetName(*sti);
              }
-             sti->updateBounds(SegmentInfo(*sd));
+             sti->updateSegmentInfo(SegmentInfo(*sd));
          }
      }
  }
@@ -1725,6 +1817,7 @@ void MainWindow::createMenus()
     toolsMenu->addAction(testScriptAct);
     toolsMenu->addAction(testLoadAct);
     toolsMenu->addAction(testRunJavaScriptAct);
+    toolsMenu->addAction(populateRouteIdAct);
 // #ifdef Q_OS_MACOS
 //     toolsMenu->addAction(testUseBundleResources);
 // #endif
@@ -3833,6 +3926,8 @@ void MainWindow::txtSegment_Leave( )
   si.setDescription(ui->txtSegment->text());
   si.setTracks(ui->sbTracks->value());
   sql->updateSegment(&si);
+
+  processDescriptionChange(ui->txtSegment->text(), ui->txtStreet->text());
 }
 
 
@@ -5766,3 +5861,90 @@ int MainWindow::countDigits(QString str)
  return ix;
 }
 
+void MainWindow::processDescriptionChange(QString descr, QString street)
+{
+    SegmentInfo si = sql->getSegmentInfo(m_segmentId);
+    if(descr != si.description() || street != si.streetName())
+    {
+        si.setStreetName(street);
+        si.setDescription(descr);
+        si.setLocation(ui->txtLocation->text().trimmed());
+        si.setNewerName(ui->txtNewerName->text());
+        sql->updateSegment(&si);
+
+        if(!ui->txtNewerName->text().isEmpty())
+        {
+            QList<StreetInfo*> list = StreetsTableModel::instance()->getStreetName(ui->txtNewerName->text(),
+                                                                                    ui->txtLocation->text()  ) ;
+            if(list.isEmpty())
+            {
+                StreetInfo sti;
+                sti.street = ui->txtNewerName->text();
+                sti.location = ui->txtLocation->text();
+                sti.sequence = 0;
+                sti.segments.append(si.segmentId());
+                sti.updateSegmentInfo(si);
+                int streetId =StreetsTableModel::instance()->newStreetDef(&sti);
+                if(streetId > 0)
+                {
+                    sti.street = ui->txtStreet->text();
+                    sti.sequence = 1;
+                    sti.dateStart = si.startDate();
+                    sti.dateEnd = si.endDate();
+                    sti.newerName = ui->txtNewerName->text().trimmed();
+                    if(StreetsTableModel::instance()->newStreetName(&sti))
+                    {
+                        si.setStreetId(streetId);
+                        sql->updateSegment(&si);
+                    }
+                }
+            }
+            else
+            {
+                foreach (StreetInfo* sti, list) {
+                    if(sti->sequence == 0)
+                    {
+                        if(!sti->segments.contains(si.segmentId()))
+                            sti->updateSegmentInfo(si);
+                        QStringList names;
+                        QList<StreetInfo*>* list2 =StreetsTableModel::instance()->getStreetNames(sti->streetId, &names);
+                        if(!names.contains(ui->txtStreet->text().trimmed()))
+                        {
+                            StreetInfo sti2 = StreetInfo(*sti);
+                            sti2.street = ui->txtStreet->text().trimmed();
+                            sti2.sequence = 1;
+                            sti2.dateStart = si.startDate();
+                            sti2.dateEnd = si.endDate();
+                            sti2.segments.append(si.segmentId());
+                            sti2.updateBounds();
+                            if(StreetsTableModel::instance()->newStreetName(&sti2))
+                            {
+                                si.setStreetId(sti->streetId);
+                                si.setNewerName(sti->street);
+                                sql->updateSegment(&si);
+                            }
+                        }
+                        else
+                        {
+                            if(names.contains(ui->txtStreet->text().trimmed()))
+                            {
+                                StreetInfo* sti2 = list2->at(names.indexOf(ui->txtStreet->text()));
+                                sti->segments.append(si.segmentId());
+                                if(StreetsTableModel::instance()->updateStreetName(*sti2))
+                                {
+                                    sti2->segments.append(si.segmentId());
+                                    sti2->updateBounds();
+                                    si.setStreetId(sti->streetId);
+                                    si.setNewerName(sti->street);
+                                    sql->updateSegment(&si);
+                                }
+                            }
+                        }
+                    }
+                    StreetsTableModel::instance()->updateStreetDef(*sti);
+                }
+            }
+        }
+
+    }
+}

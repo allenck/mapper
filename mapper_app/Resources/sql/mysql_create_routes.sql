@@ -1,5 +1,6 @@
 CREATE TABLE `Routes` (
    `Route` int NOT NULL,
+   `RouteId` int,
    `Name` varchar(140) CHARACTER SET latin1 COLLATE latin1_german1_ci NOT NULL,
    `StartDate` date NOT NULL,
    `EndDate` date NOT NULL,
@@ -27,5 +28,6 @@ CREATE TABLE `Routes` (
    CONSTRAINT `Routes_ibfk_1` FOREIGN KEY (`LineKey`) REFERENCES `Segments` (`SegmentId`),
    CONSTRAINT `Routes_ibfk_3` FOREIGN KEY (`CompanyKey`) REFERENCES `Companies` (`key`),
    CONSTRAINT `Routes_ibfk_4` FOREIGN KEY (`tractionType`) REFERENCES `TractionTypes` (`tractionType`),
-   CONSTRAINT `Routes_ibfk_5` FOREIGN KEY (`Route`) REFERENCES `AltRoute` (`route`)
+   CONSTRAINT `Routes_ibfk_5` FOREIGN KEY (`Route`) REFERENCES `AltRoute` (`route`),
+   CONSTRAINT `Routes_ibfk_6` FOREIGN KEY (`RouteId`) REFERENCES `RouteName` (`routeId`)
  ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
