@@ -31,11 +31,11 @@ SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
 
     removeFromRoute = new QAction(tr("Remove from route"), this);
     connect(removeFromRoute, &QAction::triggered, [=]{
-     int row = selectedRow();
-     SegmentInfo si = sourceModel->selectedSegment(row);
-     SegmentData sd = SegmentData(si);
-     sd.updateRouteInfo(MainWindow::instance()->_rd);
-     SQL::instance()->deleteRoute(sd);
+         int row = selectedRow();
+         SegmentInfo si = sourceModel->selectedSegment(row);
+         SegmentData sd = SegmentData(si);
+         sd.updateRouteInfo(MainWindow::instance()->_rd);
+         SQL::instance()->deleteRoute(sd);
     });
     //connect(WebViewBridge::instance(), SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(on_segmentSelected(int,int)));
     connect(WebViewBridge::instance(), SIGNAL(segmentSelectedX(qint32,qint32,QList<LatLng>)), this, SLOT(on_segmentSelected(int,int,QList<LatLng>)));

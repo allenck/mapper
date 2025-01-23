@@ -492,6 +492,8 @@ private:
     QString createSortString(QString alphaRoute);
     int countDigits(QString str);
     void processDescriptionChange(QString descr, QString street);
+    bool backupDatabases();
+    bool restoreDatabases();
 
 private slots:
 //    void aCopy();

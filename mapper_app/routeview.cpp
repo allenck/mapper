@@ -45,16 +45,16 @@ RouteView::RouteView(QObject* parent )
         on_segmentSelected(pt, segmentId,list);
     });
 
-    connect(SQL::instance(), &SQL::segmentChanged, this, [=](const SegmentInfo si){
-        // SegmentInfo has changed, refresh the SegmentData record/
-        SegmentData* sd = SQL::instance()->getSegmentData(rd.route(), si.segmentId(),
-                                                          rd.startDate().toString("yyyy/MM/dd"),
-                                                          rd.endDate().toString("yyyy/MM/dd"));
-        if(sd  && sd->segmentId()  == si.segmentId())
-        {
-            sourceModel->segmentChanged(si.segmentId());
-        }
-    });
+    // connect(SQL::instance(), &SQL::segmentChanged, this, [=](const SegmentInfo si, SQL::CHANGETYPE t){
+    //     // SegmentInfo has changed, refresh the SegmentData record/
+    //     SegmentData* sd = SQL::instance()->getSegmentData(rd.route(), si.segmentId(),
+    //                                                       rd.startDate().toString("yyyy/MM/dd"),
+    //                                                       rd.endDate().toString("yyyy/MM/dd"));
+    //     if(sd  && sd->segmentId()  == si.segmentId())
+    //     {
+    //         sourceModel->segmentChanged(si.segmentId());
+    //     }
+    // });
     ui->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
     ui->horizontalHeader()->restoreState(config->rv.state);
     connect(ui->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), this,
@@ -263,12 +263,6 @@ RouteView::RouteView(QObject* parent )
       qDebug() << "new segment added " << si.segmentId() << ok;
      }
     });
-    //connect(saveChangesAct, SIGNAL(triggered()), sourceModel, SLOT(commitChanges()));
-//    connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(commitChanges()));
-//    connect(discardChangesAct, &QAction::triggered, [=]{
-    // segmentDataList = saveSegmentDataList;
-//     sourceModel->reset();
-//    });
     splitSegmentAct = new QAction(tr("Split segment at a date"),this);
     splitSegmentAct->setStatusTip(tr("Split segment into two separate route segments on a date"));
     connect(splitSegmentAct, &QAction::triggered, [=]{

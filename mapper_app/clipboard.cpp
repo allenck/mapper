@@ -20,9 +20,9 @@ Clipboard::Clipboard(QObject *parent)
                 return;
             if(history.contains(mimeData->text()))
                 return;
-            history.prepend(mimeData->text());
             if(history.length() > 10)
                 history.removeLast();
+            history.prepend(mimeData->text());
         }
     });
 }

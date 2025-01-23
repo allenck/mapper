@@ -1750,10 +1750,6 @@ void MainWindow::createMenus()
      settings.setValue("geometry", saveGeometry());
      settings.setValue("windowState", saveState());
      settings.setValue("splitter", ui->splitter->saveState());
-    //    settings.setValue("center/latitude", m_latitude);
-    //    settings.setValue("center/longitude", m_longitude);
-    //    settings.setValue("zoom", m_zoom );
-    //    settings.setValue("maptype", m_maptype);
      config->currCity->center = LatLng(m_latitude, m_longitude);
      config->currCity->zoom = m_zoom;
      config->currCity->mapType = m_maptype;
@@ -1768,6 +1764,19 @@ void MainWindow::createMenus()
      config->currCity->companyKey = ui->cbCompany->currentData().toInt();
      config->saveSettings();
     });
+    QAction* backupDbAct = new QAction(tr("Backup databases"),this);
+    backupDbAct->setStatusTip(tr("Backup SQlite dabtabases to text files."));
+    connect(backupDbAct, &QAction::triggered,this,[=]{
+        backupDatabases();
+    });
+    fileMenu->addAction(backupDbAct);
+    QAction* restoreDbAct = new QAction(tr("Restore databases"),this);
+    backupDbAct->setStatusTip(tr("Restore SQlite dabtabases from text files."));
+    connect(restoreDbAct, &QAction::triggered,this,[=]{
+        restoreDatabases();
+    });
+    fileMenu->addAction(restoreDbAct);
+
     fileMenu->addAction(quitAct);
     QMenu* connectionsMenu = new Menu("City");
     menuBar()->addMenu(connectionsMenu);
@@ -5945,6 +5954,55 @@ void MainWindow::processDescriptionChange(QString descr, QString street)
                 }
             }
         }
-
     }
+}
+
+bool MainWindow::backupDatabases()
+{
+    QProcess* process = new QProcess();
+    process->setProcessChannelMode(QProcess::MergedChannels);
+    QFileInfo info("./Resources/dump_databases.sh");
+    if(!info.exists())
+        qCritical() << "backup script not found! " << info.absoluteFilePath();
+    process->setWorkingDirectory(info.absolutePath());
+    qDebug() << "run:" << info.absoluteFilePath();
+    connect(process, &QProcess::errorOccurred,this,[=](QProcess::ProcessError error){
+        qDebug() << "process error " << error << " " << process->errorString();
+        return false;
+    });
+    process->start(info.absoluteFilePath());
+    if(process->waitForStarted())
+    {
+        process->waitForFinished();
+        process->close();
+        return true;
+    }
+    qDebug() << "process error " << process->errorString();
+
+    return false;
+}
+bool MainWindow::restoreDatabases()
+{
+    QProcess* process = new QProcess();
+    process->setProcessChannelMode(QProcess::MergedChannels);
+    QFileInfo info("./Resources/restore_databases.sh");
+    if(!info.exists())
+        qCritical() << "restore script not found! " << info.absoluteFilePath();
+    process->setWorkingDirectory(info.absolutePath());
+    qDebug() << "run:" << info.absoluteFilePath();
+    connect(process, &QProcess::errorOccurred,this,[=](QProcess::ProcessError error){
+        qDebug() << "process error " << error << " " << process->errorString();
+        return false;
+    });
+    process->start(info.absoluteFilePath());
+    if(process->waitForStarted())
+    {
+        process->waitForFinished();
+        process->close();
+        return true;
+    }
+    qDebug() << "process error " << process->errorString();
+
+    return false;
+
 }

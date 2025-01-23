@@ -141,7 +141,8 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
     tableMenu->addAction(act);
     connect(act, &QAction::triggered, [=]{
         QString txt = "select * from " + tableName;
-        processALine(txt, tableName);
+        //processALine(txt, tableName);
+        processSelect(tableName, txt);
     }); }
    toolsMenu->addSeparator();
    QMenu* viewsMenu = new QMenu(tr("Views"));

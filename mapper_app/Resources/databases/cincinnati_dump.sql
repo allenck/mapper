@@ -126,7 +126,7 @@ INSERT INTO LineSegment VALUES(103,39.07503728999999737,-84.499050830000001612,3
 INSERT INTO LineSegment VALUES(104,39.105371310000002437,-84.513999999999995793,39.10307033000000132,-84.51346098999999867,'??',122,0,0.26078499999999998903,'2016-03-10 13:50:50');
 CREATE TABLE `Terminals` (  `Route` int(11) NOT NULL,  `Name` varchar(125) NOT NULL,  `StartDate` date NOT NULL,  `EndDate` date NOT NULL,  `StartSegment` int(11) NOT NULL,  `StartWhichEnd` char(1) NOT NULL,  `EndSegment` int(11) NOT NULL,  `EndWhichEnd` char(1) NOT NULL,  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,  constraint pk PRIMARY KEY (`Route`,`Name`,`StartDate`,`EndDate`));
 INSERT INTO Terminals VALUES(101,'Chapel St','1912/05/08','1924/12/31',11,'S',28,'E','2016-03-22T16:57:19Z');
-ANALYZE sqlite_master;
+ANALYZE sqlite_schema;
 INSERT INTO sqlite_stat1 VALUES('Parameters',NULL,'1');
 INSERT INTO sqlite_stat1 VALUES('Companies',NULL,'1');
 CREATE TABLE `altRoute` (  `route` integer NOT NULL primary key AUTOINCREMENT,  `routePrefix` varchar(10) default '',  `routeAlpha` varchar(10) NOT NULL,  `baseRoute` int(11) NOT NULL DEFAULT 0,  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,  CONSTRAINT `index` unique ( routePrefix, routeAlpha));

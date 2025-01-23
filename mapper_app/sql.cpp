@@ -7504,14 +7504,15 @@ try
   QList<SegmentData> routes;
 
 
-  commandText = "SELECT a.route, n.name, a.startDate, a.endDate, companyKey, tractionType, routeAlpha, "
+  commandText = "SELECT a.route, n.name, a.startDate, a.endDate, a.companyKey, tractionType,"
+                "c.routeAlpha, "
                 "normalEnter, normalLeave, reverseEnter, reverseLeave, a.OneWay, a.Direction,"
                 " trackUsage, b.street, b.description, a.routeId "
                 "from Routes a "
                 "join Segments b on LineKey = b.SegmentId "
-                "join AltRoute c on a.route = c.route"
-                "join RouteName n on n.routeId = a.routeId"
-                " where SegmentId = " + QString("%1").arg(segmentId);
+                "join AltRoute c on a.route = c.route "
+                "join RouteName n on n.routeId = a.routeId "
+                "where SegmentId = " + QString("%1").arg(segmentId);
   bQuery = query.exec(commandText);
   if(!bQuery)
   {

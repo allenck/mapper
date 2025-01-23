@@ -1,19 +1,25 @@
 .open berlinerstrassenbahn.sqlite3
-.output berlinerstrassenbahn_dump.sql
-.dump
+.read berlinerstrassenbahn_dump.sql
+select "berlinerstrassenbahn restored"
+
 .open cincinnati.sqlite3
 .read cincinnati_dump.sql
-.dump
+select "cincinnati restored"
+
 .open cleveland.sqlite3
 .read cleveland_dump.sql
-.dump
+select "cleveland restored"
+
 .open indianapolis.sqlite3
 .read indianapolis_dump.sql
-.dump
+select "indianapolis restored"
+
 .open louisville.sqlite3
 .read Louisville_dump.sql
-.dump
+select "louisville restored"
+
 .open StLouis.sqlite3
-.read StLouis_dump.sql
-.dump
+.read StLouis_dumpStLouis.sql
+.select "berlinerstrassenbahn restored"
+
 .exit

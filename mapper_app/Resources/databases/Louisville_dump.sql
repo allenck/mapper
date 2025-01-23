@@ -1062,7 +1062,7 @@ INSERT INTO Terminals VALUES(4,'Fourth (Park 7th)','1899/01/01','1941/09/21',3,'
 INSERT INTO Terminals VALUES(6,'6th & 7th','1923/03/25','1930/06/30',151,'E',258,'S','2013-02-04T16:50:38Z');
 INSERT INTO Terminals VALUES(8,'Brook & 7th','1912/01/01','1923/03/24',151,'E',67,'S','2013-02-03T17:04:46Z');
 INSERT INTO Terminals VALUES(9,'Bank-West Jefferson','1923/03/25','1930/07/01',225,'E',72,'S','2013-02-03 17:09:55');
-ANALYZE sqlite_master;
+ANALYZE sqlite_schema;
 CREATE TABLE `altRoute` (  `route` integer NOT NULL primary key AUTOINCREMENT,  `routePrefix` varchar(10) default '',  `routeAlpha` varchar(10) NOT NULL,  `baseRoute` int(11) NOT NULL DEFAULT 0,  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,  CONSTRAINT `index` unique ( routePrefix, routeAlpha));
 INSERT INTO altRoute VALUES(2,'','02',0,'2012-05-29T20:58:09');
 INSERT INTO altRoute VALUES(4,'','04',0,'2012-05-29T20:58:09');

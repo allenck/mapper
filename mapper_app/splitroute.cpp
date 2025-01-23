@@ -524,20 +524,22 @@ void SplitRoute::btnOK_Click()
 
     for(int i = 0; i <myArray.count(); i ++)
     {
-     SegmentData* sd1 = myArray.at(i);
-     if(ui->chkDeleteOriginal->isChecked())
-     {
-      // if(!sql->deleteRouteSegment(sd1->route(), sd1->routeId(), sd1->segmentId(),
-      //                             sd1->startDate().toString("yyyy/MM/dd"),
-      //                             sd1->endDate().toString("yyyy/MM/dd")))
-      if(!sql->deleteRouteSegment(*sd1, false))
-      {
-       ui->lblHelp->setText (tr("delete failed"));
-       QApplication::beep();
-       setCursor(Qt::ArrowCursor);
-       sql->rollbackTransaction("SplitRoute");
-       return;
-      }
+        qApp->processEvents();
+        setCursor(Qt::WaitCursor);
+         SegmentData* sd1 = myArray.at(i);
+         if(ui->chkDeleteOriginal->isChecked())
+         {
+          // if(!sql->deleteRouteSegment(sd1->route(), sd1->routeId(), sd1->segmentId(),
+          //                             sd1->startDate().toString("yyyy/MM/dd"),
+          //                             sd1->endDate().toString("yyyy/MM/dd")))
+          if(!sql->deleteRouteSegment(*sd1, false))
+          {
+           ui->lblHelp->setText (tr("delete failed"));
+           QApplication::beep();
+           setCursor(Qt::ArrowCursor);
+           sql->rollbackTransaction("SplitRoute");
+           return;
+          }
      }
 
      // add back if original has an earlier start date.

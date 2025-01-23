@@ -1,0 +1,5 @@
+Sun Jan 19 01:20:12 2025at line 4542 IGNORED
+[unixODBC][Driver Manager]Function sequence error, S1010 QODBC: Unable to execute statement 0
+insert into StreetDef (`StreetId`,`Street`,`Location`,`StartDate`,`EndDate`,`StartLatLng`,`EndLatLng`,`Length`,`Bounds`,`Segments`,`Comment`,`Seq`,`lastUpdate`) values (?,?,?,?,?,?,?,?,?,?,?,?,?)
+:StreetId=1,:Street=Delmar,:Location=,:StartDate=,:EndDate=,:StartLatLng=38.633730,-90.201312,:EndLatLng=38.634345,-90.198423,:Length=0.260089,:Bounds=    -90.201312,      38.63373,     -90.198423,     38.634345,:Segments=1392,:Comment=,:Seq=0,:lastUpdate=2025-01-18T16:38:28.000
+

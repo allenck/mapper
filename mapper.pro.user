@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 15.0.0, 2025-01-21T11:43:37. -->
+<!-- Written by QtCreator 15.0.0, 2025-01-23T09:58:57. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -31,7 +31,7 @@
    <value type="qlonglong" key="EditorConfiguration.CodeStyle.Count">2</value>
    <value type="QByteArray" key="EditorConfiguration.Codec">UTF-8</value>
    <value type="bool" key="EditorConfiguration.ConstrainTooltips">false</value>
-   <value type="int" key="EditorConfiguration.IndentSize">4</value>
+   <value type="int" key="EditorConfiguration.IndentSize">2</value>
    <value type="bool" key="EditorConfiguration.KeyboardTooltips">false</value>
    <value type="int" key="EditorConfiguration.LineEndingBehavior">0</value>
    <value type="int" key="EditorConfiguration.MarginColumn">80</value>
@@ -46,8 +46,8 @@
    <value type="bool" key="EditorConfiguration.SmartSelectionChanging">true</value>
    <value type="bool" key="EditorConfiguration.SpacesForTabs">true</value>
    <value type="int" key="EditorConfiguration.TabKeyBehavior">0</value>
-   <value type="int" key="EditorConfiguration.TabSize">8</value>
-   <value type="bool" key="EditorConfiguration.UseGlobal">true</value>
+   <value type="int" key="EditorConfiguration.TabSize">2</value>
+   <value type="bool" key="EditorConfiguration.UseGlobal">false</value>
    <value type="bool" key="EditorConfiguration.UseIndenter">false</value>
    <value type="int" key="EditorConfiguration.Utf8BomBehavior">1</value>
    <value type="bool" key="EditorConfiguration.addFinalNewLine">true</value>
@@ -75,6 +75,7 @@
    <valuelist type="QVariantList" key="AutoTest.PathFilters"/>
    <value type="int" key="AutoTest.RunAfterBuild">0</value>
    <value type="bool" key="AutoTest.UseGlobal">true</value>
+   <value type="bool" key="ClangFormat.UseGlobalSettings">false</value>
    <valuemap type="QVariantMap" key="ClangTools">
     <value type="bool" key="ClangTools.AnalyzeOpenFiles">true</value>
     <value type="bool" key="ClangTools.BuildBeforeAnalysis">true</value>

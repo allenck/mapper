@@ -249,13 +249,13 @@ void WebViewBridge::clickPoint(double lat, double lng)
 {
     LatLng latlng = LatLng(lat, lng);
     emit clickLatLng(latlng );
-    QClipboard *clip = QApplication::clipboard();
-    QVariant v = QVariant::fromValue(latlng);
-    QMimeData* mimeData = new QMimeData;
-    QByteArray ba = v.toByteArray();
-    mimeData->setData("latlng", ba);
-    clip->setMimeData(mimeData);
-    clip->setText(latlng.str());
+    // QClipboard *clip = QApplication::clipboard();
+    // QVariant v = QVariant::fromValue(latlng);
+    // QMimeData* mimeData = new QMimeData;
+    // QByteArray ba = v.toByteArray();
+    // mimeData->setData("latlng", ba);
+    // clip->setMimeData(mimeData);
+    // clip->setText(latlng.str());
 }
 
 void WebViewBridge::movePoint(qint32 segmentId, qint32 i, double lat, double lng)

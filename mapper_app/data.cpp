@@ -415,6 +415,7 @@ QString SegmentData::reverseDescription()
 
 void SegmentData::updateRouteInfo(RouteData rd){
  _route = rd.route();
+ _routeId = rd.routeId();
  _routeName = rd.routeName();
  _dateBegin = rd.startDate();
  _dateEnd = rd.endDate();
