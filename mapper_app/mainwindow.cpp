@@ -5961,7 +5961,11 @@ bool MainWindow::backupDatabases()
 {
     QProcess* process = new QProcess();
     process->setProcessChannelMode(QProcess::MergedChannels);
+#ifdef Q_OS_WIN
+    QFileInfo info("./Resources/dump_databases.bat");
+#else
     QFileInfo info("./Resources/dump_databases.sh");
+#endif
     if(!info.exists())
         qCritical() << "backup script not found! " << info.absoluteFilePath();
     process->setWorkingDirectory(info.absolutePath());
@@ -5983,9 +5987,16 @@ bool MainWindow::backupDatabases()
 }
 bool MainWindow::restoreDatabases()
 {
+    QSqlDatabase db = QSqlDatabase::database();
+    if(db.isOpen())
+        db.close();
     QProcess* process = new QProcess();
     process->setProcessChannelMode(QProcess::MergedChannels);
+#ifdef Q_OS_WIN
+    QFileInfo info("./Resources/restore_databases.bat");
+#else
     QFileInfo info("./Resources/restore_databases.sh");
+#endif
     if(!info.exists())
         qCritical() << "restore script not found! " << info.absoluteFilePath();
     process->setWorkingDirectory(info.absolutePath());
@@ -5999,6 +6010,7 @@ bool MainWindow::restoreDatabases()
     {
         process->waitForFinished();
         process->close();
+        sql->dbOpen();
         return true;
     }
     qDebug() << "process error " << process->errorString();
