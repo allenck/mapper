@@ -422,7 +422,7 @@ private:
     QString  currentOverlay;
     QMap<int,TractionTypeInfo> tractionTypeList;
     QList<CompanyData*> companyList;
-    QList<CompanyData*> selectedComanyList;
+    QList<CompanyData*> selectedCompanyList;
     SystemConsole2* consoleDlg = nullptr;
     QStringList currentStreetNames;
 

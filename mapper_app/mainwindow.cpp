@@ -2024,7 +2024,7 @@ void MainWindow::newCity(QAction* act )
   this->setCursor(QCursor(Qt::WaitCursor));
   enableControls(false);
   qApp->processEvents();
-
+  streetView->reset();
   // first, save some settings for the current city
   config->currCity->center = LatLng(m_latitude, m_longitude);
   config->currCity->zoom = m_zoom;
@@ -2990,7 +2990,7 @@ void MainWindow::onCbRouteIndexChanged(int row)
  }
  CompanyData* cd = sql->getCompany(_rd.companyKey());
  disconnect(ui->cbRoute, SIGNAL(currentIndexChanged(int)), this, SLOT(onCbRouteIndexChanged(int)));
- ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(cd->companyKey));
+ //ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(cd->companyKey));
  connect(ui->cbRoute, SIGNAL(currentIndexChanged(int)), this, SLOT(onCbRouteIndexChanged(int)));
 
  //ui->txtRouteNbr->setText(sql->getAlphaRoute(_rd.route(),cd->routePrefix));
@@ -3063,7 +3063,7 @@ void MainWindow::refreshCompanies()
     // QStandardItem* item;
     // QStandardItemModel* mod = new QStandardItemModel(1,0);
     companyList = sql->getCompanies();
-    selectedComanyList.clear();
+    selectedCompanyList.clear();
     for(int i=0; i < companyList.count(); i++)
     {
         CompanyData* cd = companyList.at(i);
@@ -3073,7 +3073,7 @@ void MainWindow::refreshCompanies()
                 config->currCity->selectedCompaniesList.contains(cd->companyKey))
             {
                 ui->cbCompany->addItem(cd->name, cd->companyKey);
-                selectedComanyList.append(cd);
+                selectedCompanyList.append(cd);
             }
             // else
             //     ui->cbCompany->addItem(cd->name, cd->companyKey);
@@ -3087,7 +3087,7 @@ void MainWindow::refreshCompanies()
     //ui->cbCompany->setModel(mod);
     if(routeDlg != NULL)
      routeDlg->fillCompanies();
-    ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(m_companyKey));
+    //ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(m_companyKey));
 }
 
 void MainWindow::cbCompanySelectionChanged(int sel)

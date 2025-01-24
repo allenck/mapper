@@ -327,7 +327,6 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
  if(companyKey >0)
   where= " where r.companyKey = " + QString("%1").arg(companyKey);
  if(config->currConnection->servertype() != "MsSql")
-
     commandText = "Select distinct a.baseRoute, r.route, n.name, r.startDate, "
                "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic,r.routeId  "
                "from Routes r "
@@ -5842,6 +5841,7 @@ QList<RouteData> SQL::getRouteInfo(qint32 route)
 
     return myArray;
 }
+
 /// <summary>
 /// Update company record
 /// </summary>
@@ -10465,19 +10465,79 @@ void SQL::checkTables(QSqlDatabase db)
       executeCommand("drop table StreetName");
 
   }
+  if(!doesColumnExist("Companies", "RoutePrefix"))
+  {
+   addColumn("Companies", "RoutePrefix", "varchar(10 NOT NULL default '')");
+   if(config->currConnection->servertype() == "Sqlite")
+    executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
+  }
 
-  if(!tableList.contains("StreetDef"),Qt::CaseInsensitive)
+  if(!doesColumnExist("Companies", "info"))
+  {
+   addColumn("Companies", "info", "varchar(50) NOT NULL default ''", "Description");
+  }
+
+  if(!doesColumnExist("Companies", "Mnemonic"))
+  {
+      if(config->currConnection->servertype() == "MySql")
+          addColumn("Companies", "Mnemonic", "varchar(10) NOT NULL default '' ", "`key`");
+      else
+          addColumn("Companies", "Mnemonic", "varchar(10) NOT NULL default ''");
+      // if(config->currConnection->servertype() == "Sqlite")
+      //  executeScript(":/sql/sqlite3_recreateCompanies.sql",db);
+  }
+  if(!doesColumnExist("Companies", "Url"))
+  {
+      if(config->currConnection->servertype() == "MySql")
+          addColumn("Companies", "Url", "varchar(100) NOT NULL default '' ", "`key`");
+      else
+          addColumn("Companies", "Url", "varchar(100) NOT NULL default ''");
+      // if(config->currConnection->servertype() == "Sqlite")
+      //  executeScript(":/sql/sqlite3_recreateCompanies.sql",db);
+  }
+  if(!doesColumnExist("Segments", "DoubleDate"))
+  {
+     addColumn("Segments", "DoubleDate", "date NOT NULL DEFAULT '2000-01-01'");
+     // if(config->currConnection->servertype() == "Sqlite")
+     //  executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
+  }
+
+  if(!doesColumnExist("Segments", "FormatOK"))
+  {
+     addColumn("Segments", "FormatOK", "int(1) NOT NULL DEFAULT FALSE");
+     // if(config->currConnection->servertype() == "Sqlite")
+     //  executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
+  }
+  if(!doesColumnExist("Segments", "NewerName"))
+  {
+      addColumn("Segments", "NewerName", "text NOT NULL Default ''");
+      // if(config->currConnection->servertype() == "Sqlite")
+      //  executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
+  }
+
+  if(!doesColumnExist("Segments", "StreetId"))
+  {
+      addColumn("Segments", "StreetId", "integer NOT NULL Default -1");
+      // if(config->currConnection->servertype() == "Sqlite")
+      //  executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
+  }
+  if(!tableList.contains("StreetDef",Qt::CaseInsensitive))
   {
       if(config->currConnection->servertype() == "Sqlite")
        executeScript(":/sql/sqlite3_create_streetdef.sql",db);
   }
+  if(!doesColumnExist("Routes", "routeId"))
+  {
+    addColumn("Routes", "routeId", "int(11) NOT NULL DEFAULT -1", "Name");
+    executeScript(":/sql/sqlite3_recreate_routes.sql",db);
+  }
 
   if(!tableList.contains("RouteName",Qt::CaseInsensitive))
   {
-      executeCommand("begin");
       if(!executeScript(":/sql/create_routeName.sql", db))
          exit(EXIT_FAILURE);
-      if(!executeScript(":/sql/create_routeView", db))
+      executeCommand("begin");
+      if(!executeScript(":/sql/create_routeView.sql", db))
           exit(EXIT_FAILURE);
     if(!populateRouteId())
         exit(EXIT_FAILURE);
@@ -10512,64 +10572,10 @@ void SQL::checkTables(QSqlDatabase db)
    }
   }
 
-  if(!doesColumnExist("Segments", "DoubleDate"))
-  {
-     addColumn("Segments", "DoubleDate", "date NOT NULL DEFAULT '2000-01-01'");
-     if(config->currConnection->servertype() == "Sqlite")
-      executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
-  }
 
-  if(!doesColumnExist("Segments", "FormatOK"))
-  {
-     addColumn("Segments", "FormatOK", "int(1) NOT NULL DEFAULT FALSE");
-     if(config->currConnection->servertype() == "Sqlite")
-      executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
-  }
 
-  if(!doesColumnExist("Segments", "NewerName"))
-  {
-      addColumn("Segments", "NewerName", "text NOT NULL Default ''");
-      if(config->currConnection->servertype() == "Sqlite")
-       executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
-  }
 
-  if(!doesColumnExist("Segments", "StreetId"))
-  {
-      addColumn("Segments", "StreetId", "integer NOT NULL Default -1");
-      if(config->currConnection->servertype() == "Sqlite")
-       executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
-  }
 
-  if(!doesColumnExist("Companies", "RoutePrefix"))
-  {
-   addColumn("Companies", "RoutePrefix", "varchar(10 NOT NULL default '')");
-   if(config->currConnection->servertype() == "Sqlite")
-    executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
-  }
-
-  if(!doesColumnExist("Companies", "info"))
-  {
-   addColumn("Companies", "info", "varchar(50) NOT NULL default ''", "Description");
-  }
-
-  if(!doesColumnExist("Companies", "Mnemonic"))
-  {
-      if(config->currConnection->servertype() == "MySql")
-          addColumn("Companies", "Mnemonic", "varchar(10) NOT NULL default '' ", "`key`");
-      else
-          addColumn("Companies", "Mnemonic", "varchar(10) NOT NULL default ''");
-      if(config->currConnection->servertype() == "Sqlite")
-       executeScript(":/sql/sqlite3_recreateCompanies.sql",db);
-  }
-  if(!doesColumnExist("Companies", "Url"))
-  {
-      if(config->currConnection->servertype() == "MySql")
-          addColumn("Companies", "Url", "varchar(100) NOT NULL default '' ", "`key`");
-      else
-          addColumn("Companies", "Url", "varchar(100) NOT NULL default ''");
-      if(config->currConnection->servertype() == "Sqlite")
-       executeScript(":/sql/sqlite3_recreateCompanies.sql",db);
-  }
 
 #if 0
   if(config->currConnection->servertype() == "Sqlite" )
@@ -10650,10 +10656,6 @@ void SQL::checkTables(QSqlDatabase db)
    // TODO: add Sql Server syntax
    //executeScript(":/sql/recreate_routes.sql");
   }
-  if(!doesColumnExist("Routes", "routeId"))
-  {
-    addColumn("Routes", "routeId", "int(11) NOT NULL DEFAULT -1", "Name");
-    executeScript(":/sql/sqlite3_recreate_routes.sql",db);}
 
   if(!doesColumnExist("Parameters", "abbreviationsList"))
   {
@@ -12496,7 +12498,7 @@ bool SQL::scanRoutes(QList<RouteData> routes)
 
 bool SQL::populateRouteId()
 {
-    QList<SegmentData*> list = segmentDataFromView("where routeId < 0");
+    QList<SegmentData*> list = segmentDataFromView("");// get all routes
     foreach (SegmentData* sd, list) {
         SegmentData sd2 = SegmentData(*sd);
         RouteInfo ri = RouteInfo(*sd);
