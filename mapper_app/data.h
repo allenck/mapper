@@ -983,6 +983,6 @@ public:
     void updateBounds();
     bool inDateRange(QDate dt);
     bool encompasses(StreetInfo sti);
-
+    QString toString();
 };
 #endif // DATA_H

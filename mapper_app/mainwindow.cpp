@@ -2155,9 +2155,9 @@ void MainWindow::newCity(QAction* act )
     geocoderRequestAct->setChecked(config->currCity->bGeocoderRequest);
     m_bridge->processScript("setGeocoderRequest", config->currCity->bGeocoderRequest?"true":"false");
 
-    objArray.clear();
-    objArray << 0 << m_latitude<<m_longitude<<7<<"pointO"<<m_segmentId;
-     m_bridge->processScript("addMarker",objArray);
+    // objArray.clear();
+    // objArray << 0 << m_latitude<<m_longitude<<7<<"pointO"<<m_segmentId;
+    //  m_bridge->processScript("addMarker",objArray);
 
     for(int i=0; i< routeList.count(); i++)
     {
@@ -2174,6 +2174,8 @@ void MainWindow::newCity(QAction* act )
     this->setCursor(QCursor(Qt::ArrowCursor));
     enableControls(true);
     routeView->clear();
+    streetView->model()->setList(streetView->model()->getStreetInfoList());
+    ui->ssw->initialize();
 }
 
 void MainWindow::newOverlay(QAction* act)

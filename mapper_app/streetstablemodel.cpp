@@ -13,64 +13,6 @@ StreetsTableModel::StreetsTableModel(QObject *parent)
     //fixDates();
     //streetsList = getStreets();
     streetsList = getStreetInfoList();
-#if 0
-    connect(SQL::instance(), &SQL::segmentChanged, this, [=](int segmentId){
-        SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId);
-        StreetInfo* sti = StreetsTableModel::instance()->getStreet(si.streetName());
-        QStringList names;
-        QList<StreetInfo*>* namesList;
-        Q_UNUSED(namesList);
-        if(!sti)
-        {
-            sti= new StreetInfo();
-            sti->street = si.getStreetName();
-            if(!si.newerName().isEmpty())
-                sti->newerName = sti->newerName;
-            sti->startDate = si.startDate();
-            sti->segments.append(si.segmentId());
-            sti->updateBounds(si);
-            QList<SegmentInfo> segs = getSegmentsForStreet(names);
-            foreach (SegmentInfo si , segs) {
-                if(!sti->segments.contains(si.segmentId()))
-                    sti->segments.append(si.segmentId());
-                sti->updateBounds(si);
-            }
-            newStreet(*sti);
-            beginInsertRows(QModelIndex(), rowCount(QModelIndex()),rowCount(QModelIndex()));
-            streetsList.append(*sti);
-            endInsertRows();
-            emit streetUpdated(rowCount(QModelIndex())-1, sti->street);
-        }
-        else
-        {
-            namesList = getStreetNames(sti->streetId, &names);
-
-            if(!si.newerName().isEmpty() && sti->newerName != si.newerName())
-                sti->newerName = si.newerName();
-            if(!sti->segments.contains(si.segmentId()))
-                sti->segments.append(si.segmentId());
-            sti->updateBounds(si);
-
-            if(updateStreet(*sti))
-            {
-                for(int row = 0; row < streetsList.count(); row++)
-                {
-                    StreetInfo sti1 = streetsList.at(row);
-                    if(sti1.street == si.streetName())
-                    {
-                        streetsList.replace(row, *sti);
-                        emit streetUpdated(row, sti1.street);
-                        return;
-                    }
-                }
-                streetsList.append(*sti);
-                emit streetUpdated(streetsList.count() -1, si.streetName());
-
-
-            }
-        }
-    });
-#endif
     connect(this, &StreetsTableModel::streetInfoChanged, this, [=](StreetInfo si, Action act){
         int row = findRow(si.rowid);
         //QModelIndex srcIndex = index(row, 0);
@@ -542,10 +484,76 @@ QList<StreetInfo> StreetsTableModel::getStreetInfoList(QString street)
     return myArray;
 }
 
+bool StreetsTableModel::doesStreetDefExist(StreetInfo* sti)
+{
+    StreetInfo* si = nullptr;
+    QSqlDatabase db = QSqlDatabase::database();
+    QString commandText;
+    if(sti->sequence == 0)
+     commandText = "Select `Street`, `Location`,`StartLatLng`,`EndLatLng`, `Length`, "
+                          "`Bounds`,`Segments`,`Comment`, `StreetId`, `Seq`, `startDate`,"
+                          " `endDate`, rowid"
+                          " from StreetDef "
+                          " where `street` = '" + sti->street + "'"
+                          " and `Location` = '" + sti->location + "'"
+                          " and seq = " + QString::number(sti->sequence);
+    else
+        commandText = "Select `Street`, `Location`,`StartLatLng`,`EndLatLng`, `Length`, "
+                      "`Bounds`,`Segments`,`Comment`, `StreetId`, `Seq`, `startDate`,"
+                      " `endDate`, rowid"
+                      " from StreetDef "
+                      " where `street` = '" + sti->street + "'"
+                      " and `Location` = '" + sti->location + "'"
+                      " and seq = " + QString::number(sti->sequence) +
+                      " and startDate ='" + sti->dateStart.toString("yyyy/MM/dd") +"'";
+
+    QSqlQuery query = QSqlQuery(db);
+    bool bQuery = query.exec(commandText);
+    if(!bQuery)
+    {
+        SQLERROR(std::move(query));
+        //throw Exception();
+        return false;
+    }
+    while (query.next())
+    {
+        sti->street = query.value(0).toString();
+        sti->location = query.value(1).toString();
+        sti->startLatLng = LatLng::fromString( query.value(2).toString());
+        sti->endLatLng = LatLng::fromString(query.value(3).toString());
+        sti->length = query.value(4).toDouble();
+        sti->bounds = Bounds(query.value(5).toString());
+        sti->segments = si->setSegments(query.value(6).toString());
+        sti->comment = query.value(7).toString();
+        sti->streetId = query.value(8).toInt();
+        sti->sequence = query.value(9).toInt();
+        sti->dateStart = query.value(10).toDate();
+        si->dateEnd = query.value(11).toDate();
+        sti->rowid = query.value(12).toInt();
+    }
+    return true;
+}
+
 int StreetsTableModel::newStreetDef(QString street, QString location, QDate date)
 {
     if(street.length() > 30)
         qDebug() << "street size?";
+    bool bNbr;
+    if(!(street.trimmed().isEmpty()))
+    {
+        int num = street.toInt(&bNbr);
+        if(bNbr)
+            return -1;
+    }
+    else
+        return -1;
+    StreetInfo* sti = new StreetInfo();
+    sti->street = street;
+    sti->location = location;
+    sti->sequence= 0;
+    if(doesStreetDefExist(sti))
+        return sti->streetId;
+
     QSqlDatabase db = QSqlDatabase::database();
     QString commandText = "insert into StreetDef (`Street`, `Location`, `startDate`) values ("
                           "'" + street + "',"
@@ -644,14 +652,30 @@ int StreetsTableModel::newStreetDef(StreetInfo* sti)
 // streetid, street, location, dateStart, endDate must be populated
 bool StreetsTableModel::newStreetName(StreetInfo* info)
 {
+    bool bNbr;
+    if(!(info->street.trimmed().isEmpty()))
+    {
+        int num = info->street.toInt(&bNbr);
+        if(bNbr)
+            return -1;
+    }
+    else
+        return -1;
+    if(doesStreetDefExist(info))
+    {
+        qDebug() << "already exists: "<< info->toString();
+        return false;
+    }
+
     if(info->streetId < 1 || info->street.isEmpty() || !info->dateStart.isValid())
         throw IllegalArgumentException(tr("newStreetName: invalid parameters."));
     if(info->dateEnd.isValid() && info->dateStart > info->dateEnd)
         qDebug() << "newStreetName " <<info->street << " end date " <<info->dateEnd.toString("yyyy/MM/dd")
                  << " < start date " << info->dateStart.toString("yyyy/MM/dd");
 
-    if(info->sequence ==0)
-        info->sequence =1;
+    int maxSeq = maxStreetDefSeq(info->streetId);
+    if(maxSeq > info->sequence)
+        info->sequence = maxSeq++;
 
     QSqlDatabase db = QSqlDatabase::database();
     QString commandText = "insert into StreetDef (`StreetId`, `Street`, `Location`,`startDate`, "
@@ -812,6 +836,15 @@ bool StreetsTableModel::updateStreet(StreetInfo si)
 #endif
 bool StreetsTableModel::updateStreetName(StreetInfo si)
 {
+    bool bNbr;
+    if(!(si.street.trimmed().isEmpty()))
+    {
+        int num = si.street.toInt(&bNbr);
+        if(bNbr)
+            return -1;
+    }
+    else
+        return -1;
 
     QSqlDatabase db = QSqlDatabase::database();
     QString commandText = " Update StreetDef set"
@@ -846,6 +879,15 @@ bool StreetsTableModel::updateStreetName(StreetInfo si)
 }
 bool StreetsTableModel::updateStreetDef(StreetInfo sti)
 {
+    bool bNbr;
+    if(!(sti.street.trimmed().isEmpty()))
+    {
+        int num = sti.street.toInt(&bNbr);
+        if(bNbr)
+            return -1;
+    }
+    else
+        return -1;
     QSqlDatabase db = QSqlDatabase::database();
     QString commandText;
     commandText = " Update StreetDef set"
@@ -1277,6 +1319,7 @@ QList<StreetInfo*>* StreetsTableModel::getStreetNames(int streetId, QStringList 
     return myArray;
 }
 
+// used by dialogUpdateStreets
 bool StreetsTableModel::addOldStreetName(StreetInfo* sti)
 {
     try {
@@ -1449,3 +1492,23 @@ QStringList StreetsTableModel::getStreetnamesList(QString location)
     return list;
 }
 
+int StreetsTableModel::maxStreetDefSeq(int streetId)
+{
+    QSqlDatabase db = QSqlDatabase::database();
+    int maxSeq = -1;
+    QString commandText = "select MAX(`seq`) from StreetDef where `StreetId` = "
+                          + QString::number(streetId);
+    QSqlQuery query = QSqlQuery(db);
+    bool bQuery = query.exec(commandText);
+    if(!bQuery)
+    {
+        SQLERROR(std::move(query));
+        //throw Exception();
+        return maxSeq;
+    }
+    while (query.next())
+    {
+        maxSeq = query.value(0).toInt();
+    }
+    return maxSeq;
+}

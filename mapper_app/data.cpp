@@ -1316,3 +1316,8 @@ bool StreetInfo::encompasses(StreetInfo sti)
 {
     return sti.street == street && sti.location == location && inDateRange(sti.dateStart);
 }
+
+QString StreetInfo::toString()
+{
+    return street + " " + location + " streetId:" + QString::number(streetId);
+}

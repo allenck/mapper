@@ -424,7 +424,12 @@ void SegmentSelectionWidget::cbSegments_editingFinished()
 
 
   bool bOk=false;
-  segmentId = text.toInt(&bOk, 10);
+  segmentId = text.trimmed().toInt(&bOk, 10);
+  if(!bOk)
+  {
+      b_cbSegments_TextChanged =false;
+      return;
+  }
 
   ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(segmentId));
   if(ui->cbSegments->currentIndex() < 0)

@@ -73,6 +73,8 @@ public:
     bool fixDates();
     StreetInfo *getOlderStreet(int streetid, QString Street, QString location, QDate date);
     QStringList getStreetnamesList(QString location);
+    bool doesStreetDefExist(StreetInfo* sti);
+    int maxStreetDefSeq(int streetId);
 
 signals:
     void streetUpdated(int row, QString street);

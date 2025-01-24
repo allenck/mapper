@@ -654,7 +654,8 @@ void RouteViewTableModel::setList(QList< SegmentData* > segmentDataList)
     beginResetModel();
     this->listOfSegments = segmentDataList;
     saveSegmentDataList = QList<SegmentData>();
-    this->route = segmentDataList.at(0)->route();
+    if(!segmentDataList.isEmpty())
+        this->route = segmentDataList.at(0)->route();
     for(SegmentData* sd : segmentDataList)
         saveSegmentDataList.append(SegmentData(*sd));
     bChangesMade = false;
