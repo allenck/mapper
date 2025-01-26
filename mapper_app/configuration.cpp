@@ -51,7 +51,7 @@ void Configuration::saveSettings()
   settings->setValue("userMap", c->bUserMap);
   settings->setValue("bounds", c->bounds().toString());
   settings->setValue("currOverlay", c->curOverlayId);
-  settings->setValue("selectedCompanies",SQL::instance()->list2String(c->selectedCompaniesList));
+  //settings->setValue("selectedCompanies",SQL::instance()->list2String(c->selectedCompaniesList));
   settings->setValue("displayRoutesForGroup", c->bDisplayRoutesForGroup);
   // QString abbreviationsStr;
   // for (QPair<QString,QString> pair: c->abbreviationsList) {
@@ -301,15 +301,16 @@ void Configuration::getSettings()
       nc->bUserMap = settings.value("userMap", false).toBool();
       if(nc->city_overlayMap->isEmpty())
          nc->bShowOverlay = false;
-      nc->selectedCompanies = settings.value("selectedCompanies","").toString();
-      QStringList sl = nc->selectedCompanies.split(",");
-      nc->selectedCompaniesList.clear();
-      for(int i=0; i < sl.count(); i++ )
-      {
-          int companyKey = sl.at(i).toInt();
-          if(companyKey > 0)
-            nc->selectedCompaniesList.append(sl.at(i).toInt());
-      }
+      // nc->selectedCompanies = settings.value("selectedCompanies","").toString();
+      // QStringList sl = nc->selectedCompanies.split(",");
+      // nc->selectedCompaniesList.clear();
+      // for(int i=0; i < sl.count(); i++ )
+      // {
+      //     int companyKey = sl.at(i).toInt();
+      //     if(companyKey > 0)
+      //       nc->selectedCompaniesList.append(sl.at(i).toInt());
+      // }
+      remove("selectedCompanies");
       nc->bDisplayRoutesForGroup = settings.value("displayRoutesForGroup",!nc->selectedCompaniesList.isEmpty()).toBool();
       // QString abbreviationsStr = settings.value("abbreviations").toString();
       // QStringList list =  abbreviationsStr.split(",");

@@ -3257,7 +3257,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
     "[Length] [decimal](15, 5) NOT NULL,"\
     "[Points] [int] NOT NULL,"\
     "[StartDate] [date] NOT NULL,"\
-    "[DoubleDate] [date] NOT NULL,"\
+    "[DoubleDate] [date],"\
     "[EndDate] [date] NOT NULL,"\
     "[Direction] [varchar](6),"\
     "[PointArray] [text] NULL,"\
@@ -3967,6 +3967,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
           "`endDate` date DEFAULT NULL," \
           "`firstRoute` int(11) DEFAULT NULL," \
           "`lastRoute` int(11) DEFAULT NULL," \
+          "`Selected` int(1),"\
           "`lastUpdate` timestamp DEFAULT CURRENT_TIMESTAMP" \
     ");";
  else if(dbType == "MySql")
@@ -3981,6 +3982,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
     "`endDate` date DEFAULT NULL,"\
     "`firstRoute` int(11) DEFAULT NULL,"\
     "`lastRoute` int(11) DEFAULT NULL,"\
+    "`Selected` int(1),"\
     "`lastUpdate` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"\
     "UNIQUE KEY `key` (`key`)"\
   ") ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=latin1";
@@ -4000,6 +4002,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
         "[firstRoute] [int] NULL,"\
         "[lastRoute] [int] NULL,"\
         "[lastUpdate] [datetime] NOT NULL, "\
+        "[Selected] int,"\
     "CONSTRAINT [PK_Companies_1] PRIMARY KEY CLUSTERED"\
     "(" \
         "[key] ASC"\
@@ -4317,7 +4320,8 @@ bool ExportSql::exportTable(QString table)
  QStringList tables = targetDb().tables();
  if(tables.contains(table,Qt::CaseInsensitive))
   updateTimestamp(table);
- QStringList columns = SQL::instance()->listColumns(table, srcServerType, srcDb);
+ QStringList types;
+ QStringList columns = SQL::instance()->listColumns(table, srcServerType, srcDb, &types);
 // QStringList tgtColumns = SQL::instance()->listColumns(table, tgtDbType, _targetDb);
 // if(columns.count() != tgtColumns.count())
  if(!areTableDefsEqual(table, config->currConnection, tgtConn, srcDb, _targetDb))
@@ -4408,8 +4412,8 @@ bool ExportSql::exportTable(QString table)
      //db.close();
      return false;
  }
- QStringList types;
- QStringList keys = SQL::instance()->listPkColumns(table, tgtDbType, _targetDb, &types);
+
+ QStringList keys = SQL::instance()->listPkColumns(table, tgtDbType, _targetDb);
  while(query->next())
  {
   bool bFound = false;
@@ -4548,8 +4552,15 @@ bool ExportSql::exportTable(QString table)
     {
         QVariant v = query->value(i);
 
-        if(types.at(i)== "date" && v.toString().trimmed().isEmpty())
-            query2->bindValue(":"+ col, QVariant(QMetaType::fromType<QString>()) );
+        if(types.at(i)== "date" )
+        {
+            QDate dt =v.toDate();
+            if(!dt.isValid())
+                query2->bindValue(":"+ col, QVariant(QMetaType::fromType<QString>()) );
+            else
+                query2->bindValue(":"+ col, query->value(i) );
+
+        }
         else
             query2->bindValue(":"+ col, query->value(i) );
     }

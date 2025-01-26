@@ -3,6 +3,7 @@
 
 #include <QAbstractTableModel>
 #include "data.h"
+#include "sql.h"
 #include <QTextEdit>
 
 class Configuration;
@@ -58,7 +59,7 @@ public:
     QT_DEPRECATED int newStreetDef(QString street, QString location = "", QDate date = QDate::fromString("2050/01/01"));
     int newStreetDef(StreetInfo* sti);
     bool newStreetName(StreetInfo *info);
-    int findStreetId(QString street, QString location="");
+    int findStreetId(QString street, QString location="", bool bIsDef=true);
     bool updateStreetDef(StreetInfo);
     StreetInfo* getStreetDef(int streetId);
     QList<StreetInfo *> getStreetName(QString street, QString location = "", int streetId =-1);
@@ -75,6 +76,7 @@ public:
     QStringList getStreetnamesList(QString location);
     bool doesStreetDefExist(StreetInfo* sti);
     int maxStreetDefSeq(int streetId);
+    void on_segmentChange(SegmentInfo si, SQL::CHANGETYPE t);
 
 signals:
     void streetUpdated(int row, QString street);
@@ -84,6 +86,8 @@ private:
     QList<StreetInfo> streetsList;
     static StreetsTableModel* _instance;
     Configuration* config = nullptr;
+    void processStreetUpdate(int streetId, SegmentInfo si);
+
 };
 
 #endif // STREETSTABLEMODEL_H

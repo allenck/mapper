@@ -78,10 +78,10 @@ RouteDlg::RouteDlg(QWidget *parent) :
     connect(ui->dateStart, SIGNAL(editingFinished()), this, SLOT(dateStart_Leave()));
     myParent = (MainWindow*)parent;
     connect(myParent, SIGNAL(newCitySelected()), this, SLOT(OnNewCity()));
-    // connect(CompanyView::instance()->model(), &MyCompanyTableModel::companyChange, [=]{
-    //  fillCompanies();
-    // } );
     fillCompanies();
+    connect(myParent->companyView->model(), &MyCompanyTableModel::dataChanged,this,[=]{
+        fillCompanies();
+    });
     fillTractionTypes();
 
     ui->rnw->configure((SegmentData*)nullptr, ui->lblHelpText);

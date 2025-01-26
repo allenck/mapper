@@ -803,6 +803,7 @@ class CompanyData
         lastRoute = o.lastRoute;
         info = o.info;
         url = o.url;
+        bSelected =o.bSelected;
     }
 
     QString toString()
@@ -819,6 +820,7 @@ class CompanyData
     QString info;
     QUrl url;
     QDateTime lastUpdated;
+    bool bSelected;
 };
 
 class Parameters

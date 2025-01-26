@@ -260,7 +260,7 @@ public:
     bool doesFunctionExist(QString name, QString serverType, QSqlDatabase db);
     QStringList listViews();
     QList<SegmentData *> segmentDataFromView(QString where);
-    QStringList listColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase());
+    QStringList listColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase(), QStringList *types=nullptr);
     QStringList listPkColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase(), QStringList *types=nullptr);
     bool getForeignKeyCheck();
     void setForeignKeyCheck(bool b);

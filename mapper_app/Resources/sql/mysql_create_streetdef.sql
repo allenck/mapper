@@ -12,6 +12,6 @@ CREATE TABLE IF NOT EXISTS `StreetDef` ( `StreetId` INTEGER   AUTO_INCREMENT ,
                                           `Comment` text,
                                           `Seq` INT NOT NULL DEFAULT 1,
                                           `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                          PRIMARY KEY(`StreetId`, `Seq`)
+                                          PRIMARY KEY(`StreetId`, `Seq`),
                                           UNIQUE (`Street`, `StartDate`)
                                        );

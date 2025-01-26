@@ -30,9 +30,13 @@ public:
     bool removeRow(int row, const QModelIndex &parent = QModelIndex());
     CompanyData* getCompanyAtRow(int row);
 
+ signals:
+    void companySelectionsChanged();
+
  private:
     enum COLS
     {
+        SELECT,
         KEY,
         MNEMONIC,
         ROUTEPREFIX,
@@ -45,7 +49,7 @@ public:
         URL,
         LASTUPDATED
     };
-    QMap<int, QString> hdrMap = {{KEY, "Company Key"},{MNEMONIC, "Mnemonic"}, {NAME, "Company Name"},
+     QMap<int, QString> hdrMap = {{SELECT,"Select"},{KEY, "Company Key"},{MNEMONIC, "Mnemonic"}, {NAME, "Company Name"},
                                      {ROUTEPREFIX, "Prefix"}, {INFO, "Information"},{STARTDATE, "Start"},
                                      {ENDDATE, "End"}, {URL,"Url"},
                                      {FIRSTROUTE, "First Route"}, {LASTROUTE, "Last Route"},
@@ -62,7 +66,7 @@ class CompanyView : public QObject
 {
     Q_OBJECT
 public:
-    CompanyView(Configuration *cfg, QObject *parent = 0);
+    CompanyView(QObject *parent = 0);
     QObject* m_parent;
     void clear();
 
@@ -71,7 +75,7 @@ public:
     static CompanyView* instance();
 
 signals:
-    void dataChanged();
+    //void dataChanged();
 
 public slots:
     void newRecord();

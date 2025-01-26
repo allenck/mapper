@@ -1,11 +1,21 @@
-**Recent Changes September-October 2024 VERSION=1.1.4
+**Recent Changes January 2025 VERSION=1.1.5
+1. Segments table has new field: "NewerName" which is the current name of a street. This and
+   the location field have been dded to the main window's edit segment section.
+2. A new table "StreetDef" contains information about current and historic steet names. This
+   information is displayed in a new "Streets tab in the main window.
+3. A new table, "RouteName" has been created to store Route names with the intention of eventually removing
+   the route name from each Route table entry and replacing it with the integer key to the RouteName table.
+4. New scripts have been added to dump and restore SQLite databases to/from text files.
+5. The Companies table has had a new field, 'Url' containing a url of a web page about the company.
+
+**Recent Changes September-December 2024 VERSION=1.1.4
 1. Additional routes for Berlin as of 1901 added based on information from
    https://www.berliner-linienchronik.de/lv-1901.html
 2. Implement feature where only routes for selected companies are showm in routes combobox.
 3. Implement clipboard history for selected fields.
 4. Add mnemonic field to Companies table.
 5. Add logic to maintain lists of common street abbreviations. Add reformatting of segment descriptions
-   and display background colors for invalid or qestionable segment descriptions.
+   and display background colors for invalid or questionable segment descriptions.
 
 **Recent Changes April 2024 VERSION=1.1.3
 1. Fix ModifyTractionTypeDlg.

@@ -4537,10 +4537,10 @@ QList<CompanyData*> SQL::getCompanies()
  QString commandText;
  if(config->currConnection->servertype() != "MsSql")
      commandText = "select `key`, description, routePrefix, startDate, endDate,"
-                   " firstRoute, lastRoute, mnemonic, info, url, lastUpdate from Companies";
+                   " firstRoute, lastRoute, mnemonic, info, url, selected, lastUpdate from Companies";
  else
      commandText = "select [key], description, routePrefix, startDate, endDate,"
-                   " firstRoute, lastRoute, mnemonic, info, url, lastUpdate from Companies";
+                   " firstRoute, lastRoute, mnemonic, info, url, selected,lastUpdate from Companies";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -4570,7 +4570,8 @@ QList<CompanyData*> SQL::getCompanies()
      cd->mnemonic = query.value(7).toString();
      cd->info = query.value(8).toString();
      cd->url = QUrl(query.value(9).toString());
-     cd->lastUpdated = query.value(10).toDateTime();
+     cd->bSelected = query.value(10).toBool();
+     cd->lastUpdated = query.value(11).toDateTime();
      setDefaultCompanyMnemonic(cd);
      myArray.append(cd);
  }
@@ -4597,7 +4598,8 @@ bool SQL::updateCompany(CompanyData* cd)
             "startDate = '" + cd->startDate.toString("yyyy/MM/dd")+ "',"
             "endDate = '" + cd->endDate.toString("yyyy/MM/dd")+ "',"
             "firstroute = " +QString::number(cd->firstRoute) + ","
-            "lastroute = " + QString::number(cd->lastRoute) + " "
+            "lastroute = " + QString::number(cd->lastRoute) + ", "
+            "selected = " + QString::number(cd->bSelected) + " "
             "where `key` = " +  QString::number(cd->companyKey);
     else
         commandText = "update companies set "
@@ -4609,7 +4611,8 @@ bool SQL::updateCompany(CompanyData* cd)
             "startDate = '" + cd->startDate.toString("yyyy/MM/dd")+ "',"
             "endDate = '" + cd->endDate.toString("yyyy/MM/dd")+ "',"
             "firstroute = " +QString::number(cd->firstRoute) + ","
-            "lastroute = " + QString::number(cd->lastRoute) + " "
+            "lastroute = " + QString::number(cd->lastRoute) + ", "
+            "selected = " + QString::number(cd->bSelected) + " "
             "where [key] = " +  QString::number(cd->companyKey);
 
     query.prepare(commandText);
@@ -4619,6 +4622,7 @@ bool SQL::updateCompany(CompanyData* cd)
     if(!bQuery)
     {
          QSqlError err = query.lastError();
+         SQLERROR(std::move(query));
          qDebug() << err.text() + "\n";
          qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
          // db.close();
@@ -4648,12 +4652,12 @@ QList<CompanyData*> SQL::getCompaniesInDateRange(QDate startDate, QDate endDate)
  QString commandText;
  if(config->currConnection->servertype() != "MsSql")
      commandText = QString("select `key`, description, routePrefix, startDate, endDate,"
-                   " firstRoute, lastRoute, mnemonic from Companies"
+                   " firstRoute, lastRoute, mnemonic, url, selected from Companies"
                    " where startDate between '%1' and '%2' or endDate between '%1' and '%2'")
        .arg(startDate.toString("yyyy/MM/dd")).arg(endDate.toString("yyyy/MM/dd"));
  else
      commandText = QString("select [key], description, routePrefix, startDate, endDate,"
-                   " firstRoute, lastRoute, mnemonic from Companies"
+                   " firstRoute, lastRoute, mnemonic, url, selected from Companies"
                    " where startDate between '%1' and '%2' or endDate between '%1' and '%2'")
                    .arg(startDate.toString("yyyy/MM/dd"))
                    .arg(endDate.toString("yyyy/MM/dd"));
@@ -4684,6 +4688,8 @@ QList<CompanyData*> SQL::getCompaniesInDateRange(QDate startDate, QDate endDate)
      cd->firstRoute = query.value(5).toInt();
      cd->lastRoute = query.value(6).toInt();
      cd->mnemonic = query.value(7).toString();
+     cd->url = QUrl(query.value(8).toString());
+     cd->bSelected = query.value(9).toBool();
      setDefaultCompanyMnemonic(cd);
      myArray.append(cd);
  }
@@ -4708,10 +4714,12 @@ CompanyData* SQL::getCompany(qint32 companyKey)
         QString commandText;
         if(config->currConnection->servertype() != "MsSql")
             commandText = "select `key`, description, startDate, endDate, firstRoute, lastRoute,"
-                          " routePrefix, mnemonic, info, url from Companies where `key` = " +QString("%1").arg(companyKey);
+                          " routePrefix, mnemonic, info, url, selected from Companies"
+                          " where `key` = " +QString("%1").arg(companyKey);
         else
             commandText = "select [key], description, startDate, endDate, firstRoute, lastRoute,"
-                          " routePrefix,memonic, info, url from companies where [key] = " + QString("%1").arg(companyKey);
+                          " routePrefix,memonic, info, url, selected from companies"
+                          " where [key] = " + QString("%1").arg(companyKey);
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -4743,6 +4751,7 @@ CompanyData* SQL::getCompany(qint32 companyKey)
             cd->mnemonic = query.value(7).toString();
             cd->info = query.value(8).toString();
             cd->url = QUrl(query.value(9).toString());
+            cd->bSelected = query.value(10).toBool();
             setDefaultCompanyMnemonic(cd);
         }
     }
@@ -10476,6 +10485,11 @@ void SQL::checkTables(QSqlDatabase db)
   {
    addColumn("Companies", "info", "varchar(50) NOT NULL default ''", "Description");
   }
+  if(!doesColumnExist("Companies", "selected"))
+  {
+   addColumn("Companies", "selected", "int", "Description");
+  }
+
 
   if(!doesColumnExist("Companies", "Mnemonic"))
   {
@@ -11761,9 +11775,11 @@ QStringList SQL::listViews()
  return list;
 }
 
-QStringList SQL::listColumns(QString table, QString serverType, QSqlDatabase db)
+QStringList SQL::listColumns(QString table, QString serverType, QSqlDatabase db, QStringList* types)
 {
  QStringList columns;
+ if(types)
+   types->clear();
  //Connection* c = config->currConnection;
  //QSqlDatabase db = QSqlDatabase::database();
  QString commandText;
@@ -11786,11 +11802,23 @@ QStringList SQL::listColumns(QString table, QString serverType, QSqlDatabase db)
  while(query.next())
  {
   if(serverType== "Sqlite")
+  {
    columns.append(query.value("name").toString());
+   if(types)
+       types->append(query.value("type").toString());
+  }
   else if(serverType == "MySql")
+  {
    columns.append(query.value("Field").toString());
+   if(types)
+       types->append(query.value("Type").toString());
+  }
   else // SQL Server
+  {
    columns.append(query.value("Name").toString());
+  if(types)
+      types->append(query.value("DATA_TYPE").toString());
+  }
  }
  return columns;
 }

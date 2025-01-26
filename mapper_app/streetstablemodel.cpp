@@ -47,6 +47,11 @@ StreetsTableModel::StreetsTableModel(QObject *parent)
         }
         qDebug() << QString("streetInfo %1 %3 type %2 error").arg(si.streetId).arg(actStr.at(act)).arg(si.street);
     });
+
+    connect(SQL::instance(), &SQL::segmentChanged,this,[=](SegmentInfo si, SQL::CHANGETYPE t){
+        on_segmentChange(si, t);
+    });
+
     _instance = this;
 }
 
@@ -664,7 +669,7 @@ bool StreetsTableModel::newStreetName(StreetInfo* info)
     if(doesStreetDefExist(info))
     {
         qDebug() << "already exists: "<< info->toString();
-        return false;
+        //return false;
     }
 
     if(info->streetId < 1 || info->street.isEmpty() || !info->dateStart.isValid())
@@ -1090,7 +1095,7 @@ void StreetsTableModel::deleteStreetDef(int row)
     }
 }
 
-int StreetsTableModel::findStreetId(QString street, QString location)
+int StreetsTableModel::findStreetId(QString street, QString location, bool bIsDef)
 {
     int streetId = -1;
     QSqlDatabase db = QSqlDatabase::database();
@@ -1098,7 +1103,10 @@ int StreetsTableModel::findStreetId(QString street, QString location)
     commandText = "select d.`street`, d.`streetId` from `StreetDef` d "
                   "where d.`street` = '" + street + "' "
                   "and d.`location` = '" + location + "' ";
-                  // "and d.seq = 0";
+    if(bIsDef)
+        commandText = commandText.append("and Seq = 0");
+    else
+        commandText = commandText.append("and Seq != 0");
     QSqlQuery query = QSqlQuery(db);
     bool bQuery = query.exec(commandText);
     if(!bQuery)
@@ -1511,4 +1519,103 @@ int StreetsTableModel::maxStreetDefSeq(int streetId)
         maxSeq = query.value(0).toInt();
     }
     return maxSeq;
+}
+
+void StreetsTableModel::on_segmentChange(SegmentInfo si, SQL::CHANGETYPE t)
+{
+    int streetId = si.streetId();
+    switch (t) {
+    case SQL::CHANGETYPE::ADDSEG:
+    case SQL::CHANGETYPE::MODIFYSEG:
+    {
+        if(!si.newerName().isEmpty())
+        {
+            if(si.streetId() < 1)
+            {
+                // must add newer name if not ptesent
+                streetId = findStreetId(si.newerName(),si.location());
+                if(streetId < 1)
+                {
+                    StreetInfo sti = StreetInfo();
+                    sti.street = si.newerName();
+                    sti.location = si.location();
+                    sti.segments.append(si.segmentId());
+                    sti.updateSegmentInfo(si);
+                    sti.sequence = 0;
+                    sti.newerName = si.newerName();
+                    if(!(streetId = newStreetDef(&sti)))
+                    {
+                        return;
+                    }
+                    // now add the actual steeet
+                    sti.street = si.streetName();
+                    if(!newStreetName(&sti))
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    processStreetUpdate(streetId, si);
+                }
+                SQL::instance()->executeCommand(QString("update Segments set streetId = %1").arg(streetId));
+            }
+            else
+            {
+
+                StreetInfo* sti = getStreetDef(streetId);
+                if(!sti->segments.contains(si.segmentId()))
+                {
+                    sti->segments.append(si.segmentId());
+                    sti->updateSegmentInfo(si);
+                }
+                if(!updateStreetDef(*sti))
+                {
+                    return;
+                }
+                processStreetUpdate(streetId, si);
+
+            }
+        }
+        break;
+    }
+    case SQL::CHANGETYPE::DELETESEG:
+        break;
+    default:
+        break;
+    }
+}
+
+void StreetsTableModel::processStreetUpdate(int streetId, SegmentInfo si)
+{
+    // add or update the actual street
+    QList<StreetInfo*> list = getStreetName(si.streetName(), si.location(),streetId);
+    // multiple occurrences of the name may exist because of multiple uses of the name.
+    if(list.isEmpty())
+    {
+        StreetInfo sti = StreetInfo();
+        sti.street = si.streetName();
+        sti.location = si.location();
+        sti.streetId = streetId;
+        sti.sequence = maxStreetDefSeq(streetId)+1;
+        sti.segments.append(si.segmentId());
+        sti.newerName = si.newerName();
+        sti.updateSegmentInfo(si);
+        sti.street = si.streetName();
+        if(!newStreetName(&sti))
+        {
+            return;
+        }
+    }
+    if(list.count() == 1)
+    {
+        StreetInfo* sti = list.at(0);
+        if(!sti->segments.contains(si.segmentId()))
+            sti->segments.append(si.segmentId());
+        sti->updateSegmentInfo(si);
+        if(!updateStreetName(*sti))
+        {
+            return;
+        }
+    }
 }

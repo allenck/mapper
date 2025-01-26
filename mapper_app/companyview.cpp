@@ -5,7 +5,7 @@
 #include <QDesktopServices>
 #include "dateeditdelegate.h"
 
-CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
+CompanyView::CompanyView(QObject *parent) :
     QObject(parent)
 {
     m_parent = parent;
@@ -32,9 +32,9 @@ CompanyView::CompanyView(Configuration *cfg, QObject *parent) :
     // _model->setTable("Companies");
     // _model->setSort(1, Qt::AscendingOrder);
     //connect(_model, SIGNAL(primeInsert(int,QSqlRecord&)), this, SLOT(On_primeInsert(int,QSqlRecord&)));
-    connect(_model, &QAbstractTableModel::dataChanged, [=](QModelIndex left, QModelIndex right, QList<int> roles){
-        emit dataChanged();
-    });
+    // connect(_model, &QAbstractTableModel::dataChanged, [=](QModelIndex left, QModelIndex right, QList<int> roles){
+    //     emit dataChanged();
+    // });
     //model->setQuery("select * from Companies");
     //connect(_model, SIGNAL(beforeUpdate(int,QSqlRecord&)), this, SLOT(On_primeInsert(int,QSqlRecord&)));
 
@@ -206,8 +206,11 @@ MyCompanyTableModel::MyCompanyTableModel(QObject *parent) : QAbstractTableModel(
 Qt::ItemFlags MyCompanyTableModel::flags(const QModelIndex &index) const
 {
     if(index.column() == KEY  || index.column() == LASTUPDATED)
+        return Qt::ItemIsEnabled | Qt::ItemIsEditable ;
+    if(index.column() == SELECT)
         return Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsUserCheckable;
-    return Qt::ItemIsEnabled | Qt::ItemIsEditable | Qt::ItemIsUserCheckable;
+    return Qt::ItemIsEnabled | Qt::ItemIsEditable;
+
 }
 
 
@@ -216,12 +219,13 @@ QVariant MyCompanyTableModel::data ( const QModelIndex & index, int role ) const
  if (!index.isValid())
      return QVariant();
  CompanyData* cd = companyList.at(index.row());
- if(role == Qt::CheckStateRole and index.column()==0)
+ if(role == Qt::CheckStateRole and index.column()==SELECT)
  {
-     if(config->currCity->selectedCompaniesList.isEmpty() )
-         return Qt::Checked;
+     // if(config->currCity->selectedCompaniesList.isEmpty() )
+     //     return Qt::Checked;
 
-     if(config->currCity->selectedCompaniesList.contains(cd->companyKey))
+     //if(config->currCity->selectedCompaniesList.contains(cd->companyKey))
+     if(cd->bSelected)
          return Qt::Checked;
      else
          return Qt::Unchecked;
@@ -251,6 +255,8 @@ QVariant MyCompanyTableModel::data ( const QModelIndex & index, int role ) const
          return cd->info;
      case URL:
          return cd->url.toDisplayString();
+     default:
+         break;
      }
  }
 
@@ -267,27 +273,32 @@ bool MyCompanyTableModel::setData(const QModelIndex &mindex, const QVariant &val
  QModelIndex left = index(mindex.row(), 0);
  QModelIndex right = index(mindex.row(), LASTUPDATED-1);
 
- if( role == Qt::CheckStateRole /*||role == Qt::EditRole) && index.column() == 0*/)
+ if( role == Qt::CheckStateRole || role == Qt::EditRole/* && index.column() == 0*/)
  {
      switch(mindex.column())
      {
-        case 0:
+        case SELECT:
         {
-            qint32 companyKey = data(mindex,Qt::DisplayRole).toInt();
-
-            bool checked = value.toBool();
-            if(checked)
-            {
-                //if(!config->currCity->selectedCompaniesList.contains(companyKey))
-                    config->currCity->selectedCompaniesList.append(companyKey);
-            }
-            else
-            {
-                //if(config->currCity->selectedCompaniesList.contains(companyKey))
-                    config->currCity->selectedCompaniesList.removeOne(companyKey);
-            }
+            //bool checked = value.toBool();
+            // if(checked)
+            // {
+            //     if(!config->currCity->selectedCompaniesList.contains(cd->companyKey))
+            //         config->currCity->selectedCompaniesList.append(cd->companyKey);
+            // }
+            // else
+            // {
+            //     if(config->currCity->selectedCompaniesList.contains(cd->companyKey))
+            //         config->currCity->selectedCompaniesList.removeOne(cd->companyKey);
+            // }
             bDirty = true;
+            cd->bSelected = value.toBool();
+            companyList.at(mindex.row())->bSelected = value.toBool();
+            cd = companyList.at(mindex.row());
+            dataChanged(mindex, index(mindex.row(), LASTROUTE));
             roles.append(role);
+            sql->updateCompany(cd);
+            emit companySelectionsChanged();
+            return true;
         }
     }
  }
@@ -333,7 +344,9 @@ bool MyCompanyTableModel::setData(const QModelIndex &mindex, const QVariant &val
      if(sql->updateCompany(cd))
      {
          bDirty = false;
+         companyList.replace(mindex.row(),cd);
          emit dataChanged(left, right,roles);
+         emit companySelectionsChanged();
          return true;
      }
  }

@@ -230,7 +230,9 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   otherRouteView =  OtherRouteView::instance();
   connect(otherRouteView, SIGNAL(displayRoute(RouteData)), this, SLOT(On_displayRoute(RouteData)));
   stationView = new StationView(config, this);
-  companyView = new CompanyView(config, this);
+  companyView = new CompanyView(this);
+  connect(companyView->model(), SIGNAL(companySelectionsChanged()), this, SLOT(refreshCompanies()));
+
   tractionTypeView = new TractionTypeView(config, this);
   dupSegmentView = new DupSegmentView(this);
   connect(routeView, SIGNAL(selectSegment(int)), this, SLOT(selectSegment(int)));
@@ -384,7 +386,6 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   connect(ui->btnBack, SIGNAL(clicked()), this, SLOT(pageBack()));
   //connect(ui->chkOneWay, SIGNAL(clicked(bool)), this, SLOT(chkOneWay_Leave(bool)));
   connect(ui->cbCompany, SIGNAL(currentIndexChanged(int)), this, SLOT(cbCompanySelectionChanged(int)));
-  //connect(companyView->model(), SIGNAL(companyChange()), this, SLOT(refreshCompanies()));
   connect(ui->sbRoute, SIGNAL(actionTriggered(int)), this,  SLOT(sbRouteTriggered(int)));
   //connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbrLeave()) );
   connect(ui->sbTracks, SIGNAL(valueChanged(int)), this, SLOT(sbTracks_valueChanged(int)));
@@ -1425,31 +1426,31 @@ void MainWindow::createActions()
 
  selAllCompaniesAct = new QAction(tr("All Companies"), this);
  selAllCompaniesAct->setStatusTip(tr("Show routes for all companies"));
- connect(selAllCompaniesAct, &QAction::triggered, [=]{
-     QStandardItemModel* mod = (QStandardItemModel*)ui->cbCompany->model();
-     config->currCity->selectedCompanies.clear();
-     for(int i=0; i < mod->columnCount(); i++)
-     {
-         QStandardItem* item = mod->item(i);
-         item->setCheckState(Qt::Checked);
-         if(config->currCity->selectedCompanies.isEmpty())
-             config->currCity->selectedCompanies.append(item->data().toString());
-         else
-             config->currCity->selectedCompanies.append(","+item->data().toString());
-     }
+ // connect(selAllCompaniesAct, &QAction::triggered, [=]{
+ //     QStandardItemModel* mod = (QStandardItemModel*)ui->cbCompany->model();
+ //     config->currCity->selectedCompanies.clear();
+ //     for(int i=0; i < mod->columnCount(); i++)
+ //     {
+ //         QStandardItem* item = mod->item(i);
+ //         item->setCheckState(Qt::Checked);
+ //         if(config->currCity->selectedCompanies.isEmpty())
+ //             config->currCity->selectedCompanies.append(item->data().toString());
+ //         else
+ //             config->currCity->selectedCompanies.append(","+item->data().toString());
+ //     }
 
- });
- clearAllCompaniesAct = new QAction(tr("clear company selections"),this);
- connect(clearAllCompaniesAct, &QAction::triggered, [=]{
-     QStandardItemModel* mod = (QStandardItemModel*)ui->cbCompany->model();
-     QStringList selectedCompanyList = config->currCity->selectedCompanies.split(",");
-     config->currCity->selectedCompanies.clear();
-     for(int i=0; i < mod->columnCount(); i++)
-     {
-         QStandardItem* item = mod->item(i);
-         item->setCheckState(Qt::Unchecked);
-     }
- });
+ // });
+ // clearAllCompaniesAct = new QAction(tr("clear company selections"),this);
+ // connect(clearAllCompaniesAct, &QAction::triggered, [=]{
+ //     QStandardItemModel* mod = (QStandardItemModel*)ui->cbCompany->model();
+ //     //QStringList selectedCompanyList = config->currCity->selectedCompanies.split(",");
+ //     config->currCity->selectedCompanies.clear();
+ //     for(int i=0; i < mod->columnCount(); i++)
+ //     {
+ //         QStandardItem* item = mod->item(i);
+ //         item->setCheckState(Qt::Unchecked);
+ //     }
+ // });
 
  combineRoutesAct = new QAction(tr("Combine two routes"), this);
  combineRoutesAct->setStatusTip(tr("Combine two routes into one"));
@@ -1921,9 +1922,9 @@ void MainWindow::createCityMenu()
   }
   cityMenu->addMenu(connectMenu);
   cityMenu->addAction(displayAllRoutesForGroupAct);
-  connect(displayAllRoutesForGroupAct, &QAction::toggled, [=]{
-      refreshCompanies();
-  });
+  // connect(displayAllRoutesForGroupAct, &QAction::toggled, [=]{
+  //     refreshCompanies();
+  // });
  }
 }
 
@@ -2169,8 +2170,8 @@ void MainWindow::newCity(QAction* act )
       break;
      }
     }
-    companyView = new CompanyView(config, this);
-    tractionTypeView = new TractionTypeView(config, this);
+    // companyView = new CompanyView(config, this);
+    // tractionTypeView = new TractionTypeView(config, this);
     this->setCursor(QCursor(Qt::ArrowCursor));
     enableControls(true);
     routeView->clear();
@@ -3058,38 +3059,33 @@ QList<StationInfo> MainWindow::getStations(QList<SegmentData*> rsList)
 
 void MainWindow::refreshCompanies()
 {
-    //QStringList companies = config->selectedCompanies.split(",");
+  if(bRefreshingCompanies)
+    return;
+  bRefreshingCompanies = true;
     ui->cbCompany->clear();
     if(!config->currCity->bDisplayRoutesForGroup)
         ui->cbCompany->addItem(tr("All companies"),0);
-    // QStandardItem* item;
-    // QStandardItemModel* mod = new QStandardItemModel(1,0);
     companyList = sql->getCompanies();
-    selectedCompanyList.clear();
+    //selectedCompanyList.clear();
     for(int i=0; i < companyList.count(); i++)
     {
         CompanyData* cd = companyList.at(i);
         if(config->currCity->bDisplayRoutesForGroup)
         {
-            if(config->currCity->bDisplayRoutesForGroup &&
-                config->currCity->selectedCompaniesList.contains(cd->companyKey))
+            // if(config->currCity->bDisplayRoutesForGroup &&
+            //     config->currCity->selectedCompaniesList.contains(cd->companyKey))
+          if(cd->bSelected)
             {
                 ui->cbCompany->addItem(cd->name, cd->companyKey);
-                selectedCompanyList.append(cd);
+                //selectedCompanyList.append(cd);
             }
-            // else
-            //     ui->cbCompany->addItem(cd->name, cd->companyKey);
         }
         else
         {
             ui->cbCompany->addItem(cd->name, cd->companyKey);
         }
     }
-
-    //ui->cbCompany->setModel(mod);
-    if(routeDlg != NULL)
-     routeDlg->fillCompanies();
-    //ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(m_companyKey));
+    bRefreshingCompanies = false;
 }
 
 void MainWindow::cbCompanySelectionChanged(int sel)
@@ -5479,7 +5475,7 @@ bool MainWindow::openWebViewPanel()
         return error.defer();
      });
 #ifdef Q_OS_WINDOWS
-     fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2n.htm");
+     fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2b.htm");
 #else
      //fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2n.htm");
      fileUrl = QUrl("qrc:/GoogleMaps2b.htm");

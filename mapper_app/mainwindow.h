@@ -318,6 +318,7 @@ private slots:
 
 private:
     //Webviewer *centralWidget;
+    QMutex mutex;
     QMenu *fileMenu;
     QMenu *helpMenu;
     QMenu *cityMenu;
@@ -435,6 +436,7 @@ private:
     bool bStreetChanged = false;
     //bool bSegmentChanged = false;
     bool bRefreshingSegments = false;
+    bool bRefreshingCompanies = false;
     bool bDisplayStationMarkers = false;
     bool bDisplayTerminalMarkers = false;
     bool bDisplayRouteComments = false;
