@@ -12,7 +12,7 @@ greaterThan(QT_MAJOR_VERSION, 4): {
 message(WEBENGINE  " = "  $$WEBENGINE)
 
  QT       += core gui  network sql xml widgets websockets webchannel
- greaterThan(QT_MAJOR_VERSION, 4): QT += widgets serialport printsupport webenginewidgets gui
+ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport webenginewidgets gui
  DEFINES += USE_WEBENGINE
  message("using WebEngine")
 
@@ -158,6 +158,9 @@ DEPENDPATH += $$PWD/.
 
 
 #unix:!macx: LIBS += -L$$PWD/../../../sqlite-amalgamation-3390400/ -lsqlite3
+
+INCLUDEPATH += $$(QTDIR)/../Src/qtbase/src/3rdparty/sqlite
+
 
 VERSION=1.1.5
 MY_VERSION_STR = '\\"$${VERSION}\\"'

@@ -219,7 +219,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  //connect(ui->chkOneWay, SIGNAL(toggled(bool)), this, SLOT(chkOneWay_Leave(bool)));
  connect(ui->saveImage, SIGNAL(clicked(bool)), this, SLOT(On_saveImage_clicked()));
 
-  QUrl startURL = QUrl(QStringLiteral("qrc:/GoogleMaps2.htm"));
+  QUrl startURL = QUrl(QStringLiteral("qrc:/GoogleMaps2b.htm"));
 
 
   routeView = new RouteView(this);
@@ -245,9 +245,10 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   routeDlg = new RouteDlg(this);
   //routeDlg->Configuration ( config);
   //routeDlg->SegmentChanged += new segmentChangedEventHandler(segmentChanged);
-  connect(routeDlg, SIGNAL(SegmentChangedEvent(qint32, qint32)),this, SLOT(segmentChanged(qint32,qint32)));
+  connect(routeDlg, SIGNAL(SegmentChangedEvent(qint32,iic723@knobacres
+                                               qint32)),this, SLOT(segmentChanged(qint32,qint32)));
   //routeDlg->routeChanged += new routeChangedEventHandler(RouteChanged);
-  connect(routeDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs )), this, SLOT(RouteChanged(RouteChangedEventArgs )));
+  connect(routeDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs)), this, SLOT(RouteChanged(RouteChangedEventArgs)));
   connect(ui->btnDisplayRoute, SIGNAL(clicked()), this, SLOT(btnDisplayRouteClicked()));
   connect(ui->btnFirst, SIGNAL(clicked()), this, SLOT(btnFirstClicked()));
   connect(ui->btnNext, SIGNAL(clicked()), this, SLOT(btnNextClicked()));
@@ -425,7 +426,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
       ui->cbRoute->lineEdit()->setPalette(p);
   });
 
-  connect(ui->tab, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tab1CustomContextMenu(QPoint)));
+  //connect(ui->tab, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tab1CustomContextMenu(QPoint)));
   ui->cbRoute->addAction(addSegmentAct);
   ui->cbRoute->addAction(copyRouteAct);
   ui->cbRoute->addAction(displayAct);
@@ -456,7 +457,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   });
 //  connect(ui->cbSegments, SIGNAL(signalFocusOut()), this, SLOT( cbSegments_Leave()));
   connect(ui->cbRoute, SIGNAL(signalFocusOut()), this, SLOT(cbRoutes_Leave()));
-  connect(companyView, SIGNAL(dataChanged()), this, SLOT(refreshCompanies()));
+  //connect(companyView, SIGNAL(dataChanged()), this, SLOT(refreshCompanies()));
 
   QPalette pal = ui->txtSegment->palette();
   txtSegment_color = pal.color(ui->txtSegment->backgroundRole());
@@ -685,7 +686,8 @@ Configuration* MainWindow::getConfiguration()
 void MainWindow::reloadMap()
 {
  disconnect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
-
+    if(config->bRunInBrowser)
+    {
      if(!QDesktopServices::openUrl(fileUrl))
      {
          qCritical() << "open webbrowser failed " << fileUrl.toDisplayString();
@@ -694,6 +696,18 @@ void MainWindow::reloadMap()
      connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
      if(!channel)
          setupbridge();
+    }
+    else
+    {
+#ifdef Q_OS_WINDOWS
+     fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2b.htm");
+#else
+     fileUrl = QUrl("qrc:/GoogleMaps2b.htm");
+#endif
+    webView->setUrl(fileUrl);
+    setupbridge();
+    webView->page()->setWebChannel(channel);
+  }
 
  QVariantList objArray;
  objArray << m_latitude << m_longitude;
@@ -5451,12 +5465,12 @@ bool MainWindow::openWebViewPanel()
      webView->setContextMenuPolicy(Qt::CustomContextMenu);
      webView->setPage(myWebEnginePage = new MyWebEnginePage());
      webView->setMinimumWidth(400);
-     // connect(myWebEnginePage, &QWebEnginePage::selectClientCertificate,
-     //         [=](QWebEngineClientCertificateSelection selection){
-     //     QList<QSslCertificate> list = selection.certificates();
+     connect(myWebEnginePage, &QWebEnginePage::selectClientCertificate,
+             [=](QWebEngineClientCertificateSelection selection){
+         QList<QSslCertificate> list = selection.certificates();
 
-     //     qDebug() << list.count() << " certificates in list";
-     // });
+         qDebug() << list.count() << " certificates in list";
+     });
      connect(myWebEnginePage, &QWebEnginePage::certificateError,
              [=](QWebEngineCertificateError error){
         QList<QSslCertificate> chain = error.certificateChain();
@@ -5477,7 +5491,6 @@ bool MainWindow::openWebViewPanel()
 #ifdef Q_OS_WINDOWS
      fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2b.htm");
 #else
-     //fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2n.htm");
      fileUrl = QUrl("qrc:/GoogleMaps2b.htm");
 #endif
     webView->setUrl(fileUrl);
