@@ -24,7 +24,7 @@ class TractionTypeView : public QObject
 {
     Q_OBJECT
 public:
-    TractionTypeView(Configuration * cfg, QObject *parent = 0);
+    TractionTypeView(QObject *parent = 0);
     QObject* m_parent;
     void clear();
 
@@ -35,10 +35,10 @@ public slots:
     void delRecord();
 
 private:
-    QSqlTableModel *model;
-    Configuration * config;
-    SQL* sql;
-    QTableView* tableView;
+    QSqlTableModel *model = nullptr;
+    Configuration * config=nullptr;
+    SQL* sql=nullptr;
+    QTableView* tableView = nullptr;
     QMenu* menu;
     QAction* addAct;
     QAction* delAct;
@@ -49,8 +49,5 @@ private:
 private slots:
     void Resize (int oldcount,int newcount);
     void tablev_customContextMenu( const QPoint& pt);
-
-
 };
-
 #endif // TRACTIONTYPEVIEW_H

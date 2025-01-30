@@ -13,7 +13,7 @@ class StreetView : public QTableView
 {
     Q_OBJECT
 public:
-    StreetView();
+    StreetView(QObject* parent = 0);
     StreetsTableModel* model();
 
 public slots:
@@ -27,7 +27,7 @@ private:
     Configuration* config = nullptr;
     SQL* sql = nullptr;
     void segmentChanged(SegmentInfo si, SQL::CHANGETYPE t);
-
+    QObject* myParent;
     friend class StreetsTableModel;
 };
 

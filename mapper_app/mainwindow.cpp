@@ -233,7 +233,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   companyView = new CompanyView(this);
   connect(companyView->model(), SIGNAL(companySelectionsChanged()), this, SLOT(refreshCompanies()));
 
-  tractionTypeView = new TractionTypeView(config, this);
+  tractionTypeView = new TractionTypeView(this);
   dupSegmentView = new DupSegmentView(this);
   connect(routeView, SIGNAL(selectSegment(int)), this, SLOT(selectSegment(int)));
   connect(dupSegmentView, SIGNAL(selectSegment(int)), this, SLOT(selectSegment(int)));
@@ -1370,7 +1370,7 @@ void MainWindow::createActions()
   }
  });
  displayAllRoutesForGroupAct = new QAction(tr("Display all routes for group"),this);
- displayAllRoutesForGroupAct->setStatusTip(tr("If checked routes will be displayed for all selected companies."));
+ displayAllRoutesForGroupAct->setStatusTip(tr("If checked routes will be displayed only for all checked companiesin the CompanyView."));
  displayAllRoutesForGroupAct->setCheckable(true);
  displayAllRoutesForGroupAct->setChecked(config->currCity->bDisplayRoutesForGroup);
  connect(displayAllRoutesForGroupAct, &QAction::toggled, [=](bool checked){
@@ -1875,7 +1875,7 @@ void MainWindow::createMenus()
       optionsMenu->addAction(fontSizeChangeAct);
       optionsMenu->addAction(displaySegmentArrows);
       displaySegmentArrows->setChecked(config->bDisplaySegmentArrows);
-      //optionsMenu->addAction(displayAllRoutesForGroupAct);
+      optionsMenu->addAction(displayAllRoutesForGroupAct);
 
     // }
     //});
@@ -1935,10 +1935,6 @@ void MainWindow::createCityMenu()
    connect(actionGroup, SIGNAL(triggered(QAction*)), this, SLOT(newCity(QAction*)));
   }
   cityMenu->addMenu(connectMenu);
-  cityMenu->addAction(displayAllRoutesForGroupAct);
-  // connect(displayAllRoutesForGroupAct, &QAction::toggled, [=]{
-  //     refreshCompanies();
-  // });
  }
 }
 
@@ -2039,7 +2035,8 @@ void MainWindow::newCity(QAction* act )
   this->setCursor(QCursor(Qt::WaitCursor));
   enableControls(false);
   qApp->processEvents();
-  streetView->reset();
+  streetView = new StreetView();
+
   // first, save some settings for the current city
   config->currCity->center = LatLng(m_latitude, m_longitude);
   config->currCity->zoom = m_zoom;
@@ -2053,8 +2050,8 @@ void MainWindow::newCity(QAction* act )
 
   // Save any changes to currentCity
 //    config->cityList.replace(config->currentCityId, config->currCity);
-    companyView->clear();
-    tractionTypeView->clear();;
+    companyView = new CompanyView(this);
+    tractionTypeView = new TractionTypeView(this);
     config->currCity->lastRoute = m_routeNbr;
     config->currCity->lastRouteName = m_routeName;
     config->currCity->lastRouteEndDate = m_currRouteEndDate;
@@ -2387,17 +2384,18 @@ void MainWindow::refreshRoutes()
     {
         if(config->currCity->selectedCompaniesList.isEmpty() )
         {
-            // QMessageBox::information(nullptr, tr("No companies selected."),
-            //     tr("No companies are checked in the Companies tab.\n"
-            //         "Either check one or more companies or turn off the <I>'Display all routes for group'</I> option"));
-            // bCbRouteRefreshing= false;
-            // return;
-            if(config->currCity->companyKey > 0 )
-                config->currCity->selectedCompaniesList.append(config->currCity->companyKey);
-            else
-                config->currCity->selectedCompaniesList.append(1);
+            QMessageBox::information(nullptr, tr("No companies selected."),
+                tr("No companies are checked in the Companies tab.\n"
+                    "Either check one or more companies or turn off the <I>'Display all routes for group'</I> option"));
+            bCbRouteRefreshing= false;
+            return;
         }
-     routeList = sql->getRoutesByEndDate(config->currCity->selectedCompaniesList);
+        if(config->currCity->companyKey > 0 )
+            config->currCity->selectedCompaniesList.append(config->currCity->companyKey);
+        else
+            config->currCity->selectedCompaniesList.append(1);
+
+        routeList = sql->getRoutesByEndDate(config->currCity->selectedCompaniesList);
     }
     else
     {
@@ -3080,7 +3078,7 @@ void MainWindow::refreshCompanies()
     if(!config->currCity->bDisplayRoutesForGroup)
         ui->cbCompany->addItem(tr("All companies"),0);
     companyList = sql->getCompanies();
-    //selectedCompanyList.clear();
+    config->currCity->selectedCompaniesList.clear();
     for(int i=0; i < companyList.count(); i++)
     {
         CompanyData* cd = companyList.at(i);
@@ -3091,7 +3089,7 @@ void MainWindow::refreshCompanies()
           if(cd->bSelected)
             {
                 ui->cbCompany->addItem(cd->name, cd->companyKey);
-                //selectedCompanyList.append(cd);
+                config->currCity->selectedCompaniesList.append(cd->companyKey);
             }
         }
         else

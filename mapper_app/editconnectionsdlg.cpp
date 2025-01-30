@@ -1331,7 +1331,8 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
      }
      if(ui->cbConnections->currentText().isEmpty() && !ui->cbCities->currentText().isEmpty())
      {
-         ui->cbConnections->setCurrentText(ui->cbCities->currentText() + " " + ui->cbDbType->currentText() + " " + ui->cbConnect->currentText());
+         ui->cbConnections->setCurrentText(ui->cbCities->currentText() + " " + ui->cbDbType->currentText()
+                                           + " " + ui->cbConnect->currentText() + " "+ ui->txtHost->text());
      }
  }
  else

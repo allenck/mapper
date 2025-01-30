@@ -118,37 +118,27 @@ public:
     MainWindow(int argc, char * argv[],QWidget *parent = 0);
     Ui::MainWindow *ui;
     QSqlDatabase db;
-    SQL* sql;
+    SQL* sql = nullptr;
     void setModel(QAbstractItemModel *model);
     //MapView *centralWidget;
     WebViewBridge *m_bridge=nullptr;
-    RouteView *routeView;
-    SegmentView *segmentView;
-    OtherRouteView *otherRouteView;
-    DupSegmentView *dupSegmentView;
-    StationView * stationView;
-    CompanyView * companyView;
-    TractionTypeView * tractionTypeView;
+    RouteView *routeView = nullptr;
+    SegmentView *segmentView= nullptr;
+    OtherRouteView *otherRouteView = nullptr;
+    DupSegmentView *dupSegmentView =nullptr;
+    StationView * stationView = nullptr;
+    CompanyView * companyView =nullptr;
+    TractionTypeView * tractionTypeView = nullptr;
+    StreetView* streetView = nullptr;
     void getInfoWindowComments(double lat, double lon, int route, QString date, int func);
     void SetPoint(qint32 i, double lat, double lon);
     QT_DEPRECATED void getArray();
-//    void setLat(double lat);
-//    void setLon(double lon);
     void setLen(qint32 len);
     QString ProcessScript(QString func, QString params);
-    // QString getRouteMarkerImagePath(QString route, bool isStart);
-    // QString getMarkerImagePath(QString tmplt, QString name, QString text, double offset);
-
     QList<RouteData> routeList;
-//    QAction *saveChangesAct;
-//    QAction *discardChangesAct;
-//    QAction* sortNameAct;
-    StreetView* streetView = nullptr;
-
     double m_latitude, m_longitude;
     qint32 m_zoom;
     QString m_maptype;
-    //QList<SegmentInfo> segmentInfoList;
     QList<SegmentData> segmentDataList;
 
     qint32 m_routeNbr;

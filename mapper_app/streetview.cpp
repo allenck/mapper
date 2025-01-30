@@ -7,7 +7,8 @@
 #include "streetstablemodel.h"
 #include "webviewbridge.h"
 
-StreetView::StreetView() {
+StreetView::StreetView(QObject *parent) {
+    myParent = parent;
     config = Configuration::instance();
     sql = SQL::instance();
     setAlternatingRowColors(true);

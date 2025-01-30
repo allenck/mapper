@@ -2,7 +2,7 @@
 #include <QMenu>
 #include <QString>
 
-TractionTypeView::TractionTypeView(Configuration *cfg, QObject *parent) :
+TractionTypeView::TractionTypeView(QObject *parent) :
     QObject(parent)
 {
     m_parent = parent;
@@ -102,7 +102,10 @@ Qt::ItemFlags MyTractionTypesTableModel::flags(const QModelIndex &index) const
 
 void TractionTypeView::clear()
 {
- model->clear();
+  if(model)
+    model->clear();
+  else
+    model = new MyTractionTypesTableModel();
 }
 
 void TractionTypeView::newRecord()
