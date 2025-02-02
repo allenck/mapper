@@ -56,8 +56,9 @@ page</a><br>
 <p>This program allows the user to maintain a database of streetcar
 routes or any other type of transit route. The basic program
 provides populated databases for St. Louis, Missouri, Louisville,
-Kentucky and Berlin, Germany. The default databases use Sqlite
-as the database engine. However, provisions are made to also support
+Kentucky, Cincinnati,OH, Indianapolis, IN and Berlin, Germany. 
+The default databases use Sqlite as the database engine. However, provisions
+are made to also support exporting to 
 MySql and Sql Server databases. The routes are displayed on a Google
 Maps map or alternatively an Open Street Map map. It is also possible
 to display a user-defined map. Historical overlays like historical
@@ -112,8 +113,12 @@ map.<br>
 <caption><b>File menu</b></caption>
 <dl>
 <dt>Save current settings</dt>
-<dd>Click to save the current settings that will be restored upon restart. </dd>
+<dd>Click to save the current settings that will be restored upon restart.
+Otherwise, settings will be automatically upon setup and closing the app. </dd>
 </dl>
+<dl><dt>Backup databases</dt><dd>Dump the databases to text files which can be restored 
+with the SQLite3 restore procedure.</dd></dl>
+<dl><dt>Restore</dt><dd>Restore databases that were backed up previously.</dd></dl>
 <dl><dt>Quit</dt><dd>Save settings and exit Mapper</dd></dl>
 <br>
 <caption><b>City menu</b></caption>
@@ -134,10 +139,12 @@ map.<br>
 <dd>Open a dialog to create a new city and its default database.</dd>
 </dl>
 <dl>
-<dt>Delete City</dt>
+<dt>Remove City</dt>
 <dd>Delete a city from use.</dd>
 </dl>
-<br>
+<dt>Update Parameters</dt>
+<dd>Modify a city's name or other parameters.</dd>
+</dl><br>
 <caption><b>Options menu</b></caption><tr>
 <td></td>
 <td></td>
@@ -159,13 +166,9 @@ map.<br>
 <dd>If checked, Javascript debug messages will be displayed in the infobar at the bottom of the main window.</dd>
 </dl>
 <dl>
-<dt><Lookup geocoder requests</dt>
-<dd></dd>
-</dl>
-<dl>
 <dt>Display map in browser</dt>
 <dd>If checked, the map will be displayed in a tab in your PC's default browser. 
-This option is most effective whe you have two or mor screens attached to your PC,</dd>
+This option is most effective when you have two or more screens attached to your PC,</dd>
 </dl>
 <dl>
 <dt>Route Sort Option</dt>
@@ -173,7 +176,8 @@ This option is most effective whe you have two or mor screens attached to your P
 </dl>
 <dl>
 	<dt>Show Google Maps features</dt>
-	<dd>Only display Google Maps features (markers for businesses, transit stops, points of interest, etc., if checked, etc.)</dd>
+	<dd>Display Google Maps features (markers for businesses, transit stops, points of interest, etc., 
+	if checked, etc.)</dd>
 </dl>
 <dl>
 	<dt>Foreign key check</dt>
@@ -184,8 +188,9 @@ This option is most effective whe you have two or mor screens attached to your P
 	<dd>Open a dialog to change the font family and size. </dd>
 </dl>
 <dl>
-	<dt>Log messages to a file</dt>
-	<dd>If checked, all console messages will also be written to a file.</dd>
+	<dt>Display segment arrows</dt>
+	<dd>If checked, segments will display arrows at the end. Such arrows define the direction in 
+	which points are defined and do not imply the direction of operation on a segment. </dd>
 </dl>
 
 <br>
@@ -193,7 +198,7 @@ This option is most effective whe you have two or mor screens attached to your P
 
 <dl>
 	<dt>Add new Route</dt>
-	<dd>Open Route dialog</dd>
+	<dd>Open Route dialog to </dd>
 </dl>
 <dl>
 	<dt>Add Segment</dt>
@@ -201,17 +206,17 @@ This option is most effective whe you have two or mor screens attached to your P
 </dl>
 <dl>
 	<dt>Add point mode</dt>
-	<dd>If checked, the map cursor will be changed to a cross hairs cursor. Then double clicking will 
-	extend the current segment to that point. A marker will also be displayed and drug around to the
+	<dd>If checked, the map cursor will be changed to a cross hairs cursor. Then double clicking on the map will 
+	extend the current segment to that point. A marker will also be displayed and can be drug around to the
 	 desired final location.</dd>
 </dl>
 <dl>
 	<dt>Create Kml file</dt>
-	<dd></dd>
+	<dd>A KML file can be created to display a segment on a Google Maps map.</dd>
 </dl>
 <dl>
 	<dt>Export database</dt>
-	<dd>Export database contents from the current city connection to another sqlite, MySql or Sql Server database,</dd>
+	<dd>Export database contents from the current city connection to another SQlite, MySql or Sql Server database,</dd>
 </dl>
 <dl>
 	<dt>Reload Google Maps</dt>
@@ -219,7 +224,8 @@ This option is most effective whe you have two or mor screens attached to your P
 </dl>
 <dl>
 	<dt>Refresh Routes</dt>
-	<dd>Refresh the contents of the routes combobox and Route Segments Table View. This may be necessary after adding or modifying routes.</dd>
+	<dd>Refresh the contents of the routes combobox and Route Segments Table View. This may be necessary 
+	after adding or modifying routes.</dd>
 </dl>
 <dl>
 	<dt>Create new Sqlite db</dt>
@@ -231,7 +237,7 @@ This option is most effective whe you have two or mor screens attached to your P
 </dl>
 <dl>
 	<dt>Edit Overlay List</dt>
-	<dd>Addvthe definition for an overlay.</dd>
+	<dd>Add or modify the definition for an overlay.</dd>
 </dl>
 <dl>
 	<dt>Browse Comments</dt>
@@ -245,7 +251,16 @@ This option is most effective whe you have two or mor screens attached to your P
 	<dt>Set City Bounds</dt>
 	<dd>Get the bounds for a region displayed on the map</dd>
 </dl>
-
+<dl>
+	<dt>Log messages to a file</dt>
+	<dd>If checked, console messages will also be written to a file. </dd>
+</dl>
+<dl>
+	<dt>Update Streets dialog</dt>
+	<dd>A dialog specific to Berlin to add streets to the StreetDef table using data pasted from route descriptions in 
+	the <a href = 'https://www.berliner-linienchronik.de/strassenbahn-1904.html'>Berliner Linienchronik site</a>. </dd>
+</dl>
+<BR>The following options are only available when the program has been compiled in debug mode.
 <dl>
 	<dt>Debug: test url </dt>
 	<dd>enter a url to display in the webView panel. Only when not running in the browser.</dd>

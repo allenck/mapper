@@ -30,8 +30,15 @@ create a datasource for each server that you will be accessing.
 <p> 
 <h3>ODBC Unix</h3>
 On Unix, it will be
-necessary to download and install the <a href="http://www.freetds.org/">FreeTds</a> utilities to compile your own ODBC drivers.This is not
-required for MySql or Ms Sql Server.
+necessary have installed the <a href="https://www.unixodbc.org/">UnixODBC</a> utilities to compile your own ODBC drivers.This is not
+required for MySql or Ms Sql Server. However, one can download ODBC drivers for MySql and Microsoft Sql Server which automatically 
+include UnixODBC. Examples are:
+<ol>
+<li>
+<b>MySql</b> download the "MySQL Connector/ODBC" package from the official MySQL website.</li>
+<li>
+<b>Sql Server</b> <a href="https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server?view=sql-server-ver16" >
+Download ODBC Driver for SQL Server</a>. Both Windows and Linux versions can be downloaded.</li>
 <br>
 <h3>Creating a MySql or SQL Server database. <br>
 </h3>
@@ -45,7 +52,7 @@ and no other database is available to export, you will have to use one of the sc
 to create the necessary table.<br>
 <br>
 
-<img src="images/addODBC-MsSql.png" width="703" height="398" alt=""><br>
+<img src="images/addODBC-MySql.png" width="703" height="398" alt=""><br>
 If a test is successful then click on the "Add/Update" button to add the connection to the city. <br>
 <br>
 However, the SqlQuery dialog accessible from the Tools menu

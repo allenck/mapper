@@ -3,15 +3,18 @@
 
 #include <QDialog>
 #include "configuration.h"
+#include "qwidgetaction.h"
 #include <QTableView>
 #include <QMenu>
 #include <QMenuBar>
 #include <QTextLine>
 
+
 namespace Ui {
 class QueryDialog;
 }
 
+class QComboBox;
 class QueryDialog : public QDialog
 {
  Q_OBJECT
@@ -70,6 +73,12 @@ private:
  void setTitle();
  void on_sortAction();
  static QueryDialog* _instance;
+ QComboBox* cbFile = nullptr;
+ QMenu* fileMenu = nullptr;
+ QWidgetAction* createWidgetAction();
+ QWidgetAction* wAct = nullptr;
+ QMenu* selectMenu = nullptr;
+ void loadFile(QString s_File_Name);
 
 private slots:
  void on_go_QueryButton_clicked();

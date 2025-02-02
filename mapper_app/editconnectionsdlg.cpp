@@ -1332,13 +1332,14 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
      if(ui->cbConnections->currentText().isEmpty() && !ui->cbCities->currentText().isEmpty())
      {
          ui->cbConnections->setCurrentText(ui->cbCities->currentText() + " " + ui->cbDbType->currentText()
-                                           + " " + ui->cbConnect->currentText() + " "+ ui->txtHost->text());
+                                           + " " + ui->cbConnect->currentText() + " " + ui->txtHost->text());
      }
  }
  else
  {
   ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
-  ui->lblHelp->setText(tr("Connection succeeded. %1 Has %2 tables!<br> %3").arg(currDb).arg(tableList.count()).arg(tableList.join(", ")));
+  ui->lblHelp->setText(tr("Connection succeeded. %1 Has %2 tables!<br> %3").arg(currDb).arg(tableList.count())
+                           .arg(tableList.join(", ")));
 
  }
  timer->stop();

@@ -78,8 +78,12 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   toolsMenu = new QMenu(tr("Tools"));
   layout()->setMenuBar(menuBar);
 
-  QMenu* fileMenu= new Menu(tr("File"));
+  fileMenu= new Menu(tr("File"));
   menuBar->addMenu(fileMenu);
+  selectMenu = new QMenu(tr("Load Resource script"));
+  this->selectMenu->addAction(createWidgetAction());
+  this->selectMenu->setStatusTip(tr("load a read-only resource script"));
+  fileMenu->addMenu(selectMenu);
   QAction* loadFileAct = new QAction(tr("Load query"), this);
   fileMenu->addAction(loadFileAct);
   connect(loadFileAct, &QAction::triggered, [=]{on_load_QueryButton_clicked();});
@@ -303,6 +307,7 @@ void QueryDialog::on_clear_QueryButton_clicked()
  saveFileAct->setEnabled(false);
 }
 
+
 void QueryDialog::on_load_QueryButton_clicked()
 {
  setCursor(Qt::WaitCursor);
@@ -313,6 +318,11 @@ void QueryDialog::on_load_QueryButton_clicked()
  QCoreApplication::processEvents();
  setCursor(Qt::ArrowCursor);
  if (s_File_Name.isEmpty()) return;
+ loadFile(s_File_Name);
+}
+
+void QueryDialog::loadFile(QString s_File_Name)
+{
  QFile this_file(s_File_Name);
  QFileInfo this_fi(s_File_Name);
 
@@ -1207,4 +1217,30 @@ void QueryDialog::setTitle()
   cur.insertText(text);
   cur.insertHtml(QString("<BR><FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\">")
                  .arg("#end" + s_File_Name ));
+ }
+
+ QWidgetAction* QueryDialog::createWidgetAction()
+ {
+     cbFile = new QComboBox(this);
+     QDirIterator dirIterator(":/sql", QDirIterator::Subdirectories);
+     while (dirIterator.hasNext()) {
+         dirIterator.next();
+         QFileInfo fileInfo = dirIterator.fileInfo();
+         if (fileInfo.isFile())
+         {
+             // Do not add directories to the list
+             cbFile->addItem(fileInfo.fileName(), fileInfo.filePath());
+         }
+     }
+     cbFile->setVisible(true);
+     cbFile->activateWindow();
+
+     connect(cbFile, &QComboBox::currentTextChanged,this, [=](){
+         loadFile(cbFile->currentData().toString());
+         qInfo() << "file selection changed:" << cbFile->currentText();
+         selectMenu->close();
+     });
+     wAct = new QWidgetAction(this);
+     wAct->setDefaultWidget(cbFile);
+     return wAct;
  }

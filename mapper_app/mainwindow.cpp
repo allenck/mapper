@@ -1,4 +1,3 @@
-#include <QtGui>
 #include "mainwindow.h"
 #include "qcompleter.h"
 #include "removecitydialog.h"
@@ -699,11 +698,11 @@ void MainWindow::reloadMap()
     }
     else
     {
-#ifdef Q_OS_WINDOWS
-     fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2b.htm");
-#else
+// #ifdef Q_OS_WINDOWS
+//      fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2b.htm");
+// #else
      fileUrl = QUrl("qrc:/GoogleMaps2b.htm");
-#endif
+//#endif
     webView->setUrl(fileUrl);
     setupbridge();
     webView->page()->setWebChannel(channel);
@@ -1830,10 +1829,10 @@ void MainWindow::createMenus()
     connect(toolsMenu, &QMenu::aboutToShow,this, [=]{
      addPointModeAct->setChecked(m_bAddMode);
     });
-    toolsMenu->addAction(companyChangeRoutes);
-    toolsMenu->addAction(editStreetsAct);
+    //toolsMenu->addAction(companyChangeRoutes);
+    //toolsMenu->addAction(editStreetsAct);
     toolsMenu->addAction((updateStreetsAct));
-
+#ifdef MYPREFIX_DEBUG
     toolsMenu->addSeparator();
     toolsMenu->addSection("Debug");
     toolsMenu->addAction(testUrlAct);
@@ -1842,9 +1841,7 @@ void MainWindow::createMenus()
     toolsMenu->addAction(testLoadAct);
     toolsMenu->addAction(testRunJavaScriptAct);
     toolsMenu->addAction(populateRouteIdAct);
-// #ifdef Q_OS_MACOS
-//     toolsMenu->addAction(testUseBundleResources);
-// #endif
+#endif
     optionsMenu = new Menu(tr("Options"));
     overlayMenu = new Menu(tr("Overlays"));
 
@@ -1859,8 +1856,9 @@ void MainWindow::createMenus()
       optionsMenu->addAction(displayStationMarkersAct);
       optionsMenu->addAction(displayTerminalMarkersAct);
       optionsMenu->addAction(showDebugMessages);
+#ifdef MYPREFIX_DEBUG
       optionsMenu->addAction(geocoderRequestAct);
-
+#endif
       disconnect(runInBrowserAct, SIGNAL(toggled(bool)), this, SLOT(on_runInBrowser(bool)));
       optionsMenu->addAction(runInBrowserAct);
       runInBrowserAct->setChecked(config->bRunInBrowser);
@@ -1876,9 +1874,6 @@ void MainWindow::createMenus()
       optionsMenu->addAction(displaySegmentArrows);
       displaySegmentArrows->setChecked(config->bDisplaySegmentArrows);
       optionsMenu->addAction(displayAllRoutesForGroupAct);
-
-    // }
-    //});
     menuBar()->addMenu(optionsMenu);
     menuBar()->addMenu(toolsMenu);
 
@@ -5486,11 +5481,11 @@ bool MainWindow::openWebViewPanel()
 
         return error.defer();
      });
-#ifdef Q_OS_WINDOWS
-     fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2b.htm");
-#else
+// #ifdef Q_OS_WINDOWS
+//      fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2b.htm");
+// #else
      fileUrl = QUrl("qrc:/GoogleMaps2b.htm");
-#endif
+//#endif
     webView->setUrl(fileUrl);
     setupbridge();
     webView->page()->setWebChannel(channel);

@@ -23,7 +23,12 @@ copy %1\..\..\..\mapper_Qt\mapper_app\Resources\tram-icon.ico %2
 REM copy C:\Users\allen\Downloads\sqlite-dll-win64-x64-3390400\sqlite3.dll %2
 
 REM copy Resources and sub-folders
+mkdir %2\Resources\wiki
+mkdir %2\Resources\wiki\images
 xcopy %1\..\..\..\mapper_QT\mapper_app\Resources %2\Resources
+xcopy %1\..\..\..\mapper_QT\mapper_app\Resources\wiki\* %2\Resources\wiki
+xcopy %1\..\..\..\mapper_QT\mapper_app\Resources\wiki\images\* %2\Resources\wiki\images
+
 ::create base archive (everything except databases)
 rem package base files
 C:/Qt/Tools/QtInstallerFramework/4.5/bin/archivegen.exe C:\Users\allen\Projects\Mapper\mapper_QT\installer\packages\com.vendor.product\data\mapper_base.7z %2\*

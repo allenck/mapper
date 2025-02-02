@@ -18,11 +18,7 @@ message(WEBENGINE  " = "  $$WEBENGINE)
 
 RC_ICONS = Resources/tram-icon.ico
 
-# greaterThan(QT_MAJOR_VERSION, 5): {
-#  greaterThan(QT_MINOR_VERSION, 7): {
-#   DEFINES += USE_QTCONCURRENT
-#  }
-# }
+CONFIG += c++17
 
 DEFINES += "BUILD_DIR=\"\\\""$$OUT_PWD"\\\"\""
 DEFINES += QT_MESSAGELOGCONTEXT
@@ -31,7 +27,12 @@ DEFINES += QT_MESSAGELOGCONTEXT
 
 # enable to provide a console window to display debug and info messages
 DEFINES += HAVE_CONSOLE
-
+debug {
+  DEFINES += MYPREFIX_DEBUG
+}
+release {
+  DEFINES += MYPREFIX_RELEASE
+}
 TARGET = mapper
 TEMPLATE = app
 
@@ -92,15 +93,15 @@ RESOURCES += \
 
 DISTFILES += \
     README.txt \
-    Resources/GoogleMaps2n.htm \
-    Resources/copyList.txt \
+    # Resources/GoogleMaps2n.htm \
+    # Resources/copyList.txt \
     Resources/dump_databases.cmd \
     Resources/dump_databases.sh \
-    Resources/initMap.js \
+    # Resources/initMap.js \
     Resources/restore_databases.cmd \
     Resources/restore_databases.sh \
-    Resources/scripts/createMsSqlDistance.sql \
-    Resources/sql/ sqlite3_create_route.sql \
+    # Resources/scripts/createMsSqlDistance.sql \
+    Resources/sql/sqlite3_create_route.sql \
     Resources/sql/addBiDirectionalToRoutes.sql \
     Resources/sql/create_stations.sql \
     Resources/sql/mssql_create_routes.sql \
@@ -112,27 +113,27 @@ DISTFILES += \
     Resources/sql/recreateRouteComments.sql \
     Resources/sql/recreateSegmentsTable.sql \
     Resources/sql/recreate_routes.sql \
-    Resources/scripts \
-    Resources/scripts/opacity-slider2.png \
-    Resources/scripts/opacity-slider3d14.png \
-    Resources/scripts/opacity-slider3d6.png \
-    Resources/scripts/opacity-slider3d7.png \
-    Resources/scripts/qwebchannel.js \
+    # Resources/scripts \
+    # Resources/scripts/opacity-slider2.png \
+    # Resources/scripts/opacity-slider3d14.png \
+    # Resources/scripts/opacity-slider3d6.png \
+    # Resources/scripts/opacity-slider3d7.png \
+    # Resources/scripts/qwebchannel.js \
     Resources/GoogleMaps2b.htm \
     Resources/sql/sqlite3_recreateCompanies.sql \
     Resources/sql/sqlite3_recreate_routes.sql \
     Resources/sql/updateOneWay.sql \
     Resources/sql/updaterouteoneway.sql \
-    Resources/test.htm \
+    # Resources/test.htm \
     Resources/white.png \
     Resources/orange.png \
     Resources/tram.png \
     Resources/tram.shadow.png \
     Resources/wiki/Credits.html \
-    compile_MySql_plugin.sh \
+    # compile_MySql_plugin.sh \
     html/.gitignore \
-    Resources/mapper.icns \
-    mysql-qt-driver.sh
+    Resources/mapper.icns
+    # mysql-qt-driver.sh
 
 ICON = Resources/mapper.icns
 #CONFIG-=app_bundle

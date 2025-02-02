@@ -9,17 +9,18 @@
 <br>
 Source is available if you want to modify the program or run it on a Linux system. Mapper source can be downloaded 
 from GitHub: <a href="https://github.com/allenck/mapper">https://github.com/allenck/mapper</a><br><br>
-<br>
+<p>
 <h4>Prerequisites</h4>
 Mapper uses QT as a programming framework. QT can be downloaded from <a href="http://www.qt.io/download-open-source/#section-2">Download Qt</a>
 The default Qt configuration should be sufficient to compile and run Mapper. Mapper utilizes Sqlite3 to store data.Qt includes a 
 version of Sqlite3. Qt has an application called <b>Qt Maintenance Tool</b> which can be used to download different versions 
 as well as optional libraries and extensions. Here is a screenshot of loading Qt on my computer:
+<p>
  <img src="images/QtMaintenanceTool.png" width="50%" height="50%" alt="Qt Maintenance tool">
  <p>
  Installing Qt does not install everything necessary to compile and test Mapper. Some of the other libraries needed are:
  <ul>
- <li>Essentials which includes the make system, compilers and debuggers. On linux, this can be downloaded with
+ <li>Essentials which includes the make system, compilers and debuggers. On Linux, this can be downloaded with
  <i>sudo apt install build-essential</i> </li>
  <li><i>sudo apt-get install g++ </i></li>
  <li><i>sudo apt-get install libglu1-mesa-dev freeglut3-dev mesa-common-dev</i></li>
@@ -79,23 +80,60 @@ On Linux, the SQLite3 lirary can be compiled with this shell script:
  <li>  -DSQLITE_ENABLE_RTREE \</li>
 <li>   -DSQLITE_OMIT_COMPLETE</li>
  </ul>
- The resutng libsqlite3.so library should be copied to some place such as /usr/local/lib.
+ The resulting libsqlite3.so library should be copied to some place such as /usr/local/lib.
 
 <h4>Google Maps</h4>
-Google requires that programs using the Google Maps API must have an API key which can be obtained at
- <a href="https://developers.google.com/maps/documentation/javascript/get-api-key"> Use API keys</a>
+Google requires that programs using the Google Maps API must have an API key which can be obtained at Google's 
+ <a href="https://developers.google.com/maps/documentation/javascript/get-api-key"> Use API keys</a> site. 
  No API keys for Google Maps can be stored in source files in GitHub. In fact, Google will 
- invalidate them if they are included in files! Several html files dynamically substitute the actual API key 
- contained in the apikey.js file. apikey.js is a one line source file containing your API key as a constant: <i>var apikey="MY_API_KEY";</i>
+ invalidate them if they are included in files stored in GitHub! Several html files dynamically substitute the actual API key 
+ contained in the apikey.js file. apikey.js is a one line source file containing your API key as a constant: 
+ <i>var apikey="MY_API_KEY";</i>
  
   NOTE that git will ignore the apikey.js in the <i>./mapper_app/Resources</i>.
  -DSQLITE_ENABLE_RTREE \
    -DSQLITE_OMIT_COMPLETE
 
 
-<h5>Macintosh</h5>
+<h4>Macintosh</h4>
 QT is available on the Macintosh. As of December 2023, Mapper has also been successfully implemented on MacOS. <br>
 
 <br>
+<h3>Deploying Mapper</h3>
+Once Mapper has been successfully compiled and tested, it must be packaged or deployed to the ultimate user. Since
+ there is no way to know which version, if any, of Qt that is on the user's system, the necessary libraries or dll
+ files as well as any resources needed by the program must be included in the deployment package. While there are documented 
+ procedures published for deploying to Linux systems, the numerous Linux systems in use more or less precludes being able to 
+ deploy. In this case, the user will most likely be better off by compiling Mapper from source.
+ 
+ However, for Windows, and Apple MacIntosh, there are some tools which make it possible to deploy programs to those
+ systems:
+ 
+ <h5>Windows</h5>
+ The tool <i><b>windeployqt</b></i> included with Qt enables the programmer to collect Qt libraries and plugins needed to a work 
+ location. For more details see <a href="https://doc.qt.io/qt-6/windows-deployment.html" >Qt for Windows - Deployment</a> 
+ The user can then copy any resources needed to run the program aside from any Qt libraries.  Mapper has implemented 
+ these tools in the Windows batch file: <i>windeploy.bat</i> in the <i>mapper_app</i> folder. This batch file can then be called in a 
+ QtCreator Deployment step:
+ <p>
+ <img src="images/deploy.png" width="717" height="383" alt="">.
+ <br>
+ Specifically, <i>windeploy.bat</i>, does the following:
+ <ol>Accepts two parameters:1 the location of the exe file. 2 the marshalling directory.</ol>
+ <ol>Call Qt program <i>windeployqt</i> to copy Qt libraries and plugins to the marshalling location.</ol>
+ <ol>Copy various resources and databases used by Mapper to the marshalling location</ol>
+ <ol>Use the Windows <i>archivegen.exe</i> program to create a zip file of all the files needed by the install program.</ol>
+ <br>
+ When the Deploy step has finished, the marshalling location will have a Windows batch file <i>createinstaller.bat</i>. This
+ batch file when run will create a <i><b>Mapper_install.exe</b></i> file which is the installer to be used to install the
+ program. 
+ <h5>MacOS></h5>
+ <br>
+ MacOS deploy procedure is much simpler. The compiler and tool included with MacOS create a <i>'bundle'</i> which has most 
+ of the resources needed to run Mapper.  Using the <b><i>macdeployqt</i></b> utility creates a  mapper.dmg file which can be 
+ used on another MacOS system to install the app.
+ Here is the QtCreator configuration defining the deploy step for Mapper. 
+ <p>
+ <img src="images/MacOS_deploy.png" width="700" height="454" alt=""><img src="images/MacOS_deploy.png" width="1400" height="831" alt="">
 
 </body></html>
