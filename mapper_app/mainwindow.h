@@ -396,7 +396,7 @@ private:
     QAction* displaySegmentArrows;
     QAction* selAllCompaniesAct;
     QAction* clearAllCompaniesAct;
-    QAction* displayAllRoutesForGroupAct;
+    QAction* displayRoutesForSelectedCompaniesAct;
     QAction* editStreetsAct;
     QAction* updateStreetsAct;
     QAction* editRouteSqlAct;

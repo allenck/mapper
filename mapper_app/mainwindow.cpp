@@ -1368,12 +1368,12 @@ void MainWindow::createActions()
     config->currCity->setNameOverride(dlg.parameters().city);
   }
  });
- displayAllRoutesForGroupAct = new QAction(tr("Display all routes for group"),this);
- displayAllRoutesForGroupAct->setStatusTip(tr("If checked routes will be displayed only for all checked companiesin the CompanyView."));
- displayAllRoutesForGroupAct->setCheckable(true);
- displayAllRoutesForGroupAct->setChecked(config->currCity->bDisplayRoutesForGroup);
- connect(displayAllRoutesForGroupAct, &QAction::toggled, [=](bool checked){
-     config->currCity->bDisplayRoutesForGroup = checked;
+ displayRoutesForSelectedCompaniesAct = new QAction(tr("Display routes for selected companies"),this);
+ displayRoutesForSelectedCompaniesAct->setStatusTip(tr("If checked, routes will be displayed only for checked companies in the Companies tab."));
+ displayRoutesForSelectedCompaniesAct->setCheckable(true);
+ displayRoutesForSelectedCompaniesAct->setChecked(config->currCity->bDisplayRoutesForSelectedCompanies);
+ connect(displayRoutesForSelectedCompaniesAct, &QAction::toggled, [=](bool checked){
+     config->currCity->bDisplayRoutesForSelectedCompanies = checked;
      refreshCompanies();
  });
 
@@ -1873,7 +1873,7 @@ void MainWindow::createMenus()
       optionsMenu->addAction(fontSizeChangeAct);
       optionsMenu->addAction(displaySegmentArrows);
       displaySegmentArrows->setChecked(config->bDisplaySegmentArrows);
-      optionsMenu->addAction(displayAllRoutesForGroupAct);
+      optionsMenu->addAction(displayRoutesForSelectedCompaniesAct);
     menuBar()->addMenu(optionsMenu);
     menuBar()->addMenu(toolsMenu);
 
@@ -2375,14 +2375,15 @@ void MainWindow::refreshRoutes()
     ui->cbRoute->clear();
 
     //routeList = sql->getRoutesByEndDate(companyKey);
-    if(config->currCity->bDisplayRoutesForGroup)
+    if(config->currCity->bDisplayRoutesForSelectedCompanies)
     {
         if(config->currCity->selectedCompaniesList.isEmpty() )
         {
             QMessageBox::information(nullptr, tr("No companies selected."),
-                tr("No companies are checked in the Companies tab.\n"
-                    "Either check one or more companies or turn off the <I>'Display all routes for group'</I> option"));
+                tr("No companies are checked in the Companies view tab.\n"
+                    "Check one or more companies and turn on the <I>'Display routes for selected Companies'</I> option"));
             bCbRouteRefreshing= false;
+            config->currCity->bDisplayRoutesForSelectedCompanies =false;
             return;
         }
         if(config->currCity->companyKey > 0 )
@@ -3070,14 +3071,14 @@ void MainWindow::refreshCompanies()
     return;
   bRefreshingCompanies = true;
     ui->cbCompany->clear();
-    if(!config->currCity->bDisplayRoutesForGroup)
+    if(!config->currCity->bDisplayRoutesForSelectedCompanies)
         ui->cbCompany->addItem(tr("All companies"),0);
     companyList = sql->getCompanies();
     config->currCity->selectedCompaniesList.clear();
     for(int i=0; i < companyList.count(); i++)
     {
         CompanyData* cd = companyList.at(i);
-        if(config->currCity->bDisplayRoutesForGroup)
+        if(config->currCity->bDisplayRoutesForSelectedCompanies)
         {
             // if(config->currCity->bDisplayRoutesForGroup &&
             //     config->currCity->selectedCompaniesList.contains(cd->companyKey))

@@ -1233,16 +1233,17 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
  if(currDb.isEmpty())
  {
      QString defaultDb;
-     defaultDb= getODBCDSNValue(QDir::home().absolutePath() + QDir::separator()+ ".odbc.ini",ui->cbODBCDsn->currentText(), "database");
+     defaultDb= getODBCDSNValue(QDir::home().absolutePath() + QDir::separator()+ ".odbc.ini",
+                                 ui->cbODBCDsn->currentData().toString(), "database");
      if(defaultDb.isEmpty())
         defaultDb= getODBCDSNValue( "/Library/ODBC/odbc.ini",ui->cbODBCDsn->currentText(), "database");
      if(!defaultDb.isEmpty())
      {
-         if(SQL::instance()->useDatabase(ui->cbDbType->currentText(),defaultDb,db))
+         if(SQL::instance()->useDatabase(defaultDb, ui->cbDbType->currentText(),db))
          {
              currDb = getDatabase();
              ui->txtUseDatabase->setText(currDb);
-             ui->txtDefaultDb->setText(currDb);
+             ui->txtDefaultDb->setText(defaultDb);
          }
          else
              qDebug() << QString("useDatabase(%1)").arg(defaultDb) << " failed";
@@ -1442,7 +1443,7 @@ bool EditConnectionsDlg::populateDatabases()
   QString currDatabase = ui->txtUseDatabase->text();
   QSqlQuery query = QSqlQuery(db);
 
-  if(connection->servertype() == "MsSql")
+  if(ui->cbDbType->currentText() == "MsSql")
   {
    // Select * from Sys.Databases
    //QStringList databases;
@@ -1492,7 +1493,7 @@ bool EditConnectionsDlg::populateDatabases()
     }
    }
   }
-  else if(connection->servertype() == "MySql")
+  else if(ui->cbDbType->currentText() == "MySql")
   {
    // MySql
    QStringList availableDatabases = SQL::instance()->showMySqlDatabases(db);
@@ -1676,7 +1677,7 @@ void EditConnectionsDlg::txtPwdLeave()
  {
   SQL* sql = SQL::instance();
   databases = sql->showDatabases("testConnection", ui->cbDbType->currentText());
-  qDebug() << " databases: " << databases;
+  qDebug() << " databases: " << databases.join(",");
   if(databases.count() >0)
   {
    ui->txtDbOrDSN->setText(databases.at(0));

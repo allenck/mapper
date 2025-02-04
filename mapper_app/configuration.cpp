@@ -52,7 +52,7 @@ void Configuration::saveSettings()
   settings->setValue("bounds", c->bounds().toString());
   settings->setValue("currOverlay", c->curOverlayId);
   //settings->setValue("selectedCompanies",SQL::instance()->list2String(c->selectedCompaniesList));
-  settings->setValue("displayRoutesForGroup", c->bDisplayRoutesForGroup);
+  settings->setValue("displayRoutesForGroup", c->bDisplayRoutesForSelectedCompanies);
   // QString abbreviationsStr;
   // for (QPair<QString,QString> pair: c->abbreviationsList) {
   //     abbreviationsStr.append(pair.first+":"+pair.second +",");
@@ -311,7 +311,7 @@ void Configuration::getSettings()
       //       nc->selectedCompaniesList.append(sl.at(i).toInt());
       // }
       remove("selectedCompanies");
-      nc->bDisplayRoutesForGroup = settings.value("displayRoutesForGroup",!nc->selectedCompaniesList.isEmpty()).toBool();
+      nc->bDisplayRoutesForSelectedCompanies = settings.value("displayRoutesForGroup",!nc->selectedCompaniesList.isEmpty()).toBool();
       // QString abbreviationsStr = settings.value("abbreviations").toString();
       // QStringList list =  abbreviationsStr.split(",");
       // nc->abbreviationsList.clear();
