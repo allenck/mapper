@@ -6,10 +6,12 @@
 #include "mainwindow.h"
 #include <QClipboard>
 #include <QApplication>
+//#include <unistd.h>
 #include "vptr.h"
 #include "mymessagebox.h"
 #include "exceptions.h"
 #include "exportsql.h"
+#include "odbcutil.h"
 
 EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
   QDialog(parent),
@@ -18,10 +20,13 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
     ui->setupUi(this);
     ui->lblHelp->setText("");
     ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
+    ui->lblHelp->setTextInteractionFlags(Qt::TextSelectableByMouse);
     config = Configuration::instance();
+    odbcUtil = ODBCUtil::instance();
     currCity = config->currCity;
     this->setWindowTitle(tr("Edit Connections "));
     drivers = QSqlDatabase::drivers();
+    ui->cbODBCDsn->setEditable(true);
 
    // connection that is being edited
    connection = currCity->connections.at(currCity->curConnectionId);
@@ -29,19 +34,12 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
    refreshCities();
 
 
-   dbTypes <<"MySql"<<"MsSql"<<"Sqlite";  // currently supported database types.
+   dbTypes <<"MySql"<<"MsSql"<<"Sqlite"<<"PostgreSQL";  // currently supported database types.
    for(int i=0; i < dbTypes.count(); i++)
    {
      ui->cbDbType->addItem(dbTypes.at(i), (DBTYPE)i);
    }
    ui->cbDriverType->clear();
-//   ui->cbDriverType->addItem("QSQLITE");
-//   ui->cbDriverType->addItem("QSQLITE3");
-//   ui->cbDriverType->addItem("QMYSQL");
-//   ui->cbDriverType->addItem("QMYSQL3");
-//   ui->cbDriverType->addItem("QMARIADB");
-//   ui->cbDriverType->addItem("QODBC");
-//   ui->cbDriverType->addItem("QODBC3");
    ui->cbDriverType->addItems(drivers);
    ui->cbConnect->clear();
    ui->cbConnect->addItem("Local");
@@ -103,8 +101,8 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
     connect(ui->txtHost, SIGNAL(editingFinished()), this, SLOT(txtHostLeave()));
     connect(ui->txtPort, SIGNAL(editingFinished()), this, SLOT(txtPortLeave()));
     connect(ui->txtPWD, SIGNAL(editingFinished()), this, SLOT(txtPwdLeave()));
-    connect(ui->txtDbOrDSN, SIGNAL(textChanged(QString)), this, SLOT(txtDsnTextChanged(QString)));
-    connect(ui->txtDbOrDSN, SIGNAL(editingFinished()), this, SLOT(ontxtDbOrDsn_editingFinished()));
+    connect(ui->txtSqliteFileName, SIGNAL(textChanged(QString)), this, SLOT(txtDsnTextChanged(QString)));
+    connect(ui->txtSqliteFileName, SIGNAL(editingFinished()), this, SLOT(ontxtSqliteFileName_editingFinished()));
     ui->tbView->setIcon(QIcon(":/show-password.png"));
     ui->txtPWD->setEchoMode(QLineEdit::Password);
 
@@ -158,7 +156,7 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
          }
       }
     });
-   connect(ui->cbODBCDsn, SIGNAL(currentTextChanged(QString)),this, SLOT(handleOverrides(QString)));
+   //connect(ui->cbODBCDsn, SIGNAL(currentTextChanged(QString)),this, SLOT(handleOverrides(QString)));
 
    ui->cbConnections->setCurrentIndex(ui->cbConnections->
                                        findText(connection->description()));
@@ -175,7 +173,7 @@ void EditConnectionsDlg::setupComboBoxes(QString txt)
  if(ui->cbDbType->currentText()=="Sqlite")
  {
   ui->cbDriverType->setCurrentText("QSQLITE");
-  ui->txtDbOrDSN->setText(connection->sqlite_fileName());
+  ui->txtSqliteFileName->setText(connection->sqlite_fileName());
  }
  else if(ui->cbDbType->currentText()=="MySql")
  {
@@ -200,17 +198,10 @@ void EditConnectionsDlg::setupComboBoxes(QString txt)
 
 void EditConnectionsDlg::onDbTypeChanged(QString dbType)
 {
- disconnect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(onDbTypeChanged(QString)));
+ //disconnect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(onDbTypeChanged(QString)));
 
  if(dbType == "Sqlite")
  {
-//     setComboBoxItemEnabled(ui->cbDriverType,0,true); //QSQLITE
-//     setComboBoxItemEnabled(ui->cbDriverType,1,true); //QSQLITE3
-//     setComboBoxItemEnabled(ui->cbDriverType,2,false); //QMYSQL
-//     setComboBoxItemEnabled(ui->cbDriverType,3,false); //QMYSQL3
-//     setComboBoxItemEnabled(ui->cbDriverType,4,false); //QMARIADB
-//     setComboBoxItemEnabled(ui->cbDriverType,5,false); //QODBC"
-//     setComboBoxItemEnabled(ui->cbDriverType,6,false); //QODBC3"
   foreach (QString driver, drivers) {
    int index = ui->cbDriverType->findText(driver);
    setComboBoxItemEnabled(ui->cbDriverType,index, driver == "QSQLITE" || driver == "QSQLITE3");
@@ -225,13 +216,8 @@ void EditConnectionsDlg::onDbTypeChanged(QString dbType)
  }
  else if(dbType == "MySql")
  {
-//     setComboBoxItemEnabled(ui->cbDriverType,0,false); //QSQLITE
-//     setComboBoxItemEnabled(ui->cbDriverType,1,false); //QSQLITE3
-//     setComboBoxItemEnabled(ui->cbDriverType,2,true); //QMYSQL
-//     setComboBoxItemEnabled(ui->cbDriverType,3,true); //QMYSQL3
-//     setComboBoxItemEnabled(ui->cbDriverType,4,true); //QMARIADB
-//     setComboBoxItemEnabled(ui->cbDriverType,5,true); //QODBC"
-//     setComboBoxItemEnabled(ui->cbDriverType,6,true); //QODBC3"
+  ui->cbODBCDsn->setVisible(true);
+  odbcUtil->fillDSNCombo(ui->cbODBCDsn,"MySql");
   foreach (QString driver, drivers) {
    int index = ui->cbDriverType->findText(driver);
    setComboBoxItemEnabled(ui->cbDriverType,index,
@@ -251,22 +237,26 @@ void EditConnectionsDlg::onDbTypeChanged(QString dbType)
  }
  else if(dbType == "MsSql")
  {
-//     setComboBoxItemEnabled(ui->cbDriverType,0,false); //QSQLITE
-//     setComboBoxItemEnabled(ui->cbDriverType,1,false); //QSQLITE3
-//     setComboBoxItemEnabled(ui->cbDriverType,2,false); //QMYSQL
-//     setComboBoxItemEnabled(ui->cbDriverType,3,false); //QMYSQL3
-//     setComboBoxItemEnabled(ui->cbDriverType,4,false); //QMARIADB
-//     setComboBoxItemEnabled(ui->cbDriverType,5,true); //QODBC"
-//     setComboBoxItemEnabled(ui->cbDriverType,6,true); //QODBC3"
+     ui->cbODBCDsn->setVisible(true);
+     odbcUtil->fillDSNCombo(ui->cbODBCDsn,"MsSql");
   foreach (QString driver, drivers) {
    int index = ui->cbDriverType->findText(driver);
-  setComboBoxItemEnabled(ui->cbDriverType,index,
+   setComboBoxItemEnabled(ui->cbDriverType,index,
                          driver == "QODBC" || driver == "QODBC3" );
- }
-
+  }
      setComboBoxItemEnabled(ui->cbConnect, 0, false); // Local"
      setComboBoxItemEnabled(ui->cbConnect, 1, false); // Direct");
      setComboBoxItemEnabled(ui->cbConnect, 2, true); // ODBC");
+ }
+ else if(dbType == "PostgreSQL")
+ {
+     ui->cbODBCDsn->setVisible(true);
+     odbcUtil->fillDSNCombo(ui->cbODBCDsn,"PostgreSQL");
+     foreach (QString driver, drivers) {
+         int index = ui->cbDriverType->findText(driver);
+         setComboBoxItemEnabled(ui->cbDriverType,index,
+                                driver == "QODBC" || driver == "QODBC3" || driver == "QPSQL");
+     }
  }
  else
  {
@@ -285,7 +275,7 @@ void EditConnectionsDlg::onDbTypeChanged(QString dbType)
    setControls("ODBC");
   }
  }
- connect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(onDbTypeChanged(QString)));
+ //connect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(onDbTypeChanged(QString)));
 
 }
 
@@ -368,7 +358,7 @@ void EditConnectionsDlg::cbCitiesLeave()
    {
     ui->cbConnections->clear();
     //ui->cbConnections->addItem(tr("Add new connection"));
-    ui->txtDbOrDSN->setText("");
+    ui->txtSqliteFileName->setText("");
 
     foreach(Connection* cn, c->connections)
     {
@@ -388,7 +378,7 @@ void EditConnectionsDlg::cbCitiesLeave()
   c->id = config->cityList.count()-1;
   ui->cbConnections->clear();
   //ui->cbConnections->addItem(tr("Add new connection"));
-  ui->txtDbOrDSN->setText("");
+  ui->txtSqliteFileName->setText("");
  }
 }
 
@@ -413,7 +403,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
 
  if(ui->cbConnect->currentText()== "Local") // Local
  {
-  ui->txtDbOrDSN->setText(connection->sqlite_fileName());
+  ui->txtSqliteFileName->setText(connection->sqlite_fileName());
  }
  else if(ui->cbConnect->currentText() == "Direct") // Direct
  {
@@ -438,8 +428,9 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
   ui->txtUseDatabase->setText(connection->defaultSqlDatabase());
   ui->txtDefaultDb->setText(connection->defaultSqlDatabase());
   ui->cbODBCDsn->setVisible(true);
+  odbcUtil->fillDSNCombo(ui->cbODBCDsn, ui->cbDbType->currentText());
   ui->cbODBCDsn->setCurrentIndex(ui->cbODBCDsn->findData(connection->dsn()));
-  handleOverrides(connection->dsn());
+  //handleOverrides(connection->dsn());
   ui->lblHelp->setStyleSheet("QLabel {  color : #FF8000; }");
   ui->lblHelp->setText(tr("connecting ..."));
   ui->txtUserId->setText(connection->userId());
@@ -495,23 +486,41 @@ void EditConnectionsDlg::cbDriverTypeSelectionChanged(QString sel)
          || driverType == "QMARIADB" || driverType == "QMARIADB"))
  {
   ui->cbDbType->setCurrentIndex(ui->cbDbType->findText("MySql"));
-  if(!((ui->cbConnect->currentText() == "Direct") ))
-  {
+  // if(!((ui->cbConnect->currentText() == "Direct") ))
+  // {
     //ui->cbConnect->setCurrentIndex(ui->cbConnect->findText(c->connectionType()));
+    ui->cbODBCDsn->setVisible(true);
     setComboBoxItemEnabled(ui->cbConnect, 1, true); // Direct");
     ui->cbConnect->setCurrentIndex(1);
     setControls("Direct");
-    qDebug() << QCoreApplication::libraryPaths();
-    qDebug() << QSqlDatabase::drivers();
-  }
+    qDebug() << QCoreApplication::libraryPaths().join(",");
+    qDebug() << QSqlDatabase::drivers().join(",");
+  // }
+ }
+ else if(dbType == "PostgreSQL" && driverType == "PSQL")
+ {
+     ui->cbODBCDsn->setVisible(false);
+     setComboBoxItemEnabled(ui->cbConnect, 1, true); // Direct");
+     ui->cbConnect->setCurrentIndex(1);
+     setControls("Direct");
+     ui->txtHost->setEnabled(true);
+     ui->txtPort->setEnabled(true);
+     ui->txtPWD->setEnabled(true);
+     ui->txtUserId->setEnabled(true);
  }
  else if((dbType == "MySql" || dbType == "MsSql") &&(ui->cbDriverType->currentText() == "QODBC"
           || ui->cbDriverType->currentText() == "QODBC3"))
  {
-//  ui->cbDbType->setCurrentIndex(ui->cbDbType->findText("MsSql"));
-//  ui->cbConnect->setCurrentText("ODBC");
-   if(!((ui->cbDbType->currentText() == "MySql") || (ui->cbDbType->currentText() == "MsSql")))
-     ui->cbDbType->setCurrentIndex(ui->cbDbType->findText(c->servertype()));
+     ui->cbODBCDsn->setVisible(true);
+     odbcUtil->fillDSNCombo(ui->cbODBCDsn, dbType);
+     if(!((ui->cbDbType->currentText() == "MySql") || (ui->cbDbType->currentText() == "MsSql")))
+         ui->cbDbType->setCurrentIndex(ui->cbDbType->findText(c->servertype()));
+     ui->txtHost->setEnabled(true);
+     ui->txtPort->setEnabled(true);
+     ui->txtPWD->setEnabled(true);
+     ui->txtUserId->setEnabled(true);
+     if(dbType == "MySql")
+         ui->txtPort->setText("3306");
  }
  setControls(ui->cbConnect->currentText());
 }
@@ -521,13 +530,13 @@ void EditConnectionsDlg::setControls(QString txt)
  if(txt == "Direct")
  {
   ui->label_2->setVisible(false);
-  ui->txtDbOrDSN->setVisible(false);
+  ui->txtSqliteFileName->setVisible(false);
   ui->tbBrowse->setVisible(false);
   //ui->cbDbType->setCurrentIndex(ix);
   ui->txtHost->setEnabled(true);
   ui->txtPort->setEnabled(true);
-  ui->txtDbOrDSN->setText("");
-  ui->txtDbOrDSN->setPlaceholderText("select MySqlDatabase");
+  ui->txtSqliteFileName->setText("");
+  ui->txtSqliteFileName->setPlaceholderText("select MySqlDatabase");
   //ui->cbConnections->setCurrentText(tr("MySql Connection"));
   ui->txtPWD->setEnabled(true);
   ui->tbView->setEnabled(true);
@@ -554,8 +563,8 @@ void EditConnectionsDlg::setControls(QString txt)
   ui->tbBrowse->setVisible(false); // browse, only for Sqlite.
   ui->label_2->setVisible(false);
   ui->label_2->setText(tr("DSN")+":");
-  ui->txtDbOrDSN->setVisible(false);
-  ui->txtDbOrDSN->setCompleter(nullptr);
+  ui->txtSqliteFileName->setVisible(false);
+  ui->txtSqliteFileName->setCompleter(nullptr);
   ui->label_12->setVisible(false);
   ui->cbODBCDsn->setVisible(false);
  }
@@ -572,7 +581,7 @@ void EditConnectionsDlg::setControls(QString txt)
   ui->tbView->setEnabled(true);
   ui->txtUserId->setEnabled(true);
 
-  odbcPairMap.clear();
+  //odbcPairMap.clear();
 
 #ifdef Q_OS_WIN
   QSettings winReg1("HKEY_CURRENT_USER\\Software\\ODBC\\ODBC.INI\\ODBC Data Sources", QSettings::NativeFormat);
@@ -604,15 +613,18 @@ void EditConnectionsDlg::setControls(QString txt)
   }
 
 #else
-#  ifdef Q_OS_MACOS
-  findODBCDsn("/Library/ODBC/odbc.ini", &databases);
-  findODBCDsn(QDir::home().absolutePath() + QDir::separator()+ ".odbc.ini", &databases);
-#  else
-  // location of unixODBC config files
-  findODBCDsn(QDir::home().absolutePath() + QDir::separator()+ ".odbc.ini", &databases);
-  //findODBCDsn("/usr/local/etc/odbc.ini", &databases);
-  findODBCDsn("/etc/odbc.ini", &databases);
-#  endif
+// #  ifdef Q_OS_MACOS
+//   findODBCDsn("/Library/ODBC/odbc.ini", &databases);
+//   findODBCDsn(QDir::home().absolutePath() + QDir::separator()+ ".odbc.ini", &databases);
+// #  else
+//   // location of unixODBC config files
+//   findODBCDsn(QDir::home().absolutePath() + QDir::separator()+ ".odbc.ini", &databases);
+//   //findODBCDsn("/usr/local/etc/odbc.ini", &databases);
+//   findODBCDsn("/etc/odbc.ini", &databases);
+// #  endif
+  connect(odbcUtil, &ODBCUtil::odbc_changed,this,[=]{
+      odbcUtil->fillDSNCombo(ui->cbODBCDsn, ui->cbDbType->currentText());
+  });
 #endif
   // use database (required for ODBC)
   ui->label_10->setVisible(true);
@@ -637,17 +649,16 @@ void EditConnectionsDlg::setControls(QString txt)
   ui->tbView->setVisible(true); // view password
   ui->tbBrowse->setVisible(false); // browse, only for Sqlite.
   ui->label_2->setVisible(false);
-  ui->txtDbOrDSN->setVisible(true);
+  ui->txtSqliteFileName->setVisible(true);
   ui->txtDefaultDb->setEnabled(false);
   ui->tbBrowse->setVisible(false);
   //ui->label_2->setText(tr("ODBC DSN")+":");
-  ui->txtDbOrDSN->setVisible(false);
-  //ui->txtDbOrDSN->setCompleter(new QCompleter(databases));
+  ui->txtSqliteFileName->setVisible(false);
+  //ui->txtSqliteFileName->setCompleter(new QCompleter(databases));
   ui->label_12->setVisible(true);
   ui->cbODBCDsn->setVisible(true);
-  ui->cbODBCDsn->clear();
-  //ui->cbODBCDsn->addItems(databases);
-  //QStringList sources;
+  odbcUtil->fillDSNCombo(ui->cbODBCDsn, ui->cbDbType->currentText());
+#ifdef  Q_OS_WIN
   QMapIterator<QString, QList<QPair<QString,QString>>> iter(odbcPairMap);
   while(iter.hasNext())
   {
@@ -667,6 +678,7 @@ void EditConnectionsDlg::setControls(QString txt)
       ui->cbODBCDsn->addItem(iter.key() + " - " + description, iter.key());
   }
   //ui->cbODBCDsn->addItems(sources);
+#endif
  }
  else if(txt == "Local") // Local (Sqlite only)
  {
@@ -703,13 +715,14 @@ void EditConnectionsDlg::setControls(QString txt)
   ui->tbBrowse->setVisible(true); // browse, only for Sqlite.
   ui->label_2->setVisible(true);
   ui->label_2->setText(tr("DSN")+":");
-  ui->txtDbOrDSN->setVisible(true);
-  ui->txtDbOrDSN->setCompleter(nullptr);
+  ui->txtSqliteFileName->setVisible(true);
+  ui->txtSqliteFileName->setCompleter(nullptr);
   ui->label_12->setVisible(false);
   ui->cbODBCDsn->setVisible(false);
  }
 }
 
+#if 0
 #ifndef Q_OS_WIN
 void EditConnectionsDlg::findODBCDsn(QString iniFile, QStringList* dsnList)
 {
@@ -791,7 +804,7 @@ QString EditConnectionsDlg::getODBCDSNValue(QString iniFile, QString dsn, QStrin
     return "";
 }
 #endif
-
+#endif
 void EditConnectionsDlg::btnTestClicked()
 {
    removeEmptyFiles();
@@ -799,6 +812,7 @@ void EditConnectionsDlg::btnTestClicked()
    ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
    qApp->processEvents();
    connection->setValid(testConnection());
+   setCursor(Qt::ArrowCursor);
 }
 
 void EditConnectionsDlg::btnCancelClicked()
@@ -840,7 +854,7 @@ void EditConnectionsDlg::btnSaveClicked()
       ui->btnSave->setEnabled(false);
       return;
    }
-   if(ui->txtDbOrDSN->text() == "" && ui->cbDbType->currentText() == "Sqlite")
+   if(ui->txtSqliteFileName->text() == "" && ui->cbDbType->currentText() == "Sqlite")
    {
      ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
      ui->lblHelp->setText(tr("Database or DSN name required"));
@@ -890,26 +904,32 @@ void EditConnectionsDlg::btnSaveClicked()
    connection->setServerType(ui->cbDbType->currentText());
    connection->setConnectionType(ui->cbConnect->currentText());
    connection->setCityName(currCity->name());
+   connection->setHost(ui->txtHost->text());
    int id = findId(connection);
 
-  if(ui->cbDbType->currentText() == "MsSql")
+  if(ui->cbDbType->currentText() == "MsSql" || ui->cbDbType->currentText() == "PostgreSQL")
   {
-     //connection->setOdbcConnectorName(ui->txtDbOrDSN->text());
+     //connection->setOdbcConnectorName(ui->txtSqliteFileName->text());
      connection->setDSN(ui->cbODBCDsn->currentData().toString());
      connection->setDefaultSqlDatabase(ui->txtDefaultDb->text());
      connection->setDatabase(ui->txtUseDatabase->text());
      connection->setUserId(ui->txtUserId->text());
      connection->setPWD(ui->txtPWD->text());
+     if(ui->cbDbType->currentText() == "PostgreSQL" && ui->cbConnect->currentText()=="ODBC")
+         connection->setConnectString(odbcUtil->connectString(ui->cbODBCDsn->currentData().toString(),
+                                                              ui->txtHost->text(), ui->txtPort->text().toInt(), ui->txtUserId->text(),
+                                                              ui->txtPWD->text(), ui->txtUseDatabase->text().toLower()));
+
   }
   else if(ui->cbDbType->currentText() == "Sqlite")
   {
-       QFileInfo info(ui->txtDbOrDSN->text());
+       QFileInfo info(ui->txtSqliteFileName->text());
        if(!info.isAbsolute())
        {
 //#ifndef Q_OS_MACOS
-        info = QFileInfo("Resources/databases/" + ui->txtDbOrDSN->text());
+        info = QFileInfo("Resources/databases/" + ui->txtSqliteFileName->text());
 // #else
-//         info = QFileInfo(config->macOSPublic+ "databases/" + ui->txtDbOrDSN->text());
+//         info = QFileInfo(config->macOSPublic+ "databases/" + ui->txtSqliteFileName->text());
 // #endif
         connection->setSqliteFileName(info.fileName());
        }
@@ -1099,7 +1119,7 @@ void EditConnectionsDlg::newConnection(){
     ui->btnNew->setEnabled(false);
     ui->btnSave->setEnabled(false);
     ui->cbDriverType->setCurrentIndex(0); //QSQLITE
-    ui->txtDbOrDSN->setText("");
+    ui->txtSqliteFileName->setText("");
     ui->txtHost->setText("");
     ui->txtPort->setText("");
     ui->txtPWD->setText("");
@@ -1128,7 +1148,7 @@ void EditConnectionsDlg::newConnection(){
     connection->setConnectionName("");
     ui->cbConnections->addItem("",VPtr<Connection>::asQVariant(connection));
     ui->cbConnections->setCurrentIndex(ui->cbConnections->findData(VPtr<Connection>::asQVariant(connection)));
-    ui->cbConnections->lineEdit()->setPlaceholderText(tr("enter unique connction name"));
+    ui->cbConnections->lineEdit()->setPlaceholderText(tr("enter unique connection description"));
     //ui->cbConnections->lineEdit()->setPlaceholderText(tr("enter connetion description"));
     //ui->cbDriverType->setCurrentIndex(-1);
     //ui->cbDbType->setCurrentIndex(-1);
@@ -1156,7 +1176,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
  qApp->processEvents();
  if(ui->cbDbType->currentText() == "Sqlite")
  {
-  QString fn = ui->txtDbOrDSN->text();
+  QString fn = ui->txtSqliteFileName->text();
   if(!fn.toLower().endsWith(".sqlite3"))
    fn.append(".sqlite3");
   QFileInfo file(fn);
@@ -1201,11 +1221,11 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
     return false;
    }
   }
-  //ui->txtDbOrDSN->setText(file.completeBaseName());
+  //ui->txtSqliteFileName->setText(file.completeBaseName());
   QStringList tableList = db.tables();
   ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
   ui->lblHelp->setText(tr("Connection succeeded. %1 Has %2 tables!<br> %3")
-                           .arg(ui->txtDbOrDSN->text()).arg(tableList.count()).arg(tableList.join(", ")));
+                           .arg(ui->txtSqliteFileName->text()).arg(tableList.count()).arg(tableList.join(", ")));
 
  } // end Sqlite
  else
@@ -1227,7 +1247,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
  }
 
  QString currDb = getDatabase();
-
+#if 0
 #ifdef Q_OS_MACOS
  // iODBC not setting default db
  if(currDb.isEmpty())
@@ -1250,7 +1270,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
      }
  }
 #endif
-
+#endif
  QStringList tableList = db.tables();
  bool bOpen = db.open(/*ui->txtUserId->text(), ui->txtPWD->text()*/);
  parms = SQL::instance()->getParameters(db);
@@ -1262,15 +1282,20 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
       expSql->createParametersTable(db, ui->cbDbType->currentText());
   else
   {
-      QMessageBox::information(nullptr, tr("Setup database"), tr("No tables exist in this database. "
-                                                                 "The database administrator must create the database and users."));
-      return false;
+      QMessageBox::warning(nullptr, tr("Setup database"),
+                               tr("No tables exist in this database. \n"
+                               "The database administrator must create the database and users.\n"
+                               "Or you can export to this database."));
+      ui->lblHelp->setStyleSheet("color: yellow");
+      ui->lblHelp->setText("Connection OK but no tables exist!");
+      return true;
   }
  }
 
  QString odbcDsn = db.databaseName();
 
- if(ui->cbDbType->currentText() =="MsSql" || ui->cbDbType->currentText() =="MySql")
+ //if(ui->cbDbType->currentText() =="MsSql" || ui->cbDbType->currentText() =="MySql")
+ if(ui->cbDbType->currentText() != "Sqlite")
  {
      if(!currDb.isEmpty())
      {
@@ -1353,25 +1378,44 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
 
 bool EditConnectionsDlg::openTestDb()
 {
-    setCursor(Qt::WaitCursor);
-//    if(ui->txtDbOrDSN->text()=="")
-//        return false;
- db = QSqlDatabase::addDatabase(ui->cbDriverType->currentText(),"testConnection");
+   if(!_testConnection)
+     _testConnection = new Connection();
+   setCursor(Qt::WaitCursor);
+   _testConnection->setConnectionType(ui->cbConnect->currentText());
+   _testConnection->setDriver(ui->cbDriverType->currentText());
+   _testConnection->setServerType(ui->cbDbType->currentText());
+   db = QSqlDatabase::addDatabase(ui->cbDriverType->currentText(),"testConnection");
+   _testConnection->setDb(db);
  if(ui->cbDbType->currentText() == "Sqlite"  )
  {
-  QFileInfo info(ui->txtDbOrDSN->text());
+  QFileInfo info(ui->txtSqliteFileName->text());
   if(info.isAbsolute())
-    db.setDatabaseName( ui->txtDbOrDSN->text());
+    db.setDatabaseName( ui->txtSqliteFileName->text());
   else
-   db.setDatabaseName("Resources/databases/" + ui->txtDbOrDSN->text());
+   db.setDatabaseName("Resources/databases/" + ui->txtSqliteFileName->text());
+  _testConnection->setSqliteFileName(db.databaseName());
  }
  else if(ui->cbConnect->currentText() == "ODBC")
  {
-  //QString connector = ui->txtDbOrDSN->text();
   QString connector = ui->cbODBCDsn->currentData().toString();
-  db.setDatabaseName(connector);
+  QString connstring = QString("Driver=psqlodbcw.so;Server=%1;Port=%2;User Id=%3;Password=%4;Database=%5;")
+                           .arg(ui->txtHost->text()).arg(ui->txtPort->text()).arg(ui->txtUserId->text(),
+                                ui->txtPWD->text(),ui->txtUseDatabase->text());
+  QString connstring2 = odbcUtil->connectString(connector,ui->txtHost->text(),ui->txtPort->text().toInt(),
+                                                ui->txtUserId->text(),ui->txtPWD->text(),ui->txtUseDatabase->text());
+  if(ui->cbDbType->currentText() == "PostgreSQL")
+  {
+    db.setDatabaseName(connstring2);
+    _testConnection->setDSN(connector);
+    _testConnection->setConnectString(connstring2);
+  }
+  else
+  {
+    db.setDatabaseName(connector);
+   _testConnection->setDSN(connector);
+  }
 
-  if(ui->cbDbType->currentText() == "MySql")
+  if(ui->cbDbType->currentText() == "MySql" || ui->cbDbType->currentText() == "PostgreSQL")
   {
       // userid, server, etc are not defined in the DSN override here
       if(db.userName().isEmpty())
@@ -1388,6 +1432,7 @@ bool EditConnectionsDlg::openTestDb()
       {
        ui->txtHost->setEnabled(true);
        db.setHostName(ui->txtHost->text());
+
        qDebug() << db.hostName();
       }
       if(db.port()< 1)
@@ -1396,6 +1441,8 @@ bool EditConnectionsDlg::openTestDb()
        if(!ui->txtPort->text().isEmpty())
         db.setPort(ui->txtPort->text().toInt());
       }
+      // if(!ui->txtUseDatabase->text().isEmpty())
+      //     db.setDatabaseName(ui->txtUseDatabase->text());
   }
   else
   {
@@ -1417,9 +1464,19 @@ bool EditConnectionsDlg::openTestDb()
      throw IllegalArgumentException(tr("invalid server type: %1").arg(ui->cbDbType->currentText()));
  ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
  ui->lblHelp->setText(tr(""));
+ _testConnection->setUserId(db.userName());
+ _testConnection->setPWD(db.password());
+ _testConnection->setHost(db.hostName());
+ _testConnection->setPort(db.port());
+ _testConnection->setConnectionName(db.connectionName());
+ _testConnection->setTables(db.tables());
+ _testConnection->setDSN(db.connectionName());
+ _testConnection->setDriver(db.driverName());
+ _testConnection->setDatabase(db.databaseName());
  bool bOpen = db.open();
  if(bOpen)
  {
+
   if(ui->cbDbType->currentText() != "Sqlite" )
   {
     QString defaultDatabase = getDatabase();
@@ -1560,7 +1617,7 @@ bool EditConnectionsDlg::populateDatabases()
           QStringList databases = dir.entryList(nameFilter, QDir::Files);
           QCompleter *completer = new QCompleter(databases, this);
           completer->setCaseSensitivity(Qt::CaseInsensitive);
-          ui->txtDbOrDSN->setCompleter(completer);
+          ui->txtSqliteFileName->setCompleter(completer);
       }
   }
 
@@ -1591,6 +1648,8 @@ QString EditConnectionsDlg::getDatabase()
   commandText = "SELECT DB_NAME() ";
  else if(ui->cbDbType->currentText() == "MySql")
   commandText = "SELECT DATABASE()";
+ else if(ui->cbDbType->currentText() == "PostgreSQL")
+     commandText = "SELECT current_database()";
  else
   return dbName;
  if(!query.exec(commandText))
@@ -1680,7 +1739,7 @@ void EditConnectionsDlg::txtPwdLeave()
   qDebug() << " databases: " << databases.join(",");
   if(databases.count() >0)
   {
-   ui->txtDbOrDSN->setText(databases.at(0));
+   ui->txtSqliteFileName->setText(databases.at(0));
   }
  }
 }
@@ -1689,7 +1748,7 @@ void EditConnectionsDlg::txtDsnTextChanged(QString text)
 {
  QCompleter *completer = new QCompleter(databases, this);
  completer->setCaseSensitivity(Qt::CaseInsensitive);
- ui->txtDbOrDSN->setCompleter(completer);
+ ui->txtSqliteFileName->setCompleter(completer);
 }
 
 void EditConnectionsDlg::on_tbBrowse_clicked()
@@ -1700,7 +1759,7 @@ void EditConnectionsDlg::on_tbBrowse_clicked()
 //    basePath = config->macOSPublic + QDir::separator() +"databases" + QDir::separator();
 
 // #endif
-// QFileInfo info(ui->txtDbOrDSN->text());
+// QFileInfo info(ui->txtSqliteFileName->text());
 // if(info.exists())
 //  basePath=info.canonicalPath();
 
@@ -1710,10 +1769,10 @@ void EditConnectionsDlg::on_tbBrowse_clicked()
   QFileInfo pInfo(path);
   if(pInfo.isAbsolute() && !path.startsWith( basePath))
   {
-    ui->txtDbOrDSN->setText(path);
+    ui->txtSqliteFileName->setText(path);
   }
   else
-   ui->txtDbOrDSN->setText(pInfo.fileName());
+   ui->txtSqliteFileName->setText(pInfo.fileName());
  }
 }
 
@@ -1751,30 +1810,30 @@ bool EditConnectionsDlg::createSqliteTables(QSqlDatabase db)
  }
  return true;
 }
-void EditConnectionsDlg::ontxtDbOrDsn_editingFinished()
+void EditConnectionsDlg::ontxtSqliteFileName_editingFinished()
 {
- QString dbName = ui->txtDbOrDSN->text();
+ QString dbName = ui->txtSqliteFileName->text();
  if(ui->cbDbType->currentText() == "Sqlite")
  {
-     if(ui->txtDbOrDSN->text().isEmpty())
+     if(ui->txtSqliteFileName->text().isEmpty())
          return;
   QFileInfo info;
-  if(!ui->txtDbOrDSN->text().toLower().endsWith("sqlite3"))
-   ui->txtDbOrDSN->setText(ui->txtDbOrDSN->text().append(".sqlite3"));
-  if(ui->txtDbOrDSN->text().startsWith("/"))
-   info.setFile(ui->txtDbOrDSN->text());
+  if(!ui->txtSqliteFileName->text().toLower().endsWith("sqlite3"))
+   ui->txtSqliteFileName->setText(ui->txtSqliteFileName->text().append(".sqlite3"));
+  if(ui->txtSqliteFileName->text().startsWith("/"))
+   info.setFile(ui->txtSqliteFileName->text());
   else
 //#ifndef Q_OS_MACOS
-   info.setFile("Resources/databases/" + ui->txtDbOrDSN->text());
+   info.setFile("Resources/databases/" + ui->txtSqliteFileName->text());
 // #else
-//    info.setFile(config->macOSPublic + "/databases/" + ui->txtDbOrDSN->text());
+//    info.setFile(config->macOSPublic + "/databases/" + ui->txtSqliteFileName->text());
 
 // #endif
 
 //  if(info.isAbsolute())
-//   ui->txtDbOrDSN->setText(info.absoluteFilePath());
+//   ui->txtSqliteFileName->setText(info.absoluteFilePath());
 //  else
-  ui->txtDbOrDSN->setText(info.fileName());
+  ui->txtSqliteFileName->setText(info.fileName());
   if(!info.exists())
   {
       QMessageBox::warning(this, "New file", tr("The file entered does not exist. If you coninue "
@@ -1791,7 +1850,7 @@ void EditConnectionsDlg::ontxtDbOrDsn_editingFinished()
  else if(ui->cbDbType->currentText() == "MySql")
  {
   if(ui->cbConnect->currentText()== "ODBC")
-   handleOverrides(ui->txtDbOrDSN->text());
+   //handleOverrides(ui->txtSqliteFileName->text());
   if(databases.contains(dbName))
   {
    if(!verifyDatabase(dbName))
@@ -1875,7 +1934,8 @@ void EditConnectionsDlg::setParameter(Parameters p)
  parms = p;
 }
 
-// handle parameters (host, uset, port, etc specified in ODBC )
+#if 0
+// handle parameters (host, user, port, etc specified in ODBC )
 void EditConnectionsDlg::handleOverrides(QString dbName)
 {
  ui->lblHelp->setText("");
@@ -1912,7 +1972,7 @@ void EditConnectionsDlg::handleOverrides(QString dbName)
   }
  }
 }
-
+#endif
 
 int EditConnectionsDlg::findId(Connection* c)
 {

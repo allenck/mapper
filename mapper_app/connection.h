@@ -37,6 +37,8 @@ class Connection : public QObject
  bool _dirty;
  bool _connectionValid = false;
  bool _sqlite_user_function_loaded = false; // true for Sqlite only!
+ QStringList _tables;
+ QString _connectString;
 
 public:
  Connection(QObject* parent = nullptr);
@@ -48,6 +50,7 @@ public:
  QString servertype() {return _servertype;}
  QSqlDatabase configure(const QString cName = QLatin1String(QSqlDatabase::defaultConnection));
  QSqlDatabase getDb();
+ void setDb(QSqlDatabase db){this->db = db;}
  qint32 id() {return _id;}
  void setId(qint32 i) {_id = i;}
  QString description() { return _description;}
@@ -66,6 +69,8 @@ public:
  void setHost(QString h) {_hostName = h;}
  qint32 port() {return _port;}
  void setPort(qint32 p) {_port = p;}
+ void setConnectString(QString s){_connectString = s;}
+ QString connectString() {return _connectString;}
 // QString useDatabase() {return _useDatabase;}
 // void setUseDatabase(QString u) {_useDatabase = u;}
  QString cityName() {return _cityName;}
@@ -93,6 +98,8 @@ public:
  void setValid(bool b){_connectionValid = b;}
  bool isSqliteUserFunctionLoaded() {return _sqlite_user_function_loaded;}
  void setSqliteUserFunctionLoaded(bool b) {_sqlite_user_function_loaded = b;}
+ QStringList tables(){return db.tables();}
+ void setTables(QStringList tables){_tables = tables;}
 };
 
 #endif // CONNECTION_H

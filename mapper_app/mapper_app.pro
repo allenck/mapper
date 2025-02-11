@@ -101,6 +101,7 @@ DISTFILES += \
     Resources/restore_databases.cmd \
     Resources/restore_databases.sh \
     # Resources/scripts/createMsSqlDistance.sql \
+    Resources/sql/mysql_create_stations.sql \
     Resources/sql/sqlite3_create_route.sql \
     Resources/sql/addBiDirectionalToRoutes.sql \
     Resources/sql/create_stations.sql \
@@ -238,12 +239,15 @@ unix: LIBS += -ldl
 
 FORMS += \
     dialogeditstreets.ui \
-    dialogupdatestreets.ui
+    dialogupdatestreets.ui \
+    findreplacewidget.ui
 
 HEADERS += \
     dialogeditstreets.h \
-    dialogupdatestreets.h
+    dialogupdatestreets.h \
+    findreplacewidget.h
 
 SOURCES += \
     dialogeditstreets.cpp \
-    dialogupdatestreets.cpp
+    dialogupdatestreets.cpp \
+    findreplacewidget.cpp

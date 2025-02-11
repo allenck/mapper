@@ -90,9 +90,10 @@ void Configuration::saveSettings()
    {
        settings->setValue("DSN", cn->dsn());
        settings->setValue("defaultSqlDatabase", cn->defaultSqlDatabase());
-       settings->setValue("useSqlDatabase", cn->database());
+       settings->setValue("database", cn->database());
        settings->setValue("PWD", cn->pwd());
        settings->setValue("UID", cn->userId());
+       settings->setValue("connectString",cn->connectString());
    }
    else if(cn->connectionType()== "Direct")
    {
@@ -106,7 +107,7 @@ void Configuration::saveSettings()
     if(cn->port() > 0)
      settings->setValue("port", cn->port());
     settings->setValue("defaultSqlDatabase", cn->defaultSqlDatabase());
-    settings->setValue("useSqlDatabase", cn->database());
+    //settings->setValue("useSqlDatabase", cn->database());
    }
   }
   settings->endArray(); // connections
@@ -382,7 +383,7 @@ void Configuration::getSettings()
            ncn->setHost(settings.value("hostname").toString());
            ncn->setPort(settings.value("port").toInt());
            ncn->setDefaultSqlDatabase(settings.value("defaultSqlDatabase").toString());
-           ncn->setDatabase(settings.value("useSqlDatabase").toString());
+           ncn->setDatabase(settings.value("database").toString());
            //ncn->setMySqlDatabase(settings.value("mySqlDatabase").toString());
         }
         else if(ncn->connectionType() == "ODBC") {
@@ -390,11 +391,12 @@ void Configuration::getSettings()
            if(!settings.value("odbcConnector").toString().isEmpty())
             ncn->setDSN(settings.value("odbcConnector").toString());
            ncn->setDefaultSqlDatabase(settings.value("defaultSqlDatabase").toString());
-           ncn->setDatabase(settings.value("useSqlDatabase").toString());
+           ncn->setDatabase(settings.value("database").toString());
            ncn->setPWD(settings.value("PWD").toString());
            ncn->setUserId(settings.value("UID").toString());
            ncn->setHost(settings.value("hostname").toString());
            ncn->setPort(settings.value("port").toInt());
+           ncn->setConnectString(settings.value("connectString").toString());
         }
 
         if(!nc->connections.contains(ncn))

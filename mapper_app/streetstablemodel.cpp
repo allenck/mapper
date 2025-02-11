@@ -59,6 +59,8 @@ StreetsTableModel::StreetsTableModel(QObject *parent)
 
 /*static*/ StreetsTableModel* StreetsTableModel::instance()
 {
+    if(!_instance)
+        _instance = new StreetsTableModel();
     return _instance;
 }
 

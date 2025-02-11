@@ -14,6 +14,7 @@
 #include "mainwindow.h"
 #include "queryeditmodel.h"
 #include <QInputMethod>
+#include "findreplacewidget.h"
 
 /*static*/ QueryDialog* QueryDialog::instance(){return _instance;}
 /*static*/ QueryDialog* QueryDialog::_instance = nullptr;
@@ -24,9 +25,11 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
 {
   _instance = this;
   ui->setupUi(this);
+  frw = new FindReplaceWidget(ui->editQuery, this);
+  ui->query_splitter->insertWidget(1,frw);
   config = cfg;
   config->changeFonts(this, config->font);
-  currQueryFilename = "";
+  // currQueryFilename = "";
   setTitle();
   bChanging = false;
   tgtConn = config->currCity->connections.at(config->currCity->curConnectionId);
@@ -86,25 +89,32 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   fileMenu->addMenu(selectMenu);
   QAction* loadFileAct = new QAction(tr("Load query"), this);
   fileMenu->addAction(loadFileAct);
-  connect(loadFileAct, &QAction::triggered, [=]{on_load_QueryButton_clicked();});
+  connect(loadFileAct, &QAction::triggered, this,[=]{
+      on_load_QueryButton_clicked();
+  });
   saveFileAct = new QAction(tr("Save query"), this);
   saveFileAct->setEnabled(false);
   fileMenu->addAction(saveFileAct);
-  connect(saveFileAct, &QAction::triggered, [=]{on_save_QueryButton_clicked(currQueryFilename);});
+  connect(saveFileAct, &QAction::triggered, this,[=]{
+      on_save_QueryButton_clicked(currQueryFilename);
+  });
   saveAsFileAct = new QAction(tr("Save query as ..."), this);
   fileMenu->addAction(saveAsFileAct);
-  connect(saveAsFileAct, &QAction::triggered, [=]{on_saveAs_QueryButton_clicked();});
+  connect(saveAsFileAct, &QAction::triggered,this, [=]{
+      on_saveAs_QueryButton_clicked();
+  });
   refreshRoutesAct = new QAction(tr("Refresh routes"),this);
   refreshRoutesAct->setCheckable(true);
-  connect(refreshRoutesAct, &QAction::triggered, [=]{
+  connect(refreshRoutesAct, &QAction::triggered, this,[=]{
    MainWindow::instance()->refreshRoutes();
    if(refreshRoutesAct->isChecked())
     MainWindow::instance()->btnDisplayRouteClicked();
   });
 
   menuBar->addMenu(toolsMenu);
+  toolsMenu->addAction(refreshRoutesAct);
   //QMenu* tablesMenu = new QMenu(tr("Tables"));
-  connect(toolsMenu, &QMenu::aboutToShow, [=]{
+  connect(toolsMenu, &QMenu::aboutToShow, this,[=]{
    Connection* c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
    QSqlDatabase db = QSqlDatabase::database(c->connectionName());
    QStringList tableList = db.tables(QSql::Tables);
@@ -164,12 +174,23 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
       txt = QString("pragma table_info('%1')").arg(v);
      else if(c->servertype() == "MySql")
       txt = "describe " + v;
-     else // SQL Server
+     else if(c->servertype() == "PostgreSQL")
+         txt = QString("select column_name, data_type, character_maximum_length, column_default, is_nullable\
+                       from INFORMATION_SCHEMA.COLUMNS where table_name = '&1';").arg(v);
+     else // SQL Server & PostgreSQL
       txt = "EXEC sp_help " + v;
+
      processALine(txt, v);
     });
    }
    toolsMenu->addMenu(viewsMenu);
+   QAction* act = new QAction(tr("Show find/replace"),this);
+   act->setCheckable(true);
+   act->setChecked(frw->isVisible());
+   connect(act, &QAction::triggered,this,[=](bool bChecked){
+       frw->setVisible(bChecked);
+   });
+   toolsMenu->addAction(act);
   });
 
   tgtDbType = tgtConn->servertype();
@@ -1234,6 +1255,7 @@ void QueryDialog::setTitle()
      }
      cbFile->setVisible(true);
      cbFile->activateWindow();
+     cbFile->model()->sort(0, Qt::AscendingOrder);
 
      connect(cbFile, &QComboBox::currentTextChanged,this, [=](){
          loadFile(cbFile->currentData().toString());

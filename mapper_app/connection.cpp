@@ -90,7 +90,7 @@ QSqlDatabase Connection::configure(const QString cName)
    QString cmd = QString("use %1").arg(config->currConnection->database());
    if(!query.exec(cmd))
    {
-    SQLERROR(query);
+    SQLERROR(std::move(query));
     db.close();
     bOpen = false;
     return db;
@@ -248,24 +248,33 @@ void Connection::configureDb(QSqlDatabase db, Connection* currConnection, Config
          db.setPort(currConnection->port());
         db.setUserName(currConnection->userId());
         db.setPassword(currConnection->pwd());
-        db.setDatabaseName(currConnection->defaultSqlDatabase());
+        //db.setDatabaseName(currConnection->defaultSqlDatabase());
+        db.setDatabaseName(currConnection->database());
     }
     else if(currConnection->connectionType() == "ODBC")
     {
-        db.setDatabaseName(currConnection->dsn());
-        db.setUserName(currConnection->userId());
-        db.setPassword(currConnection->pwd());
+        if(currConnection->_connectString.isEmpty())
+        {
+            db.setDatabaseName(currConnection->dsn());
+            db.setUserName(currConnection->userId());
+            db.setPassword(currConnection->pwd());
+        }
+        else
+        {
+            db.setDatabaseName(currConnection->_connectString);
+        }
     }
     else
     {
      throw IllegalArgumentException(tr("invalid driver name: '%1'").arg(driver));
     }
-    if(currConnection->connectionType() != "Local" )
+    if(currConnection->connectionType() != "Local"
+            && currConnection->servertype() != "PostgreSQL")
     {
       if(db.open() && !currConnection->defaultSqlDatabase().isEmpty())
       {
         QSqlQuery query = QSqlQuery(db);
-        if(!query.exec(QString("use %1").arg(currConnection->defaultSqlDatabase())))
+        if(!query.exec(QString("use %1").arg(currConnection->database())))
         {
             QMessageBox::critical(nullptr, tr("Sql error"), tr("An sql error has occured! \n")
                          + query.lastError().text() + " query: " + query.lastQuery());

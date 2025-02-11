@@ -10,6 +10,7 @@ namespace Ui {
     class editConnectionsDlg;
 }
 
+class ODBCUtil;
 class EditConnectionsDlg : public QDialog
 {
     Q_OBJECT
@@ -41,10 +42,10 @@ private:
  bool createSqliteTables(QSqlDatabase db);
  bool populateDatabases();
  QString getDatabase();
-#ifndef Q_WS_WIN
- void findODBCDsn(QString iniFile, QStringList* dsnList);
- QString getODBCDSNValue(QString iniFile, QString dsn, QString key);
-#endif
+// #ifndef Q_WS_WIN
+//  void findODBCDsn(QString iniFile, QStringList* dsnList);
+//  QString getODBCDSNValue(QString iniFile, QString dsn, QString key);
+// #endif
   bool verifyDatabase(QString name);
   void setControls(QString txt);
   City* currCity = nullptr;
@@ -58,6 +59,8 @@ private:
   QMap<QString, QList<QPair<QString,QString>>> odbcPairMap;
   bool setDatabase(QString useDatabase);
   int findId(Connection* c);
+  Connection* _testConnection = nullptr;
+  ODBCUtil* odbcUtil = nullptr;
 
 private slots:
  void cbCitiesSelectionChanged(int sel);
@@ -77,11 +80,11 @@ private slots:
  void txtPwdLeave();
  void txtDsnTextChanged(QString text);
  void on_tbBrowse_clicked();
- void ontxtDbOrDsn_editingFinished();
+ void ontxtSqliteFileName_editingFinished();
  void setupComboBoxes(QString);
  void onDbTypeChanged(QString);
  void cbConnections_contextMenuRequested(QPoint);
- void handleOverrides(QString dbName);
+ //void handleOverrides(QString dbName);
 };
 
 #endif // EDITCONNECTIONSDLG_H

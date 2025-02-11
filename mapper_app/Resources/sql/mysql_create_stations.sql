@@ -1,5 +1,5 @@
 CREATE TABLE `Stations` (
-  `stationKey` integer NOT NULL primary key AUTOINCREMENT,
+  `stationKey` integer NOT NULL primary key AUTO_INCREMENT,
   `routes` varchar(250) NOT NULL DEFAULT '',
   `name` varchar(75) NOT NULL,
   `latitude` decimal(15,13) NOT NULL DEFAULT 0.0,

@@ -4548,7 +4548,7 @@ QList<CompanyData*> SQL::getCompanies()
   SQLERROR(std::move(query));
   //db.close();
   //exit(EXIT_FAILURE);
-  sqlErrorMessage(query, QMessageBox::Ok);
+  sqlErrorMessage(std::move(query), QMessageBox::Ok);
   return myArray;
  }
  while (query.next())
@@ -11252,7 +11252,7 @@ QString SQL::getDatabase(QString serverType, QSqlDatabase db)
   while(query.next())
   {
    if(!query.value(0).isNull())
-   dbName = query.value(0).toString();
+    dbName = query.value(0).toString();
   }
  }
  return dbName;
@@ -11260,6 +11260,8 @@ QString SQL::getDatabase(QString serverType, QSqlDatabase db)
 
 bool SQL::useDatabase(QString dbName, QString serverType, QSqlDatabase db)
 {
+    if(serverType == "PostgreSQL")
+        return true;
     QString currentDb = getDatabase(serverType, db);
     if(currentDb == dbName)
         return true;

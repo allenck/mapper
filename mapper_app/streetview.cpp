@@ -20,7 +20,7 @@ StreetView::StreetView(QObject *parent) {
 
     setItemDelegateForColumn(StreetsTableModel::STARTDATE, new DateEditDelegate());
     setItemDelegateForColumn(StreetsTableModel::ENDDATE, new DateEditDelegate());
-    sourceModel = new StreetsTableModel(this);
+    sourceModel =  StreetsTableModel::instance();
     proxyModel = new QSortFilterProxyModel();
     proxyModel->setSourceModel(sourceModel);
 

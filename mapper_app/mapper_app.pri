@@ -7,6 +7,7 @@ SOURCES += main.cpp\
     $$PWD/logger.cpp \
     $$PWD/modifyroutedialog.cpp \
     $$PWD/mytextedit.cpp \
+    $$PWD/odbcutil.cpp \
     $$PWD/overlay.cpp \
     $$PWD/queryeditmodel.cpp \
     $$PWD/replacesegmentdialog.cpp \
@@ -89,6 +90,7 @@ HEADERS  += mainwindow.h \
     $$PWD/logger.h \
     $$PWD/modifyroutedialog.h \
     $$PWD/mytextedit.h \
+    $$PWD/odbcutil.h \
     $$PWD/overlay.h \
     $$PWD/queryeditmodel.h \
     $$PWD/replacesegmentdialog.h \

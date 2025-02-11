@@ -14,6 +14,7 @@ namespace Ui {
 class QueryDialog;
 }
 
+class FindReplaceWidget;
 class QComboBox;
 class QueryDialog : public QDialog
 {
@@ -79,6 +80,7 @@ private:
  QWidgetAction* wAct = nullptr;
  QMenu* selectMenu = nullptr;
  void loadFile(QString s_File_Name);
+ FindReplaceWidget* frw = nullptr;
 
 private slots:
  void on_go_QueryButton_clicked();

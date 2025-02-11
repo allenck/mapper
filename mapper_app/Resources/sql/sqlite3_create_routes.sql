@@ -3,7 +3,7 @@ CREATE TABLE `Routes` (
              `Route` int(11) NOT NULL,
              `RouteId`  int(11),
              `Name` varchar(140) NOT NULL,
-             `StartDate`  NOT NULL,
+             `StartDate`  date NOT NULL,
              `EndDate` date NOT NULL,
              `LineKey` int(11) NOT NULL,
              `OneWay` char(1) check(`oneWay` in ('Y','N',' ')) default ' ' NOT NULL,
