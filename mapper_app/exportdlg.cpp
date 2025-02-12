@@ -85,7 +85,7 @@ void ExportDlg::chkAll_changed(bool isChecked)
     ui->chkAltRoute->setChecked(isChecked);
     ui->chkComments->setChecked(isChecked);
     ui->chkCompanies->setChecked(isChecked);
-    ui->chkIntersections->setChecked(isChecked);
+    //ui->chkIntersections->setChecked(isChecked);
     ui->chkRouteName->setChecked(isChecked);
     ui->chkParameters->setChecked(isChecked);
     ui->chkRoutes->setChecked(isChecked);
@@ -95,6 +95,7 @@ void ExportDlg::chkAll_changed(bool isChecked)
     ui->chkTractionTypes->setChecked(isChecked);
     ui->chkRouteComments->setChecked(isChecked);
     ui->chkStreetDef->setChecked(isChecked);
+    ui->chkRouteSeq->setChecked(isChecked);
     on_chkAll_toggled(isChecked);
 }
 

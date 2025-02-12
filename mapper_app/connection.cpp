@@ -85,16 +85,21 @@ QSqlDatabase Connection::configure(const QString cName)
   }
   if(config->currConnection->database()  != "")
   {
-   QSqlQuery query = QSqlQuery(db);
-   //QString cmd = QString("use [%1]").arg(config->currConnection->mySqlDatabase());
-   QString cmd = QString("use %1").arg(config->currConnection->database());
-   if(!query.exec(cmd))
-   {
-    SQLERROR(std::move(query));
-    db.close();
-    bOpen = false;
-    return db;
-   }
+    // PostgreSQL does not support a user to access different databases from a login. A new connection
+    // must be made to switc.
+    if(config->currConnection->servertype() != "PostgreSQL")
+    {
+       QSqlQuery query = QSqlQuery(db);
+       //QString cmd = QString("use [%1]").arg(config->currConnection->mySqlDatabase());
+       QString cmd = QString("use %1").arg(config->currConnection->database());
+       if(!query.exec(cmd))
+       {
+        SQLERROR(std::move(query));
+        db.close();
+        bOpen = false;
+        return db;
+       }
+    }
    //if(config->currConnection->servertype() == "Sqlite" )
     sql->checkTables(db);
    tableList = db.tables();

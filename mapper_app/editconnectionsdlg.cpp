@@ -26,7 +26,7 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
     currCity = config->currCity;
     this->setWindowTitle(tr("Edit Connections "));
     drivers = QSqlDatabase::drivers();
-    ui->cbODBCDsn->setEditable(true);
+    ui->cbODBCDsn->setEditable(false);
 
    // connection that is being edited
    connection = currCity->connections.at(currCity->curConnectionId);
@@ -155,8 +155,14 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
           }
          }
       }
-    });
-   //connect(ui->cbODBCDsn, SIGNAL(currentTextChanged(QString)),this, SLOT(handleOverrides(QString)));
+   });
+   connect(ui->cbODBCDsn, &QComboBox::currentTextChanged,this,[=]{
+        QString connector = ui->cbODBCDsn->currentData().toString();
+        if(!openTestDb())
+        {
+
+        }
+   });
 
    ui->cbConnections->setCurrentIndex(ui->cbConnections->
                                        findText(connection->description()));
@@ -668,7 +674,7 @@ void EditConnectionsDlg::setControls(QString txt)
       QString description;
       for(QPair<QString,QString> pair : list)
       {
-          if(pair.first.toLower() == "description")
+          if(pair.first.toLower().compare("description",Qt::CaseInsensitive)==0)
           {
               description = pair.second;
               break;
@@ -1398,14 +1404,50 @@ bool EditConnectionsDlg::openTestDb()
  else if(ui->cbConnect->currentText() == "ODBC")
  {
   QString connector = ui->cbODBCDsn->currentData().toString();
+#ifndef Q_OS_WIN
   QString connstring = QString("Driver=psqlodbcw.so;Server=%1;Port=%2;User Id=%3;Password=%4;Database=%5;")
                            .arg(ui->txtHost->text()).arg(ui->txtPort->text()).arg(ui->txtUserId->text(),
                                 ui->txtPWD->text(),ui->txtUseDatabase->text());
   QString connstring2 = odbcUtil->connectString(connector,ui->txtHost->text(),ui->txtPort->text().toInt(),
                                                 ui->txtUserId->text(),ui->txtPWD->text(),ui->txtUseDatabase->text());
+
+#else
+  QList<QPair<QString, QString>> list = odbcPairMap.value(connector);
+  QString driver;
+  QString servername;
+  QString port;
+  QString UID;
+  QString password;
+  QString database;
+  QStringList keys = {"Driver","Servername", "Port", "UID", "Password","Database"};
+
+  for(QPair<QString,QString> pair : list)
+  {
+      if(keys.contains(pair.first))
+      {
+        if(pair.first == "Driver") driver = pair.second;
+        if(pair.first == "Servername") servername = pair.second;
+        if(pair.first == "Port") port = pair.second;
+        if(pair.first == "UID") UID = pair.second;
+        if(pair.first == "Password") password = pair.second;
+        if(pair.first == "Database") database = pair.second;
+      }
+  }
+  ui->txtHost->setText(servername);
+  ui->txtPWD->setText((password));
+  ui->txtUserId->setText(UID);
+  ui->txtUseDatabase->setText(database);
+  QString connstring2 = QString("Driver=%1;Server=%2;Port=%3;User Id=%4;Password=%5;Database=%6;")
+                            .arg(driver,servername,port,UID,password,database);
+
+#endif
   if(ui->cbDbType->currentText() == "PostgreSQL")
   {
-    db.setDatabaseName(connstring2);
+#ifdef Q_OS_WIN
+    db.setDatabaseName(connector);
+#else
+      db.setDatabaseName(connstring2);
+#endif
     _testConnection->setDSN(connector);
     _testConnection->setConnectString(connstring2);
   }
@@ -1620,19 +1662,27 @@ bool EditConnectionsDlg::populateDatabases()
           ui->txtSqliteFileName->setCompleter(completer);
       }
   }
-
-  // use desired db
-  if(!currDatabase.isEmpty())
+  // PostgreSQL DSN can only connect to one database so trying to do this is invalid
+  if(ui->cbDbType->currentText() != "PostgreSQL")
   {
-      if(!query.exec("use "+ currDatabase))
+      // use desired db
+      if(!currDatabase.isEmpty())
       {
-        qDebug() << query.lastError().driverText()+ query.lastError().databaseText();
-        ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
-        ui->lblHelp->setText(query.lastError().driverText() + query.lastError().databaseText());
-        return false;
+          if(!query.exec("use "+ currDatabase))
+          {
+            qDebug() << query.lastError().driverText()+ query.lastError().databaseText();
+            ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
+            ui->lblHelp->setText(query.lastError().driverText() + query.lastError().databaseText());
+            return false;
+          }
+          ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
+          ui->lblHelp->setText(tr("using ")+currDatabase);
       }
-      ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
-      ui->lblHelp->setText(tr("using ")+currDatabase);
+      else
+      {
+          ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
+          ui->lblHelp->setText(tr("using PostgreSQL database")+currDatabase);
+      }
   }
   return true;
 }

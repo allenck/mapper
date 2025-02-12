@@ -326,7 +326,7 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
  QString where;
  if(companyKey >0)
   where= " where r.companyKey = " + QString("%1").arg(companyKey);
- if(config->currConnection->servertype() != "MsSql")
+ if(config->currConnection->servertype() == "MySql")
     commandText = "Select distinct a.baseRoute, r.route, n.name, r.startDate, "
                "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic,r.routeId  "
                "from Routes r "
@@ -334,10 +334,10 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
                "join Companies c on r.companyKey = c.`key` "
                "join RouteName n on r.routeId = n.routeId "
                + where +
-               " group by a.baseRoute, r.route, r.name, r.startDate, r.endDate, "
+               " group by a.baseRoute, r.route, n.name, r.startDate, r.endDate, "
                " r.companykey,tractionType, a.routeAlpha "
-               " order by a.routeAlpha, r.name, r.endDate ";
- else
+               " order by a.routeAlpha, n.name, r.endDate ";
+ else if(config->currConnection->servertype() == "MsSql")
      commandText = "Select distinct a.baseRoute, r.route, n.name, r.startDate, "
                    "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic, r.routeId  "
                    "from Routes r "
@@ -345,10 +345,20 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
                    "join Companies c on r.companyKey = c.[key] "
                    "join RouteName n on r.routeId = n.routeId "
                    + where +
-                   " group by a.baseRoute, r.route, r.name, r.startDate, r.endDate, "
+                   " group by a.baseRoute, r.route, n.name, r.startDate, r.endDate, "
                    " r.companykey,tractionType, a.routeAlpha "
-                   " order by a.routeAlpha, r.name, r.endDate ";
-
+                   " order by a.routeAlpha, n.name, r.endDate ";
+ else
+    commandText = "Select distinct a.baseRoute, r.route, n.name, r.startDate, "
+            "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic, r.routeId  "
+            "from Routes r "
+            "join AltRoute a on r.route =  a.route "
+            "join Companies c on r.companyKey = c.key "
+            "join RouteName n on r.routeId = n.routeId "
+            + where +
+            " group by a.baseRoute, r.route, n.name, r.startDate, r.endDate, "
+            " r.companykey,c.mnemonic,tractionType, a.routeAlpha, r.routeid "
+            " order by a.routeAlpha, n.name, r.endDate ";
  query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -991,7 +1001,6 @@ QMap<int, SegmentInfo> SQL::getSegmentInfoList(QString location)
                         " location, pointArray, tracks, direction, DoubleDate, newerName,"
                         " streetid, rowid"
                         " from Segments order by description";
-
   }
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
@@ -1344,13 +1353,13 @@ SegmentInfo SQL::getSegmentInfo(qint32 segmentId)
   QSqlDatabase db = QSqlDatabase::database();
   QString commandText;
 
-  if(config->currConnection->servertype() != "MsSql")
-       commandText = "Select `SegmentId`, Description, tracks, type,"
-                     " StartLat, StartLon, EndLat, EndLon, length, StartDate, EndDate, Direction,"
-                     " Street, location, pointArray, DoubleDate, FormatOK, NewerName, StreetId from Segments"
-                     " where SegmentId = " + QString("%1").arg(segmentId);
-  else
-       commandText = "Select `SegmentId`, Description, tracks, type,"
+       commandText =   // if(config->currConnection->servertype() != "MsSql")
+               //      commandText = "Select `SegmentId`, Description, tracks, type,"
+               //                    " StartLat, StartLon, EndLat, EndLon, length, StartDate, EndDate, Direction,"
+               //                    " Street, location, pointArray, DoubleDate, FormatOK, NewerName, StreetId from Segments"
+               //                    " where SegmentId = " + QString("%1").arg(segmentId);
+               // else
+"Select SegmentId, Description, tracks, type,"
                      " StartLat, StartLon, EndLat, EndLon, length, StartDate, EndDate, Direction,"
                      " Street, location, pointArray, DoubleDate, FormatOK, NewerName,StreetId from Segments"
                      " where SegmentId = " + QString("%1").arg(segmentId);
@@ -2171,229 +2180,7 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
 }
 
 #endif
-#if 0
-QList<segmentData> SQL::getIntersectingSegmentsWithRoute(double lat, double lon, double radius, RouteType type)
-{
-    QList<segmentData> myArray;
-    segmentData sd =  segmentData();
-    double startLat=0, startLon=0, endLat=0, endLon = 0;
-    qint32 segmentId=0, sequence = 0, key=0;
-    qint32 route = -1;
-    double distance = 0, length =0;
-    qint32 currSegment = -1;
-    double curSegmentDistance = radius+1;
-    QString streetName = "";
-    try
-    {
-        if(!dbOpen())
-            throw Exception(tr("database not open: %1").arg(__LINE__));
-        QSqlDatabase db = QSqlDatabase::database();
 
-        QString commandText;
-        if(config->currConnection->servertype() != "MsSql")
-            commandText = "select b.segmentId, b.startLat, b.startLon, b.endLat, a.EndLon, a.`key`, a.sequence, a.length, a.streetName, r.route, ar.routeAlpha from LineSegment a join Segments b on a.segmentId = b.segmentId AND ((a.startLat = b.startLat and a.startLon= b.startLon) OR (a.startLat =  b.endLat and a.startLon = b.endLon) OR (a.endLat = b.endLat and a.endLon = b.endLon) OR (a.endLat = b.startLat and a.endLon = b.startLon)) join Routes r on r.linekey = b.segmentId JOIN AltRoute ar ON ar.route = r.route where (" + QString("%1").arg((int)type )+ "= -1 OR b.type = " + QString("%1").arg((int)type )+ ") and (distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", b.startLat, b.startLon) < " + QString("%1").arg(radius,0,'f',8 )+ " OR distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", b.endLat, b.endLon) < " + QString("%1").arg(radius,0,'f',8) + ") order by r.route, segmentId, sequence";
-        else
-            commandText = "select b.segmentId, b.startLat, b.startLon, b.endLat, a.EndLon, a.[key], a.sequence, a.length, a.streetName, r.route, ar.routeAlpha from LineSegment a join Segments b on a.segmentId = b.segmentId AND ((a.startLat = b.startLat and a.startLon= b.startLon) OR (a.startLat =  b.endLat and a.startLon = b.endLon) OR (a.endLat = b.endLat and a.endLon = b.endLon) OR (a.endLat = b.startLat and a.endLon = b.startLon)) join Routes r on r.linekey = b.segmentId JOIN AltRoute ar ON ar.route = r.route where (" + QString("%1").arg((int)type )+ "= -1 OR b.type = " + QString("%1").arg((int)type )+ ") and (dbo.distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", b.startLat, b.startLon) < " + QString("%1").arg(radius,0,'f',8 )+ " OR dbo.distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", b.endLat, b.endLon) < " + QString("%1").arg(radius,0,'f',8) + ")  order by r.route, segmentId, sequence";
-        qDebug() << commandText + "\n";
-        QSqlQuery query = QSqlQuery(db);
-        bool bQuery = query.exec(commandText);
-        if(!bQuery)
-        {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
-        }
-
-        while(query.next())
-        {
-            segmentId = query.value(0).toInt();
-            startLat = query.value(1).toDouble();
-            startLon = query.value(2).toDouble();
-            endLat = query.value(3).toDouble();
-            endLon = query.value(4).toDouble();
-            key = query.value(5).toInt();
-            sequence = query.value(6).toInt();
-            length = query.value(7).toDouble();
-            streetName = query.value(8).toString();
-            route = query.value(9).toInt();
-
-            if (segmentId != currSegment)
-            {
-                if (currSegment > 0 && curSegmentDistance < radius)
-                {
-                    myArray.append(sd);
-                }
-
-                sd =  segmentData();
-                currSegment = segmentId;
-                curSegmentDistance = radius + 1.0;
-            }
-
-            distance = Distance(lat, lon, startLat, startLon);
-            if (distance < curSegmentDistance)
-            {
-                sd.key = key;
-                sd.SegmentId = segmentId;
-                sd.startLat = startLat;
-                sd.startLon = startLon;
-                sd.endLat = endLat;
-                sd.endLon = endLon;
-                sd.sequence = sequence;
-                sd.distance = distance;
-                curSegmentDistance = distance;
-                sd.streetName = streetName;
-                sd.routeType = type;
-                sd.whichEnd = "S";
-                sd.route = route;
-                sd.endSegment = key;
-                sd.alphaRoute = query.value(10).toString();
-            }
-            // check the ending point
-            distance = Distance(lat, lon, endLat, endLon);
-            if (distance < curSegmentDistance)
-            {
-                sd.key = key;
-                sd.SegmentId = segmentId;
-                sd.startLat = startLat;
-                sd.startLon = startLon;
-                sd.endLat = endLat;
-                sd.endLon = endLon;
-                sd.sequence = sequence + 1;
-                sd.distance = distance;
-                curSegmentDistance = distance;
-                sd.streetName = streetName;
-                sd.routeType = (RouteType)type;
-                sd.whichEnd = "E";
-                sd.route = route;
-                sd.endSegment = key;
-                sd.alphaRoute = query.value(10).toString();
-            }
-        }
-
-
-        if(curSegmentDistance < radius)
-            myArray.append(sd);
-
-    }
-    catch (Exception e)
-    {
-        myExceptionHandler(e);
-
-    }
-
-    return myArray;
-}
-#endif
-
-#if 0
-QList<segmentData> SQL::getIntersectingSegments(double lat, double lon, double radius)
-{
-    QList<segmentData> myArray;
-    segmentData sd =  segmentData();
-    double startLat = 0, startLon = 0, endLat = 0, endLon = 0;
-    qint32 segmentId = 0, sequence = 0, key = 0;
-    double distance = 0, length=0;
-    qint32 currSegment = -1;
-    double curSegmentDistance = radius + 1;
-    QString streetName = "";
-    RouteType type = Other;
-    try
-    {
-        if(!dbOpen())
-            throw Exception(tr("database not open: %1").arg(__LINE__));
-        QSqlDatabase db = QSqlDatabase::database();
-
-        QString commandText;
-        if(config->currConnection->servertype() != "MsSql")
-            commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon, a.[key], a.sequence, a.length, a.streetName, b.type from LineSegment a join Segments b on a.segmentId = b.segmentId where (distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", a.startLat, a.startLon) < " + QString("%1").arg(radius,0,'f',8 )+ " OR distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", a.endLat, a.endLon) < " + QString("%1").arg(radius,0,'f',8) + ") order by segmentId, sequence";
-        else
-        commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon, a.[key], a.sequence, a.length, a.streetName, b.type from LineSegment a join Segments b on a.segmentId = b.segmentId where (dbo.distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", a.startLat, a.startLon) < " + QString("%1").arg(radius,0,'f',8 )+ " OR dbo.distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", a.endLat, a.endLon) < " + QString("%1").arg(radius,0,'f',8) + ") order by segmentId, sequence";
-        QSqlQuery query = QSqlQuery(db);
-        bool bQuery = query.exec(commandText);
-        if(!bQuery)
-        {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
-        }
-        while (query.next())
-        {
-            segmentId = query.value(0).toInt();
-            startLat = query.value(1).toDouble();
-            startLon = query.value(2).toDouble();
-            endLat = query.value(3).toDouble();
-            endLon = query.value(4).toDouble();
-            key = query.value(5).toInt();
-            sequence = query.value(6).toInt();
-            length = query.value(7).toDouble();
-            streetName = query.value(8).toString();
-            type = (RouteType)query.value(9).toInt();
-
-            if (segmentId != currSegment)
-            {
-                if (currSegment > 0 && curSegmentDistance < radius)
-                {
-                    myArray.append(sd);
-                }
-
-                sd =  segmentData();
-                currSegment = segmentId;
-                curSegmentDistance = radius + 1.0;
-            }
-
-            distance = Distance(lat, lon, startLat, startLon);
-            if (distance < curSegmentDistance)
-            {
-                sd.key = key;
-                sd.SegmentId = segmentId;
-                sd.startLat = startLat;
-                sd.startLon = startLon;
-                sd.endLat = endLat;
-                sd.endLon = endLon;
-                sd.sequence = sequence;
-                sd.distance = distance;
-                curSegmentDistance = distance;
-                sd.streetName = streetName;
-                sd.routeType = type;
-                sd.whichEnd = "S";
-            }
-            // check the ending point
-            distance = Distance(lat, lon, endLat, endLon);
-            if (distance < curSegmentDistance)
-            {
-                sd.key = key;
-                sd.SegmentId = segmentId;
-                sd.startLat = startLat;
-                sd.startLon = startLon;
-                sd.endLat = endLat;
-                sd.endLon = endLon;
-                sd.sequence = sequence + 1;
-                sd.distance = distance;
-                curSegmentDistance = distance;
-                sd.streetName = streetName;
-                sd.routeType = (RouteType)type;
-                sd.whichEnd = "E";
-            }
-        }
-
-
-        if (curSegmentDistance < radius)
-            myArray.append(sd);
-
-    }
-    catch (Exception e)
-    {
-        //myExceptionHandler(e);
-
-    }
-
-    return myArray;
-}
-#endif
 // Return a list of all segments that have their starting or ending location within the stated radius
 QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double radius)
 {
@@ -4535,12 +4322,16 @@ QList<CompanyData*> SQL::getCompanies()
  QSqlDatabase db = QSqlDatabase::database();
 
  QString commandText;
- if(config->currConnection->servertype() != "MsSql")
+ if(config->currConnection->servertype() == "MySql")
      commandText = "select `key`, description, routePrefix, startDate, endDate,"
                    " firstRoute, lastRoute, mnemonic, info, url, selected, lastUpdate from Companies";
- else
+ else if(config->currConnection->servertype() == "MsSql")
+
      commandText = "select [key], description, routePrefix, startDate, endDate,"
                    " firstRoute, lastRoute, mnemonic, info, url, selected,lastUpdate from Companies";
+ else //Sqlite and PostgreSQL
+ commandText = "select key, description, routePrefix, startDate, endDate,"
+               " firstRoute, lastRoute, mnemonic, info, url, selected, lastUpdate from Companies";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -4588,7 +4379,7 @@ bool SQL::updateCompany(CompanyData* cd)
     QSqlQuery query = QSqlQuery(db);
     bool bQuery;
     int rows = 0;
-    if(config->currConnection->servertype() != "MsSql")
+    if(config->currConnection->servertype() == "MySql")
         commandText = "update companies set "
             "description= '" + cd->name + "',"
             "mnemonic= '" + cd->mnemonic + "',"
@@ -4601,7 +4392,7 @@ bool SQL::updateCompany(CompanyData* cd)
             "lastroute = " + QString::number(cd->lastRoute) + ", "
             "selected = " + QString::number(cd->bSelected) + " "
             "where `key` = " +  QString::number(cd->companyKey);
-    else
+    else if(config->currConnection->servertype() == "MsSql")
         commandText = "update companies set "
             "description= '" + cd->name + "',"
             "mnemonic= '" + cd->mnemonic + "',"
@@ -4614,6 +4405,20 @@ bool SQL::updateCompany(CompanyData* cd)
             "lastroute = " + QString::number(cd->lastRoute) + ", "
             "selected = " + QString::number(cd->bSelected) + " "
             "where [key] = " +  QString::number(cd->companyKey);
+    else // Sqlite and PostgreSQL
+        commandText = "update companies set "
+            "description= '" + cd->name + "',"
+            "mnemonic= '" + cd->mnemonic + "',"
+            "routePrefix= '" + cd->routePrefix + "',"
+            "info= '" + cd->info + "',"
+            "url= '" + cd->url.toDisplayString() + "',"
+            "startDate = '" + cd->startDate.toString("yyyy/MM/dd")+ "',"
+            "endDate = '" + cd->endDate.toString("yyyy/MM/dd")+ "',"
+            "firstroute = " +QString::number(cd->firstRoute) + ","
+            "lastroute = " + QString::number(cd->lastRoute) + ", "
+            "selected = " + QString::number(cd->bSelected) + " "
+            "where key = " +  QString::number(cd->companyKey);
+
 
     query.prepare(commandText);
     query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
@@ -4650,17 +4455,23 @@ QList<CompanyData*> SQL::getCompaniesInDateRange(QDate startDate, QDate endDate)
  QSqlDatabase db = QSqlDatabase::database();
 
  QString commandText;
- if(config->currConnection->servertype() != "MsSql")
+ if(config->currConnection->servertype() == "MySql")
      commandText = QString("select `key`, description, routePrefix, startDate, endDate,"
                    " firstRoute, lastRoute, mnemonic, url, selected from Companies"
                    " where startDate between '%1' and '%2' or endDate between '%1' and '%2'")
        .arg(startDate.toString("yyyy/MM/dd")).arg(endDate.toString("yyyy/MM/dd"));
- else
+ else if(config->currConnection->servertype() == "MsSql")
+
      commandText = QString("select [key], description, routePrefix, startDate, endDate,"
                    " firstRoute, lastRoute, mnemonic, url, selected from Companies"
                    " where startDate between '%1' and '%2' or endDate between '%1' and '%2'")
                    .arg(startDate.toString("yyyy/MM/dd"))
                    .arg(endDate.toString("yyyy/MM/dd"));
+ else
+    commandText = QString("select key, description, routePrefix, startDate, endDate,"
+               " firstRoute, lastRoute, mnemonic, url, selected from Companies"
+               " where startDate between '%1' and '%2' or endDate between '%1' and '%2'")
+   .arg(startDate.toString("yyyy/MM/dd")).arg(endDate.toString("yyyy/MM/dd"));
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -4712,14 +4523,18 @@ CompanyData* SQL::getCompany(qint32 companyKey)
         QSqlDatabase db = QSqlDatabase::database();
 
         QString commandText;
-        if(config->currConnection->servertype() != "MsSql")
+        if(config->currConnection->servertype() == "MySql")
             commandText = "select `key`, description, startDate, endDate, firstRoute, lastRoute,"
                           " routePrefix, mnemonic, info, url, selected from Companies"
                           " where `key` = " +QString("%1").arg(companyKey);
-        else
+        else if(config->currConnection->servertype() == "MsSql")
             commandText = "select [key], description, startDate, endDate, firstRoute, lastRoute,"
                           " routePrefix,memonic, info, url, selected from companies"
                           " where [key] = " + QString("%1").arg(companyKey);
+        else // Sqlite and PostgreSQL
+        commandText = "select key, description, startDate, endDate, firstRoute, lastRoute,"
+                      " routePrefix, mnemonic, info, url, selected from Companies"
+                      " where key = " +QString("%1").arg(companyKey);
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -5874,10 +5689,16 @@ bool SQL::updateCompany(qint32 companyKey, qint32 route)
         QSqlDatabase db = QSqlDatabase::database();
         QString commandText;
         //beginTransaction("updateCompanies");
-        if(config->currConnection->servertype() != "MsSql")
+        if(config->currConnection->servertype() == "MySql")
             commandText = "select `key`, description, startDate, endDate, firstRoute, lastRoute from Companies where `key` = " + QString("%1").arg(companyKey);
-        else
+        else if(config->currConnection->servertype() == "MsSql")
             commandText = "select [key], description, startDate, endDate, firstRoute, lastRoute from companies where [key] = " + QString("%1").arg(companyKey);
+        else // sqlite and PostgreSQL
+            commandText = "select key, description, startDate, endDate, "
+                          "firstRoute, lastRoute "
+                          "from Companies "
+                          "where key = " + QString("%1").arg(companyKey);
+
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -5910,10 +5731,18 @@ bool SQL::updateCompany(qint32 companyKey, qint32 route)
         if (route > cd->lastRoute)
             cd->lastRoute = route;
 
-        if(config->currConnection->servertype() != "MsSql")
-            commandText = "Update Companies set  firstRoute= " +QString("%1").arg( cd->firstRoute) + ", lastRoute = " + QString("%1").arg(cd->lastRoute) + ",lastUpdate=:lastUpdate where `key` = " + QString("%1").arg(companyKey);
-        else
+        if(config->currConnection->servertype() == "MySql")
+            commandText = "Update Companies set  "
+                          "firstRoute= " +QString("%1").arg( cd->firstRoute) +
+                          ", lastRoute = " + QString("%1").arg(cd->lastRoute) +
+                    ",lastUpdate=:lastUpdate where `key` = " + QString("%1").arg(companyKey);
+        else if(config->currConnection->servertype() == "MsSql")
             commandText = "Update companies set  firstRoute= " +QString("%1").arg( cd->firstRoute) + ", lastRoute = " + QString("%1").arg(cd->lastRoute) + ",lastUpdate=:lastUpdate where [key] = " + QString("%1").arg(companyKey);
+        else // Sqlite and PostgreSQL
+            commandText = "Update Companies set  "
+                          "firstRoute= " +QString("%1").arg( cd->firstRoute) +
+                          ", lastRoute = " + QString("%1").arg(cd->lastRoute) +
+                    ",lastUpdate=:lastUpdate where key = " + QString("%1").arg(companyKey);
         query.prepare(commandText);
         query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
         bQuery = query.exec();
@@ -6493,7 +6322,7 @@ QList<RouteData> SQL::getRouteDataForRouteName(qint32 route, QString name)
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         QString commandText;
-        if(config->currConnection->servertype() != "MsSql")
+        if(config->currConnection->servertype() == "MySql")
         {
             commandText = "select min(a.startdate), Max(a.enddate), Name, a.route, b.`Key`,"
                           " tractionType, routeAlpha, routeId"
@@ -6502,13 +6331,24 @@ QList<RouteData> SQL::getRouteDataForRouteName(qint32 route, QString name)
                           + " between firstRoute and lastRoute"
                           " join AltRoute c on a.route = c.route where a.Route = " + QString("%1").arg(route) + " and Name = '" + name + "' group by a.StartDate, a.endDate, Name, a.route, b.`Key`, tractionType, routeAlpha";
         }
-        else
+        else if(config->currConnection->servertype() == "MsSql")
         {
             commandText = "select min(a.startdate), Max(a.enddate), Name, a.route, b.[Key],"
                           " tractionType, routeAlpha, routeId"
                           " from Routes a"
                           " join Companies b on " + QString("%1").arg(route) + " between firstRoute and lastRoute join AltRoute c on a.route = c.route where a.Route = " + QString("%1").arg(route) + " and Name = '" + name + "' group by a.StartDate, a.endDate, Name, a.route, b.[Key], tractionType, routeAlpha";
         }
+        else // Sqlite && PostgreSQL
+            commandText = "select min(a.startdate), Max(a.enddate), Name, a.route, b.Key,"
+                          " tractionType, routeAlpha, routeId"
+                          " from Routes a"
+                          " join Companies b on " + QString("%1").arg(route)
+                          + " between firstRoute and lastRoute"
+                          " join AltRoute c on a.route = c.route "
+                          "where a.Route = " + QString("%1").arg(route) +
+                          " and Name = '" + name + "' "
+                          "group by a.StartDate, a.endDate,"
+                            " Name, a.route, b.Key, tractionType, routeAlpha";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -6946,13 +6786,21 @@ qint32 SQL::getDefaultCompany(qint32 route, QString date)
         QSqlDatabase db = QSqlDatabase::database();
 
         QString commandText;
-        if(config->currConnection->servertype() != "MsSql")
-            commandText = "select `key`, description from Companies where '" + date + "' "
-                          "between startDate and endDate and " + QString("%1").arg(route) + " between firstRoute and lastRoute";
-        else
-            commandText = "select [key], description from companies where '" + date + "' "
-                          "between startDate and endDate and " + QString::number(route) + " between firstRoute and lastRoute";
-        QSqlQuery query = QSqlQuery(db);
+        if(config->currConnection->servertype() == "MySql")
+            commandText = "select `key`, description from Companies where '" + date + "'"
+                          " between startDate and endDate"
+                          " and " + QString("%1").arg(route) + " between firstRoute and lastRoute";
+        else if(config->currConnection->servertype() == "MsSql")
+
+            commandText = "select [key], description from companies where '" + date + "'"
+                          " between startDate and endDate and " + QString::number(route) +
+                          " between firstRoute and lastRoute";
+        else {
+            commandText = "select key, description from Companies where '" + date + "'"
+                          " between startDate and endDate and " + QString("%1").arg(route) +
+                          " between firstRoute and lastRoute";
+
+        }QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
@@ -7023,11 +6871,17 @@ qint32 SQL::addCompany(QString name, qint32 route, QString startDate, QString en
         QSqlDatabase db = QSqlDatabase::database();
 
         QString commandText;
-        if(config->currConnection->servertype() != "MsSql")
-            commandText = "select `key`, description from Companies where description = '" + name + "'";
-        else
-            commandText = "select [key], description from companies where description = '" + name + "'";
-        QSqlQuery query = QSqlQuery(db);
+        if(config->currConnection->servertype() == "MySql")
+            commandText = "select `key`, description from Companies"
+                          " where description = '" + name + "'";
+        else if(config->currConnection->servertype() == "MsSql")
+            commandText = "select [key], description from companies"
+                          " where description = '" + name + "'";
+        else {
+            commandText = "select key, description from Companies"
+                          " where description = '" + name + "'";
+
+        }QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
@@ -7058,10 +6912,12 @@ qint32 SQL::addCompany(QString name, qint32 route, QString startDate, QString en
             rows = query.numRowsAffected();
             if(rows > 0)
             {
-                if(config->currConnection->servertype() != "MsSql")
+                if(config->currConnection->servertype() == "MySql")
                     commandText = "select `key`, description from Companies where description = '" + name + "'";
-                else
+                else if(config->currConnection->servertype() == "MsSql")
                     commandText = "select [key], description from Companies where description = '" + name + "'";
+                else // Sqlite and PostgreSQL
+                    commandText = "select key, description from Companies where description = '" + name + "'";
                 bQuery = query.exec(commandText);
                 if(!bQuery)
                 {
@@ -8806,27 +8662,27 @@ RouteComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
-        QString commandText = "SELECT rc.commentKey, c.commentKey, rc.companyKey, comments, tags, rc.latitude, "
+        QString commandText = QString("SELECT rc.commentKey, c.commentKey, rc.companyKey, comments, tags, rc.latitude, "
             "rc.longitude, r.name, a.routeAlpha "
             "from Comments c "
             "join RouteComments rc on rc.commentKey = c.commentKey "
-            "join Routes r on r.route = rc.route and :date between r.startDate and r.endDate "
+            "join Routes r on r.route = rc.route and '%2' between r.startDate and r.endDate "
             "JOIN AltRoute a ON a.route = rc.route "
-            "where rc.route = :route and rc.date = :date ";
+            "where rc.route = %1 and rc.date = '%2'").arg(route).arg(date.toString("yyyy/MM/dd"));
 
         QSqlQuery query = QSqlQuery(db);
-        bool bQuery = query.prepare(commandText);
-        if(!bQuery)
-        {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
-        }
-        query.bindValue(":route", route);
-        query.bindValue(":date", date.toString("yyyy/MM/dd"));
-        bQuery = query.exec();
+        // bool bQuery = query.prepare(commandText);
+        // if(!bQuery)
+        // {
+        //     QSqlError err = query.lastError();
+        //     qDebug() << err.text() + "\n";
+        //     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+        //     db.close();
+        //     exit(EXIT_FAILURE);
+        // }
+        // query.bindValue(":route", route);
+        // query.bindValue(":date", date.toString("yyyy/MM/dd"));
+        bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
             QSqlError err = query.lastError();
@@ -10268,9 +10124,16 @@ bool SQL::doesColumnExist(QString table, QString column)
  }
  else if(config->currConnection->servertype() == "MsSql")
  {
-  int count;
   //commandText = "Select count(*) from information_schema.COLUMNS where table_schema ='dbo' and table_name = '" + table +"' and column_name = '" + column + "'";
   commandText = "select col_length('" + table + "','" +column +"')";
+ }
+ else // PostgreSQL
+ {
+      commandText = QString("Select count(*) from INFORMATION_SCHEMA.COLUMNS"
+                            " where TABLE_NAME='%1' and COLUMN_NAME='%2'")
+              .arg(table.toLower(),column.toLower());
+ }
+ int count;
   query.prepare(commandText);
 //  query.bindValue(":tbName",table);
 //  query.bindValue(":schema", db.databaseName());
@@ -10291,11 +10154,6 @@ bool SQL::doesColumnExist(QString table, QString column)
   }
   QString txt = query.executedQuery();
   return false;
- }
- else
- {
-  return false;
- }
 }
 
 bool SQL::doesConstraintExist(QString tbName, QString name)
@@ -10341,18 +10199,20 @@ bool SQL::addColumn(QString tbName, QString name, QString type, QString after)
 
  if(config->currConnection->servertype() == "Sqlite" )
   commandText = "alter table '" + tbName + "' add column  '" + name + "' " + type +" ";
- else if(config->currConnection->servertype() == "MySql")
+ else if(config->currConnection->servertype() == "MySql" )
  {
   commandText = "alter table " + tbName + " add column " + name + " " + type +"";
   if(!after.isEmpty())
     commandText.append(" after `" + after + "`");
  }
+ else  if(config->currConnection->servertype() == "PostgreSQL" )
+     commandText = "alter table " + tbName + " add column  " + name + " " + type +" ";
  else
   commandText = "alter table dbo." + tbName + " add " + name + " " + type +" ";
- query.prepare(commandText);
+ //query.prepare(commandText);
  //query.bindValue(":tbName",tbName);
  //query.bindValue(":column", name);
- bQuery = query.exec();
+ bQuery = query.exec(commandText);
  if(!bQuery)
  {
   QSqlError err = query.lastError();
@@ -10543,9 +10403,24 @@ void SQL::checkTables(QSqlDatabase db)
   if(!doesColumnExist("Routes", "routeId"))
   {
     addColumn("Routes", "routeId", "int(11) NOT NULL DEFAULT -1", "Name");
-    executeScript(":/sql/sqlite3_recreate_routes.sql",db);
+    //executeScript(":/sql/sqlite3_recreate_routes.sql",db);
   }
-
+  if(config->currConnection->servertype() == "PostgreSQL")
+  {
+   // export does not export rowids so we have to create a pseudo rowid in some tables
+   // that use 'rowid' in queries. Export creates the table without a column named 'rowid'
+   // so we add one here after the tables are complete.
+   if(!doesColumnExist("segments", "rowid"))
+   {
+       addColumn("routes", "rowid", "integer GENERATED BY DEFAULT AS IDENTITY");
+   }
+   if(!doesColumnExist("segments", "rowid"))
+   {
+       addColumn("segments", "rowid", "integer GENERATED BY DEFAULT AS IDENTITY");
+   }
+   if(!executeScript(":/sql/create_routeView.sql", db))
+       exit(EXIT_FAILURE);
+  }
   if(!tableList.contains("RouteName",Qt::CaseInsensitive))
   {
       if(!executeScript(":/sql/create_routeName.sql", db))
@@ -11134,7 +11009,7 @@ QList<FKInfo> SQL::getForeignKeyInfo(QSqlDatabase db, Connection* c, QString tab
    commandText.append(" Where REFERENCED_TABLE_SCHEMA = '" + c->defaultSqlDatabase() + "'");
   }
  }
- else
+ else if(c->servertype() == "MsSql")
  {
   // MsSql
      commandText = "SELECT  obj.name AS FK_NAME, "
@@ -11156,6 +11031,25 @@ QList<FKInfo> SQL::getForeignKeyInfo(QSqlDatabase db, Connection* c, QString tab
         "     ON tab2.object_id = fkc.referenced_object_id"
         " INNER JOIN sys.columns col2"
         "     ON col2.column_id = referenced_column_id AND col2.object_id = tab2.object_id";
+ }
+ else
+ {
+    commandText = "SELECT\
+         tc.table_schema,\
+         tc.constraint_name,\
+         tc.table_name,\
+         kcu.column_name,\
+         ccu.table_name AS foreign_table_name,\
+         ccu.column_name AS foreign_column_name\
+     FROM information_schema.table_constraints AS tc\
+     JOIN information_schema.key_column_usage AS kcu\
+         ON tc.constraint_name = kcu.constraint_name\
+         AND tc.table_schema = kcu.table_schema\
+     JOIN information_schema.constraint_column_usage AS ccu\
+         ON ccu.constraint_name = tc.constraint_name\
+     WHERE tc.constraint_type = 'FOREIGN KEY'\
+         AND tc.table_schema='public'\
+         AND tc.table_name='" + table +"'";
  }
  if(!query.exec(commandText))
  {
@@ -11940,9 +11834,7 @@ QList<SegmentData*>  SQL::segmentDataFromView(QString where)
   sd->_newerName = query.value(39).toString();
   sd->_routePrefix = query.value(40).toString();
   sd->_streetId = query.value(41).toInt();
-  sd->_rowid = query.value(42).toInt();
-  sd->_segRowid = query.value(43).toInt();
-  sd->_routeId = query.value(44).toInt();
+  sd->_routeId = query.value(42).toInt();
   if(!sd->segmentStartDate().isValid() || !sd->segmentEndDate().isValid())
   {
       SegmentInfo si = SegmentInfo(*sd);
@@ -12154,15 +12046,19 @@ QList<RouteData> SQL:: checkRouteName(QString name, QDate startDate, QDate endDa
        if(!dbOpen())
            throw Exception(tr("database not open: %1").arg(__LINE__));
        QSqlDatabase db = QSqlDatabase::database();
-           commandText = "select distinct r.startDate, r.endDate, r.name, r.route, r.companyKey, tractionType, "
+           commandText = "select distinct r.startDate, r.endDate, r.name, r.route, "
+                         "r.companyKey, tractionType, "
                          "a.routeAlpha, r.routeid "
                          "from routes r "
                          "join altRoute a on r.route = a.route "
                          "join RouteName n on n.routeid = r.routeid "
                          "where n.name = '" +name + "' "
-                         "and '" + startDate.toString("yyyy/MM/dd") +"' between r.startDate and r.endDate "
-                         "and '" + endDate.toString("yyyy/MM/dd") + "' between r.startDate and r.endDate "
-                         "group by r.startDate, r.enddate";
+                         "and '" + startDate.toString("yyyy/MM/dd") +
+                         "' between r.startDate and r.endDate "
+                         "and '" + endDate.toString("yyyy/MM/dd") +
+                         "' between r.startDate and r.endDate "
+                         "group by r.startDate, r.enddate, r.name,r.route,"
+                         "r.companykey,r.tractiontype,a.routeAlpha, r.routeId";
        QSqlQuery query = QSqlQuery(db);
        bool bQuery = query.exec(commandText);
        if(!bQuery)

@@ -126,8 +126,11 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
    toolsMenu->addMenu(tablesMenu);
    foreach(QString tableName, tableList)
    {
-    if(sysTableList.contains(tableName))
-     continue;
+    if(c->servertype()!="PostgreSQL")
+    {
+     if(sysTableList.contains(tableName))
+      continue;
+    }
     if(c->servertype() == "Sqlite" && tableName.startsWith("sqlite_"))
      continue;
     QMenu* tableMenu = new QMenu(tableName);
@@ -141,13 +144,14 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
       txt = QString("pragma table_info('%1')").arg(tableName);
      else if(c->servertype() == "MySql")
       txt = "describe " + tableName;
-     else // SQL Server
-     {
-      //txt = "EXEC sp_help " + tableName;
+     else if(c->servertype() == "MsSql")// SQL Server
       txt = "select *"
          " from INFORMATION_SCHEMA.COLUMNS"
          " where TABLE_NAME='" + tableName + "'";
-     }
+      else
+        txt = QString("Select * from INFORMATION_SCHEMA.COLUMNS"
+                  "where TABLE_NAME='%1'").arg(tableName);
+
      processALine(txt, tableName);
     });
     act = new QAction(tr("select table"),this);

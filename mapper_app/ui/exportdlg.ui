@@ -90,6 +90,9 @@
    </item>
    <item row="6" column="0">
     <widget class="QCheckBox" name="chkIntersections">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="text">
       <string>Intersections</string>
      </property>
