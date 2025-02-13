@@ -76,17 +76,6 @@ RouteView::RouteView(QObject* parent )
     ui->setSelectionMode( QAbstractItemView::SingleSelection );
     ui->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    //create contextmenu
-    // copyAction = new QAction(tr("&Copy"), this);
-    // copyAction->setStatusTip(tr("Copy Table Location"));
-    // copyAction->setShortcut(tr("Ctrl+C"));
-    // connect(copyAction, SIGNAL(triggered()), this, SLOT(aCopy()));
-
-    // pasteAction = new QAction(tr("&Paste"), this);
-    // pasteAction->setStatusTip(tr("Paste"));
-    // pasteAction->setShortcut(tr("Ctrl+V"));
-    // connect(pasteAction, SIGNAL(triggered()), this, SLOT(aPaste()));
-
     reSequenceFromStartAct = new QAction(tr("&Start route at beginning"), this);
     reSequenceFromStartAct->setStatusTip(tr("Start route at this segment"));
     reSequenceFromStartAct->setShortcut(tr("Alt_Ctrl+S"));
@@ -121,18 +110,11 @@ RouteView::RouteView(QObject* parent )
     connect(deleteSelectedRowsAct, &QAction::triggered, [=]{
      for(SegmentData* sd : selectedSegments())
      {
-//      SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId);
-//      SegmentData sd =  SegmentData(si);
-//      sd.updateRouteInfo(rd);
       SQL::instance()->deleteRoute(*sd);
       MainWindow::instance()->m_bridge->processScript("clearPolyline", QString("%1").arg(sd->segmentId()));
      }
      model()->_selectedSegments.clear();
     });
-
-//    unDeleteSegmentAct = new QAction(tr("Undo delete of segment"), this);
-//    unDeleteSegmentAct->setStatusTip(tr("Don't delete the segment from the route"));
-//    connect(unDeleteSegmentAct, SIGNAL(triggered()), this, SLOT(unDeleteSegment()));
 
     selectSegmentAct = new QAction(tr("Select segment"),this);
     selectSegmentAct->setToolTip(tr("Select segment on map."));
@@ -147,10 +129,6 @@ RouteView::RouteView(QObject* parent )
     sourceModel = new RouteViewTableModel(route, name, companyKey, startDate,
                                           endDate, QList<SegmentData*>(),this);
 
-//    saveChangesAct = new QAction(tr("Commit changes"),this);
-//    saveChangesAct->setStatusTip(tr("Save any uncommitted changes"));
-//    discardChangesAct = new QAction(tr("Abandon changes"),this);
-//    discardChangesAct->setStatusTip(tr("Discard any changes"));
     sortNameAct = new QAction(tr("Sort Description"),this);
     sortNameAct->setStatusTip(tr("Sort table by description"));
     connect(sortNameAct, &QAction::triggered, [=]{
@@ -172,15 +150,10 @@ RouteView::RouteView(QObject* parent )
 
     hideColumnAct = new QAction(tr("Hide Column"),this);
     connect(hideColumnAct, &QAction::triggered, [=]{
-     // QItemSelectionModel * model = ui->selectionModel();
-     // QModelIndex mix = model->currentIndex();
-     // QModelIndex ci = proxymodel->mapToSource( model->currentIndex());
-     // int logicalIndex = ui->horizontalHeader()->logicalIndex(ci.column());
      int logicalIndex =hideColumnAct->data().toInt();
      ui->hideColumn(logicalIndex);
      if(!config->rv.hiddenColumns.contains(logicalIndex))
       config->rv.hiddenColumns.append(logicalIndex);
-     //config->rv.state = ui->horizontalHeader()->saveState();
     });
 
 
@@ -253,11 +226,6 @@ RouteView::RouteView(QObject* parent )
                                                     sd->startDate().toString("yyyy/MM/dd"),
                                                     sd->endDate().toString("yyyy/MM/dd"));
       qDebug() << "old segment deleted " << sd->segmentId() << ok;
-      // ok = SQL::instance()->addSegmentToRoute(sd->route(),sd->routeName(), sd->startDate(),sd->endDate(),
-      //                                         si.segmentId(),sd->companyKey(),
-      //                                    sd->tractionType(),sd->direction(), -1, -1, 0,0,0,0,
-      //                                         sd->sequence(), sd->returnSeq(),
-      //                                         "N", " ", sd->doubleDate());
       sd->setOneWay("N");
       ok = SQL::instance()->addSegmentToRoute(sd);
       qDebug() << "new segment added " << si.segmentId() << ok;
@@ -467,19 +435,7 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
 void RouteView::tab1CustomContextMenu(const QPoint &)
 {
  QMenu tab1Menu;
-//    tab1Menu.addAction(saveChangesAct);
-//    tab1Menu.addAction(discardChangesAct);
     tab1Menu.addAction(sortNameAct);
-//    if(!bUncomittedChanges())
-//    {
-//       saveChangesAct->setEnabled(false);
-//       discardChangesAct->setEnabled(false);
-//    }
-//    else
-//    {
-//       saveChangesAct->setEnabled(true);
-//       discardChangesAct->setEnabled(true);
-//    }
     tab1Menu.exec(QCursor::pos());
 }
 
@@ -497,18 +453,6 @@ bool RouteView::boolGetItemTableView(QTableView *table)
         return (false);
 
 }
-
-// void RouteView::aCopy()
-// {
-//     QClipboard *clipboard = QApplication::clipboard();
-//     if(currentIndex.isValid())
-//         clipboard->setText(currentIndex.data().toString());
-// }
-
-// void RouteView::aPaste()
-// {
-
-// }
 
 void RouteView::updateRouteView()
 {

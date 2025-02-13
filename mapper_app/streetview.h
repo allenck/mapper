@@ -3,13 +3,14 @@
 
 #include <QTableView>
 #include "data.h"
+#include "mainwindow.h"
 #include "sql.h"
 
 class SQL;
 class Configuration;
 class StreetsTableModel;
 class QSortFilterProxyModel;
-class StreetView : public QTableView
+class StreetView : public QObject
 {
     Q_OBJECT
 public:
@@ -27,7 +28,10 @@ private:
     Configuration* config = nullptr;
     SQL* sql = nullptr;
     void segmentChanged(SegmentInfo si, SQL::CHANGETYPE t);
-    QObject* myParent;
+    QObject* m_parent;
+    MainWindow* myParent;
+    QTableView* ui;
+
     friend class StreetsTableModel;
 };
 

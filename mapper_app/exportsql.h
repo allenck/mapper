@@ -38,6 +38,7 @@ public:
     void setTargetConn(Connection* tgtConn);
     bool setIdentityInsert(QString table, bool );
     void logError(QSqlQuery* query, bool ignored, int line);
+    bool dropView(QString view);
 
     //bool exportAltRoute();
     bool exportAll();

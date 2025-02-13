@@ -86,6 +86,7 @@ void ExportDlg::chkAll_changed(bool isChecked)
     ui->chkComments->setChecked(isChecked);
     ui->chkCompanies->setChecked(isChecked);
     //ui->chkIntersections->setChecked(isChecked);
+    ui->chkRouteView->setChecked(isChecked);
     ui->chkRouteName->setChecked(isChecked);
     ui->chkParameters->setChecked(isChecked);
     ui->chkRoutes->setChecked(isChecked);
@@ -149,6 +150,11 @@ void ExportDlg::btnGo_clicked()
 
  while(stopEnabled)
  {
+  if(ui->chkRouteView->isChecked())
+  {
+    if(exprt->dropView("RouteView"))
+      ui->chkRouteView->setCheckState(Qt::PartiallyChecked);
+  }
   if(ui->chkParameters->isChecked())
   {
       ui->lblHelp->setText(tr("Parameters"));

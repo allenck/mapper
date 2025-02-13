@@ -153,16 +153,6 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
-    <widget class="QCheckBox" name="chkRouteName">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="text">
-      <string>RouteName</string>
-     </property>
-    </widget>
-   </item>
    <item row="17" column="0">
     <widget class="QPushButton" name="btnFinish">
      <property name="toolTip">
@@ -251,6 +241,23 @@
     <widget class="QCheckBox" name="chkSegments">
      <property name="text">
       <string>Segments</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QCheckBox" name="chkRouteName">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>RouteName</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QCheckBox" name="chkRouteView">
+     <property name="text">
+      <string>RouteView</string>
      </property>
     </widget>
    </item>

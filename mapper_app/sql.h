@@ -96,7 +96,6 @@ public:
     QList<SegmentInfo> getIntersectingSegments(double lat, double lon, double radius);
     QList<SegmentInfo> getIntersectingSegments(double lat, double lon, double radius, RouteType type);
     bool updateRecord(SegmentInfo sd);
-    bool updateSegmentDetails(qint32 SegmentId, QString description, int tracks, double length, RouteType type);
     QList<CompanyData *> getCompanies();
     QList<CompanyData*> getCompaniesInDateRange(QDate startDate, QDate endDate);
     bool updateCompany(CompanyData* cd);
@@ -236,7 +235,6 @@ public:
     bool updateSegmentDates(SegmentInfo *si);
     QT_DEPRECATED QList<SegmentInfo> getUnusedSegments();
     bool replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegments, QDate ignoreDate);
-    bool updateSegmentDates(); // Global
     QT_DEPRECATED void updateSegmentDates(int segmentId);
     QPair<QDate,QDate> getStartAndEndDates(int segmentId);
     QList<FKInfo> getForeignKeyInfo(QSqlDatabase db, Connection *c, QString table="");
@@ -279,6 +277,7 @@ public:
     RouteInfo getRouteName(int routeId);
     bool updateRouteName(RouteInfo ri);
     bool insertRouteName(RouteInfo ri);
+    bool updateIdentitySequence(QString table, QString column);
 
 signals:
     void details(QString);

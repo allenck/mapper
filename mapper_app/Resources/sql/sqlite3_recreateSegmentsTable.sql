@@ -15,7 +15,7 @@ CREATE TABLE `Segments` ( `SegmentId` integer  primary key AUTOINCREMENT NOT NUL
                           `FormatOK` int(1) NOT NULL DEFAULT FALSE,
                           `Tracks` int(11) check(`tracks` in (1,2) )NOT NULL DEFAULT 1,
                           `Street` text not null default '',
-                          `StreetId` integer,
+                          `StreetId` integer NOT NULL DEFAULT -1,
                           `NewerName` text not null default '',
                           `Location` text not null default '',
                           `Type` int(11) NOT NULL DEFAULT 0,

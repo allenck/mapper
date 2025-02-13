@@ -1,4 +1,4 @@
-# run this script in psql
+/* run this script in psql */
 CREATE OR REPLACE FUNCTION distance(lat1 float, lon1 float, lat2 float, lon2 float)
 RETURNS float AS $dist$
     DECLARE

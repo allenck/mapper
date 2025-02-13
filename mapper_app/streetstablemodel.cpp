@@ -870,8 +870,13 @@ bool StreetsTableModel::updateStreetName(StreetInfo si)
                           " Length = " + QString::number(si.length)  + ","
                           " Segments = '" + si.segmentsToString()  + "',"
                           " Comment ='" + si.comment + "',"
-                          " Seq = " + QString::number(si.sequence)  +
+                          " Seq = " + QString::number(si.sequence)  + ","
+                          " lastUpdate=CURRENT_TIMESTAMP"
                           " where rowid = " + QString::number(si.rowid);
+    if(config->currConnection->servertype() == "PostgreSQL" )
+    {
+        commandText.replace("endDate = ''", "endDate = null");
+    }
     QSqlQuery query = QSqlQuery(db);
     bool bQuery = query.exec(commandText);
     if(!bQuery)
@@ -913,9 +918,13 @@ bool StreetsTableModel::updateStreetDef(StreetInfo sti)
                           " Length = " + QString::number(sti.length)  + ","
                           " Segments = '" + sti.segmentsToString()  + "',"
                           " Comment ='" + sti.comment + "',"
-                          " Seq = " + QString::number(sti.sequence)  +
+                          " Seq = " + QString::number(sti.sequence)  + ","
+                          " lastUpdate=CURRENT_TIMESTAMP"
                           " where rowid = " + QString::number(sti.rowid);
-
+    if(config->currConnection->servertype() == "PostgreSQL" )
+    {
+        commandText.replace("endDate = ''", "endDate = null");
+    }
     QSqlQuery query = QSqlQuery(db);
     bool bQuery = query.exec(commandText);
     if(!bQuery)
@@ -1275,11 +1284,11 @@ QList<StreetInfo*>* StreetsTableModel::getStreetNames(int streetId, QStringList 
     QString commandText;
 
     commandText = "Select Street, Location,StartLatLng,EndLatLng, Length, "
-                          "Bounds,Segments,Comment, StreetId, IIF(seq =0,'2050/01/01',StartDate),"
+                          "Bounds,Segments,Comment, StreetId, startDate,"
                           "StartDate, endDate, Seq, rowid"
                           " from StreetDef "
                           " where streetId = " + QString::number(streetId)
-                          + " order by StreetId, IIF(seq =0,'2050/01/01',StartDate) DESC";
+                          + " order by StreetId, StartDate DESC";
     QSqlQuery query = QSqlQuery(db);
     bool bQuery = query.exec(commandText);
     if(!bQuery)

@@ -448,7 +448,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
    QStringList list;
    if(ui->cbDbType->currentText() == "MsSql")
     list = SQL::instance()->showMsSqlDatabases(db);
-   else
+   else if(ui->cbDbType->currentText() == "MySql")
     list = SQL::instance()->showMySqlDatabases(db);
 
    QCompleter* completer = new QCompleter(list);
@@ -681,7 +681,8 @@ void EditConnectionsDlg::setControls(QString txt)
           }
       }
           //sources.append(iter.key());
-      ui->cbODBCDsn->addItem(iter.key() + " - " + description, iter.key());
+      if(ui->cbODBCDsn->findData(iter.key())<0 && description.startsWith(ui->cbDbType->currentText()))
+        ui->cbODBCDsn->addItem(iter.key() + " - " + description, iter.key());
   }
   //ui->cbODBCDsn->addItems(sources);
 #endif

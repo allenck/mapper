@@ -105,6 +105,9 @@ private slots:
  void showContextMenu(const QPoint &pt);
  void replaceWithInclude();
  void makeSelectedInclude();
+
+ protected: void keyPressEvent(QKeyEvent *event);
+
 };
 
 #endif // QUERYDIALOG_H

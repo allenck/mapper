@@ -1270,3 +1270,14 @@ void QueryDialog::setTitle()
      wAct->setDefaultWidget(cbFile);
      return wAct;
  }
+
+ void QueryDialog::keyPressEvent(QKeyEvent *event)
+ {
+     if(event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_F)
+     {
+         QTextCursor cursor = ui->editQuery->textCursor();
+         QString selection = cursor.selectedText();
+         frw->setTextSelection(selection);
+     }
+     QWidget::keyPressEvent(event);
+ }

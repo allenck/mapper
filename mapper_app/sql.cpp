@@ -1197,150 +1197,6 @@ bool SQL::updateSegmentDates(SegmentInfo* si)
  }
  return true;
 }
-#if 0
-// used to populate segmentInfo conversion
-void SQL::populatePointList(SegmentData sd)
-{
- int seq = 0;
- sd.points = 0;
- sd.length = 0;
- bool more=true;
- QSqlDatabase db = QSqlDatabase::database();
- QString commandText;
- QSqlQuery query = QSqlQuery(db);
- bool bQuery;
- int rows;
- while(more)
- {
-  commandText = "Select startLat, startLon, endLat, endLon, StreetName from LineSegment where segmentid = " +QString("%1").arg(sd.segmentId );
-  bQuery = query.exec(commandText);
-  if(!bQuery)
-  {
-   SQLERROR(query);
-     db.close();
-     exit(EXIT_FAILURE);
-  }
-  if (!query.isActive())
-  {
-     ////sI = null;
-     //
-     qDebug() << "SegmentID " + QString("%1").arg(sd.segmentId()) + " missing sequence nbr " + QString("%1").arg(sd.points - 1);
-     qDebug() << " or number of points ( " + QString("%1").arg(sd.points) + ") is incorrect";
-
-     //return sI;
-  }
-  while (query.next())
-  {
-   LatLng start(query.value(0).toDouble(), query.value(1).toDouble());
-   LatLng end(query.value(2).toDouble(), query.value(3).toDouble());
-   sd._streetName = query.value(4).toString();
-   Bearing b(start,end);
-   sd.length += b.Distance();
-   if(seq == 0 && start.isValid())
-   {
-    sd.pointList().append(start);
-
-    sd.bearingStart = b;
-    sd._startLat = start.lat();
-    sd._startLon = start.lon();
-   }
-   else
-   {
-    if(end.isValid() && !(sd.pointList().last() == start))
-     qDebug() << tr("segment %1 point mismatch, seq %2").arg(sd.segmentId()).arg(seq);
-    sd.bearingEnd = b;
-    sd._endLat = end.lat();
-    sd._endLon = end.lon();
-   }
-   if(end.isValid())
-    sd.pointList().append(end);
-
-   sd.points++;
-   seq++;
-
-  }
-  more = false;
- }
-
- commandText = "update Segments set startDate = '"
-   + sd.startDate.toString("yyyy/MM/dd")
-   + "', endDate ='" + sd.endDate.toString("yyyy/MM/dd") + "', "
-   + "street= '" + sd._streetName + "', pointArray= '"
-   + sd.pointsString() + "', "
-   + "length=" + QString::number(sd.length) +
-     ", lastUpdate=:lastUpdate where SegmentId = " + QString("%1").arg(sd.segmentId());
- bQuery = query.prepare(commandText);
- if(!bQuery)
- {
-  SQLERROR(query);
-     db.close();
-     exit(EXIT_FAILURE);
- }
- query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
- bQuery = query.exec();
- if(!bQuery)
- {
-  SQLERROR(query);
-     db.close();
-     exit(EXIT_FAILURE);
- }
- rows = query.numRowsAffected();
- if (rows == 0)
- {
-     //
- }
-}
-#endif
-/// <summary>
-/// Get all line segments for a segment in reverse order
-/// </summary>
-/// <param name="SegmentId"></param>
-/// <returns></returns>
-//QList<SegmentData> SQL::getSegmentData(qint32 SegmentId)
-//{
-//    QList<SegmentData> myArray;
-//    SegmentData sd;
-//    //double endLat = 0, endLon = 0;
-//    try
-//    {
-//        if(!dbOpen())
-//            throw Exception(tr("database not open: %1").arg(__LINE__));
-//        QSqlDatabase db = QSqlDatabase::database();
-
-//        QString commandText = "SELECT StartLat,StartLon,EndLat,EndLon,StreetName,Sequence,Length FROM LineSegment where SegmentId = " + QString("%1").arg(SegmentId) + " order by sequence desc";
-//        QSqlQuery query = QSqlQuery(db);
-//        bool bQuery = query.exec(commandText);
-//        if(!bQuery)
-//        {
-//         SQLERROR(query);
-//            db.close();
-//            exit(EXIT_FAILURE);
-//        }
-//        if (!query.isActive())
-//        {
-//            return myArray;
-//        }
-//        //                myArray = new LatLng[myReader.RecordsAffected];
-//        while (query.next())
-//        {
-//            sd = SegmentData();
-//            sd.startLat = query.value(0).toDouble();
-//            sd.startLon = query.value(1).toDouble();
-//            sd.endLat = query.value(2).toDouble();
-//            sd.endLon = query.value(3).toDouble();
-//            sd.streetName = query.value(4).toString();
-//            sd.length = query.value(6).toDouble();
-//            myArray.append(sd);
-//        }
-//        //myArray.Add(new LatLng(endLat, endLon));
-//    }
-//    catch (Exception e)
-//    {
-//        myExceptionHandler(e);
-//    }
-//    return myArray;
-//}
-
 SegmentInfo SQL::getSegmentInfo(qint32 segmentId)
 {
  SegmentInfo si;
@@ -1353,19 +1209,12 @@ SegmentInfo SQL::getSegmentInfo(qint32 segmentId)
   QSqlDatabase db = QSqlDatabase::database();
   QString commandText;
 
-       commandText =   // if(config->currConnection->servertype() != "MsSql")
-               //      commandText = "Select `SegmentId`, Description, tracks, type,"
-               //                    " StartLat, StartLon, EndLat, EndLon, length, StartDate, EndDate, Direction,"
-               //                    " Street, location, pointArray, DoubleDate, FormatOK, NewerName, StreetId from Segments"
-               //                    " where SegmentId = " + QString("%1").arg(segmentId);
-               // else
-"Select SegmentId, Description, tracks, type,"
+       commandText =   "Select SegmentId, Description, tracks, type,"
                      " StartLat, StartLon, EndLat, EndLon, length, StartDate, EndDate, Direction,"
                      " Street, location, pointArray, DoubleDate, FormatOK, NewerName,StreetId from Segments"
                      " where SegmentId = " + QString("%1").arg(segmentId);
   QSqlQuery query = QSqlQuery(db);
   bool bQuery = query.exec(commandText);
-  //bQuery = query.exec(commandText);
   if(!bQuery)
   {
       QSqlError err = query.lastError();
@@ -3392,44 +3241,6 @@ double SQL::Distance(double Lat1, double Lon1, double Lat2, double Lon2)
     return d; // distance in kilometers
 }
 
-bool SQL::updateSegmentDetails(qint32 SegmentId, QString description, int tracks, double length, RouteType type)
-{
- qint32 rows = 0;
-
- if(!dbOpen())
-     throw Exception(tr("database not open: %1").arg(__LINE__));
- QSqlDatabase db = QSqlDatabase::database();
- QString street;
- int ix = description.indexOf(",");
- if(ix >= 0)
- {
-  street = description.mid(0, ix);
- }
- QString oneWay = "";
- QString commandText = "update Segments set description = '" + description +
-   "', oneWay = '" + oneWay + "', tracks="+QString::number(tracks) +
-   ", street = '" +street +
-   "', length=" +QString::number(length,'g',8) +
-   ", type = " +QString::number(type) +
-   ", lastUpdate=:lastUpdate where SegmentId = " + QString("%1").arg(SegmentId);
- QSqlQuery query = QSqlQuery(db);
- query.prepare(commandText);
- query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
- bool bQuery = query.exec();
- if(!bQuery)
- {
-  SQLERROR(std::move(query));
-  QSqlError err = query.lastError();
-  QMessageBox::critical(NULL, "Error", "A fatal SQL error has occured:\n" + err.text() + "\n"+query.lastQuery() + " line:" + QString("%1").arg(__LINE__));
- }
- rows = query.numRowsAffected();
- if (rows == 0)
- {
-    return false;
- }
-
- return true;
-}
 
 
 bool SQL::updateSegment(SegmentInfo* si, bool bNotify)
@@ -3489,12 +3300,10 @@ bool SQL::updateSegment(SegmentInfo* si, bool bNotify)
    + "DoubleDate='" + si->_dateDoubled.toString("yyyy/MM/dd") + "', "
    + "endDate='" + si->_dateEnd.toString("yyyy/MM/dd") + "', "
    + "formatOk=" + QString::number(si->_formatOK)  +", "
-   + "lastUpdate=:lastUpdate "
+   + "lastUpdate=CURRENT_TIMESTAMP "
    + "where SegmentId = " + QString("%1").arg(si->segmentId());
- query.prepare(commandText);
- query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
  qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
- bQuery = query.exec();
+ bQuery = query.exec(commandText);
  if(!bQuery)
  {
       QSqlError err = query.lastError();
@@ -3584,11 +3393,9 @@ bool SQL::updateSegment(SegmentData* sd)
    + "startDate='" + sd->segmentStartDate().toString("yyyy/MM/dd") + "', "
    + "endDate='" + sd->segmentEndDate().toString("yyyy/MM/dd") + "', "
    + "DoubleDate='" + sd->_dateDoubled.toString("yyyy/MM/dd") + "', "
-   + "lastUpdate=date('now') "
+   + "lastUpdate=CURRENT_TIMESTAMP "
    + "where SegmentId = " + QString("%1").arg(sd->segmentId());
- query.prepare(commandText);
- //query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
- bQuery = query.exec();
+ bQuery = query.exec(commandText);
  if(!bQuery)
  {
       QSqlError err = query.lastError();
@@ -3689,11 +3496,10 @@ bool SQL::updateSegment(qint32 SegmentId)
      QString("%1").arg(sd.startLon(),0,'f',8) + ", endLat= " + QString("%1").arg(sd.endLat(),0,'f',8)
      + ", endLon= " + QString("%1").arg(sd.endLon(),0,'f',8) + ", length= " + QString("%1").arg(sd.length())
      + ", points= " + QString("%1").arg(sd._points) + ", direction = '" + sd.direction()
-     + "', tracks="+ QString::number(sd.tracks())+ ", pointArray='" + sd.pointsString() + "', lastUpdate=:lastUpdate " +
+     + "', tracks="+ QString::number(sd.tracks())+ ", pointArray='" + sd.pointsString() + "', "
+     "lastUpdate=CURRENT_TIMESTAMP " +
      "where SegmentId = " + QString("%1").arg(SegmentId);
- query.prepare(commandText);
- query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
- bQuery = query.exec();
+ bQuery = query.exec(commandText);
  if(!bQuery)
  {
    SQLERROR(std::move(query));
@@ -3776,48 +3582,7 @@ QList<StationInfo> SQL::getStationsOnSegment(qint32 segmentId)
    sList.append(sti0);
   }
  }
-#if 0
- if(!dbOpen())
-     throw Exception(tr("database not open: %1").arg(__LINE__));
- QSqlDatabase db = QSqlDatabase::database();
- QString sTxt = QString::number(segmentId);
- QString commandText = "SELECT stationKey, a.name, latitude, longitude, "
-                       " startDate, endDate, routes, markerType, segmentId,"
-                       " infoKey, segments, routeType"
-                       " from Stations a "
-                       " where segments like('%" + sTxt + "%')";
- QSqlQuery query = QSqlQuery(db);
- bool bQuery = query.exec(commandText);
- if(!bQuery)
- {
-     SQLERROR(query);
-    return sList;
- }
- if (!query.isActive())
- {
-     return sList;
- }
- while (query.next())
- {
-  sti = StationInfo();
-  sti.stationKey = query.value(0).toInt();
-  sti.stationName = query.value(1).toString();
-  sti.latitude = query.value(2).toDouble();
-  sti.longitude = query.value(3).toDouble();
-  sti.startDate = query.value(4).toDate();
-  sti.endDate = query.value(5).toDate();
-  sti.routes = query.value(6).toString().split(",");
-  sti.markerType = query.value(7).toString();
-  sti.segmentId = query.value(8).toInt();
-  sti.infoKey = query.value(9).toInt();
-  sti.segments = query.value(10).toString().split(",");
-  sti.routeType = (RouteType)query.value(11).toInt();
-  sList.append(sti);
- }
-#endif
- return sList;
 }
-
 
 //TODO this query may return multiple rows!
 StationInfo SQL::getStationInfo(QString name)
@@ -3872,12 +3637,11 @@ bool SQL::updateStation(qint32 stationKey, qint32 infoKey)
         QSqlDatabase db = QSqlDatabase::database();
         beginTransaction("updateStation");
 
-        QString commandText = "update Stations set infoKey = " + QString("%1").arg(infoKey) + ",lastUpdate=:lastUpdate " +
+        QString commandText = "update Stations set infoKey = " + QString("%1").arg(infoKey)
+                + ",lastUpdate=CURRENT_TIMESTAMP " +
             "where stationKey = " + QString("%1").arg(stationKey);
         QSqlQuery query = QSqlQuery(db);
-        query.prepare(commandText);
-        query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-        bool bQuery = query.exec();
+        bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
             QSqlError err = query.lastError();
@@ -3923,12 +3687,10 @@ bool SQL::updateStation(StationInfo sti)
                               + ", infoKey = " + QString::number(sti.infoKey)
                               + ", segments = '" + sti.segments.join(",")+ "'"
                               + ", routeType = " + QString::number(sti.routeType)
-                              + ",lastUpdate=:lastUpdate "
+                              + ",lastUpdate=CURRENT_TIMESTAMP "
                               " where stationKey = " + QString("%1").arg(sti.stationKey);
         QSqlQuery query = QSqlQuery(db);
-        query.prepare(commandText);
-        query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-        bool bQuery = query.exec();
+        bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
             QSqlError err = query.lastError();
@@ -4252,11 +4014,10 @@ bool SQL::updateRecord(SegmentInfo sd)
             ", endLat=" + QString::number(sd._endLat, 'g', 8) +
             ", endLon=" + QString::number(sd._endLon,'g',8)+
             ", type=" + QString::number((int)sd._routeType) + " " +
-            ", lastUpdate=:lastUpdate where SegmentId = " + QString("%1").arg(sd.segmentId());
+            ", lastUpdate=CURRENT_TIMESTAMP "
+            "where SegmentId = " + QString("%1").arg(sd.segmentId());
         QSqlQuery query = QSqlQuery(db);
-        query.prepare(commandText);
-        query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-        bool bQuery = query.exec();
+        bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
             SQLERROR(std::move(query));
@@ -4391,6 +4152,7 @@ bool SQL::updateCompany(CompanyData* cd)
             "firstroute = " +QString::number(cd->firstRoute) + ","
             "lastroute = " + QString::number(cd->lastRoute) + ", "
             "selected = " + QString::number(cd->bSelected) + " "
+            "lastUpdate=CURRENT_TIMESTAMP "
             "where `key` = " +  QString::number(cd->companyKey);
     else if(config->currConnection->servertype() == "MsSql")
         commandText = "update companies set "
@@ -4404,6 +4166,7 @@ bool SQL::updateCompany(CompanyData* cd)
             "firstroute = " +QString::number(cd->firstRoute) + ","
             "lastroute = " + QString::number(cd->lastRoute) + ", "
             "selected = " + QString::number(cd->bSelected) + " "
+            "lastUpdate=CURRENT_TIMESTAMP "
             "where [key] = " +  QString::number(cd->companyKey);
     else // Sqlite and PostgreSQL
         commandText = "update companies set "
@@ -4417,13 +4180,9 @@ bool SQL::updateCompany(CompanyData* cd)
             "firstroute = " +QString::number(cd->firstRoute) + ","
             "lastroute = " + QString::number(cd->lastRoute) + ", "
             "selected = " + QString::number(cd->bSelected) + " "
+            "lastUpdate=CURRENT_TIMESTAMP  "
             "where key = " +  QString::number(cd->companyKey);
-
-
-    query.prepare(commandText);
-    query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-    qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-    bQuery = query.exec();
+    bQuery = query.exec(commandText);
     if(!bQuery)
     {
          QSqlError err = query.lastError();
@@ -4767,7 +4526,10 @@ bool SQL::updateAltRoute(int route, QString routeAlpha)
  QSqlDatabase db = QSqlDatabase::database();
  Q_ASSERT(!routeAlpha.isEmpty() && !routeAlpha.startsWith(" "));
 
- QString commandText = "update AltRoute set AltRoute=" + routeAlpha.trimmed()+ " where route = " +QString::number(route);
+ QString commandText = "update AltRoute "
+                       "set AltRoute=" + routeAlpha.trimmed()+
+                       ",lastUpdate=CURRENT_TIMESTAMP"
+                       " where route = " +QString::number(route);
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -4858,10 +4620,8 @@ bool SQL::deleteRouteSegment(SegmentData sd, bool bNotify)
 
         commandText = "update Segments set startDate = '" + segStartDate  + "', endDate = '"
                       + segEndDate + "' "
-                      + ",lastUpdate=:lastUpdate where SegmentId =" + QString("%1").arg(sd._segmentId);
-        query.prepare(commandText);
-        query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-        bQuery = query.exec();
+                      + ",lastUpdate=CURRENT_TIMESTAMPwhere SegmentId =" + QString("%1").arg(sd._segmentId);
+        bQuery = query.exec(commandText);
         if(!bQuery)
         {
             QSqlError err = query.lastError();
@@ -4979,10 +4739,8 @@ bool SQL::deleteRouteSegment(qint32 route, int routeId, qint32 SegmentId,
 
         commandText = "update Segments set startDate = '" + segStartDate  + "', endDate = '"
                       + segEndDate + "' "
-                      + ",lastUpdate=:lastUpdate where SegmentId =" + QString("%1").arg(SegmentId);
-        query.prepare(commandText);
-        query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-        bQuery = query.exec();
+                      + ",lastUpdate=CURRENT_TIMESTAMP where SegmentId =" + QString("%1").arg(SegmentId);
+        bQuery = query.exec(commandText);
         if(!bQuery)
         {
             QSqlError err = query.lastError();
@@ -5003,24 +4761,6 @@ bool SQL::deleteRouteSegment(qint32 route, int routeId, qint32 SegmentId,
     }
     return ret;
 }
-
-// TODO: add next, prev, seq,... etc
-// if notify is false, routeview will not get notified of additions
-// bool SQL::addSegmentToRoute(SegmentData* sd, bool notify)
-// {
-//   if(addSegmentToRoute( sd->route(), sd->routeName(), sd->startDate(),
-//                             sd->endDate(), sd->segmentId(), sd->companyKey(),
-//                             sd->tractionType(), sd->direction(), sd->next(), sd->prev(),
-//                             sd->normalEnter(), sd->normalLeave(),
-//                             sd->reverseEnter(), sd->reverseLeave(), sd->sequence(), sd->returnSeq(),
-//                             sd->oneWay(), sd->trackUsage(),sd->doubleDate()))
-//   {
-//    if(notify)
-//      emit routeChange(NotifyRouteChange(ADDSEG, sd));
-//    return true;
-//   }
-//   return false;
-// }
 
 // NOTE: except for pointer ref to SegmentData this function is the same as insertRouteSegment()
 // except that SegmentInfo fields are updated in SegmentData
@@ -5142,115 +4882,6 @@ bool SQL::addSegmentToRoute(SegmentData* sd, bool notify)
     return ret;
 }
 
-#if 0
-bool SQL::addSegmentToRoute(qint32 routeNbr, QString routeName, QDate startDate, QDate endDate,
-                            qint32 SegmentId, qint32 companyKey, qint32 tractionType,
-                            QString direction, qint32 next, qint32 prev, qint32 normalEnter,
-                            qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave,
-                            qint32 sequence, qint32 reverseSeq,
-                            QString oneWay, QString trackUsage, QDate doubleDate) //16
-{
-    if(startDate.isNull() || endDate.isNull() || !startDate.isValid() || !endDate.isValid() || endDate < startDate)
-     throw IllegalArgumentException(tr("invalid dates"));
-    bool ret = false;
-    int rows = 0;
-    if (routeNbr < 1)
-    {
-        qDebug()<<"Invalid route number";
-        return ret;
-    }
-    if (routeName == "" || routeName.length() > 140)
-    {
-        qDebug()<<"invalid route name";
-        return ret;
-    }
-//    QDateTime dtStart = QDateTime::fromString(startDate, "yyyy/MM/dd");
-//    QDateTime dtEnd = QDateTime::fromString(endDate, "yyyy/MM/dd");
-
-    if (endDate < startDate)
-    //    throw (new ApplicationException("Invalid end date" + endDate));
-    {
-        qDebug()<<"end date ("+ endDate.toString("yyyy/MM/dd") +") before start date("+ startDate.toString("yyyy/MM/dd")+")!";
-        return ret;
-    }
-    if (SegmentId <= 0)
-        throw (new ApplicationException("invalid segmentid:" + QString::number(SegmentId)));
-    if (companyKey < 1)
-    {
-        qDebug()<<"invalid company key: " + QString("%1").arg(companyKey);
-        return ret;
-    }
-    CompanyData* cd = getCompany(companyKey);
-    if(routeNbr != 9998 && routeNbr != 9999)
-        updateCompany(companyKey, routeNbr);
-
-    try
-    {
-        if(!dbOpen())
-            throw Exception(tr("database not open: %1").arg(__LINE__));
-        QSqlDatabase db = QSqlDatabase::database();
-
-        //BeginTransaction("addSegmentToRoute");
-
-        QString commandText = "INSERT INTO Routes(Route, Name, StartDate, EndDate, LineKey, "
-                "companyKey, tractionType, direction, next, prev, normalEnter, normalleave,"
-                " reverseEnter, reverseLeave, sequence, ReverseSeq, oneWay, trackUsage) "
-                "VALUES(" + QString("%1").arg(routeNbr) + ", '"
-                + routeName.trimmed() + "', '"
-                + startDate.toString("yyyy/MM/dd") + "', '"
-                + endDate.toString("yyyy/MM/dd") + "',"
-                + QString("%1").arg(SegmentId) + ", "
-                + QString("%1").arg(companyKey)+","
-                + QString("%1").arg(tractionType)+",'"
-                + direction +"', "
-                + QString("%1").arg(next) +", "
-                + QString("%1").arg(prev) +", "
-                + QString("%1").arg(normalEnter) + ","
-                + QString("%1").arg(normalLeave) + ","
-                + QString("%1").arg(reverseEnter) + ", "
-                + QString("%1").arg(reverseLeave) + ", "
-                + QString("%1").arg(sequence) + ", "
-                + QString("%1").arg(reverseSeq) + ", '"
-                + QString("%1").arg(oneWay)  + "', '"
-                + trackUsage + "')";
-        QSqlQuery query = QSqlQuery(db);
-        bool bQuery = query.exec(commandText);
-        if(!bQuery)
-        {
-         qDebug() << query.lastError().text() << commandText;
-         QString text;
-         SQLERROR1(std::move(query), QMessageBox::Ignore | QMessageBox::Ok, text);
-         switch(errReturn)
-         {
-         case QMessageBox::Abort:
-             EXIT_FAILURE;
-         case QMessageBox::Ignore:
-             return true;
-         case QMessageBox::Ok:
-             return false;
-         default:
-             break;
-         }
-        }
-        rows = query.numRowsAffected();
-//        if (rows == 0)
-//        {
-//            //                    RollbackTransaction("deletePoint");
-//            return ret;
-//        }
-
-        updateSegmentDates(SegmentId);
-
-        //CommitTransaction("addSegmentToRoute");
-        ret = true;
-    }
-    catch (Exception e)
-    {
-        myExceptionHandler(e);
-    }
-    return ret;
-}
-#endif
 // if a segment is split, makesure that any route using the original
 // segment get the new segment added.
 bool SQL::addSegmentToRoutes(int _newSegmentId, int _segmentId)
@@ -5282,101 +4913,6 @@ bool SQL::addSegmentToRoutes(int _newSegmentId, int _segmentId)
  return true;
 }
 
-#if 0
-bool SQL::addSegmentToRoute(RouteData rd) //16
-{
-    if(rd._startDate.isNull() || rd._endDate.isNull() || !rd._startDate.isValid()
-       || !rd._endDate.isValid() || rd._endDate < rd._startDate)
-     throw IllegalArgumentException(tr("invalid dates"));
-    bool ret = false;
-    int rows = 0;
-    if (rd._route < 1)
-    {
-        qDebug()<<"Invalid route number";
-        return ret;
-    }
-    if (rd._name == "" || rd._name.length() > 100)
-    {
-        qDebug()<<"invalid route name";
-        return ret;
-    }
-//    QDateTime dtStart = QDateTime::fromString(startDate, "yyyy/MM/dd");
-//    QDateTime dtEnd = QDateTime::fromString(endDate, "yyyy/MM/dd");
-
-    if (rd._endDate < rd._startDate)
-    //    throw (new ApplicationException("Invalid end date" + endDate));
-    {
-        qDebug()<<"end date ("+ rd._endDate.toString("yyyy/MM/dd") +") before start date("
-         + rd._startDate.toString("yyyy/MM/dd")+")!";
-        return ret;
-    }
-    if (rd._lineKey <= 0)
-        throw (new ApplicationException("invalid segmentid:" + QString::number(rd._lineKey)));
-    if (rd._companyKey < 1)
-    {
-        qDebug()<<"invalid company key: " + QString("%1").arg(rd._companyKey);
-        return ret;
-    }
-    CompanyData* cd = getCompany(rd._companyKey);
-    if(rd._route != 9998 && rd._route != 9999)
-        updateCompany(rd._companyKey, rd._route);
-
-    try
-    {
-        if(!dbOpen())
-            throw Exception(tr("database not open: %1").arg(__LINE__));
-        QSqlDatabase db = QSqlDatabase::database();
-
-        //BeginTransaction("addSegmentToRoute");
-
-        QString commandText = "INSERT INTO Routes(Route, Name, StartDate, EndDate, LineKey, "
-                "companyKey, tractionType, direction, next, prev, normalEnter, normalleave,"
-                " reverseEnter, reverseLeave, sequence, reverseSeq, oneWay, trackUsage) "
-                "VALUES(" + QString("%1").arg(rd._route) + ", '"
-                + rd._name.trimmed() + "', '"
-                + rd._startDate.toString("yyyy/MM/dd") + "', '"
-                + rd._endDate.toString("yyyy/MM/dd") + "',"
-                + QString("%1").arg(rd._lineKey) + ", "
-                + QString("%1").arg(rd._companyKey)+","
-                + QString("%1").arg(rd._tractionType)+",'"
-                + rd._direction +"', "
-                + QString("%1").arg(rd._next) +", "
-                + QString("%1").arg(rd._prev) +", "
-                + QString("%1").arg(rd._normalEnter) + ","
-                + QString("%1").arg(rd._normalLeave) + ","
-                + QString("%1").arg(rd._reverseEnter) + ", "
-                + QString("%1").arg(rd._reverseLeave) + ", '"
-                + QString("%1").arg(rd._sequence) + ", '"
-                + QString("%1").arg(rd._returnSeq) + ", '"
-                + QString("%1").arg(rd._oneWay)  + "', '"
-                + rd._trackUsage + "')";
-        QSqlQuery query = QSqlQuery(db);
-        bool bQuery = query.exec(commandText);
-        if(!bQuery)
-        {
-         SQLERROR(query);
-         //db.close();
-         return ret;
-        }
-        rows = query.numRowsAffected();
-//        if (rows == 0)
-//        {
-//            //                    RollbackTransaction("deletePoint");
-//            return ret;
-//        }
-
-        updateSegmentDates(rd._lineKey);
-
-        //CommitTransaction("addSegmentToRoute");
-        ret = true;
-    }
-    catch (Exception e)
-    {
-        myExceptionHandler(e);
-    }
-    return ret;
-}
-#endif
 bool SQL::updateTerminals(TerminalInfo ti)
 {
  return  updateTerminals(ti.route, ti.name, ti.startDate, ti.endDate,
@@ -5469,14 +5005,12 @@ bool SQL::updateTerminals(qint32 route, QString name, QDate startDate, QDate end
                           + QString("%1").arg(cStartSegment) + ", startWhichEnd='"
                           + cStartWhichEnd + "', endSegment = "
                           + QString("%1").arg(cEndSegment) + ", endWhichEnd = '"
-                          + cEndWhichEnd + "',lastUpdate=:lastUpdate"
+                          + cEndWhichEnd + "',lastUpdate=CURRENT_TIMESTAMP"
                           " where route = " + QString("%1").arg(route) + ""
                           " and name = '" + name + "' and endDate = '"
                           + endDate.toString("yyyy/MM/dd") + "'";
-            query.prepare(commandText);
             qDebug()<<commandText;
-            query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-            bQuery = query.exec();
+            bQuery = query.exec(commandText);
             if(!bQuery)
             {
                 QSqlError err = query.lastError();
@@ -5735,17 +5269,15 @@ bool SQL::updateCompany(qint32 companyKey, qint32 route)
             commandText = "Update Companies set  "
                           "firstRoute= " +QString("%1").arg( cd->firstRoute) +
                           ", lastRoute = " + QString("%1").arg(cd->lastRoute) +
-                    ",lastUpdate=:lastUpdate where `key` = " + QString("%1").arg(companyKey);
+                    ",lastUpdate=CURRENT_TIMESTAMP where `key` = " + QString("%1").arg(companyKey);
         else if(config->currConnection->servertype() == "MsSql")
             commandText = "Update companies set  firstRoute= " +QString("%1").arg( cd->firstRoute) + ", lastRoute = " + QString("%1").arg(cd->lastRoute) + ",lastUpdate=:lastUpdate where [key] = " + QString("%1").arg(companyKey);
         else // Sqlite and PostgreSQL
             commandText = "Update Companies set  "
                           "firstRoute= " +QString("%1").arg( cd->firstRoute) +
                           ", lastRoute = " + QString("%1").arg(cd->lastRoute) +
-                    ",lastUpdate=:lastUpdate where key = " + QString("%1").arg(companyKey);
-        query.prepare(commandText);
-        query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-        bQuery = query.exec();
+                    ",lastUpdate=CURRENT_TIMESTAMP where key = " + QString("%1").arg(companyKey);
+        bQuery = query.exec(commandText);
         if(!bQuery)
         {
             QSqlError err = query.lastError();
@@ -5769,79 +5301,6 @@ bool SQL::updateCompany(qint32 companyKey, qint32 route)
     return ret;
 }
 
-/// <summary>
-/// Get well code to fix segment start and end dates
-/// </summary>
-/// <returns></returns>
-bool SQL::updateSegmentDates()
-{
-    QList<SegmentData> myArray;
-    SegmentData sd;
-    int rows = 0;
-    try
-    {
-        if(!dbOpen())
-            throw Exception(tr("database not open: %1").arg(__LINE__));
-        QSqlDatabase db = QSqlDatabase::database();
-
-        QString commandText ="Select segmentid, min(b.StartDate), MAX(b.EndDate) from Segments a join Routes b on LineKey = SegmentId group by b.LineKey, SegmentId";
-        QSqlQuery query = QSqlQuery(db);
-        bool bQuery = query.exec(commandText);
-        if(!bQuery)
-        {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
-        }
-        if (query.isActive()!= true)
-        {
-            return true;
-        }
-        while (query.next())
-        {
-            sd = SegmentData();
-            sd._segmentId = query.value(0).toInt();
-            sd._dateBegin = query.value(1).toDate();
-            sd._dateEnd = query.value(2).toDate();
-            myArray.append(sd);
-        }
-        //foreach(segmentData sd1 in myArray)
-        for(int i=0; i<myArray.count(); i++)
-        {
-            SegmentData sd1 = (SegmentData)myArray.at(i);
-            QString commandText = "update Segments set startDate = '"
-                    + sd1._dateBegin.toString("yyyy/MM/dd")+ "', endDate = '"
-                    + sd1._dateEnd.toString("yyyy/MM/dd")
-                    + "',lastUpdate=:lastUpdate where segmentid = "
-                    + QString("%1").arg(sd1._segmentId);
-            query.prepare(commandText);
-            query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-            bQuery = query.exec();
-            if(!bQuery)
-            {
-                QSqlError err = query.lastError();
-                qDebug() << err.text() + "\n";
-                qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-                db.close();
-                exit(EXIT_FAILURE);
-            }
-            rows = query.numRowsAffected();
-            if (rows == 0)
-            {
-                return false;
-            }
-        }
-    }
-    catch (Exception e)
-    {
-        myExceptionHandler(e);
-
-    }
-
-    return true;
-}
 /// <summary>
 /// Update the start and end dates for a segment
 /// </summary>
@@ -5896,11 +5355,11 @@ void SQL::updateSegmentDates(int segmentId)
                     if (String.Compare(endDate, segEndDate) > 0)
                         segEndDate = endDate;
     */
-    commandText = "update Segments set startDate = '" + segStartDate + "', endDate ='" + segEndDate + "' " +
-        ",lastUpdate=:lastUpdate where SegmentId = " + QString("%1").arg(segmentId);
-    query.prepare(commandText);
-    query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-    bQuery = query.exec();
+    commandText = "update Segments set startDate = '" + segStartDate + "', "
+                  "endDate ='" + segEndDate + "' " +
+                  ",lastUpdate=CURRENT_TIMESTAMP "
+                  "where SegmentId = " + QString("%1").arg(segmentId);
+    bQuery = query.exec(commandText);
     if(!bQuery)
     {
         QSqlError err = query.lastError();
@@ -6098,18 +5557,12 @@ bool SQL::insertParameters(Parameters parms, QSqlDatabase db)
             throw Exception(tr("database not open: %1").arg(__LINE__));
         //QSqlDatabase db = QSqlDatabase::database();
 
-        QString commandText = "insert into Parameters (lat, lon, title, city, minDate, maxDate, alphaRoutes) "
-                              " values (:lat, :lon, :title, :city, :minDate, :maxDate, :alphaRoutes)";
+        QString commandText = QString("insert into Parameters (lat, lon, title, city, minDate, maxDate, alphaRoutes,lastupdate)"
+                              " values (%1, %2, '%3', '%4', '%5', '%6', '%7',CURRENT_TIMESTAMP)")
+                .arg(parms.lat).arg(parms.lon).arg(parms.title,parms.city,parms.minDate.toString("yyyy/MM/dd"),
+                    parms.maxDate.toString("yyyy/MM/dd"), parms.bAlphaRoutes?"Y":"N");
         QSqlQuery query = QSqlQuery(db);
-        query.prepare(commandText);
-        query.bindValue(":lat", parms.lat);
-        query.bindValue(":lon", parms.lon);
-        query.bindValue(":title", parms.title);
-        query.bindValue(":city", parms.city);
-        query.bindValue(":minDate", parms.minDate);
-        query.bindValue(":maxDate", parms.maxDate);
-        query.bindValue(":alphaRoutes", (parms.bAlphaRoutes?'Y':'N'));
-        bool bQuery = query.exec();
+        bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
             QSqlError err = query.lastError();
@@ -6133,25 +5586,18 @@ bool SQL::updateParameters(Parameters parms, QSqlDatabase db)
             throw Exception(tr("database not open: %1").arg(__LINE__));
         //QSqlDatabase db = QSqlDatabase::database();
 
-        QString commandText = "update Parameters set lat = :lat, lon=:lon, title=:title, city=:city, "
-                              "minDate = :minDate, maxDate= :maxDate, alphaRoutes = :alphaRoutes,"
-                              "abbreviationsList = :abbreviationsList";
+        QString commandText = QString("update Parameters set lat = %1, lon=%2, title='%3', city='%4', "
+                              "minDate = '%5', maxDate= '%6', alphaRoutes = '%7',"
+                              "abbreviationsList = '%8',lastUpdate=CURRENT_TIMESTAMP")
+                .arg(parms.lat).arg(parms.lon).arg(parms.title,parms.city,parms.minDate.toString("yyyy/MM/dd"),
+                    parms.maxDate.toString("yyyy/MM/dd"), parms.bAlphaRoutes?"Y":"N");
         QSqlQuery query = QSqlQuery(db);
-        query.prepare(commandText);
-        query.bindValue(":lat", parms.lat);
-        query.bindValue(":lon", parms.lon);
-        query.bindValue(":title", parms.title);
-        query.bindValue(":city", parms.city);
-        query.bindValue(":minDate", parms.minDate);
-        query.bindValue(":maxDate", parms.maxDate);
-        query.bindValue(":alphaRoutes", (parms.bAlphaRoutes?'Y':'N'));
         QString abbreviationsStr;
         for (QPair<QString,QString> pair: parms.abbreviationsList) {
             abbreviationsStr.append(pair.first+":"+pair.second +",");
         }
         abbreviationsStr.chop(1);
-        query.bindValue(":abbreviationsList", abbreviationsStr);
-        bool bQuery = query.exec();
+        bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
             QSqlError err = query.lastError();
@@ -7025,11 +6471,12 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
   // Now get the SegmentId (identity) value so it can be returned.
   if(config->currConnection->servertype() == "Sqlite")
     commandText = "SELECT LAST_INSERT_ROWID()";
-  else
- if(config->currConnection->servertype() != "MsSql")
+  else if(config->currConnection->servertype() == "MySql")
     commandText = "SELECT LAST_INSERT_ID()";
-  else
+  else if(config->currConnection->servertype() == "MsSql")
     commandText = "SELECT IDENT_CURRENT('Segments')";
+  else // PostgreSQL
+    commandText = "SELECT max(segmentId)";
   bQuery = query.exec(commandText);
  if(!bQuery)
   {
@@ -7150,12 +6597,12 @@ qint32 SQL::addSegment(SegmentInfo si, bool *bAlreadyExists, bool forceInsert)
   // Now get the SegmentId (identity) value so it can be returned.
   if(config->currConnection->servertype() == "Sqlite")
     commandText = "SELECT LAST_INSERT_ROWID()";
-
-  else
- if(config->currConnection->servertype() != "MsSql")
+  else if(config->currConnection->servertype() == "MySql")
     commandText = "SELECT LAST_INSERT_ID()";
-  else
+  else if(config->currConnection->servertype() == "MsSql")
     commandText = "SELECT IDENT_CURRENT('Segments')";
+  else // PostgreSQL
+    commandText = "SELECT max(segmentId)";
   bQuery = query.exec(commandText);
  if(!bQuery)
   {
@@ -7248,11 +6695,9 @@ try
                "pointArray='"+ pointArray + "', "
                "tracks=" +QString::number(oldTracks)+ ","
                "street='"+ oldStreet + "',"
-               "lastUpdate=:lastUpdate"
+               "lastUpdate=CURRENT_TIMESTAMP"
                " where SegmentId = " + QString("%1").arg(segmentId);
- query.prepare(commandText);
- query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
- bQuery = query.exec();
+ bQuery = query.exec(commandText);
  if(!bQuery)
  {
   SQLERROR(std::move(query));
@@ -7299,7 +6744,7 @@ try
      + QString("%1").arg(length,0,'f',8)+",'"
      + oldSi._dateBegin.toString("yyyy/MM/dd")+"',"
      "'" + oldSi._dateEnd.toString("yyyy/MM/dd")+"',"
-     + QString("%1").arg(pointArray2.count())+","
+     + QString("%1").arg(pointArray2.size())+","
      "'" + direction+"',"
      "'" + pointArray2 + "', "
      + QString::number(newTracks)+","
@@ -7319,13 +6764,13 @@ try
  }
  // Now get the SegmentId (identity) value of the new segment so it can be returned.
  if(config->currConnection->servertype() == "Sqlite")
-  commandText = "SELECT LAST_INSERT_ROWID()";
-
- else
- if(config->currConnection->servertype() != "MsSql")
-    commandText = "SELECT LAST_INSERT_ID()";
- else
-    commandText = "SELECT IDENT_CURRENT('Segments')";
+   commandText = "SELECT LAST_INSERT_ROWID()";
+ else if(config->currConnection->servertype() == "MySql")
+   commandText = "SELECT LAST_INSERT_ID()";
+ else if(config->currConnection->servertype() == "MsSql")
+   commandText = "SELECT IDENT_CURRENT('Segments')";
+ else // PostgreSQL
+   commandText = "SELECT max(segmentId)";
 
  bQuery = query.exec(commandText);
  if(!bQuery)
@@ -7476,12 +6921,10 @@ try
     // Now update the turn info for the original segment
     commandText = "update Routes set normalLeave = " + QString("%1").arg(normalLeave) + ","
                   " reverseEnter = " + QString("%1").arg(reverseEnter)
-                  + ",lastUpdate=:lastUpdate where route = " + QString("%1").arg(sd1._route) + ""
+                  + ",lastUpdate=CURRENT_TIMESTAMP where route = " + QString("%1").arg(sd1._route) + ""
                   " and name = '" + sd1._routeName + "' and startDate = '" + sd1._dateBegin.toString("yyyy/MM/dd")
       + "' and endDate = '" + sd1._dateEnd.toString("yyyy/MM/dd") + "' and lineKey = " + QString("%1").arg(sd1._segmentId);
-    query.prepare(commandText);
-    query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-    bQuery = query.exec();
+    bQuery = query.exec(commandText);
     if(!bQuery)
     {
      SQLERROR(std::move(query));
@@ -7568,16 +7011,14 @@ bool SQL::updateSegmentToRoute(qint32 routeNbr, QString routeName, QString start
           + ", reverseEnter= " + QString("%1").arg(reverseEnter)
           + ", reverseLeave = " + QString("%1").arg(reverseLeave)
           + ", OneWay = '" + oneWay
-          + "', lastUpdate=:lastUpdate "
+          + "', lastUpdate=CURRENT_TIMESTAMP "
           "where route = " + QString("%1").arg(routeNbr)
           + " and Name= '" + routeName
           + "' and LineKey = " + QString("%1").arg(SegmentId)
           + " and StartDate= '" + startDate
           + "' and EndDate= '" + endDate + "'";
         QSqlQuery query = QSqlQuery(db);
-        query.prepare(commandText);
-        query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-        bool bQuery = query.exec();
+        bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
             SQLERROR(std::move(query));
@@ -7889,67 +7330,6 @@ bool SQL::modifyCurrentRoute(RouteData* rd, bool bStartDate, QDate dt)
         return false;
      }
  }
- //  commandText = "update Routes set startDate = '" + dt.toString("yyyy/MM/dd")
- //                + "',lastUpdate=:lastUpdate where startDate = '"
- //                + rd->startDate().toString("yyyy/MM/dd") + "' and route = "
- //                + QString("%1").arg(rd->route());
- //  else
- //  commandText = "update Routes set endDate = '" + dt.toString("yyyy/MM/dd")
- //                + "',lastUpdate=:lastUpdate where endDate = '"
- //                + rd->endDate().toString("yyyy/MM/dd") + "' and route = "
- //                + QString("%1").arg(rd->route());
- //  QSqlQuery query = QSqlQuery(db);
- //  query.prepare(commandText);
- //  query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
- //  bool bQuery = query.exec();
- //  if(!bQuery)
- //  {
- //   QSqlError err = query.lastError();
- //   SQLERROR(std::move(query));
- //   qDebug() << err.text() + "\n";
- //   qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
- //    return false;
- //  }
- //  rows = query.numRowsAffected();
- //  if (rows > 0)
- //  {
- //    RouteInfo ri = RouteInfo(*rd);
- //    if(!updateRouteName(ri))
- //    {
- //       qDebug() << "updateRoutname failed";
- //          return false;
- //    }
- //    SegmentData* sd = new SegmentData(*rd);
- //    if(bStartDate)
- //        sd->setStartDate(dt);
- //    else
- //     sd->setEndDate(dt);
- //    routeChange(NotifyRouteChange(MODIFYSEG, sd));
- //    ret = true;
- //  }
- //  // modify any routes that begin the day after or end the day before.
- //  if (bStartDate)
- //   commandText = "update Routes set endDate = '" + dt.addDays(1).toString("yyyy/MM/dd")
- //                 + "',lastUpdate=:lastUpdate where endDate = '"
- //                 + rd->startDate().addDays(1).toString("yyyy/MM/dd")
- //                 + "' and route = " + QString("%1").arg(rd->route());
- //  else
- //   commandText = "update Routes set startDate = '" + dt.addDays(1).toString("yyyy/MM/dd")
- //                 + "',lastUpdate=:lastUpdate where startDate = '"
- //                 + rd->endDate().addDays(1).toString("yyyy/MM/dd")
- //                 + "' and route = " + QString("%1").arg(rd->route());
- //  query.prepare(commandText);
- //  query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
- //  bQuery = query.exec();
- //  if(!bQuery)
- //  {
- //   QSqlError err = query.lastError();
- //   qDebug() << err.text() + "\n";
- //   qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
- //   db.close();
- //   exit(EXIT_FAILURE);
- // }
- // rows = query.numRowsAffected();
   ret = true;
  return ret;
 }
@@ -8468,11 +7848,10 @@ int SQL::addComment(QString comments, QString tags)
             //comments = comments.toLatin1();
         }
 
-        QString commandText = "insert into Comments (comments, tags ) values(:comments,'" + tags + "')";
+        QString commandText = QString("insert into Comments (comments, tags ) "
+                                      "values('%1','%2')").arg(comments,tags);
         QSqlQuery query = QSqlQuery(db);
-        query.prepare(commandText);
-        query.bindValue(":comments", comments);
-        bool bQuery = query.exec();
+        bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
             QSqlError err = query.lastError();
@@ -8486,19 +7865,13 @@ int SQL::addComment(QString comments, QString tags)
         //if (rows == 1)
         {
             if(config->currConnection->servertype() == "Sqlite")
-            {
-                commandText = "SELECT LAST_INSERT_ROWID()";
-
-            }
-            else
-            if(config->currConnection->servertype() != "MsSql")
-            {
-                commandText = "SELECT LAST_INSERT_ID()";
-            }
-            else
-            {
-                commandText = "SELECT IDENT_CURRENT('comments')";
-            }
+              commandText = "SELECT LAST_INSERT_ROWID()";
+            else if(config->currConnection->servertype() == "MySql")
+              commandText = "SELECT LAST_INSERT_ID()";
+            else if(config->currConnection->servertype() == "MsSql")
+              commandText = "SELECT IDENT_CURRENT('comments')";
+            else // PostgreSQL
+              commandText = "SELECT max(commentKey)";
             bQuery = query.exec(commandText);
             if(!bQuery)
             {
@@ -8547,12 +7920,11 @@ bool SQL::updateComment(qint32 infoKey, QString comments, QString tags)
         }
 
 
-        QString commandText = "update  Comments set comments=:comments, tags ='" + tags + "',lastUpdate=:lastUpdate where commentKey = " + QString("%1").arg(infoKey);
+        QString commandText = "update  Comments set comments='"+ comments+", "
+                              "tags ='" + tags + "',"
+                              "lastUpdate=:CURRENT_TIMESTAMP where commentKey = " + QString("%1").arg(infoKey);
         QSqlQuery query = QSqlQuery(db);
-        query.prepare(commandText);
-        query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-        query.bindValue(":comments", comments);
-        bool bQuery = query.exec();
+        bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
             QSqlError err = query.lastError();
@@ -8671,17 +8043,6 @@ RouteComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
             "where rc.route = %1 and rc.date = '%2'").arg(route).arg(date.toString("yyyy/MM/dd"));
 
         QSqlQuery query = QSqlQuery(db);
-        // bool bQuery = query.prepare(commandText);
-        // if(!bQuery)
-        // {
-        //     QSqlError err = query.lastError();
-        //     qDebug() << err.text() + "\n";
-        //     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-        //     db.close();
-        //     exit(EXIT_FAILURE);
-        // }
-        // query.bindValue(":route", route);
-        // query.bindValue(":date", date.toString("yyyy/MM/dd"));
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
@@ -8750,9 +8111,10 @@ bool SQL::updateRouteComment(RouteComments rc)
 
             rc.ci.commentKey = addComment(rc.ci.comments, rc.ci.tags);
 
-            commandText = "insert into RouteComments (route, date, commentKey, companyKey, latitude, longitude) "
-            " values(:route, :date, :commentKey, :companyKey, :latitude, :longitude)";
-            bQuery = query.prepare(commandText);
+            commandText = QString("insert into RouteComments (route, date, commentKey, companyKey, latitude, longitude) "
+            " values(%1, '%2', %3, %4, %5, %6)").arg(rc.route).arg(rc.date.toString("yyyy/MM/dd"))
+                    .arg(rc.ci.commentKey ).arg(rc.companyKey).arg(rc.pos.lat()).arg(rc.pos.lon());
+            bQuery = query.exec(commandText);
             if(!bQuery)
             {
                 QSqlError err = query.lastError();
@@ -8761,13 +8123,6 @@ bool SQL::updateRouteComment(RouteComments rc)
                 db.close();
                 exit(EXIT_FAILURE);
             }
-            query.bindValue(":route", rc.route);
-            query.bindValue(":date", rc.date.toString("yyyy/MM/dd"));
-            query.bindValue(":commentKey",rc.ci.commentKey );
-            query.bindValue(":companyKey", rc.companyKey);
-            query.bindValue(":latitude", rc.pos.lat());
-            query.bindValue(":longitude", rc.pos.lon());
-
             bQuery = query.exec();
             if(!bQuery)
             {
@@ -8783,24 +8138,12 @@ bool SQL::updateRouteComment(RouteComments rc)
         }
         else
         {
-            commandText = "update RouteComments set companyKey = :companyKey, latitude = :latitude, longitude=:longitude, lastUpdate=:lastUpdate  where route = :route and date = :date";
-            bQuery = query.prepare(commandText);
-            if(!bQuery)
-            {
-                QSqlError err = query.lastError();
-                qDebug() << err.text() + "\n";
-                qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-                db.close();
-                exit(EXIT_FAILURE);
-            }
-            query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-            query.bindValue(":route", rc.route);
-            query.bindValue(":date", rc.date.toString("yyyy/MM/dd"));
-            //query.bindValue(":commentKey",rc.ci.infoKey );
-            query.bindValue(":companyKey", rc.companyKey);
-            query.bindValue(":latitude", rc.pos.lat());
-            query.bindValue(":longitude", rc.pos.lon());
-            bQuery = query.exec();
+            commandText = QString("update RouteComments set companyKey = %1, "
+                          "latitude = %2, longitude=%3, "
+                          "lastUpdate=CURRENT_TIMESTAMP  where route = %4 and date = '%5'")
+                          .arg(rc.companyKey).arg(rc.pos.lat()).arg(rc.pos.lon()).arg(rc.route)
+                          .arg(rc.date.toString("yyyy/MM/dd"));
+            bQuery = query.exec(commandText);
             if(!bQuery)
             {
                 QSqlError err = query.lastError();
@@ -8905,19 +8248,9 @@ bool SQL::deleteRouteComment(RouteComments rc)
 
         beginTransaction("deleteRouteComment");
 
-        commandText = "delete from RouteComments where route = :route and date = :date";
-        bQuery = query.prepare(commandText);
-        if(!bQuery)
-        {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
-        }
-        query.bindValue(":route", rc.route);
-        query.bindValue(":date", rc.date.toString("yyyy/MM/dd"));
-        bQuery = query.exec();
+        commandText = QString("delete from RouteComments where route = %1 and date = ':date'%2'")
+                .arg(rc.route).arg(rc.date.toString("yyyy/MM/dd"));
+        bQuery = query.exec(commandText);
         if(!bQuery)
         {
             QSqlError err = query.lastError();
@@ -9382,13 +8715,15 @@ qint32 SQL::addStation(StationInfo sti)
        //if (rows == 1)
        {
            //myCommand.commandText = "SELECT stationKey from Stations where name = '" + name + "'";
-           if(config->currConnection->servertype() == "Sqlite")
+            if(config->currConnection->servertype() == "Sqlite")
                commandText = "SELECT LAST_INSERT_ROWID()";
-           else
-           if(config->currConnection->servertype() != "MsSql")
+             else if(config->currConnection->servertype() == "MySql")
                commandText = "SELECT LAST_INSERT_ID()";
-           else
+             else if(config->currConnection->servertype() == "MsSql")
                commandText = "SELECT IDENT_CURRENT('dbo.stations')";
+             else // PostgreSQL
+               commandText = "SELECT max(stationKey)";
+
            bQuery = query.exec(commandText);
            if(!bQuery)
            {
@@ -9452,14 +8787,12 @@ bool SQL::updateRoute(qint32 route, QString name, QString endDate, qint32 segmen
 
  QString commandText = "update Routes set next = " + QString("%1").arg(next)
              + ", trackUsage  = '" + trackUsage + "'"
-             + ", prev=" + QString("%1").arg(prev)+ ",lastUpdate=:lastUpdate"
+             + ", prev=" + QString("%1").arg(prev)+ ",lastUpdate=CURRENT_TIMESTAMP"
              " where route ="+QString("%1").arg(route)
              + " and name ='"+name+"' and endDate='"+endDate
              +"' and lineKey="+QString("%1").arg(segmentId);
  QSqlQuery query = QSqlQuery(db);
- query.prepare(commandText);
- query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
- bool bQuery = query.exec();
+ bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
      QSqlError err = query.lastError();
@@ -9566,16 +8899,14 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd, bool notify, bool ignoreE
              + ", name = '" + sd.routeName() + "'"
              + ", startDate = '" + sd.startDate().toString("yyyy/MM/dd")+ "'"
              + ", endDate = '" + sd.endDate().toString("yyyy/MM/dd")+ "'"
-             + ", lastUpdate=date('now')"
+             + ", lastUpdate=CURRENT_TIMESTAMP"
              " where route =" + QString("%1").arg(osd.route())
              + " and name ='" + osd.routeName() + "'"
              + " and startDate ='" + osd.startDate().toString("yyyy/MM/dd")+ "'"
              + " and endDate='" + osd.endDate().toString("yyyy/MM/dd")+ "'"
              + " and lineKey=" + QString("%1").arg(osd.segmentId());
  QSqlQuery query = QSqlQuery(db);
- query.prepare(commandText);
- //query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
- bool bQuery = query.exec();
+ bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
      QSqlError err = query.lastError();
@@ -9609,7 +8940,8 @@ int SQL::updateRouteDate(int segmentId, QString startDate, QString endDate)
 
  QSqlDatabase db = QSqlDatabase::database();
  QString commandText = "Update Routes set startDate = '" + startDate
-             + "', endDate='" + endDate+ "'"
+             + "', endDate='" + endDate+ "',"
+             "lastUpdate=CURRENT_TIMESTAMP"
              " where lineKey =" +QString::number(segmentId);
  QSqlQuery query = QSqlQuery(db);
  if(!query.exec(commandText))\
@@ -9638,6 +8970,7 @@ int SQL::updateRouteSegment(int segmentId, QString startDate, QString endDate, i
  QString commandText = "Update Routes set startDate = '" + startDate
              + "', endDate='" + endDate+ "'"
              + ", linekey = " +QString::number(newSegmentId)
+             + ",lastUpdate=CURRENT_TIMESTAMP"
              + " where lineKey =" +QString::number(segmentId);
  QSqlQuery query = QSqlQuery(db);
  if(!query.exec(commandText))\
@@ -9933,135 +9266,6 @@ bool SQL::checkSegments()
       }
    updateSegment(&si);
   }
-#if 0
-  // get list of routes using segment
-  QList<SegmentData*> routeList = getRouteSegmentsBySegment(si.segmentId());
-  if(!routeList.isEmpty())
-  {
-   foreach(SegmentData* sd, routeList)
-   {
-       qApp->processEvents();
-       if(!doesRouteSegmentExist(*sd))
-           continue; // may have been already modified
-       SegmentData sdwrk = SegmentData(*sd);
-       QDate nxtStartDate = getNextStartOrEndDate(sdwrk.route(), sdwrk._dateStart,0, true);
-       CompanyData *cd = getCompany(sdwrk.companyKey());
-       if(!cd)
-           continue;
-       if(!isCompanyValid(sdwrk))
-               continue;
-       bool bMustUpdate = false;
-       if(sdwrk._dateStart == sdwrk._dateEnd)
-       {
-           QDate nxtEndDate = getNextStartOrEndDate(sdwrk.route(), nxtStartDate, sdwrk.segmentId(),false);
-           QString where = QString("where Route = %1 and StartDate = '%2' and segmentid = %3"
-                                   " and companykey = %4")
-                   .arg(sdwrk.route()).arg(nxtStartDate.toString("yyyy/MM/dd"))
-                   .arg(sdwrk.segmentId()).arg(sdwrk.companyKey());
-           QList<SegmentData*> list = segmentDataFromView(where);
-           SegmentData sdnxt;
-           if(!list.isEmpty())
-                   sdnxt = *list.at(0);
-           else
-               continue;
-           beginTransaction("equal");
-           if(!deleteRoute(*sd))
-           {
-               rollbackTransaction("equal");
-               continue;
-           }
-           if(!deleteRoute(sdwrk))
-           {
-               rollbackTransaction("equal");
-               continue;
-           }
-           sdwrk._dateStart = sd->startDate();
-           if(sdwrk.endDate()> cd->endDate)
-           {
-                sdwrk._dateEnd = cd->endDate;
-                //keep what's left in a new record
-                SegmentData sdnew = sdnxt;
-                sdnew._dateStart = cd->endDate.addDays(1);
-                if(!insertRouteSegment(sdnew))
-                {
-                    rollbackTransaction("equal");
-                    continue;
-                }
-           }
-           if(!insertRouteSegment(sdwrk))
-               rollbackTransaction("equal");
-           else
-               commitTransaction("equal");
-       }
-       else
-       {
-
-           if(nxtStartDate < sdwrk.endDate())
-           {
-               QDate nxtEndDate = getNextStartOrEndDate(sdwrk.route(), nxtStartDate, sdwrk.segmentId(),false);
-               QString where = QString("where Route = %1 and StartDate = '%2' and segmentid = %3"
-                                       " and companykey = %4"
-                                       " order by startdate")
-                       .arg(sdwrk.route()).arg(nxtStartDate.toString("yyyy/MM/dd"))
-                                       .arg(sdwrk.segmentId()).arg(sdwrk.companyKey());
-               QList<SegmentData*> list = segmentDataFromView(where);
-               SegmentData sdnxt;
-               if(!list.isEmpty())
-                       sdnxt = *list.at(0);
-               else
-                   continue;
-               beginTransaction("enddate");
-               if(!deleteRoute(*sd))
-               {
-                   rollbackTransaction("equal");
-                   continue;
-               }
-               if(!deleteRoute(sdwrk))
-               {
-                   rollbackTransaction("equal");
-                   continue;
-               }
-               sdwrk = sdnxt;
-               sdwrk._dateEnd = nxtStartDate.addDays(-1);
-               sdwrk._dateStart = sd->startDate();
-               if(sdwrk.endDate()> cd->endDate)
-               {
-                    sdwrk._dateEnd = cd->endDate;
-                    //keep what's left in a new record
-                    SegmentData sdnew = sdnxt;
-                    sdnew._dateStart = cd->endDate.addDays(1);
-                    if(!insertRouteSegment(sdnew))
-                    {
-                        rollbackTransaction("enddate");
-                        continue;
-                    }
-               }
-               if(!insertRouteSegment(sdwrk))
-                   rollbackTransaction("enddate");
-               else
-                   commitTransaction("enddate");
-           }
-       }
-       if(!isCompanyValid(sdwrk))
-       {
-           if(!splitSegmentDataForCompany(sdwrk))
-               return false;
-       }
-    // bool bNeedsUpdate = false;
-    // if(sdwrk.direction() != si._direction)
-    // {
-    //  sdwrk.direction() = si._direction;
-    //   bNeedsUpdate = true;
-    // }
-    // if(bNeedsUpdate)
-    //    updateRoute(*sd, sdwrk);
-   }
-  }
-  else {
-   // segment not used
-   qDebug() << "segment " << si.segmentId() << " " <<si.description() << " is not being used";
-  }
-#endif
  }
 
  return scanRoutes(MainWindow::instance()->routeList);
@@ -10078,9 +9282,7 @@ bool SQL::doesColumnExist(QString table, QString column)
  if(config->currConnection->servertype() == "Sqlite")
  {
   commandText = "PRAGMA table_info(" + table+")";
-  query.prepare(commandText);
-  //query.bindValue(":tName",table);
-  bQuery = query.exec();
+  bQuery = query.exec(commandText);
   if(!bQuery)
   {
    QSqlError err = query.lastError();
@@ -10101,11 +9303,7 @@ bool SQL::doesColumnExist(QString table, QString column)
   commandText = "Select count(*) from information_schema.COLUMNS"
                 " where table_schema ='" + config->currConnection->database()
                 + "' and table_name = '" + table +"' and column_name = '" + column + "'";
-  query.prepare(commandText);
-//  query.bindValue(":tbName",table);
-//  query.bindValue(":schema", db.databaseName());
-//  query .bindValue(":col", column);
-  bQuery = query.exec();
+  bQuery = query.exec(commandText);
   if(!bQuery)
   {
    QSqlError err = query.lastError();
@@ -10134,11 +9332,7 @@ bool SQL::doesColumnExist(QString table, QString column)
               .arg(table.toLower(),column.toLower());
  }
  int count;
-  query.prepare(commandText);
-//  query.bindValue(":tbName",table);
-//  query.bindValue(":schema", db.databaseName());
-//  query .bindValue(":col", column);
-  bQuery = query.exec();
+  bQuery = query.exec(commandText);
   if(!bQuery)
   {
    QSqlError err = query.lastError();
@@ -10166,9 +9360,7 @@ bool SQL::doesConstraintExist(QString tbName, QString name)
  if(config->currConnection->servertype() == "Sqlite")
  {
   commandText = QString("select sql from sqlite_master where name = '%1'").arg(tbName);
-  query.prepare(commandText);
-  //query.bindValue(":tName",table);
-  bQuery = query.exec();
+  bQuery = query.exec(commandText);
   if(!bQuery)
   {
    SQLERROR(std::move(query));
@@ -10209,9 +9401,6 @@ bool SQL::addColumn(QString tbName, QString name, QString type, QString after)
      commandText = "alter table " + tbName + " add column  " + name + " " + type +" ";
  else
   commandText = "alter table dbo." + tbName + " add " + name + " " + type +" ";
- //query.prepare(commandText);
- //query.bindValue(":tbName",tbName);
- //query.bindValue(":column", name);
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
@@ -10269,11 +9458,13 @@ bool SQL::updateTractionType(qint32 tractionType, QString description, QString d
         }
         else
         {
-            commandText = "update TractionTypes set description = '" + description + "', displayColor = '" + displayColor + "', routeType=" + QString("%1").arg(routeType)  + ", lastUpdate=:lastUpdate where tractionType = " + QString("%1").arg(tractionType) ;
-            query.prepare(commandText);
+            commandText = "update TractionTypes set description = '" + description + "', "
+                          "displayColor = '" + displayColor + "', routeType=" + QString("%1").arg(routeType)  + ", "
+                          "lastUpdate=CURRENT_TIMESTAMP "
+                          "where tractionType = " + QString("%1").arg(tractionType) ;
+            // query.prepare(commandText);
             qDebug()<<commandText;
-            query.bindValue(":lastUpdate", QDateTime::currentDateTimeUtc());
-            bQuery = query.exec();
+            bQuery = query.exec(commandText);
             if(!bQuery)
             {
              SQLERROR(std::move(query));
@@ -10407,19 +9598,31 @@ void SQL::checkTables(QSqlDatabase db)
   }
   if(config->currConnection->servertype() == "PostgreSQL")
   {
-   // export does not export rowids so we have to create a pseudo rowid in some tables
+   // PostgreSQL does not support 'rowid' as in Sqlite. So
+   // export must not export rowids so we have to create a pseudo rowid in some tables
    // that use 'rowid' in queries. Export creates the table without a column named 'rowid'
    // so we add one here after the tables are complete.
    if(!doesColumnExist("segments", "rowid"))
    {
-       addColumn("routes", "rowid", "integer GENERATED BY DEFAULT AS IDENTITY");
+       addColumn("routes", "rowid", "integer GENERATED ALWAYS AS IDENTITY");
    }
    if(!doesColumnExist("segments", "rowid"))
    {
-       addColumn("segments", "rowid", "integer GENERATED BY DEFAULT AS IDENTITY");
+       addColumn("segments", "rowid", "integer GENERATED ALWAYS AS IDENTITY");
+   }
+   if(!doesColumnExist("streetdef", "rowid"))
+   {
+       addColumn("streetdef", "rowid", "integer GENERATED ALWAYS AS IDENTITY");
    }
    if(!executeScript(":/sql/create_routeView.sql", db))
        exit(EXIT_FAILURE);
+   updateIdentitySequence("streetdef", "streetid");
+   updateIdentitySequence("segments", "segmentid");
+   updateIdentitySequence("companies", "key");
+   updateIdentitySequence("comments", "commentkey");
+   updateIdentitySequence("stations", "stationkey");
+   updateIdentitySequence("routename", "routeid");
+
   }
   if(!tableList.contains("RouteName",Qt::CaseInsensitive))
   {
@@ -10461,29 +9664,6 @@ void SQL::checkTables(QSqlDatabase db)
    }
   }
 
-
-
-
-
-
-#if 0
-  if(config->currConnection->servertype() == "Sqlite" )
-  {
-   if(!doesColumnExist("AltRoute", "RoutePrefix") || !testAltRoute())
-   {
-    //addColumn("AltRoute", "routePrefix", "varchar(10)");
-    executeScript(":/sql/recreateAltRoute.sql",db);
-   }
-  }
-  else
-  {
-   if(!doesColumnExist("AltRoute", "RoutePrefix"))
-   {
-    //addColumn("AltRoute", "routePrefix", "varchar(10)");
-    executeScript(":/sql/recreateAltRoute.sql",db);
-   }
-  }
-#endif
   if(!doesColumnExist("Stations", "routes"))
   {
    addColumn("Stations", "routes", "varchar(50)");
@@ -10761,15 +9941,6 @@ bool SQL::deleteAndReplaceSegmentWith(int segmentId1, int segmentId2)
      rows ++;
  }
 
- // // to avoid sql error dont update if segmentId2 is already.
- // commandText = "update Routes set lineKey = " + QString("%1").arg(segmentId2)
- //         + "  where linekey = " + QString("%1").arg(segmentId1) + " and lineKey != " + QString("%1").arg(segmentId2);
- // if(!query.exec(commandText))
- // {
- //  SQLERROR(query);
- //  return false;
- // }
- // rows = query.numRowsAffected();
  if(rows)
  {
   if(!deleteSegment(segmentId1))
@@ -10781,7 +9952,9 @@ bool SQL::deleteAndReplaceSegmentWith(int segmentId1, int segmentId2)
   int cnt = getCountOfStationsUsingSegment(segmentId1);
   if(cnt)
   {
-   commandText = QString("update Stations set segmentId = %1 where segmentId = %2").arg(segmentId2).arg(segmentId1);
+   commandText = QString("update Stations set segmentId = %1, "
+                         "lastUpdate=CURRENT_TIMESTAMP "
+                         "where segmentId = %2").arg(segmentId2).arg(segmentId1);
    if(!query.exec(commandText))
    {
     SQLERROR(std::move(query));
@@ -11268,18 +10441,6 @@ SegmentInfo SQL::convertSegment(int segmentId, int tracks)
                      " where tracks = " + QString("%1").arg(tracks)
                      +  distanceWhere;
   QSqlQuery query = QSqlQuery(db);
-//  bool bQuery = query.prepare(commandText);
-//  if(!bQuery)
-//  {
-//   SQLERROR(query);
-//      db.close();
-//      exit(EXIT_FAILURE);
-//  }
-//  query.bindValue(":startLat", si.startLat());
-//  query.bindValue(":startLon", si.startLon());
-//  query.bindValue(":endLat", si.endLat());
-//  query.bindValue(":endLon", si.endLon());
-
   bool bQuery = query.exec(commandText);
   qDebug() << query.lastQuery() << " line:" <<__LINE__;
 
@@ -11553,7 +10714,9 @@ QList<TerminalInfo> SQL::terminalsForRoute(int route)
 bool SQL::updateRouteForStations(int oldRoute, int newRoute)
 {
  QSqlDatabase db = QSqlDatabase::database();
- QString commandText = "update Stations set route = " + QString::number(newRoute) + " where route = "
+ QString commandText = "update Stations set route = " + QString::number(newRoute)
+                       +",lastUpdate=CURRENT_TIMESTAMP  "
+                        "where route = "
                        + QString::number(oldRoute);
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
@@ -11683,6 +10846,9 @@ QStringList SQL::listColumns(QString table, QString serverType, QSqlDatabase db,
   commandText = QString("pragma table_info('%1')").arg(table);
  else if(serverType == "MySql")
   commandText = "describe " + table;
+ else if(serverType == "PostgreSQL")
+  commandText = QString("select column_name, data_type, character_maximum_length, column_default, is_nullable\
+                        from INFORMATION_SCHEMA.COLUMNS where table_name = '%1';").arg(table);
  else // SQL Server
   commandText = "EXEC sp_help " + table;
  //processALine(txt, v);
@@ -11693,6 +10859,7 @@ QStringList SQL::listColumns(QString table, QString serverType, QSqlDatabase db,
      QSqlError err = query.lastError();
      qDebug() << err.text() + "\n";
      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+     SQLERROR(std::move(query));
      return columns;
  }
  while(query.next())
@@ -11708,6 +10875,18 @@ QStringList SQL::listColumns(QString table, QString serverType, QSqlDatabase db,
    columns.append(query.value("Field").toString());
    if(types)
        types->append(query.value("Type").toString());
+  }
+  else if(serverType == "PostgreSQL")
+  {
+   //PostgreSQL extra colums start with 'specific_catalog'
+   if(query.value("column_name").toString()== "rowid")
+       break;
+   if(query.value("column_name").toString()== "specific_catalog")
+       break;
+
+   columns.append(query.value("column_name").toString());
+   if(types)
+       types->append(query.value("data_type").toString());
   }
   else // SQL Server
   {
@@ -11908,6 +11087,9 @@ void SQL::setForeignKeyCheck(bool b)
  {
      if(!dbOpen())
          throw Exception(tr("database not open: %1").arg(__LINE__));
+     if(config->currConnection->servertype() != "Sqlite")
+         return;
+
      QSqlDatabase db = QSqlDatabase::database();
 
      QString commandText = "PRAGMA foreign_keys="+ QString(b?"1":"0");
@@ -12492,12 +11674,12 @@ qint32 SQL::addRouteName(RouteInfo ri,bool *bAlreadyExists)
      // Now get the SegmentId (identity) value so it can be returned.
      if(config->currConnection->servertype() == "Sqlite")
        commandText = "SELECT LAST_INSERT_ROWID()";
-
-     else
-    if(config->currConnection->servertype() != "MsSql")
+     else if(config->currConnection->servertype() == "MySql")
        commandText = "SELECT LAST_INSERT_ID()";
-     else
+     else if(config->currConnection->servertype() == "MsSql")
        commandText = "SELECT IDENT_CURRENT('RouteName')";
+     else // PostgreSQL
+       commandText = "SELECT max(routeid)";
      bQuery = query.exec(commandText);
     if(!bQuery)
      {
@@ -12584,7 +11766,8 @@ bool SQL::updateRouteName(RouteInfo ri)
                           "startdate='" + ri.startDate.toString("yyyy/MM/dd") + "',"
                           "enddate ='" + ri.endDate.toString("yyyy/MM/dd") + "',"
                           "routeAlpha='" + ri.alphaRoute + "',"
-                          "companyKey =" + QString::number(ri.companyKey)
+                          "companyKey =" + QString::number(ri.companyKey) + ","
+                          "lastUpdate =CURRENT_TIMESTAMP"
                           + " where routeId = " + QString::number(ri._routeId);
     QSqlQuery query = QSqlQuery(db);
 
@@ -12598,4 +11781,13 @@ bool SQL::updateRouteName(RouteInfo ri)
       return false;
     }
     return true;
+}
+
+// update the next value for an PosgreSQL identity column
+// needed th first time a table is referenced after import
+bool SQL::updateIdentitySequence(QString table, QString column)
+{
+    QString commandTxt = QString("SELECT setval(pg_get_serial_sequence('%1', '%2'),\
+                                       (select max(%2) from %1))").arg(table,column);
+     return executeCommand(commandTxt);
 }

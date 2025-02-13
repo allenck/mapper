@@ -141,8 +141,6 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  statusBar()->addPermanentWidget(geocoderRslt);
 
  ui->ssw->initialize();
- streetView = new StreetView();
- ui->tabWidget->addTab(streetView, tr("Streets"));
 
  cwd = QDir::currentPath();
  qDebug() << "starting with CWD = '" << cwd;
@@ -209,6 +207,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  ui->tblStationView->horizontalHeader()->restoreState(settings.value("stationView").toByteArray());
  ui->tblCompanyView->horizontalHeader()->restoreState(settings.value("companyView").toByteArray());
  ui->tblTractionTypes->horizontalHeader()->restoreState(settings.value("tractionTypeView").toByteArray());
+ ui->tblDupSegments->horizontalHeader()->restoreState(settings.value("dupSegmentsView").toByteArray());
+ ui->tblStreetView->horizontalHeader()->restoreState(settings.value("streetView").toByteArray());
 
  QDir resource("Resources");
  m_resourcePath =  resource.absoluteFilePath("");
@@ -240,12 +240,13 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
       segmentView->sourceModel->setList(sql->getIntersectingSegments(latLng.lat(), latLng.lon(), .020));
   });
 
+  streetView = new StreetView(this);
+
   // setup routeDlg
   routeDlg = new RouteDlg(this);
   //routeDlg->Configuration ( config);
   //routeDlg->SegmentChanged += new segmentChangedEventHandler(segmentChanged);
-  connect(routeDlg, SIGNAL(SegmentChangedEvent(qint32,iic723@knobacres
-                                               qint32)),this, SLOT(segmentChanged(qint32,qint32)));
+  connect(routeDlg, SIGNAL(SegmentChangedEvent(qint32,qint32)),this, SLOT(segmentChanged(qint32,qint32)));
   //routeDlg->routeChanged += new routeChangedEventHandler(RouteChanged);
   connect(routeDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs)), this, SLOT(RouteChanged(RouteChangedEventArgs)));
   connect(ui->btnDisplayRoute, SIGNAL(clicked()), this, SLOT(btnDisplayRouteClicked()));
@@ -262,90 +263,6 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui->txtSegment->setContextMenu(txtSegment_customContextMenu());
   connect(ui->txtSegment, &EditSegmentDescr::descrUpdated, [=](QString descr, QString street){
       processDescriptionChange(descr, street);
-      // SegmentInfo si = sql->getSegmentInfo(m_segmentId);
-      // if(descr != si.description() || street != si.streetName())
-      // {
-      //     si.setStreetName(street);
-      //     si.setDescription(descr);
-      //     si.setLocation(ui->txtLocation->text().trimmed());
-      //     si.setNewerName(ui->txtNewerName->text());
-      //     sql->updateSegment(&si);
-
-      //     if(!ui->txtNewerName->text().isEmpty())
-      //     {
-      //         QList<StreetInfo*> list = StreetsTableModel::instance()->getStreetName(ui->txtNewerName->text(),
-      //                                         ui->txtLocation->text()  ) ;
-      //         if(list.isEmpty())
-      //         {
-      //             StreetInfo sti;
-      //             sti.street = ui->txtNewerName->text();
-      //             sti.location = ui->txtLocation->text();
-      //             sti.sequence = 0;
-      //             sti.segments.append(si.segmentId());
-      //             sti.updateSegmentInfo(si);
-      //             int streetId =StreetsTableModel::instance()->newStreetDef(&sti);
-      //             if(streetId > 0)
-      //             {
-      //                 sti.street = ui->txtStreet->text();
-      //                 sti.sequence = 1;
-      //                 sti.dateStart = si.startDate();
-      //                 sti.dateEnd = si.endDate();
-      //                 sti.newerName = ui->txtNewerName->text().trimmed();
-      //                 if(StreetsTableModel::instance()->newStreetName(&sti))
-      //                 {
-      //                     si.setStreetId(streetId);
-      //                     sql->updateSegment(&si);
-      //                 }
-      //             }
-      //         }
-      //         else
-      //         {
-      //             foreach (StreetInfo* sti, list) {
-      //                 if(sti->sequence == 0)
-      //                 {
-      //                     if(!sti->segments.contains(si.segmentId()))
-      //                         sti->updateSegmentInfo(si);
-      //                     QStringList names;
-      //                     QList<StreetInfo*>* list2 =StreetsTableModel::instance()->getStreetNames(sti->streetId, &names);
-      //                     if(!names.contains(ui->txtStreet->text().trimmed()))
-      //                     {
-      //                         StreetInfo sti2 = StreetInfo(*sti);
-      //                         sti2.street = ui->txtStreet->text().trimmed();
-      //                         sti2.sequence = 1;
-      //                         sti2.dateStart = si.startDate();
-      //                         sti2.dateEnd = si.endDate();
-      //                         sti2.segments.append(si.segmentId());
-      //                         sti2.updateBounds();
-      //                         if(StreetsTableModel::instance()->newStreetName(&sti2))
-      //                         {
-      //                             si.setStreetId(sti->streetId);
-      //                             si.setNewerName(sti->street);
-      //                             sql->updateSegment(&si);
-      //                         }
-      //                     }
-      //                     else
-      //                     {
-      //                         if(names.contains(ui->txtStreet->text().trimmed()))
-      //                         {
-      //                             StreetInfo* sti2 = list2->at(names.indexOf(ui->txtStreet->text()));
-      //                             sti->segments.append(si.segmentId());
-      //                             if(StreetsTableModel::instance()->updateStreetName(*sti2))
-      //                             {
-      //                                 sti2->segments.append(si.segmentId());
-      //                                 sti2->updateBounds();
-      //                                 si.setStreetId(sti->streetId);
-      //                                 si.setNewerName(sti->street);
-      //                                 sql->updateSegment(&si);
-      //                             }
-      //                         }
-      //                     }
-      //                 }
-      //                 StreetsTableModel::instance()->updateStreetDef(*sti);
-      //             }
-      //         }
-      //     }
-
-      // }
   });
   currentStreetNames = StreetsTableModel::instance()->getStreetnamesList(ui->txtLocation->text());
   QCompleter* nnC = new QCompleter(currentStreetNames, this);
@@ -2030,7 +1947,6 @@ void MainWindow::newCity(QAction* act )
   this->setCursor(QCursor(Qt::WaitCursor));
   enableControls(false);
   qApp->processEvents();
-  streetView = new StreetView();
 
   // first, save some settings for the current city
   config->currCity->center = LatLng(m_latitude, m_longitude);
@@ -3718,10 +3634,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
  settings.setValue("geometry", saveGeometry());
  settings.setValue("windowState", saveState());
  settings.setValue("splitter", ui->splitter->saveState());
-//    settings.setValue("center/latitude", m_latitude);
-//    settings.setValue("center/longitude", m_longitude);
-//    settings.setValue("zoom", m_zoom );
-//    settings.setValue("maptype", m_maptype);
  config->currCity->center = LatLng(m_latitude, m_longitude);
  config->currCity->zoom = m_zoom;
  config->currCity->mapType = m_maptype;
@@ -3740,7 +3652,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
  settings.setValue("otherRouteView", ui->tblOtherRouteView->horizontalHeader()->saveState());
  settings.setValue("stationView", ui->tblStationView->horizontalHeader()->saveState());
  settings.setValue("companyView", ui->tblCompanyView->horizontalHeader()->saveState());
- settings.setValue("tractionTypeView", ui->tblTractionTypes->horizontalHeader()->saveState());
+ settings.setValue("dupSegmentsView", ui->tblDupSegments->horizontalHeader()->saveState());
+ settings.setValue("streetsView",ui->tblStreetView->horizontalHeader()->saveState());
 
  QSqlDatabase db = QSqlDatabase::database();
  db.close();

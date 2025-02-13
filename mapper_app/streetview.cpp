@@ -8,27 +8,30 @@
 #include "webviewbridge.h"
 
 StreetView::StreetView(QObject *parent) {
-    myParent = parent;
+    m_parent = parent;
     config = Configuration::instance();
     sql = SQL::instance();
-    setAlternatingRowColors(true);
-    setSelectionBehavior(QAbstractItemView::SelectRows );
-    setSelectionMode( QAbstractItemView::SingleSelection );
-    horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
-    setContextMenuPolicy(Qt::CustomContextMenu);
-    setSortingEnabled(true);
+    myParent = qobject_cast<MainWindow*>(m_parent);
 
-    setItemDelegateForColumn(StreetsTableModel::STARTDATE, new DateEditDelegate());
-    setItemDelegateForColumn(StreetsTableModel::ENDDATE, new DateEditDelegate());
+    ui = myParent->ui->tblStreetView;
+    ui->setAlternatingRowColors(true);
+    ui->setSelectionBehavior(QAbstractItemView::SelectRows );
+    ui->setSelectionMode( QAbstractItemView::SingleSelection );
+    ui->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->setSortingEnabled(true);
+
+    ui->setItemDelegateForColumn(StreetsTableModel::STARTDATE, new DateEditDelegate());
+    ui->setItemDelegateForColumn(StreetsTableModel::ENDDATE, new DateEditDelegate());
     sourceModel =  StreetsTableModel::instance();
     proxyModel = new QSortFilterProxyModel();
     proxyModel->setSourceModel(sourceModel);
 
-    setModel(proxyModel);
-    resizeColumnsToContents();
-    horizontalHeader()->stretchLastSection();
+    ui->setModel(proxyModel);
+    ui->resizeColumnsToContents();
+    ui->horizontalHeader()->stretchLastSection();
     //connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tablev_CustomContextMenu(QPoint)));
-    connect(this, &QTableView::customContextMenuRequested, this,[=](const QPoint& pt){
+    connect(ui, &QTableView::customContextMenuRequested, this,[=](const QPoint& pt){
         tablev_CustomContextMenu(pt);
     });
     connect(sourceModel, &StreetsTableModel::streetInfoChanged, this,[=](StreetInfo sti, StreetsTableModel::Action act){
@@ -36,30 +39,30 @@ StreetView::StreetView(QObject *parent) {
         int row =sourceModel->findRow(sti.rowid);
         QModelIndex srcIndex = sourceModel->index(row,0);
         QModelIndex srtIndex = proxyModel->mapFromSource(srcIndex);
-        scrollTo(srtIndex);
+        ui->scrollTo(srtIndex);
     });
     if(config->sv.colWidths.count() != sourceModel->columnCount(QModelIndex()))
     {
         config->sv.colWidths.clear();
         for(int i=0; i < sourceModel->columnCount(QModelIndex()); i++)
         {
-            config->sv.colWidths.append(columnWidth(i));
+            config->sv.colWidths.append(ui->columnWidth(i));
         }
     }
 
-    connect(horizontalHeader(), &QHeaderView::sectionResized, this,
+    connect(ui->horizontalHeader(), &QHeaderView::sectionResized, this,
             [=](int logicalIndex, int oldSize, int newSize){
-        config->sv.state = horizontalHeader()->saveState();
+        config->sv.state = ui->horizontalHeader()->saveState();
         config->sv.colWidths.replace(logicalIndex,newSize);
     });
     qApp->processEvents();
-    horizontalHeader()->restoreState(config->sv.state);
+    ui->horizontalHeader()->restoreState(config->sv.state);
 
     if(!config->sv.colWidths.isEmpty())
     {
         for(int i=0; i < config->sv.colWidths.count(); i++)
         {
-            setColumnWidth(i, config->sv.colWidths.at(i));
+            ui->setColumnWidth(i, config->sv.colWidths.at(i));
         }
     }
 
@@ -77,10 +80,10 @@ StreetsTableModel* StreetView::model()
 void StreetView::tablev_CustomContextMenu(const QPoint &pt)
 {
     QMenu tablMenu;
-    curRow = rowAt(pt.y());
-    curCol = columnAt(pt.x());
+    curRow = ui->rowAt(pt.y());
+    curCol = ui->columnAt(pt.x());
     int srcRow = proxyModel->mapToSource(proxyModel-> index(curRow, curCol)).row();
-    QItemSelectionModel * selModel = selectionModel();
+    QItemSelectionModel * selModel = ui->selectionModel();
     QModelIndexList indexes = selModel->selectedIndexes();
     if(indexes.isEmpty())
         return;
@@ -126,7 +129,7 @@ void StreetView::tablev_CustomContextMenu(const QPoint &pt)
     act = new QAction("Copy cell text", this);
     tablMenu.addAction(act);
     connect(act, &QAction::triggered, this, [=]{
-        QModelIndex index = currentIndex();
+        QModelIndex index = ui->currentIndex();
         QModelIndex srcIndex = proxyModel->mapToSource(index);
         QClipboard *clip = QApplication::clipboard();
         clip->setText(srcIndex.data().toString());
