@@ -9299,6 +9299,7 @@ bool SQL::doesColumnExist(QString table, QString column)
    if(col.compare(column, Qt::CaseInsensitive)==0)
     return true;
   }
+  return false;
  }
  else if(config->currConnection->servertype() == "MySql")
  {
@@ -9585,7 +9586,7 @@ void SQL::checkTables(QSqlDatabase db)
    // export must not export rowids so we have to create a pseudo rowid in some tables
    // that use 'rowid' in queries. Export creates the table without a column named 'rowid'
    // so we add one here after the tables are complete.
-   if(!doesColumnExist("segments", "rowid"))
+   if(!doesColumnExist("routes", "rowid"))
    {
        addColumn("routes", "rowid", "integer GENERATED ALWAYS AS IDENTITY");
    }
@@ -9661,56 +9662,64 @@ void SQL::checkTables(QSqlDatabase db)
   }
 
 
-  if(!doesColumnExist("Routes", "OneWay"))
-  {
-   addColumn("Routes", "OneWay", "char(1) default 'Y'");
-   executeScript(":/sql/updateOneWay.sql",db);
-  }
+//   if(!doesColumnExist("Routes", "OneWay"))
+//   {
+//    addColumn("Routes", "OneWay", "char(1) default 'Y'");
+//    executeScript(":/sql/updateOneWay.sql",db);
+//   }
 
-  if(!doesColumnExist("Routes", "TrackUsage"))
-  {
-   if(config->currConnection->servertype() == "Sqlite" )
-   {
-    addColumn("Routes", "TrackUsage", " text check(`TrackUsage` in ('B', 'L', 'R', ' ')) default ' ' NOT NULL");
-    executeScript(":/sql/sqlite3_recreate_routes.sql",db);
-   }
-   else if(config->currConnection->servertype() == "MySql")
-   {
-    addColumn("Routes", "TrackUsage", "ENUM('N', 'B', 'R')");
-    executeScript(":/sql/mysql_recreate_routes.sql");
-   }
-   // TODO: add Sql Server syntax
-   //executeScript(":/sql/mssql_recreate_routes.sql");
-  }
+//   if(!doesColumnExist("Routes", "TrackUsage"))
+//   {
+//    if(config->currConnection->servertype() == "Sqlite" )
+//    {
+//     addColumn("Routes", "TrackUsage", " text check(`TrackUsage` in ('B', 'L', 'R', ' ')) default ' ' NOT NULL");
+//     executeScript(":/sql/sqlite3_recreate_routes.sql",db);
+//    }
+//    else if(config->currConnection->servertype() == "MySql")
+//    {
+//     addColumn("Routes", "TrackUsage", "ENUM('N', 'B', 'R')");
+//     executeScript(":/sql/mysql_recreate_routes.sql");
+//    }
+//    // TODO: add Sql Server syntax
+//    //executeScript(":/sql/mssql_recreate_routes.sql");
+//   }
 
-  if(!doesColumnExist("Routes", "Sequence"))
-  {
-   if(addColumn("Routes", "Sequence", "int(11) NOT NULL DEFAULT -1", "ReverseLeave"))
-    if(addColumn("Routes", "ReverseSeq", "int(11) NOT NULL DEFAULT -1", "Sequence"))
-    {
-//     if(config->currConnection->servertype() == "Sqlite" )
-//      executeScript(":/sql/sqlite3_recreate_routes.sql");
-    }
-  }
+//   if(!doesColumnExist("Routes", "Sequence"))
+//   {
+//    if(addColumn("Routes", "Sequence", "int(11) NOT NULL DEFAULT -1", "ReverseLeave"))
+//     if(addColumn("Routes", "ReverseSeq", "int(11) NOT NULL DEFAULT -1", "Sequence"))
+//     {
+// //     if(config->currConnection->servertype() == "Sqlite" )
+// //      executeScript(":/sql/sqlite3_recreate_routes.sql");
+//     }
+//   }
 
-  if(!doesColumnExist("Routes", "NextR"))
-  {
-   if(config->currConnection->servertype() == "Sqlite" )
-   {
-    addColumn("Routes", "NextR", "int(11) NOT NULL DEFAULT -1", "ReverseLeave");
-    addColumn("Routes", "PrevR", "int(11) NOT NULL DEFAULT -1", "NextR");
-//    executeScript(":/sql/sqlite3_recreate_routes.sql",db);
-//    executeScript(":/sql/create_routeView", db);
-   }
-   else if(config->currConnection->servertype() == "MySql")
-   {
-//    addColumn("Routes", "NextR", "int(11) NOT NULL DEFAULT -1", "ReverseLeave");
-//    addColumn("Routes", "PrevR", "int(11) NOT NULL DEFAULT -1", "NextR");
+//   if(!doesColumnExist("Routes", "NextR"))
+//   {
+//    if(config->currConnection->servertype() == "Sqlite" )
+//    {
+//     addColumn("Routes", "NextR", "int(11) NOT NULL DEFAULT -1", "ReverseLeave");
+//     addColumn("Routes", "PrevR", "int(11) NOT NULL DEFAULT -1", "NextR");
+// //    executeScript(":/sql/sqlite3_recreate_routes.sql",db);
+// //    executeScript(":/sql/create_routeView", db);
+//    }
+//    else if(config->currConnection->servertype() == "MySql")
+//    {
+// //    addColumn("Routes", "NextR", "int(11) NOT NULL DEFAULT -1", "ReverseLeave");
+// //    addColumn("Routes", "PrevR", "int(11) NOT NULL DEFAULT -1", "NextR");
 
-   }
-   // TODO: add Sql Server syntax
-   //executeScript(":/sql/recreate_routes.sql");
-  }
+//    }
+//    // TODO: add Sql Server syntax
+//    //executeScript(":/sql/recreate_routes.sql");
+//   }
+
+  // if(doesColumnExist("routes", "name"))
+  // {
+  //     if(executeScript(":/sql/sqlite3_recreate_routes.sql"))
+  //     {
+  //         executeCommand("commit");
+  //     }
+  // }
 
   if(!doesColumnExist("Parameters", "abbreviationsList"))
   {

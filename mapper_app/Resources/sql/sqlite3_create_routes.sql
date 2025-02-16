@@ -2,7 +2,6 @@ DROP TABLE if exists `Routes`;
 CREATE TABLE `Routes` (
              `Route` int(11) NOT NULL,
              `RouteId`  int(11) NOT NULL DEFAULT -1,
-             `Name` varchar(140) NOT NULL,
              `StartDate`  date NOT NULL,
              `EndDate` date NOT NULL,
              `LineKey` int(11) NOT NULL,

@@ -3,7 +3,6 @@ DROP TABLE IF EXISTS [dbo].[Routes];
 CREATE TABLE [dbo].[Routes](
                    [Route] [int] NOT NULL,
                    [RouteId] int,
-                   [name] [varchar](140) NOT NULL,
                    [StartDate]  [date] NOT NULL,
                    [EndDate] [date] NOT NULL,
                    [LineKey] [int] NOT NULL,

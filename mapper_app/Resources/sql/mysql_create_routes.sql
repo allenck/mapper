@@ -1,7 +1,6 @@
 CREATE TABLE `Routes` (
    `Route` int NOT NULL,
    `RouteId` int,
-   `Name` varchar(140) CHARACTER SET latin1 COLLATE latin1_german1_ci NOT NULL,
    `StartDate` date NOT NULL,
    `EndDate` date NOT NULL,
    `LineKey` int NOT NULL,

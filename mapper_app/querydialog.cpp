@@ -60,7 +60,6 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
           if(c->id() == config->currConnection->id())
               ui->cbConnections->setCurrentIndex(i);
       }
-
     });
   });
   makeSelectedIncludeAct = new QAction(tr("Make include file of selection"), this);
@@ -115,12 +114,12 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   toolsMenu->addAction(refreshRoutesAct);
   //QMenu* tablesMenu = new QMenu(tr("Tables"));
   connect(toolsMenu, &QMenu::aboutToShow, this,[=]{
-   Connection* c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
+   Connection* c = tgtConn;
    QSqlDatabase db;
-   if(c->connectionName().isEmpty())
+   //if(c->connectionName().isEmpty())
     db = QSqlDatabase::database(tgtConn->connectionName());
-   else
-    db = QSqlDatabase::database(c->connectionName());
+   // else
+   //  db = QSqlDatabase::database(c->connectionName());
    QStringList tableList = db.tables(QSql::Tables);
    QStringList sysTableList = db.tables(QSql::SystemTables);
    toolsMenu->clear();
@@ -185,7 +184,7 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
      else if(c->servertype() == "PostgreSQL")
          txt = QString("select column_name, data_type, character_maximum_length, column_default, is_nullable\
                        from INFORMATION_SCHEMA.COLUMNS where table_name = '&1';").arg(v);
-     else // SQL Server & PostgreSQL
+     else // SQL Server
       txt = "EXEC sp_help " + v;
 
      processALine(txt, v);
@@ -1069,6 +1068,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
  void QueryDialog::On_cbConnections_CurrentIndexChanged(int ix)
  {
   if(bChanging) return;
+  setCursor(Qt::WaitCursor);
   Connection* tgtConn = VPtr<Connection>::asPtr(ui->cbConnections->itemData(ix));
   if(ui->cbConnections->currentText() == config->currCity->connections.at(config->currCity->curConnectionId)->description())
   {
@@ -1142,6 +1142,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    qDebug() << "connection name:" << tgtConn->connectionName();
    qDebug() << "driver:" << db.driverName() << " database:" << db.databaseName();
   }
+  setCursor(Qt::ArrowCursor);
 }
 
 void QueryDialog::setTitle()

@@ -17,11 +17,11 @@ INSERT INTO  `t_routes` (`Route` ,  `RouteId`,`Name` ,  `StartDate`, `EndDate` ,
              `ReverseSeq`,  `LastUpdate`
              from `Routes`;
 #include sqlite3_create_routes.sql
-   INSERT INTO `Routes` (`Route`, `RouteId`,`Name`,  `StartDate`,  `EndDate`,  `LineKey`,  `OneWay` ,`TrackUsage`,
+   INSERT INTO `Routes` (`Route`, `RouteId`,  `StartDate`,  `EndDate`,  `LineKey`,  `OneWay` ,`TrackUsage`,
                `CompanyKey`, `tractionType`, `Direction`, `next`, `prev`, `NextR`,   `PrevR`,
                `normalEnter`,  `normalLeave`,
                `reverseEnter`,  `reverseLeave`, `Sequence`, `ReverseSeq`, `lastUpdate`)
-           SELECT `Route`, `RouteId`,`Name`,  `StartDate`,  `EndDate`,  `LineKey`,  `OneWay` ,`TrackUsage`, `CompanyKey`,
+           SELECT `Route`, `RouteId`, `StartDate`,  `EndDate`,  `LineKey`,  `OneWay` ,`TrackUsage`, `CompanyKey`,
                 `tractionType`, `Direction`, `next`, `prev`, `NextR`,   `PrevR`,
                 `normalEnter`,  `normalLeave`,  `reverseEnter`,
                 `reverseLeave`, `Sequence`, `ReverseSeq`, `lastUpdate`s
