@@ -4580,8 +4580,13 @@ bool ExportSql::exportTable(QString inTable)
  QStringList columns = SQL::instance()->listColumns(table, srcServerType, srcDb, &types);
 // QStringList tgtColumns = SQL::instance()->listColumns(table, tgtDbType, _targetDb);
 // if(columns.count() != tgtColumns.count())
- if(!areTableDefsEqual(table, config->currConnection, tgtConn, srcDb, _targetDb))
-  bDropTables = true;
+ if(tables.contains(table,Qt::CaseInsensitive))
+ {
+     if(!areTableDefsEqual(table, config->currConnection, tgtConn, srcDb, _targetDb))
+      bDropTables = true;
+ }
+ else
+     bDropTables = true; // if target table does not exist, they are obviously not equal
 
  added=0;
  updated=0;

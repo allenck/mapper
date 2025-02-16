@@ -107,6 +107,7 @@ void ExportDlg::btnCancel_clicked()
 
 void ExportDlg::btnGo_clicked()
 {
+    try {
     ui->btnGo->setEnabled(false);
     ui->cbConnections->setEnabled(false);
 
@@ -383,8 +384,13 @@ void ExportDlg::btnGo_clicked()
  }
  // timer->stop();
  // this->close();
+
  ui->btnGo->setEnabled(true);
  ui->cbConnections->setEnabled(true);
+    } catch (Exception e)
+    {
+        QMessageBox::warning(this,"Exception", tr("The export failed: %1").arg(e.msg));
+    }
 }
 
 // void ExportDlg::quickProcess()

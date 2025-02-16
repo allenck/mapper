@@ -29,6 +29,9 @@ RouteCommentsDlg::RouteCommentsDlg(QWidget *parent) :
     connect(ui->dateEdit, SIGNAL(editingFinished()), this, SLOT(OnDateLeave()));
     connect(ui->txtComments, SIGNAL(dirtySet(bool)), this, SLOT(OnDirtySet(bool)));
 //    connect(ui->txtAdditionalRoutes, SIGNAL(editingFinished()), this, SLOT(OnAdditionalRoutesLeave()));
+    connect(ui->txtComments, &QTextBrowser::anchorClicked,this,[=](const QUrl &link){
+        qDebug() << link.toDisplayString();
+    });
 
     setWindowTitle(tr("Route Comments"));
 

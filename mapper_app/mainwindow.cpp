@@ -2045,6 +2045,9 @@ void MainWindow::newCity(QAction* act )
     this->setWindowTitle("Mapper - "+ config->currCity->name() + " ("+config->currConnection->description()+")");
     config->saveSettings();
 
+    tractionTypeList = sql->getTractionTypes();
+    tractionTypeView = new TractionTypeView(this);
+
     //refreshSegmentCB();
     ui->ssw->refresh();
     refreshCompanies();
@@ -5343,6 +5346,7 @@ void MainWindow::on_linkClicked(QUrl url)
 bool MainWindow::openBrowserWindow()
 {
  // open map display in browser window
+    ui->groupBox->setMaximumWidth(16777215);
      QString cwd = QDir::currentPath();
 #ifdef Q_OS_WIN
     cwd.replace("/", QDir::separator());
@@ -5366,6 +5370,7 @@ bool MainWindow::openWebViewPanel()
      webView = ui->webView;
 
      ui->groupBox_2->setVisible(true);
+     ui->groupBox->setMaximumWidth(1000);
      QWebEngineSettings *settings = webView->page()->settings();
      settings->setAttribute(QWebEngineSettings::JavascriptEnabled, true);
      //webView->setObjectName(QStringLiteral("webEngineView"));

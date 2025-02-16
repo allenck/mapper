@@ -93,5 +93,6 @@
         <file>sql/mssql_create_routeName.sql</file>
         <file>sql/recreate_streetdef.sql</file>
         <file>sql/mysql_create_stations.sql</file>
+        <file>sql/create_routeView_x.sql</file>
     </qresource>
 </RCC>

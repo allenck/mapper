@@ -7,7 +7,7 @@ CREATE VIEW RouteView (Route, AlphaRoute, RouteName, SegmentId, Description,
                                      Sequence, ReturnSeq, Points, PointArray, BaseRoute, DoubleDate,
                                      SegmentStartDate, SegmentEndDate, NewerName, RoutePrefix, StreetId,
                                      RouteId, RRowId, SRowId)
-AS Select a.route, b.routeAlpha, a.name, s.segmentId, s.description, a.startDate, a.endDate,
+AS Select a.route, b.routeAlpha, n.name, s.segmentId, s.description, a.startDate, a.endDate,
        a.companyKey, c.description, t.description, s.tracks, a.OneWay, a.TrackUsage, s.length, s.direction,
        s.Type, s.street, s.location, s.startLat, s.startLon, s.endLat, s.endLon, t.tractionType,
        a.Next, a.Prev, a.nextR, a.prevR, a.NormalEnter, a.NormalLeave, a.ReverseEnter, a.ReverseLeave,
@@ -18,7 +18,6 @@ AS Select a.route, b.routeAlpha, a.name, s.segmentId, s.description, a.startDate
        join AltRoute b on a.route = b.route
        join TractionTypes t on a.tractionType = t.tractionType
        join Companies c on a.companyKey = c.key
-# join RouteName n on n.RouteId = a.RouteId;
-      join RouteName n on n.Name = a.name and n.startDate = a.startDate and n.endDate = a.endDate and n.CompanyKey = a.companyKey;
+       join RouteName n on n.RouteId = a.RouteId;
 
 

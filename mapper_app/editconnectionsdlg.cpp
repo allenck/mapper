@@ -156,13 +156,13 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
          }
       }
    });
-   connect(ui->cbODBCDsn, &QComboBox::currentTextChanged,this,[=]{
-        QString connector = ui->cbODBCDsn->currentData().toString();
-        if(!openTestDb())
-        {
+   // connect(ui->cbODBCDsn, &QComboBox::currentTextChanged,this,[=]{
+   //      QString connector = ui->cbODBCDsn->currentData().toString();
+   //      if(!openTestDb())
+   //      {
 
-        }
-   });
+   //      }
+   // });
 
    ui->cbConnections->setCurrentIndex(ui->cbConnections->
                                        findText(connection->description()));
@@ -430,7 +430,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
   ui->txtUseDatabase->setText(connection->defaultSqlDatabase());
  }
  else
- { // ODBC (MsSql or MySql/MariaDb
+ { // ODBC (MsSql, MySql/MariaDb or PostgreSQL
   ui->txtUseDatabase->setText(connection->defaultSqlDatabase());
   ui->txtDefaultDb->setText(connection->defaultSqlDatabase());
   ui->cbODBCDsn->setVisible(true);
@@ -443,17 +443,17 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
   ui->txtPWD->setText(connection->pwd());
   ui->txtPWD->setEnabled(true);
   ui->txtUseDatabase->setText(connection->database());
-  if(openTestDb())
-  {
-   QStringList list;
-   if(ui->cbDbType->currentText() == "MsSql")
-    list = SQL::instance()->showMsSqlDatabases(db);
-   else if(ui->cbDbType->currentText() == "MySql")
-    list = SQL::instance()->showMySqlDatabases(db);
+  // if(openTestDb())
+  // {
+  //  QStringList list;
+  //  if(ui->cbDbType->currentText() == "MsSql")
+  //   list = SQL::instance()->showMsSqlDatabases(db);
+  //  else if(ui->cbDbType->currentText() == "MySql")
+  //   list = SQL::instance()->showMySqlDatabases(db);
 
-   QCompleter* completer = new QCompleter(list);
-   ui->txtUseDatabase->setCompleter(completer);
-  }
+  //  QCompleter* completer = new QCompleter(list);
+  //  ui->txtUseDatabase->setCompleter(completer);
+  // }
  }
  connectionChanging=false;
 }
@@ -1504,7 +1504,13 @@ bool EditConnectionsDlg::openTestDb()
   db.setPassword(ui->txtPWD->text());
  }
  else
-     throw IllegalArgumentException(tr("invalid server type: %1").arg(ui->cbDbType->currentText()));
+ {
+     QString msg = tr("invalid configuration db type: %1, driver: %2, connType: %3")
+                       .arg(ui->cbDbType->currentText(), ui->cbDriverType->currentText(), ui->cbConnect->currentText());
+     //throw IllegalArgumentException(msg);
+     ui->lblHelp->setText(msg);
+     return false;
+ }
  ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
  ui->lblHelp->setText(tr(""));
  _testConnection->setUserId(db.userName());

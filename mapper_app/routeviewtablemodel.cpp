@@ -40,7 +40,7 @@ RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, int company
  endRow = -1;
  connect(SQL::instance(), SIGNAL(routeChange(NotifyRouteChange)),
          SLOT(routeChange(NotifyRouteChange)));
- connect(SQL::instance(), SIGNAL(segmentChanged(int,SQL::CHANGETYPE)), this,SLOT(segmentChanged(int,SQL::CHANGETYPE)));
+ connect(SQL::instance(), SIGNAL(segmentChanged(SegmentInfo,SQL::CHANGETYPE)), this,SLOT(segmentChanged(SegmentInfo,SQL::CHANGETYPE)));
 
  TerminalInfo ti = SQL::instance()->getTerminalInfo(route,name, endDate);
  for(int i =0; i < listOfSegments.count(); i++)
@@ -94,7 +94,7 @@ void RouteViewTableModel::routeChange(NotifyRouteChange rc)
   }
 }
 
-void RouteViewTableModel::segmentChanged(int segmentId, SQL::CHANGETYPE t)
+void RouteViewTableModel::segmentChanged(SegmentInfo si, SQL::CHANGETYPE t)
 {
     if(t != SQL::CHANGETYPE::MODIFYSEG)
         return;
@@ -103,7 +103,7 @@ void RouteViewTableModel::segmentChanged(int segmentId, SQL::CHANGETYPE t)
     for(int i=0; i < listOfSegments.count(); i++)
     {
         SegmentData* sd1 = listOfSegments.at(i);
-        if(segmentId==sd1->segmentId())
+        if(si.segmentId()==sd1->segmentId())
         {
             row = i;
             break;
@@ -111,7 +111,7 @@ void RouteViewTableModel::segmentChanged(int segmentId, SQL::CHANGETYPE t)
     }
     if(row >=0)
     {
-    SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId);
+    //SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId);
     SegmentData* sd = listOfSegments.at(row);
     sd->setTracks(si.tracks());
     sd->setDescription(si.description());

@@ -73,7 +73,7 @@ signals:
 public slots:
     void getRows(int, int); // to get the row numbers that need to be highlighted
     //bool commitChanges();
-    void segmentChanged(int segmentId, SQL::CHANGETYPE);
+    void segmentChanged(SegmentInfo si, SQL::CHANGETYPE);
     void routeChange(NotifyRouteChange rc);
 
 private:

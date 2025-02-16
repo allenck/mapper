@@ -6476,7 +6476,7 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
   else if(config->currConnection->servertype() == "MsSql")
     commandText = "SELECT IDENT_CURRENT('Segments')";
   else // PostgreSQL
-    commandText = "SELECT max(segmentId)";
+    commandText = "SELECT max(segmentId) from segments";
   bQuery = query.exec(commandText);
  if(!bQuery)
   {
@@ -6602,7 +6602,7 @@ qint32 SQL::addSegment(SegmentInfo si, bool *bAlreadyExists, bool forceInsert)
   else if(config->currConnection->servertype() == "MsSql")
     commandText = "SELECT IDENT_CURRENT('Segments')";
   else // PostgreSQL
-    commandText = "SELECT max(segmentId)";
+    commandText = "SELECT max(segmentId) from segments";
   bQuery = query.exec(commandText);
  if(!bQuery)
   {
@@ -6770,7 +6770,7 @@ try
  else if(config->currConnection->servertype() == "MsSql")
    commandText = "SELECT IDENT_CURRENT('Segments')";
  else // PostgreSQL
-   commandText = "SELECT max(segmentId)";
+   commandText = "SELECT max(segmentId) from segments";
 
  bQuery = query.exec(commandText);
  if(!bQuery)
@@ -7849,7 +7849,7 @@ int SQL::addComment(QString comments, QString tags)
         }
 
         QString commandText = QString("insert into Comments (comments, tags ) "
-                                      "values('%1','%2')").arg(comments,tags);
+                                      "values('%1','%2')").arg(comments.replace("'","\''"),tags);
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -7871,7 +7871,7 @@ int SQL::addComment(QString comments, QString tags)
             else if(config->currConnection->servertype() == "MsSql")
               commandText = "SELECT IDENT_CURRENT('comments')";
             else // PostgreSQL
-              commandText = "SELECT max(commentKey)";
+              commandText = "SELECT max(commentKey) from comments";
             bQuery = query.exec(commandText);
             if(!bQuery)
             {
@@ -7919,10 +7919,10 @@ bool SQL::updateComment(qint32 infoKey, QString comments, QString tags)
             //comments = comments.toLatin1();
         }
 
-
-        QString commandText = "update  Comments set comments='"+ comments+", "
+        QString commandText = "update  Comments set comments='"+ comments.replace("'","\''")+"', "
                               "tags ='" + tags + "',"
-                              "lastUpdate=:CURRENT_TIMESTAMP where commentKey = " + QString("%1").arg(infoKey);
+                              "lastUpdate=CURRENT_TIMESTAMP "
+                              "where commentKey = " + QString("%1").arg(infoKey);
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -8120,19 +8120,10 @@ bool SQL::updateRouteComment(RouteComments rc)
                 QSqlError err = query.lastError();
                 qDebug() << err.text() + "\n";
                 qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-                db.close();
-                exit(EXIT_FAILURE);
-            }
-            bQuery = query.exec();
-            if(!bQuery)
-            {
-                QSqlError err = query.lastError();
-                qDebug() << err.text() + "\n";
-                qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
                 //db.close();
+                //exit(EXIT_FAILURE);
                 return false;
             }
-
             db.commit();
             ret = true;
         }
@@ -8248,7 +8239,7 @@ bool SQL::deleteRouteComment(RouteComments rc)
 
         beginTransaction("deleteRouteComment");
 
-        commandText = QString("delete from RouteComments where route = %1 and date = ':date'%2'")
+        commandText = QString("delete from RouteComments where route = %1 and date = '%2'")
                 .arg(rc.route).arg(rc.date.toString("yyyy/MM/dd"));
         bQuery = query.exec(commandText);
         if(!bQuery)
@@ -8722,7 +8713,7 @@ qint32 SQL::addStation(StationInfo sti)
              else if(config->currConnection->servertype() == "MsSql")
                commandText = "SELECT IDENT_CURRENT('dbo.stations')";
              else // PostgreSQL
-               commandText = "SELECT max(stationKey)";
+               commandText = "SELECT max(stationKey) from stations";
 
            bQuery = query.exec(commandText);
            if(!bQuery)
@@ -9505,26 +9496,6 @@ void SQL::checkTables(QSqlDatabase db)
   //tableList = getTableList(db, config->currConnection->servertype());
   tableList = db.tables();
 
-//  if(!tableList.contains("Streets", Qt::CaseInsensitive))
-//  {
-//      if(config->currConnection->servertype() == "Sqlite")
-//       executeScript(":/sql/sqlite3_create_streets.sql",db);
-//  }
-  if(tableList.contains("Streets", Qt::CaseInsensitive))
-  {
-   executeCommand("drop table Streets");
-  }
-
-  if(tableList.contains("Streets2", Qt::CaseInsensitive))
-  {
-      executeCommand("drop table Streets2");
-  }
-
-  if(tableList.contains("StreetName", Qt::CaseInsensitive))
-  {
-      executeCommand("drop table StreetName");
-
-  }
   if(!doesColumnExist("Companies", "RoutePrefix"))
   {
    addColumn("Companies", "RoutePrefix", "varchar(10 NOT NULL default '')");
@@ -9624,15 +9595,18 @@ void SQL::checkTables(QSqlDatabase db)
    updateIdentitySequence("routename", "routeid");
 
   }
-  if(!tableList.contains("RouteName",Qt::CaseInsensitive))
+  if(doesColumnExist("routename", "startDate"))
   {
+      if(!executeScript(":/sql/create_routeView_x.sql", db))
+          exit(EXIT_FAILURE);
+
+      executeCommand("begin");
       if(!executeScript(":/sql/create_routeName.sql", db))
          exit(EXIT_FAILURE);
-      executeCommand("begin");
+      if(!populateRouteId())
+          exit(EXIT_FAILURE);
       if(!executeScript(":/sql/create_routeView.sql", db))
           exit(EXIT_FAILURE);
-    if(!populateRouteId())
-        exit(EXIT_FAILURE);
     executeCommand("commit");
   }
 
@@ -11607,6 +11581,7 @@ bool SQL::scanRoutes(QList<RouteData> routes)
 bool SQL::populateRouteId()
 {
     QList<SegmentData*> list = segmentDataFromView("");// get all routes
+    int count=0;
     foreach (SegmentData* sd, list) {
         SegmentData sd2 = SegmentData(*sd);
         RouteInfo ri = RouteInfo(*sd);
@@ -11619,6 +11594,10 @@ bool SQL::populateRouteId()
                 //return false;
             }
         }
+        qApp->processEvents();
+        count++;
+        if(count%100 == 0)
+                qDebug() << tr("processed %1 of %2").arg(count).arg(list.count());
     }
     return true;
 }
@@ -11631,10 +11610,7 @@ qint32 SQL::addRouteName(RouteInfo ri,bool *bAlreadyExists)
     QSqlDatabase db = QSqlDatabase::database();
     if(!dbOpen())
         throw Exception(tr("database not open: %1").arg(__LINE__));
-    QString commandText = "Select RouteId from RouteName where name = '" + ri.routeName
-      + "' and startDate = '" + ri.startDate.toString("yyyy/MM/dd")
-      + "' and enddate = '"  + ri.endDate.toString("yyyy/MM/dd")
-      + "' and companyKey = " + QString::number(ri.companyKey);
+    QString commandText = "Select RouteId from RouteName where name = '" + ri.routeName +"'";
     QSqlQuery query = QSqlQuery(db);
     bool bQuery = query.exec(commandText);
     if(!bQuery)
@@ -11656,13 +11632,9 @@ qint32 SQL::addRouteName(RouteInfo ri,bool *bAlreadyExists)
      return routeId;
     }
 
-    commandText = "insert into RouteName (Name, startdate, enddate, routealpha, companyKey) values ("
+    commandText = "insert into RouteName (Name) values ("
             "'" + ri.routeName
-            + "','" + ri.startDate.toString("yyyy/MM/dd")
-            + "','" + ri.endDate.toString("yyyy/MM/dd")
-            + "','" + ri.alphaRoute
-            + "'," + QString::number(ri.companyKey)
-            + ")";
+            + "')";
     bQuery = query.exec(commandText);
     if(!bQuery)
     {
@@ -11679,7 +11651,7 @@ qint32 SQL::addRouteName(RouteInfo ri,bool *bAlreadyExists)
      else if(config->currConnection->servertype() == "MsSql")
        commandText = "SELECT IDENT_CURRENT('RouteName')";
      else // PostgreSQL
-       commandText = "SELECT max(routeid)";
+       commandText = "SELECT max(routeid) from routename";
      bQuery = query.exec(commandText);
     if(!bQuery)
      {
@@ -11703,14 +11675,9 @@ bool SQL::insertRouteName(RouteInfo ri)
         throw Exception(tr("database not open: %1").arg(__LINE__));
     QSqlQuery query = QSqlQuery(db);
 
-    QString commandText = "insert into RouteName (Name, startdate, enddate, routealpha, companyKey, routeid) values ("
+    QString commandText = "insert into RouteName (Name) values ("
             "'" + ri.routeName
-            + "','" + ri.startDate.toString("yyyy/MM/dd")
-            + "','" + ri.endDate.toString("yyyy/MM/dd")
-            + "','" + ri.alphaRoute
-            + "'," + QString::number(ri.companyKey)
-            + "," + QString::number(ri._routeId)
-            + ")";
+            + "')";
     bool bQuery = query.exec(commandText);
     if(!bQuery)
     {QSqlError err = query.lastError();
@@ -11727,7 +11694,7 @@ RouteInfo SQL::getRouteName(int routeId)
     QSqlDatabase db = QSqlDatabase::database();
     if(!dbOpen())
         throw Exception(tr("database not open: %1").arg(__LINE__));
-    QString commandText = "Select name, startdate,enddate, routeAlpha, companyKey "
+    QString commandText = "Select name "
                           "from RouteName where routeId = " + QString::number(routeId);
     QSqlQuery query = QSqlQuery(db);
 
@@ -11744,10 +11711,6 @@ RouteInfo SQL::getRouteName(int routeId)
     while (query.next())
     {
         ri.routeName = query.value(0).toString();
-        ri.startDate = query.value(1).toDate();
-        ri.endDate = query.value(2).toDate();
-        ri.alphaRoute = query.value(3).toString();
-        ri.companyKey= query.value(4).toInt();
     }
     return ri;
 }
@@ -11763,10 +11726,6 @@ bool SQL::updateRouteName(RouteInfo ri)
         return false;
     }
     QString commandText = "Update RouteName set name ='" + ri.routeName + "',"
-                          "startdate='" + ri.startDate.toString("yyyy/MM/dd") + "',"
-                          "enddate ='" + ri.endDate.toString("yyyy/MM/dd") + "',"
-                          "routeAlpha='" + ri.alphaRoute + "',"
-                          "companyKey =" + QString::number(ri.companyKey) + ","
                           "lastUpdate =CURRENT_TIMESTAMP"
                           + " where routeId = " + QString::number(ri._routeId);
     QSqlQuery query = QSqlQuery(db);
