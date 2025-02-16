@@ -116,7 +116,11 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   //QMenu* tablesMenu = new QMenu(tr("Tables"));
   connect(toolsMenu, &QMenu::aboutToShow, this,[=]{
    Connection* c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
-   QSqlDatabase db = QSqlDatabase::database(c->connectionName());
+   QSqlDatabase db;
+   if(c->connectionName().isEmpty())
+    db = QSqlDatabase::database(tgtConn->connectionName());
+   else
+    db = QSqlDatabase::database(c->connectionName());
    QStringList tableList = db.tables(QSql::Tables);
    QStringList sysTableList = db.tables(QSql::SystemTables);
    toolsMenu->clear();

@@ -90,5 +90,11 @@
         <file>sql/mssql_create_routeName.sql</file>
         <file>sql/recreate_streetdef.sql</file>
         <file>sql/mysql_create_stations.sql</file>
+        <file>dump_databases.bat</file>
+        <file>dump_databases.sh</file>
+        <file>restore_databases.bat</file>
+        <file>restore_databases.sh</file>
+        <file>dump_databases.cmd</file>
+        <file>restore_databases.cmd</file>
     </qresource>
 </RCC>
