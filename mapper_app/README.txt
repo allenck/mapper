@@ -1,12 +1,17 @@
+**Recent Changes January 2025 VERSION=1.2.0
+1. Add support for PostgreSQL database.
+2. Wiki changes to add PostgreSQL support.
+
 **Recent Changes January 2025 VERSION=1.1.5
 1. Segments table has new field: "NewerName" which is the current name of a street. This and
-   the location field have been dded to the main window's edit segment section.
-2. A new table "StreetDef" contains information about current and historic steet names. This
-   information is displayed in a new "Streets tab in the main window.
+   the location field have been added to the main window's edit segment section.
+2. A new table "StreetDef" contains information about current and historic street names. This
+   information is displayed in a new "Streets" tab in the main window.
 3. A new table, "RouteName" has been created to store Route names with the intention of eventually removing
    the route name from each Route table entry and replacing it with the integer key to the RouteName table.
 4. New scripts have been added to dump and restore SQLite databases to/from text files.
-5. The Companies table has had a new field, 'Url' containing a url of a web page about the company.
+5. The Companies table has had a new field added, 'Url' containing a url of a web page about the company.
+
 
 **Recent Changes September-December 2024 VERSION=1.1.4
 1. Additional routes for Berlin as of 1901 added based on information from

@@ -428,9 +428,9 @@ QList<RouteData> SQL::getRoutesByEndDate(QList<int> compayList)
                "join Companies c on r.companyKey = c.[key] "
                "join RouteName n on r.routeId = n.routeId "
                + where +
-               " group by a.baseRoute, r.route, r.name, r.startDate, r.endDate, r.companykey,"
+               " group by a.baseRoute, r.route, n.name, r.startDate, r.endDate, r.companykey,"
                " tractionType, a.routeAlpha, c.routePrefix, r.routeId "
-               " order by a.routeAlpha, r.name, r.endDate ";
+               " order by a.routeAlpha, n.name, r.endDate ";
  query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -6882,8 +6882,10 @@ try
    if (count == 0)
    {
 
-    commandText = "insert into Routes ( route, routeId, name, startDate, endDate, lineKey, companyKey, tractionType, "
-                  "next, prev, normalEnter, normalLeave, reverseEnter, reverseLeave, OneWay, Direction, trackUsage) "
+    commandText = "insert into Routes ( route, routeId, name, startDate, endDate, "
+                  "lineKey, companyKey, tractionType, "
+                  "next, prev, normalEnter, normalLeave, reverseEnter, reverseLeave,"
+                  " OneWay, Direction, trackUsage) "
                   " values ("
                   + QString("%1").arg(sd1._route) + ", "
                   + QString("%1").arg(sd1._routeId) + ", '"
@@ -6921,9 +6923,13 @@ try
     // Now update the turn info for the original segment
     commandText = "update Routes set normalLeave = " + QString("%1").arg(normalLeave) + ","
                   " reverseEnter = " + QString("%1").arg(reverseEnter)
-                  + ",lastUpdate=CURRENT_TIMESTAMP where route = " + QString("%1").arg(sd1._route) + ""
-                  " and name = '" + sd1._routeName + "' and startDate = '" + sd1._dateBegin.toString("yyyy/MM/dd")
-      + "' and endDate = '" + sd1._dateEnd.toString("yyyy/MM/dd") + "' and lineKey = " + QString("%1").arg(sd1._segmentId);
+                  + ",lastUpdate=CURRENT_TIMESTAMP"
+                  " where route = " + QString("%1").arg(sd1._route) +
+ //               " and name = '" + sd1._routeName + "'"
+                  " and routeId = " + QString::number(sd1._routeId) +
+                  " and startDate = '" + sd1._dateBegin.toString("yyyy/MM/dd")+ "'"
+                  " and endDate = '" + sd1._dateEnd.toString("yyyy/MM/dd") + "'"
+                  " and lineKey = " + QString("%1").arg(sd1._segmentId);
     bQuery = query.exec(commandText);
     if(!bQuery)
     {
@@ -6957,6 +6963,7 @@ try
 
  return newSegmentId;
 }
+
 SegmentData* SQL::getSegmentData(qint32 route, qint32 segmentId, QString startDate, QString endDate)
 {
  QString where = "where route = " + QString("%1").arg(route)
@@ -6977,7 +6984,7 @@ QList<SegmentData*> SQL::getSegmentDataList(RouteData rd)
    + " and endDate = '" + rd._dateEnd.toString("yyyy/MM/dd") + "'";
  return segmentDataFromView(where);
 }
-
+#if 0
 /// <summary>
 /// Update a route segment
 /// </summary>
@@ -7013,8 +7020,9 @@ bool SQL::updateSegmentToRoute(qint32 routeNbr, QString routeName, QString start
           + ", OneWay = '" + oneWay
           + "', lastUpdate=CURRENT_TIMESTAMP "
           "where route = " + QString("%1").arg(routeNbr)
-          + " and Name= '" + routeName
-          + "' and LineKey = " + QString("%1").arg(SegmentId)
+          // + " and Name= '" + routeName
+          + "and routeId = " + QString::number(routeid)
+          + " and LineKey = " + QString("%1").arg(SegmentId)
           + " and StartDate= '" + startDate
           + "' and EndDate= '" + endDate + "'";
         QSqlQuery query = QSqlQuery(db);
@@ -7046,7 +7054,7 @@ bool SQL::updateSegmentToRoute(qint32 routeNbr, QString routeName, QString start
 
     return ret;
 }
-
+#endif
 SegmentData* SQL::getConflictingSegmentDataForRoute(qint32 route, QString name, qint32 segmentId,
                                               QString startDate, QString endDate)
 {
@@ -7303,7 +7311,8 @@ bool SQL::modifyCurrentRoute(RouteData* rd, bool bStartDate, QDate dt)
  QList<SegmentData*> segmentlist = getSegmentDatasForDate(rd->route(), rd->routeName(),rd->companyKey(), rd->endDate());
  QString commandText;
  int rows;
- if(!executeCommand(QString("delete from routes where route=%1 and routeid = %2").arg(rd->_route).arg(rd->_routeId)))
+ if(!executeCommand(QString("delete from routes where route=%1 and routeid = %2")
+                    .arg(rd->_route).arg(rd->_routeId)))
  {
        qDebug() << "delete route failed";
          return false;
@@ -7641,7 +7650,8 @@ bool SQL::isRouteUsedOnDate(qint32 route, qint32 segmentId,  QString date)
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
-        QString commandText = "select count(*) from Routes where route = " + QString("%1").arg(route)
+        QString commandText = "select count(*) from Routes "
+                              "where route = " + QString("%1").arg(route)
                               + " and lineKey= " + QString("%1").arg(segmentId)
                               + " and '"+ date + "' between startDate and endDate";
         QSqlQuery query = QSqlQuery(db);
@@ -8766,7 +8776,7 @@ bool SQL::deleteStation(qint32 stationKey)
     }
     return ret;
 }
-
+#if 0
 bool SQL::updateRoute(qint32 route, QString name, QString endDate, qint32 segmentId,
                       qint32 next, qint32 prev, QString trackUsage)
 {
@@ -8797,7 +8807,7 @@ bool SQL::updateRoute(qint32 route, QString name, QString endDate, qint32 segmen
      ret = true;
  return ret;
 }
-
+#endif
 // if notify is false, routeview will not be notified of changes
 bool SQL::updateRoute(SegmentData osd, SegmentData sd, bool notify, bool ignoreErr)
 {
@@ -8887,12 +8897,14 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd, bool notify, bool ignoreE
              + ", ReverseSeq = " + QString::number(sd._returnSeq)
              + ", Route = " + QString::number(sd._route)
              + ", RouteId = " + QString::number(sd._routeId)
-             + ", name = '" + sd.routeName() + "'"
+             // + ", name = '" + sd.routeName() + "'"
+             + ", routeId = " + QString::number(sd.routeId())
              + ", startDate = '" + sd.startDate().toString("yyyy/MM/dd")+ "'"
              + ", endDate = '" + sd.endDate().toString("yyyy/MM/dd")+ "'"
              + ", lastUpdate=CURRENT_TIMESTAMP"
              " where route =" + QString("%1").arg(osd.route())
-             + " and name ='" + osd.routeName() + "'"
+             // + " and name ='" + osd.routeName() + "'"
+             + " and routeId = " + QString::number(osd._routeId)
              + " and startDate ='" + osd.startDate().toString("yyyy/MM/dd")+ "'"
              + " and endDate='" + osd.endDate().toString("yyyy/MM/dd")+ "'"
              + " and lineKey=" + QString("%1").arg(osd.segmentId());
@@ -8919,7 +8931,7 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd, bool notify, bool ignoreE
   qDebug() << "update failed: " << commandText;
  return ret;
 }
-
+#if 0
 int SQL::updateRouteDate(int segmentId, QString startDate, QString endDate)
 {
  QDate dateStart = QDate::fromString(startDate, "yyyy/MM/dd");
@@ -8971,7 +8983,7 @@ int SQL::updateRouteSegment(int segmentId, QString startDate, QString endDate, i
  }
  return query.numRowsAffected();
 }
-
+#endif
 QStringList SQL::showDatabases(QString connection, QString servertype)
 {
  QStringList ret;
@@ -9595,20 +9607,20 @@ void SQL::checkTables(QSqlDatabase db)
    updateIdentitySequence("routename", "routeid");
 
   }
-  if(doesColumnExist("routename", "startDate"))
-  {
-      if(!executeScript(":/sql/create_routeView_x.sql", db))
-          exit(EXIT_FAILURE);
+  // if(doesColumnExist("routename", "startDate"))
+  // {
+  //     if(!executeScript(":/sql/create_routeView_x.sql", db))
+  //         exit(EXIT_FAILURE);
 
-      executeCommand("begin");
-      if(!executeScript(":/sql/create_routeName.sql", db))
-         exit(EXIT_FAILURE);
-      if(!populateRouteId())
-          exit(EXIT_FAILURE);
-      if(!executeScript(":/sql/create_routeView.sql", db))
-          exit(EXIT_FAILURE);
-    executeCommand("commit");
-  }
+  //     executeCommand("begin");
+  //     if(!executeScript(":/sql/create_routeName.sql", db))
+  //        exit(EXIT_FAILURE);
+  //     if(!populateRouteId())
+  //         exit(EXIT_FAILURE);
+  //     if(!executeScript(":/sql/create_routeView.sql", db))
+  //         exit(EXIT_FAILURE);
+  //   executeCommand("commit");
+  // }
 
   if(!tableList.contains("RouteSeq", Qt::CaseInsensitive))
   {
@@ -9846,7 +9858,8 @@ int SQL::getCountOfRoutesUsingSegment(int segmentId)
 {
  QSqlDatabase db = QSqlDatabase();
  QSqlQuery query = QSqlQuery(db);
- QString commandText = "select count(*) from Routes where linekey =" + QString("%1").arg(segmentId) ;
+ QString commandText = "select count(*) from Routes "
+                       "where linekey =" + QString("%1").arg(segmentId) ;
  if(!query.exec(commandText))
  {
   SQLERROR(std::move(query));
@@ -11202,7 +11215,7 @@ QList<RouteData> SQL:: checkRouteName(QString name, QDate startDate, QDate endDa
        if(!dbOpen())
            throw Exception(tr("database not open: %1").arg(__LINE__));
        QSqlDatabase db = QSqlDatabase::database();
-           commandText = "select distinct r.startDate, r.endDate, r.name, r.route, "
+           commandText = "select distinct r.startDate, r.endDate, n.name, r.route, "
                          "r.companyKey, tractionType, "
                          "a.routeAlpha, r.routeid "
                          "from routes r "
@@ -11213,7 +11226,7 @@ QList<RouteData> SQL:: checkRouteName(QString name, QDate startDate, QDate endDa
                          "' between r.startDate and r.endDate "
                          "and '" + endDate.toString("yyyy/MM/dd") +
                          "' between r.startDate and r.endDate "
-                         "group by r.startDate, r.enddate, r.name,r.route,"
+                         "group by r.startDate, r.enddate, n.name,r.route,"
                          "r.companykey,r.tractiontype,a.routeAlpha, r.routeId";
        QSqlQuery query = QSqlQuery(db);
        bool bQuery = query.exec(commandText);

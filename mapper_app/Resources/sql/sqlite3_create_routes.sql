@@ -1,7 +1,7 @@
 DROP TABLE if exists `Routes`;
 CREATE TABLE `Routes` (
              `Route` int(11) NOT NULL,
-             `RouteId`  int(11),
+             `RouteId`  int(11) NOT NULL DEFAULT -1,
              `Name` varchar(140) NOT NULL,
              `StartDate`  date NOT NULL,
              `EndDate` date NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE `Routes` (
              `Sequence` int(11) NOT NULL DEFAULT -1,
              `ReverseSeq` int(11) NOT NULL DEFAULT -1,
              `LastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-             constraint pk PRIMARY key (`Route`,`Name`,`CompanyKey`,`StartDate`,`EndDate`,`LineKey`),
+             constraint pk PRIMARY key (`Route`,`RouteId`,`CompanyKey`,`StartDate`,`EndDate`,`LineKey`),
              CONSTRAINT `Routes_ibfk_1` FOREIGN KEY (`LineKey`) REFERENCES `Segments` (`SegmentId`) ON UPDATE RESTRICT ON DELETE RESTRICT,
              CONSTRAINT `Routes_ibfk_3` FOREIGN KEY (`CompanyKey`) REFERENCES `Companies` (`key`),
              CONSTRAINT `Routes_ibfk_4` FOREIGN KEY (`tractionType`) REFERENCES `TractionTypes` (`tractionType`),

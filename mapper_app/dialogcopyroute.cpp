@@ -94,6 +94,7 @@ void DialogCopyRoute::setConfiguration(Configuration *value) { config = value; }
 void DialogCopyRoute::fillCompanies()
 {
     ui->cbCompany->clear();
+    ui->cbNewCompany->clear();
     //ui->cbCompany->setcurrentText = " ";
     _companyList = sql->getCompanies();
     if (_companyList.count()==0)
@@ -102,9 +103,9 @@ void DialogCopyRoute::fillCompanies()
     for(int i = 0; i<_companyList.count(); i++)
     {
      ui->cbCompany->addItem(((CompanyData*)_companyList.at(i))->toString(), _companyList.at(i)->companyKey);
+     ui->cbNewCompany->addItem(((CompanyData*)_companyList.at(i))->toString(), _companyList.at(i)->companyKey);
     }
     //cbCompany.Text = "";
-
 }
 
 void DialogCopyRoute::setCompany(int companyKey)
@@ -285,7 +286,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     QList<SegmentData*> segmentDataList;
     ui->lblHelp->setText("");
     bool bAlphaRoute = false;
-    int companyKey = ui->cbCompany->itemData(ui->cbCompany->currentIndex()).toInt();
+    int companyKey = ui->cbNewCompany->itemData(ui->cbNewCompany->currentIndex()).toInt();
     CompanyData* cd = sql->getCompany(companyKey);
     if(ui->dateStart->date() < cd->startDate || ui->dateEnd->date() > cd->endDate)
     {
@@ -545,7 +546,7 @@ void DialogCopyRoute::cbCompany_SelectedIndexChanged(int row) // SLOT
 void DialogCopyRoute::dateStart_ValueChanged()   //SLOT
 {
     ui->lblHelp->setText("");
-    cd = _companyList.at(ui->cbCompany->currentIndex());
+    cd = _companyList.at(ui->cbNewCompany->currentIndex());
     if(ui->dateStart->date() < cd->startDate)
     {
         ui->lblHelp->setText(tr("start date is prior to company's start date"));
@@ -563,7 +564,7 @@ void DialogCopyRoute::dateStart_ValueChanged()   //SLOT
 void DialogCopyRoute::dateEnd_ValueChanged()   //SLOT
 {
     ui->lblHelp->setText("");
-    cd = _companyList.at(ui->cbCompany->currentIndex());
+    cd = _companyList.at(ui->cbNewCompany->currentIndex());
     if(ui->dateStart->dateTime() > ui->dateEnd->dateTime())
     {
         ui->lblHelp->setText(tr("end date must be after company start date (")+ cd->startDate.toString("yyyy/MM/dd")+")");

@@ -21,7 +21,7 @@ CREATE TABLE `Routes` (
    `Sequence` int NOT NULL DEFAULt -1,
    `ReverseSeq` int NOT NULL DEFAULt -1,
    `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-   PRIMARY KEY (`Route`,`Name`,`CompanyKey`,`StartDate`,`EndDate`,`LineKey`),
+   PRIMARY KEY (`Route`,`RouteId`,`CompanyKey`,`StartDate`,`EndDate`,`LineKey`),
    KEY `LineKey` (`LineKey`),
    KEY `companyKey` (`CompanyKey`),
    KEY `tractionType` (`tractionType`),

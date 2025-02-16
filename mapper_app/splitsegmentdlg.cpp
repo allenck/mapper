@@ -303,12 +303,15 @@ bool SplitSegmentDlg::processChanges()
     if(sd1->segmentId() != sd->segmentId())
      continue;
 
-    // If split date is between route segment's start and en dates
+    // If split date is between route segment's start and end dates
     if( sd1->endDate() > sd->endDate()
         &&  sd1->startDate() < sd->startDate())
     {
-     if(!SQL::instance()->updateRouteDate(sd->segmentId(), sd1->startDate().toString("yyyy/MM/dd"),
-                                          sd->endDate().toString("yyyy/MM/dd")))
+     // if(!SQL::instance()->updateRouteDate(sd->segmentId(), sd1->startDate().toString("yyyy/MM/dd"),
+     //                                      sd->endDate().toString("yyyy/MM/dd")))
+        SegmentData sd2 = SegmentData(*sd1);
+     sd2.setEndDate(sd->endDate());
+     if(!SQL::instance()->updateRoute(*sd1,sd2))
      {
       SQL::instance()->rollbackTransaction("splitSegment");
       return false;
@@ -339,8 +342,11 @@ bool SplitSegmentDlg::processChanges()
     if(sd1->startDate()> sd->endDate())
     {
      //if(!SQL::instance()->updateRoute(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"), newSegmentId, rd.next, rd.prev))
-     if(!SQL::instance()->updateRouteSegment(sd1->segmentId(), sd1->startDate().toString("yyyy/MM/dd"),
-                                             sd1->endDate().toString("yyyy/MM/dd"),newSegmentId))
+     // if(!SQL::instance()->updateRouteSegment(sd1->segmentId(), sd1->startDate().toString("yyyy/MM/dd"),
+     //                                         sd1->endDate().toString("yyyy/MM/dd"),newSegmentId))
+        SegmentData sd2 = SegmentData(*sd1);
+     sd2.setSegmentId(newSegmentId);
+     if(!SQL::instance()->updateRoute(*sd1,sd2))
      {
       SQL::instance()->rollbackTransaction("splitSegment");
       return false;

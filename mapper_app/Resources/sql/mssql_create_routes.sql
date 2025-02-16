@@ -26,7 +26,7 @@ CREATE TABLE [dbo].[Routes](
                   CONSTRAINT [PK_Routes] PRIMARY KEY CLUSTERED
                  (
                      [Route] ASC,
-                     [name] ASC,
+                     [RouteId] ASC,
                      [CompanyKey] ASC,
                      [StartDate] ASC,
                      [EndDate] ASC,

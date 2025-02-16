@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Using MySql or SQL Server databases</title></head>
+<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Using MySql, PostgreSQL or SQL Server databases</title></head>
 <body style="background-color:#faf0e6">
 <h1>Using MySql or SQL Server databases</h1>
 Mapper has an 'Export' function which provides for transferring data from Mapper's Sqlite3 database to a local or remote database such as MySql or Microsoft's Sql Server. 
@@ -11,12 +11,13 @@ plugins are configured and compiled for your version of Qt and
 operating system. This is explained <a href="http://doc.qt.io/qt-4.8/sql-driver.html">here</a>. MySql databases can also be accessed via ODBC.<br>
 <h3>SQL Server<br>
 </h3>
-&nbsp;Accessing SQL Server databases requires ODBC. ODBC is supported
-in Windows automatically but must be added for Unix systems. <br>
+&nbsp;Accessing PostgreSQL and SQL Server databases requires ODBC. ODBC is supported
+in Windows automatically but must be added for Unix and MacOS systems. <br>
 <br>
 
 <h3>Other databases</h3>
-Exporting to other databases such as <b>Postgresql</b> or <b>Oracle</b> can also be supported either thru the use of ODBC or a Qt Sql plugin. However, while SQL commands
+Exporting to other databases such as <b>Postgresql</b> or <b>Oracle</b> can also be supported either thru the use of ODBC or a 
+Qt Sql plugin. However, while SQL commands
 generally are interpreted the same for different databases, the commands for adding or modifying tables and views may require 
 explicit coding for a given type of database. 
 
@@ -32,7 +33,7 @@ create a datasource for each server that you will be accessing.
 On Unix, it will be
 necessary have installed the <a href="https://www.unixodbc.org/">UnixODBC</a> utilities to compile your own ODBC drivers.This is not
 required for MySql or Ms Sql Server. However, one can download ODBC drivers for MySql and Microsoft Sql Server which automatically 
-include UnixODBC. Examples are:
+include UnixODBC. (<b>Note:</b> MacOS utilizes a product, "iODBC" which is functionally equal to UnixODBC.)Examples are:
 <ol>
 <li>
 <b>MySql</b> download the "MySQL Connector/ODBC" package from the official MySQL website.</li>

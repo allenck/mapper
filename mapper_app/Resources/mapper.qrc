@@ -49,8 +49,6 @@
         <file>sql/recreateStationTable.sql</file>
         <file>sql/recreateTractionTypes.sql</file>
         <file>sql/sqlite3_create_tables.sql</file>
-        <file>sql/updateOneWay.sql</file>
-        <file>sql/updaterouteoneway.sql</file>
         <file>sql/mysql_recreateCompanies.sql</file>
         <file>sql/sqlite3_recreateCompanies.sql</file>
         <file>sql/mySql_recreateSegmentsTable.sql</file>
@@ -77,7 +75,6 @@
         <file>sql/mssql_recreate_routes.sql</file>
         <file>contextmenu.js</file>
         <file>sql/mysql_recreateRouteComments.sql</file>
-        <file>sql/update_segmentDates.sql</file>
         <file>sql/mssql_create_routeView.sql</file>
         <file>S-Bahn-Logo.svg</file>
         <file>U-Bahn.svg</file>
@@ -93,6 +90,5 @@
         <file>sql/mssql_create_routeName.sql</file>
         <file>sql/recreate_streetdef.sql</file>
         <file>sql/mysql_create_stations.sql</file>
-        <file>sql/create_routeView_x.sql</file>
     </qresource>
 </RCC>
