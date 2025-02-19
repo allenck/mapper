@@ -2123,17 +2123,20 @@ void MainWindow::newOverlay(QAction* act)
  }
 
  loadOverlay(cOv);
- bool bFound=false;
  for(int i = 0; i < config->currCity->city_overlayMap->count(); i++)
  {
   Overlay* ov = config->currCity->city_overlayMap->values().at(i);
   if(currentOverlay == ov->name)
   {
-   bFound = true;
    config->currCity->curOverlayId = i;
    break;
   }
  }
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    config->saveSettings();
 }
 
 void MainWindow::about()

@@ -4179,7 +4179,7 @@ bool SQL::updateCompany(CompanyData* cd)
             "endDate = '" + cd->endDate.toString("yyyy/MM/dd")+ "',"
             "firstroute = " +QString::number(cd->firstRoute) + ","
             "lastroute = " + QString::number(cd->lastRoute) + ", "
-            "selected = " + QString::number(cd->bSelected) + " "
+            "selected = " + QString::number(cd->bSelected) + ", "
             "lastUpdate=CURRENT_TIMESTAMP  "
             "where key = " +  QString::number(cd->companyKey);
     bQuery = query.exec(commandText);
@@ -4564,11 +4564,14 @@ bool SQL::deleteRouteSegment(SegmentData sd, bool bNotify)
          commandText = "delete from Routes where route = " + QString("%1").arg(sd._route)
            + " and routeId = " + QString::number(sd._routeId)
            + " and LineKey = " + QString("%1").arg(sd._segmentId)
-           + " and startDate = '" + sd.startDate().toString("yyyy/MM/dd") + "' and endDate = '" + sd.endDate().toString("yyyy/MM/dd") + "'";
+           + " and startDate = '" + sd.startDate().toString("yyyy/MM/dd") + "'"
+           " and endDate = '" + sd.endDate().toString("yyyy/MM/dd") + "'";
         else
          commandText = "delete from Routes where route = " + QString("%1").arg(sd._route)
                  + " and routeId = " + QString::number(sd._routeId)
-                 + " and LineKey = " + QString("%1").arg(sd._segmentId) + " and startDate = '" + sd.startDate().toString("yyyy/MM/dd") + "' and endDate = '" + sd.endDate().toString("yyyy/MM/dd") + "'";
+                 + " and LineKey = " + QString("%1").arg(sd._segmentId)
+                 + " and startDate = '" + sd.startDate().toString("yyyy/MM/dd")  + "'"
+                 + " and endDate = '" + sd.endDate().toString("yyyy/MM/dd") + "'";
         QSqlQuery query = QSqlQuery(db);
         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
 
@@ -4620,7 +4623,8 @@ bool SQL::deleteRouteSegment(SegmentData sd, bool bNotify)
 
         commandText = "update Segments set startDate = '" + segStartDate  + "', endDate = '"
                       + segEndDate + "' "
-                      + ",lastUpdate=CURRENT_TIMESTAMPwhere SegmentId =" + QString("%1").arg(sd._segmentId);
+                      + ",lastUpdate=CURRENT_TIMESTAMP "
+                        "where SegmentId =" + QString("%1").arg(sd._segmentId);
         bQuery = query.exec(commandText);
         if(!bQuery)
         {
@@ -4818,13 +4822,11 @@ bool SQL::addSegmentToRoute(SegmentData* sd, bool notify)
         }
         sd->setRouteId(routeId);
 
-        QString commandText = "INSERT INTO Routes(Route, routeId, name, routeId, StartDate, EndDate, LineKey, "
+        QString commandText = "INSERT INTO Routes(Route, routeId, StartDate, EndDate, LineKey, "
                 "companyKey, tractionType, direction, next, prev, normalEnter, normalleave,"
                 " reverseEnter, reverseLeave, sequence, ReverseSeq, oneWay, trackUsage) "
                 "VALUES(" + QString("%1").arg(sd->route()) + ", "
                 + QString::number(sd->routeId()) + ",'"
-                + sd->routeName() + "',"
-                + QString::number(sd->routeId()) + ", '"
                 + sd->startDate().toString("yyyy/MM/dd") + "', '"
                 + sd->endDate().toString("yyyy/MM/dd") + "',"
                 + QString("%1").arg(sd->segmentId()) + ", "
@@ -5164,7 +5166,7 @@ QList<RouteData> SQL::getRouteInfo(qint32 route)
                               "routeAlpha, b.baseRoute, a.routeId"
                               " from Routes a "
                               "join AltRoute b on a.route = b.route "
-                              "join RouteNameon n.routeId = a.routeId "
+                              "join RouteName n on n.routeId = a.routeId "
                               "where a.route = " + QString("%1").arg(route)
                               + " group by a.route, n.name, startDate, endDate, routeAlpha";
         QSqlQuery query = QSqlQuery(db);
@@ -8045,11 +8047,12 @@ RouteComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
         QSqlDatabase db = QSqlDatabase::database();
 
         QString commandText = QString("SELECT rc.commentKey, c.commentKey, rc.companyKey, comments, tags, rc.latitude, "
-            "rc.longitude, r.name, a.routeAlpha "
+            "rc.longitude, n.name, a.routeAlpha "
             "from Comments c "
             "join RouteComments rc on rc.commentKey = c.commentKey "
             "join Routes r on r.route = rc.route and '%2' between r.startDate and r.endDate "
             "JOIN AltRoute a ON a.route = rc.route "
+            "join RouteName n on r.routeid =n.routeid "
             "where rc.route = %1 and rc.date = '%2'").arg(route).arg(date.toString("yyyy/MM/dd"));
 
         QSqlQuery query = QSqlQuery(db);
@@ -8306,13 +8309,13 @@ RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyK
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
-        QString commandText = "SELECT rc.commentKey, comments, tags, date, rc.companyKey, r.name,"
+        QString commandText = "SELECT rc.commentKey, comments, tags, date, rc.companyKey, n.name,"
                 " a.routeAlpha, rc.latitude, rc.longitude "
                 "from RouteComments rc "
                 "join Comments c on rc.commentKey = c.commentKey "
                 "JOIN AltRoute a ON a.route = rc.route "
                 "join Routes r on r.route = rc.route and '"+date.toString("yyyy/MM/dd")+"' between r.startDate and r.endDate "
-                "where rc.route = "+ QString("%1").arg(route) +" "
+                "join RouteName n on r.routeId = n.Routeid "
                 "and rc.date  > '" + date.toString("yyyy/MM/dd")+"'";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);

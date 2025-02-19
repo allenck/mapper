@@ -1288,7 +1288,7 @@ QList<StreetInfo*>* StreetsTableModel::getStreetNames(int streetId, QStringList 
                           "StartDate, endDate, Seq, rowid"
                           " from StreetDef "
                           " where streetId = " + QString::number(streetId)
-                          + " order by StreetId, StartDate DESC";
+                          + " order by StreetId, Seq, StartDate DESC";
     QSqlQuery query = QSqlQuery(db);
     bool bQuery = query.exec(commandText);
     if(!bQuery)
@@ -1332,13 +1332,18 @@ QList<StreetInfo*>* StreetsTableModel::getStreetNames(int streetId, QStringList 
             sti->dateEnd = prevStartDate.addDays(-1);
             bUpdateNeeded = true;
         }
-        if(sti->sequence != i && sti->sequence > 0)
-        {
-            sti->sequence = i;
-            bUpdateNeeded = true;
-        }
+        // if(sti->sequence > 0 && sti->sequence != i)
+        // {
+        //     sti->sequence = i;
+        //     bUpdateNeeded = true;
+        // }
         if(bUpdateNeeded)
-            updateStreetDef(*sti);
+        {
+            if(sti->sequence ==0)
+                updateStreetDef(*sti);
+            else
+                updateStreetName(*sti);
+        }
     }
     return myArray;
 }

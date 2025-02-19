@@ -509,7 +509,7 @@ private slots:
     void displayAll();
 
 protected:
-    //void resizeEvent(QResizeEvent *event);
+    void resizeEvent(QResizeEvent *event);
     QColor txtSegment_color;
 
 signals:
