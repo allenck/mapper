@@ -11,9 +11,8 @@ RouteViewTableModel::RouteViewTableModel(QObject *parent) :
  bSelectedRowChanged = false;
  bIsSequenced = false;
  tractionTypes = SQL::instance()->getTractionTypes();
- connect(SQL::instance(), SIGNAL(routeChange(NotifyRouteChange)),
-         SLOT(routeChange(NotifyRouteChange)));
- connect(SQL::instance(), SIGNAL(segmentChanged(SegmentInfo,SQL::CHANGETYPE)), this,SLOT(segmentChanged(int, SQL::CHANGETYPE)));
+ connect(SQL::instance(), SIGNAL(routeChange(NotifyRouteChange)),SLOT(routeChange(NotifyRouteChange)));
+ connect(SQL::instance(), SIGNAL(segmentChanged(SegmentInfo,SQL::CHANGETYPE)), this,SLOT(segmentChanged(SegmentInfo,SQL::CHANGETYPE)));
 }
 
 RouteViewTableModel::RouteViewTableModel(qint32 route, QString name, int companyKey, QDate dtStart,
@@ -844,3 +843,4 @@ void RouteViewTableModel::clear()
     listOfSegments.clear();
     reset();
 }
+

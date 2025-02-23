@@ -83,6 +83,7 @@ void StreetView::tablev_CustomContextMenu(const QPoint &pt)
     curRow = ui->rowAt(pt.y());
     curCol = ui->columnAt(pt.x());
     int srcRow = proxyModel->mapToSource(proxyModel-> index(curRow, curCol)).row();
+    sti0 = sourceModel->getStreetInfo(srcRow);
     QItemSelectionModel * selModel = ui->selectionModel();
     QModelIndexList indexes = selModel->selectedIndexes();
     if(indexes.isEmpty())
@@ -103,13 +104,16 @@ void StreetView::tablev_CustomContextMenu(const QPoint &pt)
     connect(act, &QAction::triggered, this, [=]{
         QStringList names;
         names.append(street);
-        QList<SegmentInfo> segments = sourceModel->getSegmentsForStreet(names);
-        foreach (SegmentInfo si , segments) {
-            if(!sti->segments.contains(si.segmentId()))
-                sti->segments.append(si.segmentId());
-            sti->updateSegmentInfo(si);
+        //QList<SegmentInfo> segments = sourceModel->getSegmentsForStreet(names);
+        QList<SegmentInfo*> segments = sourceModel->getStreetsSegments(sti0);
+        foreach (SegmentInfo* si , segments) {
+            // if(!sti0.segments.contains(si->segmentId()))
+            //     sti0.segments.append(si->segmentId());
+            if(!sti0.bounds.checkValid())
+                sti0.bounds = Bounds();
+            sti0.updateSegmentInfo(*si);
         }
-        sourceModel->updateStreetName(*sti);
+        sourceModel->updateStreetName(sti0);
 
     });
     tablMenu.addAction(act);
@@ -248,3 +252,4 @@ void StreetView::segmentChanged(SegmentInfo si, SQL::CHANGETYPE t)
         }
     }
 }
+

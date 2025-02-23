@@ -4,7 +4,6 @@
 #include <QWebEngineHistory>
 #include "streetstablemodel.h"
 #include "websocketclientwrapper.h"
-//#include <QWebEnginePage>
 #include <QWebSocketServer>
 #include "webviewbridge.h"
 #include "sql.h"
@@ -15,7 +14,6 @@
 #include <QMessageBox>
 #include "segmentdlg.h"
 #include "modifyroutedatedlg.h"
-//#include "exportdlg.h"
 #include "editconnectionsdlg.h"
 #include "combineroutesdlg.h"
 #include "reroutingdlg.h"
@@ -25,7 +23,6 @@
 #include "exportroutedialog.h"
 #include "editcitydialog.h"
 #ifdef HAVE_CONSOLE
-//#include "systemconsoleaction.h"
 #include "systemconsole2.h"
 #endif
 #include <QStatusBar>
@@ -46,7 +43,6 @@
 #include "splitsegmentdlg.h"
 #include "overlay.h"
 #include <QClipboard>
-//#include "exceptions.h"
 #include "segmentview.h"
 #include "otherrouteview.h"
 #include "stationview.h"
@@ -563,19 +559,9 @@ void MainWindow::createBridge()
 {
  //! The object we will expose to JavaScript engine:
  m_bridge = new WebViewBridge(LatLng(m_latitude, m_longitude), m_zoom, "roadmap", config->mapId, this);
-// m_bridge->_lat = m_latitude;
-// m_bridge->_lon = m_longitude;
-// m_bridge->_zoom = m_zoom;
-// m_bridge->maptype="roadmap";
-// m_bridge->browseWindowHeight = webView->height();
-// m_bridge->browseWindowWidth = webView->width();
-
- //connect( m_bridge, SIGNAL(movePointSignal(qint32, qint32,double,double)), this, SLOT(movePoint(qint32, qint32,double,double)));
  connect( m_bridge, SIGNAL(movePointSignalX(qint32,qint32,LatLng,QList<LatLng>)), this, SLOT(movePointX(qint32,qint32,LatLng,QList<LatLng>)));
  connect(m_bridge, SIGNAL(addPointSignal(int,double,double)), this, SLOT(addPoint(int,double,double)));
- //connect(m_bridge, SIGNAL(addPointSignalX(int,double,double)), this, SLOT(addPointX(int,QList<LatLng>)));
  connect (m_bridge, SIGNAL(insertPointSignal(int,qint32,double,double)), this, SLOT(insertPoint(int,qint32,double,double)));
- //connect(m_bridge, SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(segmentSelected(qint32, qint32)));
  connect(m_bridge, SIGNAL(segmentSelectedX(qint32,qint32,QList<LatLng>)), this, SLOT(segmentSelectedX(qint32,qint32,QList<LatLng>)));
  connect(m_bridge, SIGNAL(outputSetDebug(QString)), this, SLOT(setDebug(QString)));
  connect(m_bridge, SIGNAL(segmentStatusSignal(QString,QString)), this, SLOT(segmentStatus(QString,QString)));
@@ -1143,17 +1129,23 @@ void MainWindow::createActions()
      sd->setEndDate(_rd.endDate());
      sd->setTractionType(_rd.tractionType());
      sd->setCompanyKey(_rd.companyKey());
-     QList<SegmentData*> conflicts
-             = sql->getConflictingRouteSegments(_rd.route(), _rd.routeName(),
-                                                _rd.startDate().toString("yyyy/MM/dd"),
-                                                _rd.endDate().toString("yyyy/MM/dd"),
-                                                _rd.companyKey(),sd->segmentId());
-     if(conflicts.count())
-     {
-         QMessageBox::critical(this, tr("Conflict"), tr("The segment is already present"
+     int selectedDegmentId = sd->segmentId(); // this is the pne we hope to add
+     // QList<SegmentData*> conflicts
+     //         = sql->getConflictingRouteSegments(_rd.route(), _rd.routeName(),
+     //                                            _rd.startDate(),
+     //                                            _rd.endDate(),
+     //                                            _rd.companyKey(),sd->segmentId());
+     QList<SegmentData*> conflicts;
+     QList<SegmentInfo> dupSegments = sql->getDupSegments(*sd);
+     foreach(SegmentInfo si, dupSegments) {
+         sd->setSegmentId(si.segmentId());
+         if(sql->doesRouteSegmentExist(*sd))
+         {
+            QMessageBox::critical(this, tr("Conflict"), tr("The segment is already present"
                                " or conflicts with the start or end date of an"
                                " existing segment. The segment will not be added!"));
-         return;
+            return;
+         }
      }
      if(!sql->addSegmentToRoute(sd))
      {
@@ -1587,18 +1579,18 @@ QWidgetAction *MainWindow::createWidgetAction()
 
 void MainWindow::addSegmentToRoute(SegmentData* sd)
 {
- QList<SegmentData*> conflicts
-         = sql->getConflictingRouteSegments(_rd.route(), _rd.routeName(),
-                                            _rd.startDate().toString("yyyy/MM/dd"),
-                                            _rd.endDate().toString("yyyy/MM/dd"),
-                                            _rd.companyKey(), sd->segmentId());
- if(conflicts.count())
- {
-     QMessageBox::critical(this, tr("Conflict"), tr("The segment is already present"
+    SegmentInfo si = sql->getSegmentInfo(sd->segmentId());
+    QList<SegmentInfo> dupSegments = sql->getDupSegments(si);
+    foreach(SegmentInfo si, dupSegments) {
+        sd->setSegmentId(si.segmentId());
+        if(sql->doesRouteSegmentExist(*sd))
+        {
+            QMessageBox::critical(this, tr("Conflict"), tr("The segment is already present"
                         " or conflicts with the start or end date of an"
-                        " existing segment %1. The segment will not be added!").arg(conflicts.at(0)->toString2()));
-     return;
- }
+                        " existing segment %1. The segment will not be added!").arg(si.toString()));
+            return;
+        }
+    }
 
  if(sd->startDate() < sd->segmentStartDate())
      sd->setSegmentStartDate(sd->startDate());
@@ -5403,11 +5395,7 @@ bool MainWindow::openWebViewPanel()
 
         return error.defer();
      });
-// #ifdef Q_OS_WINDOWS
-//      fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2b.htm");
-// #else
      fileUrl = QUrl("qrc:/GoogleMaps2b.htm");
-//#endif
     webView->setUrl(fileUrl);
     setupbridge();
     webView->page()->setWebChannel(channel);

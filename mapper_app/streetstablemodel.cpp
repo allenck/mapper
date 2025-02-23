@@ -493,6 +493,11 @@ QList<StreetInfo> StreetsTableModel::getStreetInfoList(QString street)
     return myArray;
 }
 
+StreetInfo StreetsTableModel::getStreetInfo(int row)
+{
+    return streetsList.at(row);
+}
+
 bool StreetsTableModel::doesStreetDefExist(StreetInfo* sti)
 {
     StreetInfo* si = nullptr;
@@ -539,7 +544,7 @@ bool StreetsTableModel::doesStreetDefExist(StreetInfo* sti)
         sti->streetId = query.value(8).toInt();
         sti->sequence = query.value(9).toInt();
         sti->dateStart = query.value(10).toDate();
-        si->dateEnd = query.value(11).toDate();
+        sti->dateEnd = query.value(11).toDate();
         sti->rowid = query.value(12).toInt();
     }
     return true;
@@ -620,8 +625,11 @@ int StreetsTableModel::newStreetDef(StreetInfo* sti)
     if(sti->street.length() > 30)
         qDebug() << "street size?";
     if(sti->dateEnd.isValid())
+    {
         qDebug() << "newStreetDef end date not null " << sti->dateEnd.toString("yyyy/MM/dd");
-
+        if(doesStreetExist(sti))
+            return sti->streetId;
+    }
     sti->streetId = getNextStreetId();
     QSqlDatabase db = QSqlDatabase::database();
     QString commandText = "insert into StreetDef (Street, Location, startDate, endDate,Seq, StreetId,"
@@ -1037,6 +1045,15 @@ QList<SegmentInfo> StreetsTableModel::getSegmentsForStreet(QStringList names)
     }
 
     return myArray;
+}
+
+QList<SegmentInfo*> StreetsTableModel::getStreetsSegments(StreetInfo sti)
+{
+    QList<SegmentInfo*> list;
+    foreach (int segmentid, sti.segments) {
+        list.append(new SegmentInfo(SQL::instance()->getSegmentInfo(segmentid)));
+    }
+    return list;
 }
 
 void StreetsTableModel::streetChanged(StreetInfo info)
@@ -1570,6 +1587,7 @@ void StreetsTableModel::on_segmentChange(SegmentInfo si, SQL::CHANGETYPE t)
                     }
                     // now add the actual steeet
                     sti.street = si.streetName();
+                    sti.sequence = 1;
                     if(!newStreetName(&sti))
                     {
                         return;
@@ -1579,7 +1597,8 @@ void StreetsTableModel::on_segmentChange(SegmentInfo si, SQL::CHANGETYPE t)
                 {
                     processStreetUpdate(streetId, si);
                 }
-                SQL::instance()->executeCommand(QString("update Segments set streetId = %1").arg(streetId));
+                SQL::instance()->executeCommand(QString("update Segments set streetId = %1 where segmentid = %3")
+                                                    .arg(streetId).arg(si.segmentId()));
             }
             else
             {
@@ -1596,6 +1615,32 @@ void StreetsTableModel::on_segmentChange(SegmentInfo si, SQL::CHANGETYPE t)
                 }
                 processStreetUpdate(streetId, si);
 
+            }
+        }
+        else {
+            // The street is the current name
+            if(si.streetId()>0)
+            {
+                //street is in the streetdef table so update the bounds
+                QList<StreetInfo*> list = getStreetName(si.streetName(), si.location(), si.streetId());
+                if(list.empty())
+                    return;
+                foreach (StreetInfo* sti, list) {
+                    if(sti->segments.contains(si.segmentId())){
+                        sti->bounds = Bounds();
+                        for(int i=sti->segments.count()-1; i >=0; i--)
+                        {
+                            int segmentId = sti->segments.at(i);
+                            SegmentInfo si1 = SQL::instance()->getSegmentInfo(segmentId);
+                            if(si1.segmentId()<0)
+                            {
+                                sti->segments.removeAt(i);
+                            }
+                            sti->updateSegmentInfo(si1);
+                        }
+                        updateStreetDef(*sti);
+                    }
+                }
             }
         }
         break;
@@ -1639,4 +1684,33 @@ void StreetsTableModel::processStreetUpdate(int streetId, SegmentInfo si)
             return;
         }
     }
+}
+
+bool StreetsTableModel::doesStreetExist(StreetInfo* sti)
+{
+    QSqlDatabase db = QSqlDatabase::database();
+    QString commandText = "select streetid, seq from streetdef "
+                          "where street ='" +sti->street + "' "
+                          "and location = '" + sti->location +"' "
+                          "and startDate ='" + sti->dateStart.toString("yyyy/MM/dd") + "' "
+                          "and endDate = '" + sti->dateEnd.toString("yyyy/MM/dd") + "' ";
+
+    QSqlQuery query = QSqlQuery(db);
+    bool bQuery = query.exec(commandText);
+    if(!bQuery)
+    {
+        SQLERROR(std::move(query));
+        //throw Exception();
+        return false;
+    }
+    int streetId=-1;
+    int sequence =-1;
+    while (query.next())
+    {
+        streetId = query.value(0).toInt();
+        sequence = query.value(1).toInt();
+    }
+    if(sti->streetId <= 0)
+        sti->streetId = streetId;
+    return streetId > 0;
 }

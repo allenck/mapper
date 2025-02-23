@@ -174,7 +174,7 @@ public:
     //bool modifyCurrentRoute(RouteData *rd, bool bStartDate, QDate dt, QString name1, QString name2);
     bool modifyCurrentRoute(RouteData* rd, bool bStartDate, QDate dt);
     QList<SegmentData *> getConflictingRouteSegments(qint32 route, QString name,
-                                                     QString startDate, QString endDate, int companyKey,
+                                                     QDate startDate, QDate endDate, int companyKey,
                                                      qint32 segmentId);
     QList<SegmentData *> getRoutes(qint32 segmentid);
     QList<RouteIntersects> updateLikeRoutes(qint32 segmentid, qint32 route, QString name, QString date, bool bAllRoutes = false);
@@ -257,7 +257,7 @@ public:
     QString currentTransaction;
     bool doesFunctionExist(QString name, QString serverType, QSqlDatabase db);
     QStringList listViews();
-    QList<SegmentData *> segmentDataFromView(QString where);
+    QList<SegmentData *> segmentDataListFromView(QString where);
     QStringList listColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase(), QStringList *types=nullptr);
     QStringList listPkColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase(), QStringList *types=nullptr);
     bool getForeignKeyCheck();

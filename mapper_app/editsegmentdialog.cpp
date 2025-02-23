@@ -525,6 +525,8 @@ void EditSegmentDialog::On_btnSave_clicked()
           ui->lblHelp->setText(tr("delete route %1 failed").arg(sd->route()));
           return;
         }
+        if(sql->doesRouteSegmentExist(sd1))
+            return;
         if(!sql->addSegmentToRoute(&sd1))
         {
           sql->rollbackTransaction("updateSegment");

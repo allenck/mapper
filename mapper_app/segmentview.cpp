@@ -71,6 +71,7 @@ void SegmentView::tablev_customContextMenu( const QPoint& pt)
 {
     curRow = ui->rowAt(pt.y());
     curCol = ui->columnAt(pt.x());
+
     // check is item in QTableView exist or not
     if(boolGetItemTableView(ui))
     {
@@ -79,6 +80,9 @@ void SegmentView::tablev_customContextMenu( const QPoint& pt)
         QModelIndexList indexes = model->selectedIndexes();
         if(indexes.size() > 0)
         {
+            QModelIndex Index = indexes.at(SegmentViewTableModel::SEGMENTID);
+            QString txtSegmentId = Index.data().toString();
+
          QModelIndex ix = proxymodel->mapToSource(indexes.at(0));
 
          if((ix.data(Qt::CheckStateRole) != Qt::Checked))

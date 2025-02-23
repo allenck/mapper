@@ -675,8 +675,6 @@ class SegmentInfo
  double startLon() {return _startLon;}
  double endLat() {return _endLat;}
  double endLon() {return _endLon;}
- LatLng getStartLat() {return LatLng(_startLat, _startLon);}
- LatLng getEndLat() {return LatLng(_endLat, _endLon);}
  QString streetName() {return _streetName;}
  QString newerName() {return _newerStreetName;}
  QString description() const {return _description;}
@@ -987,4 +985,5 @@ public:
     bool encompasses(StreetInfo sti);
     QString toString();
 };
+Q_DECLARE_METATYPE(StreetInfo)
 #endif // DATA_H

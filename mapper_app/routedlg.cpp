@@ -1664,8 +1664,9 @@ void RouteDlg::btnAdd_Click()         // SLOT
   checkDirection(ui->rbNormal->isChecked() ? ui->rbNormal->text() : ui->rbReverse->text());
 
   // Check for conflicting segments
-  QList<SegmentData*> myArray = sql->getConflictingRouteSegments(_routeNbr, ui->rnw->alphaRoute(), ui->dateStart->text(), ui->dateEnd->text(),
-                                                                  ui->cbCompany->currentData().toInt(), _segmentId);
+  QList<SegmentData*> myArray = sql->getConflictingRouteSegments(_routeNbr, ui->rnw->alphaRoute(),
+                                ui->dateStart->date(), ui->dateEnd->date(),
+                                ui->cbCompany->currentData().toInt(), _segmentId);
   if (myArray.count() > 0)
   {
    //foreach (routeData rd in myArray)

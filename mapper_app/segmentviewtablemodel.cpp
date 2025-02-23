@@ -108,19 +108,9 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
              return sd.streetId();
          case DIRECTION:
           return sd.direction();
-         // case LAT:
-         //     if(sd.whichEnd() == "S")
-         //         return QString("%1").arg(sd.startLat(),0,'f',8);
-         //     else
-         //         return QString("%1").arg(sd.endLat(),0,'f',8);
-         // case LON:
-         //     if(sd.whichEnd()=="S")
-         //         return QString("%1").arg(sd.startLon(),0,'f',8);
-         //     else
-         //         return QString("%1").arg(sd.endLon(),0,'f',8);
-          case LATLNG:
+         case LATLNG:
                 if(sd.whichEnd() == "S")
-                  return sd.startLatLng().str();
+                    return sd.startLatLng().str();
                 else
                     return sd.endLatLng().str();
          case WHICHEND:

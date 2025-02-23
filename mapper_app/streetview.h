@@ -31,6 +31,7 @@ private:
     QObject* m_parent;
     MainWindow* myParent;
     QTableView* ui;
+    StreetInfo sti0;
 
     friend class StreetsTableModel;
 };

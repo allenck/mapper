@@ -68,6 +68,7 @@ public:
     QList<StreetInfo *> *getStreetNames(int streetId, QStringList *nameList=nullptr);
     bool addOldStreetName(StreetInfo* sti);
     QList<StreetInfo> getStreetInfoList(QString street = "");
+    StreetInfo getStreetInfo(int row);
     int getNextStreetId();
     bool fixDates();
     StreetInfo *getOlderStreet(int streetid, QString Street, QString location, QDate date);
@@ -75,6 +76,8 @@ public:
     bool doesStreetDefExist(StreetInfo* sti);
     int maxStreetDefSeq(int streetId);
     void on_segmentChange(SegmentInfo si, SQL::CHANGETYPE t);
+    bool doesStreetExist(StreetInfo* sti);
+    QList<SegmentInfo*> getStreetsSegments(StreetInfo sti);
 
 signals:
     void streetUpdated(int row, QString street);

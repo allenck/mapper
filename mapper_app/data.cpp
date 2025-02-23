@@ -642,7 +642,6 @@ SegmentInfo::SegmentInfo(const SegmentInfo& o)
 {
  _description = o._description;
  _segmentId = o._segmentId;
- //lineSegments = o.lineSegments;
  _points = o._points;
  _length = o._length;
  _dateBegin = o._dateBegin;
@@ -1297,6 +1296,7 @@ void StreetInfo::updateBounds()
 
     }
 }
+
 
 bool StreetInfo::inDateRange(QDate dt)
 {
