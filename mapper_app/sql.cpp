@@ -79,9 +79,11 @@ bool SQL::dbOpen()
        QSqlQuery query = QSqlQuery(db);
        if(!query.exec(tr("use [%1]").arg(config->currConnection->database())))
        {
-        SQLERROR(std::move(query));
-        db.close();
-        exit(EXIT_FAILURE);
+           QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+           qDebug() << errCommand;
+           QSqlError error = query.lastError();
+           SQLERROR(std::move(query));
+           throw SQLException(error.text() + " " + errCommand);
        }
       }
      }
@@ -139,11 +141,11 @@ void SQL::beginTransaction (QString name)
  bool bQuery = db.transaction();
  if(!bQuery)
  {
-     QSqlError err = db.lastError();
-     qDebug() << err.text() + "\n";
-     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     //db.close();
-     //exit(EXIT_FAILURE);
+     QString errCommand = commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = db.lastError();
+     //SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  currentTransaction = name;
 }
@@ -166,11 +168,11 @@ void SQL::commitTransaction (QString name)
   bool bQuery = db.commit();
   if(!bQuery)
   {
-      QSqlError err = db.lastError();
-      qDebug() << err.text() + "\n";
-      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-      //db.close();
-      //exit(EXIT_FAILURE);
+      QString errCommand = commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+      qDebug() << errCommand;
+      QSqlError error = db.lastError();
+      //SQLERROR(std::move(query));
+      throw SQLException(error.text() + " " + errCommand);
   }
   qDebug() << commandText << " comitted";
   currentTransaction = "";
@@ -189,7 +191,7 @@ void SQL::rollbackTransaction (QString name)
  bool bQuery = db.rollback();
  if(!bQuery)
  {
-  QSqlError err = QSqlError();
+  QSqlError err = db.lastError();
   qWarning() <<tr("Rollback transaction %1 failed %2").arg(currentTransaction).arg(err.driverText());
 //  db.close();
 //  exit(EXIT_FAILURE);
@@ -363,8 +365,11 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  return list;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  int ix =-1;
  while (query.next())
@@ -435,8 +440,11 @@ QList<RouteData> SQL::getRoutesByEndDate(QList<int> compayList)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  return list;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  int ix =-1;
  while (query.next())
@@ -500,8 +508,11 @@ RouteSeq SQL::getRouteSeq(RouteData rd)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  return  rs;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while(query.next())
  {
@@ -527,8 +538,11 @@ bool SQL::deleteRouteSeq(RouteSeq rs)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  return  false;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  return true;
 }
@@ -575,10 +589,11 @@ TerminalInfo SQL::getTerminalInfo(qint32 route, QString name, QDate endDate)
   qDebug() << commandText;
   if(!bQuery)
   {
-   SQLERROR(std::move(query));
-//      db.close();
-//      exit(EXIT_FAILURE);
-      return TerminalInfo();
+      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+      qDebug() << errCommand;
+      QSqlError error = query.lastError();
+      SQLERROR(std::move(query));
+      throw SQLException(error.text() + " " + errCommand);
   }
   if (!query.isActive())
   {
@@ -661,9 +676,11 @@ QList<TerminalInfo> SQL::getTerminalInfoUsingSegment(int segmentId)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-     db.close();
-     exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  if (!query.isActive())
  {
@@ -713,9 +730,11 @@ QString SQL::getAlphaRoute(qint32 route, QString routePrefix)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-     db.close();
-     exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  if (!query.isActive())
  {
@@ -745,9 +764,11 @@ QStringList SQL::getAlphaRoutes(QString text)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-         SQLERROR(std::move(query));
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (!query.isActive())
         {
@@ -776,8 +797,11 @@ bool SQL::deleteAlphaRoute(QString routeAlpha)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  return false;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  return  true;
 }
@@ -797,11 +821,11 @@ QMap<int,TractionTypeInfo> SQL::getTractionTypes()
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-         SQLERROR(std::move(query));
-//            db.close();
-//            exit(EXIT_FAILURE);
-         sqlErrorMessage(query, QMessageBox::Ok);
-         return myArray;
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         while (query.next())
         {
@@ -905,11 +929,11 @@ QList<SegmentInfo> SQL::getSegmentsForStreet(QString street, QString location)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-     qDebug() << "Is default database correct?";
-//            db.close();
-//            exit(EXIT_FAILURE);
-     return QList<SegmentInfo>();
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while (query.next())
  {
@@ -1006,11 +1030,11 @@ QMap<int, SegmentInfo> SQL::getSegmentInfoList(QString location)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-     qDebug() << "Is default database correct?";
-//            db.close();
-//            exit(EXIT_FAILURE);
-     return QMap<int, SegmentInfo>();
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while (query.next())
  {
@@ -1090,11 +1114,11 @@ QStringList SQL::getLocations()
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-     qDebug() << "Is default database correct?";
-//            db.close();
-//            exit(EXIT_FAILURE);
-     return list;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while (query.next())
  {
@@ -1168,9 +1192,11 @@ bool SQL::updateSegmentDates(SegmentInfo* si)
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-    db.close();
-    exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  if (!query.isActive())
  {
@@ -1191,9 +1217,11 @@ bool SQL::updateSegmentDates(SegmentInfo* si)
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-    db.close();
-    exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  return true;
 }
@@ -1216,11 +1244,11 @@ SegmentInfo SQL::getSegmentInfo(qint32 segmentId)
   bool bQuery = query.exec(commandText);
   if(!bQuery)
   {
-      QSqlError err = query.lastError();
-      qDebug() << err.text() + "\n";
-      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-      db.close();
-      exit(EXIT_FAILURE);
+      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+      qDebug() << errCommand;
+      QSqlError error = query.lastError();
+      SQLERROR(std::move(query));
+      throw SQLException(error.text() + " " + errCommand);
   }
   if (!query.isActive())
   {
@@ -1309,11 +1337,11 @@ SegmentInfo SQL::getSegmentIdForDescription(QString description)
   bQuery = query.exec(commandText);
   if(!bQuery)
   {
-      QSqlError err = query.lastError();
-      qDebug() << err.text() + "\n";
-      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-      db.close();
-      exit(EXIT_FAILURE);
+      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+      qDebug() << errCommand;
+      QSqlError error = query.lastError();
+      SQLERROR(std::move(query));
+      throw SQLException(error.text() + " " + errCommand);
   }
   if (!query.isActive())
   {
@@ -1577,7 +1605,7 @@ QList<SegmentData> SQL::getRouteDatasForDate(int segmentId, QString date)
                        " from Routes a"
                        " join AltRoute c on a.route = c.route"
                        " join Segments s on a.lineKey = s.segmentId"
-                       "join RouteName on a.routeId = n.routeid"
+                       " join RouteName on a.routeId = n.routeid"
                        " where '" + date + "' between a.startDate and a.endDate"
                        " and lineKey = "+QString::number(segmentId);
 
@@ -1585,9 +1613,11 @@ QList<SegmentData> SQL::getRouteDatasForDate(int segmentId, QString date)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  db.close();
-  exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  if (!query.isActive())
  {
@@ -1653,9 +1683,11 @@ QList<RouteData> SQL::getRoutes(qint32 segmentid, QString date )
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            db.close();
-            exit(EXIT_FAILURE);
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (!query.isActive())
         {
@@ -1699,8 +1731,11 @@ bool SQL::saveRouteSequence(RouteData rd, int firstSegment, QString whichEnd)
   bool bQuery = query.exec(commandText);
   if(!bQuery)
   {
+      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+      qDebug() << errCommand;
+      QSqlError error = query.lastError();
       SQLERROR(std::move(query));
-      return false;
+      throw SQLException(error.text() + " " + errCommand);
   }
   int count =0;
   while(query.next())
@@ -1726,8 +1761,11 @@ bool SQL::saveRouteSequence(RouteData rd, int firstSegment, QString whichEnd)
   bQuery = query.exec(commandText);
   if(!bQuery)
   {
+      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+      qDebug() << errCommand;
+      QSqlError error = query.lastError();
       SQLERROR(std::move(query));
-      return false;
+      throw SQLException(error.text() + " " + errCommand);
   }
   return true;
 }
@@ -1749,8 +1787,11 @@ bool SQL::addRouteSeq(RouteSeq rs)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
      SQLERROR(std::move(query));
-     return false;
+     throw SQLException(error.text() + " " + errCommand);
  }
  return true;
 }
@@ -1968,10 +2009,11 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
   bool bQuery = query.exec(commandText);
   if(!bQuery)
   {
-   SQLERROR(std::move(query));
-   db.close();
-   //exit(EXIT_FAILURE);
-   return myArray;
+      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+      qDebug() << errCommand;
+      QSqlError error = query.lastError();
+      SQLERROR(std::move(query));
+      throw SQLException(error.text() + " " + errCommand);
   }
 
   while(query.next())
@@ -2069,10 +2111,11 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
   bool bQuery = query.exec(commandText);
   if(!bQuery)
   {
-   SQLERROR(std::move(query));
-   // db.close();
-   // exit(EXIT_FAILURE);
-   return myArray;
+      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+      qDebug() << errCommand;
+      QSqlError error = query.lastError();
+      SQLERROR(std::move(query));
+      throw SQLException(error.text() + " " + errCommand);
   }
   while (query.next())
   {
@@ -2305,9 +2348,11 @@ QList<SegmentData*> SQL::getIntersectingRouteSegmentsAtPoint(SegmentData* sd1,
  qDebug() << commandText;
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  db.close();
-  exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
 
  while(query.next())
@@ -3307,11 +3352,11 @@ bool SQL::updateSegment(SegmentInfo* si, bool bNotify)
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
-      QSqlError err = query.lastError();
-      qDebug() << err.text() + "\n";
-      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-      db.close();
-      exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  rows = query.numRowsAffected();
  if (rows == 0)
@@ -3399,13 +3444,11 @@ bool SQL::updateSegment(SegmentData* sd)
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
-      QSqlError err = query.lastError();
-      SQLERROR(std::move(query));
-      qDebug() << err.text() + "\n";
-      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-//      db.close();
-//      exit(EXIT_FAILURE);
-      return false;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  rows = query.numRowsAffected();
  if (rows == 0)
@@ -3448,8 +3491,11 @@ bool SQL::updateSegment(qint32 SegmentId)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  return false;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  if (!query.isActive())
  {
@@ -3503,9 +3549,11 @@ bool SQL::updateSegment(qint32 SegmentId)
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
-   SQLERROR(std::move(query));
-   db.close();
-   exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  rows = query.numRowsAffected();
  if (rows == 0)
@@ -3537,8 +3585,11 @@ StationInfo SQL::getStationInfo(qint32 stationKey)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
      SQLERROR(std::move(query));
-    return StationInfo();
+     throw SQLException(error.text() + " " + errCommand);
  }
  if (!query.isActive())
  {
@@ -3583,6 +3634,7 @@ QList<StationInfo> SQL::getStationsOnSegment(qint32 segmentId)
    sList.append(sti0);
   }
  }
+ return sList;
 }
 
 //TODO this query may return multiple rows!
@@ -3602,8 +3654,11 @@ StationInfo SQL::getStationInfo(QString name)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
      SQLERROR(std::move(query));
-     return sti;
+     throw SQLException(error.text() + " " + errCommand);
  }
  if (!query.isActive())
  {
@@ -3645,11 +3700,11 @@ bool SQL::updateStation(qint32 stationKey, qint32 infoKey)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         rows = query.numRowsAffected();
         if(rows > 0)
@@ -3694,10 +3749,11 @@ bool SQL::updateStation(StationInfo sti)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            return false;
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         rows = query.numRowsAffected();
         if (rows > 0)
@@ -3747,9 +3803,11 @@ QList<StationInfo> SQL::getStationAtPoint(LatLng pt)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-         SQLERROR(std::move(query));
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (!query.isActive())
         {
@@ -3792,8 +3850,11 @@ QList<StationInfo> SQL::getStationsLikeName(QString name)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
      SQLERROR(std::move(query));
-    return list;
+     throw SQLException(error.text() + " " + errCommand);
  }
  if (!query.isActive())
  {
@@ -3834,11 +3895,11 @@ LatLng SQL::getPointOnSegment(qint32 pt, qint32 segmentId)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         while (query.next())
         {
@@ -3854,11 +3915,11 @@ LatLng SQL::getPointOnSegment(qint32 pt, qint32 segmentId)
             bQuery = query.exec(commandText);
             if(!bQuery)
             {
-                QSqlError err = query.lastError();
-                qDebug() << err.text() + "\n";
-                qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-                db.close();
-                exit(EXIT_FAILURE);
+                QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+                qDebug() << errCommand;
+                QSqlError error = query.lastError();
+                SQLERROR(std::move(query));
+                throw SQLException(error.text() + " " + errCommand);
             }
             while (query.next())
             {
@@ -3888,11 +3949,11 @@ QString SQL::getSegmentOneWay(qint32 SegmentId)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         while (query.next())
         {
@@ -3922,11 +3983,11 @@ bool SQL::doesSegmentExist(QString descr, QString oneWay, QString location)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (!query.isActive())
         {
@@ -3960,11 +4021,11 @@ QString SQL::getSegmentDescription(qint32 SegmentId)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         while (query.next())
         {
@@ -4021,9 +4082,11 @@ bool SQL::updateRecord(SegmentInfo sd)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            db.close();
-            exit(EXIT_FAILURE);
+            throw SQLException(error.text() + " " + errCommand);
         }
         rows = query.numRowsAffected();
         if (rows == 0)
@@ -4098,11 +4161,11 @@ QList<CompanyData*> SQL::getCompanies()
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  //db.close();
-  //exit(EXIT_FAILURE);
-  sqlErrorMessage(std::move(query), QMessageBox::Ok);
-  return myArray;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while (query.next())
  {
@@ -4186,13 +4249,11 @@ bool SQL::updateCompany(CompanyData* cd)
     bQuery = query.exec(commandText);
     if(!bQuery)
     {
-         QSqlError err = query.lastError();
-         SQLERROR(std::move(query));
-         qDebug() << err.text() + "\n";
-         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-         // db.close();
-         // exit(EXIT_FAILURE);
-         return false;
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
+        throw SQLException(error.text() + " " + errCommand);
     }
     rows = query.numRowsAffected();
     if (rows == 0)
@@ -4236,11 +4297,11 @@ QList<CompanyData*> SQL::getCompaniesInDateRange(QDate startDate, QDate endDate)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  //db.close();
-  //exit(EXIT_FAILURE);
-  sqlErrorMessage(query, QMessageBox::Ok);
-  return myArray;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while (query.next())
  {
@@ -4299,11 +4360,11 @@ CompanyData* SQL::getCompany(qint32 companyKey)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
 //        if(query.numRowsAffected()== 0)
 //         throw  Exception(tr("company key %1 invalid").arg(companyKey));
@@ -4354,11 +4415,11 @@ bool SQL::doesAltRouteExist(int route, QString alphaRoute)
      bool bQuery = query.exec(commandText);
      if(!bQuery)
      {
-         QSqlError err = query.lastError();
-         qDebug() << err.text() + "\n";
-         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-         db.close();
-         exit(EXIT_FAILURE);
+         QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+         qDebug() << errCommand;
+         QSqlError error = query.lastError();
+         SQLERROR(std::move(query));
+         throw SQLException(error.text() + " " + errCommand);
      }
      if (!query.isActive())
      {
@@ -4409,8 +4470,11 @@ qint32 SQL::addAltRoute(QString routeAlpha, QString routePrefix)
     bQuery = query.exec(commandText);
     if(!bQuery)
     {
-     SQLERROR(std::move(query));
-     return -1;
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
+        throw SQLException(error.text() + " " + errCommand);
     }
     return nbr;
  }
@@ -4419,9 +4483,11 @@ qint32 SQL::addAltRoute(QString routeAlpha, QString routePrefix)
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  db.close();
-  exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while(query.next())
  {
@@ -4446,9 +4512,11 @@ qint32 SQL::addAltRoute(QString routeAlpha, QString routePrefix)
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-     db.close();
-     exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  int newroute = -1;
  if (query.isActive())
@@ -4471,9 +4539,11 @@ qint32 SQL::addAltRoute(QString routeAlpha, QString routePrefix)
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-//  db.close();
-//  exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  rows = query.numRowsAffected();
 
@@ -4481,9 +4551,11 @@ qint32 SQL::addAltRoute(QString routeAlpha, QString routePrefix)
  commandText = QString("select route from AltRoute where routeAlpha = '%1' and routePrefix = '%2'").arg(routeAlpha).arg(routePrefix);
  if(!query.exec(commandText))
  {
-  SQLERROR(std::move(query));
-  db.close();
-  exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  int newKey = 0;
  while(query.next())
@@ -4515,8 +4587,11 @@ bool SQL::addAltRoute(int routeNum, QString routeAlpha, QString routePrefix){
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  return false;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  return true;
 }
@@ -4535,9 +4610,11 @@ bool SQL::updateAltRoute(int route, QString routeAlpha)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  db.close();
-  exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
 
  return true;
@@ -4579,11 +4656,11 @@ bool SQL::deleteRouteSegment(SegmentData sd, bool bNotify)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            return false;
+            throw SQLException(error.text() + " " + errCommand);
         }
         rows = query.numRowsAffected();
         if(bNotify)
@@ -4594,12 +4671,11 @@ bool SQL::deleteRouteSegment(SegmentData sd, bool bNotify)
         bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (query.isActive())
         {
@@ -4629,11 +4705,11 @@ bool SQL::deleteRouteSegment(SegmentData sd, bool bNotify)
         bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         rows = query.numRowsAffected();
 
@@ -4697,11 +4773,11 @@ bool SQL::deleteRouteSegment(qint32 route, int routeId, qint32 SegmentId,
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            return false;
+            throw SQLException(error.text() + " " + errCommand);
         }
         rows = query.numRowsAffected();
         RouteInfo ri = getRouteName(routeId);
@@ -4714,12 +4790,11 @@ bool SQL::deleteRouteSegment(qint32 route, int routeId, qint32 SegmentId,
         bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (query.isActive())
         {
@@ -4748,11 +4823,11 @@ bool SQL::deleteRouteSegment(qint32 route, int routeId, qint32 SegmentId,
         bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         rows = query.numRowsAffected();
 
@@ -4951,11 +5026,11 @@ bool SQL::updateTerminals(qint32 route, QString name, QDate startDate, QDate end
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (!query.isActive())
         {
@@ -4980,11 +5055,11 @@ bool SQL::updateTerminals(qint32 route, QString name, QDate startDate, QDate end
             bQuery = query.exec(commandText);
             if(!bQuery)
             {
-                QSqlError err = query.lastError();
-                qDebug() << err.text() + "\n";
-                qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-                db.close();
-                exit(EXIT_FAILURE);
+                QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+                qDebug() << errCommand;
+                QSqlError error = query.lastError();
+                SQLERROR(std::move(query));
+                throw SQLException(error.text() + " " + errCommand);
             }
             rows = query.numRowsAffected();
             //if (rows == 1)
@@ -5016,11 +5091,11 @@ bool SQL::updateTerminals(qint32 route, QString name, QDate startDate, QDate end
             bQuery = query.exec(commandText);
             if(!bQuery)
             {
-                QSqlError err = query.lastError();
-                qDebug() << err.text() + "\n";
-                qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-                db.close();
-                exit(EXIT_FAILURE);
+                QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+                qDebug() << errCommand;
+                QSqlError error = query.lastError();
+                SQLERROR(std::move(query));
+                throw SQLException(error.text() + " " + errCommand);
             }
             rows = query.numRowsAffected();
             //if (rows == 1)
@@ -5103,10 +5178,11 @@ qint32 SQL::getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * 
     bool bQuery = query.exec(commandText);
     if(!bQuery)
     {
-     SQLERROR(std::move(query));
-     db.close();
-     //exit(EXIT_FAILURE);
-     throw Exception();
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
+        throw SQLException(error.text() + " " + errCommand);
     }
     if (!query.isActive())
     {
@@ -5174,11 +5250,11 @@ QList<RouteData> SQL::getRouteInfo(qint32 route)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            return myArray;
+            throw SQLException(error.text() + " " + errCommand);
         }
         while (query.next())
         {
@@ -5240,11 +5316,11 @@ bool SQL::updateCompany(qint32 companyKey, qint32 route)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         while (query.next())
         {
@@ -5283,11 +5359,11 @@ bool SQL::updateCompany(qint32 companyKey, qint32 route)
         bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         rows = query.numRowsAffected();
         if (rows > 0)
@@ -5324,11 +5400,11 @@ void SQL::updateSegmentDates(int segmentId)
     bool bQuery = query.exec(commandText);
     if(!bQuery)
     {
-        QSqlError err = query.lastError();
-        qDebug() << err.text() + "\n";
-        qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-        db.close();
-        exit(EXIT_FAILURE);
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
+        throw SQLException(error.text() + " " + errCommand);
     }
     if (!query.isActive())
     {
@@ -5365,11 +5441,11 @@ void SQL::updateSegmentDates(int segmentId)
     bQuery = query.exec(commandText);
     if(!bQuery)
     {
-        QSqlError err = query.lastError();
-        qDebug() << err.text() + "\n";
-        qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-        db.close();
-        exit(EXIT_FAILURE);
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
+        throw SQLException(error.text() + " " + errCommand);
     }
     rows = query.numRowsAffected();
     if (rows == 0)
@@ -5391,11 +5467,11 @@ QPair<QDate,QDate> SQL::getStartAndEndDates(int segmentId)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-     QSqlError err = query.lastError();
-     qDebug() << err.text() + "\n";
-     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     db.close();
-     exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  if (!query.isActive())
  {
@@ -5433,11 +5509,11 @@ QList<QString> SQL::getRouteNames(qint32 route)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            return myArray;
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (!query.isActive())
         {
@@ -5474,11 +5550,11 @@ qint32 SQL::getRouteCompany(qint32 route)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         while (query.next())
         {
@@ -5512,10 +5588,11 @@ Parameters SQL::getParameters(QSqlDatabase db)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            return parms;
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (!query.isActive())
         {
@@ -5568,10 +5645,11 @@ bool SQL::insertParameters(Parameters parms, QSqlDatabase db)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            return false;
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
     }
     catch (Exception e)
@@ -5603,11 +5681,11 @@ bool SQL::updateParameters(Parameters parms, QSqlDatabase db)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            return false;
+            throw SQLException(error.text() + " " + errCommand);
         }
     }
     catch (Exception e)
@@ -5651,8 +5729,11 @@ QList<SegmentData> SQL::getRouteSegmentsBySegment(int route, qint32 segmentId)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            exit(EXIT_FAILURE);
+            throw SQLException(error.text() + " " + errCommand);
         }
         while (query.next())
         {
@@ -5725,8 +5806,11 @@ QList<SegmentData> SQL::getRouteSegmentsForRouteNbr(QString route)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            throw Exception();
+            throw SQLException(error.text() + " " + errCommand);
         }
         while (query.next())
         {
@@ -5811,11 +5895,11 @@ QList<RouteData> SQL::getRouteDataForRouteName(qint32 route, QString name)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (!query.isActive())
         {
@@ -5874,11 +5958,11 @@ QDate SQL::getRoutesEarliestDateForSegment(qint32 route, QString name, qint32 Se
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            return dt;
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (!query.isActive())
         {
@@ -5915,10 +5999,11 @@ bool SQL::recalculateSegmentDates(SegmentInfo* si)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            return false;
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (!query.isActive())
         {
@@ -5967,12 +6052,11 @@ QDate SQL::getRoutesNextDateForSegment(qint32 route, QString name, qint32 Segmen
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (!query.isActive())
         {
@@ -6030,11 +6114,11 @@ bool SQL::doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QD
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            return false;
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (!query.isActive())
         {
@@ -6110,9 +6194,11 @@ QList<SegmentInfo> SQL::getSegmentsInSameDirection(SegmentInfo siIn, bool revers
     bool bQuery = query.exec(commandText);
     if(!bQuery)
     {
-     SQLERROR(std::move(query));
-     db.close();
-     //exit(EXIT_FAILURE);
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
+        throw SQLException(error.text() + " " + errCommand);
     }
     SegmentInfo si;
 
@@ -6177,11 +6263,11 @@ bool SQL::deleteSegment(qint32 segmentId)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         rows = query.numRowsAffected();
         // delete any routes referencing the segment
@@ -6189,11 +6275,11 @@ bool SQL::deleteSegment(qint32 segmentId)
         bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         rows = query.numRowsAffected();
 
@@ -6201,11 +6287,11 @@ bool SQL::deleteSegment(qint32 segmentId)
         bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         rows = query.numRowsAffected();
         if (rows == 0)
@@ -6259,11 +6345,11 @@ qint32 SQL::getDefaultCompany(qint32 route, QString date)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         while (query.next())
         {
@@ -6293,11 +6379,11 @@ LatLng SQL::getPointInfo(qint32 pt, qint32 SegmentId)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         while (!query.isActive())
         {
@@ -6340,11 +6426,11 @@ qint32 SQL::addCompany(QString name, qint32 route, QString startDate, QString en
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         while (query.next())
         {
@@ -6358,11 +6444,11 @@ qint32 SQL::addCompany(QString name, qint32 route, QString startDate, QString en
             bQuery = query.exec(commandText);
             if(!bQuery)
             {
-                QSqlError err = query.lastError();
-                qDebug() << err.text() + "\n";
-                qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-                db.close();
-                exit(EXIT_FAILURE);
+                QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+                qDebug() << errCommand;
+                QSqlError error = query.lastError();
+                SQLERROR(std::move(query));
+                throw SQLException(error.text() + " " + errCommand);
             }
             rows = query.numRowsAffected();
             if(rows > 0)
@@ -6376,11 +6462,11 @@ qint32 SQL::addCompany(QString name, qint32 route, QString startDate, QString en
                 bQuery = query.exec(commandText);
                 if(!bQuery)
                 {
-                    QSqlError err = query.lastError();
-                    qDebug() << err.text() + "\n";
-                    qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-                    db.close();
-                    exit(EXIT_FAILURE);
+                    QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+                    qDebug() << errCommand;
+                    QSqlError error = query.lastError();
+                    SQLERROR(std::move(query));
+                    throw SQLException(error.text() + " " + errCommand);
                 }
                 while (query.next())
                 {
@@ -6427,11 +6513,11 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  QSqlError err = query.lastError();
-  qDebug() << err.text() + "\n";
-  qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-  db.close();
-  exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while (query.next())
  {
@@ -6470,10 +6556,11 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
  qDebug() << "SQL::addSegment: " << commandText;
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-    // db.close();
-    // exit(EXIT_FAILURE);
-    throw IllegalArgumentException(query.lastError().text());
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
   }
   rows = query.numRowsAffected();
 
@@ -6489,11 +6576,11 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
   bQuery = query.exec(commandText);
  if(!bQuery)
   {
-    QSqlError err = query.lastError();
-    qDebug() << err.text() + "\n";
-    qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-    db.close();
-    exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
   }
   while (query.next())
   {
@@ -6542,11 +6629,11 @@ qint32 SQL::addSegment(SegmentInfo si, bool *bAlreadyExists, bool forceInsert)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  QSqlError err = query.lastError();
-  qDebug() << err.text() + "\n";
-  qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-  // db.close();
-  // exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while (query.next())
  {
@@ -6596,10 +6683,11 @@ qint32 SQL::addSegment(SegmentInfo si, bool *bAlreadyExists, bool forceInsert)
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  // db.close();
-  // exit(EXIT_FAILURE);
-  return -1;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
   }
   rows = query.numRowsAffected();
 
@@ -6615,11 +6703,11 @@ qint32 SQL::addSegment(SegmentInfo si, bool *bAlreadyExists, bool forceInsert)
   bQuery = query.exec(commandText);
  if(!bQuery)
   {
-    QSqlError err = query.lastError();
-    qDebug() << err.text() + "\n";
-    qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-    db.close();
-    exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
   }
   while (query.next())
   {
@@ -6709,9 +6797,11 @@ try
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  db.close();
-  exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  rows = query.numRowsAffected();
  if(rows == 0)
@@ -6761,9 +6851,11 @@ try
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  db.close();
-  exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  rows = query.numRowsAffected();
  if (rows == 0)
@@ -6784,9 +6876,11 @@ try
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-    db.close();
-    exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  if(!query.isActive())
  {
@@ -6835,9 +6929,11 @@ try
   bQuery = query.exec(commandText);
   if(!bQuery)
   {
-   SQLERROR(std::move(query));
-   db.close();
-   exit(EXIT_FAILURE);
+      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+      qDebug() << errCommand;
+      QSqlError error = query.lastError();
+      SQLERROR(std::move(query));
+      throw SQLException(error.text() + " " + errCommand);
   }
   while (query.next())
   {
@@ -6877,11 +6973,11 @@ try
    bQuery = query.exec(commandText);
    if(!bQuery)
    {
-    QSqlError err = query.lastError();
-    qDebug() << err.text() + "\n";
-    qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-    db.close();
-    exit(EXIT_FAILURE);
+       QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+       qDebug() << errCommand;
+       QSqlError error = query.lastError();
+       SQLERROR(std::move(query));
+       throw SQLException(error.text() + " " + errCommand);
    }
    while (query.next())
    {
@@ -6916,11 +7012,11 @@ try
     bQuery = query.exec(commandText);
     if(!bQuery)
     {
-     QSqlError err = query.lastError();
-     qDebug() << err.text() + "\n";
-     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     db.close();
-     exit(EXIT_FAILURE);
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
+        throw SQLException(error.text() + " " + errCommand);
     }
     rows = query.numRowsAffected();
     if (rows == 0)
@@ -6941,9 +7037,11 @@ try
     bQuery = query.exec(commandText);
     if(!bQuery)
     {
-     SQLERROR(std::move(query));
-     db.close();
-     exit(EXIT_FAILURE);
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
+        throw SQLException(error.text() + " " + errCommand);
     }
     rows = query.numRowsAffected();
     if (rows == 0)
@@ -7104,11 +7202,11 @@ RouteData SQL::getRouteDataForRouteDates(qint32 route, QString name, qint32 segm
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            return rd;
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (!query.isActive())
         {
@@ -7175,11 +7273,11 @@ bool SQL::deleteRoute(qint32 route, int routeId, QString startDate, QString endD
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            return false;
+            throw SQLException(error.text() + " " + errCommand);
         }
         rows = query.numRowsAffected();
         if (rows == 0)
@@ -7225,8 +7323,11 @@ bool SQL::deleteRoute(SegmentData sd)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  return false;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  rows = query.numRowsAffected();
  if (rows == 0)
@@ -7263,8 +7364,11 @@ bool SQL::deleteRoute(RouteData rd)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-  return false;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  rows = query.numRowsAffected();
  if (rows == 0)
@@ -7362,8 +7466,11 @@ QString SQL::getPrevRouteName(QDate dt)
                        "where r.endDate = '%1'").arg(dt.addDays(-1).toString("yyyy/MM/dd"));
  if(!query.exec(commandText))
  {
-  SQLERROR(std::move(query));
-  return "error!";
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while(query.next())
  {
@@ -7382,8 +7489,11 @@ QString SQL::getNextRouteName(QDate dt)
                        "where r.startDate = '%1'").arg(dt.addDays(1).toString("yyyy/MM/dd"));
  if(!query.exec(commandText))
  {
-  SQLERROR(std::move(query));
-  return "error!";
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while(query.next())
  {
@@ -7680,11 +7790,11 @@ bool SQL::isRouteUsedOnDate(qint32 route, qint32 segmentId,  QString date)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (query.isActive() == false)
         {
@@ -7723,11 +7833,11 @@ QList<StationInfo> SQL::getStations(QString alphaRoute, QDate date)
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
-    qDebug() << commandText;
-    SQLERROR(std::move(query));
-    //db.close();
-    //exit(EXIT_FAILURE);
-    return myArray;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
 
  if (!query.isActive())
@@ -7773,10 +7883,11 @@ QList<StationInfo> SQL::getStations()
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  SQLERROR(std::move(query));
-     //db.close();
-     //exit(EXIT_FAILURE);
-     return myArray;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  if (!query.isActive())
  {
@@ -7821,11 +7932,11 @@ CommentInfo SQL::getComments(qint32 infoKey)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
 
         if (!query.isActive())
@@ -7886,11 +7997,11 @@ int SQL::addComment(QString comments, QString tags)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
 
         //int rows = query.numRowsAffected();
@@ -7907,11 +8018,11 @@ int SQL::addComment(QString comments, QString tags)
             bQuery = query.exec(commandText);
             if(!bQuery)
             {
-               QSqlError err = query.lastError();
-               qDebug() << err.text() + "\n";
-               qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-               db.close();
-               exit(EXIT_FAILURE);
+                QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+                qDebug() << errCommand;
+                QSqlError error = query.lastError();
+                SQLERROR(std::move(query));
+                throw SQLException(error.text() + " " + errCommand);
             }
             while (query.next())
             {
@@ -7959,11 +8070,11 @@ bool SQL::updateComment(qint32 infoKey, QString comments, QString tags)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         rows = query.numRowsAffected();
         if (rows > 0)
@@ -7991,11 +8102,11 @@ bool SQL::deleteComment(qint32 infoKey)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         rows = query.numRowsAffected();
         if (rows > 0)
@@ -8024,11 +8135,11 @@ QDate SQL::getFirstCommentDate(qint32 route, QDate date, qint32 companyKey)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-     QSqlError err = query.lastError();
-     qDebug() << err.text() + "\n";
-     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     db.close();
-     exit(EXIT_FAILURE);
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  if (!query.isActive())
  {
@@ -8079,11 +8190,11 @@ RouteComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
 
         if (!query.isActive())
@@ -8150,12 +8261,11 @@ bool SQL::updateRouteComment(RouteComments rc)
             bQuery = query.exec(commandText);
             if(!bQuery)
             {
-                QSqlError err = query.lastError();
-                qDebug() << err.text() + "\n";
-                qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-                //db.close();
-                //exit(EXIT_FAILURE);
-                return false;
+                QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+                qDebug() << errCommand;
+                QSqlError error = query.lastError();
+                SQLERROR(std::move(query));
+                throw SQLException(error.text() + " " + errCommand);
             }
             db.commit();
             ret = true;
@@ -8170,11 +8280,11 @@ bool SQL::updateRouteComment(RouteComments rc)
             bQuery = query.exec(commandText);
             if(!bQuery)
             {
-                QSqlError err = query.lastError();
-                qDebug() << err.text() + "\n";
-                qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-                db.close();
-                exit(EXIT_FAILURE);
+                QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+                qDebug() << errCommand;
+                QSqlError error = query.lastError();
+                SQLERROR(std::move(query));
+                throw SQLException(error.text() + " " + errCommand);
             }
 
 
@@ -8205,20 +8315,20 @@ int SQL::countCommentUsers(int commentKey)
      bQuery = query.prepare(commandText);
      if(!bQuery)
      {
-         QSqlError err = query.lastError();
-         qDebug() << err.text() + "\n";
-         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-         db.close();
-         exit(EXIT_FAILURE);
+         QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+         qDebug() << errCommand;
+         QSqlError error = query.lastError();
+         SQLERROR(std::move(query));
+         throw SQLException(error.text() + " " + errCommand);
      }
      bQuery = query.exec(commandText);
      if(!bQuery)
      {
-         QSqlError err = query.lastError();
-         qDebug() << err.text() + "\n";
-         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-         db.close();
-         exit(EXIT_FAILURE);
+         QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+         qDebug() << errCommand;
+         QSqlError error = query.lastError();
+         SQLERROR(std::move(query));
+         throw SQLException(error.text() + " " + errCommand);
      }
      while (query.next())
      {
@@ -8231,20 +8341,20 @@ int SQL::countCommentUsers(int commentKey)
      bQuery = query.prepare(commandText);
      if(!bQuery)
      {
-         QSqlError err = query.lastError();
-         qDebug() << err.text() + "\n";
-         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-         db.close();
-         exit(EXIT_FAILURE);
+         QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+         qDebug() << errCommand;
+         QSqlError error = query.lastError();
+         SQLERROR(std::move(query));
+         throw SQLException(error.text() + " " + errCommand);
      }
      bQuery = query.exec(commandText);
      if(!bQuery)
      {
-         QSqlError err = query.lastError();
-         qDebug() << err.text() + "\n";
-         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-         db.close();
-         exit(EXIT_FAILURE);
+         QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+         qDebug() << errCommand;
+         QSqlError error = query.lastError();
+         SQLERROR(std::move(query));
+         throw SQLException(error.text() + " " + errCommand);
      }
      while (query.next())
      {
@@ -8277,11 +8387,11 @@ bool SQL::deleteRouteComment(RouteComments rc)
         bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
 
         int count = countCommentUsers(rc.ci.commentKey);
@@ -8342,11 +8452,11 @@ RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyK
         //qDebug()<< query.lastQuery();
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
 
         if (!query.isActive())
@@ -8421,11 +8531,11 @@ RouteComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 companyK
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
 
         if (!query.isActive())
@@ -8492,11 +8602,11 @@ CommentInfo SQL::getComment(qint32 commentKey, int pos)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
 
         if (!query.isActive())
@@ -8524,11 +8634,11 @@ CommentInfo SQL::getComment(qint32 commentKey, int pos)
         bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            //db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
 
         if (!query.isActive())
@@ -8546,11 +8656,11 @@ CommentInfo SQL::getComment(qint32 commentKey, int pos)
         bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
 
         if (!query.isActive())
@@ -8702,9 +8812,11 @@ qint32 SQL::addStation(StationInfo sti)
        bool bQuery = query.exec(commandText);
        if(!bQuery)
        {
+           QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+           qDebug() << errCommand;
+           QSqlError error = query.lastError();
            SQLERROR(std::move(query));
-           db.close();
-           exit(EXIT_FAILURE);
+           throw SQLException(error.text() + " " + errCommand);
        }
        while(query.next())
        {
@@ -8732,8 +8844,11 @@ qint32 SQL::addStation(StationInfo sti)
        bQuery = query.exec(commandText);
        if(!bQuery)
        {
+           QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+           qDebug() << errCommand;
+           QSqlError error = query.lastError();
            SQLERROR(std::move(query));
-           return -1;
+           throw SQLException(error.text() + " " + errCommand);
        }
        rows = query.numRowsAffected();
        //if (rows == 1)
@@ -8751,9 +8866,11 @@ qint32 SQL::addStation(StationInfo sti)
            bQuery = query.exec(commandText);
            if(!bQuery)
            {
+               QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+               qDebug() << errCommand;
+               QSqlError error = query.lastError();
                SQLERROR(std::move(query));
-               db.close();
-               exit(EXIT_FAILURE);
+               throw SQLException(error.text() + " " + errCommand);
            }
            while (query.next())
            {
@@ -8783,11 +8900,11 @@ bool SQL::deleteStation(qint32 stationKey)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         rows = query.numRowsAffected();
         if (rows > 0)
@@ -8935,11 +9052,11 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd, bool notify, bool ignoreE
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-     QSqlError err = query.lastError();
-     qDebug() << err.text() + "\n";
-     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     //throw Exception(err.text());
-     return false;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
   //qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
  rows = query.numRowsAffected();
@@ -9019,12 +9136,11 @@ QStringList SQL::showDatabases(QString connection, QString servertype)
   bool bQuery = query.exec(commandText);
   if(!bQuery)
   {
-    QSqlError err = query.lastError();
-    qDebug() << err.text() + "\n";
-    qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-    db.close();
-    //exit(EXIT_FAILURE);
-    return ret;
+      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+      qDebug() << errCommand;
+      QSqlError error = query.lastError();
+      SQLERROR(std::move(query));
+      throw SQLException(error.text() + " " + errCommand);
   }
   while(query.next())
   {
@@ -9311,10 +9427,11 @@ bool SQL::doesColumnExist(QString table, QString column)
   bQuery = query.exec(commandText);
   if(!bQuery)
   {
-   QSqlError err = query.lastError();
-   qDebug() << err.text() + "\n";
-   qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-   return false;
+      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+      qDebug() << errCommand;
+      QSqlError error = query.lastError();
+      SQLERROR(std::move(query));
+      throw SQLException(error.text() + " " + errCommand);
   }
   while(query.next())
   {
@@ -9333,10 +9450,11 @@ bool SQL::doesColumnExist(QString table, QString column)
   bQuery = query.exec(commandText);
   if(!bQuery)
   {
-   QSqlError err = query.lastError();
-   qDebug() << err.text() + "\n";
-   qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-   return false;
+      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+      qDebug() << errCommand;
+      QSqlError error = query.lastError();
+      SQLERROR(std::move(query));
+      throw SQLException(error.text() + " " + errCommand);
   }
   while(query.next())
   {
@@ -9362,10 +9480,11 @@ bool SQL::doesColumnExist(QString table, QString column)
   bQuery = query.exec(commandText);
   if(!bQuery)
   {
-   QSqlError err = query.lastError();
-   qDebug() << err.text() + "\n";
-   qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-   return false;
+      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+      qDebug() << errCommand;
+      QSqlError error = query.lastError();
+      SQLERROR(std::move(query));
+      throw SQLException(error.text() + " " + errCommand);
   }
   while(query.next())
   {
@@ -9390,8 +9509,11 @@ bool SQL::doesConstraintExist(QString tbName, QString name)
   bQuery = query.exec(commandText);
   if(!bQuery)
   {
-   SQLERROR(std::move(query));
-   return false;
+      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+      qDebug() << errCommand;
+      QSqlError error = query.lastError();
+      SQLERROR(std::move(query));
+      throw SQLException(error.text() + " " + errCommand);
   }
   while(query.next())
   {
@@ -9431,10 +9553,11 @@ bool SQL::addColumn(QString tbName, QString name, QString type, QString after)
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
-  QSqlError err = query.lastError();
-  qDebug() << err.text() + "\n";
-  qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-  return false;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  return true;
 }
@@ -9456,9 +9579,11 @@ bool SQL::updateTractionType(qint32 tractionType, QString description, QString d
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-         SQLERROR(std::move(query));
-         return false;
-
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (!query.isActive())
         {
@@ -9475,9 +9600,11 @@ bool SQL::updateTractionType(qint32 tractionType, QString description, QString d
             bQuery = query.exec(commandText);
             if(!bQuery)
             {
-             SQLERROR(std::move(query));
-             return false;
-
+                QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+                qDebug() << errCommand;
+                QSqlError error = query.lastError();
+                SQLERROR(std::move(query));
+                throw SQLException(error.text() + " " + errCommand);
             }
             rows = query.numRowsAffected();
             //if (rows == 1)
@@ -9494,8 +9621,11 @@ bool SQL::updateTractionType(qint32 tractionType, QString description, QString d
             bQuery = query.exec(commandText);
             if(!bQuery)
             {
-             SQLERROR(std::move(query));
-             return false;
+                QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+                qDebug() << errCommand;
+                QSqlError error = query.lastError();
+                SQLERROR(std::move(query));
+                throw SQLException(error.text() + " " + errCommand);
             }
             rows = query.numRowsAffected();
             //if (rows == 1)
@@ -9794,10 +9924,11 @@ bool SQL::executeCommand(QString commandString, QSqlDatabase db)
  QSqlQuery query = QSqlQuery(db);
  if(!query.exec(commandString))
  {
-  SQLERROR(std::move(query));
-  //ui->lblHelp->setText(err.text());
-  rollbackTransaction("");
-  return false;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  return true;
 }
@@ -9853,10 +9984,11 @@ bool SQL::processFile(QTextStream* in, QSqlDatabase db, bool bIsInclude)
    QSqlQuery query = QSqlQuery(db);
    if(!query.exec(sqltext))
    {
-    SQLERROR(std::move(query));
-    //ui->lblHelp->setText(err.text());
-    rollbackTransaction("");
-    return false;
+       QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+       qDebug() << errCommand;
+       QSqlError error = query.lastError();
+       SQLERROR(std::move(query));
+       throw SQLException(error.text() + " " + errCommand);
    }
    sqltext="";
   }
@@ -9872,8 +10004,11 @@ bool SQL::testAltRoute()
  QString commandText = "select sql from sqlite_master where tbl_name = 'AltRoute'";
  if(!query.exec(commandText))
  {
-  SQLERROR(std::move(query));
-  return false;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  QString sql;
  while(query.next())
@@ -9894,8 +10029,11 @@ int SQL::getCountOfRoutesUsingSegment(int segmentId)
                        "where linekey =" + QString("%1").arg(segmentId) ;
  if(!query.exec(commandText))
  {
-  SQLERROR(std::move(query));
-  return false;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  QString sql;
  while(query.next())
@@ -9913,8 +10051,11 @@ int SQL::getCountOfStationsUsingSegment(int segmentId)
  QString commandText = "select count(*) from Stations where segmentId =" + QString("%1").arg(segmentId) ;
  if(!query.exec(commandText))
  {
-  SQLERROR(std::move(query));
-  return false;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  QString sql;
  while(query.next())
@@ -9976,9 +10117,11 @@ bool SQL::deleteAndReplaceSegmentWith(int segmentId1, int segmentId2)
                          "where segmentId = %2").arg(segmentId2).arg(segmentId1);
    if(!query.exec(commandText))
    {
-    SQLERROR(std::move(query));
-    rollbackTransaction("replaceSegment");
-    return false;
+       QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+       qDebug() << errCommand;
+       QSqlError error = query.lastError();
+       SQLERROR(std::move(query));
+       throw SQLException(error.text() + " " + errCommand);
    }
    if(rows != cnt)
    {
@@ -10028,8 +10171,11 @@ QList<SegmentInfo> SQL::getUnusedSegments()
                        " from Segments s where s.segmentid not in (select linekey from Routes r) ";
  if(!query.exec(commandText))
  {
-  SQLERROR(std::move(query));
-  return list;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while(query.next())
  {
@@ -10077,9 +10223,11 @@ bool SQL::replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegmen
                 "where r.linekey in " +oldIn;
   if(!query.exec(commandText))
   {
-   SQLERROR(std::move(query));
-   rollbackTransaction("replaceSegments");
-   return false;
+      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+      qDebug() << errCommand;
+      QSqlError error = query.lastError();
+      SQLERROR(std::move(query));
+      throw SQLException(error.text() + " " + errCommand);
   }
   QList<SegmentData> list;
   while(query.next())
@@ -10245,8 +10393,11 @@ QList<FKInfo> SQL::getForeignKeyInfo(QSqlDatabase db, Connection* c, QString tab
  }
  if(!query.exec(commandText))
  {
-  SQLERROR(std::move(query));
-  return list;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  int seq = 0;
  while(query.next())
@@ -10300,8 +10451,11 @@ QMap<int,RouteName*>* SQL::routeNameList()
  QString commandText =  "SELECT route, routePrefix, routeAlpha, baseRoute FROM AltRoute";
  if(!query.exec(commandText))
  {
-  SQLERROR(std::move(query));
-  return list;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while(query.next())
  {
@@ -10331,7 +10485,11 @@ QString SQL::getDatabase(QString serverType, QSqlDatabase db)
 
  if(!query.exec(commandText))
  {
-  SQLERROR(std::move(query));
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  else
  {
@@ -10355,8 +10513,11 @@ bool SQL::useDatabase(QString dbName, QString serverType, QSqlDatabase db)
     QString commandText = "use " +dbName;
     if(!query.exec(commandText))
     {
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
         SQLERROR(std::move(query));
-        return false;
+        throw SQLException(error.text() + " " + errCommand);
     }
     return true;
 }
@@ -10375,10 +10536,11 @@ bool SQL::createSqlDatabase(QString dbName, QSqlDatabase db, QString dbType)
 
  if(!query.exec(commandText))
  {
-  SQLERROR(std::move(query));
-  QMessageBox::critical(NULL, "Error", "A fatal SQL error has occured:\n" + query.lastError().text() + "\n"+query.lastQuery() + " line:" + QString("%1").arg(__LINE__));
-
-  return false;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  return true;
 }
@@ -10394,8 +10556,11 @@ QStringList SQL::showMySqlDatabases(QSqlDatabase db)
  QString commandText = "show databases";
  if(!query.exec(commandText))
  {
-  SQLERROR(std::move(query));
-  return list;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  QStringList excludes = {"mysql", "information_schema", "performance_schema", "phpmyadmin", "sys"};
  while(query.next())
@@ -10415,8 +10580,11 @@ QStringList SQL::showMsSqlDatabases(QSqlDatabase db)
  QString commandText = "select name from sys.Databases WHERE name NOT IN ('master', 'tempdb', 'model', 'msdb')";
  if(!query.exec(commandText))
  {
-  SQLERROR(std::move(query));
-  return list;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while(query.next())
  {
@@ -10465,11 +10633,11 @@ SegmentInfo SQL::convertSegment(int segmentId, int tracks)
 
   if(!bQuery)
   {
-      QSqlError err = query.lastError();
-      qDebug() << err.text() + "\n";
-      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-      db.close();
-      exit(EXIT_FAILURE);
+      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+      qDebug() << errCommand;
+      QSqlError error = query.lastError();
+      SQLERROR(std::move(query));
+      throw SQLException(error.text() + " " + errCommand);
   }
   if (!query.isActive())
   {
@@ -10547,10 +10715,11 @@ int SQL::nextRouteNumberInRange(int lowRange, int highRange){
 
  if(!bQuery)
  {
-     QSqlError err = query.lastError();
-     qDebug() << err.text() + "\n";
-     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     return -1;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while(query.next())
  {
@@ -10678,11 +10847,11 @@ QList<RouteComments> SQL::commentsForRoute(int route)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-     QSqlError err = query.lastError();
-     qDebug() << err.text() + "\n";
-     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     throw Exception();
-     ;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while (query.next())
  {
@@ -10709,10 +10878,11 @@ QList<TerminalInfo> SQL::terminalsForRoute(int route)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-     QSqlError err = query.lastError();
-     qDebug() << err.text() + "\n";
-     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     throw Exception();
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while(query.next())
  {
@@ -10741,10 +10911,11 @@ bool SQL::updateRouteForStations(int oldRoute, int newRoute)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-     QSqlError err = query.lastError();
-     qDebug() << err.text() + "\n";
-     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     return false;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  return true;
 }
@@ -10757,10 +10928,11 @@ bool SQL::deleteTerminalInfo(int route)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-     QSqlError err = query.lastError();
-     qDebug() << err.text() + "\n";
-     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     return false;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  return true;
 
@@ -10786,10 +10958,11 @@ bool SQL::doesFunctionExist(QString name, QString serverType, QSqlDatabase db)
     bool bQuery = query.exec(commandText);
     if(!bQuery)
     {
-        QSqlError err = query.lastError();
-        qDebug() << err.text() + "\n";
-        qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-        return false;
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
+        throw SQLException(error.text() + " " + errCommand);
     }
     QString fName;
     QString type;
@@ -10838,10 +11011,11 @@ QStringList SQL::listViews()
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-     QSqlError err = query.lastError();
-     qDebug() << err.text() + "\n";
-     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     return list;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while(query.next())
  {
@@ -10875,11 +11049,11 @@ QStringList SQL::listColumns(QString table, QString serverType, QSqlDatabase db,
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-     QSqlError err = query.lastError();
-     qDebug() << err.text() + "\n";
-     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
      SQLERROR(std::move(query));
-     return columns;
+     throw SQLException(error.text() + " " + errCommand);
  }
  while(query.next())
  {
@@ -10940,10 +11114,11 @@ QStringList SQL::listPkColumns(QString table, QString serverType, QSqlDatabase d
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-     QSqlError err = query.lastError();
-     qDebug() << err.text() + "\n";
-     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     return columns;
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
  }
  while(query.next())
  {
@@ -10981,11 +11156,11 @@ QList<SegmentData*>  SQL::segmentDataListFromView(QString where)
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
-     QSqlError err = query.lastError();
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
      SQLERROR(std::move(query));
-     qDebug() << err.text() + "\n";
-     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     return list;
+     throw SQLException(error.text() + " " + errCommand);
  }
  while(query.next())
  {
@@ -11077,10 +11252,11 @@ bool SQL::getForeignKeyCheck()
      bool bQuery = query.exec(commandText);
      if(!bQuery)
      {
-         QSqlError err = query.lastError();
-         qDebug() << err.text() + "\n";
-         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-         return false;
+         QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+         qDebug() << errCommand;
+         QSqlError error = query.lastError();
+         SQLERROR(std::move(query));
+         throw SQLException(error.text() + " " + errCommand);
      }
      if (!query.isActive())
      {
@@ -11116,10 +11292,11 @@ void SQL::setForeignKeyCheck(bool b)
      bool bQuery = query.exec(commandText);
      if(!bQuery)
      {
-         QSqlError err = query.lastError();
-         qDebug() << err.text() + "\n";
-         qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-         return;
+         QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+         qDebug() << errCommand;
+         QSqlError error = query.lastError();
+         SQLERROR(std::move(query));
+         throw SQLException(error.text() + " " + errCommand);
      }
  }
  catch (Exception e)
@@ -11264,11 +11441,11 @@ QList<RouteData> SQL:: checkRouteName(QString name, QDate startDate, QDate endDa
        bool bQuery = query.exec(commandText);
        if(!bQuery)
        {
-           QSqlError err = query.lastError();
+           QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+           qDebug() << errCommand;
+           QSqlError error = query.lastError();
            SQLERROR(std::move(query));
-           qDebug() << err.text() + "\n";
-           qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-           return list;
+           throw SQLException(error.text() + " " + errCommand);
        }
        if (!query.isActive())
        {
@@ -11337,12 +11514,11 @@ QDate SQL::getNextStartOrEndDate(int route, QDate dt, int segmentId, bool bStart
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            throw SQLException(error.text() + " " + errCommand);
         }
         if (!query.isActive())
         {
@@ -11390,11 +11566,11 @@ QList<SegmentData*> SQL::getConflictingRouteSegments(RouteData rd)
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
-            QSqlError err = query.lastError();
-            qDebug() << err.text() + "\n";
-            qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-            db.close();
-            exit(EXIT_FAILURE);
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
         }
         while (query.next())
         {
@@ -11660,11 +11836,11 @@ qint32 SQL::addRouteName(RouteInfo ri,bool *bAlreadyExists)
     bool bQuery = query.exec(commandText);
     if(!bQuery)
     {
-     QSqlError err = query.lastError();
-     SQLERROR(std::move(query));
-     qDebug() << err.text() + "\n";
-     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     return -1;
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
+        throw SQLException(error.text() + " " + errCommand);
     }
     while (query.next())
     {
@@ -11683,8 +11859,11 @@ qint32 SQL::addRouteName(RouteInfo ri,bool *bAlreadyExists)
     bQuery = query.exec(commandText);
     if(!bQuery)
     {
-     SQLERROR(std::move(query));
-     return -1;
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
+        throw SQLException(error.text() + " " + errCommand);
     }
      rows = query.numRowsAffected();
 
@@ -11700,11 +11879,11 @@ qint32 SQL::addRouteName(RouteInfo ri,bool *bAlreadyExists)
      bQuery = query.exec(commandText);
     if(!bQuery)
      {
-       QSqlError err = query.lastError();
-       SQLERROR(std::move(query));
-       qDebug() << err.text() + "\n";
-       qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-       return -1;
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
+        throw SQLException(error.text() + " " + errCommand);
      }
      while (query.next())
      {
@@ -11725,9 +11904,12 @@ bool SQL::insertRouteName(RouteInfo ri)
             + "')";
     bool bQuery = query.exec(commandText);
     if(!bQuery)
-    {QSqlError err = query.lastError();
-     SQLERROR(std::move(query));
-     return -1;
+    {
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
+        throw SQLException(error.text() + " " + errCommand);
     }
      int rows = query.numRowsAffected();
      return rows;
@@ -11746,11 +11928,11 @@ RouteInfo SQL::getRouteName(int routeId)
     bool bQuery = query.exec(commandText);
    if(!bQuery)
     {
-      QSqlError err = query.lastError();
-      SQLERROR(std::move(query));
-      qDebug() << err.text() + "\n";
-      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-      return ri;
+       QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+       qDebug() << errCommand;
+       QSqlError error = query.lastError();
+       SQLERROR(std::move(query));
+       throw SQLException(error.text() + " " + errCommand);
     }
 
     while (query.next())
@@ -11778,11 +11960,11 @@ bool SQL::updateRouteName(RouteInfo ri)
     bool bQuery = query.exec(commandText);
     if(!bQuery)
     {
-      QSqlError err = query.lastError();
-      SQLERROR(std::move(query));
-      qDebug() << err.text() + "\n";
-      qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-      return false;
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
+        throw SQLException(error.text() + " " + errCommand);
     }
     return true;
 }
