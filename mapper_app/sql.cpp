@@ -136,16 +136,17 @@ void SQL::beginTransaction (QString name)
  }
  QString commandText = "Begin Transaction " +name;
  QSqlDatabase db = QSqlDatabase::database();
- //QSqlQuery query = QSqlQuery(db);
- //bool bQuery = query.exec(commandText);
- bool bQuery = db.transaction();
+ QSqlQuery query = QSqlQuery(db);
+ bool bQuery = query.exec(commandText);
+ //bool bQuery = db.transaction();
  if(!bQuery)
  {
      QString errCommand = commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
      qDebug() << errCommand;
      QSqlError error = db.lastError();
-     //SQLERROR(std::move(query));
-     throw SQLException(error.text() + " " + errCommand);
+     SQLERROR(std::move(query));
+     //throw SQLException(error.text() + " " + errCommand);
+     return;
  }
  currentTransaction = name;
 }
@@ -1581,7 +1582,7 @@ QList<SegmentData*> SQL::getSegmentDatasForDate(qint32 route, QString name, int 
 
  QString where = " where Route = " + QString("%1").arg(route) + ""
  " and '" + date.toString("yyyy/MM/dd") + "' between startDate and endDate"
- " and RouteName = '" + name + "'"
+ " and trim(RouteName) = '" + name.trimmed() + "'"
  " and companyKey = " + QString::number(companyKey);
  return segmentDataListFromView(where);
 }
@@ -1601,11 +1602,11 @@ QList<SegmentData> SQL::getRouteDatasForDate(int segmentId, QString date)
  QString commandText = "SELECT a.Route,n.Name,a.StartDate,a.EndDate,LineKey,a.companyKey,"
                        " a.tractionType, a.direction, normalEnter, normalLeave,"
                        " reverseEnter, reverseLeave, routeAlpha, s.tracks, a.trackUsage,"
-                       " a.oneWay, s.street, s.description, c.baseRoute, r.routeId"
+                       " a.oneWay, s.street, s.description, c.baseRoute, a.routeId"
                        " from Routes a"
                        " join AltRoute c on a.route = c.route"
                        " join Segments s on a.lineKey = s.segmentId"
-                       " join RouteName on a.routeId = n.routeid"
+                       " join RouteName n on a.routeId = n.routeid"
                        " where '" + date + "' between a.startDate and a.endDate"
                        " and lineKey = "+QString::number(segmentId);
 
@@ -2286,7 +2287,7 @@ QList<SegmentData*> SQL::getIntersectingRouteSegmentsAtPoint(int ignoreThis, dou
  }
 #endif
  QString where = "where Route = " + QString("%1").arg(route)
-         + " and trim(RouteName) = '" + routeName
+         + " and trim(RouteName) = '" + routeName.trimmed()
          + "' and '" + date + "' between StartDate and EndDate"
          + " and SegmentId != " + QString("%1").arg(ignoreThis)
          + " order by SegmentId";
@@ -7084,7 +7085,7 @@ SegmentData* SQL::getSegmentData(qint32 route, qint32 segmentId, QString startDa
 QList<SegmentData*> SQL::getSegmentDataList(RouteData rd)
 {
  QString where = " where route = " + QString("%1").arg(rd._route)
-   + " and routeName = '" + rd._name + "'"
+   + " and trim(routeName) = '" + rd._name.trimmed() + "'"
 //                       + " and a.companyKey = " + QString::number(rd.companyKey)
    + " and startDate = '" + rd._dateBegin.toString("yyyy/MM/dd") + "'"
    + " and endDate = '" + rd._dateEnd.toString("yyyy/MM/dd") + "'";
@@ -7167,7 +7168,7 @@ SegmentData* SQL::getConflictingSegmentDataForRoute(qint32 route, QString name, 
  QString where = " where Route = " + QString("%1").arg(route) + ""
                  " and ('" + startDate + "' between startDate and endDate"
                  " or  '" + endDate + "' between startDate and endDate)"
-                 " and RouteName = '" + name + "'"
+                 " and trim(RouteName) = '" + name.trimmed() + "'"
                  " and SegmentId = " + QString("%1").arg(segmentId);
  QList<SegmentData*> list = segmentDataListFromView(where);
  if(list.count() > 0)
@@ -7515,12 +7516,11 @@ bool SQL::insertRouteSegment(SegmentData sd, bool bNotify)
   //return false;
  }
 
- commandText = "INSERT INTO Routes (Route, RouteId, Name, StartDate, EndDate, LineKey, companyKey, tractionType, direction, "
+ commandText = "INSERT INTO Routes (Route, RouteId, StartDate, EndDate, LineKey, companyKey, tractionType, direction, "
                "next, prev, normalEnter, normalleave, reverseEnter, reverseLeave,sequence, reverseSeq, "
                "oneWay, trackusage) "
                "VALUES(" + QString("%1").arg(sd._route) + ", "
                + QString("%1").arg(sd._routeId) + ",'"
-               + sd._routeName.trimmed() + "', '"
                + sd._dateBegin.toString("yyyy/MM/dd") + "', '"
                + sd._dateEnd.toString("yyyy/MM/dd") + "',"
                + QString("%1").arg(sd._segmentId) + ", "
@@ -8001,7 +8001,8 @@ int SQL::addComment(QString comments, QString tags)
             qDebug() << errCommand;
             QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            throw SQLException(error.text() + " " + errCommand);
+            //throw SQLException(error.text() + " " + errCommand);
+            return -1;
         }
 
         //int rows = query.numRowsAffected();
@@ -8248,14 +8249,17 @@ bool SQL::updateRouteComment(RouteComments rc)
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         QSqlQuery query = QSqlQuery(db);
+
         if(rc.commentKey == -1)
         {
-            db.transaction();
+            //db.transaction();
+            beginTransaction("updateouteComment");
             //qDebug()<< rc.ci.comments;
 
             rc.ci.commentKey = addComment(rc.ci.comments, rc.ci.tags);
 
-            commandText = QString("insert into RouteComments (route, date, commentKey, companyKey, latitude, longitude) "
+            commandText = QString("insert into RouteComments (route, date, commentKey, companyKey,"
+                                  " latitude, longitude) "
             " values(%1, '%2', %3, %4, %5, %6)").arg(rc.route).arg(rc.date.toString("yyyy/MM/dd"))
                     .arg(rc.ci.commentKey ).arg(rc.companyKey).arg(rc.pos.lat()).arg(rc.pos.lon());
             bQuery = query.exec(commandText);
@@ -8265,7 +8269,8 @@ bool SQL::updateRouteComment(RouteComments rc)
                 qDebug() << errCommand;
                 QSqlError error = query.lastError();
                 SQLERROR(std::move(query));
-                throw SQLException(error.text() + " " + errCommand);
+                //throw SQLException(error.text() + " " + errCommand);
+                return false;
             }
             db.commit();
             ret = true;
@@ -8466,6 +8471,7 @@ RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyK
         while (query.next())
         {
             rc.commentKey = query.value(0).toInt();
+            rc.ci.commentKey = rc.commentKey;
             rc.ci.comments = query.value(1).toString();
             rc.ci.tags = query.value(2).toString();
             rc.date = query.value(3).toDate();
@@ -8519,12 +8525,14 @@ RouteComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 companyK
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
-        QString commandText = "SELECT rc.commentKey, comments, tags, date, rc.companyKey, r.name,"
+        QString commandText = "SELECT rc.commentKey, comments, tags, date, rc.companyKey, n.name,"
                 " a.routeAlpha, rc.latitude, rc.longitude "
                 "from RouteComments rc "
                 "join Comments c on rc.commentKey = c.commentKey "
                 "JOIN AltRoute a ON a.route = rc.route "
-                "join Routes r on r.route = rc.route and '"+date.toString("yyyy/MM/dd")+"' between r.startDate and r.endDate "
+                "join Routes r on r.route = rc.route"
+                " and '"+date.toString("yyyy/MM/dd")+"' between r.startDate and r.endDate "
+                "join RouteName n on r.routeId = n.Routeid "
                 "where rc.route = "+ QString("%1").arg(route) +" "
                 "and rc.date  < '" + date.toString("yyyy/MM/dd")+"'";
         QSqlQuery query = QSqlQuery(db);
@@ -11900,7 +11908,7 @@ bool SQL::insertRouteName(RouteInfo ri)
     QSqlQuery query = QSqlQuery(db);
 
     QString commandText = "insert into RouteName (Name) values ("
-            "'" + ri.routeName
+            "'" + ri.routeName.trimmed()
             + "')";
     bool bQuery = query.exec(commandText);
     if(!bQuery)
@@ -11964,7 +11972,8 @@ bool SQL::updateRouteName(RouteInfo ri)
         qDebug() << errCommand;
         QSqlError error = query.lastError();
         SQLERROR(std::move(query));
-        throw SQLException(error.text() + " " + errCommand);
+        //throw SQLException(error.text() + " " + errCommand);
+        return false;
     }
     return true;
 }

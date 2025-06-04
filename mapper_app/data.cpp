@@ -1321,3 +1321,23 @@ QString StreetInfo::toString()
 {
     return street + " " + location + " streetId:" + QString::number(streetId);
 }
+
+RouteComments::RouteComments(const RouteComments& other)
+{
+    route = other.route;
+    date = other.date;
+    commentKey = other.commentKey;
+    ci = other.ci;
+    pos = other.pos;
+    companyKey = other.companyKey;
+    name = other.name;
+    routeAlpha = other.routeAlpha;
+}
+
+CommentInfo::CommentInfo(const CommentInfo& other){
+    commentKey = other.commentKey;
+    tags = other.tags;
+    comments = other.comments;
+    usedByRoutes = other.usedByRoutes;
+    usedByStations = other.usedByStations;
+}

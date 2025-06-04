@@ -836,9 +836,11 @@ public:
 
 class CommentInfo
 {
- public:
-  CommentInfo(){commentKey = -1;}
-  CommentInfo(int commentKey) {this->commentKey = commentKey;}
+public:
+    CommentInfo(){commentKey = -1;}
+    CommentInfo(int commentKey) {this->commentKey = commentKey;}
+    ~CommentInfo() {}
+    CommentInfo(const CommentInfo& other);
     qint32 commentKey = -1;
     QString tags;
     QString comments;
@@ -880,8 +882,9 @@ public:
     }
 };
 
-struct RouteComments
+class RouteComments
 {
+public:
     qint32 route;
     QDate date;
     qint32 commentKey;
@@ -890,6 +893,9 @@ struct RouteComments
     qint32 companyKey;
     QString name;
     QString routeAlpha;
+    RouteComments(){}
+    ~RouteComments() {}
+    RouteComments(const RouteComments&other);
 };
 
 class RouteChangedEventArgs

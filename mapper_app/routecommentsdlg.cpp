@@ -196,6 +196,7 @@ void RouteCommentsDlg::outputChanges()
  {
   _rc.ci.comments = ui->txtComments->toHtml();
   _rc.ci.tags = ui->txtTags->text();
+  _rc.commentKey =
   //qDebug()<< _rc.ci.comments;
   sql->updateRouteComment( _rc);
 
