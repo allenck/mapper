@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 15.0.0, 2025-06-03T20:42:17. -->
+<!-- Written by QtCreator 15.0.0, 2025-06-19T16:33:02. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -275,6 +275,7 @@
     <value type="bool" key="RunConfiguration.UseCppDebuggerAuto">true</value>
     <value type="bool" key="RunConfiguration.UseLibrarySearchPath">true</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
+    <value type="QString" key="RunConfiguration.WorkingDirectory.default">/home/allen/Projects/Mapper/mapper_QT/build/Desktop_Qt_6_8_2-Debug/mapper_app</value>
    </valuemap>
    <value type="qlonglong" key="ProjectExplorer.Target.RunConfigurationCount">2</value>
   </valuemap>

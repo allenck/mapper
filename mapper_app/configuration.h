@@ -99,6 +99,7 @@ public:
  //bool bUseBundleResources = false;
  QString startCwd;
 #endif
+ QString tileServerUrl;
 
 private:
  static Configuration* _instance;

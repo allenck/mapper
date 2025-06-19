@@ -92,6 +92,35 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  config = Configuration::instance();
  config->getSettings();
 
+ // see if there are any command line overrides
+ if(argc >= 3)
+ {
+     int i = 1;
+     while(i < argc)
+     {
+         QString str = argv[i];
+         QString str2;
+         if(str.startsWith("-"))
+         {
+             if(str.at(1)== "b")
+             {
+                 if(i+1 < argc)
+                 {
+                     str2 = argv[i+1];
+                     bool bOK;
+                     int v = str2.toInt(&bOK);
+                     if(bOK)
+                         config->bRunInBrowser = v;
+                     else
+                         config->bRunInBrowser = false;
+                     qInfo() << "bRunInBrowser override - set to: " << (config->bRunInBrowser?"true":"false");
+                 }
+             }
+         }
+         i++;
+     }
+}
+
  cwd = QDir::currentPath();
 // config = Configuration::instance();
 // config->getSettings();
@@ -173,7 +202,9 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  systemConsoleAction = NULL;
 #endif
 
- QUrl dataUrl("http://ubuntu-2:80/public/map_tiles/overlay.lst");
+ //QUrl dataUrl("http://ubuntu-2:80/public/map_tiles/overlay.lst");
+ QUrl dataUrl(config->tileServerUrl + "overlay.lst");
+
  m_dataCtrl = new FileDownloader(dataUrl, this);
  connect (m_dataCtrl, SIGNAL(downloaded(QString)), this, SLOT(loadAcksoftData(QString)));
 
@@ -671,6 +702,8 @@ void MainWindow::loadAcksoftData(QString err)
 {
  QString data;
  data = m_dataCtrl->downloadedData();
+ delete m_dataCtrl;
+ m_dataCtrl = nullptr;
  if(data.startsWith("<!DOCTYPE HTML PUBLIC"))
   return;
  if(!err.isEmpty())
@@ -727,15 +760,18 @@ void MainWindow::loadData(QString data, QString source)
   if(source == "acksoft")
   {
    //overlay->urls.append("http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/");
-   overlay->urls.append("https://ubuntu-2:80/public/map_tiles/");
+   //overlay->urls.append("https://ubuntu-2:80/public/map_tiles/");
+   overlay->urls.append(config->tileServerUrl);
 
    if(!overlay->bounds().isValid())
    {
-    QEventLoop loop;
+    //QEventLoop loop;
     m_tilemapresource = new FileDownloader("http://ubuntu-2:80/public/map_tiles/" + overlay->name + "/tilemapresource.xml");
     m_tilemapresource->setOverlay(overlay);
     connect(m_tilemapresource, SIGNAL(downloaded(QString)), this, SLOT(processTileMapResource()));
-    loop.exec();
+    //loop.exec();
+    while(m_tilemapresource)
+        qApp->processEvents();
    }
    if(config->currCity->name() == overlay->cityName)
     config->currCity->city_overlayMap->insert(overlay->name, overlay);
@@ -816,6 +852,7 @@ void MainWindow::processTileMapResource()
    }
   }
  }
+ m_tilemapresource = nullptr;
 }
 
 //#ifdef WIN32

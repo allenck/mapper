@@ -188,11 +188,7 @@ void Configuration::saveSettings()
  settings->setValue("displayArrows", bDisplaySegmentArrows);
  settings->setValue("font",font.toString());
  settings->setValue("mapId", mapId);
- //settings->setValue("selectedCompanies", selectedCompanies);
-// #ifdef Q_OS_MAC
-//  settings->setValue("useBundleResources", bUseBundleResources);
-// #endif
-
+ settings->setValue("tileServerUrl", tileServerUrl);
 }
 
 
@@ -500,6 +496,7 @@ void Configuration::getSettings()
    bDisplayDebugMsgs = settings.value("displayDebugMsgs", false).toBool();
    bDisplaySegmentArrows = settings.value("displayArrows", false).toBool();
    mapId = settings.value("mapId", "99f6ba1d184ea0b6").toString();
+   tileServerUrl = settings.value("tileServerUrl", "https://ubuntu-2/public/map_tiles/").toString();
    QFont f;
    f.fromString(settings.value("font").toString());
    font =f;
