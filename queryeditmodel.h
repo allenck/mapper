@@ -2,6 +2,8 @@
 #define QUERYEDITMODEL_H
 
 #include <QSqlTableModel>
+#include "sql.h"
+#include "data.h"
 
 class QueryEditModel : public QSqlTableModel
 {
@@ -12,13 +14,16 @@ class QueryEditModel : public QSqlTableModel
   void setTabName(QString name);
   QVariant edit(const QModelIndex &index) const;
   QVariant data(const QModelIndex &index, int role) const;
-
+  void setTable(const QString& table);
   QString tabName;
+
+ signals:
+  void routeChange(NotifyRouteChange rc);
 
  protected:
   bool setData(const QModelIndex &index, const QVariant &value, int role);
  private:
-
+  QString table;
 };
 
 #endif // QUERYEDITMODEL_H

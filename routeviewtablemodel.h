@@ -5,13 +5,14 @@
 //#include <QPair>
 #include <QList>
 #include "data.h"
+#include "sql.h"
 
 class RouteViewTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
-    RouteViewTableModel(QObject *parent = 0);
-    RouteViewTableModel(qint32 route, QString name, QDate dtStart, QDate dtEnd, QList<SegmentData> segmentInfoList, QObject *parent=0);
+    RouteViewTableModel(QObject *parent);
+    RouteViewTableModel(qint32 route, QString name, int companyKey, QDate dtStart, QDate dtEnd, QList<SegmentData*> segmentDataList, QObject *parent);
 
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
@@ -21,14 +22,15 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role=Qt::EditRole);
     bool insertRows(int position, int rows, const QModelIndex &index=QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index=QModelIndex());
-    QList<SegmentData> getList();
+    QList<SegmentData *> getList();
+    void setList(QList<SegmentData *> segmentDataList);
     void reset();
     void setSequenced(bool b);
 
-    QMap<int, RowChanged*> changedMap;
+    //QMap<int, RowChanged*> changedMap;
     void deleteRow(qint32 segmentId, const QModelIndex &index);
-    void unDeleteRow(qint32 segmentId, const QModelIndex &index);
-    bool isSegmentMarkedForDelete(qint32 segmentId);
+    //void unDeleteRow(qint32 segmentId, const QModelIndex &index);
+    //bool isSegmentMarkedForDelete(qint32 segmentId);
     enum COLUMNS
     {
      SEGMENTID,
@@ -37,22 +39,32 @@ public:
      TYPE,
      ONEWAY,
      USAGE,
+     COMBO,
      TRACTIONTYPE,
      DISTANCE,
+     COMPANYKEY,
+     STARTDATE,
+     DOUBLEDATE,
+     ENDDATE,
+     ANGLES,
+     ANGLEE,
      NE,
      NL,
      NEXT,
      PREV,
+     NEXTR,
+     PREVR,
      RE,
      RL,
      DIR,
      SEQ,
      RSEQ,
-     STARTDATE,
-     ENDDATE
+        STREET,
+        NEWERSTREET
     };
     int getRow(int segmentId);
-    SegmentData segmentData(int row);
+    SegmentData *segmentData(int row);
+    void clear();
 
 signals:
     void rowChange(qint32 row, qint32 segmentid, bool bDeleted, bool bChanged);
@@ -60,11 +72,12 @@ signals:
 
 public slots:
     void getRows(int, int); // to get the row numbers that need to be highlighted
-    bool commitChanges();
-    void discardChanges();
+    //bool commitChanges();
+    void segmentChanged(SegmentInfo si, SQL::CHANGETYPE);
+    void routeChange(NotifyRouteChange rc);
 
 private:
-     QList<SegmentData> listOfSegments;
+     QList<SegmentData*> listOfSegments;
      bool bIsSequenced;
      qint32 selectedRow;
      bool bSelectedRowChanged;
@@ -74,10 +87,14 @@ private:
      QList<SegmentData> saveSegmentDataList;
      qint32 route;
      QString name;
+     int companyKey;
      qint32 startRow, endRow;
      QMap<int, TractionTypeInfo> tractionTypes;
      QMap<int, QString> turnMap = {{0, "back"}, {1,"Left"},{2,"Right"}};
      QMap<int, QString> turnMap2 = {{0, "ahead"}, {1,"Left"},{2,"Right"}};
+     bool bChangesMade = false; // set when changes need to be comitted.
+     QList<SegmentData*> _selectedSegments;
+     bool bSegmentNeedsUpdate = false;
 
      friend class RouteView;
 };

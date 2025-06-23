@@ -5,37 +5,27 @@
 #include "stationview.h"
 #include <QCompleter>
 
-EditStation::EditStation(qint32 stationKey, bool bDisplayStationMarkers, QWidget *parent) :
+EditStation::EditStation(StationInfo sti, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::editStation)
 {
     ui->setupUi(this);
+    _sti = sti;
     bDirty = false;
     config = Configuration::instance();
-    this->bDisplayStationMarkers = bDisplayStationMarkers;
-    this->markerType = markerType;
-    //sql->setConfig(config);
     sql = SQL::instance();
-    _segmentId = -1;
-    //_stationKey = -1;
-    _lineSegmentId = -1;
-    _stationKey = stationKey;
+    _stationKey = sti.stationKey;
     _stationName = "";
-    _latLng = LatLng();
-    _pt = -1;
     _infoKey = -1;
-    _bStationDeleted = false;
-    bUpdateExisting = false;
-    _bGeodb_loc_id = -1;
     ui->lblErrorText->setText("");
     connect(ui->btnDelete, SIGNAL(clicked()), this, SLOT(btnDelete_Click()));
     connect(ui->btnEditText, SIGNAL(clicked()), this, SLOT(btnEditText_Click()));
     connect(ui->btnOk, SIGNAL(clicked()), this, SLOT(btnOK_Click()));
-    connect(ui->txtGeodbLocId, SIGNAL(editingFinished()),this, SLOT(txtGeodbLocId_Leave()));
+    connect(ui->txtLatitude, SIGNAL(editingFinished()),this, SLOT(txtLatLng_Leave()));
+    connect(ui->txtLongitude, SIGNAL(editingFinished()),this, SLOT(txtLatLng_Leave()));
     connect(ui->txtStationName, SIGNAL(editingFinished()), this, SLOT(txtStationName_Leave()));
     connect(ui->txtStationName, SIGNAL(textEdited(QString)), this, SLOT(txtStationName_edited(QString)));
     this->setWindowTitle("Edit Station");
-    ui->rbClosestPoint->setChecked(true);
 
     ui->cbIcons->clear();
     ui->cbIcons->addItem(QIcon(":/darkred-dot.png"), "Default", "default");
@@ -48,44 +38,57 @@ EditStation::EditStation(qint32 stationKey, bool bDisplayStationMarkers, QWidget
     ui->cbIcons->addItem(QIcon(":/blue-red-blank.png"), "Blue & red bubble", "blue-red");
     ui->cbIcons->addItem(QIcon(":/tram.png"), "Tram icon", "tram");
     ui->cbIcons->addItem(QIcon(":/subway.png"), "Subway icon", "subway");
+    ui->cbIcons->addItem(QIcon(":/S-Bahn-Logo.svg"), "U-Bahn", "sbahn");
+    ui->cbIcons->addItem(QIcon(":/U-Bahn.svg"), "S-Bahn", "ubahn");
+    ui->cbIcons->addItem(QIcon(":/Strassenbahn-Haltestelle.svg"), "Haltestelle", "haltestelle");
+    ui->cbIcons->addItem(QIcon(":/sl-metro-logo.svg"),"StL Metro", "slmetro");
+    int iconIndex = ui->cbIcons->findData(QVariant(sti.markerType));
+    ui->cbIcons->setCurrentIndex(iconIndex);
+
     connect(ui->cbIcons, SIGNAL(currentIndexChanged(int)), this, SLOT(On_cbIcons_selectionChanged(int)));
     if(_stationKey > 0)
     {
-     setStationId(stationKey);
-     bUpdateExisting = true;
-
+     setStationId(_stationKey);
     }
-
+    ui->txtStationName->setText(sti.stationName);
+    _latLng = LatLng(sti.latitude,sti.longitude);
+    ui->txtLatitude->setText( QString::number(sti.latitude,'g',8));
+    ui->txtLongitude->setText(QString::number(sti.longitude,'g',8));
+    ui->txtRoutes->setText(_sti.routes.join(","));
+    ui->cbIcons->setCurrentIndex(ui->cbIcons->findData(markerType));
+    ui->dateStart->setDate(sti.startDate);
+    ui->dateEnd->setDate(sti.endDate);
 }
 
 EditStation::~EditStation()
 {
     delete ui;
 }
-qint32 EditStation::SegmentId()
+
+qint32 EditStation::segmentId()
 {
    return _segmentId;
 }
 
-void EditStation::setSegmentId(qint32 value)
-{
- _segmentId = value;
- sd = sql->getSegmentInfo(_segmentId);
- if (_latLng.isValid() && _pt != -1)
-     setRadioButtons();
- if(ui->dateStart->date() < sd.startDate())
- {
-  qDebug() <<"start date change from " << ui->dateStart->date().toString("yyyy/MM/dd") << " to " << sd.startDate();
-  ui->dateStart->setDate(sd.startDate());
-  bDirty = true;
- }
- if(ui->dateEnd->date() > sd.endDate())
- {
-  qDebug() <<"end date change from " << ui->dateEnd->date().toString("yyyy/MM/dd") << " to " << sd.endDate();
-  ui->dateEnd->setDate(sd.endDate());
-  bDirty = true;
- }
-}
+//void EditStation::setSegmentId(qint32 value)
+//{
+// _segmentId = value;
+// sd = sql->getSegmentInfo(_segmentId);
+// if (_latLng.isValid() && _pt != -1)
+//     setRadioButtons();
+// if(ui->dateStart->date() < sd.startDate())
+// {
+//  qDebug() <<"start date change from " << ui->dateStart->date().toString("yyyy/MM/dd") << " to " << sd.startDate();
+//  ui->dateStart->setDate(sd.startDate());
+//  bDirty = true;
+// }
+// if(ui->dateEnd->date() > sd.endDate())
+// {
+//  qDebug() <<"end date change from " << ui->dateEnd->date().toString("yyyy/MM/dd") << " to " << sd.endDate();
+//  ui->dateEnd->setDate(sd.endDate());
+//  bDirty = true;
+// }
+//}
 
 qint32 EditStation::StationId()
 { return _stationKey; }
@@ -99,12 +102,12 @@ void EditStation::setMarkerType(QString markerType)
 
 void EditStation::On_cbIcons_selectionChanged(int i)
 {
- if(markerType != ui->cbIcons->itemData(i).toString())
+    if(markerType != ui->cbIcons->currentData().toString())
  {
   qDebug() << "marker type change from " << markerType << " to " << ui->cbIcons->itemData(i).toString();
   bDirty = true;
  }
- markerType = ui->cbIcons->itemData(i).toString();
+ markerType = ui->cbIcons->currentData().toString();
 }
 
 void EditStation::setStationId(qint32 value)
@@ -120,7 +123,6 @@ void EditStation::setStationId(StationInfo sti)
  {
   ui->btnDelete->setEnabled(true);
   ui->btnEditText->setEnabled(true);
-  ui->groupBox1->setEnabled(false);
   _stationName = sti.stationName;
   ui->txtStationName->setText( _stationName);
   _infoKey = sti.infoKey;
@@ -145,11 +147,11 @@ void EditStation::setStationId(StationInfo sti)
     }
    }
   }
-  _bGeodb_loc_id = sti.geodb_loc_id;
-  if(sti.geodb_loc_id > 0)
-      ui->txtGeodbLocId->setText(QString("%1").arg(sti.geodb_loc_id));
-  ui->dateStart->setDateTime( sti.startDate);
-  ui->dateEnd->setDateTime(sti.endDate);
+//  _bGeodb_loc_id = sti.geodb_loc_id;
+//  if(sti.geodb_loc_id > 0)
+//      ui->txtGeodbLocId->setText(QString("%1").arg(sti.geodb_loc_id));
+  ui->dateStart->setDate( sti.startDate);
+  ui->dateEnd->setDate(sti.endDate);
 //  QList<SegmentData> pointList = sql->getSegmentData(_segmentId);
 //  if (pointList.isEmpty())
 //      _pt = 0;
@@ -170,8 +172,6 @@ void EditStation::setStationId(StationInfo sti)
   markerType = sti.markerType;
   ui->cbIcons->setCurrentIndex(ui->cbIcons->findData(sti.markerType));
   ui->cbIcons->setCurrentIndex(ui->cbIcons->findData(markerType));
-  bUpdateExisting = true;
-
  }
 }
 QString EditStation::StationName()
@@ -183,43 +183,47 @@ void EditStation::setStationName(QString value)
     _stationName = value;
 }
 
-LatLng EditStation::Point()
-{
-     return _latLng;
-}
-void EditStation::setPoint(LatLng value)
-{
-    _latLng = value;
-    if (_segmentId != -1 && _pt !=-1)
-        setRadioButtons();
-}
-int EditStation::Index() { return _pt; }
-void EditStation::setIndex(qint32 value)
-{
-    _pt = value;
-    if (_latLng.isValid() && _segmentId != -1)
-        setRadioButtons();
-}
+//LatLng EditStation::Point()
+//{
+//     return _latLng;
+//}
+//void EditStation::setPoint(LatLng value)
+//{
+//    _latLng = value;
+//    if (_segmentId != -1 && _pt !=-1)
+//        setRadioButtons();
+//}
+//int EditStation::Index() { return _pt; }
+//void EditStation::setIndex(qint32 value)
+//{
+//    _pt = value;
+//    if (_latLng.isValid() && _segmentId != -1)
+//        setRadioButtons();
+//}
 
 qint32 EditStation::infoKey (){ return _infoKey; }
 bool EditStation::WasStationDeleted() {  return _bStationDeleted;  }
-int EditStation::LineSegmentId() {  return _lineSegmentId; }
 QDate EditStation::StartDate() {  return ui->dateStart->date(); }
+
 void EditStation::setStartDate(QDate value)
 {
     ui->dateStart->setDate(value);
     //qDebug()<< "editStation: start date -" + ui->dateStart->dateTime().toString();
 }
+
 QDate EditStation::EndDate() { return ui->dateEnd->date(); }
 void EditStation::setEndDate(QDate value){
     ui->dateEnd->setDate(value);
     //qDebug()<< "editStation: end date -" + ui->dateEnd->dateTime().toString();
 }
-qint32 EditStation::Geodb_Loc_Id() {return _bGeodb_loc_id;}
-void EditStation::setGeodb_Loc_Id(qint32 value)
+
+LatLng EditStation::latLng() {return _latLng;}
+
+void EditStation::setLatLng(LatLng value)
 {
-   _bGeodb_loc_id = value;
-    ui->txtGeodbLocId->setText( QString("%1").arg(_bGeodb_loc_id));
+   _latLng = value;
+    ui->txtLatitude->setText( QString::number(_latLng.lat(),'g',8));
+    ui->txtLongitude->setText(QString::number(_latLng.lon(),'g',8));
 }
 
 
@@ -231,30 +235,30 @@ void EditStation::setGeodb_Loc_Id(qint32 value)
 //    config = cfg;
 //    sql->setConfig(config);
 //}
-void EditStation::setRadioButtons()
-{
-    StationInfo sti = StationInfo();
-    // Closest end check
-    if (sql->Distance(sd.startLat(), sd.startLon(), _latLng.lat(), _latLng.lon()) <
-            sql->Distance(sd.endLat(), sd.endLon(), _latLng.lat(), _latLng.lon()))
-    {
-     sti = sql->getStationAtPoint( LatLng(sd.startLat(), sd.startLon()));
-     if (sti.stationKey >=0)
-         ui->rbClosestEnd->setEnabled(false);
-    }
-    else
-    {
-     sti = sql->getStationAtPoint( LatLng(sd.endLat(), sd.endLon()));
-     if (sti.stationKey >= 0)
-         ui->rbClosestEnd->setEnabled(false);
-    }
+//void EditStation::setRadioButtons()
+//{
+//    StationInfo sti = StationInfo();
+//    // Closest end check
+//    if (sql->Distance(sd.startLat(), sd.startLon(), _latLng.lat(), _latLng.lon()) <
+//            sql->Distance(sd.endLat(), sd.endLon(), _latLng.lat(), _latLng.lon()))
+//    {
+//     sti = sql->getStationAtPoint( LatLng(sd.startLat(), sd.startLon()));
+//     if (sti.stationKey >=0)
+//         ui->rbClosestEnd->setEnabled(false);
+//    }
+//    else
+//    {
+//     sti = sql->getStationAtPoint( LatLng(sd.endLat(), sd.endLon()));
+//     if (sti.stationKey >= 0)
+//         ui->rbClosestEnd->setEnabled(false);
+//    }
 
-    // closest point check
-    sd = sql->getSegmentInfo(/*_pt,*/ _segmentId);
-    sti = sql->getStationAtPoint( sd.getStartLatLng());
-    if (sti.stationKey >= 0)
-        ui->rbClosestPoint->setEnabled(false);
-}
+//    // closest point check
+//    sd = sql->getSegmentInfo(/*_pt,*/ _segmentId);
+//    sti = sql->getStationAtPoint( sd.getStartLatLng());
+//    if (sti.stationKey >= 0)
+//        ui->rbClosestPoint->setEnabled(false);
+//}
 
 void EditStation::btnOK_Click()
 {
@@ -266,97 +270,106 @@ void EditStation::btnOK_Click()
   return;
  }
  _stationName = ui->txtStationName->text();
+ _sti.stationName = ui->txtStationName->text();
+ _sti.routes = ui->txtRoutes->text().split(",");
+ if(_sti.routes.isEmpty())
+ {
+  ui->lblErrorText->setText(tr("Routes cannot be blank!"));
+  QApplication::beep();
+  ui->txtStationName->setFocus();
+  return;
+ }
+ _sti.startDate = ui->dateStart->date();
+ _sti.endDate = ui->dateEnd->date();
+ if(_sti.endDate < _sti.startDate)
+ {
+  ui->lblErrorText->setText(tr("End date must br > start date!"));
+  QApplication::beep();
+  ui->txtStationName->setFocus();
+  return;
+ }
+ _sti.latitude = ui->txtLatitude->text().toDouble();
+ _sti.longitude = ui->txtLongitude->text().toDouble();
+ _latLng = LatLng(_sti.latitude,_sti.longitude);
+ if(!_latLng.isValid())
+ {
+  ui->lblErrorText->setText(tr("Latitude or longitude is invalid!"));
+  QApplication::beep();
+  ui->txtStationName->setFocus();
+  return;
+ }
+ _sti.markerType = ui->cbIcons->currentData().toString();
+ if(_sti.markerType.isEmpty())
+ {
+     ui->lblErrorText->setText(tr("Marker type must be selected!"));
+     QApplication::beep();
+     ui->cbIcons->setFocus();
+     return;
+ }
 
- StationInfo sti = sql->getStationAtPoint(_latLng);
+ QList<SegmentInfo> sList = sql->getIntersectingSegments(_sti.latitude, _sti.longitude,
+                                                         .020, _sti.routeType);
+ for(SegmentInfo si : sList)
+ {
+  QString sTxt = QString::number(si.segmentId());
+  if(!_sti.segments.contains(sTxt))
+   _sti.segments.append(sTxt);
+ }
 
- if(ui->rbAddPoint->isChecked())
+ if (_sti.stationKey > 0)
  {
-  //sql->insertPoint((qint32)_pt, _segmentId, _latLng.lat(), _latLng.lon(), & _lineSegmentId);
-  SegmentInfo sd = sql->getSegmentInfo(_segmentId);
-  sd.insertPoint(_pt, _latLng);
-  sql->updateSegment(&sd);
- }
- else if (ui->groupBox1->isEnabled())
- {
-  if (ui->rbClosestEnd->isChecked())
-  {
-   if (sql->Distance(sd.startLat(), sd.startLon(), _latLng.lat(), _latLng.lon()) <
-           sql->Distance(sd.endLat(), sd.endLon(), _latLng.lat(), _latLng.lon()))
-   {
-//    _latLng = LatLng(si.startLat, si.startLon);
-//    sd = sql->getSegmentData(0, _segmentId);
-//    _lineSegmentId = sd.key;
-//   }
-//   else
-//   {
-//    _latLng =  LatLng(si.endLat, si.endLon);
-//    sd = sql->getSegmentData(si.lineSegments - 1, _segmentId);
-//    _lineSegmentId = sd.key;
-    sd = sql->getSegmentInfo(_segmentId);
-   }
-  }
-  else if (ui->rbClosestPoint->isChecked())
-  {
-   sd = sql->getSegmentInfo(/*_pt,*/ _segmentId);
-   //_latLng = new LatLng(sd.startLat, sd.startLon);
-   //sd = sql->getSegmentData(_pt, _segmentId);
-   _lineSegmentId = sd.segmentId();
-   if (sql->Distance(sd.startLat(), sd.startLon(), _latLng.lat(), _latLng.lon()) <
-           sql->Distance(sd.endLat(), sd.endLon(), _latLng.lat(), _latLng.lon()))
-       _latLng =  sd.getStartLatLng();
-   else
-       _latLng =  sd.getEndLatLng();
-  }
-  else if(!ui->rbAddPoint->isChecked())
-  {
-   ui->lblErrorText->setText(tr("Radio button not set"));
-   QApplication::beep();
-   return;
-  }
- }
- else
- {
- _stationName = ui->txtStationName->text();
- }
- if (bUpdateExisting)
- {
-  StationInfo   sti = sql->getStationInfo(_stationKey);
   if(StationView::instance() != NULL)
-   StationView::instance()->changeStation("chg", sti);
+   StationView::instance()->changeStation("chg", _sti);
 
-  sql->updateStation(_stationKey, _infoKey,_stationName, _segmentId, ui->dateStart->dateTime().toString("yyyy/MM/dd"),ui->dateEnd->dateTime().toString("yyyy/MM/dd"),markerType);
+  //sql->updateStation(_stationKey, _infoKey,_stationName, _segmentId, ui->dateStart->dateTime().toString("yyyy/MM/dd"),ui->dateEnd->dateTime().toString("yyyy/MM/dd"),markerType);
+  sql->updateStation(_sti);
   QVariantList objArray;
-  objArray << _stationKey << markerType;
+  objArray << _stationKey << _sti.markerType;
   WebViewBridge::instance()->processScript("updateStationMarker", objArray);
  }
  else
  {
  //qint32 stationKey = sql->addStation(_stationName, _latLng, _segmentId, ui->dateStart->dateTime().toString("yyyy/MM/dd"),ui->dateEnd->dateTime().toString("yyyy/MM/dd"), 0, si.routeType, markerType);
-  qint32 stationKey = sql->addStation(_stationName, _latLng, _segmentId, ui->dateStart->dateTime().toString("yyyy/MM/dd"),ui->dateEnd->dateTime().toString("yyyy/MM/dd"),-1, -1,sd.routeType(),markerType, 0);
- if (stationKey >= 0)
- {
-   QString str = _stationName;
-   StationInfo sti = sql->getStationInfo(stationKey);
-   sti.segmentId = _segmentId;
-   sti.route = 0;
-   sti.alphaRoute= "";
-
+  //qint32 stationKey = sql->addStation(_stationName, _latLng, _segmentId, ui->dateStart->dateTime().toString("yyyy/MM/dd"),ui->dateEnd->dateTime().toString("yyyy/MM/dd"),-1, -1,sd.routeType(),markerType, 0);
+  qint32 stationKey= sql->addStation(_sti);
+  if (stationKey >= 0)
+  {
    StationView* _stationView = StationView::instance();
    if(_stationView != NULL)
    {
-    _stationView->changeStation("add", sti);
+    _stationView->changeStation("add", _sti);
    }
    QVariantList objArray;
 //                if (sti.infoKey > 0)
 //                {
-   CommentInfo ci = sql->getComments(sti.infoKey);
+   CommentInfo ci = sql->getComments(_sti.infoKey);
    //str = ci.comments;
    //m_bridge->processScript("addStationMarker", QString("%1").arg(form.Point().lat(),0,'f',8)+","+QString("%1").arg(form.Point().lon(),0,'f',8)+","+(bDisplayStationMarkers?"true":"false")+","+QString("%1").arg(form.SegmentId())+",'"+form.StationName()+"',"+QString("%1").arg(stationKey)+","+QString("%1").arg(sti.infoKey)+",comments,'"+QString("%1").arg(markerType)+"'", "comments", ci.comments);
    objArray << _latLng.lat() << _latLng.lon()
             << QString("%1").arg(_latLng.lat(),0,'f',8)+","+QString("%1").arg(_latLng.lon(),0,'f',8)
-               +","+(bDisplayStationMarkers?"true":"false") << _segmentId << _stationName
-            << _stationKey << sti.infoKey<<ci.comments << markerType;
+               +","+(config->currCity->bDisplayStationMarkers?"true":"false") << _segmentId << _stationName
+            << _stationKey << _sti.infoKey<<ci.comments << markerType;
    WebViewBridge::instance()->processScript("addStationMarker",objArray);
+  }
+ }
+ // get other stations at this point and update segments field
+ QList<StationInfo> stnList = sql->getStationAtPoint(LatLng(_sti.latitude, _sti.longitude));
+ for(StationInfo sti : stnList)
+ {
+  if(_sti.stationKey == sti.stationKey)
+   continue;
+  bool bNeedsUpdate = false;
+  for(QString sTxt :_sti.segments)
+  {
+   if(!sti.segments.contains(sTxt))
+   {
+    sti.segments.append(sTxt);
+    bNeedsUpdate = true;
+   }
+   if(bNeedsUpdate)
+   {
+    sql->updateStation(sti);
+   }
   }
  }
  bDirty = false;
@@ -410,22 +423,24 @@ void EditStation::txtStationName_Leave()
   ui->btnEditText->setEnabled(true);
  else
   ui->btnEditText->setEnabled(false);
- if(!bUpdateExisting)
+ //if(!bUpdateExisting)
  {
   StationInfo sti = sql->getStationInfo(ui->txtStationName->text().trimmed());
   if(sti.stationName == ui->txtStationName->text().trimmed())
   {
    // Station already exists
-   sti.segmentId = _segmentId;
-   sti.latitude = _latLng.lat();
-   sti.longitude = _latLng.lon();
-   sql->updateStation(sti.stationKey, _latLng, _segmentId);
+   _sti.segmentId = sti.segmentId;
+   _sti.latitude = sti.latitude;
+   ui->txtLatitude->setText(QString::number(sti.latitude,'g',8));
+   _sti.longitude = sti.longitude;
+   ui->txtLongitude->setText(QString::number(sti.longitude,'g',8));
+   ui->txtRoutes->setText(_sti.routes.join(","));
+   ui->cbIcons->setCurrentIndex(ui->cbIcons->findData(sti.markerType));
+   sql->updateStation(sti);
    _stationKey = sti.stationKey;
    //ui->cbIcons->
-   setStationId(sti);
+   setStationId(sti.stationKey);
   }
-  else
-   bUpdateExisting = false;
  }
 }
 void EditStation::txtStationName_edited(QString txt)
@@ -451,24 +466,68 @@ void EditStation::dateTimePicker2_ValueChanged()
  bDirty = true;
 }
 
-void EditStation::txtGeodbLocId_Leave()
+void EditStation::txtLatLng_Leave()
 {
-    if (ui->txtGeodbLocId->text().length() != 0 && ui->txtGeodbLocId->text().length()!=10)
+//    if (ui->txtLatLng->text().length() != 0 && ui->txtLatLng->text().length()!=10)
+//    {
+//        ui->lblErrorText->setText(tr("must be 0 or 10 bytes"));
+//        ui->txtLatLng->setFocus();
+//        return;
+//    }
+//    bool bOk = false;
+//    _bGeodb_loc_id = ui->txtLatLng->text().toInt(&bOk, 10);
+//    if(!bOk)
+//    {
+//        ui->lblErrorText->setText(tr( "must be numeric"));
+//        ui->txtLatLng->setFocus();
+//        return;
+//    }
+//    ui->lblErrorText->setText( "");
+  bool bOk;
+  double latitude = ui->txtLatitude->text().toDouble(&bOk);
+  if(!bOk)
+  {
+      ui->lblErrorText->setText(tr( "latitude must be numeric"));
+      ui->txtLatitude->setFocus();
+      return;
+  }
+  double longitude = ui->txtLongitude->text().toDouble(&bOk);
+  if(!bOk)
+  {
+      ui->lblErrorText->setText(tr( "longitude must be numeric"));
+      ui->txtLongitude->setFocus();
+      return;
+  }
+  _latLng = LatLng(latitude,longitude);
+  if(!_latLng.isValid())
+  {
+      ui->lblErrorText->setText(tr( "invalid LatLng"));
+      ui->txtLatitude->setFocus();
+      return;
+  }
+
+  _sti.latitude = latitude;
+  _sti.longitude = longitude;
+
+  _sti.markerType = ui->cbIcons->currentData().toString();
+  _sti.stationName = ui->txtStationName->text();
+  if(_sti.stationKey < 0)
+  {
+   if(sql->addStation(_sti)< 0)
+   {
+    ui->lblErrorText->setText(tr( "error adding station"));
+    return;
+   }
+   else
+   {
+    if(!sql->updateStation(_sti))
     {
-        ui->lblErrorText->setText(tr("must be 0 or 10 bytes"));
-        ui->txtGeodbLocId->setFocus();
-        return;
+     ui->lblErrorText->setText(tr( "error updating station"));
+     return;
     }
-    bool bOk = false;
-    _bGeodb_loc_id = ui->txtGeodbLocId->text().toInt(&bOk, 10);
-    if(!bOk)
-    {
-        ui->lblErrorText->setText(tr( "must be numeric"));
-        ui->txtGeodbLocId->setFocus();
-        return;
-    }
-    ui->lblErrorText->setText( "");
-    bDirty = true;
+   }
+  }
+ close();
 }
 
 void EditStation::closeEvent(QCloseEvent *event)

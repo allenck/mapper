@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html >
+ <head>
+  <meta name="viewport" content="initial-scale=1.0" user-scalable="yes" />
+  <style type="text/css">
+    html { height: 100% }
+    body { height: 100%; margin: 0; padding: 0 }
+    #map_canvas { height: 100%
+    }
+    .menu {
+        width: 160px;
+        box-shadow: 3px 3px 5px #888888;
+        border-style: solid;
+        border-width: 1px;
+        border-color: grey;
+        border-radius: 2px;
+        background-color: #ffff;
+        position: fixed;
+        text-align: center;
+        display: none;
+    }
+
+    .menu-item {
+        height: 20px;
+        background-color: white;
+    }
+</style>
+  <title>Mapper</title>
+
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.3/jquery.min.js"></script>
+  <script type="text/javascript" src="qwebchannel.js"> </script>
+  <!-- API key 3 -->
+  <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?v=weekly&key=AIzaSyAOCU1jW4tM8ZADiqzuqiqOZagsQwDpP7M"></script>
+  <!--script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.googlemap/1.5.1/jquery.googlemap.js"></script-->
+  <!--script src="gmaps.js"></script-->
+  <script type="text/javascript" src="ExtDraggableObject.js"></script>
+  <script type="text/javascript" src="opacityControl.js"></script>
+  <script type="text/javascript" src="GoogleMaps.js"> </script>
+  <script type="text/javascript" src="WebChannel.js"> </script>
+  <script>
+  //alert("setup google maps event 'load'");
+  google.maps.event.addDomListener(window, "load", window.onLoad);
+  </script>
+
+ </head>
+ <body style="font-family: Arial; border: 0 none;">
+ <!--The div element for the map -->
+     <div id="map-canvas" style="width:100%; height:100%;"></div>
+
+ <div class="menu" id="menu">
+     <div class="menu-item"><i class="glyphicon glyphicon-file"></i>Manage files</div>
+ </div>
+ </body>
+</html>

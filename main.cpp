@@ -2,8 +2,7 @@
 //#include "webviewbridge.h"
 #include "mainwindow.h"
 #include <QMessageBox>
-#include "systemconsole.h"
-#include "consoleinterface.h"
+#include "systemconsole2.h"
 #include <QString>
 #include "myapplication.h"
 //#include "logger.h"
@@ -58,8 +57,14 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
     QByteArray formattedTimeMsg = formattedTime.toLocal8Bit();
     QString logLevelName = msgLevelHash[type];
     QByteArray logLevelMsg = logLevelName.toLocal8Bit();
-
-    ConsoleInterface::instance()->sendMessage(logLevelName + ": "+ msg);
+    QFileInfo info(context.file);
+    QString fn = info.fileName();
+    QByteArray formattedFn = fn.toLocal8Bit();
+#ifdef HAVE_CONSOLE
+    //ConsoleInterface::instance()->sendMessage(logLevelName + ": "+ msg);
+    if(SystemConsole2::instance())
+     SystemConsole2::instance()->message(logLevelName + ": "+ msg);
+#endif
     logToFile = Configuration::instance()->loggingOn();
     if (logToFile) {
         QString txt = QString("%1 %2: %3   (%4.%5)").arg(formattedTime, logLevelName, msg,  context.file).arg(context.line);
@@ -75,7 +80,10 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
         ts << txt << '\n';
         outFile.close();
     } else {
-        fprintf(stdout, "%s %s: %s (%s:%u, %s)\n", formattedTimeMsg.constData(), logLevelMsg.constData(), localMsg.constData(), context.file, context.line, context.function);
+       fprintf(stdout, "%s %s: %s     (%s:%u, %s)\n",
+               formattedTimeMsg.constData(), logLevelMsg.constData(),
+               localMsg.constData(), /*context.file*/formattedFn.constData(),
+               context.line, context.function);
         fflush(stdout);
     }
 
@@ -90,16 +98,29 @@ int main(int argc, char *argv[])
 
     if (envVar.isEmpty())
         logToFile = true;
-    ConsoleInterface::instance(); // create singleton class.
-    qInstallMessageHandler(customMessageOutput); // custom message handler for debugging
 
- QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+ //QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
  //QApplication a(argc, argv);
  QApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
  MyApplication a(argc, argv);
-
  MainWindow w(argc, argv);
+ a.setStyle("Fusion");
+ qRegisterMetaType<LatLng>("LatLng");
+
+#ifndef Q_OS_WIN
+     //ConsoleInterface::instance(); // create singleton class.
+ // SystemConsole2::instance()->setParent(&w);
+ // SystemConsole2::instance()->setVisible(false);
+ qInstallMessageHandler(customMessageOutput); // custom message handler for debugging
+#else
+# ifndef QT_DEBUG
+     //ConsoleInterface::instance(); // create singleton class.
+ //SystemConsole2::instance();
+ qInstallMessageHandler(customMessageOutput); // custom message handler for debugging
+# endif
+#endif
+
  w.show();
 
  return a.exec();

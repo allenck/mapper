@@ -7,6 +7,7 @@ CREATE TABLE if not exists `Parameters` (
   `minDate` date NOT NULL,
   `maxDate` date NOT NULL,
   `alphaRoutes` char(1) NOT NULL default ('Y'),
+  `abbreviationsList`  varchar(200) NOT NULL DEFAULT '',
   `lastUpdate` timestamp NOT NULL DEFAULT (CURRENT_TIMESTAMP));
 
 CREATE TABLE if not exists `TractionTypes` (
@@ -20,8 +21,11 @@ CREATE TABLE if not exists `TractionTypes` (
 
 CREATE TABLE if not exists `Companies` (
   `key` integer NOT NULL primary key AUTOINCREMENT,
-  `Description` varchar(50) NOT NULL,
-  `routePrefix` varchar(10) default '',
+  `mnemonic`  varchar(10) NOT NULL DEFAULT '',
+  `Description` varchar(60) NOT NULL,
+  `info` varchar(60) NOT NULL DEFAULT '',
+  `url` varchar(100) NOT NULL DEFAULT '',
+  `routePrefix` varchar(10) NOT NULL DEFAULT '',
   `startDate` date DEFAULT NULL,
   `endDate` date DEFAULT NULL,
   `firstRoute` int(11) DEFAULT NULL,
@@ -45,8 +49,8 @@ CREATE TABLE if not exists `Intersections` (
   `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE if not exists  `altRoute` ( 
-  `route` NOT NULL INTEGER PRIMARY KEY AUTOINCREMENT, 
+CREATE TABLE if not exists  `AltRoute` (
+  `route` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   `routePrefix` varchar(10) default '', 
   `routeAlpha` varchar(8) NOT NULL, 
   `baseRoute` int(11) NOT NULL DEFAULT 0, 
@@ -59,8 +63,9 @@ CREATE TABLE if not exists `Segments` (
   `SegmentId` integer NOT NULL primary key AUTOINCREMENT,
   `Description` varchar(100) NOT NULL,
   `OneWay` char(1) NOT NULL DEFAULT 'N',
-  `Tracks` int(2) NOT NULL DEFAULT 2,
-  `street` text,
+  `Tracks` int(2) check(`tracks` in (1,2)) NOT NULL DEFAULT 1,
+  `street` textNOT NULL DEFAULT '',
+  `Location` 'text' NOT NULL DEFAULT '',
   `Type` int(11) NOT NULL DEFAULT 0,
   `StartLat` decimal(15,13) NOT NULL DEFAULT 0.0,
   `StartLon` decimal(15,13) NOT NULL DEFAULT 0.0,
@@ -69,12 +74,14 @@ CREATE TABLE if not exists `Segments` (
   `Length` decimal(15,5) NOT NULL DEFAULT 0,
   `points` int(11) NOT NULL default 0,
   `StartDate` date NOT NULL DEFAULT '1800-01-01',
+  `DoubleDate` date NOT NULL DEFAULT '1800-01-01',
   `endDate` date NOT NULL DEFAULT '1800-01-01',
   `Direction` varchar(6) NOT NULL DEFAULT ' ',
   `Locality` varchar(15) NOT NULL DEFAULT ' ',
   `pointArray` text,
   `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
 CREATE TABLE if not exists `LineSegment` (
   `Key` integer NOT NULL primary key AUTOINCREMENT,
   `StartLat` decimal(15,13) NOT NULL,
@@ -92,11 +99,12 @@ CREATE TABLE if not exists `LineSegment` (
 
 CREATE TABLE if not exists `Routes` (
   `Route` int(11) NOT NULL,
-  `Name` varchar(125) NOT NULL,
+  `Name` varchar(140) NOT NULL,
   `StartDate` date NOT NULL,
   `EndDate` date NOT NULL,
   `LineKey` int(11) NOT NULL,
-  `OneWay` char(1) DEFAULT 'Y',
+  `OneWay` char(1) check(`oneWay` in ('Y','N',' ')) default ' ' NOT NULL,
+  `TrackUsage` text check(`TrackUsage` in ('B', 'L', 'R', ' ')) default ' ' NOT NULL,
   `CompanyKey` int(11) NOT NULL DEFAULT 0,
   `tractionType` int(11) NOT NULL DEFAULT 0,
   `Direction` varchar(6) NOT NULL DEFAULT ' ',
@@ -106,12 +114,16 @@ CREATE TABLE if not exists `Routes` (
   `normalLeave` int(11) NOT NULL DEFAULT 0,
   `reverseEnter` int(11) NOT NULL DEFAULT 0,
   `reverseLeave` int(11) NOT NULL DEFAULT 0,
+  `nextR` int(11) NOT NULL DEFAULT -1,
+  `prevR` int(11) NOT NULL DEFAULT -1,
+  `sequence` int(11) NOT NULL DEFAULT -1,
+  `reverseSeq` int(11) NOT NULL DEFAULT -1,
   `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  constraint pk PRIMARY key (`Route`,`Name`,`StartDate`,`EndDate`,`LineKey`),
+  constraint pk PRIMARY key (`Route`,`Name`,`CompanyKey`,`StartDate`,`EndDate`,`LineKey`),
   CONSTRAINT `Routes_ibfk_1` FOREIGN KEY (`LineKey`) REFERENCES `Segments` (`SegmentId`),
   CONSTRAINT `Routes_ibfk_3` FOREIGN KEY (`CompanyKey`) REFERENCES `Companies` (`key`),
-  CONSTRAINT `Routes_ibfk_4` FOREIGN KEY (`tractionType`) REFERENCES `TractionTypes` (`tractionType`),
-  CONSTRAINT `Routes_ibfk_5` FOREIGN KEY (`Route`) REFERENCES `altRoute` (`route`)
+  CONSTRAINT `Routes_ibfk_4` FOREIGN KEY (`TractionType`) REFERENCES `TractionTypes` (`tractionType`),
+  CONSTRAINT `Routes_ibfk_5` FOREIGN KEY (`Route`) REFERENCES `AltRoute` (`route`)
 );
 
 
@@ -128,23 +140,16 @@ CREATE TABLE if not exists `RouteComments` (
 
 CREATE TABLE `Stations` (
   `stationKey` integer NOT NULL primary key AUTOINCREMENT,
-  `route` int(11) NOT NULL DEFAULT 0,
+  `routes` varchar(50) NOT NULL DEFAULT '',
   `name` varchar(75) NOT NULL,
-  `suffix` varchar(4) NOT NULL DEFAULT '',
   `latitude` decimal(15,13) NOT NULL DEFAULT 0.0,
   `longitude` decimal(15,13) NOT NULL DEFAULT 0.0,
   `startDate` date DEFAULT NULL,
   `endDate` date DEFAULT NULL,
-  `segmentId` int(11) NOT NULL,
-  `point` int(11) NOT NULL DEFAULT 0,
-  `infoKey` int(11) DEFAULT NULL,
-  `geodb_loc_id` varchar(15) DEFAULT NULL,
-  `routeType` int(11) NOT NULL DEFAULT -1,
   `markerType` varchar(15) default '',
   `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  constraint main unique (`segmentId`,`name`,`startDate`,`endDate`),
+  constraint main unique (`name`,`startDate`,`endDate`),
   constraint `stationKey` UNIQUE (`stationKey`),
-  CONSTRAINT `SegmentId_ibfk_1` FOREIGN KEY (`segmentId`) REFERENCES `Segments` (`SegmentId`)
 );
 
 CREATE TABLE if not exists `Terminals` (

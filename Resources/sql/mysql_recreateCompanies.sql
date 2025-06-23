@@ -4,9 +4,9 @@ ALTER TABLE `Routes` DROP FOREIGN Key `Routes_ibfk_3`;
 DROP TABLE `Companies`;
 CREATE TABLE if not exists `Companies` (
           `key` integer NOT NULL primary key AUTO_INCREMENT,
-          `Description` varchar(50) NOT NULL,
+          `Description` varchar(60) NOT NULL,
           `routePrefix` varchar(10) default '',
-          `info` varchar(50) default '',
+          `info` varchar(60) default '',
           `startDate` date DEFAULT NULL,
           `endDate` date DEFAULT NULL,
           `firstRoute` int(11) DEFAULT NULL,

@@ -31,7 +31,7 @@ class SegmentSelectionWidget : public QWidget
   void refreshStreetsCb();
   void cbStreets_editingFinished();
   void cbStreets_currentIndexChanged(int);
-  void segmentSelected(int pt, int segmentId);
+  void segmentSelected(int pt, int segmentId, QList<LatLng> points);
   void cbSegments_currentIndexChanged(int);
   void cbSegmentsTextChanged(QString );
   void cbSegments_editingFinished();
@@ -44,7 +44,7 @@ class SegmentSelectionWidget : public QWidget
   bool bRefreshingSegments = false;
   bool bCbStreetsRefreshing = false;
   //QList<SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
-  QMap<int, SegmentData> cbSegmentDataMap;
+  QMap<int, SegmentInfo> cbSegmentInfoMap;
   qint32 m_SegmentId;
   bool bCbStreets_text_changed=false;
   QString saveStreet;

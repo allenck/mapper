@@ -9,7 +9,6 @@
 #include "overlay.h"
 #include <QIntValidator>
 #include <QMessageBox>
-#include "editcomments.h" // for formatting menu
 #include "webviewbridge.h"
 
 
@@ -74,6 +73,7 @@ AddGeoreferencedDialog::~AddGeoreferencedDialog()
 
 void AddGeoreferencedDialog::on_buttonBoxAccepted()
 {
+ Overlay* ov = new Overlay();
  ov->name = ui->edName->text();
  ov->cityName = ui->edCity->text();
  if(!ui->edYear->text().isEmpty())

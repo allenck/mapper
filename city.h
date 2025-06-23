@@ -15,17 +15,17 @@ class City : public QObject
  Q_OBJECT
 public:
  explicit City(QObject *parent = nullptr);
-    qint32 id;
+    qint32 id =0;
  QList<Connection*> connections;
  QT_DEPRECATED QStringList connectionNames;
  QMap<QString, Connection*> connectionMap;
  qint32 curConnectionId = 0;
  qint32 curExportConnId =-1;
- qint32 curOverlayId;
+ qint32 curOverlayId =0;
  LatLng center;
  QString mapType = "roadmap";
  qint32 zoom =8;
- bool bAlphaRoutes = false;
+ bool bAlphaRoutes = true;
  bool bNoPanOpt = false;
  bool bGeocoderRequest = false;
  qint32 lastRoute = 0;
@@ -34,8 +34,11 @@ public:
  bool bDisplayStationMarkers = false;
  bool bDisplayTerminalMarkers = false;
  bool bDisplayRouteComments = false;
+ bool bDisplayRoutesForSelectedCompanies = false;
  bool bShowOverlay = false;
  qint32 companyKey=-1;
+ //QString selectedCompanies; // comma separated list of companies selected to show in routes
+ QList<int> selectedCompaniesList;
  qint32 routeSortType = 0;
  QString savedClipboard;
  bool bUserMap = false;
@@ -53,6 +56,12 @@ public:
   _name = name;
   else
    throw IllegalArgumentException("city name is protected");
+ }
+ //QList<QPair<QString,QString>> abbreviationsList;
+
+ void setNameOverride(QString name)
+ {
+     _name = name;
  }
  QString name() {return _name;}
  void setCenter(LatLng center);

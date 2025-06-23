@@ -2,6 +2,7 @@
 #include <QMessageBox>
 #include "webviewbridge.h"
 #include "overlay.h"
+#include "sql.h"
 
 City::City(QObject *parent) : QObject(parent)
 {

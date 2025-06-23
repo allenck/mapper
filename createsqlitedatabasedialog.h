@@ -30,6 +30,7 @@ private slots:
     void on_txtDbName_editingFinished();
     void on_cbCities_currentIndexChanged(int);
     void on_edTitle_editingFinished();
+    void txtLatLngChanged();
 
 };
 

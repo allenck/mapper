@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html >
+ <head>
+  <meta name="viewport" content="initial-scale=1.0" user-scalable="yes" />
+  <style type="text/css">
+    html { height: 100%; }
+    body { height: 100%; margin: 0; padding: 0 }
+    #map { height: 100%; }
+    .menu {
+        width: 160px;
+        box-shadow: 3px 3px 5px #888888;
+        border-style: solid;
+        border-width: 1px;
+        border-color: grey;
+        border-radius: 2px;
+        background-color: #ffff;
+        position: fixed;
+        text-align: center;
+        display: none;
+    }
+
+    .menu-item {
+        height: 20px;
+        background-color: white;
+    }
+</style>
+  <title>Mapper</title>
+
+  <!--script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script-->
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.js?features=default"></script>
+  <script type="text/javascript" src="qrc:/qwebchannel.js"> </script>
+  <script type="text/javascript" src="qrc:/ExtDraggableObject.js"></script>
+  <script type="text/javascript" src="qrc:/WebChannel.js" > </script>
+  <script type="text/javascript" src="qrc:/GoogleMaps.js" > </script>
+
+ </head>
+ <body style="font-family: Arial; border: 0 none;">
+ <!--The div element for the map -->
+ <div id="map"></div>
+
+ <script src="src/index.js"></script>
+
+ <script src= "apikey.js"></script>
+ <!--script>(g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
+         ({key: apikey2, v: "3.54", libraries: "geometry"});</script-->
+ <script src="https://maps.googleapis.com/maps/api/js?v=weekly&key=AIzaSyDiaVeK1cp8Ctk62ydHuHLUG7lhpwy50YI></script>
+
+ <div class="menu" id="menu">
+     <div class="menu-item"><i class="glyphicon glyphicon-file"></i>Manage files</div>
+ </div>
+ </body>
+</html>

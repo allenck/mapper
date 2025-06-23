@@ -20,6 +20,8 @@ public:
     SegmentViewTableModel *sourceModel;
     segmentViewSortProxyModel *proxymodel;
     QModelIndex currentIndex;
+    int selectedRow();
+    int selectedSegmentId();
 
 signals:
     void sendRows(int, int);
@@ -27,18 +29,18 @@ signals:
 
 public slots:
     void editSegment();
-    void on_segmentSelected(int, int segmentId);
+    void on_segmentSelected(int, int segmentId, QList<LatLng>);
 
 private:
-    QAction *copyAction;
-    QAction *pasteAction;
-    QAction *addToRouteAct;
+    int m_segmentId = -1;
+    QAction *addInUpdateRoute;
     QAction *editSegmentAct;
     QAction *selectSegmentAct;
+    QAction* removeFromRoute;
     qint32 curRow, curCol;
     QStringList headers;
     QTableView* ui;
-    QList<SegmentData> myArray;
+    QList<SegmentInfo> myArray;
     Configuration *config;
     SQL* sql;
 
@@ -47,8 +49,8 @@ private:
 private slots:
     void tablev_customContextMenu( const QPoint& pt);
 
-    void aCopy();
-    void aPaste();
+//    void aCopy();
+//    void aPaste();
     void addToRoute();
     void itemSelectionChanged(QModelIndex index );
     void Resize (int oldcount,int newcount);

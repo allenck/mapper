@@ -6,7 +6,7 @@
 #include <QTextDocumentFragment>
 #include "htmltextedit.h"
 
-RouteCommentsDlg::RouteCommentsDlg(Configuration *cfg, QWidget *parent) :
+RouteCommentsDlg::RouteCommentsDlg(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RouteCommentsDlg)
 {
@@ -15,7 +15,7 @@ RouteCommentsDlg::RouteCommentsDlg(Configuration *cfg, QWidget *parent) :
     _companyKey = -1;
     //_date.setYMD(1800,1,1);
     _date = QDate(1800,1,1);
-    config = cfg;
+    config = Configuration::instance();
     //sql->setConfig(config);
     sql = SQL::instance();
     ui->txtComments->setReadOnly(false);
@@ -29,6 +29,9 @@ RouteCommentsDlg::RouteCommentsDlg(Configuration *cfg, QWidget *parent) :
     connect(ui->dateEdit, SIGNAL(editingFinished()), this, SLOT(OnDateLeave()));
     connect(ui->txtComments, SIGNAL(dirtySet(bool)), this, SLOT(OnDirtySet(bool)));
 //    connect(ui->txtAdditionalRoutes, SIGNAL(editingFinished()), this, SLOT(OnAdditionalRoutesLeave()));
+    connect(ui->txtComments, &QTextBrowser::anchorClicked,this,[=](const QUrl &link){
+        qDebug() << link.toDisplayString();
+    });
 
     setWindowTitle(tr("Route Comments"));
 
@@ -193,6 +196,7 @@ void RouteCommentsDlg::outputChanges()
  {
   _rc.ci.comments = ui->txtComments->toHtml();
   _rc.ci.tags = ui->txtTags->text();
+  _rc.commentKey =
   //qDebug()<< _rc.ci.comments;
   sql->updateRouteComment( _rc);
 

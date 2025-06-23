@@ -1,21 +1,34 @@
 #include "segmentdescription.h"
+#include "data.h"
+
+/*static*/ QList<QPair<QString,QString>> SegmentDescription::abbreviations = QList<QPair<QString,QString>>();
 
 SegmentDescription::SegmentDescription(QObject *parent) :
     QObject(parent)
 {
+    common();
 }
-SegmentDescription::SegmentDescription(QString Description)
-{
-    work = Description;
-    newDescription = work;
-    newReverseDescription = "";
-    QString strTo = " to ";
-    QString strAnd = " and ";
-    QString strAmp = " & ";
-    QString strSlash = "/";
-    QStringList saFrom =  QStringList();
-    QStringList saTo =  QStringList();
 
+SegmentDescription::SegmentDescription(QString description, QObject *parent) : QObject(parent)
+{
+    common();
+    work = description;
+    tokens = tokenize(work);
+}
+
+void SegmentDescription::common()
+{
+    Parameters parms = sql->getParameters();
+    abbreviations = parms.abbreviationsList;
+    _newDescription = work;
+    newReverseDescription = "";
+    setText(work);
+}
+
+void SegmentDescription::setText(QString descr)
+{
+    work = descr;
+#if 0
     int len = 0;
     if (work.contains(","))
     {
@@ -161,42 +174,235 @@ SegmentDescription::SegmentDescription(QString Description)
             isValid = true;
         }
     }
+
+#endif
 }
 /// <summary>
 /// gets the formatted description
 /// </summary>
-QString SegmentDescription::NewDescription() {  return newDescription;  }
+QString SegmentDescription::newDescription() {
+    if(isValidFormat(work))
+    {
+        _newDescription = buildDescription(tokens);
+    }
+    return _newDescription;  }
 /// <summary>
 /// returns the new description with the to and from street reversed.
 /// </summary>
-QString SegmentDescription::ReverseDescription() {  return newReverseDescription;  }
+QString SegmentDescription::reverseDescription() {
+    if(isValidFormat(work))
+    {
+        newReverseDescription =  QString("%1, %2 - %3").arg(tokens.at(0).trimmed(),tokens.at(1).trimmed(),tokens.at(2).trimmed());
+    }
+    return newReverseDescription;
+}
 /// <summary>
 /// gets the street
 /// </summary>
-QString SegmentDescription::Street() { return street; }
+QString SegmentDescription::street() {
+    if(tokens.size() > 0)
+        return tokens.at(0);
+    if(!work.isEmpty())
+        return work;
+    return "";
+}
 /// <summary>
 /// gets the 'to' intersecting street
 /// </summary>
-QString SegmentDescription::FromStreet() {return fromStreet; }
+QString SegmentDescription::fromStreet() {
+    if(tokens.size() > 1)
+        return tokens.at(1);
+    return "";
+}
 /// <summary>
 /// Gets the 'from' intersecting street.
 /// </summary>
-QString SegmentDescription::ToStreet() { return toStreet; }
+QString SegmentDescription::toStreet() {
+    if(tokens.size() > 2)
+        return tokens.at(2);
+    return "";
+}
 /// <summary>
 /// Returns boolean value of True if the description is valid.
 /// </summary>
-bool SegmentDescription::IsValid() { return isValid;  }
+bool SegmentDescription::isValid() {
+    _isValid = isValidFormat(work);
+    return _isValid;  }
 
 
-//private string stripIt(string str)
-//{
-//    while (str.StartsWith(" "))
-//    {
-//        str = str.Substring(1, str.Length - 1);
-//    }
-//    while (str.EndsWith(" "))
-//    {
-//        str = str.Substring(0, str.Length - 1);
-//    }
-//    return str;
-//}
+bool SegmentDescription::isValidFormat(SegmentInfo si)
+{
+    if(si.description().isEmpty())
+        qDebug() << "blank description";
+    return !tokenize(si.description()).isEmpty();
+}
+
+bool SegmentDescription::isValidFormat(QString str)
+{
+    if(!(str.contains(",") || str.contains(" - ")|| str.contains(" to ") || str.contains(" zur ")
+          || str.contains("&") /*|| !hasAbbreviations(str)*/))
+        return true;
+    return !tokenize(str).isEmpty();
+}
+
+QStringList SegmentDescription::tokenize(QString descr)
+{
+    QStringList rslt;
+    QString tgt = descr.remove('.');
+    QStringList sl1 = tgt.split(",");
+
+    if(sl1.isEmpty() || sl1.count() !=2)
+    {
+        if(tokenizeAlternate(descr, "/").isEmpty())
+            return tokenizeAlternate(descr, "&");
+        rslt.append(sl1.at(0));
+        return rslt;
+    }
+    QStringList sl2 = sl1.at(1).split(" - ");
+    if( sl2.count() ==2)
+    {
+        rslt.append(sl1.at(0));
+        rslt.append(sl2);
+        return rslt;
+    }
+    sl2 = sl1.at(1).split(" to ");
+    if(sl2.count()==2)
+    {
+        rslt.append(sl1.at(0));
+        rslt.append(sl2);
+        return rslt;
+    }
+    sl2 = sl1.at(1).split(" zur ");
+    if(sl2.count()==2)
+    {
+        rslt.append(sl1.at(0));
+        rslt.append(sl2);
+        return rslt;
+    }
+    return rslt;
+}
+
+// decode alternate format: e.g. street1/street2 to street1/street3
+QStringList SegmentDescription::tokenizeAlternate(QString text, QString sep)
+{
+    QStringList result;
+    int slash1 = text.indexOf(sep);
+    if(slash1 <0)
+        return result;
+    int slash2 = text.indexOf(sep);
+    if(slash2 <0)
+        return result;
+    int separator;
+    QString separatorTxt = " - ";
+    separator = text.indexOf(separatorTxt);
+    if(separator < 0)
+    {
+        separatorTxt = " to ";
+        separator = text.indexOf(separatorTxt);
+        if(separator < 0)
+        {
+            separatorTxt = " zur ";
+            separator = text.indexOf(separatorTxt);
+            if(separator < 0)
+                return result;
+        }
+    }
+    QStringList halves = text.split(separatorTxt);
+    // does each half contain "/"?
+    if(!(halves.at(0).contains(sep) && halves.at(1).contains(sep)))
+        return result;
+    QStringList tokens1 = halves.at(0).split(sep);
+    QStringList tokens2 = halves.at(1).split(sep);
+    if(tokens1.at(0).trimmed() == tokens2.at(0).trimmed())
+    {
+        result.append(tokens1.at(0));
+        result.append(tokens1.at(1));
+        result.append(tokens2.at(1));
+        return result;
+    }
+    if(tokens1.at(0) == tokens2.at(1))
+    {
+        result.append(tokens1.at(0));
+        result.append(tokens1.at(1));
+        result.append(tokens2.at(0));
+        return result;
+    }
+    if(tokens1.at(1) == tokens2.at(0))
+    {
+        result.append(tokens1.at(1));
+        result.append(tokens1.at(0));
+        result.append(tokens2.at(1));
+        return result;
+    }
+    if(tokens1.at(1) == tokens2.at(1))
+    {
+        result.append(tokens1.at(1));
+        result.append(tokens1.at(0));
+        result.append(tokens2.at(0));
+        return result;
+    }
+    return result;
+}
+
+QString SegmentDescription::buildDescription(QStringList tokens)
+{
+    if(tokens.count() != 3)
+        return work;
+    work = QString("%1, %2 - %3").arg(tokens.at(0).trimmed(),tokens.at(1).trimmed(),tokens.at(2).trimmed());
+    return work;
+}
+
+QString SegmentDescription::replaceAbbreviations(QString descr)
+{
+    tokens = tokenize(descr);
+    if(tokens.count() == 0)
+        return descr;
+    tokens.replace(0,updateToken(tokens.at(0)));
+    tokens.replace(1,updateToken(tokens.at(1)));
+    tokens.replace(2,updateToken(tokens.at(2)));
+    return buildDescription(tokens);
+}
+
+QString SegmentDescription::updateToken(QString str){
+    QStringList sl = str.split(" ");
+    for(int i=0; i < sl.count(); i++)
+    {
+        QString result = sl.at(i);
+        if(SegmentDescription::abbreviations.isEmpty())
+        {
+            Parameters parms = SQL::instance()->getParameters();
+            SegmentDescription::abbreviations = parms.abbreviationsList;
+        }
+
+        for(const QPair<QString,QString>& pair : SegmentDescription::abbreviations)
+        {
+            if(result.endsWith(pair.second))
+                break;
+            if(result.endsWith(pair.first))
+            {
+                int loc = result.lastIndexOf(pair.first);
+                QString remainder = result.mid(0,loc );
+                result = remainder.append(pair.second);
+                break;
+            }
+        }
+        sl.replace(i,result);
+    }
+    return sl.join(" ");
+}
+
+bool SegmentDescription::hasAbbreviations(QString descr)
+{
+    tokens = tokenize(descr);
+    for(const QString& token : tokens)
+    {
+        for(QPair<QString,QString> pair : abbreviations )
+        {
+            if(token.endsWith(pair.first))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}

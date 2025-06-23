@@ -20,10 +20,10 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
  italicAction->setCheckable(true);
  underlineAct = new QAction(tr("Underline"), this );
  underlineAct->setCheckable(true);
- textZoomAct = new QAction(tr("Zoom +"), this);
+ textZoomAct = new QAction(tr("Size +"), this);
  textZoomAct->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_Plus));
  textZoomAct->setShortcutContext(Qt::WidgetShortcut);
- textUnzoomAct = new QAction(tr("Zoom -"), this);
+ textUnzoomAct = new QAction(tr("Size -"), this);
  textUnzoomAct->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_Minus));
  textUnzoomAct->setShortcutContext(Qt::WidgetShortcut);
  setColorRedAct = new QAction(tr("Red"), this);
@@ -39,6 +39,7 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
  pasteHtmlAct = new QAction(tr("Paste HTML"),this);
  pasteSaved = new QAction(tr("Paste saved"), this);
  copySaved = new QAction(tr("Copy to saved"), this);
+ linkWebPageAct = new QAction(tr("create link"),this);
  setPlaceholderText("Enter text");
 
  connect(boldAction, SIGNAL(triggered(bool)), this, SLOT(OnBoldAction(bool)));
@@ -58,6 +59,10 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
  connect(copySaved, SIGNAL(triggered()), this, SLOT(OnCopySaved()));
  connect(setBackgroundColorAct, SIGNAL(triggered(bool)), this, SLOT(OnSetBackgroundColor(bool)));
  connect(setTextColorAct, SIGNAL(triggered(bool)), this, SLOT(OnSetTextColor(bool)));
+ connect(linkWebPageAct, &QAction::triggered, this,[=]{
+     onLinkWebPage();
+ });
+
 
  setFontPointSize(9);
  setDirty(false);
@@ -98,6 +103,7 @@ void HtmlTextEdit::showContextMenu(QPoint pt)
   italicAction->setChecked(this->fontItalic());
 
   menu->addAction(copySaved);
+  menu->addAction(linkWebPageAct);
  }
  else
  {
@@ -267,6 +273,7 @@ void HtmlTextEdit::OnPasteSaved()
 {
  this->setHtml(config->currCity->savedClipboard);
 }
+
 void HtmlTextEdit::OnCopySaved()
 {
  config->currCity->savedClipboard = this->textCursor().selection().toHtml();
@@ -285,4 +292,17 @@ void HtmlTextEdit::OnSetBackgroundColor(bool)
 {
  QColor c = QColorDialog::getColor(this->textBackgroundColor());
  setTextBackgroundColor(c);
+}
+
+void HtmlTextEdit::onLinkWebPage()
+{
+    QTextCursor cursor = textCursor();
+    QString address = cursor.selectedText();
+    QTextCharFormat fmt = cursor.charFormat();
+    fmt.setForeground(QColor('blue'));
+    fmt.setAnchor(true);
+    fmt.setAnchorHref(address);
+    fmt.setToolTip(address);
+    cursor.insertText(address, fmt);
+
 }

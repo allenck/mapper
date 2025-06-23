@@ -27,6 +27,7 @@ StationView::StationView(Configuration *cfg, QObject *parent) :
     sourceModel = new StationViewTableModel();
     proxymodel = new StationViewSortProxyModel(this);
     proxymodel->setSourceModel(sourceModel);
+    ui->setSortingEnabled(true);
     ui->setModel(proxymodel);
     //connect(this, SIGNAL(sendRows(int, int)), proxymodel, SLOT(getRows(int,int)));
     connect(ui, SIGNAL(clicked(QModelIndex)), this, SLOT(itemSelectionChanged(QModelIndex)));
@@ -52,8 +53,20 @@ StationView::StationView(Configuration *cfg, QObject *parent) :
     editAction->setShortcut(tr("Ctrl+E"));
     connect(editAction, SIGNAL(triggered(bool)), this, SLOT(on_editTriggered()));
 
+    deleteAction = new QAction(tr("Delete station"),this);
+    connect(deleteAction, &QAction::triggered, [=]{
+        int stationKey = currentIndex.model()->index(currentIndex.row(), 0).data().toInt();
+        qDebug() << "delete" << stationKey;
+        sourceModel->removeRows(currentIndex.row(), currentIndex.row());
+        sql->deleteStation(stationKey);
+    });
+
     myParent->ui->tabWidget->setTabText(3, "Stations");
     _instance = this;
+
+    ui->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
+
 }
 /*static*/ StationView* StationView::instance()
 {
@@ -69,16 +82,16 @@ void StationView::Resize (int oldcount,int newcount)
     ui->resizeRowsToContents ();
 }
 
-void StationView::showStations()
+void StationView::showStations(QList<StationInfo> stationList)
 {
     //SQL sql;
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     //sql->setConfig( myParent->getConfiguration());
     //QList<StationInfo> stationList =   sql->getStations();
-    QList<StationInfo> stationList =   sql->getStations(myParent->m_routeNbr, myParent->m_routeName, myParent->m_currRouteEndDate);
+    //QList<StationInfo> stationList =   sql->getStations(myParent->m_alphaRoute, QDate::fromString(myParent->m_currRouteEndDate, "yyyy/MM/dd"));
     if(stationList.isEmpty())
         return;
-    ui->setSortingEnabled(false);
+    ui->setSortingEnabled(true);
 
     sourceModel = new StationViewTableModel(stationList, this);
     proxymodel->setSourceModel(sourceModel);
@@ -100,8 +113,6 @@ void StationView::showStations()
 
     ui->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
-
-
 }
 
 void StationView::changeStation(QString typeOfChg, StationInfo sti)
@@ -124,13 +135,16 @@ void StationView::tablev_customContextMenu( const QPoint& pt)
 
   menu.addAction(copyAction);
   menu.addAction(pasteAction);
+  menu.addSeparator();
   menu.addAction(displayAction);
   menu.addAction(editAction);
+  menu.addAction(deleteAction);
+
   QItemSelectionModel * model = ui->selectionModel();
   QModelIndexList indexes = model->selectedIndexes();
   //qint32 row = model->currentIndex().row();
   //qint32 col =model->currentIndex().column();
-  QModelIndex Index = indexes.at(0);
+  QModelIndex Index = proxymodel->mapToSource(indexes.at(0));
   QString txtSegmentId = Index.data().toString();
   txtSegmentId.replace("!", "");
   txtSegmentId.replace("*", "");
@@ -173,8 +187,10 @@ void StationView::on_DisplayTriggered(bool)
   QVariantList objArray;
   objArray << stationKey;
   WebViewBridge::instance()->processScript("isStationMarkerDisplayed", objArray);
-  while(WebViewBridge::instance()->getRslt() == QVariant())
+  while(!WebViewBridge::instance()->isResultReceived())
+  {
    qApp->processEvents();
+  }
   QString rslt = WebViewBridge::instance()->getRslt().toString();
   qDebug() << tr("stationmarker %1 is displayed %2").arg(stationKey).arg(rslt);
 
@@ -197,7 +213,8 @@ void StationView::on_editTriggered()
  if(currentIndex.isValid())
  {
   int stationKey = currentIndex.model()->index(currentIndex.row(), 0).data().toInt();
-  EditStation dlg(stationKey, true);
+  StationInfo sti = SQL::instance()->getStationInfo(stationKey);
+  EditStation dlg(sti);
   dlg.exec();
  }
 }
@@ -228,21 +245,6 @@ QVariant StationViewSortProxyModel::data ( const QModelIndex & index, int role )
     if (!index.isValid())
         return QVariant();
 
-    // We only wish to override the background role
-//    if (role == Qt::BackgroundRole )
-//    {
-//        sourceIndex = mapToSource(index);
-//        qint32 row = sourceIndex.row();
-//        if ( row == startRow)
-//        {
-//            return QVariant( Qt::green );
-//        }
-
-//        if ( row == endRow)
-//        {
-//            return QVariant( Qt::red );
-//        }
-//    }
     // let the base class handle all other cases
     return QSortFilterProxyModel::data( index, role );
 }
@@ -282,46 +284,28 @@ void StationViewTableModel::setStationList(QList<StationInfo> stationList)
 
      if (index.row() >= listOfStations.size() || index.row() < 0)
          return QVariant();
-//     if(role == Qt::CheckStateRole)
-//     {
-//         if(index.column() != 0)
-//             return QVariant();
-//         else
-//         {
-//             segmentData sd = listOfSegments.at(index.row());
-//             segmentInfo si = sql->getSegmentInfo(sd.SegmentId);
-//            if (sql->isRouteUsedOnDate(m_routeNbr, sd.SegmentId, m_date))
-//                return Qt::Checked;
-//            else
-//                return Qt::Unchecked;
-//         }
-//     }
 
      StationInfo sti = listOfStations.at(index.row());
      if (role == Qt::DisplayRole) {
          switch(index.column())
          {
-         case 0:
+         case STATIONKEY:
              //TODO setup checkbox if segment used in route.
              return sti.stationKey;
-         case 1:
+         case NAME:
              return sti.stationName;
-         case 2:
-             return sti.routeType;
-         case 3:
+         case ROUTES:
+             return sti.routes.join(",");
+         case STARTDATE:
              return sti.startDate.toString("yyyy/MM/dd");
-         case 4:
+         case ENDDATE:
              return sti.endDate.toString("yyyy/MM/dd");
-         case 5:
+         case LATITUDE:
              return QString("%1").arg(sti.latitude, 0, 'f', 8);
-         case 6:
+         case LONGITUDE:
              return QString("%1").arg(sti.longitude, 0, 'f', 8);
-//         case 7:
-//             return sti.lineSegmentId;
-         case 8:
-             return sti.geodb_loc_id;
-         case 7:
-             return sti.segmentId;
+         case MARKER:
+             return sti.markerType;
         }
      }
      return QVariant();
@@ -335,26 +319,22 @@ void StationViewTableModel::setStationList(QList<StationInfo> stationList)
      {
          switch (section)
          {
-             case 0:
+             case STATIONKEY:
                  return tr("StnKey");
-             case 1:
+             case NAME:
                  return tr("Name");
-             case 2:
-                 return tr("Route Type");
-             case 3:
+             case ROUTES:
+                 return tr("Routes");
+             case STARTDATE:
                  return tr("Start date");
-             case 4:
+             case ENDDATE:
                  return tr("End Date");
-             case 5:
+             case LATITUDE:
                  return tr("latitude");
-             case 6:
+             case LONGITUDE:
                 return tr("Longitude");
-//             case 7:
-//                return tr("LSegId");
-             case 8:
-                return tr("GeoDb_Id");
-             case 7:
-                return tr("SegmentId");
+             case MARKER:
+                return tr("Marker");
              default:
                  return QVariant();
          }
@@ -466,17 +446,17 @@ void StationViewTableModel::setStationList(QList<StationInfo> stationList)
      index = this->index(row, 1, QModelIndex());
      setData(index, sti.stationName, Qt::EditRole);
      index = this->index(row, 2, QModelIndex());
-     setData(index, sti.route, Qt::EditRole);
+     setData(index, sti.routes, Qt::EditRole);
      index = this->index(row, 3, QModelIndex());
      setData(index, sti.latitude, Qt::EditRole);
      index = this->index(row, 4, QModelIndex());
      setData(index, sti.longitude, Qt::EditRole);
      index = this->index(row, 5, QModelIndex());
-     setData(index, sti.lineSegmentId, Qt::EditRole);
-     index = this->index(row, 6, QModelIndex());
-     setData(index, sti.geodb_loc_id, Qt::EditRole);
-     index = this->index(row, 7, QModelIndex());
-     setData(index, sti.segmentId, Qt::EditRole);
+//     setData(index, sti.lineSegmentId, Qt::EditRole);
+//     index = this->index(row, 6, QModelIndex());
+//     setData(index, sti.geodb_loc_id, Qt::EditRole);
+//     index = this->index(row, 7, QModelIndex());
+//     setData(index, sti.segmentId, Qt::EditRole);
 
     listOfStations.replace(row,sti);
 

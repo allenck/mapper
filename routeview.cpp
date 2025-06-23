@@ -4,11 +4,12 @@
 #include "editsegmentdialog.h"
 #include "webviewbridge.h"
 #include "otherrouteview.h"
-#include "ttitemdelegate.h"
 #include "rtitemdelegate.h"
+#include "usagedelegate.h"
 #include "splitsegmentdlg.h"
-#include "checkroute.h"
 #include "turndelegate.h"
+#include "ttitemdelegate.h"
+#include "dateeditdelegate.h"
 
 RouteView::RouteView(QObject* parent )
 {
@@ -20,28 +21,60 @@ RouteView::RouteView(QObject* parent )
     myParent = qobject_cast<MainWindow*>(m_parent);
     ui = myParent->ui->tblRouteView;
     connect(ui->verticalHeader(), SIGNAL(sectionCountChanged(int,int)), this, SLOT(Resize(int,int)));
+    connect(myParent->ui->tab, SIGNAL(customContextMenuRequested(QPoint)), this,
+            SLOT(tab1CustomContextMenu(QPoint)));
+    if(auto cornerButton = ui->findChild<QAbstractButton*>(QString(), Qt::FindDirectChildrenOnly)) {
+        //this button is not a normal button, it doesn't paint text or icon
+        //so it is not easy to show text on it, the simplest way is tooltip
+        cornerButton->setToolTip("Sort Description");
+        //disconnect the connected slots to the tableview (the "selectAll" slot)
+        disconnect(cornerButton, Q_NULLPTR, ui, Q_NULLPTR);
+//        //connect "clear" slot to it, here I use QTableWidget's clear, you can connect your own
+//        connect(cornerButton, &QAbstractButton::clicked, ui->tableWidget, &QTableWidget::clear);
+        connect(cornerButton, &QAbstractButton::clicked, [=]{
+         sortNameAct->trigger();
+        });
+//        connect(cornerButton, &QAbstractButton::setText, [=](QString txt){
+//         cornerButton->setText("Sort");
+//        });
+    }
+    connect(ui, &QTableView::activated, [=](QModelIndex index){
+        ui->blockSignals(true);
+    });
+    connect(WebViewBridge::instance(), &WebViewBridge::segmentSelectedX, [=] (qint32 pt, qint32 segmentId, QList<LatLng> list){
+        on_segmentSelected(pt, segmentId,list);
+    });
 
-    //ui->setColumnCount(headers.count());
-    //ui->setHorizontalHeaderLabels(headers);
-
-    //ui->resizeColumnsToContents();
+    // connect(SQL::instance(), &SQL::segmentChanged, this, [=](const SegmentInfo si, SQL::CHANGETYPE t){
+    //     // SegmentInfo has changed, refresh the SegmentData record/
+    //     SegmentData* sd = SQL::instance()->getSegmentData(rd.route(), si.segmentId(),
+    //                                                       rd.startDate().toString("yyyy/MM/dd"),
+    //                                                       rd.endDate().toString("yyyy/MM/dd"));
+    //     if(sd  && sd->segmentId()  == si.segmentId())
+    //     {
+    //         sourceModel->segmentChanged(si.segmentId());
+    //     }
+    // });
+    ui->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->horizontalHeader()->restoreState(config->rv.state);
+    connect(ui->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), this,
+            SLOT(hdr_customContextMenu(QPoint)));
 
     ui->setAlternatingRowColors(true);
+    ui->horizontalHeader()->setSectionsMovable(true);
+    connect(ui->horizontalHeader(), &QHeaderView::sectionMoved, [=](int logicalIndex, int oldVisualIndex, int newVisualIndex){
+     config->rv.movedColumns.clear();
+     for(int i = 0; i < ui->model()->columnCount(); i++)
+     {
+      config->rv.movedColumns.append(ui->horizontalHeader()->logicalIndex(i));
+     }
+     config->rv.state = ui->horizontalHeader()->saveState();
+    });
 
     //m_myParent = myParent;
     ui->setSelectionBehavior(QAbstractItemView::SelectRows );
     ui->setSelectionMode( QAbstractItemView::SingleSelection );
-
-    //create contextmenu
-    copyAction = new QAction(tr("&Copy"), this);
-    copyAction->setStatusTip(tr("Copy Table Location"));
-    copyAction->setShortcut(tr("Ctrl+C"));
-    connect(copyAction, SIGNAL(triggered()), this, SLOT(aCopy()));
-
-    pasteAction = new QAction(tr("&Paste"), this);
-    pasteAction->setStatusTip(tr("Paste"));
-    pasteAction->setShortcut(tr("Ctrl+V"));
-    connect(pasteAction, SIGNAL(triggered()), this, SLOT(aPaste()));
+    ui->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
 
     reSequenceFromStartAct = new QAction(tr("&Start route at beginning"), this);
     reSequenceFromStartAct->setStatusTip(tr("Start route at this segment"));
@@ -69,13 +102,19 @@ RouteView::RouteView(QObject* parent )
     endTerminalEndAct->setStatusTip(tr("End terminal is at end of segment"));
     connect(endTerminalEndAct,SIGNAL(triggered()), this, SLOT(EndRoute_E()));
 
-    deleteSegmentAct = new QAction(tr("Remove from route"), this);
-    deleteSegmentAct->setStatusTip(tr("Delete the segment from the route"));
-    connect(deleteSegmentAct, SIGNAL(triggered()), this, SLOT(deleteSegment()));
+    removeSegmentAct = new QAction(tr("Remove from route"), this);
+    removeSegmentAct->setStatusTip(tr("Delete the segment from the route"));
+    connect(removeSegmentAct, SIGNAL(triggered()), this, SLOT(removeSegment()));
 
-    unDeleteSegmentAct = new QAction(tr("Undo delete of segment"), this);
-    unDeleteSegmentAct->setStatusTip(tr("Don't delete the segment from the route"));
-    connect(unDeleteSegmentAct, SIGNAL(triggered()), this, SLOT(unDeleteSegment()));
+    deleteSelectedRowsAct = new QAction(tr("Remove selected rows"),this);
+    connect(deleteSelectedRowsAct, &QAction::triggered, [=]{
+     for(SegmentData* sd : selectedSegments())
+     {
+      SQL::instance()->deleteRoute(*sd);
+      MainWindow::instance()->m_bridge->processScript("clearPolyline", QString("%1").arg(sd->segmentId()));
+     }
+     model()->_selectedSegments.clear();
+    });
 
     selectSegmentAct = new QAction(tr("Select segment"),this);
     selectSegmentAct->setToolTip(tr("Select segment on map."));
@@ -86,72 +125,126 @@ RouteView::RouteView(QObject* parent )
     connect(editSegmentAct, SIGNAL(triggered(bool)), this, SLOT(editSegment()));
 
     ui->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
-    sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"), QDate::fromString(endDate, "yyyy/MM/dd"), segmentDataList);
+    //connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
+    sourceModel = new RouteViewTableModel(route, name, companyKey, startDate,
+                                          endDate, QList<SegmentData*>(),this);
 
-    saveChangesAct = new QAction(tr("Commit changes"),this);
-    saveChangesAct->setStatusTip(tr("Save any uncommitted changes"));
-    discardChangesAct = new QAction(tr("Abandon changes"),this);
-    discardChangesAct->setStatusTip(tr("Discard any changes"));
-
-    showColumnsAct = new QAction(tr("Hide extra columns"),this);
-    showColumnsAct->setCheckable(true);
-    connect(showColumnsAct, &QAction::toggled, [=]{
-     bool b = showColumnsAct->isChecked();
-     ui->setColumnHidden(RouteViewTableModel::NEXT, b);
-     ui->setColumnHidden(RouteViewTableModel::PREV, b);
-     ui->setColumnHidden(RouteViewTableModel::SEQ, b);
-     ui->setColumnHidden(RouteViewTableModel::RSEQ, b);
+    sortNameAct = new QAction(tr("Sort Description"),this);
+    sortNameAct->setStatusTip(tr("Sort table by description"));
+    connect(sortNameAct, &QAction::triggered, [=]{
+     Qt::SortOrder order = ui->horizontalHeader()->sortIndicatorOrder();
+     switch (order) {
+     case Qt::AscendingOrder:
+      order = Qt::DescendingOrder;
+      break;
+     case Qt::DescendingOrder:
+      order = Qt::AscendingOrder;
+      break;
+     default:
+      order = Qt::AscendingOrder;
+     }
+     ui->sortByColumn(model()->NAME, order);
+     ui->hideColumn(model()->NAME);
     });
+    connect(ui, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tablev_customContextMenu(QPoint)));
+
+    hideColumnAct = new QAction(tr("Hide Column"),this);
+    connect(hideColumnAct, &QAction::triggered, [=]{
+     int logicalIndex =hideColumnAct->data().toInt();
+     ui->hideColumn(logicalIndex);
+     if(!config->rv.hiddenColumns.contains(logicalIndex))
+      config->rv.hiddenColumns.append(logicalIndex);
+    });
+
 
     updateRouteAct = new QAction(tr("Update route"),this);
     connect(updateRouteAct, &QAction::triggered, [=]{
      QItemSelectionModel * model = ui->selectionModel();
      QModelIndexList indexes = model->selectedIndexes();
-     qint32 segmentId = indexes.at(0).data().toInt();
-     QModelIndex ix = proxymodel->mapToSource(indexes.at(0));
-     SegmentData sd = sourceModel->listOfSegments.at(ix.row());
+     qint32 segmentId = indexes.at(RouteViewTableModel::SEGMENTID).data().toInt();
+     QModelIndex ix = proxymodel->mapToSource(indexes.at(RouteViewTableModel::SEGMENTID));
+     SegmentData* sd = sourceModel->listOfSegments.at(ix.row());
 
      myParent->selectSegment(segmentId);
-     myParent->updateRoute(&sd);
+     myParent->updateRoute(sd);
+    });
 
+    addToAnotherRouteAct = new QAction(tr("Add selected segments to Another Route"));
+    connect(addToAnotherRouteAct, &QAction::triggered, myParent,[=]{
+     QComboBox* cbCombo = new QComboBox();
+     QList<RouteData> routeList = myParent->routeList;
+     for(int i=0; i<routeList.count(); i++)
+     {
+       RouteData rd = (RouteData)routeList.at(i);
+       QString rdStartDate = rd.startDate().toString("yyyy/MM/dd");
+       cbCombo->addItem(rd.toString(),QVariant::fromValue(rd));
+//          if( rd.toString() == currText)
+//             cbCombo->setCurrentIndex(i);
+     }
+     QMessageBox* box = new QMessageBox(QMessageBox::Question, tr("Select Route"),
+                                          tr("Select the route to add the selected segments to."),
+                                        QMessageBox::Ok| QMessageBox::Cancel);
+//     box->setInformativeText("Routes");
+//     QList<QWidget*> list = box->findChildren<QWidget*>("qt_msgbox_informativelabel");
+
+     QLayout* layout = box->layout();
+     if(qobject_cast<QGridLayout*>(layout))
+     {
+       //layout->addWidget(cbCombo);
+      ((QGridLayout*)layout)->addWidget(cbCombo,1,2);
+
+       if(box->exec() == QMessageBox::Ok)
+       {
+        RouteData rd = cbCombo->currentData().value<RouteData>();
+        if(cbCombo->currentIndex() < 0)
+         return;
+        for(SegmentData* sd : sourceModel->_selectedSegments)
+        {
+         sd->setRouteName(rd.routeName());
+         sd->setStartDate(rd.startDate());
+         sd->setEndDate(rd.endDate());
+         sd->setCompanyKey(rd.companyKey());
+         if(SQL::instance()->doesRouteSegmentExist(*sd))
+             continue;
+         SQL::instance()->addSegmentToRoute(sd);
+        }
+        sourceModel->_selectedSegments.clear();
+       }
+      }
     });
 
     convertToSingleTrackAct = new QAction(tr("Convert to single track"),this);
     connect(convertToSingleTrackAct, &QAction::triggered, [=]{
      QItemSelectionModel * model = ui->selectionModel();
      QModelIndexList indexes = model->selectedIndexes();
-     qint32 segmentId = indexes.at(0).data().toInt();
-     QModelIndex ix = proxymodel->mapToSource(indexes.at(0));
-     SegmentData sd = sourceModel->listOfSegments.at(ix.row());
+     qint32 segmentId = indexes.at(RouteViewTableModel::SEGMENTID).data().toInt();
+     QModelIndex ix = proxymodel->mapToSource(indexes.at(RouteViewTableModel::SEGMENTID));
+     SegmentData* sd = sourceModel->listOfSegments.at(ix.row());
      SegmentInfo si = SQL::instance()->convertSegment(segmentId, 1);
-     if(si.segmentId() > 0 && si.segmentId() != sd.segmentId()){
-      bool ok = SQL::instance()->deleteRouteSegment(sd.route(), sd.routeName(),sd.segmentId(),
-                                                    sd.startDate().toString("yyyy/MM/dd"),
-                                                    sd.endDate().toString("yyyy/MM/dd"));
-      qDebug() << "old segment deleted " << sd.segmentId() << ok;
-      ok = SQL::instance()->addSegmentToRoute(sd.route(),sd.routeName(), sd.startDate(),sd.endDate(),
-                                              si.segmentId(),sd.companyKey(),
-                                         sd.tractionType(),sd.direction(), -1, -1, 0,0,0,0,"N", " ");
+     if(si.segmentId() > 0 && si.segmentId() != sd->segmentId()){
+      bool ok = SQL::instance()->deleteRouteSegment(sd->route(), sd->routeId(),sd->segmentId(),
+                                                    sd->startDate().toString("yyyy/MM/dd"),
+                                                    sd->endDate().toString("yyyy/MM/dd"));
+      qDebug() << "old segment deleted " << sd->segmentId() << ok;
+      sd->setOneWay("N");
+      ok = SQL::instance()->addSegmentToRoute(sd);
       qDebug() << "new segment added " << si.segmentId() << ok;
      }
-    });
-    //connect(saveChangesAct, SIGNAL(triggered()), sourceModel, SLOT(commitChanges()));
-    connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(commitChanges()));
-    connect(discardChangesAct, &QAction::triggered, [=]{
-     segmentDataList = saveSegmentDataList;
-     sourceModel->reset();
     });
     splitSegmentAct = new QAction(tr("Split segment at a date"),this);
     splitSegmentAct->setStatusTip(tr("Split segment into two separate route segments on a date"));
     connect(splitSegmentAct, &QAction::triggered, [=]{
      QItemSelectionModel * model = ui->selectionModel();
      QModelIndexList indexes = model->selectedIndexes();
-     qint32 segmentId = indexes.at(0).data().toInt();
-     SplitSegmentDlg* splitSegment = new SplitSegmentDlg(segmentId);
+     QModelIndex ix = proxymodel->mapToSource(indexes.at(RouteViewTableModel::SEGMENTID));
+     SegmentData* sd = sourceModel->listOfSegments.at(ix.row());
+     qint32 segmentId = indexes.at(RouteViewTableModel::SEGMENTID).data().toInt();
+     SplitSegmentDlg* splitSegment = new SplitSegmentDlg(sd);
      int ret = splitSegment->exec();
      if(ret == QDialog::Accepted)
-      //refreshSegmentCB();
+     {
+      //sourceModel->listOfSegments.removeAt(ix.row());
+     }
       myParent-> ui->ssw->refresh();
     });
 
@@ -170,14 +263,37 @@ RouteView::RouteView(QObject* parent )
     ui->setColumnWidth(RouteViewTableModel::TYPE, 20);
     ui->setColumnWidth(RouteViewTableModel::DISTANCE, 29);
     ui->setColumnWidth(RouteViewTableModel::TRACKS, 5);
+    ui->hideColumn(sourceModel->NAME);
+    //ui->horizontalHeader()->restoreState(config->rv.state);
+    config->rv.hiddenColumns.clear();
+    for(int i=0; i < sourceModel->columnCount(QModelIndex()); i++)
+    {
+     if(ui->horizontalHeader()->isSectionHidden(i))
+     {
+      if(!config->rv.hiddenColumns.contains(QVariant(i)))
+       config->rv.hiddenColumns.append(QVariant(i));
+     }
+     else
+     {
+      if(config->rv.hiddenColumns.contains(QVariant(i)))
+       config->rv.hiddenColumns.removeOne(QVariant(i));
+     }
+    }
 
-    connect(WebViewBridge::instance(), SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(on_segmentSelected(int,int)));
+    //connect(WebViewBridge::instance(), SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(on_segmentSelected(int,int)));
+    connect(WebViewBridge::instance(), SIGNAL(segmentSelectedX(qint32,qint32,QList<LatLng>)), this, SLOT(on_segmentSelected(int,int,QList<LatLng>)));
 
     myParent->ui->tabWidget->setTabText(0, "Route Segments");
     startTerminal = NULL;
     startSegment = -1;
     endSegment = -1;
 }
+
+void RouteView::setList(QList<SegmentData*> segmentDataList)
+{
+ sourceModel->setList(segmentDataList);
+}
+
 
 RouteViewTableModel* RouteView::model() { return sourceModel;}
 
@@ -187,6 +303,30 @@ void RouteView::Resize (int oldcount,int newcount)
     Q_UNUSED(newcount)
     ui->resizeColumnsToContents ();
     ui->resizeRowsToContents ();
+}
+
+void RouteView::hdr_customContextMenu( const QPoint pt)
+{
+    // curRow = ui->rowAt(pt.y());
+    //curCol = ui->columnAt(pt.x());
+    menu.clear();
+    hideColumnAct->setData(ui->horizontalHeader()->logicalIndexAt(pt));
+    menu.addAction(hideColumnAct);
+    if(config->rv.hiddenColumns.count()>0)
+    {
+     QMenu* m = new QMenu(tr("Show column"));
+     menu.addMenu(m);
+     foreach(QVariant col, config->rv.hiddenColumns)
+     {
+      QAction* a = new QAction(sourceModel->headerData(col.toInt(),Qt::Horizontal, Qt::DisplayRole).toString(),this);
+      m->addAction(a);
+      connect(a, &QAction::triggered, [=]{
+       ui->showColumn(col.toInt());
+       config->rv.hiddenColumns.removeOne(col.toInt());
+      });
+     }
+    }
+    menu.exec(QCursor::pos());
 }
 
 //create table input context menu
@@ -199,31 +339,38 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
     {
         //menu = QMenu(m_parent*);
      menu.clear();
-     menu.addAction(copyAction);
-     menu.addAction(pasteAction);
+//     menu.addAction(copyAction);
+//     menu.addAction(pasteAction);
+//     menu.addSeparator();
+
      QItemSelectionModel * model = ui->selectionModel();
      QModelIndexList indexes = model->selectedIndexes();
      //qint32 row = model->currentIndex().row();
      //qint32 col =model->currentIndex().column();
-     QModelIndex Index = indexes.at(0);
+     if(indexes.count()==0)
+      return;
+     QModelIndex Index = indexes.at(RouteViewTableModel::SEGMENTID);
      QString txtSegmentId = Index.data().toString();
      txtSegmentId.replace("!", "");
      txtSegmentId.replace("*", "");
      qint32 segmentId = txtSegmentId.toInt();
-     SegmentData sd = sourceModel->segmentData(proxymodel->mapToSource(Index).row());
-     if(sourceModel->isSegmentMarkedForDelete(segmentId))
-         menu.addAction(unDeleteSegmentAct);
-     else
-         menu.addAction(deleteSegmentAct);
+     SegmentData* sd = sourceModel->segmentData(proxymodel->mapToSource(Index).row());
+     //if(sourceModel->isSegmentMarkedForDelete(segmentId))
+//     if(sd->markedForDelete())
+//         menu.addAction(unDeleteSegmentAct);
+//     else
+     menu.addAction(removeSegmentAct);
+     if(selectedSegments().count())
+      menu.addAction(deleteSelectedRowsAct);
      //if(curRow == 0)
-     menu.addAction(saveChangesAct);
-     menu.addAction(discardChangesAct);
+     //menu.addAction(saveChangesAct);
+     //menu.addAction(discardChangesAct);
      menu.addAction(selectSegmentAct);
      QMenu* resequenceMenu = new QMenu(tr("Resequence route"));
      resequenceMenu->addAction(reSequenceFromStartAct);
      resequenceMenu->addAction(reSequenceFromEndAct);
-     bool enable = (sd.tracks() == 1 && sd.oneWay() != "Y")
-       || (sd.tracks() == 2 && sd.oneWay() == "Y" && sd.trackUsage() != "L");
+     bool enable = (sd->tracks() == 1 && sd->oneWay() != "Y")
+       || (sd->tracks() == 2 && sd->oneWay() == "Y" && sd->trackUsage() != "L");
      reSequenceFromEndAct->setEnabled(enable);
      menu.addMenu(resequenceMenu);
 //        if(!startTerminal)
@@ -258,28 +405,40 @@ void RouteView::tablev_customContextMenu( const QPoint& pt)
 //        }     menu.addAction(saveChangesAct);
 
      menu.addAction(editSegmentAct);
-     menu.addAction(showColumnsAct);
+     //menu.addAction(showColumnsAct);
      menu.addAction(updateRouteAct);
      menu.addAction(splitSegmentAct);
-
-     {
-      QItemSelectionModel * model = ui->selectionModel();
-      QModelIndexList indexes = model->selectedIndexes();
-      qint32 segmentId = indexes.at(0).data().toInt();
-      SegmentInfo sd = SQL::instance()->getSegmentInfo(segmentId);
-      if(sd.tracks()==2)
-       menu.addAction(convertToSingleTrackAct);
-     }
-     if(sourceModel->changedMap.values().count() > 0)
+     if(selectedSegments().count())
+      menu.addAction(addToAnotherRouteAct);
+//     addToAnotherRouteAct->setEnabled(sourceModel->_selectedSegments.count());
+//     {
+//      QItemSelectionModel * model = ui->selectionModel();
+//      QModelIndexList indexes = model->selectedIndexes();
+//      qint32 segmentId = indexes.at(RouteViewTableModel::SEGMENTID).data().toInt();
+//      SegmentInfo sd = SQL::instance()->getSegmentInfo(segmentId);
+//      if(sd.tracks()==2)
+//       menu.addAction(convertToSingleTrackAct);
+//     }
+     //if(sourceModel->changedMap.values().count() > 0)
+     if(sourceModel->bChangesMade)
      {
          menu.addSeparator();
-         menu.addAction(saveChangesAct);
-         menu.addAction(discardChangesAct);
+//         menu.addAction(saveChangesAct);
+//         menu.addAction(discardChangesAct);
+         menu.addAction(sortNameAct);
      }
+     menu.addSeparator();
      menu.exec(QCursor::pos());
-
  }
 }
+
+void RouteView::tab1CustomContextMenu(const QPoint &)
+{
+ QMenu tab1Menu;
+    tab1Menu.addAction(sortNameAct);
+    tab1Menu.exec(QCursor::pos());
+}
+
 //get QTableView selected item
 bool RouteView::boolGetItemTableView(QTableView *table)
 {
@@ -295,133 +454,39 @@ bool RouteView::boolGetItemTableView(QTableView *table)
 
 }
 
-void RouteView::aCopy()
-{
-    QClipboard *clipboard = QApplication::clipboard();
-    if(currentIndex.isValid())
-        clipboard->setText(currentIndex.data().toString());
-
-}
-void RouteView::aPaste()
-{
-
-}
-
 void RouteView::updateRouteView()
 {
     //SQL sql;
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
-    TerminalInfo ti = SQL::instance()->getTerminalInfo(myParent->m_routeNbr, myParent->m_routeName, myParent->m_currRouteEndDate);
+    TerminalInfo ti = SQL::instance()->getTerminalInfo(myParent->m_routeNbr, myParent->m_routeName,
+                                                       QDate::fromString(myParent->m_currRouteEndDate, "yyyy/MM/dd"));
     startSegment = ti.startSegment;
     endSegment = ti.endSegment;
     // Check for uncomitted changes
-    checkChanges();
+//    checkChanges();
     route = myParent->m_routeNbr;
     name = myParent->m_routeName;
-    startDate = myParent->m_currRouteStartDate;
-    endDate = myParent->m_currRouteEndDate;
+    companyKey = myParent->_rd.companyKey();
+    startDate = QDate::fromString(myParent->m_currRouteStartDate, "yyyy/MM/dd");
+    endDate = QDate::fromString(myParent->m_currRouteEndDate, "yyyy/MM/dd");
     alphaRoute = myParent->m_alphaRoute;
 
-    //segmentInfoList = SQL::instance()->getRouteSegmentsInOrder2(route, name, endDate);
-    segmentDataList = SQL::instance()->getRouteSegmentsInOrder(route, name, endDate);
-    //rd = myParent->routeList.at(myParent->ui->cbRoute->currentIndex());
     rd = myParent->ui->cbRoute->currentData().value<RouteData>();
     myParent->ui->routeViewLabel->setText(tr("Route segments for route %1").arg(rd.toString()));
 
-    qDebug()<<"checkRoute: "+alphaRoute + " '"+name+"' "+endDate;
-    chk = new CheckRoute(segmentDataList, config, this);
-    chk->setStart(startSegment);
-    chk->setEnd(endSegment);
-    bIsSequenced = chk->setSeqNbrs();
-
-    if(segmentDataList.count()== 0)
-        return;
-#if 0
-    bIsSequenced = true;
-    for(int i=0; i <segmentInfoList.count(); i++)
-    {
-        segmentInfo si = segmentInfoList.at(i);
-        if(si.next < 1 && si.prev < 1 )
-        {
-            bIsSequenced=false;
-            break;
-        }
-    }
-    if(bIsSequenced && ti.startSegment > 0)
-    {
-        // assign sequence numbers
-        bool bWorking = true;
-        qint32 nextSequence = ti.startSegment;
-        qint32 currSeq = -1;
-        int i=0;
-
-        while(bWorking)
-        {
-            for( i=0; i < segmentInfoList.count(); i ++)
-            {
-                segmentInfo * si = (segmentInfo*)&segmentInfoList.at(i);
-                if(segmentInfoList.at(i).SegmentId == nextSequence)
-                {
-                    nextSequence = segmentInfoList.at(i).next;
-                    si->sequence = ++currSeq;
-                    //if(segmentInfoList.at(i).SegmentId == ti.endSegment)
-                    if(si->SegmentId == ti.endSegment)
-                    {
-                        bWorking = false;
-                    }
-                    break;
-                }
-            }
-            if(i >= segmentInfoList.count())
-                break;
-            if(currSeq > segmentInfoList.count())
-                break;
-        }
-        nextSequence = ti.endSegment;
-        currSeq = -1;
-        bWorking = true;
-        while(bWorking)
-        {
-            for( i=0; i < segmentInfoList.count(); i ++)
-            {
-                segmentInfo * si = (segmentInfo*)&segmentInfoList.at(i);
-                if(segmentInfoList.at(i).SegmentId == nextSequence)
-                {
-                    nextSequence = segmentInfoList.at(i).prev;
-                    si->returnSeq = ++currSeq;
-                    //if(segmentInfoList.at(i).SegmentId == ti.startSegment)
-                    if(si->SegmentId == ti.startSegment)
-                    {
-                        bWorking = false;
-                    }
-                    break;
-                }
-            }
-            if(i >= segmentInfoList.count())
-                break;
-            if(currSeq > segmentInfoList.count())
-                break;
-
-        }
-    }
-#endif
 
     ui->setSortingEnabled(false);
-    sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"), QDate::fromString(endDate, "yyyy/MM/dd"), segmentDataList);
-    //saveSegmentInfoList = segmentInfoList;  // added 5/6/2012 ack
-    //connect(saveChangesAct, SIGNAL(triggered()), sourceModel, SLOT(commitChanges()));
-    connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(commitChanges()));
-
-    saveSegmentDataList.clear();
-    foreach(SegmentData sd, segmentDataList)
-        saveSegmentDataList.append(sd);
+    if(!sourceModel)
+     sourceModel = new RouteViewTableModel(route, name, companyKey, startDate, endDate,
+                                           SQL::instance()->getRouteSegmentsInOrder(route, name, companyKey, endDate),this);
+    else
+     sourceModel->setList(SQL::instance()->getRouteSegmentsInOrder(route, name, companyKey, endDate));
     sourceModel->setSequenced(bIsSequenced);
 
-    //routeViewFilterProxyModel* filterProxy = new routeViewFilterProxyModel(this);
-    //routeViewSortProxyModel *proxyModel= new routeViewSortProxyModel(this);
-    //filterProxy->setTerminals(startRow, endRow);
-    //filterProxy->setSourceModel(sourceModel);
     proxymodel->setSourceModel(sourceModel);
+
+    if(!(ui->contextMenuPolicy() == Qt::CustomContextMenu))
+        ui->setContextMenuPolicy(Qt::CustomContextMenu);
 
     // get the row of the start segment and the end segment
     int numRows = sourceModel->rowCount(QModelIndex());
@@ -453,14 +518,21 @@ void RouteView::updateRouteView()
     ui->horizontalHeader()->resizeSection(7,35);
     ui->horizontalHeader()->resizeSection(8,65);
     ui->horizontalHeader()->resizeSection(9,65);
+    ui->resizeColumnsToContents();
     ui->setItemDelegateForColumn(sourceModel->TRACTIONTYPE, new TTItemDelegate());
     ui->setItemDelegateForColumn(sourceModel->TYPE, new RTItemDelegate());
     ui->setItemDelegateForColumn(sourceModel->NE, new TurnDelegate("back"));
     ui->setItemDelegateForColumn(sourceModel->NL, new TurnDelegate("ahead"));
     ui->setItemDelegateForColumn(sourceModel->RE, new TurnDelegate("back"));
     ui->setItemDelegateForColumn(sourceModel->RL, new TurnDelegate("ahead"));
+    ui->setItemDelegateForColumn(sourceModel->COMBO, new UsageDelegate());
+    ui->setItemDelegateForColumn(sourceModel->STARTDATE, new DateEditDelegate());
+    ui->setItemDelegateForColumn(sourceModel->ENDDATE, new DateEditDelegate());
+    ui->setItemDelegateForColumn(sourceModel->DOUBLEDATE, new DateEditDelegate());
+
     //populateList();
 }
+
 void RouteView::populateList()
 {
  ui->setSortingEnabled(false);
@@ -497,15 +569,17 @@ void RouteView::reSequenceRoute(QString whichEnd)
  QModelIndexList indexes = model->selectedIndexes();
  //qint32 row = model->currentIndex().row();
  //qint32 col =model->currentIndex().column();
- QModelIndex Index = indexes.at(0);
+ QModelIndex proxyIndex = indexes.at(RouteViewTableModel::SEGMENTID);
+ QModelIndex srcIndex = proxymodel->mapToSource(proxyIndex);
+ qint32 segmentId;
  //if(col==0)
  {
   //bool bOk=false;
-  qint32 segmentId = Index.data().toInt();
+  segmentId = this->model()->getList().at(srcIndex.row())->segmentId();
   qint32 endSegment = -1;
-  endSegment = SQL::instance()->sequenceRouteSegments(segmentId, segmentDataList, route, name,
-                                                      endDate, whichEnd);
-
+  endSegment = SQL::instance()->sequenceRouteSegments(segmentId, sourceModel->getList(), &rd, whichEnd);
+  sourceModel->bChangesMade = true;
+#if 0
   QList<SegmentData> old = segmentDataList;
   //compareSequenceClass comparer = new compareSequenceClass();
   //segmentList.Sort(comparer);
@@ -524,6 +598,7 @@ void RouteView::reSequenceRoute(QString whichEnd)
        break;
    }
   }
+#endif
 #if 0
   //populateList();
   sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"), QDate::fromString(endDate, "yyyy/MM/dd"), segmentDataList);
@@ -549,12 +624,15 @@ void RouteView::reSequenceRoute(QString whichEnd)
   }
   emit sendRows (startRow, endRow);
  }
+ SQL::instance()->saveRouteSequence(rd, segmentId, whichEnd);
  sourceModel->reset();
  myParent->setCursor(Qt::ArrowCursor);
 }
 
 void RouteView::itemSelectionChanged(QModelIndex index )
 {
+    if(!index.isValid())
+        return;
   QString value = index.model()->index(index.row(),0).data().toString();
   if(value.contains(" "))
   {
@@ -565,13 +643,15 @@ void RouteView::itemSelectionChanged(QModelIndex index )
   qint32 segmentId = value.toInt();
 
   MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
+  if(parent->m_segmentId == segmentId)
+      return;
   parent->setCursor(QCursor(Qt::WaitCursor));
-  if(parent->selectedSegment() == segmentId)
-   return; // already selected
+//  if(parent->selectedSegment() == segmentId)
+//   return; // already selected
   parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
   parent->setCursor(QCursor(Qt::ArrowCursor));
 
-  OtherRouteView::instance(NULL)->showRoutesUsingSegment(segmentId);
+  OtherRouteView::instance()->showRoutesUsingSegment(segmentId);
 }
 
 void RouteView::StartRoute_S()         //SLOT
@@ -582,18 +662,23 @@ void RouteView::StartRoute_S()         //SLOT
     QModelIndexList indexes = model->selectedIndexes();
     //qint32 row = model->currentIndex().row();
     //qint32 col =model->currentIndex().column();
-    QModelIndex Index = indexes.at(0);
+    QModelIndex Index = indexes.at(RouteViewTableModel::SEGMENTID);
     qint32 segmentId = Index.data().toInt();
 
     TerminalInfo ti = SQL::instance()->getTerminalInfo(route, name, endDate);
-    SQL::instance()->updateTerminals(route, name, startDate, endDate, segmentId, "S",  ti.route < 0 ? segmentId : ti.endSegment, ti.route < 0 ? "?" : ti.endWhichEnd);
+    SQL::instance()->updateTerminals(route, name, startDate,
+                                     endDate, segmentId, "S",
+                                      ti.route < 0 ? segmentId : ti.endSegment,
+                                      ti.route < 0 ? "?" : ti.endWhichEnd);
     ti = SQL::instance()->getTerminalInfo(route, name, endDate);
     startSegment = segmentId;
     updateRouteView();
 //    Object[] objArray = new Object[] { ti.startLatLng.lat, ti.startLatLng.lon, myParent->getRouteMarkerImagePath(myParent->m_alphaRoute, true) };
 //    webBrowser1.Document.InvokeScript("addRouteStartMarker", objArray);
     QVariantList objArray;
-    objArray << ti.startLatLng.lat()<< ti.startLatLng.lon()<<myParent->getRouteMarkerImagePath(alphaRoute, false);
+    objArray << ti.startLatLng.lat()<< ti.startLatLng.lon()<< //myParent->getRouteMarkerImagePath(alphaRoute, false);
+        "./green00.png" << "'" + alphaRoute + "'";
+
     WebViewBridge::instance()->processScript("addRouteStartMarker", objArray);
 
 }
@@ -605,19 +690,22 @@ void RouteView::EndRoute_S()           // SLOT
     QModelIndexList indexes = model->selectedIndexes();
     //qint32 row = model->currentIndex().row();
     //qint32 col =model->currentIndex().column();
-    QModelIndex Index = indexes.at(0);
+    QModelIndex Index = indexes.at(RouteViewTableModel::SEGMENTID);
     qint32 segmentId = Index.data().toInt();
 
     TerminalInfo ti = SQL::instance()->getTerminalInfo(route, name, endDate);
-    //SQL::instance()->updateTerminals(route, name,ti.route < 0 ? "1800/01/01" : ti.startDate.toString("yyyy/MM/dd"), endDate, ti.route < 0?-1:ti.startSegment, ti.route < 0?"?":ti.startWhichEnd,        segmentId, "S");
-    SQL::instance()->updateTerminals(route, name,ti.route < 0 ? "1800/01/01" : startDate, endDate, ti.route < 0?-1:ti.startSegment, ti.route < 0?"?":ti.startWhichEnd,        segmentId, "S");
+    //SQL::instance()->updateTerminals(route, name,ti.route < 0 ? "1800/01/01" : ti.startDate), endDate, ti.route < 0?-1:ti.startSegment, ti.route < 0?"?":ti.startWhichEnd,        segmentId, "S");
+    SQL::instance()->updateTerminals(route, name,ti.route < 0 ? QDate::fromString("1800/01/01", "yyyy/MM/dd") : startDate,
+                                     endDate, ti.route < 0?-1:ti.startSegment, ti.route < 0?"?":ti.startWhichEnd,        segmentId, "S");
     ti = SQL::instance()->getTerminalInfo(route, name, endDate);
     endSegment = segmentId;
     updateRouteView();
 //    Object[] objArray = new Object[] { ti.endLatLng.lat, ti.endLatLng.lon, myParent->getRouteMarkerImagePath(myParent->m_alphaRoute, false) };
 //    webBrowser1.Document.InvokeScript("addRouteEndMarker", objArray);
     QVariantList objArray;
-    objArray << ti.endLatLng.lat()<< ti.endLatLng.lon()<<myParent->getRouteMarkerImagePath(alphaRoute, false);
+    objArray << ti.endLatLng.lat()<< ti.endLatLng.lon()<< // <myParent->getRouteMarkerImagePath(alphaRoute, false);
+        "./red00.png" << "'" + alphaRoute + "'";
+
     WebViewBridge::instance()->processScript("addRouteEndMarker", objArray);
 
 }
@@ -629,19 +717,22 @@ void RouteView::StartRoute_E()         // SLOT
     QModelIndexList indexes = model->selectedIndexes();
     //qint32 row = model->currentIndex().row();
     //qint32 col =model->currentIndex().column();
-    QModelIndex Index = indexes.at(0);
+    QModelIndex Index = indexes.at(RouteViewTableModel::SEGMENTID);
     qint32 segmentId = Index.data().toInt();
 
     TerminalInfo ti = SQL::instance()->getTerminalInfo(route, name, endDate);
-    //SQL::instance()->updateTerminals(route, name, ti.route < 0?"1800/01/01":ti.startDate.toString("yyyy/MM/dd"), endDate, segmentId, "E", ti.route < 0 ? -1 : ti.endSegment, ti.route < 0 ? "?" : ti.endWhichEnd);
-    SQL::instance()->updateTerminals(route, name, ti.route < 0?"1800/01/01":startDate, endDate, segmentId, "E", ti.route < 0 ? -1 : ti.endSegment, ti.route < 0 ? "?" : ti.endWhichEnd);
+    //SQL::instance()->updateTerminals(route, name, ti.route < 0?"1800/01/01":ti.startDate), endDate, segmentId, "E", ti.route < 0 ? -1 : ti.endSegment, ti.route < 0 ? "?" : ti.endWhichEnd);
+    SQL::instance()->updateTerminals(route, name, ti.route < 0?QDate::fromString("1800/01/01","yyyy/MM/dd"):startDate,
+                                     endDate, segmentId, "E", ti.route < 0 ? -1 : ti.endSegment, ti.route < 0 ? "?" : ti.endWhichEnd);
     ti = SQL::instance()->getTerminalInfo(route,myParent-> m_routeName, endDate);
     startSegment = segmentId;
     updateRouteView();
 //    Object[] objArray = new Object[] { ti.startLatLng.lat, ti.startLatLng.lon, getRouteMarkerImagePath(m_alphaRoute, true) };
 //    webBrowser1.Document.InvokeScript("addRouteStartMarker", objArray);
     QVariantList objArray;
-    objArray << ti.startLatLng.lat()<< ti.startLatLng.lon()<<myParent->getRouteMarkerImagePath(alphaRoute, false);
+    objArray << ti.startLatLng.lat()<< ti.startLatLng.lon()<< //myParent->getRouteMarkerImagePath(alphaRoute, false);
+        "./green00.png" << "'" + alphaRoute + "'";
+
     WebViewBridge::instance()->processScript("addRouteStartMarker", objArray);
 
 }
@@ -653,7 +744,7 @@ void RouteView::EndRoute_E()       // SLOT
     QModelIndexList indexes = model->selectedIndexes();
     //qint32 row = model->currentIndex().row();
     //qint32 col =model->currentIndex().column();
-    QModelIndex Index = indexes.at(0);
+    QModelIndex Index = indexes.at(RouteViewTableModel::SEGMENTID);
     qint32 segmentId = Index.data().toInt();
 
     TerminalInfo ti = SQL::instance()->getTerminalInfo(route, name, endDate);
@@ -667,7 +758,9 @@ void RouteView::EndRoute_E()       // SLOT
 //    Object[] objArray = new Object[] { ti.endLatLng.lat, ti.endLatLng.lon, getRouteMarkerImagePath(m_alphaRoute, false) };
 //    webBrowser1.Document.InvokeScript("addRouteEndMarker", objArray);
     QVariantList objArray;
-    objArray << ti.endLatLng.lat()<< ti.endLatLng.lon()<<myParent->getRouteMarkerImagePath(alphaRoute, false);
+    objArray << ti.endLatLng.lat()<< ti.endLatLng.lon()<< //myParent->getRouteMarkerImagePath(alphaRoute, false);
+        "./red00.png" << "'" + alphaRoute + "'";
+
     WebViewBridge::instance()->processScript("addRouteEndMarker", objArray);
 
 }
@@ -679,32 +772,32 @@ void RouteView::updateTerminals()
     int startSeg = -1, endSeg = -1, startRow=-1, endRow=-1;
     QString startWhichEnd = "S", endWhichEnd = "S";
     myParent->setCursor(QCursor(Qt::WaitCursor));
-    for(int i =0; i < segmentDataList.count(); i++)
+    for(int i =0; i < sourceModel->getList().count(); i++)
     {
-        SegmentData sd = segmentDataList.at(i);
-        if(sd.sequence() == 0)
+        SegmentData* sd = sourceModel->getList().at(i);
+        if(sd->sequence() == 0)
         {
-            startSeg = sd.segmentId();
+            startSeg = sd->segmentId();
             startRow = i;
-            SegmentInfo sd1 = SQL::instance()->getSegmentInfo(sd.next());
-            if(SQL::instance()->Distance(sd.startLat(), sd.startLon(), sd1.startLat(), sd1.startLon()) < .02
-               ||SQL::instance()->Distance(sd.startLat(), sd.startLon(), sd1.endLat(), sd1.endLon()) < .02)
+            SegmentInfo sd1 = SQL::instance()->getSegmentInfo(sd->next());
+            if(SQL::instance()->Distance(sd->startLat(), sd->startLon(), sd1.startLat(), sd1.startLon()) < .02
+               ||SQL::instance()->Distance(sd->startLat(), sd->startLon(), sd1.endLat(), sd1.endLon()) < .02)
             {
                 startWhichEnd = "E";
             }
         }
-        if(sd.returnSeq() == 0)
+        if(sd->returnSeq() == 0)
         {
-            endSeg = sd.segmentId();
+            endSeg = sd->segmentId();
             endRow = i;
-            SegmentInfo sd1 = SQL::instance()->getSegmentInfo(sd.prev());
-            if(SQL::instance()->Distance(sd.startLat(), sd.startLon(), sd1.startLat(), sd1.startLon()) < .02
-               || SQL::instance()->Distance(sd.startLat(), sd.startLon(), sd1.endLat(), sd1.endLon()) < .02)
+            SegmentInfo sd1 = SQL::instance()->getSegmentInfo(sd->prev());
+            if(SQL::instance()->Distance(sd->startLat(), sd->startLon(), sd1.startLat(), sd1.startLon()) < .02
+               || SQL::instance()->Distance(sd->startLat(), sd->startLon(), sd1.endLat(), sd1.endLon()) < .02)
             {
                 startWhichEnd = "E";
             }
         }
-        if(sd.sequence() == -1 && sd.returnSeq()==-1)
+        if(sd->sequence() == -1 && sd->returnSeq()==-1)
         {
             bIsSequenced = false;
             myParent->setCursor(QCursor(Qt::ArrowCursor));
@@ -713,13 +806,18 @@ void RouteView::updateTerminals()
     }
     if(!bIsSequenced)
         return;
-    for(int i =0; i < segmentDataList.count(); i++)
+    for(int i =0; i < sourceModel->getList().count(); i++)
     {
-        SegmentData sd = segmentDataList.at(i);
-        SQL::instance()->updateRoute(route, name, endDate, sd.segmentId(), sd.next(), sd.prev(), sd.trackUsage());
+        SegmentData* sd = sourceModel->getList().at(i);
+        //SQL::instance()->updateRoute(route, name, endDate, sd.segmentId(), sd.next(), sd.prev(), sd.trackUsage());
+        SegmentData* newSd = new SegmentData(*sd);
+        newSd->setRoute(route);
+        newSd->setRouteName(name);
+        SQL::instance()->updateRoute(*sd, *newSd);
     }
 
-    SQL::instance()->updateTerminals(route, name, startDate, endDate, startSeg, startWhichEnd, endSeg, endWhichEnd);
+    SQL::instance()->updateTerminals(route, name, startDate,
+                                     endDate, startSeg, startWhichEnd, endSeg, endWhichEnd);
     emit sendRows (startRow, endRow);
 
     updateRouteView();
@@ -737,56 +835,27 @@ bool RouteView::dataChanged(QModelIndex oldIx,QModelIndex newIx )
     return true;
 }
 
-void RouteView::deleteSegment()
+void RouteView::removeSegment()
 {
     //mainWindow * myParent = qobject_cast<mainWindow*>(m_parent);
     QItemSelectionModel * model = ui->selectionModel();
     QModelIndexList indexes = model->selectedIndexes();
     QModelIndex ix = indexes.at(RouteViewTableModel::SEGMENTID);
     qint32 segmentId = ix.data().toInt();
-
-    sourceModel->deleteRow(segmentId, ix);
-
-}
-
-void RouteView::unDeleteSegment()
-{
-    //mainWindow * myParent = qobject_cast<mainWindow*>(m_parent);
-    QItemSelectionModel * model = ui->selectionModel();
-    QModelIndexList indexes = model->selectedIndexes();
-    QModelIndex ix = indexes.at(RouteViewTableModel::SEGMENTID);
-    qint32 segmentId = ix.data().toInt();
-
-    sourceModel->unDeleteRow(segmentId, ix);
-}
-
-void RouteView::commitChanges()
-{
- bool rslt = sourceModel->commitChanges();
- if(rslt)
- {
-  myParent->refreshRoutes();
-  myParent->btnDisplayRouteClicked();
- }
- myParent-> setCursor(Qt::ArrowCursor);
-}
-
-bool RouteView::bUncomittedChanges()
-{
- if(sourceModel->changedMap.values().count()>0)
-  return true;
- else
-  return false;
+    sourceModel->deleteRow(segmentId, proxymodel->mapToSource(ix));
+    sourceModel->bChangesMade = true;
+    ui->clearSelection();
+    MainWindow::instance()->segmentChanged(segmentId, 0);
 }
 
 void RouteView::on_selectSegment_triggered()
 {
  QItemSelectionModel * model = ui->selectionModel();
  QModelIndexList indexes = model->selectedIndexes();
- QModelIndex Index = indexes.at(0);
+ QModelIndex Index = indexes.at(RouteViewTableModel::SEGMENTID);
  qint32 segmentId = Index.data().toInt();
  MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
- myParent->segmentSelected(0,segmentId);
+ //myParent->segmentSelected(0,segmentId);
  emit selectSegment(segmentId);
 }
 
@@ -794,42 +863,30 @@ void RouteView::editSegment()
 {
  QItemSelectionModel * model = ui->selectionModel();
  QModelIndexList indexes = model->selectedIndexes();
- qint32 segmentId = indexes.at(0).data().toInt();
- SegmentData sd = segmentDataList.at(proxymodel->mapToSource(indexes.at(0)).row());
+ qint32 segmentId = indexes.at(RouteViewTableModel::SEGMENTID).data().toInt();
+ SegmentData* sd = sourceModel->getList().at(proxymodel->mapToSource(indexes.at(RouteViewTableModel::SEGMENTID)).row());
  SegmentInfo si = SQL::instance()->getSegmentInfo(segmentId);
- EditSegmentDialog* dlg = new EditSegmentDialog(&sd, si);
- dlg->exec();
+ EditSegmentDialog* dlg = new EditSegmentDialog(si);
+ if(dlg->exec() == QDialog::Accepted)
+  MainWindow::instance()->refreshRoutes();
 }
 
-void RouteView::on_segmentSelected(int, int segmentId)
+void RouteView::on_segmentSelected(int, int segmentId, QList<LatLng>)
 {
  int row = sourceModel->getRow(segmentId);
  if(row >= 0)
  {
   QModelIndex modelIndex = proxymodel->mapFromSource(sourceModel->index(row,1));
-  //ui->setCurrentIndex(modelIndex);
   ui->selectRow(modelIndex.row());
  }
 }
 
-void RouteView::checkChanges()
+void RouteView::clear()
 {
- if(sourceModel->changedMap.values().count() > 0)
- {
-  QMessageBox::StandardButtons rslt;
-  MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
-  rslt = QMessageBox::warning(myParent,tr("Commit changes"), tr("There are uncommited changes to the current route. Do you wish to save them?") , QMessageBox::Save | QMessageBox::Discard|QMessageBox::Cancel);
-  switch (rslt)
-  {
-  case QMessageBox::Save:
-   //commitChanges();
-   sourceModel->commitChanges();
-   break;
-  case QMessageBox::Discard:
-   sourceModel->changedMap.values().clear();
-   break;
-  default:
-   break;
-  }
- }
+    sourceModel->clear();
+}
+
+QList<SegmentData*> RouteView::selectedSegments()
+{
+ return sourceModel->_selectedSegments;
 }

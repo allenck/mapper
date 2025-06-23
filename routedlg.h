@@ -18,7 +18,7 @@ class RouteDlg : public QDialog
     Q_OBJECT
 
 public:
-    RouteDlg(Configuration *cfg, QWidget *parent = 0);
+    RouteDlg(QWidget *parent = 0);
     ~RouteDlg();
     //void configuration(Configuration* cfg);
     void setRouteNbr(qint32 rt);
@@ -26,9 +26,8 @@ public:
     void setSegmentId(qint32 segmentid);
     qint32 SegmentId();
     //enum TypeOfChange{Add,Delete,Update};
-    void setRouteData(RouteData value);
-    void setRouteData(SegmentData sd);
-    void fillCompanies();
+    void setSegmentData(RouteData value);
+    void setSegmentData(SegmentData *sd);
 
 
 public slots:
@@ -36,6 +35,7 @@ public slots:
     void routeChanged(RouteData rd);
     void setAddMode(bool value);
     void OnNewCity();
+    void fillCompanies();
 
 signals:
     void SegmentChangedEvent(qint32 changedSegment, qint32 newSegment);
@@ -48,9 +48,9 @@ signals:
 private:
     Ui::RouteDlg *ui;
     Configuration* config;
-    qint32 _routeNbr;
+    qint32 _routeNbr = -1;
     QString _alphaRoute;
-    QList<SegmentData> _segmentInfoList;
+    QList<SegmentData*> _segmentDataList;
     QList<CompanyData*> _companyList;
     QMap<int,TractionTypeInfo> _tractionList;
     QList<QString> _routeNamesList;
@@ -61,15 +61,15 @@ private:
     bool bRouteChanged;
     //public event routeChangedEventHandler routeChanged;
     //public EventHandler segmentChanged;
-    SegmentData sd;
-    SegmentData oldSd;
+    SegmentData* sd = nullptr;
+    SegmentData* oldSd = nullptr;
     SegmentInfo si;
     RouteData _rd;
     //bool bIgnoreDirection = false;
     //public event segmentChangedEventHandler SegmentChanged;
     bool formNotLoaded;
     //int normalEnter, normalLeave, reverseEnter, reverseLeave;
-    SegmentData _sd;
+    //SegmentData _sd;
     bool bSegmentChanging;
     bool bRouteChanging;
     bool bAddMode;
@@ -90,10 +90,10 @@ private:
 
 private slots:
     void Form_Load();
-    void txtRouteNbr_Leave();
-    void txtRouteName_Leave();
+//    void txtRouteNbr_Leave();
+//    void txtRouteName_Leave();
     void cbSegments_SelectedIndexChanged(int i);
-    void btnOK_click();
+    void btnClose_click();
     void gbNormalEnter_Leave();
     void gbNormalLeave_Leave();
     void gbReverseEnter_Leave();

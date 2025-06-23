@@ -1,6 +1,8 @@
 ﻿#include "segmentview.h"
 #include "editsegmentdialog.h"
 #include "webviewbridge.h"
+#include "dupsegmentview.h"
+#include "sql.h"
 
 SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
     QObject(parent)
@@ -19,38 +21,31 @@ SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
     ui->setSelectionBehavior(QAbstractItemView::SelectRows );
     ui->setSelectionMode( QAbstractItemView::SingleSelection );
 
-    //create contextmenu
-    copyAction = new QAction(tr("&Copy"), this);
-    copyAction->setStatusTip(tr("Copy Table Location"));
-    copyAction->setShortcut(tr("Ctrl+C"));
-    connect(copyAction, SIGNAL(triggered()), this, SLOT(aCopy()));
-
-    pasteAction = new QAction(tr("&Paste"), this);
-    pasteAction->setStatusTip(tr("Paste"));
-    pasteAction->setShortcut(tr("Ctrl+V"));
-    connect(pasteAction, SIGNAL(triggered()), this, SLOT(aPaste()));
-
-    addToRouteAct = new QAction(tr("Add in UpdateRoute"),this);
-    addToRouteAct->setStatusTip(tr("Add this segment to the current route."));
-    connect(addToRouteAct, SIGNAL(triggered()),this, SLOT(addToRoute()));
+    addInUpdateRoute = new QAction(tr("Add in UpdateRoute"),this);
+    addInUpdateRoute->setStatusTip(tr("Add this segment uding Update Route route."));
+    connect(addInUpdateRoute, SIGNAL(triggered()),this, SLOT(addToRoute()));
 
     editSegmentAct = new QAction(tr("Edit segment"), this);
     editSegmentAct->setStatusTip(tr("Edit this segment's properties"));
     connect(editSegmentAct, SIGNAL(triggered(bool)), this, SLOT(editSegment()));
 
-    connect(WebViewBridge::instance(), SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(on_segmentSelected(int,int)));
+    removeFromRoute = new QAction(tr("Remove from route"), this);
+    connect(removeFromRoute, &QAction::triggered, [=]{
+         int row = selectedRow();
+         SegmentInfo si = sourceModel->selectedSegment(row);
+         SegmentData sd = SegmentData(si);
+         sd.updateRouteInfo(MainWindow::instance()->_rd);
+         SQL::instance()->deleteRoute(sd);
+    });
+    //connect(WebViewBridge::instance(), SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(on_segmentSelected(int,int)));
+    connect(WebViewBridge::instance(), SIGNAL(segmentSelectedX(qint32,qint32,QList<LatLng>)), this, SLOT(on_segmentSelected(int,int,QList<LatLng>)));
 
     selectSegmentAct = new QAction(tr("Select Segment"),this);
     selectSegmentAct->setStatusTip(tr("Select this segment for further use."));
     connect(selectSegmentAct, &QAction::triggered, [=]{
-     QItemSelectionModel * model = ui->selectionModel();
-     QModelIndexList indexes = model->selectedIndexes();
-     QModelIndex Index = indexes.at(0);
-     qint32 segmentId = Index.data().toInt();
-
+     qint32 segmentId = selectedSegmentId();
      emit selectSegment(segmentId);
     });
-
 
     ui->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(tablev_customContextMenu( const QPoint& )));
@@ -58,8 +53,6 @@ SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
     proxymodel = new segmentViewSortProxyModel(this);
     proxymodel->setSourceModel(sourceModel);
     ui->setModel(proxymodel);
-    //connect(this, SIGNAL(sendRows(int, int)), proxymodel, SLOT(getRows(int,int)));
-
     connect(ui, SIGNAL(clicked(QModelIndex)), this, SLOT(itemSelectionChanged(QModelIndex)));
 
     myParent->ui->tabWidget->setTabText(1, "Intersecting Segments");
@@ -78,27 +71,47 @@ void SegmentView::tablev_customContextMenu( const QPoint& pt)
 {
     curRow = ui->rowAt(pt.y());
     curCol = ui->columnAt(pt.x());
+
     // check is item in QTableView exist or not
     if(boolGetItemTableView(ui))
     {
-        //menu = QMenu(m_parent*);
-
-        menu.addAction(copyAction);
-        menu.addAction(pasteAction);
-        //int row = ui->rowAt(pt.y());
+        menu.clear();
         QItemSelectionModel * model = ui->selectionModel();
         QModelIndexList indexes = model->selectedIndexes();
         if(indexes.size() > 0)
         {
-        QModelIndex ix = indexes.at(0);
+            QModelIndex Index = indexes.at(SegmentViewTableModel::SEGMENTID);
+            QString txtSegmentId = Index.data().toString();
+
+         QModelIndex ix = proxymodel->mapToSource(indexes.at(0));
+
          if((ix.data(Qt::CheckStateRole) != Qt::Checked))
-            menu.addAction(addToRouteAct);
+         {
+           //menu.addAction(addToRouteAct);
+          SegmentInfo si = sourceModel->selectedSegment(ix.row());
+          SegmentData* sd = new SegmentData(si);
+          MainWindow* p = MainWindow::instance();
+          RouteData rd = p->_rd;
+          sd->setRoute(p->m_routeNbr);
+          sd->setRouteName(p->m_routeName);
+          sd->setCompanyKey(p->m_companyKey);
+          sd->setTractionType(rd.tractionType());
+          sd->setStartDate(rd.startDate());
+          sd->setEndDate(rd.endDate());
+          menu.addMenu(MainWindow::instance()->addSegmentMenu(sd));
+          menu.addAction(addInUpdateRoute);
+         }
+         else
+         {
+          menu.addAction(removeFromRoute);
+         }
         }
         menu.addAction(editSegmentAct);
         menu.addAction(selectSegmentAct);
         menu.exec(QCursor::pos());
     }
 }
+
 //get QTableView selected item
 bool SegmentView::boolGetItemTableView(QTableView *table)
 {
@@ -113,22 +126,22 @@ bool SegmentView::boolGetItemTableView(QTableView *table)
         return (false);
 
 }
-void SegmentView::aCopy()
-{
-    QClipboard *clipboard = QApplication::clipboard();
-    //QItemSelectionModel model = ui->selectionModel();
-    //QModelIndex index =currentIndex();
-    //QAbstractItemModel* item = index.model();
-    if(currentIndex.isValid())
-        clipboard->setText(currentIndex.data().toString());
+//void SegmentView::aCopy()
+//{
+//    QClipboard *clipboard = QApplication::clipboard();
+//    //QItemSelectionModel model = ui->selectionModel();
+//    //QModelIndex index =currentIndex();
+//    //QAbstractItemModel* item = index.model();
+//    if(currentIndex.isValid())
+//        clipboard->setText(currentIndex.data().toString());
 
-}
-void SegmentView::aPaste()
-{
+//}
+//void SegmentView::aPaste()
+//{
 
-}
+//}
 
-void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
+void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 segmentId)
 {
     SegmentInfo sdIn;
     SegmentInfo si;
@@ -136,10 +149,10 @@ void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     double a1 = 0;
 
-    sdIn = sql->getSegmentInfo(SegmentId);
+    sdIn = sql->getSegmentInfo(segmentId);
     if (sdIn.segmentId() < 1)
     {
-        qDebug() << "segmentID " + QString("%1").arg(SegmentId) + " not found";
+        qDebug() << "segmentID " + QString("%1").arg(segmentId) + " not found";
         return;
     }
 //    if (sdIn.bearingStart == null || sdIn.bearingEnd == null)
@@ -148,27 +161,30 @@ void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
     if(qAbs(lat - sdIn.startLat())< .00000001 && qAbs(lon - sdIn.startLon()) < .00000001)
     {
         sdIn.whichEnd() = "S";
-        a1 = sdIn.bearingStart().getBearing();
+        a1 = sdIn.bearingStart().angle();
     }
     else
     {
         sdIn.setWhichEnd("E");
-        a1 = sdIn.bearingEnd().getBearing();
+        a1 = sdIn.bearingEnd().angle();
     }
     // get all the points within .020km
     myParent->setCursor(QCursor(Qt::WaitCursor));
     sourceModel->reset();
     myArray = sql->getIntersectingSegments(lat, lon, .020, sdIn.routeType());
+
     myParent->setCursor(QCursor(Qt::ArrowCursor));
 
     if(myArray.count()== 0)
         return;
-
+    QList<QPair<SegmentInfo,SegmentInfo>> dups = sql->getDupSegmentsInList(myArray);
+    if(dups.count()>0)
+        MainWindow::instance()->dupSegmentView->showDupSegments(dups);
     ui->setSortingEnabled(false);
 
     sourceModel = new SegmentViewTableModel(myArray, lat, lon, myParent->m_routeNbr, myParent->m_currRouteEndDate, this);
     proxymodel->setSourceModel(sourceModel);
-    myParent->ui->intersectingLabel->setText(tr("Segments connectint to %1").arg(sdIn.toString()));
+    myParent->ui->intersectingLabel->setText(tr("Segments connecting to %1").arg(sdIn.toString()));
 
     // get the row of the start segment and the end segment
     int numRows = proxymodel->rowCount();
@@ -184,7 +200,18 @@ void SegmentView::showSegmentsAtPoint(double lat, double lon, qint32 SegmentId)
 //            endRow = i;
     }
     emit sendRows (startRow, endRow);
-    //proxyModel->setTerminals(startRow, endRow);
+    if(m_segmentId > 0)
+    {
+        int row = sourceModel->getRow(m_segmentId);
+        if(row >= 0)
+        {
+            QModelIndex modelIndex = proxymodel->mapFromSource(sourceModel->index(row,1));
+            //ui->setCurrentIndex(modelIndex);
+            ui->selectRow(modelIndex.row());
+        }
+        else
+            m_segmentId=-1;
+    }
     ui->setModel(proxymodel);
     ui->setSortingEnabled(true);
 
@@ -207,7 +234,7 @@ void SegmentView::addToRoute()
  MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
  if(parent->routeDlg == 0)
  {
-  parent->routeDlg = new RouteDlg(config, parent);
+  parent->routeDlg = new RouteDlg(parent);
   //parent->routeDlg->Configuration ( config);
   //routeDlg->SegmentChanged += new segmentChangedEventHandler(segmentChanged);
   connect(parent->routeDlg, SIGNAL(SegmentChangedEvent(qint32, qint32)),parent, SLOT(segmentChanged(qint32,qint32)));
@@ -215,26 +242,38 @@ void SegmentView::addToRoute()
 // if(parent->selectedSegment() == segmentId)
 //  return; // already selected
 
- SegmentData sd = sourceModel->selectedSegment(proxymodel->mapToSource(indexes.at(0)).row());
+ SegmentInfo si = sourceModel->selectedSegment(proxymodel->mapToSource(indexes.at(0)).row());
+ SegmentData* sd = new SegmentData(si);
+// sd->setRoute(parent->_rd.route());
+// sd->setAlphaRoute(parent->_rd.alphaRoute());
+// sd->setRouteName(parent->_rd.routeName());
+// sd->setStartDate(parent->_rd.startDate());
+// sd->setEndDate(parent->_rd.endDate());
+// sd->setTractionType(parent->_rd.tractionType());
+// sd->setCompanyKey(parent->_rd.companyKey());
+
  if(parent->m_segmentStatus == "Y")
    parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
  else
  {
   //SegmentInfo sd = sql->getSegmentInfo(segmentId);
-  parent->displaySegment(segmentId, sd.description(), /*sd.oneWay(),*/ /*sd.oneWay() == "N" ? "#00FF00" :*/ "#045fb4", " ", true);
+  //parent->displaySegment(segmentId, sd->description(), /*sd->oneWay(),*/ /*sd->oneWay() == "N" ? "#00FF00" :*/ "#045fb4", " ", true);
+     sd->displaySegment(sd->startDate().toString("yyyy/MM/dd"), "#045fb4",sd->trackUsage(), true);
  }
- parent->routeDlg->setSegmentId(segmentId); // do before setting route!
+ parent->routeDlg->setSegmentData(sd); // do before setting route!
  int ix = parent->ui->cbRoute->currentIndex();
  if(ix >= 0)
  {
   RouteData rd = parent->routeList.at(ix);
-  sd.setRoute(rd.route);
-  sd.setAlphaRoute(rd.alphaRoute);
-  sd.setRouteName(rd.name);
-  sd.setStartDate(rd.startDate);
-  sd.setEndDate(rd.endDate);
-  sd.setCompanyKey(rd.companyKey);
-  parent->routeDlg->setRouteData(sd);
+  sd->setRoute(rd.route());
+  sd->setAlphaRoute(rd.alphaRoute());
+  sd->setRouteName(rd.routeName());
+  sd->setStartDate(rd.startDate());
+  sd->setEndDate(rd.endDate());
+  sd->setTractionType(rd.tractionType());
+  sd->setCompanyKey(rd.companyKey());
+
+  parent->routeDlg->setSegmentData(sd);
  }
  parent->routeDlg->show();
  parent->routeDlg->raise();
@@ -256,24 +295,17 @@ void SegmentView::itemSelectionChanged(QModelIndex index)
     QItemSelectionModel * model = ui->selectionModel();
     QModelIndexList indexes = model->selectedIndexes();
     qint32 segmentId =indexes.at(0).data().toInt();
+    m_segmentId = segmentId;
     MainWindow * parent = qobject_cast<MainWindow*>(this->m_parent);
     if(parent->selectedSegment() == segmentId)
      return; // already selected
 
-//    parent->ProcessScript("isSegmentDisplayed", QString("%1").arg(segmentId));
-//    if(parent->m_segmentStatus == "Y")
-//        parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
-//    else
-//    {
-////        SegmentData si = sql->getSegmentData(segmentId);
-//        //parent->displaySegment(segmentId, si.description, si.oneWay, si.oneWay == "N" ? "#00FF00" : "#045fb4", true);
-//        parent->ProcessScript("selectSegment", QString("%1").arg(segmentId));
-//    }
     emit selectSegment(segmentId);
 }
 
-void SegmentView::on_segmentSelected(int, int segmentId)
+void SegmentView::on_segmentSelected(int, int segmentId, QList<LatLng>)
 {
+ m_segmentId = segmentId;
  int row = sourceModel->getRow(segmentId);
  if(row >= 0)
  {
@@ -281,4 +313,27 @@ void SegmentView::on_segmentSelected(int, int segmentId)
   //ui->setCurrentIndex(modelIndex);
   ui->selectRow(modelIndex.row());
  }
+}
+
+// get selected row of source
+int SegmentView::selectedRow()
+{
+ QItemSelectionModel * model = ui->selectionModel();
+ QModelIndexList indexes = model->selectedIndexes();
+ if(indexes.isEmpty())
+     return -1;
+ QModelIndex ix = proxymodel->mapToSource(indexes.at(0));
+
+ return ix.row();
+}
+
+int SegmentView::selectedSegmentId()
+{
+ QItemSelectionModel * model = ui->selectionModel();
+ QModelIndexList indexes = model->selectedIndexes();
+ if(indexes.isEmpty())
+     return -1;
+ QModelIndex Index = indexes.at(0);
+ qint32 segmentId = Index.data().toInt();
+ return  segmentId;
 }

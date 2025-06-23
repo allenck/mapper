@@ -27,7 +27,7 @@ Overlay::Overlay(QString cityName, QString name, int opacity)
 bool Overlay::importXml(QString fileName)
 {
  QDir cwd = QDir::currentPath();
- QFile* file = new QFile(fileName);
+ QFile* file = new QFile(cwd.currentPath() + "/" + fileName);
  if(file->open(QIODevice::ReadOnly))
  {
   QDomDocument doc("Overlay");
@@ -72,7 +72,7 @@ bool Overlay::importXml(QString fileName)
    if(urls.text().isEmpty())
    {
     if(ov->source == "acksoft" && ov->urls.isEmpty())
-     ov->urls.append("http://ubuntu-2:1080/public/map_tiles/");
+     ov->urls.append("https://ubuntu-2/public/map_tiles/");
     if(ov->source == "mbtiles"&& ov->urls.isEmpty()) // Windows
      ov->urls.append("http://localhost/map_tiles/mbtiles.php");
     if(ov->source == "tileserver" && ov->urls.isEmpty()) // Linux
@@ -87,18 +87,31 @@ bool Overlay::importXml(QString fileName)
  }
  else{
   qDebug() << tr("error importing %1 %2").arg(fileName).arg(file->errorString());
-  throw FileNotFoundException(tr("error importing %1 %2").arg(fileName).arg(file->errorString()));
+  //throw FileNotFoundException(tr("error importing %1 %2").arg(fileName).arg(file->errorString()));
+  return false;
  }
  return true;
 }
-QList<Overlay*> Overlay::overlayList = QList<Overlay*>();
+
+/*static*/ QList<Overlay*> Overlay::overlayList = QList<Overlay*>();
+/*static*/ QList<Overlay*> Overlay::getList(City *city)
+{
+  if(!city)
+    return overlayList;
+  QList<Overlay*> list;
+  for(Overlay* ov : overlayList)
+  {
+      if(ov->bounds().intersects(city->bounds()))
+      list.append(ov);
+  }
+  return list;
+}
 
 bool Overlay::exportXml(QString fileName, QList<Overlay*> overlayList)
 {
  QFile* file = new QFile(fileName);
  if(file->open(QIODevice::WriteOnly))
  {
-
   QDomDocument doc("Overlays");
   QDomElement root = doc.createElement("Overlays");
   doc.appendChild(root);
@@ -154,7 +167,11 @@ bool Overlay::exportXml(QString fileName, QList<Overlay*> overlayList)
 void Overlay::getTileMapResource()
 {
  QEventLoop loop;
- QUrl url = QUrl::fromUserInput(QString("http://ubuntu-2:1080/public/map_tiles/%1/tilemapresource.xml").arg(name));
+ QUrl url;
+ if(wmtsUrl.isEmpty())
+  url = QUrl::fromUserInput(QString("https://ubuntu-2/public/map_tiles/%1/tilemapresource.xml").arg(name));
+ else
+  url = QUrl(wmtsUrl);
  if(url.isValid())
   m_tilemapresource = new FileDownloader(url);
  else
@@ -177,7 +194,8 @@ void Overlay::processTileMapResource()
   Bounds bounds;
   doc.setContent(str);
   QDomElement root = doc.documentElement();
-  if(root.tagName() == "TileMap")
+  QString rootName = root.tagName();
+  if(rootName == "TileMap")
   {
    QDomElement elem = root.firstChildElement("Title");
    if(!elem.isNull())
@@ -198,6 +216,17 @@ void Overlay::processTileMapResource()
     {
      //Overlay* ov = m_tilemapresource->overlay();
      setBounds(bounds);
+    }
+    else
+    {
+     // x & y might be reversed, try it that way
+     bounds = Bounds(LatLng(minx, miny), LatLng(maxx, maxy));
+     if(bounds.isValid())
+     {
+      //Overlay* ov = m_tilemapresource->overlay();
+      setBounds(bounds);
+     }
+
     }
    }
    elem = root.firstChildElement("TileSets");
@@ -225,6 +254,80 @@ void Overlay::processTileMapResource()
      this->maxZoom = maxZoom;
    }
    qDebug() <<"xml processed: " << name << "descr: " << description << " bounds: " << bounds.toString() << " minZoom: " << minZoom << " maxZoom: " << maxZoom;
+  }
+  else if(rootName == "Capabilities")
+  {
+   QStringList points;
+   QDomElement contents = root.firstChildElement("Contents");
+    if(!contents.isNull())
+    {
+     QDomElement layer = contents.firstChildElement("Layer");
+     if(!layer.isNull())
+     {
+      name = layer.firstChildElement("ows:Title").text();
+      LatLng sw;
+      LatLng ne;
+      QDomElement bounds = layer.firstChildElement("ows:WGS84BoundingBox");
+      if(!bounds.isNull())
+      {
+       QDomElement swCorner = bounds.firstChildElement("ows:LowerCorner");
+       QString lon_lat = swCorner.text();
+       points = lon_lat.split(" ");
+       sw = LatLng(points.at(1).toDouble(), points.at(0).toDouble());
+       QDomElement neCorner = bounds.firstChildElement("ows:UpperCorner");
+       lon_lat = neCorner.text();
+       points = lon_lat.split(" ");
+       ne = LatLng(points.at(1).toDouble(), points.at(0).toDouble());
+       setBounds(Bounds(sw, ne));
+
+       // find city name
+       LatLng center = Bounds().center();
+       //ui->edCity->setPlaceholderText(tr("enter city name"));
+       for(City* city : Configuration::instance()->cityList)
+       {
+        if(city->bounds().contains(center))
+        {
+         //ui->edCity->setText(city->name);
+         cityName = city->name();
+         break;
+        }
+       }
+
+       // calculate min/max zoom
+       maxZoom = -1;
+       minZoom = 32767;
+       QDomElement tileMatrixSetLink = layer.firstChildElement("TileMatrixSetLink");
+       if(!tileMatrixSetLink.isNull())
+       {
+        QDomElement tileMatrixSetLimits = tileMatrixSetLink.firstChildElement("TileMatrixSetLimits");
+        if(!tileMatrixSetLimits.isNull())
+        {
+         QDomNodeList list = tileMatrixSetLimits.elementsByTagName("TileMatrixLimits");
+         if(list.count() > 0)
+         {
+           QDomElement tileMatrix_first = list.at(0).toElement();
+           QString min = tileMatrix_first.firstChildElement("TileMatrix").text();
+           minZoom = min.mid(min.indexOf(":")+1).toInt();
+
+           QDomElement tileMatrix_last = list.at(list.count()-1).toElement();
+
+           QString max = tileMatrix_last.firstChildElement("TileMatrix").text();
+           maxZoom = max.mid(max.indexOf(":")+1).toInt();
+          }
+        }
+       }
+       QDomElement resourceUrl = layer.firstChildElement("ResourceURL");
+       if(!resourceUrl.isNull())
+       {
+        //https://maps.georeferencer.com/georeferences/88523211-86cb-58d9-ae3a-ed9bf52a7cfe/2021-11-29T17:47:46.800140Z/map/{z}/{x}/{y}.png?key=caj1mpUbIDuRGkUmcxkG
+        QString url = resourceUrl.attribute("template");
+        url = url.replace("{TileMatrix}/{TileCol}/{TileRow}", "{z}/{x}/{y}");
+        urls.append(url);
+       }
+      }
+     }
+    }
+
   }
   emit xmlFinished();
 

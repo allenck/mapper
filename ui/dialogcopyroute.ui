@@ -6,84 +6,80 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>524</width>
-    <height>222</height>
+    <width>541</width>
+    <height>249</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Copy Route</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Route:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="1" colspan="6">
-    <widget class="QComboBox" name="cbRoutes">
-     <property name="toolTip">
-      <string>Routes using this segment</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0" colspan="2">
+   <item row="2" column="1">
     <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>New Route:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="4" colspan="3">
-    <widget class="QLineEdit" name="txtRouteName">
-     <property name="maxLength">
-      <number>100</number>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0" colspan="2">
-    <widget class="QLabel" name="label_5">
      <property name="text">
       <string>Company:</string>
      </property>
     </widget>
    </item>
-   <item row="2" column="3" colspan="4">
+   <item row="2" column="2" colspan="5">
     <widget class="QComboBox" name="cbCompany"/>
    </item>
-   <item row="3" column="0" colspan="2">
-    <widget class="QLabel" name="label_3">
-     <property name="text">
-      <string>StartDate:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="5">
-    <widget class="QLabel" name="label_4">
-     <property name="text">
-      <string>EndDate:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="6">
+   <item row="6" column="6">
     <widget class="QDateEdit" name="dateEnd">
      <property name="displayFormat">
       <string>yyyy/MM/dd</string>
      </property>
     </widget>
    </item>
-   <item row="4" column="0" colspan="3">
+   <item row="6" column="3">
+    <widget class="QDateEdit" name="dateStart">
+     <property name="displayFormat">
+      <string>yyyy/MM/dd</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="5">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>EndDate:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Copy route:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="4" colspan="3">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1" colspan="6">
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1" colspan="2">
     <widget class="QLabel" name="label_6">
      <property name="text">
       <string>Traction Type:</string>
      </property>
     </widget>
    </item>
-   <item row="4" column="3" colspan="4">
-    <widget class="QComboBox" name="cbTractionType"/>
+   <item row="4" column="1" colspan="6">
+    <widget class="RouteNameWidget" name="rnw" native="true"/>
    </item>
-   <item row="5" column="0" colspan="7">
+   <item row="8" column="1" colspan="6">
     <widget class="QLabel" name="lblHelp">
      <property name="palette">
       <palette>
@@ -127,35 +123,39 @@
      </property>
     </widget>
    </item>
-   <item row="6" column="4" colspan="3">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+   <item row="1" column="2" colspan="5">
+    <widget class="QLineEdit" name="txtRouteName"/>
+   </item>
+   <item row="7" column="3" colspan="4">
+    <widget class="QComboBox" name="cbTractionType"/>
+   </item>
+   <item row="6" column="1" colspan="2">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>StartDate:</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="2">
-    <widget class="QDateEdit" name="dateStart">
-     <property name="displayFormat">
-      <string>yyyy/MM/dd</string>
+   <item row="5" column="1">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>New Company:</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="3">
-    <widget class="QLineEdit" name="txtRouteNbr">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter an existing route number, e.g. '20' or 'M1'. Enter a range, eg. '200,299' to create a new numeric number in that range.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="maxLength">
-      <number>9</number>
-     </property>
-    </widget>
+   <item row="5" column="2" colspan="5">
+    <widget class="QComboBox" name="cbNewCompany"/>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>RouteNameWidget</class>
+   <extends>QWidget</extends>
+   <header>routenamewidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>

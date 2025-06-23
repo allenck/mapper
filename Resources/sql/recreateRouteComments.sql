@@ -1,4 +1,4 @@
-BEGIN TRANSACTION;
+BEGIN;
 CREATE TEMPORARY TABLE if not exists `t_routeComments` (`route`, `date`, `commentKey`, `CompanyKey`, lastUpdate);
 INSERT INTO `t_routeComments`  (`route`, `date`, `commentKey`, `CompanyKey`, lastUpdate)
     select `route`, `date`, `commentKey`, `CompanyKey`, lastUpdate FROM `RouteComments`;
@@ -17,4 +17,4 @@ CREATE TABLE if not exists `RouteComments` (
 INSERT INTO `RouteComments` (`route`, `date`, `commentKey`, `CompanyKey`, lastUpdate)
        select `route`, `date`, `commentKey`, `CompanyKey`, lastUpdate FROM `t_routeComments`;
 DROP TABLE `t_routeComments`;
-COMMIT TRANSACTION;
+COMMIT;

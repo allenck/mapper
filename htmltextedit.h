@@ -33,6 +33,7 @@ private:
  QAction *copySaved;
  QAction* setTextColorAct;
  QAction *setBackgroundColorAct;
+ QAction* linkWebPageAct;
  bool bIsDirty;
  void setDirty(bool dirty);
  Configuration* config;
@@ -56,7 +57,7 @@ private slots:
  void OnTextChanged();
  void OnSetTextColor(bool);
  void OnSetBackgroundColor(bool);
-
+ void onLinkWebPage();
 };
 
 #endif // HTMLTEXTEDIT_H

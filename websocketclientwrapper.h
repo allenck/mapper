@@ -36,6 +36,7 @@
 
 #include <QObject>
 #include <qwebsocketprotocol.h>
+#include "websockettransport.h"  // do not delete
 
 QT_BEGIN_NAMESPACE
 class QWebSocketServer;

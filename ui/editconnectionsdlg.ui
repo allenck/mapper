@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>819</width>
-    <height>409</height>
+    <width>850</width>
+    <height>422</height>
    </rect>
   </property>
   <property name="font">
@@ -22,196 +22,6 @@
    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use this dialog to add connections to a database for aspecified city/location.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="11" column="9">
-    <widget class="QPushButton" name="btnAbort">
-     <property name="text">
-      <string>Abort</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="label_9">
-     <property name="text">
-      <string>City:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="0">
-    <widget class="QLabel" name="label_12">
-     <property name="text">
-      <string>ODBC DSN:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="1" colspan="5">
-    <widget class="QLineEdit" name="txtPWD">
-     <property name="echoMode">
-      <enum>QLineEdit::PasswordEchoOnEdit</enum>
-     </property>
-     <property name="placeholderText">
-      <string>User Password</string>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="9">
-    <widget class="QToolButton" name="tbBrowse">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to open a dialog to select the name of a Sqlite database file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="text">
-      <string>...</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../Resources/mapper.qrc">
-       <normaloff>:/diropen.png</normaloff>:/diropen.png</iconset>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0">
-    <widget class="QLabel" name="label_7">
-     <property name="text">
-      <string>Password:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="7">
-    <widget class="QLineEdit" name="txtPort">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Change if the selected server uses a different port than the standard. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="inputMethodHints">
-      <set>Qt::ImhDigitsOnly</set>
-     </property>
-     <property name="maxLength">
-      <number>5</number>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="1" colspan="8">
-    <widget class="QComboBox" name="cbCities">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Select an existing city from the dropdown list.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="editable">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Connection:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="11" column="8">
-    <widget class="QPushButton" name="btnCancel">
-     <property name="text">
-      <string>Cancel</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="5">
-    <widget class="QComboBox" name="cbConnect">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select connection type: &lt;span style=&quot; font-weight:600;&quot;&gt; Local&lt;/span&gt; SQLite only.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Direct&lt;/span&gt; MySql client connection&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;ODBC &lt;/span&gt;MySql or MsSql OBDC connection&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <item>
-      <property name="text">
-       <string>Local</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Direct</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>ODBC</string>
-      </property>
-     </item>
-    </widget>
-   </item>
-   <item row="11" column="6">
-    <widget class="QPushButton" name="btnDelete">
-     <property name="text">
-      <string>Delete</string>
-     </property>
-    </widget>
-   </item>
-   <item row="9" column="0">
-    <widget class="QLabel" name="label_10">
-     <property name="text">
-      <string>Database:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="11" column="7">
-    <widget class="QPushButton" name="btnSave">
-     <property name="text">
-      <string>Save</string>
-     </property>
-    </widget>
-   </item>
-   <item row="11" column="0">
-    <widget class="QPushButton" name="btnTest">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check the validity of a connection&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="text">
-      <string>Test</string>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="1" colspan="8">
-    <widget class="QComboBox" name="cbODBCDsn"/>
-   </item>
-   <item row="4" column="0">
-    <widget class="QLabel" name="label_6">
-     <property name="text">
-      <string>User Id:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="6">
-    <widget class="QToolButton" name="tbView">
-     <property name="text">
-      <string>...</string>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="1" colspan="8">
-    <widget class="QLineEdit" name="txtDbOrDSN">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Depending on which SQL database program you are using, this should be the filename of the file containing the data or a schema name. For SQLITE databases this will be a .sqlite3 file. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="1" colspan="5">
-    <widget class="QLineEdit" name="txtUserId">
-     <property name="placeholderText">
-      <string>User Id</string>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="0">
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>DSN:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="6">
-    <widget class="QLabel" name="label_5">
-     <property name="text">
-      <string>Port:</string>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="9">
     <widget class="QPushButton" name="btnNew">
      <property name="toolTip">
@@ -222,13 +32,27 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="1" colspan="5">
+   <item row="8" column="1" colspan="5">
     <widget class="QLineEdit" name="txtHost">
      <property name="toolTip">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter the host name or IP address of a remote remote server or &lt;span style=&quot; font-style:italic;&quot;&gt;localhost&lt;/span&gt; for a local server.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="placeholderText">
       <string>Host name or IP</string>
+     </property>
+    </widget>
+   </item>
+   <item row="17" column="8">
+    <widget class="QPushButton" name="btnCancel">
+     <property name="text">
+      <string>Cancel</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QComboBox" name="cbDbType">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the type of database: &lt;span style=&quot; font-weight:600;&quot;&gt;SQLite, MySql or MsSql(SQL Server)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>
@@ -246,6 +70,112 @@
      </property>
     </widget>
    </item>
+   <item row="8" column="6">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Port:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="17" column="0">
+    <widget class="QPushButton" name="btnTest">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Check the validity of a connection&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="text">
+      <string>Test</string>
+     </property>
+    </widget>
+   </item>
+   <item row="15" column="1" colspan="8">
+    <widget class="QLineEdit" name="txtUseDatabase">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter the name of the database that this connection will use. If the name entered does not exits, you will be asked whether you  wish to create it.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="6">
+    <widget class="QToolButton" name="tbBrowse">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to open a dialog to select the name of a Sqlite database file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="text">
+      <string>...</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../Resources/mapper.qrc">
+       <normaloff>:/diropen.png</normaloff>:/diropen.png</iconset>
+     </property>
+    </widget>
+   </item>
+   <item row="17" column="6">
+    <widget class="QPushButton" name="btnDelete">
+     <property name="text">
+      <string>Delete</string>
+     </property>
+    </widget>
+   </item>
+   <item row="14" column="1" colspan="8">
+    <widget class="QLineEdit" name="txtDefaultDb">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>DSN:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1" colspan="5">
+    <widget class="QLineEdit" name="txtSqliteFileName">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Depending on which SQL database program you are using, this should be the filename of the file containing the data or a schema name. For SQLITE databases this will be a .sqlite3 file. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="placeholderText">
+      <string>Sqlite file name</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1" colspan="7">
+    <widget class="QComboBox" name="cbODBCDsn">
+     <property name="placeholderText">
+      <string>select ODBC datasource name</string>
+     </property>
+    </widget>
+   </item>
+   <item row="15" column="9">
+    <widget class="QToolButton" name="tbReload">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;refresh list of known databases.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="text">
+      <string>...</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../Resources/mapper.qrc">
+       <normaloff>:/reload.png</normaloff>:/reload.png</iconset>
+     </property>
+     <property name="toolButtonStyle">
+      <enum>Qt::ToolButtonStyle::ToolButtonIconOnly</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="7">
+    <widget class="QLineEdit" name="txtPort">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Change if the selected server uses a different port than the standard. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="inputMethodHints">
+      <set>Qt::InputMethodHint::ImhNone</set>
+     </property>
+     <property name="maxLength">
+      <number>5</number>
+     </property>
+    </widget>
+   </item>
    <item row="1" column="1" colspan="8">
     <widget class="QComboBox" name="cbConnections">
      <property name="toolTip">
@@ -256,7 +186,21 @@
      </property>
     </widget>
    </item>
-   <item row="10" column="0" colspan="10">
+   <item row="9" column="1" colspan="5">
+    <widget class="QLineEdit" name="txtUserId">
+     <property name="placeholderText">
+      <string>User Id</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Connection:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="16" column="0" colspan="10">
     <widget class="QLabel" name="lblHelp">
      <property name="palette">
       <palette>
@@ -306,36 +250,8 @@
      <property name="wordWrap">
       <bool>true</bool>
      </property>
-    </widget>
-   </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="label_4">
-     <property name="text">
-      <string>Host:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="1">
-    <widget class="QComboBox" name="cbDbType">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the type of database: &lt;span style=&quot; font-weight:600;&quot;&gt;SQLite, MySql or MsSql(SQL Server)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-    </widget>
-   </item>
-   <item row="9" column="9">
-    <widget class="QToolButton" name="tbReload">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;refresh list of known databases.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="text">
-      <string>...</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../Resources/mapper.qrc">
-       <normaloff>:/reload.png</normaloff>:/reload.png</iconset>
-     </property>
-     <property name="toolButtonStyle">
-      <enum>Qt::ToolButtonIconOnly</enum>
+     <property name="textInteractionFlags">
+      <set>Qt::TextInteractionFlag::LinksAccessibleByMouse|Qt::TextInteractionFlag::TextSelectableByKeyboard</set>
      </property>
     </widget>
    </item>
@@ -346,17 +262,125 @@
      </property>
     </widget>
    </item>
-   <item row="9" column="1" colspan="8">
-    <widget class="QLineEdit" name="txtUseDatabase">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter the name of the database that this connection will use. If the name entered does not exits, you will be asked whether you  wish to create it.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   <item row="7" column="0">
+    <widget class="QLabel" name="label_12">
+     <property name="text">
+      <string>ODBC DSN:</string>
      </property>
+    </widget>
+   </item>
+   <item row="0" column="1" colspan="8">
+    <widget class="QComboBox" name="cbCities">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Select an existing city from the dropdown list.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="editable">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Host:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label_9">
+     <property name="text">
+      <string>City:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="6">
+    <widget class="QToolButton" name="tbView">
+     <property name="text">
+      <string>...</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="15" column="0">
+    <widget class="QLabel" name="label_10">
+     <property name="text">
+      <string>Database:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="5">
+    <widget class="QComboBox" name="cbConnect">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select connection type: &lt;span style=&quot; font-weight:600;&quot;&gt; Local&lt;/span&gt; SQLite only.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Direct&lt;/span&gt; MySql client connection&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;ODBC &lt;/span&gt;MySql or MsSql OBDC connection&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <item>
+      <property name="text">
+       <string>Local</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Direct</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>ODBC</string>
+      </property>
+     </item>
     </widget>
    </item>
    <item row="2" column="3">
     <widget class="QComboBox" name="cbDriverType">
      <property name="toolTip">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select which driver type to use for the desired database type.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0">
+    <widget class="QLabel" name="label_6">
+     <property name="text">
+      <string>User Id:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="17" column="9">
+    <widget class="QPushButton" name="btnAbort">
+     <property name="text">
+      <string>Abort</string>
+     </property>
+    </widget>
+   </item>
+   <item row="14" column="0">
+    <widget class="QLabel" name="label_13">
+     <property name="text">
+      <string>Default Db</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="1" colspan="5">
+    <widget class="QLineEdit" name="txtPWD">
+     <property name="echoMode">
+      <enum>QLineEdit::EchoMode::Normal</enum>
+     </property>
+     <property name="placeholderText">
+      <string>User Password</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="0">
+    <widget class="QLabel" name="label_7">
+     <property name="text">
+      <string>Password:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="17" column="7">
+    <widget class="QPushButton" name="btnSave">
+     <property name="text">
+      <string>Save</string>
      </property>
     </widget>
    </item>

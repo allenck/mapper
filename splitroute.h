@@ -15,10 +15,9 @@ class SplitRoute : public QDialog
     Q_OBJECT
 
 public:
-    explicit SplitRoute(Configuration *cfg, QWidget *parent = 0);
+    explicit SplitRoute(QWidget *parent = 0);
     ~SplitRoute();
-    void setConfiguration(Configuration *cfg);
-    void setRouteData(RouteData rd);
+    bool setRouteData(RouteData rd);
     RouteData getRoute();
     RouteData getNewRoute();
 
@@ -34,13 +33,18 @@ private:
     void refreshRoutes();
     void fillCompanies();
     SQL* sql;
+    QMap<int,TractionTypeInfo> _tractionList;
+    void fillTractionTypes();
+    QDate maxEndDate;
+    bool bIgnoreDateCheck = false;
+
 private slots:
-    void txtNewRouteNbr1_TextChanged(QString text);
-    void txtNewRouteNbr2_TextChanged(QString text);
-    void txtNewRouteNbr1_Leave();
-    void txtNewRouteNbr2_Leave();
-    void txtNewRouteName1_Leave();
-    void txtNewRouteName2_Leave();
+//    void txtNewRouteNbr1_TextChanged(QString text);
+//    void txtNewRouteNbr2_TextChanged(QString text);
+//    void txtNewRouteNbr1_Leave();
+//    void txtNewRouteNbr2_Leave();
+//    void txtNewRouteName1_Leave();
+//    void txtNewRouteName2_Leave();
     void dateFrom1_Leave();
     void dateTo1_ValueChanged();
     void dateTo1_Leave();

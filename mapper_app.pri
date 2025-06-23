@@ -1,8 +1,13 @@
 SOURCES += main.cpp\
     $$PWD/browsecommentsdialog.cpp \
+    $$PWD/clipboard.cpp \
+    $$PWD/dateeditdelegate.cpp \
+    $$PWD/editsegmentdescr.cpp \
     $$PWD/lineeditdelegate.cpp \
     $$PWD/logger.cpp \
+    $$PWD/modifyroutedialog.cpp \
     $$PWD/mytextedit.cpp \
+    $$PWD/odbcutil.cpp \
     $$PWD/overlay.cpp \
     $$PWD/queryeditmodel.cpp \
     $$PWD/replacesegmentdialog.cpp \
@@ -10,9 +15,13 @@ SOURCES += main.cpp\
     $$PWD/rtitemdelegate.cpp \
     $$PWD/segmentselectionwidget.cpp \
     $$PWD/splitsegmentdlg.cpp \
+    #$$PWD/streetname.cpp \
+    $$PWD/streetstablemodel.cpp \
+    $$PWD/streetview.cpp \
     $$PWD/ttitemdelegate.cpp \
     $$PWD/turncombo.cpp \
     $$PWD/turndelegate.cpp \
+    $$PWD/usagedelegate.cpp \
     addgeoreferenceddialog.cpp \
     $$PWD/exceptions.cpp \
     $$PWD/myapplication.cpp \
@@ -25,7 +34,6 @@ SOURCES += main.cpp\
     routeviewsortproxymodel.cpp \
     configuration.cpp \
     dialogcopyroute.cpp \
-    dialogrenameroute.cpp \
     routedlg.cpp \
     segmentdlg.cpp \
     segmentdescription.cpp \
@@ -52,7 +60,6 @@ SOURCES += main.cpp\
     reroutingdlg.cpp \
     createsqlitedatabasedialog.cpp \
     checkroute.cpp \
-    settingsdb.cpp \
     querydialog.cpp \
     querymodel.cpp \
     kml.cpp \
@@ -67,18 +74,23 @@ SOURCES += main.cpp\
     $$PWD/connection.cpp \
     $$PWD/latlng.cpp \
     $$PWD/globalmercator.cpp \
-    $$PWD/consoleinterface.cpp \
-    systemconsole.cpp \
-    systemconsoleaction.cpp \
-    jtextarea.cpp \
     flowlayout.cpp \
-    jtogglebutton.cpp
+    dialogeditparameters.cpp \
+    routenamewidget.cpp \
+    splitcompanyroutesdialog.cpp \
+    systemconsole2.cpp \
+    dialogtextedit.cpp
 
 HEADERS  += mainwindow.h \
     $$PWD/browsecommentsdialog.h \
+    $$PWD/clipboard.h \
+    $$PWD/dateeditdelegate.h \
+    $$PWD/editsegmentdescr.h \
     $$PWD/lineeditdelegate.h \
     $$PWD/logger.h \
+    $$PWD/modifyroutedialog.h \
     $$PWD/mytextedit.h \
+    $$PWD/odbcutil.h \
     $$PWD/overlay.h \
     $$PWD/queryeditmodel.h \
     $$PWD/replacesegmentdialog.h \
@@ -86,9 +98,13 @@ HEADERS  += mainwindow.h \
     $$PWD/rtitemdelegate.h \
     $$PWD/segmentselectionwidget.h \
     $$PWD/splitsegmentdlg.h \
+    #$$PWD/streetname.h \
+    $$PWD/streetstablemodel.h \
+    $$PWD/streetview.h \
     $$PWD/ttitemdelegate.h \
     $$PWD/turncombo.h \
     $$PWD/turndelegate.h \
+    $$PWD/usagedelegate.h \
     $$PWD/vptr.h \
     addgeoreferenceddialog.h \
     $$PWD/exceptions.h \
@@ -101,7 +117,6 @@ HEADERS  += mainwindow.h \
     routeview.h \
     configuration.h \
     dialogcopyroute.h \
-    dialogrenameroute.h \
     routedlg.h \
     segmentdlg.h \
     segmentdescription.h \
@@ -129,7 +144,6 @@ HEADERS  += mainwindow.h \
     reroutingdlg.h \
     createsqlitedatabasedialog.h \
     checkroute.h \
-    settingsdb.h \
     querydialog.h \
     querymodel.h \
     kml.h \
@@ -144,13 +158,13 @@ HEADERS  += mainwindow.h \
     $$PWD/connection.h \
     $$PWD/latlng.h \
     $$PWD/globalmercator.h \
-    consoleinterface.h \
-    systemconsole.h \
-    systemconsoleaction.h \
-    jtextarea.h \
     flowlayout.h \
-    jtogglebutton.h \
-    preferencespanel.h
+    preferencespanel.h \
+    dialogeditparameters.h \
+    routenamewidget.h \
+    splitcompanyroutesdialog.h \
+    systemconsole2.h \
+    dialogtextedit.h
 
 HEADERS += \
         dialogchangeroute.h \
@@ -174,13 +188,17 @@ FORMS += \
      ui/dialogchangeroute.ui \
      ui/modifyroutetractiontypedlg.ui \
      ui/newcitydialog.ui \
-     ui/removecitydialog.ui
-
-FORMS    += ui/mainwindow.ui \
+     ui/removecitydialog.ui \
+     ui/dialogtextedit.ui \
+     ui/dialogeditparameters.ui \
+     ui/routenamewidget.ui \
+     ui/splitcompanyroutesdialog.ui \
+     ui/systemconsole2.ui \
+     ui/mainwindow.ui \
+    $$PWD/ui/modifyroutedialog.ui \
     $$PWD/ui/splitsegmentdlg.ui \
     ui/addgeoreferenceddialog.ui \
     ui/dialogcopyroute.ui \
-    ui/dialogrenameroute.ui \
     ui/routedlg.ui \
     ui/segmentdlg.ui \
     ui/splitroute.ui \
@@ -203,4 +221,6 @@ FORMS    += ui/mainwindow.ui \
     ui/segmentselectionwidget.ui
 
 DISTFILES += \
- $$PWD/html/.gitignore
+ $$PWD/Resources/api_key.txt \
+ $$PWD/html/.gitignore \
+ $$PWD/sqlite.pri

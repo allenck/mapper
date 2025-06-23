@@ -81,7 +81,7 @@ void ExportRouteDialog::btnOK_clicked()
  ui->lblHelp->setText(tr("Routes"));
  qApp->processEvents();
  ui->progressBar->setValue(0);
- exprt.exportRoute( rd);
+ exprt.exportRoutes( rd);
  //ui->chkRoutes->setChecked(false);
  qApp->processEvents();
 

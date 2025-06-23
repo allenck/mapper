@@ -38,6 +38,7 @@ public:
  }
  static bool importXml(QString);
  static bool exportXml(QString, QList<Overlay *> overlayList);
+ static QList<Overlay*> getList(City* city =nullptr);
  void getTileMapResource();
 
  signals:

@@ -1,13 +1,21 @@
 #include "rtitemdelegate.h"
-#include "sql.h"
 #include "data.h"
+#include "qcombobox.h"
+#include <QSortFilterProxyModel>
 
 RTItemDelegate::RTItemDelegate()
 {
  //enum RouteType { Surface, SurfacePRW, RapidTransit, Subway, Rail, Incline, Other };
 
- routeTypes = {{RouteType::Surface, "Surface"},{RouteType::SurfacePRW, "Surface PRW"}, {RouteType::Subway, "Subway"},
-               {RouteType::Rail, "Rail"}, {RouteType::Incline, "Incline"}, {RouteType::Other, "Other"}
+ routeTypes = {{RouteType::Surface, "Surface"},
+               {RouteType::SurfacePRW, "Surface PRW"},
+               {RouteType::RapidTransit, "Rapid Transit"},
+               {RouteType::Subway, "Subway"},
+               {RouteType::Rail, "Rail"},
+               {RouteType::Incline, "Incline"},
+               {RouteType::MagLev, "Maglev"},
+               {RouteType::Elevated, "Elevated"},
+               {RouteType::Other, "Other"}
               };
 }
 
@@ -27,14 +35,24 @@ QWidget* RTItemDelegate::createEditor(QWidget *parent, const QStyleOptionViewIte
 
 void RTItemDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
 {
- QComboBox *comboBox = static_cast<QComboBox*>(editor);
- int value = index.model()->data(index, Qt::EditRole).toUInt();
- comboBox->setCurrentText(index.data().toString());
+    QModelIndex mIndex = index;
+    if(qobject_cast<const QSortFilterProxyModel*>(index.model()))
+        mIndex = qobject_cast<const QSortFilterProxyModel*>(index.model())->mapToSource(index);
+     QComboBox *comboBox = static_cast<QComboBox*>(editor);
+     int value = index.model()->data(index, Qt::EditRole).toUInt();
+     comboBox->setCurrentText(index.data().toString());
 }
 
 void RTItemDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
 {
- QComboBox *comboBox = static_cast<QComboBox*>(editor);
- model->setData(index, comboBox->currentData().toInt(), Qt::EditRole);
+    QModelIndex mIndex = index;
+    QAbstractItemModel* mModel = model;
+    if(qobject_cast<const QSortFilterProxyModel*>(index.model()))
+    {
+        mIndex = qobject_cast<const QSortFilterProxyModel*>(index.model())->mapToSource(index);
+        mModel = (QAbstractItemModel *)mIndex.model();
+    }
+     QComboBox *comboBox = static_cast<QComboBox*>(editor);
+     mModel->setData(mIndex, comboBox->currentData().toInt(), Qt::EditRole);
 }
 

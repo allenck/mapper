@@ -221,7 +221,7 @@ QDomElement Kml::createPlacemark(QString oneWay)
  doc.save(stream,2);
 }
 
-QDomElement Kml::createArrow(SegmentData si)
+QDomElement Kml::createArrow(SegmentData sd)
 {
  QDomElement placemark = doc.createElement("Placemark");
  QDomElement name = doc.createElement("name" );
@@ -243,8 +243,8 @@ QDomElement Kml::createArrow(SegmentData si)
  endPt = sd.pointList().at(len-2);
 
  Bearing b(startPt, endPt );
- LatLng left = pointRadialDistance(startPt, b.getBearing()-15, .020);
- LatLng right = pointRadialDistance(startPt, b.getBearing()+15, .020);
+ LatLng left = pointRadialDistance(startPt, b.angle()-15, .020);
+ LatLng right = pointRadialDistance(startPt, b.angle()+15, .020);
 
  QDomElement polygon = doc.createElement("Polygon");
  QDomElement extrude = doc.createElement("extrude");

@@ -1,4 +1,5 @@
 #include "querydialog.h"
+#include "querymodel.h"
 #include "ui_querydialog.h"
 #include <QMessageBox>
 #include <QFileDialog>
@@ -12,50 +13,127 @@
 #include "vptr.h"
 #include "mainwindow.h"
 #include "queryeditmodel.h"
+#include <QInputMethod>
+#include "findreplacewidget.h"
+
+/*static*/ QueryDialog* QueryDialog::instance(){return _instance;}
+/*static*/ QueryDialog* QueryDialog::_instance = nullptr;
 
 QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::QueryDialog)
 {
+  _instance = this;
   ui->setupUi(this);
+  frw = new FindReplaceWidget(ui->editQuery, this);
+  ui->query_splitter->insertWidget(1,frw);
   config = cfg;
-  currQueryFilename = "";
+  config->changeFonts(this, config->font);
+  // currQueryFilename = "";
+  setTitle();
   bChanging = false;
   tgtConn = config->currCity->connections.at(config->currCity->curConnectionId);
   db = QSqlDatabase::database();
   tgtConn->setConnectionName(db.connectionName());
+  connect(ui->editQuery, SIGNAL(textChanged()), this, SLOT(textChanged()));
+
+  ui->editQuery->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(ui->editQuery,SIGNAL(customContextMenuRequested(QPoint)),
+          this,SLOT(showContextMenu(QPoint)));
+  clearAct = new QAction("clear", this);
+  connect(clearAct, &QAction::triggered, [=]{
+   ui->editQuery->clear();
+  });
+
+  ui->cbConnections->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(ui->cbConnections, &QComboBox::customContextMenuRequested, this,[=](QPoint pt){
+      QMenu menu;
+      QAction* act = new QAction(tr("Refresh connections"),this);
+      menu.addAction(act);
+      menu.exec(QCursor::pos());
+      connect(act, &QAction::triggered,this,[=]{
+      ui->cbConnections->clear();
+      for(int i=0; i<config->currCity->connections.count(); i++)
+      {
+          Connection* c = config->currCity->connections.at(i);
+          ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
+          if(c->id() == config->currConnection->id())
+              ui->cbConnections->setCurrentIndex(i);
+      }
+    });
+  });
+  makeSelectedIncludeAct = new QAction(tr("Make include file of selection"), this);
+  connect(makeSelectedIncludeAct, &QAction::triggered, [=]{
+   makeSelectedInclude();
+  });
+  replaceWithIncludeAct = new QAction(tr("Replace selection with included file"),this);
+  connect(replaceWithIncludeAct, &QAction::triggered, [=]{
+   replaceWithInclude();
+  });
+
+  ui->widget_query_view->setTabsClosable(true);
+  connect(ui->widget_query_view, &QTabWidget::tabCloseRequested, this,[=](int tab){
+      ui->widget_query_view->removeTab(tab);
+  });
 
   menuBar = new QMenuBar();
   toolsMenu = new QMenu(tr("Tools"));
   layout()->setMenuBar(menuBar);
 
-  QMenu* fileMenu= new Menu(tr("File"));
+  fileMenu= new Menu(tr("File"));
   menuBar->addMenu(fileMenu);
+  selectMenu = new QMenu(tr("Load Resource script"));
+  this->selectMenu->addAction(createWidgetAction());
+  this->selectMenu->setStatusTip(tr("load a read-only resource script"));
+  fileMenu->addMenu(selectMenu);
   QAction* loadFileAct = new QAction(tr("Load query"), this);
   fileMenu->addAction(loadFileAct);
-  connect(loadFileAct, &QAction::triggered, [=]{on_load_QueryButton_clicked();});
+  connect(loadFileAct, &QAction::triggered, this,[=]{
+      on_load_QueryButton_clicked();
+  });
   saveFileAct = new QAction(tr("Save query"), this);
   saveFileAct->setEnabled(false);
   fileMenu->addAction(saveFileAct);
-  connect(saveFileAct, &QAction::triggered, [=]{on_save_QueryButton_clicked(currQueryFilename);});
+  connect(saveFileAct, &QAction::triggered, this,[=]{
+      on_save_QueryButton_clicked(currQueryFilename);
+  });
   saveAsFileAct = new QAction(tr("Save query as ..."), this);
   fileMenu->addAction(saveAsFileAct);
-  connect(saveAsFileAct, &QAction::triggered, [=]{on_saveAs_QueryButton_clicked();});
+  connect(saveAsFileAct, &QAction::triggered,this, [=]{
+      on_saveAs_QueryButton_clicked();
+  });
+  refreshRoutesAct = new QAction(tr("Refresh routes"),this);
+  refreshRoutesAct->setCheckable(true);
+  connect(refreshRoutesAct, &QAction::triggered, this,[=]{
+   MainWindow::instance()->refreshRoutes();
+   if(refreshRoutesAct->isChecked())
+    MainWindow::instance()->btnDisplayRouteClicked();
+  });
 
   menuBar->addMenu(toolsMenu);
+  toolsMenu->addAction(refreshRoutesAct);
   //QMenu* tablesMenu = new QMenu(tr("Tables"));
-  connect(toolsMenu, &QMenu::aboutToShow, [=]{
-   Connection* c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
-   QSqlDatabase db = QSqlDatabase::database(c->connectionName());
+  connect(toolsMenu, &QMenu::aboutToShow, this,[=]{
+   Connection* c = tgtConn;
+   QSqlDatabase db;
+   //if(c->connectionName().isEmpty())
+    db = QSqlDatabase::database(tgtConn->connectionName());
+   // else
+   //  db = QSqlDatabase::database(c->connectionName());
    QStringList tableList = db.tables(QSql::Tables);
    QStringList sysTableList = db.tables(QSql::SystemTables);
    toolsMenu->clear();
+   toolsMenu->addAction(refreshRoutesAct);
+
    QMenu* tablesMenu = new QMenu(tr("Tables"));
    toolsMenu->addMenu(tablesMenu);
    foreach(QString tableName, tableList)
    {
-    if(sysTableList.contains(tableName))
-     continue;
+    if(c->servertype()!="PostgreSQL")
+    {
+     if(sysTableList.contains(tableName))
+      continue;
+    }
     if(c->servertype() == "Sqlite" && tableName.startsWith("sqlite_"))
      continue;
     QMenu* tableMenu = new QMenu(tableName);
@@ -69,11 +147,57 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
       txt = QString("pragma table_info('%1')").arg(tableName);
      else if(c->servertype() == "MySql")
       txt = "describe " + tableName;
-     else // SQL Server
-      txt = "EXEC sp_help " + tableName;
+     else if(c->servertype() == "MsSql")// SQL Server
+      txt = "select *"
+         " from INFORMATION_SCHEMA.COLUMNS"
+         " where TABLE_NAME='" + tableName + "'";
+      else
+        txt = QString("Select * from INFORMATION_SCHEMA.COLUMNS"
+                  "where TABLE_NAME='%1'").arg(tableName);
+
      processALine(txt, tableName);
     });
+    act = new QAction(tr("select table"),this);
+    act->setData(tableName);
+    tableMenu->addAction(act);
+    connect(act, &QAction::triggered, [=]{
+        QString txt = "select * from " + tableName;
+        //processALine(txt, tableName);
+        processSelect(tableName, txt);
+    }); }
+   toolsMenu->addSeparator();
+   QMenu* viewsMenu = new QMenu(tr("Views"));
+   QStringList views = SQL::instance()->listViews();
+   foreach(QString v, views)
+   {
+    QMenu* viewMenu = new QMenu(v);
+    viewsMenu->addMenu(viewMenu);
+    QAction* act = new QAction(tr("show View"),this);
+    act->setData(v);
+    viewMenu->addAction(act);
+    connect(act, &QAction::triggered, [=]{
+     QString txt;
+     if(c->servertype() == "Sqlite")
+      txt = QString("pragma table_info('%1')").arg(v);
+     else if(c->servertype() == "MySql")
+      txt = "describe " + v;
+     else if(c->servertype() == "PostgreSQL")
+         txt = QString("select column_name, data_type, character_maximum_length, column_default, is_nullable\
+                       from INFORMATION_SCHEMA.COLUMNS where table_name = '&1';").arg(v);
+     else // SQL Server
+      txt = "EXEC sp_help " + v;
+
+     processALine(txt, v);
+    });
    }
+   toolsMenu->addMenu(viewsMenu);
+   QAction* act = new QAction(tr("Show find/replace"),this);
+   act->setCheckable(true);
+   act->setChecked(frw->isVisible());
+   connect(act, &QAction::triggered,this,[=](bool bChecked){
+       frw->setVisible(bChecked);
+   });
+   toolsMenu->addAction(act);
   });
 
   tgtDbType = tgtConn->servertype();
@@ -89,7 +213,19 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
    ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
    if(c->id() == config->currConnection->id())
     ui->cbConnections->setCurrentIndex(i);
-
+  }
+  // add other cities as well
+  for(City* city : config->cityList)
+  {
+   if(city->name() == config->currCity->name())
+    continue; // aleady got these!
+   for(int i=0; i<city->connections.count(); i++)
+   {
+    Connection* c = city->connections.at(i);
+    ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
+    if(c->id() == config->currConnection->id())
+     ui->cbConnections->setCurrentIndex(i);
+   }
   }
   setWindowTitle(tr("Manual Sql Query (%1)").arg(ui->cbConnections->currentText()));
 
@@ -144,6 +280,24 @@ QueryDialog::~QueryDialog()
  delete ui;
 }
 
+
+void QueryDialog::showContextMenu(const QPoint &pt)
+{
+    QMenu *menu = ui->editQuery->createStandardContextMenu();
+    menu->addSeparator();
+    menu->addAction(clearAct);
+    QString selected;
+    QTextCursor cur = ui->editQuery->textCursor();
+    if (cur.hasSelection())
+    {
+     selected = cur.selectedText();
+     menu->addAction(makeSelectedIncludeAct);
+     menu->addAction(replaceWithIncludeAct);
+    }
+    menu->exec(ui->editQuery->mapToGlobal(pt));
+    delete menu;
+}
+
 void QueryDialog::resizeEvent(QResizeEvent *e)
 {
  Q_UNUSED(e)
@@ -170,6 +324,7 @@ void QueryDialog::on_clear_QueryButton_clicked()
 {
  ui->editQuery->clear();
  currQueryFilename = "";
+ setTitle();
 
  for (int ix =ui->widget_query_view->count()-1; ix > 0; ix--)
   ui->widget_query_view->removeTab(ix);
@@ -177,21 +332,28 @@ void QueryDialog::on_clear_QueryButton_clicked()
  sa_Message_Text.clear();
  s_Search="";
 
- currQueryFilename = "";
  saveFileAct->setEnabled(false);
-
 }
+
 
 void QueryDialog::on_load_QueryButton_clicked()
 {
+ setCursor(Qt::WaitCursor);
+ on_clear_QueryButton_clicked();
  QString s_File_Name = QFileDialog::getOpenFileName(this, "Choose a SQL text file",
                        config->q.s_query_path, "SQL text files (*.sql *.txt);;All Files (*.*)");
  // QFileDialog take a long time to close, this should tak care of this - but does not.
  QCoreApplication::processEvents();
+ setCursor(Qt::ArrowCursor);
  if (s_File_Name.isEmpty()) return;
+ loadFile(s_File_Name);
+}
+
+void QueryDialog::loadFile(QString s_File_Name)
+{
  QFile this_file(s_File_Name);
  QFileInfo this_fi(s_File_Name);
- currQueryFilename = s_File_Name;
+
  if (!this_file.open(QIODevice::ReadOnly | QIODevice::Text))
  {
   QMessageBox::critical(this,tr("Error"), "Could not load sql query text file");
@@ -199,6 +361,7 @@ void QueryDialog::on_load_QueryButton_clicked()
  }
  config->q.s_query_path = this_fi.dir().absolutePath();
  currQueryFilename = s_File_Name;
+ setTitle();
  saveFileAct->setEnabled(true);
 
  if(this_fi.size() > 1000000)
@@ -206,7 +369,10 @@ void QueryDialog::on_load_QueryButton_clicked()
   // large file
   QMessageBox msgBox;
   msgBox.setText(tr("The query is very large"));
-  msgBox.setInformativeText(tr("The query is too large to display. Select 'No' to load it anyway, 'Yes' to process in the background or 'Cancel'.\nDo you wish to process the queries in the background?"));
+  msgBox.setInformativeText(tr("The query is too large to display.\n"
+                               "Select 'No' to load it anyway, 'Yes' to process "
+                               "in the background or 'Cancel'.\n"
+                               "Do you wish to process the queries in the background?"));
   msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
   msgBox.setDefaultButton(QMessageBox::Yes);
   msgBox.setIcon(QMessageBox::Warning);
@@ -224,56 +390,134 @@ void QueryDialog::on_load_QueryButton_clicked()
   ui->queryResultText->clear();
 
   //DbConnection *dbc = this_dblist->getDbConnection(this_dblist->current_index);
-  QTextStream in(&this_file);
-  int linesRead=0, recordsProcessed=0, errors=0;
+  QTextStream* in = new QTextStream(&this_file);
   this->setCursor(Qt::WaitCursor);
   qApp->processEvents();
 
-  while(!in.atEnd())
-  {
-   QString queryStr;
-   do
-   {
-    QString line = in.readLine();
-    linesRead++;
-    //qDebug()<<line;
-    queryStr += line;
-   } while (!queryStr.endsWith(";"));
-   //qDebug()<<queryStr;
-   QSqlQuery query = QSqlQuery(queryStr, db);
-   //QStringList sa_Message_Text;
-   if (query.lastError().isValid())
-   {
-    errors++;
-    ui->queryResultText->append(QString("<FONT COLOR=\"#FF0000\">%1<BR>%2<FONT COLOR=\"#000000\"><BR>")
-                                .arg(query.lastError().driverText(),query.lastError().databaseText())+"<BR>");
-    ui->queryResultText->append(QString(tr("Line %1 ")).arg(linesRead--)+" " +query.lastQuery()+"<BR>");
-    if(ui->cb_stop_query_on_error->isChecked())
-    {
-     ui->queryResultText->append(tr("Query stopped because of errors<BR>"));
-     this->setCursor(Qt::ArrowCursor);
-     return;
-    }
-   }
-   recordsProcessed++;
-   if(recordsProcessed%1000 == 0)
-    ui->queryResultText->append(QString(tr("Records processed: %1<BR>")).arg(recordsProcessed));
+//  while(!in->atEnd())
+//  {
+//   QString queryStr;
+//   do
+//   {
+//    QString line = in.readLine();
+//    linesRead++;
+//    //qDebug()<<line;
+//    queryStr += line;
+//   } while (!queryStr.endsWith(";"));
+//   //qDebug()<<queryStr;
+//   QSqlQuery query = QSqlQuery(queryStr, db);
+//   //QStringList sa_Message_Text;
+//   if (query.lastError().isValid())
+//   {
+//    errors++;
+//    ui->queryResultText->append(QString("<FONT COLOR=\"#FF0000\">%1<BR>%2<FONT COLOR=\"#000000\"><BR>")
+//                                .arg(query.lastError().driverText(),query.lastError().databaseText())+"<BR>");
+//    ui->queryResultText->append(QString(tr("Line %1 ")).arg(linesRead--)+" " +query.lastQuery()+"<BR>");
+//    if(ui->cb_stop_query_on_error->isChecked())
+//    {
+//     ui->queryResultText->append(tr("Query stopped because of errors<BR>"));
+//     this->setCursor(Qt::ArrowCursor);
+//     return;
+//    }
+//   }
+//   recordsProcessed++;
+//   if(recordsProcessed%1000 == 0)
+//    ui->queryResultText->append(QString(tr("Records processed: %1<BR>")).arg(recordsProcessed));
 
-   qApp->processEvents();
-  } // !while.atEnd()
+//   qApp->processEvents();
+   if(!processStream(in))
+    return;
+//  } // !while.atEnd()
   this->setCursor(Qt::ArrowCursor);
   ui->queryResultText->append(QString(tr("Records processed: %1<BR>")).arg(recordsProcessed));
   ui->queryResultText->append(QString(tr("There were errors: %1<BR>")).arg(errors));
   return;
  }
 loadIt:
- QTextStream in(&this_file);
- ui->editQuery->setPlainText(in.readAll());
+ QTextStream* in = new QTextStream(&this_file);
+ //ui->editQuery->setPlainText(in.readAll());
+ if(!loadStream(in))
+  return;
  if (ui->cb_sql_execute_after_loading->checkState() == Qt::Checked)
  {
   ui->cb_sql_execute_after_loading->setChecked(false);
   on_go_QueryButton_clicked();
  }
+}
+
+bool QueryDialog::loadStream(QTextStream* in)
+{
+ while(!in->atEnd())
+ {
+  QString line = in->readLine();
+  if(line.startsWith("#"))
+   handleComment(line);
+  else
+   ui->editQuery->append(line);
+ }
+ return true;
+}
+
+bool QueryDialog::handleComment(QString line)
+{
+ ui->editQuery->append(QString("<FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\">").arg(line));
+ if(line.startsWith("#include",Qt::CaseInsensitive))
+ {
+  QString fn = line.mid(8).trimmed();
+  QFile this_file(config->q.s_query_path+"/"+fn);
+  if (!this_file.open(QIODevice::ReadOnly | QIODevice::Text))
+  {
+   QMessageBox::critical(this,tr("Error"), "Could not load sql query text file");
+   return false;
+  }
+  else
+  {
+   QTextStream* in = new QTextStream(&this_file);
+   if(!loadStream(in))
+    return false;
+   ui->editQuery->append(QString("<FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\">")
+                         .arg("#end" + fn ));
+  }
+ }
+ return true;
+}
+
+bool QueryDialog::processStream(QTextStream* in)
+{
+ while(!in->atEnd())
+ {
+  QString queryStr;
+  do
+  {
+   QString line = in->readLine();
+   linesRead++;
+   //qDebug()<<line;
+   queryStr += line;
+  } while (!queryStr.endsWith(";"));
+  //qDebug()<<queryStr;
+  QSqlQuery query = QSqlQuery(queryStr, db);
+  //QStringList sa_Message_Text;
+  if (query.lastError().isValid())
+  {
+   errors++;
+   QSqlRecord rec = query.record();
+   ui->queryResultText->append(QString("<FONT COLOR=\"#FF0000\">%1<BR>%2<FONT COLOR=\"#000000\"><BR>")
+                               .arg(query.lastError().driverText(),query.lastError().databaseText())+"<BR>");
+   ui->queryResultText->append(QString(tr("Line %1 ")).arg(linesRead--)+" " +query.lastQuery()+"<BR>");
+   if(ui->cb_stop_query_on_error->isChecked())
+   {
+    ui->queryResultText->append(tr("Query stopped because of errors<BR>"));
+    this->setCursor(Qt::ArrowCursor);
+    return false;
+   }
+  }
+  recordsProcessed++;
+  if(recordsProcessed%1000 == 0)
+   ui->queryResultText->append(QString(tr("Records processed: %1<BR>")).arg(recordsProcessed));
+
+  qApp->processEvents();
+ }
+ return true;
 }
 
 void QueryDialog::on_go_QueryButton_clicked()
@@ -302,11 +546,23 @@ void QueryDialog::on_go_QueryButton_clicked()
  if (cur.hasSelection())
  {
   text = cur.selectedText();
+  //text = cur.selection().toRawText();
  }
-// else
-//  text = ui->editQuery->toPlainText();
- QStringList list = text.split(";\n");
- foreach(QString txt, list)
+ else
+  text = ui->editQuery->toPlainText(); // select all lines
+
+ QStringList lines = text.split("\n");
+ QString combined;
+ foreach(QString line, lines)
+ {
+  line = line.replace(QChar(8233)," ");
+  if(line.startsWith("#"))
+   continue;
+  combined.append(line + " ");
+ }
+ QStringList statements = combined.split(";");
+ QStringList viewList = SQL::instance()->listViews();
+ foreach(QString txt, statements)
  {
   if (txt.trimmed().isEmpty())
    continue;
@@ -315,7 +571,7 @@ void QueryDialog::on_go_QueryButton_clicked()
      && tokens.at(0).compare("select", Qt::CaseInsensitive)  == 0
      && tokens.at(1) == "*"
      && tokens.at(2).compare("from", Qt::CaseInsensitive) == 0
-     )
+     && !viewList.contains(tokens.at(3),Qt::CaseInsensitive) && db.isValid())
   {
    processSelect(tokens.at(3), txt);
   }
@@ -384,8 +640,8 @@ void QueryDialog::on_go_QueryButton_clicked()
 
 bool QueryDialog::processALine(QString txt, QString tabName)
 {
- QueryModel *query_view_model = new QueryModel(this ,db, config->currConnection->servertype());
- //queryModelList.append(query_view_modell);
+ QueryModel *query_view_model = new QueryModel(this ,db,
+                                               config->currConnection->servertype());
  query_view_model->setQuery(txt, db);
  if (query_view_model->lastError().isValid())
  {
@@ -397,7 +653,7 @@ bool QueryDialog::processALine(QString txt, QString tabName)
   i_Message_Error++;
   if(ui->cb_stop_query_on_error->isChecked())
   {
-   sa_Message_Text.append(tr("Query stopped because of errors<BR>"));
+   sa_Message_Text.append(tr("<BR>Query stopped because of errors<BR>"));
    for (int i=0; i<sa_Message_Text.count(); i++)
     s_Search+=sa_Message_Text[i];
    ui->queryResultText->setText(s_Search);
@@ -420,7 +676,7 @@ bool QueryDialog::processALine(QString txt, QString tabName)
     connect(query_view,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(slot_queryView_row_DoubleClicked(QModelIndex)));
     query_view->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(query_view,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(tablev_customContextMenu(QPoint)));
-    myHeaderView *hv = new myHeaderView(Qt::Horizontal, query_view);
+    MyHeaderView *hv = new MyHeaderView(Qt::Horizontal, query_view);
     query_view->setHorizontalHeader(hv);
 //     query_view->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
 //     connect(query_view->horizontalHeader(),SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(queryViewHeaderContextMenuRequested(const QPoint)));
@@ -431,6 +687,7 @@ bool QueryDialog::processALine(QString txt, QString tabName)
     sm->setSourceModel(query_view_model);
     query_view->setModel(sm);
     query_view->setSortingEnabled(true);
+    query_view->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
     sm->sort(-1,Qt::AscendingOrder);
     QString tabTitle;
     if(!tabName.isEmpty())
@@ -468,7 +725,7 @@ void QueryDialog::processSelect(QString table, QString commandLine)
 {
  QWidget *tab_First_Result=0;
 
- QSqlDatabase db = QSqlDatabase::database();
+ //QSqlDatabase db = QSqlDatabase::database();
  QueryEditModel* model = new QueryEditModel(nullptr, db);
  model->setTable(table);
  QString whereClause;
@@ -493,7 +750,7 @@ void QueryDialog::processSelect(QString table, QString commandLine)
   connect(query_view,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(slot_queryView_row_DoubleClicked(QModelIndex)));
   query_view->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(query_view,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(tablev_customContextMenu(QPoint)));
-  myHeaderView *hv = new myHeaderView(Qt::Horizontal, query_view);
+  MyHeaderView *hv = new MyHeaderView(Qt::Horizontal, query_view);
   query_view->setHorizontalHeader(hv);
   query_view->setSortingEnabled(false);
   QSortFilterProxyModel *sm = new QSortFilterProxyModel(query_view);
@@ -557,6 +814,9 @@ void QueryDialog::on_saveAs_QueryButton_clicked()
                        config->q.s_query_path,"SQL text files (*.sql *.txt);;All Files (*.*)");
  if (s_File_Name.isEmpty()) return;
  saveFile(s_File_Name);
+ currQueryFilename = s_File_Name;
+ saveFileAct->setEnabled(true);
+ setTitle();
 }
 
 void QueryDialog::on_save_QueryButton_clicked(QString s_File_Name)
@@ -578,7 +838,55 @@ void QueryDialog::saveFile(QString s_File_Name)
 
  config->q.s_query_path = this_fi.dir().absolutePath();
  QTextStream out(&this_file);
- out << ui->editQuery->toPlainText();
+ //out << ui->editQuery->toPlainText();
+ QString text; //= ui->editQuery->toPlainText();
+ QTextCursor cur = ui->editQuery->textCursor();
+ if (cur.hasSelection())
+ {
+     text = cur.selectedText();
+     //text = cur.selection().toRawText();
+ }
+ else
+     text = ui->editQuery->toPlainText(); // select all lines
+ QStringList sl = text.split("\n");
+ for(int i=0; i < sl.count(); i++)
+ {
+  QString s = sl.at(i);
+  if(s.startsWith("#include", Qt::CaseInsensitive))
+  {
+   out<< s << "\n";
+   i = handleOutFile(sl,i);
+   continue;
+  }
+  out << s<< "\n";
+ }
+}
+
+int QueryDialog::handleOutFile(QStringList sl, int i)
+{
+ QString line = sl.at(i);
+ if(line.startsWith("#include",Qt::CaseInsensitive))
+ {
+  QString fn = line.mid(8).trimmed();
+  QFile this_file(config->q.s_query_path+"/"+fn);
+  if (!this_file.open(QIODevice::WriteOnly | QIODevice::Text))
+  {
+   QMessageBox::critical(this,tr("Error"), "Could not open sql query text file");
+   return false;
+  }
+  else
+  {
+   QTextStream out(&this_file);
+   for(int j=i+1; j < sl.count(); j++)
+   {
+    QString line = sl.at(j);
+    if(line.startsWith("#end"))
+     return j;
+    out << line<< "\n";
+   }
+  }
+ }
+ throw Exception();
 }
 
 void QueryDialog::slot_QueryView_horizontalHeader_sectionDoubleClicked(int logicalIndex)
@@ -633,16 +941,26 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    //menu = QMenu(m_parent*);
    QAction * copyAction = new QAction("Copy cell text", this);
    connect(copyAction,SIGNAL(triggered()),this,SLOT(on_copyCellText()));
-//   QAction * pasteAction = new QAction("Paste",this);
-//   connect(pasteAction,SIGNAL(triggered()),this,SLOT(queryViewPaste()));
+   // QAction * pasteAction = new QAction("Paste",this);
+   // connect(pasteAction,SIGNAL(triggered()),this,SLOT(queryViewPaste()));
 //   QAction *copyBlobAct = new QAction(tr("Copy blob to clipboard"),this);
 //   connect(copyBlobAct, SIGNAL(triggered()),this,SLOT(on_copyBlob()));
-
+   QAction* insertAction = new QAction(tr("insert row"),this);
+   connect(insertAction, &QAction::triggered, this,[=]{
+    on_insertRow();
+   });
+   QAction* deleteAction = new QAction(tr("delete row"),this);
+   connect(deleteAction, &QAction::triggered, this, [=]{
+    on_deleteRow();
+   });
+   QAction* sortAction = new QAction(tr("sort on column"),this);
+   connect(sortAction, &QAction::triggered, this, [=]{
+       on_sortAction();
+   });
    //QClipboard *clip = QApplication::clipboard();
    QMenu menu;
 
    menu.addAction(copyAction);
-//   menu.addAction(pasteAction);
    // more actions can be added here
 //   QSqlRecord this_record = model->record(currentIndexQueryView.row());
 //   s_currBlobType = model->table_blobs->on_check_blob_list(model->rowCount(),&this_record,currentIndexQueryView.row(),currentIndexQueryView.column());
@@ -651,6 +969,20 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 //    qDebug()<<"Is blob "+ s_currBlobType;
 //    menu.addAction(copyBlobAct);
 //   }
+   menu.addAction(sortAction);
+
+   QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
+   QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel *>(view->model());
+   if(qobject_cast<QueryEditModel*>(proxyModel->sourceModel()))
+   {
+    QueryEditModel * model = qobject_cast<QueryEditModel*>(proxyModel->sourceModel());
+    if(model)
+    {
+     //menu.addAction(pasteAction);
+     menu.addAction(insertAction);
+     menu.addAction(deleteAction);
+    }
+   }
    menu.exec(QCursor::pos());
   }
  }//get QTableView selected item
@@ -668,53 +1000,6 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    return (false);
  }
 
-// void QueryDialog::queryViewHeaderContextMenuRequested(const QPoint &pt)
-// {
-//  QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
-
-//  QAction *hideColumn = new QAction(tr("Hide Column"),this);
-//  QAction *showHiddenColumns = new QAction(tr("Show Hidden Columns"),this);
-//  myHeaderView* hv = (myHeaderView*)view->horizontalHeader();
-//  QAction *moveOrResize = new QAction(hv->bAllowSortColumns?tr("Allow resize columns"):tr("Allow sort/drag/move columns"),this);
-//  QAction *resizeToData = new QAction(tr("Resize to data"), this);
-//  connect(hideColumn, SIGNAL(triggered()),this,SLOT(on_queryView_hide_column()));
-//  connect(showHiddenColumns,SIGNAL(triggered()),this,SLOT(on_queryView_show_columns()));
-//  connect(moveOrResize, SIGNAL(triggered()),this,SLOT(onMoveOrRezize_columns()));
-//  connect(resizeToData, SIGNAL(triggered()),this,SLOT(onResizeToData()));
-
-//  QMenu menu;
-//  queryViewCurrColumn = view->columnAt(pt.x());
-//  menu.addAction(moveOrResize);
-//  menu.addAction(resizeToData);
-//  menu.addAction(hideColumn);
-//  for(int i=0; i < view->model()->columnCount(); i++)
-//  {
-//   if(view->isColumnHidden(i))
-//   {
-//    menu.addAction(showHiddenColumns);
-//    break;
-//   }
-//  }
-//  menu.exec(QCursor::pos());
-// }
-
-// void QueryDialog::on_queryView_hide_column()
-// {
-//  QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
-//  view->hideColumn(queryViewCurrColumn);
-// }
-
-// void QueryDialog::on_queryView_show_columns()
-// {
-//  QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
-//  for(int i=0; i < view->model()->columnCount(); i++)
-//  {
-//   if(view->isColumnHidden(i))
-//   {
-//    view->showColumn(i);
-//   }
-//  }
-// }
 
  void QueryDialog::on_copyCellText()
  {
@@ -722,6 +1007,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   if(currTabIndex<1)
    return;   // no results present
   QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
+  view->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
   QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel *>(view->model());
   if(qobject_cast<QueryModel*>(proxyModel->sourceModel()))
   {
@@ -740,39 +1026,55 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 
   }
  }
-// void QueryDialog::onMoveOrRezize_columns()
-// {
-//  QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
-//  myHeaderView* hv = (myHeaderView*)view->horizontalHeader();
-//  hv->bAllowSortColumns = !hv->bAllowSortColumns;
-// }
+ void QueryDialog::on_sortAction()
+ {
+     qint32 currTabIndex = ui->widget_query_view->currentIndex();
+     if(currTabIndex<1)
+         return;   // no results present
+     QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
+     view->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+     QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel *>(view->model());
 
-// void QueryDialog::onResizeToData()
-// {
-//  QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
-//  myHeaderView* hv =(myHeaderView*) view->horizontalHeader();
-//  hv->resizeSections(QHeaderView::ResizeToContents);
-//  QVariantList colList;
-//  QVariantList mapList;
-//  for(int i=0; i < view->model()->columnCount(); i++)
-//  {
-//   if(view->isColumnHidden(i))
-//    colList << -(view->columnWidth(i));
-//   else
-//    colList << view->columnWidth(i);
-//   mapList << hv->logicalIndex(i);
-//  }
-// }
+     ((QSqlTableModel*)proxyModel->sourceModel())->setSort(currentIndexQueryView.column(),Qt::SortOrder::AscendingOrder);
+     ((QSqlTableModel*)proxyModel->sourceModel())->select();
+ }
+
+
+
+ void QueryDialog::on_deleteRow()
+ {
+  QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
+  QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel *>(view->model());
+  if(qobject_cast<QueryEditModel*>(proxyModel->sourceModel()))
+  {
+   QueryEditModel * model = qobject_cast<QueryEditModel*>(proxyModel->sourceModel());
+   int row = proxyModel->mapToSource(currentIndexQueryView).row();
+   model->removeRow(row);
+  }
+ }
+
+ void QueryDialog::on_insertRow()
+ {
+  QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
+  QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel *>(view->model());
+  if(qobject_cast<QueryEditModel*>(proxyModel->sourceModel()))
+  {
+   QueryEditModel * model = qobject_cast<QueryEditModel*>(proxyModel->sourceModel());
+   int row = currentIndexQueryView.row();
+   model->insertRow(row);
+  }
+ }
 
  void QueryDialog::On_cbConnections_CurrentIndexChanged(int ix)
  {
   if(bChanging) return;
+  setCursor(Qt::WaitCursor);
   Connection* tgtConn = VPtr<Connection>::asPtr(ui->cbConnections->itemData(ix));
   if(ui->cbConnections->currentText() == config->currCity->connections.at(config->currCity->curConnectionId)->description())
   {
    // reverting to default (currrent) database!
    //
-   // the docs recommed not setting QSqlDatabase as a member of a class but since
+   // the docs recommend not setting QSqlDatabase as a member of a class but since
    // this class is always present once created there should be no problem.
    db = QSqlDatabase::database(tgtConn->connectionName()); // restore default connection
   }
@@ -788,47 +1090,75 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    }
   }
 
-
-//  if(db.isOpen() && db.connectionName() == "testConnection")
-//   db.close();
-
-//   db=QSqlDatabase::addDatabase(tgtConn->driver(), "query");
-
-   //tgtConn = config->currCity->connections.at(config->currCity->curExportConnId);
-  //tgtConn = config->currCity->connections.at(ui->cbConnections->itemData(ix).toInt());
 #if 1
-  //if(tgtConn->connectionName().isEmpty())
+  if(tgtConn->connectionName().isEmpty())
   {
-   db = QSqlDatabase::addDatabase(tgtConn->driver(), QString("query%1").arg(ix));
+   db = QSqlDatabase::addDatabase(tgtConn->driver(), QString("query-%1").arg(tgtConn->description()));
    tgtConn->setConnectionName(db.connectionName());
-   Connection::configureDb(&db, tgtConn);
-  if(!db.open())
-  {
-   ui->go_QueryButton->setEnabled(false);
-   qDebug() << "Database not open: " + ui->cbConnections->currentText() + ", current databasename: " + db.databaseName() + " " + db.lastError().text();
-   qDebug() << "current dir: " + QDir::currentPath();
-  }
-  else
-  {
-   ui->go_QueryButton->setEnabled(true);
-   if(tgtDbType == "MsSql")
+//   if(tgtConn->servertype() == "Sqlite")
+//   {
+//    if(!tgtConn->isSqliteUserFunctionLoaded())
+//     tgtConn->setSqliteUserFunctionLoaded(SQL::instance()->
+//             loadSqlite3Functions(db));
+//   }
+   Connection::configureDb(db, tgtConn, config);
+   if(!db.open(tgtConn->userId(), tgtConn->pwd()))
    {
-#if 0
-    if(tgtConn->useDatabase() != "default" || tgtConn->useDatabase() != "")
+    ui->go_QueryButton->setEnabled(false);
+    qDebug() << "Database not open: " + ui->cbConnections->currentText() + ", current databasename: " + db.databaseName() + " " + db.lastError().text();
+    qDebug() << "current dir: " + QDir::currentPath();
+   }
+   else
+   {
+    ui->go_QueryButton->setEnabled(true);
+    if(tgtConn->servertype() == "Sqlite")
+    {
+#ifndef NO_UDF
+     if(!tgtConn->isSqliteUserFunctionLoaded())
+      tgtConn->setSqliteUserFunctionLoaded( SQL::instance()->loadSqlite3Functions(db));
+#endif
+    }
+    else if(tgtConn->servertype() == "MsSql")
+    {
+#if 1
+    if(tgtConn->database() != "default" || tgtConn->database() != "")
     {
      QSqlQuery query = QSqlQuery(db);
-     if(!query.exec(tr("use [%1]").arg(tgtConn->useDatabase())))
+     if(!query.exec(tr("use [%1]").arg(tgtConn->database())))
      {
-      SQLERROR(query);
+      SQLERROR(std::move(query));
         db.close();
         return;
      }
     }
 #endif
+    }
    }
-  }
 #endif
-  QWidget::setWindowTitle(tr("Manual Sql Query (%1)").arg(ui->cbConnections->currentText()));
+   setTitle();
+  }
+  else
+  {
+   qDebug() << "connection name:" << tgtConn->connectionName();
+   qDebug() << "driver:" << db.driverName() << " database:" << db.databaseName();
+  }
+  setCursor(Qt::ArrowCursor);
+}
+
+void QueryDialog::setTitle()
+{
+    Connection c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
+ QString database = SQL::instance()->getDatabase(c.servertype());
+
+ if(currQueryFilename.isEmpty())
+
+  QWidget::setWindowTitle(tr("Manual Sql Query (%1) %2")
+                          .arg(ui->cbConnections->currentText(),database));
+ else
+ {
+  QFileInfo info(currQueryFilename);
+  QWidget::setWindowTitle(tr("Manual Sql Query (%1) - %2 %3")
+                          .arg(ui->cbConnections->currentText(),info.fileName(),database));
  }
 }
 
@@ -837,4 +1167,122 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   ui->editQuery->clear();
   ui->editQuery->setText(commandText);
   on_go_QueryButton_clicked();
+ }
+
+ QTextLine QueryDialog::currentTextLine(const QTextCursor &cursor)
+ {
+     const QTextBlock block = cursor.block();
+     if (!block.isValid())
+         return QTextLine();
+
+     const QTextLayout *layout = block.layout();
+     if (!layout)
+         return QTextLine();
+
+     const int relativePos = cursor.position() - block.position();
+     return layout->lineForTextPosition(relativePos);
+ }
+
+ void QueryDialog::textChanged()
+ {
+  QTextCursor cursor = ui->editQuery->textCursor();
+  QTextBlock block = cursor.block();
+  QString text = block.text();
+  QTextLine textLine = currentTextLine(cursor);
+ }
+
+ void QueryDialog::replaceWithInclude()
+ {
+  setCursor(Qt::WaitCursor);
+  QString s_File_Name = QFileDialog::getOpenFileName(this, "Choose a SQL text file",
+                        config->q.s_query_path, "SQL text files (*.sql *.txt);;All Files (*.*)");
+  // QFileDialog take a long time to close, this should tak care of this - but does not.
+  QCoreApplication::processEvents();
+  setCursor(Qt::ArrowCursor);
+  if (s_File_Name.isEmpty()) return;
+  QFile this_file(s_File_Name);
+  QFileInfo this_fi(s_File_Name);
+  if (!this_file.open(QIODevice::ReadOnly | QIODevice::Text))
+  {
+   QMessageBox::critical(this,tr("Error"), "Could not load sql query text file");
+   return;
+  }
+
+  QTextCursor cur = ui->editQuery->textCursor();
+  QTextStream in(&this_file);
+  QString newText = in.readAll();
+  cur.removeSelectedText();
+  cur.insertHtml(QString("<FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\"><BR>")
+                 .arg("#include " + s_File_Name ));
+  cur.insertText(newText);
+  cur.insertHtml(QString("<FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\">")
+                 .arg("#end" + s_File_Name ));
+ }
+
+ void QueryDialog::makeSelectedInclude()
+ {
+  QTextCursor cur = ui->editQuery->textCursor();
+  QString text = cur.selectedText();
+  QString s_File_Name = QFileDialog::getSaveFileName(this, "Choose the name of a SQL text file to save to",
+                        config->q.s_query_path,"SQL text files (*.sql *.txt);;All Files (*.*)");
+  if (s_File_Name.isEmpty()) return;
+
+  QFileInfo this_fi(s_File_Name);
+  if (this_fi.completeSuffix() == "")
+   s_File_Name+=".sql";
+  QFile this_file(s_File_Name);
+  if (!this_file.open(QIODevice::WriteOnly | QIODevice::Text))
+  {
+   QMessageBox::critical(this,qApp->applicationName(), "Could not save sql query text file");
+   return;
+  }
+
+  //config->q.s_query_path = this_fi.dir().absolutePath();
+  QTextStream out(&this_file);
+  out << text;
+  cur.removeSelectedText();
+  cur.removeSelectedText();
+  cur.insertHtml(QString("<FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\"><BR>")
+                 .arg("#include " + s_File_Name ));
+  cur.insertText(text);
+  cur.insertHtml(QString("<BR><FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\">")
+                 .arg("#end" + s_File_Name ));
+ }
+
+ QWidgetAction* QueryDialog::createWidgetAction()
+ {
+     cbFile = new QComboBox(this);
+     QDirIterator dirIterator(":/sql", QDirIterator::Subdirectories);
+     while (dirIterator.hasNext()) {
+         dirIterator.next();
+         QFileInfo fileInfo = dirIterator.fileInfo();
+         if (fileInfo.isFile())
+         {
+             // Do not add directories to the list
+             cbFile->addItem(fileInfo.fileName(), fileInfo.filePath());
+         }
+     }
+     cbFile->setVisible(true);
+     cbFile->activateWindow();
+     cbFile->model()->sort(0, Qt::AscendingOrder);
+
+     connect(cbFile, &QComboBox::currentTextChanged,this, [=](){
+         loadFile(cbFile->currentData().toString());
+         qInfo() << "file selection changed:" << cbFile->currentText();
+         selectMenu->close();
+     });
+     wAct = new QWidgetAction(this);
+     wAct->setDefaultWidget(cbFile);
+     return wAct;
+ }
+
+ void QueryDialog::keyPressEvent(QKeyEvent *event)
+ {
+     if(event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_F)
+     {
+         QTextCursor cursor = ui->editQuery->textCursor();
+         QString selection = cursor.selectedText();
+         frw->setTextSelection(selection);
+     }
+     QWidget::keyPressEvent(event);
  }

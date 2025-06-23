@@ -6,92 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>675</width>
-    <height>323</height>
+    <width>752</width>
+    <height>395</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Manual SQL Query</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="3" column="9">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Close</set>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="2">
-    <widget class="QToolButton" name="rollback_toolButton">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If active a Rollback transaction will be performed when clicked.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="text">
-      <string>...</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../Resources/mapper.qrc">
-       <normaloff>:/rollback.png</normaloff>:/rollback.png</iconset>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="8" colspan="2">
-    <widget class="QComboBox" name="cbConnections">
-     <property name="toolTip">
-      <string>Select target database connection. </string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0" colspan="6">
-    <widget class="QCheckBox" name="cb_sql_execute_after_loading">
-     <property name="text">
-      <string>Execute after loading</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="7">
-    <widget class="QToolButton" name="save_QueryButton">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to save the query.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="text">
-      <string>...</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../Resources/mapper.qrc">
-       <normaloff>:/filesave.png</normaloff>:/filesave.png</iconset>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="4">
-    <widget class="QComboBox" name="cbEditStrategy">
-     <item>
-      <property name="text">
-       <string>OnFieldChange</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>OnRowChange</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>OnManualSubmit</string>
-      </property>
-     </item>
-    </widget>
-   </item>
-   <item row="2" column="9">
-    <widget class="QCheckBox" name="cb_stop_query_on_error">
-     <property name="text">
-      <string>Stop query on error</string>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="1">
     <widget class="QToolButton" name="clear_QueryButton">
      <property name="toolTip">
@@ -106,28 +28,41 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QToolButton" name="go_QueryButton">
+   <item row="2" column="9">
+    <widget class="QCheckBox" name="cb_stop_query_on_error">
+     <property name="text">
+      <string>Stop query on error</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="6">
+    <widget class="QToolButton" name="load_QueryButton">
      <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to execute selected queries if more than one,&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to load a text tile containing a query.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="text">
       <string>...</string>
      </property>
      <property name="icon">
       <iconset resource="../Resources/mapper.qrc">
-       <normaloff>:/go.png</normaloff>:/go.png</iconset>
+       <normaloff>:/fileload.png</normaloff>:/fileload.png</iconset>
      </property>
     </widget>
    </item>
    <item row="0" column="0" colspan="10">
     <widget class="QSplitter" name="query_splitter">
      <property name="orientation">
-      <enum>Qt::Vertical</enum>
+      <enum>Qt::Orientation::Vertical</enum>
      </property>
      <widget class="QTextEdit" name="editQuery">
       <property name="toolTip">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter an SQL query. if more than one query is to be perfored terminate each with a semicolon. To execute only one query, higlight it. Then click on the execute utton.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter an SQL query. if more than one query is to be performed terminate each with a semicolon. To execute only one query, higlight it. Then click on the execute utton.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="placeholderText">
+       <string>Enter or Load SQL text</string>
       </property>
      </widget>
      <widget class="QTabWidget" name="widget_query_view">
@@ -135,7 +70,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -159,17 +94,37 @@
      </widget>
     </widget>
    </item>
-   <item row="1" column="6">
-    <widget class="QToolButton" name="load_QueryButton">
-     <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to load a text tile containing a query.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
+   <item row="1" column="5">
+    <widget class="QPushButton" name="pbSubmit">
      <property name="text">
-      <string>...</string>
+      <string>Submit</string>
      </property>
-     <property name="icon">
-      <iconset resource="../Resources/mapper.qrc">
-       <normaloff>:/fileload.png</normaloff>:/fileload.png</iconset>
+    </widget>
+   </item>
+   <item row="3" column="9">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Clck to hide this dialog. Select '&lt;span style=&quot; font-style:italic;&quot;&gt;SQL Query Dialog&lt;/span&gt;' from Tolls menue to restore.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Close</set>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="8" colspan="2">
+    <widget class="QComboBox" name="cbConnections">
+     <property name="toolTip">
+      <string>Select target database connection. </string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="6">
+    <widget class="QCheckBox" name="cb_sql_execute_after_loading">
+     <property name="text">
+      <string>Execute after loading</string>
      </property>
     </widget>
    </item>
@@ -180,10 +135,64 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="5">
-    <widget class="QPushButton" name="pbSubmit">
+   <item row="1" column="4">
+    <widget class="QComboBox" name="cbEditStrategy">
+     <item>
+      <property name="text">
+       <string>OnFieldChange</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>OnRowChange</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>OnManualSubmit</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="1" column="7">
+    <widget class="QToolButton" name="save_QueryButton">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to save the query.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
-      <string>Submit</string>
+      <string>...</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../Resources/mapper.qrc">
+       <normaloff>:/filesave.png</normaloff>:/filesave.png</iconset>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QToolButton" name="rollback_toolButton">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If active a Rollback transaction will be performed when clicked.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="text">
+      <string>...</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../Resources/mapper.qrc">
+       <normaloff>:/rollback.png</normaloff>:/rollback.png</iconset>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QToolButton" name="go_QueryButton">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to execute selected queries if more than one,&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="text">
+      <string>...</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../Resources/mapper.qrc">
+       <normaloff>:/go.png</normaloff>:/go.png</iconset>
      </property>
     </widget>
    </item>

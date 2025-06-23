@@ -49,7 +49,7 @@ bool CheckRoute::checkConnectingSegments()
                             startConnects++;
                         }
                         else
-                        if(isDirectionCorrect(sd->normalEnter(), reverseBearing( sd->bearingStart().getBearing()), reverseBearing(sd2.bearingStart().getBearing())))
+                        if(isDirectionCorrect(sd->normalEnter(), reverseBearing( sd->bearingStart().angle()), reverseBearing(sd2.bearingStart().angle())))
                         {
                             nextSegment = sd2.segmentId();
                         }
@@ -69,7 +69,7 @@ bool CheckRoute::checkConnectingSegments()
                             startConnects++;
                         }
                         else
-                        if(isDirectionCorrect(sd->normalEnter(),reverseBearing( sd->bearingStart().getBearing()), reverseBearing(sd2.bearingStart().getBearing()) ))
+                        if(isDirectionCorrect(sd->normalEnter(),reverseBearing( sd->bearingStart().angle()), reverseBearing(sd2.bearingStart().angle()) ))
                         {
                             nextSegment = sd2.segmentId();
                         }
@@ -91,7 +91,7 @@ bool CheckRoute::checkConnectingSegments()
                         endConnects++;
                     }
                     else
-                    if(isDirectionCorrect(sd->normalLeave(), sd->bearing().getBearing(), reverseBearing(sd2.bearingStart().getBearing())))
+                    if(isDirectionCorrect(sd->normalLeave(), sd->bearing().angle(), reverseBearing(sd2.bearingStart().angle())))
                     {
                         prevSegment = sd2.segmentId();
                     }
@@ -111,7 +111,7 @@ bool CheckRoute::checkConnectingSegments()
                         endConnects++;
                     }
                     else
-                    if(isDirectionCorrect(sd->normalLeave(), sd->bearing().getBearing(), reverseBearing(sd2.bearingEnd().getBearing())))
+                    if(isDirectionCorrect(sd->normalLeave(), sd->bearing().angle(), reverseBearing(sd2.bearingEnd().angle())))
                     {
                         prevSegment = sd2.segmentId();
                     }

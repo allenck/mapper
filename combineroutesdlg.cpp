@@ -50,9 +50,10 @@ void CombineRoutesDlg::on_txtNewRouteNbr_editingFinished()
     }
     bool bAlphaRoute = false;
     //bRouteChanging = false;
-    int companyKey = _rd1.companyKey;
+    int companyKey = _rd1.companyKey();
+    CompanyData* cd = sql->getCompany(companyKey);
 
-    qint32 newRoute = sql->getNumericRoute(ui->txtNewRouteNbr->text(), & _alphaRoute, & bAlphaRoute, companyKey);
+    qint32 newRoute = sql->getNumericRoute(ui->txtNewRouteNbr->text(), & _alphaRoute, & bAlphaRoute, cd->routePrefix);
 
     _routeNbr = newRoute;
     if (!config->currCity->bAlphaRoutes && bAlphaRoute)
@@ -81,7 +82,7 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
 
     if(ui->buttonBox->standardButton(button) == QDialogButtonBox::Cancel)
         return;
-    if(_rd1.route <0 || _rd2.route < 0 || ui->cbRoute1->currentIndex() == ui->cbRoute2->currentIndex())
+    if(_rd1.route() <0 || _rd2.route() < 0 || ui->cbRoute1->currentIndex() == ui->cbRoute2->currentIndex())
     {
         ui->lblHelp->setText(tr("Select 2 valid routes"));
         return;
@@ -106,7 +107,7 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
     _routeNbr = sql->addAltRoute(ui->txtNewRouteNbr->text(), companyData->routePrefix);
     _alphaRoute = ui->txtNewRouteNbr->text();
 
-    QList<SegmentData> myArray;
+    QList<SegmentData*> myArray;
 
 //    // modify the end date for Route 1 to the date previous to the date control.
 //    if (sql->modifyRouteDate(_rd1, false, ui->dateEdit->dateTime().addDays(-1)))
@@ -133,15 +134,23 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
 //        return;
 //    }
 
-    myArray = sql->getRouteSegmentsForDate(_rd1.route, _rd1.name, _rd1.endDate.toString("yyyy/MM/dd"));
+    //myArray = sql->getRouteDatasForDate(_rd1.route(), _rd1.routeName(), _rd1.companyKey(), _rd1.endDate().toString("yyyy/MM/dd"));
+    myArray = sql->getSegmentDatasForDate(_rd1.route(), _rd1.routeName(), _rd1.companyKey(), _rd1.endDate());
 
-    foreach(SegmentData sd1, myArray)
+    foreach(SegmentData* sd1, myArray)
     {
-        if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->date(),
-                                   ui->endDate->date(), sd1.segmentId(), sd1.companyKey(),
-                                   sd1.tractionType(), sd1.direction(), sd1.next(), sd1.prev(),
-                                   sd1.normalEnter(), sd1.normalLeave(), sd1.reverseEnter(), sd1.reverseLeave(),
-                                   sd1.oneWay(), sd1.trackUsage()) == false)
+        // if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->date(),
+        //                            ui->endDate->date(), rd1.segmentId(), rd1.companyKey(),
+        //                            rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(),
+        //                            rd1.normalEnter(), rd1.normalLeave(), rd1.reverseEnter(), rd1.reverseLeave(),
+        //                            rd1.sequence(), rd1.returnSeq(),
+        //                            rd1.oneWay(), rd1.trackUsage(),rd1.doubleDate()) == false)
+        SegmentData sd1a = SegmentData(*sd1);
+        sd1a.setRoute(_routeNbr);
+        sd1a.setRouteName(ui->txtNewRouteName->text().trimmed());
+        sd1a.setStartDate(ui->dateEdit->date());
+        sd1a.setEndDate(ui->endDate->date());
+        if(sql->addSegmentToRoute(&sd1a))
         {
             ui->lblHelp->setText(tr("add failed: route ")+ QString("%1").arg(_routeNbr));
             //System.Media.SystemSounds.Asterisk.Play();
@@ -149,14 +158,23 @@ void CombineRoutesDlg::on_buttonBox_clicked(QAbstractButton *button)
             return;
         }
     }
-    myArray = sql->getRouteSegmentsForDate(_rd2.route, _rd2.name, _rd2.endDate.toString("yyyy/MM/dd"));
+    //myArray = sql->getRouteDatasForDate(_rd2.route(), _rd2.routeName(), _rd2.companyKey(), _rd2.endDate().toString("yyyy/MM/dd"));
+    myArray = sql->getSegmentDatasForDate(_rd2.route(), _rd2.routeName(), _rd2.companyKey(), _rd2.endDate());
 
-    foreach(SegmentData sd1, myArray)
+    foreach(SegmentData* sd1, myArray)
     {
-        if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->date(),
-                                   ui->endDate->date(), sd1.segmentId(), sd1.companyKey(),
-                                   sd1.tractionType(), sd1.direction(), sd1.next(), sd1.prev(), sd1.normalEnter(), sd1.normalLeave(),
-                                   sd1.reverseEnter(), sd1.reverseLeave(), sd1.oneWay(), sd1.trackUsage()) == false)
+        // if (sql->addSegmentToRoute(_routeNbr, ui->txtNewRouteName->text().trimmed(), ui->dateEdit->date(),
+        //                            ui->endDate->date(), rd1.segmentId(), rd1.companyKey(),
+        //                            rd1.tractionType(), rd1.direction(), rd1.next(), rd1.prev(), rd1.normalEnter(), rd1.normalLeave(),
+        //                            rd1.reverseEnter(), rd1.reverseLeave(),
+        //                            rd1.sequence(), rd1.returnSeq(),
+        //                            rd1.oneWay(), rd1.trackUsage(), rd1.doubleDate()) == false)
+        SegmentData sd1a = SegmentData(*sd1);
+        sd1a.setRoute(_routeNbr);
+        sd1a.setRouteName(ui->txtNewRouteName->text().trimmed());
+        sd1a.setStartDate(ui->dateEdit->date());
+        sd1a.setEndDate(ui->endDate->date());
+        if(sql->addSegmentToRoute(&sd1a))
         {
             ui->lblHelp->setText(tr("add failed"));
             //System.Media.SystemSounds.Asterisk.Play();
@@ -180,10 +198,10 @@ void CombineRoutesDlg:: on_cbRoute1_currentIndexChanged(int sel)
 //        return;
 //    }
     _rd1 = routeDataList.at(sel);
-    ui->dateEdit->setMinimumDate(_rd1.startDate);
-    ui->dateEdit->setMaximumDate(_rd1.endDate.addDays(1));
+    ui->dateEdit->setMinimumDate(_rd1.startDate());
+    ui->dateEdit->setMaximumDate(_rd1.endDate().addDays(1));
 
-    ui->endDate->setDate(_rd1.endDate);
+    ui->endDate->setDate(_rd1.endDate());
 }
 void CombineRoutesDlg:: on_cbRoute2_currentIndexChanged(int sel)
 {

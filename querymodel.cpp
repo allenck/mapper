@@ -1,4 +1,6 @@
 #include "querymodel.h"
+#include "qsqltablemodel.h"
+#include "ui_querydialog.h"
 #include <QDate>
 #include <QDateTime>
 #include <QSqlRecord>
@@ -7,6 +9,7 @@
 #include <QSortFilterProxyModel>
 #include <QAction>
 #include <QMenu>
+#include <querydialog.h>
 
 class QSqlRecord;
 
@@ -15,7 +18,10 @@ QueryModel::QueryModel(QObject *parent, QSqlDatabase db, QString dbtype) :
 {
  driver=db.driverName();
  dbType = dbtype;
+ qDebug() << "connection name:" << db.connectionName();
+ qDebug() << "driver:" << db.driverName() << " database:" << db.databaseName();
 }
+
 void QueryModel::sort( int column, Qt::SortOrder order)
 {
  //table_blobs->on_init_list(-1);
@@ -140,7 +146,7 @@ void QueryModel::setTabName(QString name)
  tabName = name;
 }
 
-myHeaderView::myHeaderView(Qt::Orientation orientation, QWidget *parent) : QHeaderView(orientation, parent)
+MyHeaderView::MyHeaderView(Qt::Orientation orientation, QWidget *parent) : QHeaderView(orientation, parent)
 {
  myParent = parent;
  view = qobject_cast<QTableView*>(parent);
@@ -151,14 +157,14 @@ myHeaderView::myHeaderView(Qt::Orientation orientation, QWidget *parent) : QHead
  connect(this ,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(contextMenuRequested(const QPoint)));
 
 }
-myHeaderView::~myHeaderView()
+MyHeaderView::~MyHeaderView()
 {
 
 }
-void myHeaderView::setMoveAllowed(bool b)
+void MyHeaderView::setMoveAllowed(bool b)
 { bAllowSortColumns = b; }
 
-void myHeaderView::mousePressEvent(QMouseEvent *e)
+void MyHeaderView::mousePressEvent(QMouseEvent *e)
 {
  if(!bAllowSortColumns)
   return QHeaderView::mousePressEvent(e);
@@ -174,7 +180,7 @@ void myHeaderView::mousePressEvent(QMouseEvent *e)
  }
 }
 
-void myHeaderView::mouseReleaseEvent(QMouseEvent *e)
+void MyHeaderView::mouseReleaseEvent(QMouseEvent *e)
 {
  if(!bAllowSortColumns)
   return QHeaderView::mouseReleaseEvent(e);
@@ -211,7 +217,7 @@ void myHeaderView::mouseReleaseEvent(QMouseEvent *e)
   this->setCursor(Qt::ArrowCursor);
  }
 }
-void myHeaderView::mouseMoveEvent(QMouseEvent *e)
+void MyHeaderView::mouseMoveEvent(QMouseEvent *e)
 {
  if(!bAllowSortColumns)
   return QHeaderView::mouseMoveEvent(e);
@@ -221,7 +227,7 @@ void myHeaderView::mouseMoveEvent(QMouseEvent *e)
   this->setCursor(Qt::DragMoveCursor);
  }
 }
-void myHeaderView::contextMenuRequested(const QPoint &pt)
+void MyHeaderView::contextMenuRequested(const QPoint &pt)
 {
  //QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
 
@@ -234,12 +240,16 @@ void myHeaderView::contextMenuRequested(const QPoint &pt)
  connect(showHiddenColumns,SIGNAL(triggered()),this,SLOT(on_queryView_show_columns()));
  connect(moveOrResize, SIGNAL(triggered()),this,SLOT(onMoveOrRezize_columns()));
  connect(resizeToData, SIGNAL(triggered()),this,SLOT(onResizeToData()));
-
+ QAction* sortAction = new QAction(tr("sort on column"),this);
+ connect(sortAction, &QAction::triggered, this, [=]{
+     on_sortAction();
+ });
  QMenu menu;
  queryViewCurrColumn = view->columnAt(pt.x());
- menu.addAction(moveOrResize);
  menu.addAction(resizeToData);
  menu.addAction(hideColumn);
+ menu.addAction(moveOrResize);
+ menu.addAction(sortAction);
  for(int i=0; i < view->model()->columnCount(); i++)
  {
   if(view->isColumnHidden(i))
@@ -251,13 +261,13 @@ void myHeaderView::contextMenuRequested(const QPoint &pt)
  menu.exec(QCursor::pos());
 }
 
-void myHeaderView::on_queryView_hide_column()
+void MyHeaderView::on_queryView_hide_column()
 {
  //QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
  view->hideColumn(queryViewCurrColumn);
 }
 
-void myHeaderView::on_queryView_show_columns()
+void MyHeaderView::on_queryView_show_columns()
 {
  //QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
  for(int i=0; i < view->model()->columnCount(); i++)
@@ -268,14 +278,14 @@ void myHeaderView::on_queryView_show_columns()
   }
  }
 }
-void myHeaderView::onMoveOrRezize_columns()
+void MyHeaderView::onMoveOrRezize_columns()
 {
  //QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
  //myHeaderView* hv = (myHeaderView*)view->horizontalHeader();
  bAllowSortColumns = !bAllowSortColumns;
 }
 
-void myHeaderView::onResizeToData()
+void MyHeaderView::onResizeToData()
 {
 // QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
 // myHeaderView* hv =(myHeaderView*) view->horizontalHeader();
@@ -290,4 +300,19 @@ void myHeaderView::onResizeToData()
    colList << view->columnWidth(i);
   mapList << logicalIndex(i);
  }
+}
+void MyHeaderView::on_sortAction()
+{
+    QTabWidget* tabWidget = qobject_cast<QTabWidget*>(parent());
+    if(!tabWidget)
+        return;
+    qint32 currTabIndex = tabWidget->currentIndex();
+    if(currTabIndex<1)
+        return;   // no results present
+    QTableView *view = qobject_cast<QTableView*>(tabWidget->currentWidget());
+    view->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+    QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel *>(view->model());
+
+    ((QSqlTableModel*)proxyModel->sourceModel())->setSort(view->currentIndex().column(),Qt::SortOrder::AscendingOrder);
+    ((QSqlTableModel*)proxyModel->sourceModel())->select();
 }

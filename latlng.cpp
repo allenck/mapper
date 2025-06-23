@@ -83,8 +83,28 @@ QString LatLng::toString()
 
 QString LatLng::str()
 {
- QString strLat = QString("%1").arg(/*latitude*/y(),0,'f',8);
- QString strLon = QString("%1").arg(/*longitude*/x(),0,'f',8);
+ QString strLat = QString("%1").arg(/*latitude*/y(),0,'f',6);
+ QString strLon = QString("%1").arg(/*longitude*/x(),0,'f',6);
  return strLat + "," + strLon;
 }
 
+/*static*/ LatLng LatLng::fromString(QString str)
+{
+    LatLng rslt;
+    QStringList sl;
+    sl = str.split(",");
+    bool ok;
+    double lat;
+    double lon;
+    if(sl.count()==2)
+    {
+        lat = sl.at(0).toDouble(&ok);
+        if(!ok)
+            return rslt;
+        lon = sl.at(1).toDouble(&ok);
+        if(!ok)
+            return rslt;
+        rslt = LatLng(lat,lon);
+    }
+    return rslt;
+}

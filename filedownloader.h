@@ -14,7 +14,7 @@ class FileDownloader : public QObject
 public:
     explicit FileDownloader(QUrl imageUrl, QObject *parent = 0);
 
-    virtual ~FileDownloader();
+    /*virtual*/ ~FileDownloader();
 
     QByteArray downloadedData() const;
     void setOverlay(Overlay* ov);
@@ -29,7 +29,7 @@ private slots:
 
 private:
 
-    QNetworkAccessManager m_WebCtrl;
+    QNetworkAccessManager* m_WebCtrl = nullptr;
 
     QByteArray m_DownloadedData;
     Overlay* ov = nullptr;

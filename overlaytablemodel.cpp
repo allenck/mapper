@@ -116,7 +116,17 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
    }
    break;
   case CITYNAME:
-   if(ov->cityName.isEmpty()) background = QVariant( QColor(Qt::red) );
+   if(ov->cityName.isEmpty() )
+   {
+    background = QVariant( QColor(Qt::red) );
+    break;
+   }
+   if(!config->cityNames().contains(ov->cityName))
+   {
+    background = QVariant( QColor(Qt::yellow) );
+    break;
+
+   }
    break;
   case OPACITY:
    if(ov->opacity > 65) background = QVariant( QColor(Qt::red) );
@@ -229,14 +239,10 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
  }
  if(role == Qt::EditRole)
  {
-  QString oldName = ov->cityName +"." + ov->name;
-  QString newName = ov->cityName +"." + ov->name;
+  oldName = ov->cityName +"." + ov->name;
   QString oldCityKey =ov->name;
+  newName = ov->cityName +"." + ov->name;
   QString newCityKey = ov->name;
-  if(overlayMap->contains(newName))
-  {
-   return false;
-  }
   if(index.column() == NAME)
   {
    overlayMap->remove(oldName);
@@ -246,9 +252,17 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
   if(index.column() == CITYNAME)
   {
    newName = value.toString()+"."+ov->name;
-   ov->cityName = value.toString();
+   newCityKey = value.toString();
+   newName = value.toString()+"." + ov->name;
+   QStringList cityList = config->cityNames();
+   if(!cityList.contains(newCityKey))
+    return false; // invalid city name
    if(overlayMap->contains(newName))
     return false;
+   overlayMap->remove(oldName);
+   ov->cityName = value.toString();
+   overlayMap->insert(newName,ov);
+   return true;
   }
   if(index.column() == DESCRIPTION)
   {
