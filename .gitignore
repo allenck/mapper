@@ -1,3 +1,14 @@
 ui_*
 logs/
 sqlite3.h
+debug/
+html/
+*.so
+*.so*
+*.user*
+obj/
+*.dll
+*~
+*.log
+data/
+scripts/
