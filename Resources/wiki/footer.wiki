@@ -1,0 +1,5 @@
+
+<div class="footer" style="background-image: url([file://%%BASE%%/wiki/css/gold/div_top_menu.png]);">
+Fossil version [5dd5d39e7c] 2012-03-19 12:45:47
+</div>
+</body></html>

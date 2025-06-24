@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+  <title>Creating a new database</title>
+  </head>
+<body style="background-color:#faf0e6">
+<h1><big><big><big><span style="font-weight: bold;"></span></big></big></big><big>&nbsp;
+&nbsp;&nbsp; &nbsp;&nbsp; Creating a new database &nbsp; &nbsp;&nbsp;
+&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
+&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
+</big></h1>
+On this page, we will define the steps necessary to establish a new
+database and populating it with streetcar routes. As an example, let's
+create a database for Cincinnati, Ohio. Initial data comes from a list
+published in <a href="by%20http://jjakucyk.com/transit/streetcarroutes.html.">Cincinnati Traction History </a><br>
+<br>
+<h2>Creating the database</h2>
+From the Tools menu, select "Create new sqlite db" This will present a dialog: <br>
+<br>
+<img style="width: 517px; height: 294px;" alt="Createdatabase" title="Create new database dialog" src="images/CreateNewDatabase.png"><br>
+<ul>
+  <li>The "db name will be used as the name of the database file.</li>
+  <li>The
+path is the directory where the database file will be created. The
+default is 'Resources/databases' in the program's directory. <br>
+  </li>
+  <li>If Create Connection is checked, the new database will be added
+to your list of connections. Other wise you will have to manually add
+the database with the "edit connections dialog" <br>
+  </li>
+  <li>City: should contain the name of the city as shown above. <br>
+  </li>
+  <li>The company is the one for which you will be adding the initial routes for. More companies can be added later. <br>
+  </li>
+  <li>The "Create" button will populate the database with some initial values.</li>
+</ul>
+<h3>Creating the first Segment</h3>
+Before a route can be entered, the segments that make it up must be created. Here, the following routedescription will be used: <br>
+
+
+<p style="font-style: italic;" class="p4"><small><b>2 Evanston,</b> 4th &amp; Vine-Montgomery &amp; Dana.<br>
+<span class="Apple-tab-span"></span>Vine-5th-Broadway-Gilbert-McMillan-Woodburn-Montgomery-Dana wye<br>
+<span class="Apple-tab-span"></span>Return, Montgomery-Woodburn-McMillan-Gilbert-Broadway-4th-Vine.</small></p>
+From the route description, it appears that we need a segment on Vine
+street between 4th &amp; 5th. Since this appears to be a downtown
+turning loop, we will make the new segment one way,<br>
+<br>
+Right-click on the "Select Route" combobox and select "Add Segment" <br>
+<img style="width: 450px; height: 629px;" alt="add segment" title="Add segment" src="images/AddSegment.png"><br>
+Press "OK" and the dialog will close. Now note that the cursor in the
+map display is a Cross. Whenever the cursor is a&nbsp; Cross and not
+the normal arrow cursor, Left-Double clicking the map will add a point
+for a segment, Now locate on the map, the intersection of 4th &amp;
+Vine. Left-Double-click at that location.&nbsp; Now move the cursor to
+5th and Vine. Double-Clidk and a red line with an arrrow on the end
+will be displayed. At this time, since we don't know the actual dates
+that the route used this segment, we set the begin date to 1900/01/01
+and the end date to 2000/01/01; they can be changed later. The rest of
+the controls other than Traction type can be ignored at this time. <br>
+<img style="width: 685px; height: 591px;" alt="First segment" src="images/first_segment.png"><br>
+<br>
+Notice now that the Route combo box shows the <span style="font-weight: bold;">2-Evanston </span>route.
+Now let's finish the #2 route's downtown loop.&nbsp; First, to prevent
+adding more points to the segment we just created, move the cursor over
+the line on the map. The Cross cursor will change to a pointing hand,
+Left-Click once and now the cursor changes to the normal arrow cursor. <br>
+<br>
+Now add a new segment for 5th St, Vine to Broadway (1 way). Because the
+street curves, Double-Click our way along 5th street from Vine to
+Broadway. Next, do the same for segments on Broadway, 5th to 4th (1
+way), and on 4th, Broadway to 4th (1 way).<br>
+<br>
+If you don't like where a point is, you can use the positioning
+controls to find the point. The current point will have a green marker.
+Move the marker by holding down on the left mouse key whil moving the
+marker to the desired point. To add a point locate a point on the line
+where you want to add a point, when the pointing hand cursor is
+displayed, right-click. A marker will now appear at that point and can
+be moved. <br>
+<br>
+Our downtown loop will now appear like this: <br>
+<img style="width: 685px; height: 591px;" alt="2Evanston looop" src="images/2EvanstonLoop.png"><br>
+<br>
+Now the route runs on Broadway from 5th to Gilbert. This is 2 way. Then add segments for the rest of the streets. <br>
+<br>
+<span style="font-weight: bold;">Tip</span>: when setting points for a
+segment, set a point at each intersecting street, That way the segment
+can be split if necessary later when adding another route. <br>
+<br>
+<h3>Adding a 2nd Route</h3>
+The second route that we will enter is;<br>
+
+
+<p style="font-style: italic;" class="p4"><small><b>4 Kennedy Heights,</b> 6th &amp; Main-Montgomery &amp; Kennedy.<br>
+<span class="Apple-tab-span"></span>Main-9th-Sycamore-Reading-Florence-Gilbert-McMillan-Park-Chapel-Woodburn-Montgomery-Kennedy wye <b>(</b><a href="http://jjakucyk.com/transit/streetcarroutes.html#footnotes"><b>1</b></a><b>)</b><br>
+<span class="Apple-tab-span"></span>Return, Montgomery-Woodburn-Chapel-Alms-Yale-Gilbert-Florence-Reading-Broadway-6th-Main.</small></p>
+<small><span style="font-style: italic;"></span><big>The first segment of the new route is <span style="font-style: italic;">"Main, 6th to 9th (one way)"</span>. Then, <span style="font-style: italic;">"9th, Main to Sycamore (1 way)"</span>.
+Now for the return part of the loop, we need a one way segment on
+Broadway. There is already a segment on Broadwaay used by route 2 but
+it is two way so we will add a <span style="font-style: italic;">"Broadway, Reading to 6th (one way)"</span>. Then <span style="font-style: italic;">"6th, Broadway to Main (one way)"</span>.
+Eventually, we get to where Florence meets Gilbert and there already is
+a segment there. We must split the segment at the point where Florence
+meets Gilbert. <br>
+<br>
+If Gilbert already has a point in the intersection, use the segment
+line navigation controls to set a marker at the desired point. Then
+click on the scisors icon. The original segment was <span style="font-style: italic;">"Gilbert, Broadway to McMillan"</span>. We will split it with the split segment dialog:<br>
+<img style="width: 450px; height: 629px;" alt="Split segment" src="images/SplitSegment.png"><br>
+The <span style="font-weight: bold;">4-Kennedy Heights Route</span> will use the "new" portion of the original segment so "Use New" is checked.<br>
+<br>
+When route <span style="font-weight: bold;">4-Kennedy Heights </span>gets to McMillan, We can see that it shares the section of McMillan between Gilbert and Park with the <span style="font-weight: bold;">2-Evanston</span> line for which we currently have a segment <span style="font-style: italic;">"McMillan, Gilbert to Woodburn" </span>.
+We must split McMillan at&nbsp; Park and also at Alms (since the
+4-Kennedy Heights line goes outbound on Park, one way) and returns via
+Alms, one way. In addition, we must add a segment <span style="font-style: italic;">"McMillan, Alms to Park (one way)"</span>
+for the return route. When splitting the line on McMillan at park,
+select the 'use original" radio button.&nbsp; After this, split the new
+line <span style="font-style: italic;">"McMillan, Park to Woodburn"</span> at Alms and in this case, select the "don't add" radio button because 4-Kennedy won't be using either 2 way segments. <br>
+<br>
+<span style="font-weight: bold;">Oops!</span> I made a mistake when I assumed that the segement on McMillan was two way. No problem, just add a one way segment to </big></small><small><big><span style="font-weight: bold;">4-Kennedy Heights. </span>Then
+in the Route Segments tab , find the&nbsp; 2way segment on McMillan
+and&nbsp; right click&nbsp; to get a context menu and select "Delete
+Segment". This will delete the segment from the route only; not the
+database. <br>
+<br>
+When route </big></small><small><big><span style="font-weight: bold;">4-Kennedy Heights </span>gets to the intersection of Woodburn and Mongomery, there is already a segment "Mongomery, Woodburn to Dana (2 way)"</big></small>
+defined, If the points of the lines existing at the intersection of
+Woodburn and Montgomery are the same (right click on a marker at this
+point to join them), the segment will show up in the Intersecting
+segments tab. It is highlighted in green in this screenshot:<br>
+<img style="width: 1280px; height: 720px;" alt="intersect" src="images/IntersectingSegment.png"><br>
+To add segment 10 "Mongomery to Dana to Route <span style="font-weight: bold;">4 Kennedy Heights</span> righe click and select "Add to Route" This will bring up the "Update Route" dialog. <br>
+<img style="width: 461px; height: 413px;" alt="Update Route" src="images/updateroute.png"><br>
+In this case, the defaults are sufficient so click on Add. After this,
+we can add a new segment "Montgomery, Dana to Kennedy". The Update
+Route dialo will remain displayed so it is OK to close it but it will
+not prevent you from making any changes to the map. <br>
+<br>
+<br>
+<br>
+<br>
+
+
+
+
+
+</body></html>

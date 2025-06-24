@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Using MySql, PostgreSQL or SQL Server databases</title></head>
+<body style="background-color:#faf0e6">
+<h1>Using MySql or SQL Server databases</h1>
+Mapper has an 'Export' function which provides for transferring data from Mapper's Sqlite3 database to a local or remote database such as MySql or Microsoft's Sql Server. 
+Data can also be exported to another Sqlite database on the same PC. 
+<h2>Prerequisites</h3>
+<h3>MySql</h3>
+Generally, to access a MySql database requires that MySql driver
+plugins are configured and compiled for your version of Qt and
+operating system. This is explained <a href="http://doc.qt.io/qt-4.8/sql-driver.html">here</a>. MySql databases can also be accessed via ODBC.<br>
+<h3>SQL Server<br>
+</h3>
+&nbsp;Accessing PostgreSQL and SQL Server databases requires ODBC. ODBC is supported
+in Windows automatically but must be added for Unix and MacOS systems. <br>
+<br>
+
+<h3>Other databases</h3>
+Exporting to other databases such as <b>Postgresql</b> or <b>Oracle</b> can also be supported either thru the use of ODBC or a 
+Qt Sql plugin. However, while SQL commands
+generally are interpreted the same for different databases, the commands for adding or modifying tables and views may require 
+explicit coding for a given type of database. 
+
+<h3>ODBC Windows</h3>
+
+On windows, ODBC datasources must be defined with the ODBC
+configuration utility that is part of Windows. <br><br>
+<img src="images/ODBCDataSourceAdministrator.png" width="742" height="526" alt="ODBC Data Source Selection"><br>
+The above image lists two data sources, one for Sql Server, "Mapper" and one for MySql, "Mapper-MySql". You musr 
+create a datasource for each server that you will be accessing. 
+<p> 
+<h3>ODBC Unix</h3>
+On Unix, it will be
+necessary have installed the <a href="https://www.unixodbc.org/">UnixODBC</a> utilities to compile your own ODBC drivers.This is not
+required for MySql or Ms Sql Server. However, one can download ODBC drivers for MySql and Microsoft Sql Server which automatically 
+include UnixODBC. (<b>Note:</b> MacOS utilizes a product, "iODBC" which is functionally equal to UnixODBC.)Examples are:
+<ol>
+<li>
+<b>MySql</b> download the "MySQL Connector/ODBC" package from the official MySQL website.</li>
+<li>
+<b>Sql Server</b> <a href="https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server?view=sql-server-ver16" >
+Download ODBC Driver for SQL Server</a>. Both Windows and Linux versions can be downloaded.</li>
+<br>
+<h3>Creating a MySql or SQL Server database. <br>
+</h3>
+Assuming that you have successfully created and tested the MySql
+drivers or ODBC datasources, you must then create create a connection
+to the server&nbsp; and a database on the target server. If no database exists on the server, you can either create
+it with your servers administration utility or enter the database's name in the Database field. If the 
+database does not exist, you will be asked whether you wish to create it. In any case, once the database exists,
+you are ready to populate it with data from one of the other connections for this city. If this is a new city
+and no other database is available to export, you will have to use one of the scripts included with Mapper
+to create the necessary table.<br>
+<br>
+
+<img src="images/addODBC-MySql.png" width="703" height="398" alt=""><br>
+If a test is successful then click on the "Add/Update" button to add the connection to the city. <br>
+<br>
+However, the SqlQuery dialog accessible from the Tools menu
+could possibly be utilized. However, it is suggested that the database
+be created with the utility associated with the database server, e.g,
+PHPMyAdmin or MySql Workbench in the case of MySql or SQL Server
+Management Studio in the case of SQL Server. These utilities will also
+enable you to setup any necessary security necessary. <br>
+<br>
+Once the Database has been created on the Server and assuming that you
+have already created an populated your local Sqlite database, then
+select Export Database from the Tools menu. This will display a dialog:
+<br>
+<br>
+<img style="width: 402px; height: 440px;" alt="Export database" src="images/ExportDatabase.png"><br>
+<br>
+Make sure that the target database is selected in the "Export to"
+combobox. Then click on the "All" checkbox&nbsp; which will select all
+the applicable tables since we want to export all the tables. The "Drop
+tables" checkbox should be checked if you want to do the export by first
+dropping the old table on the target and then creating the table and
+insert all the rows. If the checkbox is not checked, only database items that are newer will be exported. 
+ If "Drop tables" is not checked, the export process will compare the
+target's data to determine what to export. This option is very slow and
+is not recommended. <p>
+Click on "Go" to start the export process.
+<br>
+<br>
+
+
+</body></html>

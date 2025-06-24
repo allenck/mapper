@@ -1,0 +1,376 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+  <title>Mapper: Documentation</title>
+ <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+    <style>  <div class="column left" style="background-color:#EFDECD;"></style>
+  
+  <link rel="alternate" type="application/rss+xml" title="RSS Feed" href="/cgi-bin/fossil/mapper_QT/timeline.rss">
+
+  
+  <link rel="stylesheet" href="/cgi-bin/fossil/mapper_QT/style.css?tan" type="text/css" media="screen">
+
+</head><body style="background-color:#faf0e6">
+<div class="content">
+<h1>Maintain a database of streetcar routes</h1>
+<table align="right" bgcolor="#acc5cc" border="0" cellpadding="2" cellspacing="10" width="30%">
+  <tbody>
+    <tr>
+      <td bgcolor="#446979">
+      <table bgcolor="#d9d99d" border="0" cellpadding="10" width="100%">
+        <tbody>
+          <tr>
+            <td width="70%">
+            <ul>
+              <li><a href="Definitions.html">Definitions</a></li>
+              <li><a href="Compiling_Mapper.html">Compiling
+Mapper from Source</a></li>
+              <li><a href="Creating_a_new_database.html">Creating a new
+database.</a></li>
+              <li><a href="Instructions_for_compiling_SQLite.html">How to create SQLite plugin for Qt</a></li>
+              <li><a href="Using_MySql_or_SQL_Server_databases.html">Using
+MySql, PostgreSQL or SQL Server</a><br>
+              </li>
+              <li><a href="Overlays.html">Using Overlays</a></li>
+            </ul>
+'</td>
+          </tr>
+          <tr>
+            <td bgcolor="#d9d99d"> External Links:
+            <ul>
+              <li> <a href="https://sqlite.org/lang.html">SQL As
+Understood By SQLite</a></li>
+              <li><a href="https://www.sqlite.org/about.html">About
+SQLite</a></li>
+              <li><a href="http://acksoft.dyndns.biz:1080/cgi-bin/fossil/mapper_QT">fossil
+page</a><br>
+              </li>
+            </ul>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p>This program allows the user to maintain a database of streetcar
+routes or any other type of transit route. The basic program
+provides populated databases for St. Louis, Missouri, Louisville,
+Kentucky, Cincinnati,OH, Indianapolis, IN and Berlin, Germany. 
+The default databases use Sqlite as the database engine. However, provisions
+are made to also support exporting to and from
+MySql, PostgreSQL and Sql Server databases. The routes are displayed on a Google
+Maps map or alternatively an Open Street Map map. It is also possible
+to display a user-defined map. Historical overlays like historical
+topographic maps can be tiled on a web server. There are numerous sites 
+on the web that have such '<i>georeferenced</i>' maps; <br>
+0ne such source is the <a href="https://www.davidrumsey.com/">"David Rumsey Map Collection" </a> <br>
+</p>
+<br>
+<p>Main Window<br>
+<br>
+<img style="width: 60%; height: 60%;" alt="Mapper" title="Mapper main window display" src="images/Mainwindow.png"></p>
+<h3>Using Mapper</h3>
+<h4>Displaying a route<br>
+</h4>
+The "Select Route" combobox contains a list of all the routes for the
+current company. If the Company combo box is "All companies" then all
+routes in the database will be in the combo box. If a particular
+company is selected, then only the routes for that company will be
+shown. <br>
+<br>
+Routes in the Route combobox are listed by route number, name and
+effective dates. Select the one you wish to see and then click on
+"Display Route". There are two checkboxes that affect how a route is
+displayed. If "Clear" is checked, then the display will be cleared
+before a new route is displayed, otherwise any previously dislpayed
+routes will remain. The "No Pan" checkbox, if checked will prevent the
+map display from being panned if the new route cannot be displayed in
+the currently visible portion of the map.<br>
+<br>
+Left Clicking on a segment of a route on the map display will cause it
+to be "selected";&nbsp; the color will change. The details of the
+segment will also be displayed in the lefthand panel. <br>
+<br>
+<strong>Caution:</strong> Changing any of the Segment related data
+(name, one way, tracks, street) or route data in the Route View will
+change the database. Do not do this unless you really want to edit or
+change the data. It is worth noting that SQLite databases are all
+contained in a single file so making a backup copy is simply a matter
+of copying the file. <br>
+<br>
+The "Clear" button clears the display of any routes or segments.<br>
+<br>
+The "Save Image allows you to save the currently displayed map along
+with any routes that are displayed to a file. You will be prompted for
+a name for the file. <br>
+<br>
+The "Select Segment" combobox provides a list of all the currently
+defined segments. Selecting one will cause it to be displayed on the
+map.<br>
+<h4>Menus</h4>
+<ul>
+<caption><b>File menu</b></caption>
+<dl>
+<dt>Save current settings</dt>
+<dd>Click to save the current settings that will be restored upon restart.
+Otherwise, settings will be automatically upon setup and closing the app. </dd>
+</dl>
+<dl><dt>Backup databases</dt><dd>Dump the databases to text files which can be restored 
+with the SQLite3 restore procedure.</dd></dl>
+<dl><dt>Restore</dt><dd>Restore databases that were backed up previously.</dd></dl>
+<dl><dt>Quit</dt><dd>Save settings and exit Mapper</dd></dl>
+<br>
+<caption><b>City menu</b></caption>
+<dl>
+<dt>Cities</dt>
+<dd>Select which city and database connection to use.</dd>
+</dl>
+<dl>
+<dt>Edit connections...</dt>
+<dd>Open a dialog to add, delete or modify database connections.</dd>
+</dl>
+<dl>
+<dt>Manage Overlays</dt>
+<dd>Open a dialog to define overlays to be available.</dd>
+</dl>
+<dl>
+<dt>New City</dt>
+<dd>Open a dialog to create a new city and its default database.</dd>
+</dl>
+<dl>
+<dt>Remove City</dt>
+<dd>Delete a city from use.</dd>
+</dl>
+<dt>Update Parameters</dt>
+<dd>Modify a city's name or other parameters.</dd>
+</dl><br>
+<caption><b>Options menu</b></caption><tr>
+<td></td>
+<td></td>
+</tr>
+<dl>
+<dt>Overlays</dt>
+<dd>Select an overlay to be displayed on the map for the current city. </dd>
+</dl>
+<dl>
+<dt>Display route comments</dt>
+<dd>Check to have route comments displayed along with a route on the map display.</dd>
+</dl>
+<dl>
+<dl>Display station markers</dl>
+<dd>Check to display station arkes at the location of a station or stop.</dd>
+</dl>
+<dl>
+<dt>Show debug messages</dt>
+<dd>If checked, Javascript debug messages will be displayed in the infobar at the bottom of the main window.</dd>
+</dl>
+<dl>
+<dt>Display map in browser</dt>
+<dd>If checked, the map will be displayed in a tab in your PC's default browser. 
+This option is most effective when you have two or more screens attached to your PC,</dd>
+</dl>
+<dl>
+<dt>Route Sort Option</dt>
+<dd>Select the desired sort sequence for displaying routes in the route selection combobox.</dd>
+</dl>
+<dl>
+	<dt>Show Google Maps features</dt>
+	<dd>Display Google Maps features (markers for businesses, transit stops, points of interest, etc., 
+	if checked, etc.)</dd>
+</dl>
+<dl>
+	<dt>Foreign key check</dt>
+	<dd>Enable Foreign key checking if checked. (only for sqlite databases.)</dd>
+<dl></dl>
+<dl>
+	<dt>Change font</dt>
+	<dd>Open a dialog to change the font family and size. </dd>
+</dl>
+<dl>
+	<dt>Display segment arrows</dt>
+	<dd>If checked, segments will display arrows at the end. Such arrows define the direction in 
+	which points are defined and do not imply the direction of operation on a segment. </dd>
+</dl>
+
+<br>
+<caption><b>Tools menu</b></caption>
+
+<dl>
+	<dt>Add new Route</dt>
+	<dd>Open Route dialog to </dd>
+</dl>
+<dl>
+	<dt>Add Segment</dt>
+	<dd>Open a dialog to create a new route segment and add it to a route.</dd>
+</dl>
+<dl>
+	<dt>Add point mode</dt>
+	<dd>If checked, the map cursor will be changed to a cross hairs cursor. Then double clicking on the map will 
+	extend the current segment to that point. A marker will also be displayed and can be drug around to the
+	 desired final location.</dd>
+</dl>
+<dl>
+	<dt>Create Kml file</dt>
+	<dd>A KML file can be created to display a segment on a Google Maps map.</dd>
+</dl>
+<dl>
+	<dt>Export database</dt>
+	<dd>Export database contents from the current city connection to another SQlite, MySql or Sql Server database,</dd>
+</dl>
+<dl>
+	<dt>Reload Google Maps</dt>
+	<dd>Reload the current map.</dd>
+</dl>
+<dl>
+	<dt>Refresh Routes</dt>
+	<dd>Refresh the contents of the routes combobox and Route Segments Table View. This may be necessary 
+	after adding or modifying routes.</dd>
+</dl>
+<dl>
+	<dt>Create new Sqlite db</dt>
+	<dd>Run the SQL commands to create empty tables in a new Sqlite database file.</dd>
+</dl>
+<dl>
+	<dt>SQL Query dialog</dt>
+	<dd>Open a dialog where SQL commands can be executed to query or modify raw sql data. Use with caution.</dd>
+</dl>
+<dl>
+	<dt>Edit Overlay List</dt>
+	<dd>Add or modify the definition for an overlay.</dd>
+</dl>
+<dl>
+	<dt>Browse Comments</dt>
+	<dd>Browse and edit route comments</dd>
+</dl>
+<dl>
+	<dt>Export Overlays</dt>
+	<dd>Create an xml file with overlay definitions.</dd>
+</dl>
+<dl>
+	<dt>Set City Bounds</dt>
+	<dd>Get the bounds for a region displayed on the map</dd>
+</dl>
+<dl>
+	<dt>Log messages to a file</dt>
+	<dd>If checked, console messages will also be written to a file. </dd>
+</dl>
+<dl>
+	<dt>Update Streets dialog</dt>
+	<dd>A dialog specific to Berlin to add streets to the StreetDef table using data pasted from route descriptions in 
+	the <a href = 'https://www.berliner-linienchronik.de/strassenbahn-1904.html'>Berliner Linienchronik site</a>. </dd>
+</dl>
+<BR>The following options are only available when the program has been compiled in debug mode.
+<dl>
+	<dt>Debug: test url </dt>
+	<dd>enter a url to display in the webView panel. Only when not running in the browser.</dd>
+</dl>
+<dl>
+	<dt>Debug: test script</dt>
+	<dd>Enter a script name to execute.</dd>
+</dl>
+<dl>
+	<dt>Debug: load </dt>
+	<dd>load an html file from disk.</dd>
+</dl>
+<dl>
+	<dt>Debug: run javascript </dt>
+	<dd>run the text as a javascript script.</dd>
+</dl>
+<dl>
+	<dt></dt>
+	<dd></dd>
+</dl>
+<br>
+<caption><b>Help menu</b></caption>
+
+<dl>
+	<dt>Using Mapper</dt>
+	<dd>Show user documentation in your browser.</dd>
+</dl>
+<dl>
+	<dt>Overlays</dt>
+	<dd>Show overlays documentation.</dd>
+</dl>
+<dl>
+	<dt>About</dt>
+	<dd>Display 'about' information.</dd>
+</dl>
+</ul>
+Several options on the Tools or Options menus may be of interest: <br>
+<ol>
+  <li>Display Route Comments, Display Station Markers, Display Terminal
+Markers control whether these attributes are displayed on the map.<br>
+  </li>
+  <li>Create KML file will create a Google Maps/Google Earth KML file
+for the currently selected route. <br>
+  </li>
+  <li> Export database. This option will bring up a dialog which allows
+selected
+database tables to be exported to an<span class=""></span>other
+database. <br>
+  </li>
+  <li>SQLQuery Dialog. This dialog allows "raw" SQL queries to be made
+to the database. Don't do any "update" or "insert" type SQL queries if
+you don't want to modify the database.&nbsp;</li>
+</ol>
+<br>
+<h4>Modifying a connection</h4>
+<p>
+Each city Mapper has information about has at least one <i>'connection'</i> to a database. The preferred
+database type is "Sqlite" which is implemented as as a local .sqlite3 file. Other database types such as
+MySql/MariaDb or Microsoft Sql Server are also supported and can be located on the same machine or remotely on
+a LAN or the Internet.
+Mapper comes with several populated Sqlit3 databases. Initially, St.
+Louis is
+the default. A second city. Louisville, Kentucky is listed in the City
+-&gt; menu. A third database, for Berlin, Germany is included. Finally, there is a database for Cincinnati, Ohio. To add Berlin (or any other database
+created by
+Mapper), select Cities- &gt; Edit Connections... You then will see this
+dialog:<br>
+<br>
+<img style="width: 30%; height: 30%;" alt="Edit connections" title="Edit connections" src="images/edit_city_1.png"><br>
+
+To view the Berlin connection. <br>
+Select from the City combo Box "Berlin, Germany"<br>
+You should see something like this: <br>
+<img style="width: 30%; height: 30%;" alt="Edit Berlin" title="Dialog for a Berlin connection" src="images/edit_city_2.png"><br>
+<br>
+Now, you can click on the "Test" button to test whether the database
+can be opened. Finally, the "Update" button (which will have the text
+"Add" if the connection is new)&nbsp; must be clicked to add the new
+connection to the Cities menu. <br>
+<br>
+</p>
+<h4>Adding a connection</h4>
+A city always has at least one connection to a database. However it may be desired to have additional connections,
+ say for backup. Another possibility is storing data into a database such as MySql or Microsoft Sql Server. 
+This would make it possible to access the database from a web server. Mapper has an <b>Export</b> option which can 
+be used to transfer data from one database to another.
+<P>
+Although the following example uses a Sqlite3 database, Mapper also
+provides for accessing databases on MySql or SQL Server databases. See <a href="Using_MySql_or_SQL_Server_databases.html">Using MySql or SQL
+Server</a> for more information.<br>
+<br><p>To create a new connection, press the "New" button to create an empty dialog.<br>
+<img style="width: 30%; height: 30%;" alt="Edit Berlin" title="Dialog for a new connection" 
+src="images/addConnection.png"><br></p>
+<p>
+To configure a new connection:<br>
+<ol>
+<li> In the <i>Connection:V</i> field enter a unique description that describes this connection. It is 
+recommenced that the city, type of database, method of connection and database location be mentioned. For example, 
+"St Louis Sqlite3 test" might be specified.
+<li>For a Sqlite database, the Driver Type must be <b>QSQLITE</b> or <b>QSQLITE</b>. Connect must be <b>Local</b>.
+<li>In the DSN field enter the name of the database file. If the file extension is not specified or is not 
+"sqlite3", ".sqlite3" will be appended. If the filename entered does not exist, an empty database will be created
+ when the connection is saved. The new database can then be exported to. If your intention is to create a 
+ new database for a new city, see <a href="Creating_a_new_database.html">Creating a new
+database.</a><br>
+</li>
+<li>Next, click on the <b>Test</b> button.<br> <img style="width: 30%; height: 30%;" alt="Edit Berlin" title="Dialog for a new connection" 
+src="images/addConnection2.png"><br></p></li>
+</ol>
+</p>
+</div>
+</body>
+</html>

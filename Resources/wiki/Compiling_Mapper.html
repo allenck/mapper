@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+
+
+
+<meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Compiling Mapper from source</title></head>
+<body style="background-color:#faf0e6">
+<h3><big><big><big><span style="font-weight: bold;">Compiling Mapper from Source</span></big></big></big></h3>
+<br>
+Source is available if you want to modify the program or run it on a Linux system. Mapper source can be downloaded 
+from GitHub: <a href="https://github.com/allenck/mapper">https://github.com/allenck/mapper</a><br><br>
+<br>
+<h4>Prerequisites</h4>
+Mapper uses QT as a programming framework. QT can be downloaded from <a href="http://www.qt.io/download-open-source/#section-2">Download Qt</a>
+The default Qt configuration should be sufficient to compile and run Mapper. Mapper utilizes Sqlite3 to store data.Qt includes a 
+version of Sqlite3. Qt has an application called <b>Qt Maintenance Tool</b> which can be used to download different versions 
+as well as optional libraries and extensions. Here is a screenshot of loading Qt on my computer:
+ <img src="images/QtMaintenanceTool.png" width="50%" height="50%" alt="Qt Maintenance tool">
+ <p>
+ Installing Qt does not install everything necessary to compile and test Mapper. Some of the other libraries needed are:
+ <ul>
+ <li>Essentials which includes the make system, compilers and debuggers. On linux, this can be downloaded with
+ <i>sudo apt install build-essential</i> </li>
+ <li><i>sudo apt-get install g++ </i></li>
+ <li><i>sudo apt-get install libglu1-mesa-dev freeglut3-dev mesa-common-dev</i></li>
+ <li><i>sudo apt-get install libldl2</i> </li>
+
+ </ul>
+ </p>
+<p>
+If you wish to use Sql Server or MySql databases, you may also have to
+compile QT with plugins for those database types. However Qt, by default, includes a plugin for ODBC and ODBC drivers 
+for MySql and Microsoft Sql Server are available. 
+Even if an ODBC driver for other databases such as Postgresql is available, be aware that Mapper's internal SQL commands 
+may have to be tailored to the requirements of that database type.
+<p>
+Mapper was originally developed using version 4.8 of QT. However there
+are newer versions of QT that have some enhancements that are
+desirable. At the present time; December 2023, Mapper has been compiled with version 6.4.2 and 6.6.1.
+ QT as ofQt version 5.7 no longer supports QWebkit
+and instead offers QWebEngine as an alternative. Mapper compiled on QT
+versions later than 5.4 will use the QWebEngine module instead of
+QWebKit. QWebkit and QWebEngine provide the ability of Mapper to
+display a map using Google Maps in a web widget.<br>
+<p>
+Windows users will have to also install Microsoft Visual Studio&nbsp;
+on their computers. Note that there are two varieties of QT for
+Windows, one requiring Visual Studio and the other MinGW. I used
+Visual Studio 2008 for QT 4.8 but newer versions of Visual Studio(2010
+&amp; 2012)
+are available. Also when downloading QT, look for the "Archive for old
+versions" link which will let you download either a QT version 4 or 5.
+The version of Microsoft Visual studio that you will need will in turn
+depend on which version of QT you are using. For example, QT 5.6.1
+comes compiled with MSVC 2013 or MSVC 2015 or MinGw while QT version
+5.4 comes compiled with MSVC 2010 or MSVC 2013 or MinGw. Qt currently requires MSVC 2019.<br>
+<br>
+<h4>Sqlite</h4>
+<p>
+Although Qt comes with SQLite3 support built-in, Mapper uses some user defined sql functions which requires
+downloading and compiling SQLite3 from source and creating a library. It is reccommended that the same 
+version of SQLite3 be used that QT uses. Assuming that you have downloaded the Qt source files. the version
+info can be found in sqlite3.h in <i>Qt/6.8.0/Src/qtbase/3rdparty/sqlite</i> where "Qt" is the location on your PC where
+Qt was installed. Also substitute "6.8.0" with the version number of Qt you are using.
+<p>
+The particular SQLite3 Amalgamation source files can be downloaded from: 
+<a href="https://www.sqlite.org/download.html" name="SQLite Amalgamation"></a>
+<p>
+On Linux, the SQLite3 lirary can be compiled with this shell script:
+<ul>
+<li>#! /bin/sh</li>
+<li></li>
+<li>gcc -shared sqlite3.c -ldl -o libsqlite3.so -lpthread -fPIC  \</li>
+<li>   -DSQLITE_ENABLE_COLUMN_METADATA \</li>
+<li>   -DSQLITE_ENABLE_FTS3 \</li>
+<li>   -DSQLITE_ENABLE_FTS3_PARENTHESIS \</li>
+<li>   -DSQLITE_ENABLE_FTS5 \</li>
+<li>   -DSQLITE_ENABLE_JSON1 \</li>
+ <li>  -DSQLITE_ENABLE_RTREE \</li>
+<li>   -DSQLITE_OMIT_COMPLETE</li>
+ </ul>
+ The resulting <i>libsqlite3.so</i> library should be copied to some place such as /usr/local/lib.
+
+<h4>Google Maps</h4>
+Google requires that programs using the Google Maps API must have an API key which can be obtained at
+ <a href="https://developers.google.com/maps/documentation/javascript/get-api-key"> Use API keys</a>
+ No API keys for Google Maps can be stored in source files in GitHub. In fact, Google will 
+ invalidate them if they are included in files! Several html files dynamically substitute the actual API key 
+ contained in the apikey.js file. apikey.js is a one line source file containing your API key as a constant: <i>var apikey="MY_API_KEY";</i>
+ 
+  NOTE that git will ignore the apikey.js in the <i>./mapper_app/Resources</i>.
+
+
+<h5>Macintosh</h5>
+QT is available on the Macintosh. As of December 2023, Mapper has also been successfully implemented on MacOS. <br>
+
+<br>
+
+</body></html>
