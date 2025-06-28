@@ -1,0 +1,592 @@
+<!DOCTYPE Overlays>
+<Overlays>
+  <overlay cityName="Berlin, Deutschland" maxZoom="19" minZoom="10" name="BerlinStraube-1910" opacity="65" selected="yes" source="acksoft2" year="">
+    <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;meta charset="utf-8" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: "\2610"; }
+li.checked::marker { content: "\2612"; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;">
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
+    <bounds eastLongtude="13.7235" northLatitude="52.8346" southLatitude="52.2346" westLongitude="13.1235"/>
+    <wmtsUrl></wmtsUrl>
+    <url>https://ubuntu-2/public/map_tiles/</url>
+  </overlay>
+  <overlay cityName="Berlin, Deutschland" maxZoom="19" minZoom="10" name="Berlin_Bauentwicklung.1910.10000.300.3068" opacity="65" selected="yes" source="acksoft" year="1910">
+    <description></description>
+    <bounds eastLongtude="13.7235" northLatitude="52.8346" southLatitude="52.2346" westLongitude="13.1235"/>
+    <wmtsUrl></wmtsUrl>
+    <url>https://ubuntu-2/public/map_tiles/</url>
+  </overlay>
+  <overlay cityName="Berlin, Deutschland" maxZoom="19" minZoom="10" name="Berlin_Bauentwicklung.1940.10000.300.3068" opacity="65" selected="yes" source="acksoft" year="1940">
+    <description></description>
+    <bounds eastLongtude="13.7235" northLatitude="52.8346" southLatitude="52.2346" westLongitude="13.1235"/>
+    <wmtsUrl></wmtsUrl>
+    <url>https://ubuntu-2/public/map_tiles/</url>
+  </overlay>
+  <overlay cityName="Berlin, Deutschland" maxZoom="19" minZoom="10" name="Berlin_Bauentwicklung.1986.10000.300.3068" opacity="65" selected="yes" source="acksoft" year="1986">
+    <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;">
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
+    <bounds eastLongtude="13.7235" northLatitude="52.8346" southLatitude="52.2346" westLongitude="13.1235"/>
+    <wmtsUrl></wmtsUrl>
+    <url>https://ubuntu-2/public/map_tiles/</url>
+  </overlay>
+  <overlay cityName="Berlin, Deutschland" maxZoom="19" minZoom="10" name="Berlin_Straube" opacity="65" selected="yes" source="acksoft" year="">
+    <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;meta charset="utf-8" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: "\2610"; }
+li.checked::marker { content: "\2612"; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;">
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
+    <bounds eastLongtude="13.7235" northLatitude="52.8346" southLatitude="52.2346" westLongitude="13.1235"/>
+    <wmtsUrl></wmtsUrl>
+    <url>https://ubuntu-2/public/map_tiles/</url>
+  </overlay>
+  <overlay cityName="Berlin, Deutschland" maxZoom="19" minZoom="10" name="Schoeneberg_Verwaltungsbezirk.1931.10000.300.6881" opacity="19" selected="yes" source="acksoft" year="">
+    <description></description>
+    <bounds eastLongtude="13.7235" northLatitude="52.8346" southLatitude="52.2346" westLongitude="13.1235"/>
+    <wmtsUrl></wmtsUrl>
+    <url>https://ubuntu-2/public/map_tiles/</url>
+  </overlay>
+  <overlay cityName="Berlin, Deutschland" maxZoom="19" minZoom="10" name="historicmaps-berlin-1910-straube" opacity="65" selected="yes" source="georeferencer" year="">
+    <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;meta charset="utf-8" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: "\2610"; }
+li.checked::marker { content: "\2612"; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;">
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
+    <bounds eastLongtude="13.7235" northLatitude="52.8346" southLatitude="52.2346" westLongitude="13.1235"/>
+    <wmtsUrl></wmtsUrl>
+    <url>https://tiles.codefor.de/berlin-straubeplan/{z}/{x}/{y}.png</url>
+  </overlay>
+  <overlay cityName="Cincinnati, OH" maxZoom="16" minZoom="10" name="CincinnatiStreetcar" opacity="16" selected="yes" source="acksoft" year="">
+    <description>Cincinnati Streetcar Map courtesy of Jeffrey Jakucyk jjakucyk.com</description>
+    <bounds eastLongtude="-84.2138" northLatitude="39.4045" southLatitude="38.8045" westLongitude="-84.8138"/>
+    <wmtsUrl></wmtsUrl>
+    <url>https://ubuntu-2/public/map_tiles/</url>
+  </overlay>
+  <overlay cityName="Indianapolis, IN" maxZoom="21" minZoom="8" name="Indianapolis and Environs." opacity="65" selected="yes" source="georeferencer" year="1912">
+    <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Indianapolis and Environs.&lt;/p>&lt;/body>&lt;/html></description>
+    <bounds eastLongtude="-85.858" northLatitude="40.0685" southLatitude="39.4685" westLongitude="-86.458"/>
+    <wmtsUrl>https://maps.georeferencer.com/georeferences/a800c204-3d6e-5d26-bc15-04b816d5a8d6/2020-05-02T12:20:42.829484Z/wmts?key=mpP5xNUZ8b1t9mFrcFfI&amp;SERVICE=WMTS&amp;REQUEST=GetCapabilities</wmtsUrl>
+    <url>https://maps.georeferencer.com/georeferences/a800c204-3d6e-5d26-bc15-04b816d5a8d6/2020-05-02T12:20:42.829484Z/map/{z}/{x}/{y}.png?key=mpP5xNUZ8b1t9mFrcFfI</url>
+  </overlay>
+  <overlay cityName="Louisville, KY" maxZoom="16" minZoom="10" name="Louisville" opacity="16" selected="yes" source="acksoft" year="">
+    <description></description>
+    <bounds eastLongtude="-85.4612" northLatitude="38.5523" southLatitude="37.9523" westLongitude="-86.0611"/>
+    <wmtsUrl></wmtsUrl>
+    <url>https://ubuntu-2/public/map_tiles/</url>
+  </overlay>
+  <overlay cityName="Louisville, KY" maxZoom="21" minZoom="8" name="Louisville." opacity="65" selected="yes" source="georeferencer" year="1903">
+    <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Rand, McNally &amp;amp; Co.'s Louisville.&lt;/p>&lt;/body>&lt;/html></description>
+    <bounds eastLongtude="-85.4612" northLatitude="38.5523" southLatitude="37.9523" westLongitude="-86.0611"/>
+    <wmtsUrl>&lt;Capabilities xsi:schemaLocation="http://www.opengis.net/wmts/1.0 http://schemas.opengis.net/wmts/1.0/wmtsGetCapabilities_response.xsd" version="1.0.0">
+&lt;ows:ServiceIdentification>
+&lt;ows:ServiceType>OGC WMTS&lt;/ows:ServiceType>
+&lt;ows:ServiceTypeVersion>1.0.0&lt;/ows:ServiceTypeVersion>
+&lt;/ows:ServiceIdentification>
+&lt;ows:ServiceProvider>
+&lt;ows:ServiceContact>
+&lt;ows:ContactInfo/>
+&lt;/ows:ServiceContact>
+&lt;/ows:ServiceProvider>
+&lt;ows:OperationsMetadata>
+&lt;ows:Operation name="GetCapabilities">
+&lt;ows:DCP>
+&lt;ows:HTTP>
+&lt;ows:Get xlink:href="https://maps.georeferencer.com/georeferences/79580f71-e50d-5267-afd1-b5f579515600/2015-05-25T18:52:26.021580Z/wmts?key=caj1mpUbIDuRGkUmcxkG">
+&lt;ows:Constraint name="GetEncoding">
+&lt;ows:AllowedValues>
+&lt;ows:Value>RESTful&lt;/ows:Value>
+&lt;/ows:AllowedValues>
+&lt;/ows:Constraint>
+&lt;/ows:Get>
+&lt;/ows:HTTP>
+&lt;/ows:DCP>
+&lt;/ows:Operation>
+&lt;ows:Operation name="GetTile">
+&lt;ows:DCP>
+&lt;ows:HTTP>
+&lt;ows:Get xlink:href="https://maps.georeferencer.com/georeferences/79580f71-e50d-5267-afd1-b5f579515600/2015-05-25T18:52:26.021580Z/?key=caj1mpUbIDuRGkUmcxkG">
+&lt;ows:Constraint name="GetEncoding">
+&lt;ows:AllowedValues>
+&lt;ows:Value>RESTful&lt;/ows:Value>
+&lt;/ows:AllowedValues>
+&lt;/ows:Constraint>
+&lt;/ows:Get>
+&lt;/ows:HTTP>
+&lt;/ows:DCP>
+&lt;/ows:Operation>
+&lt;/ows:OperationsMetadata>
+&lt;Contents>
+&lt;Layer>
+&lt;ows:Title>Louisville.&lt;/ows:Title>
+&lt;ows:Identifier>map&lt;/ows:Identifier>
+&lt;Style isDefault="true">
+&lt;ows:Identifier>default&lt;/ows:Identifier>
+&lt;/Style>
+&lt;Format>image/png&lt;/Format>
+&lt;ows:WGS84BoundingBox crs="urn:ogc:def:crs:OGC:2:84">
+&lt;ows:LowerCorner>-85.843241 38.199498&lt;/ows:LowerCorner>
+&lt;ows:UpperCorner>-85.673547 38.318121&lt;/ows:UpperCorner>
+&lt;/ows:WGS84BoundingBox>
+&lt;TileMatrixSetLink>
+&lt;TileMatrixSet>GoogleMapsCompatible&lt;/TileMatrixSet>
+&lt;TileMatrixSetLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:0&lt;/TileMatrix>
+&lt;MinTileRow>0&lt;/MinTileRow>
+&lt;MaxTileRow>0&lt;/MaxTileRow>
+&lt;MinTileCol>0&lt;/MinTileCol>
+&lt;MaxTileCol>0&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:1&lt;/TileMatrix>
+&lt;MinTileRow>0&lt;/MinTileRow>
+&lt;MaxTileRow>1&lt;/MaxTileRow>
+&lt;MinTileCol>0&lt;/MinTileCol>
+&lt;MaxTileCol>1&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:2&lt;/TileMatrix>
+&lt;MinTileRow>0&lt;/MinTileRow>
+&lt;MaxTileRow>3&lt;/MaxTileRow>
+&lt;MinTileCol>0&lt;/MinTileCol>
+&lt;MaxTileCol>3&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:3&lt;/TileMatrix>
+&lt;MinTileRow>0&lt;/MinTileRow>
+&lt;MaxTileRow>7&lt;/MaxTileRow>
+&lt;MinTileCol>0&lt;/MinTileCol>
+&lt;MaxTileCol>7&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:4&lt;/TileMatrix>
+&lt;MinTileRow>0&lt;/MinTileRow>
+&lt;MaxTileRow>9&lt;/MaxTileRow>
+&lt;MinTileCol>4&lt;/MinTileCol>
+&lt;MaxTileCol>14&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:5&lt;/TileMatrix>
+&lt;MinTileRow>3&lt;/MinTileRow>
+&lt;MaxTileRow>13&lt;/MaxTileRow>
+&lt;MinTileCol>14&lt;/MinTileCol>
+&lt;MaxTileCol>24&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:6&lt;/TileMatrix>
+&lt;MinTileRow>11&lt;/MinTileRow>
+&lt;MaxTileRow>21&lt;/MaxTileRow>
+&lt;MinTileCol>34&lt;/MinTileCol>
+&lt;MaxTileCol>44&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:7&lt;/TileMatrix>
+&lt;MinTileRow>28&lt;/MinTileRow>
+&lt;MaxTileRow>38&lt;/MaxTileRow>
+&lt;MinTileCol>73&lt;/MinTileCol>
+&lt;MaxTileCol>83&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:8&lt;/TileMatrix>
+&lt;MinTileRow>61&lt;/MinTileRow>
+&lt;MaxTileRow>72&lt;/MaxTileRow>
+&lt;MinTileCol>152&lt;/MinTileCol>
+&lt;MaxTileCol>162&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:9&lt;/TileMatrix>
+&lt;MinTileRow>128&lt;/MinTileRow>
+&lt;MaxTileRow>139&lt;/MaxTileRow>
+&lt;MinTileCol>309&lt;/MinTileCol>
+&lt;MaxTileCol>320&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:10&lt;/TileMatrix>
+&lt;MinTileRow>262&lt;/MinTileRow>
+&lt;MaxTileRow>273&lt;/MaxTileRow>
+&lt;MinTileCol>624&lt;/MinTileCol>
+&lt;MaxTileCol>635&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:11&lt;/TileMatrix>
+&lt;MinTileRow>530&lt;/MinTileRow>
+&lt;MaxTileRow>541&lt;/MaxTileRow>
+&lt;MinTileCol>1254&lt;/MinTileCol>
+&lt;MaxTileCol>1265&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:12&lt;/TileMatrix>
+&lt;MinTileRow>1066&lt;/MinTileRow>
+&lt;MaxTileRow>1078&lt;/MaxTileRow>
+&lt;MinTileCol>2513&lt;/MinTileCol>
+&lt;MaxTileCol>2525&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:13&lt;/TileMatrix>
+&lt;MinTileRow>2137&lt;/MinTileRow>
+&lt;MaxTileRow>2151&lt;/MaxTileRow>
+&lt;MinTileCol>5032&lt;/MinTileCol>
+&lt;MaxTileCol>5046&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:14&lt;/TileMatrix>
+&lt;MinTileRow>4280&lt;/MinTileRow>
+&lt;MaxTileRow>4297&lt;/MaxTileRow>
+&lt;MinTileCol>10070&lt;/MinTileCol>
+&lt;MaxTileCol>10087&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:15&lt;/TileMatrix>
+&lt;MinTileRow>8565&lt;/MinTileRow>
+&lt;MaxTileRow>8590&lt;/MaxTileRow>
+&lt;MinTileCol>20146&lt;/MinTileCol>
+&lt;MaxTileCol>20170&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:16&lt;/TileMatrix>
+&lt;MinTileRow>17135&lt;/MinTileRow>
+&lt;MaxTileRow>17176&lt;/MaxTileRow>
+&lt;MinTileCol>40298&lt;/MinTileCol>
+&lt;MaxTileCol>40335&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:17&lt;/TileMatrix>
+&lt;MinTileRow>34276&lt;/MinTileRow>
+&lt;MaxTileRow>34348&lt;/MaxTileRow>
+&lt;MinTileCol>80601&lt;/MinTileCol>
+&lt;MaxTileCol>80665&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:18&lt;/TileMatrix>
+&lt;MinTileRow>68557&lt;/MinTileRow>
+&lt;MaxTileRow>68691&lt;/MaxTileRow>
+&lt;MinTileCol>161208&lt;/MinTileCol>
+&lt;MaxTileCol>161325&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:19&lt;/TileMatrix>
+&lt;MinTileRow>137120&lt;/MinTileRow>
+&lt;MaxTileRow>137377&lt;/MaxTileRow>
+&lt;MinTileCol>322422&lt;/MinTileCol>
+&lt;MaxTileCol>322646&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:20&lt;/TileMatrix>
+&lt;MinTileRow>274246&lt;/MinTileRow>
+&lt;MaxTileRow>274750&lt;/MaxTileRow>
+&lt;MinTileCol>644849&lt;/MinTileCol>
+&lt;MaxTileCol>645287&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;TileMatrixLimits>
+&lt;TileMatrix>GoogleMapsCompatible:21&lt;/TileMatrix>
+&lt;MinTileRow>548497&lt;/MinTileRow>
+&lt;MaxTileRow>549496&lt;/MaxTileRow>
+&lt;MinTileCol>1289704&lt;/MinTileCol>
+&lt;MaxTileCol>1290569&lt;/MaxTileCol>
+&lt;/TileMatrixLimits>
+&lt;/TileMatrixSetLimits>
+&lt;/TileMatrixSetLink>
+&lt;ResourceURL format="image/png" resourceType="tile" template="https://maps.georeferencer.com/georeferences/79580f71-e50d-5267-afd1-b5f579515600/2015-05-25T18:52:26.021580Z/map/{TileMatrix}/{TileCol}/{TileRow}.png?key=caj1mpUbIDuRGkUmcxkG"/>
+&lt;/Layer>
+&lt;TileMatrixSet>
+&lt;ows:Identifier>GoogleMapsCompatible&lt;/ows:Identifier>
+&lt;ows:Title>GoogleMapsCompatible&lt;/ows:Title>
+&lt;ows:Abstract>GoogleMapsCompatible EPSG:3857&lt;/ows:Abstract>
+&lt;ows:SupportedCRS>urn:ogc:def:crs:EPSG:3857&lt;/ows:SupportedCRS>
+&lt;ows:BoundingBox crs="urn:ogc:def:crs:EPSG:3857">
+&lt;ows:LowerCorner>-20037508.342789 -20037508.342789&lt;/ows:LowerCorner>
+&lt;ows:UpperCorner>20037508.342789 20037508.342789&lt;/ows:UpperCorner>
+&lt;/ows:BoundingBox>
+&lt;WellKnownScaleSet>urn:ogc:def:wkss:OGC:1.0:GoogleMapsCompatible&lt;/WellKnownScaleSet>
+&lt;TileMatrix>
+&lt;ows:Identifier>0&lt;/ows:Identifier>
+&lt;ScaleDenominator>559082264.02871787548065185547&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>1&lt;/MatrixWidth>
+&lt;MatrixHeight>1&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>1&lt;/ows:Identifier>
+&lt;ScaleDenominator>279541132.01435887813568115234&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>2&lt;/MatrixWidth>
+&lt;MatrixHeight>2&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>2&lt;/ows:Identifier>
+&lt;ScaleDenominator>139770566.00717940926551818848&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>4&lt;/MatrixWidth>
+&lt;MatrixHeight>4&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>3&lt;/ows:Identifier>
+&lt;ScaleDenominator>69885283.00358971953392028809&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>8&lt;/MatrixWidth>
+&lt;MatrixHeight>8&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>4&lt;/ows:Identifier>
+&lt;ScaleDenominator>34942641.50179485976696014404&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>16&lt;/MatrixWidth>
+&lt;MatrixHeight>16&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>5&lt;/ows:Identifier>
+&lt;ScaleDenominator>17471320.75089742988348007202&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>32&lt;/MatrixWidth>
+&lt;MatrixHeight>32&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>6&lt;/ows:Identifier>
+&lt;ScaleDenominator>8735660.37544871494174003601&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>64&lt;/MatrixWidth>
+&lt;MatrixHeight>64&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>7&lt;/ows:Identifier>
+&lt;ScaleDenominator>4367830.18772435747087001801&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>128&lt;/MatrixWidth>
+&lt;MatrixHeight>128&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>8&lt;/ows:Identifier>
+&lt;ScaleDenominator>2183915.09386217873543500900&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>256&lt;/MatrixWidth>
+&lt;MatrixHeight>256&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>9&lt;/ows:Identifier>
+&lt;ScaleDenominator>1091957.54693108866922557354&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>512&lt;/MatrixWidth>
+&lt;MatrixHeight>512&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>10&lt;/ows:Identifier>
+&lt;ScaleDenominator>545978.77346554468385875225&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>1024&lt;/MatrixWidth>
+&lt;MatrixHeight>1024&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>11&lt;/ows:Identifier>
+&lt;ScaleDenominator>272989.38673277228372171521&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>2048&lt;/MatrixWidth>
+&lt;MatrixHeight>2048&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>12&lt;/ows:Identifier>
+&lt;ScaleDenominator>136494.69336638617096468806&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>4096&lt;/MatrixWidth>
+&lt;MatrixHeight>4096&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>13&lt;/ows:Identifier>
+&lt;ScaleDenominator>68247.34668319307093042880&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>8192&lt;/MatrixWidth>
+&lt;MatrixHeight>8192&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>14&lt;/ows:Identifier>
+&lt;ScaleDenominator>34123.67334159654274117202&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>16384&lt;/MatrixWidth>
+&lt;MatrixHeight>16384&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>15&lt;/ows:Identifier>
+&lt;ScaleDenominator>17061.83667079827137058601&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>32768&lt;/MatrixWidth>
+&lt;MatrixHeight>32768&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>16&lt;/ows:Identifier>
+&lt;ScaleDenominator>8530.91833539913568529300&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>65536&lt;/MatrixWidth>
+&lt;MatrixHeight>65536&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>17&lt;/ows:Identifier>
+&lt;ScaleDenominator>4265.45916769956784264650&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>131072&lt;/MatrixWidth>
+&lt;MatrixHeight>131072&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>18&lt;/ows:Identifier>
+&lt;ScaleDenominator>2132.72958384978392132325&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>262144&lt;/MatrixWidth>
+&lt;MatrixHeight>262144&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>19&lt;/ows:Identifier>
+&lt;ScaleDenominator>1066.36479192489196066163&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>524288&lt;/MatrixWidth>
+&lt;MatrixHeight>524288&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>20&lt;/ows:Identifier>
+&lt;ScaleDenominator>533.18239596244598033081&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>1048576&lt;/MatrixWidth>
+&lt;MatrixHeight>1048576&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;TileMatrix>
+&lt;ows:Identifier>21&lt;/ows:Identifier>
+&lt;ScaleDenominator>266.59119798122299016541&lt;/ScaleDenominator>
+&lt;TopLeftCorner>-20037508.342789 20037508.342789&lt;/TopLeftCorner>
+&lt;TileWidth>256&lt;/TileWidth>
+&lt;TileHeight>256&lt;/TileHeight>
+&lt;MatrixWidth>2097152&lt;/MatrixWidth>
+&lt;MatrixHeight>2097152&lt;/MatrixHeight>
+&lt;/TileMatrix>
+&lt;/TileMatrixSet>
+&lt;/Contents>
+&lt;/Capabilities></wmtsUrl>
+    <url>https://maps.georeferencer.com/georeferences/79580f71-e50d-5267-afd1-b5f579515600/2015-05-25T18:52:26.021580Z/map/{z}/{x}/{y}.png?key=caj1mpUbIDuRGkUmcxkG</url>
+  </overlay>
+  <overlay cityName="Louisville, KY" maxZoom="16" minZoom="10" name="Louisville_1903" opacity="16" selected="yes" source="acksoft" year="">
+    <description></description>
+    <bounds eastLongtude="-85.4612" northLatitude="38.5523" southLatitude="37.9523" westLongitude="-86.0611"/>
+    <wmtsUrl></wmtsUrl>
+    <url>https://ubuntu-2/public/map_tiles/</url>
+  </overlay>
+  <overlay cityName="St Louis, MO" maxZoom="16" minZoom="10" name="1903_St_Louis_Mo.4326.map.geo" opacity="16" selected="yes" source="acksoft" year="">
+    <description></description>
+    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <wmtsUrl></wmtsUrl>
+    <url>https://ubuntu-2/public/map_tiles/</url>
+  </overlay>
+  <overlay cityName="St Louis, MO" maxZoom="21" minZoom="8" name="Indianapolis." opacity="65" selected="yes" source="georeferencer" year="1903">
+    <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;meta charset="utf-8" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: "\2610"; }
+li.checked::marker { content: "\2612"; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Rand, McNally &amp;amp; Co.'s Indianapolis. (with) Business Portion of Indianapolis on an Enlarged Scale.&lt;/p>&lt;/body>&lt;/html></description>
+    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <wmtsUrl>https://maps.georeferencer.com/georeferences/9b4ceaef-4b5e-5bb2-8ac4-c7259057165e/2018-11-30T12:08:40.876570Z/wmts?key=caj1mpUbIDuRGkUmcxkG&amp;SERVICE=WMTS&amp;REQUEST=GetCapabilities</wmtsUrl>
+    <url>https://maps.georeferencer.com/georeferences/9b4ceaef-4b5e-5bb2-8ac4-c7259057165e/2018-11-30T12:08:40.876570Z/map/{z}/{x}/{y}.png?key=caj1mpUbIDuRGkUmcxkG</url>
+  </overlay>
+  <overlay cityName="St Louis, MO" maxZoom="21" minZoom="8" name="Map of St. Louis Mo." opacity="65" selected="yes" source="georeferencer" year="1895">
+    <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:7.8pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">The Matthews-Northrup Up-To-Date Map of St. Louis Mo. Copyright, 1895, by The Matthews-Northrup Co., Complete Engraving and Printing Works, Buffalo and New York.&lt;/p>&lt;/body>&lt;/html></description>
+    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <wmtsUrl>https://maps.georeferencer.com/georeferences/3e41ed67-1c65-5e25-8b4c-99adfda9695e/2021-12-19T01:24:00.624982Z/wmts?key=caj1mpUbIDuRGkUmcxkG&amp;SERVICE=WMTS&amp;REQUEST=GetCapabilities</wmtsUrl>
+    <url>https://maps.georeferencer.com/georeferences/3e41ed67-1c65-5e25-8b4c-99adfda9695e/2021-12-19T01:24:00.624982Z/map/{z}/{x}/{y}.png?key=caj1mpUbIDuRGkUmcxkG</url>
+  </overlay>
+  <overlay cityName="St Louis, MO" maxZoom="21" minZoom="8" name="St. Louis, Missouri." opacity="65" selected="yes" source="georeferencer" year="1891">
+    <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;">
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
+    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <wmtsUrl>https://maps.georeferencer.com/georeferences/9c83ed2b-077a-5e13-867d-36962c91a9c6/2022-01-06T17:24:11.385327Z/wmts?key=caj1mpUbIDuRGkUmcxkG&amp;SERVICE=WMTS&amp;REQUEST=GetCapabilities</wmtsUrl>
+    <url>https://maps.georeferencer.com/georeferences/9c83ed2b-077a-5e13-867d-36962c91a9c6/2022-01-06T17:24:11.385327Z/map/{z}/{x}/{y}.png?key=caj1mpUbIDuRGkUmcxkG</url>
+  </overlay>
+  <overlay cityName="St Louis, MO" maxZoom="16" minZoom="10" name="St_Louis_1895" opacity="65" selected="yes" source="acksoft" year="1895">
+    <description></description>
+    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <wmtsUrl></wmtsUrl>
+    <url>https://ubuntu-2/public/map_tiles/</url>
+  </overlay>
+  <overlay cityName="St Louis, MO" maxZoom="16" minZoom="10" name="St_Louis_1903" opacity="65" selected="yes" source="acksoft" year="1903">
+    <description></description>
+    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <wmtsUrl></wmtsUrl>
+    <url>https://ubuntu-2/public/map_tiles/</url>
+  </overlay>
+  <overlay cityName="St Louis, MO" maxZoom="17" minZoom="17" name="St_Louis_historical_topo" opacity="65" selected="yes" source="acksoft" year="1927-1940">
+    <description></description>
+    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <wmtsUrl></wmtsUrl>
+    <url>https://ubuntu-2/public/map_tiles/</url>
+  </overlay>
+  <overlay cityName="St Louis, MO" maxZoom="16" minZoom="10" name="St_Louis_topo" opacity="64" selected="yes" source="acksoft" year="">
+    <description></description>
+    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <wmtsUrl></wmtsUrl>
+    <url>https://ubuntu-2/public/map_tiles/</url>
+  </overlay>
+</Overlays>
