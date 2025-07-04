@@ -208,6 +208,9 @@ void EditConnectionsDlg::onDbTypeChanged(QString dbType)
 
  if(dbType == "Sqlite")
  {
+     ui->label_2->setVisible(true);
+     ui->txtSqliteFileName->setVisible(true);
+     ui->tbBrowse->setVisible(true);
   foreach (QString driver, drivers) {
    int index = ui->cbDriverType->findText(driver);
    setComboBoxItemEnabled(ui->cbDriverType,index, driver == "QSQLITE" || driver == "QSQLITE3");
@@ -222,6 +225,10 @@ void EditConnectionsDlg::onDbTypeChanged(QString dbType)
  }
  else if(dbType == "MySql")
  {
+     ui->label_2->setVisible(false);
+     ui->txtSqliteFileName->setVisible(false);
+     ui->tbBrowse->setVisible(false);
+
   ui->cbODBCDsn->setVisible(true);
   odbcUtil->fillDSNCombo(ui->cbODBCDsn,"MySql");
   foreach (QString driver, drivers) {
@@ -243,6 +250,9 @@ void EditConnectionsDlg::onDbTypeChanged(QString dbType)
  }
  else if(dbType == "MsSql")
  {
+     ui->label_2->setVisible(false);
+     ui->txtSqliteFileName->setVisible(false);
+     ui->tbBrowse->setVisible(false);
      ui->cbODBCDsn->setVisible(true);
      odbcUtil->fillDSNCombo(ui->cbODBCDsn,"MsSql");
   foreach (QString driver, drivers) {
@@ -256,6 +266,9 @@ void EditConnectionsDlg::onDbTypeChanged(QString dbType)
  }
  else if(dbType == "PostgreSQL")
  {
+     ui->label_2->setVisible(false);
+     ui->txtSqliteFileName->setVisible(false);
+     ui->tbBrowse->setVisible(false);
      ui->cbODBCDsn->setVisible(true);
      odbcUtil->fillDSNCombo(ui->cbODBCDsn,"PostgreSQL");
      foreach (QString driver, drivers) {
@@ -430,30 +443,72 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
   ui->txtUseDatabase->setText(connection->defaultSqlDatabase());
  }
  else
- { // ODBC (MsSql, MySql/MariaDb or PostgreSQL
+ {
+     // ODBC (MsSql, MySql/MariaDb or PostgreSQL
   ui->txtUseDatabase->setText(connection->defaultSqlDatabase());
   ui->txtDefaultDb->setText(connection->defaultSqlDatabase());
   ui->cbODBCDsn->setVisible(true);
   odbcUtil->fillDSNCombo(ui->cbODBCDsn, ui->cbDbType->currentText());
   ui->cbODBCDsn->setCurrentIndex(ui->cbODBCDsn->findData(connection->dsn()));
-  //handleOverrides(connection->dsn());
+  QString ODBCDsn = ui->cbODBCDsn->currentData().toString();
+  db = QSqlDatabase::addDatabase(connection->driver(),"testConnection");
+  db.setDatabaseName(ODBCDsn);
+  db.setUserName(connection->userId());
+  db.setPassword(connection->pwd());
+
+
+  //QList<QPair<QString,QString>> pairs = odbcPairMap.value(ui->cbODBCDsn->currentData().toString());
+  QMap<QString,QString> map = odbcPairMap.value(ui->cbODBCDsn->currentData().toString());
+  //for(std::pair <QString,QString> pair : pairs)
+  QMapIterator<QString,QString> iter(map);
+  while(iter.hasNext())
+  {
+      iter.next();
+      QString key = iter.key();
+      QString val = iter.value();
+      if(key.compare("port",Qt::CaseInsensitive)==0)
+      {
+          ui->txtPort->setPlaceholderText(val);
+          //db.setPort(pair.second.toInt());
+      }
+      if(key.compare("PWD",Qt::CaseInsensitive)==0)
+      {
+          ui->txtPWD->setPlaceholderText("dsn password");
+      }
+      if(key.compare("SERVER",Qt::CaseInsensitive)==0)
+      {
+          ui->txtHost->setPlaceholderText(val);
+          //db.setHostName(pair.second);
+      }
+      if(key.compare("UID",Qt::CaseInsensitive)==0)
+      {
+          ui->txtUserId->setPlaceholderText(val);
+          //db.setUserName(pair.second);
+      }
+      // if(testConnection())
+      // {
+      //     QStringList list = SQL::instance()->showMySqlDatabases(db);
+      //     QCompleter* completer = new QCompleter(list);
+      //     ui->txtUseDatabase->setCompleter(completer);
+      //     ui->lblHelp->setStyleSheet("color: green");
+      // }
+  }
+
   ui->lblHelp->setStyleSheet("QLabel {  color : #FF8000; }");
-  ui->lblHelp->setText(tr("connecting ..."));
+  if(!db.open())
+  {
+      qDebug() << displayDbInfo(db);
+    ui->lblHelp->setText(db.lastError().text());
+  }
+  else
+  {
+      ui->lblHelp->setStyleSheet("color: green");
+      ui->lblHelp->setText(tr("OK"));
+  }
   ui->txtUserId->setText(connection->userId());
   ui->txtPWD->setText(connection->pwd());
   ui->txtPWD->setEnabled(true);
   ui->txtUseDatabase->setText(connection->database());
-  // if(openTestDb())
-  // {
-  //  QStringList list;
-  //  if(ui->cbDbType->currentText() == "MsSql")
-  //   list = SQL::instance()->showMsSqlDatabases(db);
-  //  else if(ui->cbDbType->currentText() == "MySql")
-  //   list = SQL::instance()->showMySqlDatabases(db);
-
-  //  QCompleter* completer = new QCompleter(list);
-  //  ui->txtUseDatabase->setCompleter(completer);
-  // }
  }
  connectionChanging=false;
 }
@@ -591,9 +646,10 @@ void EditConnectionsDlg::setControls(QString txt)
 
 #ifdef Q_OS_WIN
   QSettings winReg1("HKEY_CURRENT_USER\\Software\\ODBC\\ODBC.INI\\ODBC Data Sources", QSettings::NativeFormat);
-  //QSettings winReg("HKEY_CURRENT_USER\\Software\\ODBC\\ODBC.INI", QSettings::NativeFormat);
+  QSettings winReg2("HKEY_LOCAL_MACHINE\\Software\\ODBC\\ODBC.INI\\ODBC Data Sources", QSettings::NativeFormat);
   //odbcMap.clear();
-  QList<QPair<QString,QString> > list;
+  //QList<QPair<QString,QString> > list;
+  QMap<QString,QString> map;
   QStringList iniKeys;
   databases = winReg1.childKeys();
   qDebug() << QString("%1").arg(databases.count());
@@ -601,23 +657,50 @@ void EditConnectionsDlg::setControls(QString txt)
      QString keyVal = winReg1.value(key).toString();
      // if( keyVal.contains("SQL Server"))
      // {
-         list.clear();
+         //list.clear();
+     map.clear();
      QString regKey = QString("HKEY_CURRENT_USER\\Software\\ODBC\\ODBC.INI\\") + key;
-         QSettings winReg(regKey,QSettings::NativeFormat);
+     QSettings winReg(regKey,QSettings::NativeFormat);
 
-         iniKeys = winReg.childKeys();
-         for(QString iniKey : iniKeys)
+     iniKeys = winReg.childKeys();
+     for(QString iniKey : iniKeys)
+     {
+         QStringList childKeys = winReg.childKeys();
+         for(QString iniKey3 : childKeys)
          {
-             QStringList childKeys = winReg.childKeys();
-             for(QString iniKey3 : childKeys)
-             {
-                 QPair<QString,QString>  pair(iniKey3, winReg.value(iniKey3).toString());
-                 list.append(pair);
-             }
+             QPair<QString,QString>  pair(iniKey3, winReg.value(iniKey3).toString());
+             //list.append(pair);
+             map.insert(iniKey3, winReg.value(iniKey3).toString());
          }
-         odbcPairMap.insert(key, list);
+     }
+     //odbcPairMap.insert(key, list);
+     odbcPairMap.insert(key,map);
   }
 
+  // add also systemDsn
+  databases = winReg2.childKeys();
+  qDebug() << QString("%1").arg(databases.count());
+  foreach (QString key, databases) {
+      QString keyVal = winReg2.value(key).toString();
+      // if( keyVal.contains("SQL Server"))
+      // {
+      map.clear();
+      QString regKey = QString("HKEY_LOCAL_MACHINE\\Software\\ODBC\\ODBC.INI\\") + key;
+      QSettings winReg(regKey,QSettings::NativeFormat);
+
+      iniKeys = winReg.childKeys();
+      for(QString iniKey : iniKeys)
+      {
+          QStringList childKeys = winReg.childKeys();
+          for(QString iniKey3 : childKeys)
+          {
+              //QPair<QString,QString>  pair(iniKey3, winReg.value(iniKey3).toString());
+              //list.append(pair);
+              map.insert(iniKey3, winReg.value(iniKey3).toString());
+          }
+      }
+      odbcPairMap.insert(key, map);
+  }
 #else
 // #  ifdef Q_OS_MACOS
 //   findODBCDsn("/Library/ODBC/odbc.ini", &databases);
@@ -665,23 +748,25 @@ void EditConnectionsDlg::setControls(QString txt)
   ui->cbODBCDsn->setVisible(true);
   odbcUtil->fillDSNCombo(ui->cbODBCDsn, ui->cbDbType->currentText());
 #ifdef  Q_OS_WIN
-  QMapIterator<QString, QList<QPair<QString,QString>>> iter(odbcPairMap);
+  QMapIterator<QString, QMap<QString,QString>> iter(odbcPairMap);
   while(iter.hasNext())
   {
       iter.next();
       //if(iter.key() == ui->cbDbType->currentText())
-      QList<QPair<QString,QString>> list = iter.value();
+      QMap<QString,QString> map = iter.value();
       QString description;
-      for(QPair<QString,QString> pair : list)
+      QMapIterator<QString,QString> iter2(map);
+      while(iter2.hasNext())
       {
-          if(pair.first.toLower().compare("description",Qt::CaseInsensitive)==0)
+          iter2.next();
+          if(iter2.key().compare("Description",Qt::CaseInsensitive)==0)
           {
-              description = pair.second;
+              description = iter2.value();
               break;
           }
       }
           //sources.append(iter.key());
-      if(ui->cbODBCDsn->findData(iter.key())<0 && description.startsWith(ui->cbDbType->currentText()))
+      //if(ui->cbODBCDsn->findData(iter.key())<0 && description.startsWith(ui->cbDbType->currentText()))
         ui->cbODBCDsn->addItem(iter.key() + " - " + description, iter.key());
   }
   //ui->cbODBCDsn->addItems(sources);
@@ -1243,6 +1328,10 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
      {
          setDatabase(ui->txtUseDatabase->text());
      }
+     if(ui->cbDbType->currentText() == "ODBC")
+     {
+         db.setDatabaseName(ui->cbODBCDsn->currentData().toString());
+     }
  }
  if(!db.isOpen())
  {
@@ -1412,8 +1501,9 @@ bool EditConnectionsDlg::openTestDb()
   QString connstring2 = odbcUtil->connectString(connector,ui->txtHost->text(),ui->txtPort->text().toInt(),
                                                 ui->txtUserId->text(),ui->txtPWD->text(),ui->txtUseDatabase->text());
 
-#else
-  QList<QPair<QString, QString>> list = odbcPairMap.value(connector);
+#else // windows
+  //QList<QPair<QString, QString>> list = odbcPairMap.value(connector);
+  QMap<QString,QString> map = odbcPairMap.value(connector);
   QString driver;
   QString servername;
   QString port;
@@ -1422,22 +1512,36 @@ bool EditConnectionsDlg::openTestDb()
   QString database;
   QStringList keys = {"Driver","Servername", "Port", "UID", "Password","Database"};
 
-  for(QPair<QString,QString> pair : list)
+  //for(QPair<QString,QString> pair : list)
+  QMapIterator<QString,QString> iter(map);
+  while(iter.hasNext())
   {
-      if(keys.contains(pair.first))
+      iter.next();
+      QString first = iter.key();
+      if(keys.contains(first,Qt::CaseInsensitive))
       {
-        if(pair.first == "Driver") driver = pair.second;
-        if(pair.first == "Servername") servername = pair.second;
-        if(pair.first == "Port") port = pair.second;
-        if(pair.first == "UID") UID = pair.second;
-        if(pair.first == "Password") password = pair.second;
-        if(pair.first == "Database") database = pair.second;
+        if(first == "Driver")
+              driver = iter.value();
+        if(first == "Server")
+            servername = iter.value();
+        if(first == "Port")
+            port = iter.value();
+        if(first == "UID")
+            UID = iter.value();
+        if(first == "Password")
+            password = iter.value();
+        if(first == "Database")
+            database = iter.value();
       }
   }
-  ui->txtHost->setText(servername);
-  ui->txtPWD->setText((password));
-  ui->txtUserId->setText(UID);
-  ui->txtUseDatabase->setText(database);
+  // ui->txtHost->setText(servername);
+  db.setHostName(servername);
+  // ui->txtPWD->setText((password));
+  db.setPassword(ui->txtPWD->text());
+  // ui->txtUserId->setText(UID);
+  db.setUserName(ui->txtUserId->text());
+  // ui->txtUseDatabase->setText(database);
+
   QString connstring2 = QString("Driver=%1;Server=%2;Port=%3;User Id=%4;Password=%5;Database=%6;")
                             .arg(driver,servername,port,UID,password,database);
 
@@ -1458,7 +1562,7 @@ bool EditConnectionsDlg::openTestDb()
    _testConnection->setDSN(connector);
   }
 
-  if(ui->cbDbType->currentText() == "MySql" || ui->cbDbType->currentText() == "PostgreSQL")
+  if(ui->cbDbType->currentText() == "MySql" || ui->cbDbType->currentText() == "MsSql" || ui->cbDbType->currentText() == "PostgreSQL")
   {
       // userid, server, etc are not defined in the DSN override here
       if(db.userName().isEmpty())
@@ -1494,7 +1598,7 @@ bool EditConnectionsDlg::openTestDb()
   }
  }
  else if( ui->cbConnect->currentText()== "Direct")
- { // MySql
+ { // MySql or PostgreSQL
   db.setDatabaseName(ui->txtUseDatabase->text());
   db.setHostName(ui->txtHost->text());
   int port = ui->txtPort->text().toInt();
@@ -1522,7 +1626,8 @@ bool EditConnectionsDlg::openTestDb()
  _testConnection->setDSN(db.connectionName());
  _testConnection->setDriver(db.driverName());
  _testConnection->setDatabase(db.databaseName());
- bool bOpen = db.open();
+ bool bOpen = db.open(ui->txtUserId->text(), ui->txtPWD->text());
+ qDebug() << displayDbInfo(db);
  if(bOpen)
  {
 
@@ -1551,6 +1656,14 @@ bool EditConnectionsDlg::populateDatabases()
 
   if(ui->cbDbType->currentText() == "MsSql")
   {
+      if(!db.open())
+      {
+          QSqlError err = db.lastError();
+          QString txt = displayDbInfo(db);
+          //throw SQLException(tr("database not open ") +txt );
+          qDebug() << txt;
+          return false;
+      }
    // Select * from Sys.Databases
    //QStringList databases;
    if(!query.exec("SELECT name FROM sys.databases"))
@@ -1731,12 +1844,17 @@ bool EditConnectionsDlg::setDatabase(QString useDatabase)
     if(currentDb == useDatabase)
         return true;
     QSqlQuery query = QSqlQuery(db);
+    if(!db.open())
+        throw SQLException(tr("db not open!"));
     QString commandText;
     //if(ui->cbDbType->currentText() == "MsSql")
      commandText = "use " +useDatabase;
     if(!query.exec(commandText))
     {
-        SQLERROR(query);
+         QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+         qDebug() << errCommand;
+         QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
         return false;
     }
     return true;
@@ -2039,4 +2157,17 @@ int EditConnectionsDlg::findId(Connection* c)
    return connection.id();
  }
  return -1;
+}
+
+QString EditConnectionsDlg::displayDbInfo(QSqlDatabase db)
+{
+    QString txt;
+    txt.append(tr("connection name: %1 ").arg(db.connectionName()));
+    txt.append(tr("driverName: %1 ").arg(db.driverName()));
+    txt.append(tr("databaseName: %1 ").arg(db.databaseName()));
+    txt.append(tr("hostName: %1 port: %2 ").arg(db.hostName()).arg(db.port()));
+    txt.append(tr("userName: %1 pwd: %2 ").arg(db.userName(),db.password()));
+    txt.append(tr("isOpen: %1 isValid: %2 ").arg(db.isOpen()?"true":"false", db.isValid()?"true":"false"));
+    txt.append(tr("last error: %1 ").arg(db.lastError().text()));
+    return txt;
 }

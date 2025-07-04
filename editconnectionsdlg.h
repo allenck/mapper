@@ -20,9 +20,10 @@ public:
  void setCity(City* city);
  void refreshCities();
  void setParameter(Parameters p);
+ QString displayDbInfo(QSqlDatabase db);
 
  ~EditConnectionsDlg();
- enum DBTYPE {MySql, MsSql,Sqlite};
+ enum DBTYPE {MySql, MsSql,Sqlite,PostgreSQL};
 
 private:
  Ui::editConnectionsDlg *ui;
@@ -56,7 +57,8 @@ private:
   QString basePath;
   void removeEmptyFiles();
   Parameters parms;
-  QMap<QString, QList<QPair<QString,QString>>> odbcPairMap;
+  //QMap<QString, QList<QPair<QString,QString>>> odbcPairMap;
+  QMap<QString, QMap<QString,QString>> odbcPairMap;
   bool setDatabase(QString useDatabase);
   int findId(Connection* c);
   Connection* _testConnection = nullptr;

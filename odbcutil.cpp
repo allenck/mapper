@@ -309,10 +309,13 @@ void ODBCUtil::fillDSNCombo(QComboBox* box, QString type)
 
     QString currDsn = box->currentData().toString();
     box->clear();
+
     foreach(DSN* dsn , dsnByName.values())
     {
         if(dsn->type == type)
+        {
             box->addItem(dsn->name+"-"+dsn->descr, dsn->name);
+        }
     }
     if(box->count())
         box->setCurrentIndex(0);

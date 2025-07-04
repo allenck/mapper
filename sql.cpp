@@ -5582,8 +5582,8 @@ Parameters SQL::getParameters(QSqlDatabase db)
      //throw Exception(tr("database not open: %1").arg(__LINE__));
      // db = QSqlDatabase::database();
 
-        QString commandText = "select lat, lon, title, city, minDate, maxDate, alphaRoutes, "
-                              "abbreviationsList "
+        QString commandText = "select lat, lon, title, city, minDate, maxDate, "
+                              "alphaRoutes, abbreviationsList "
                               "from Parameters";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
@@ -5593,7 +5593,8 @@ Parameters SQL::getParameters(QSqlDatabase db)
             qDebug() << errCommand;
             QSqlError error = query.lastError();
             SQLERROR(std::move(query));
-            throw SQLException(error.text() + " " + errCommand);
+            //throw SQLException(error.text() + " " + errCommand);
+            return parms;
         }
         if (!query.isActive())
         {
