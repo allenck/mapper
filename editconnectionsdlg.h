@@ -86,7 +86,10 @@ private slots:
  void setupComboBoxes(QString);
  void onDbTypeChanged(QString);
  void cbConnections_contextMenuRequested(QPoint);
- //void handleOverrides(QString dbName);
+
+ public slots:
+ void cbODBCDsn_currentIndex_changed(int ix);
+
 };
 
 #endif // EDITCONNECTIONSDLG_H

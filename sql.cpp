@@ -9123,7 +9123,7 @@ int SQL::updateRouteSegment(int segmentId, QString startDate, QString endDate, i
              + "', endDate='" + endDate+ "'"
              + ", linekey = " +QString::number(newSegmentId)
              + ",lastUpdate=CURRENT_TIMESTAMP"
-             + " where lineKey =" +QString::number(segmentId);
+             + " whe're lineKey =" +QString::number(segmentId);
  QSqlQuery query = QSqlQuery(db);
  if(!query.exec(commandText))\
  {
@@ -9141,7 +9141,14 @@ QStringList SQL::showDatabases(QString connection, QString servertype)
  if(servertype != "MsSql")
  {
   QString commandText = "show databases";
+  if(servertype == "PostgreSQL")
+      commandText = "SELECT datname FROM pg_database WHERE datistemplate = false";
   QSqlQuery query = QSqlQuery(db);
+  if(!db.open())
+  {
+      qInfo() << "showDatabases:" << displayDbInfo(db);
+      return QStringList();
+  }
   bool bQuery = query.exec(commandText);
   if(!bQuery)
   {
@@ -9149,7 +9156,8 @@ QStringList SQL::showDatabases(QString connection, QString servertype)
       qDebug() << errCommand;
       QSqlError error = query.lastError();
       SQLERROR(std::move(query));
-      throw SQLException(error.text() + " " + errCommand);
+      //throw SQLException(error.text() + " " + errCommand);
+      return ret;
   }
   while(query.next())
   {
@@ -9158,6 +9166,35 @@ QStringList SQL::showDatabases(QString connection, QString servertype)
  }
  return ret;
 }
+QStringList SQL::showPostgreSQLDatabases(QSqlDatabase db)
+{
+ QStringList ret;
+
+  QString commandText = "SELECT datname FROM pg_database WHERE datistemplate = false";
+  QSqlQuery query = QSqlQuery(db);
+  if(!db.open())
+  {
+      qInfo() << "showDatabases:" << displayDbInfo(db);
+      return QStringList();
+  }
+  bool bQuery = query.exec(commandText);
+  if(!bQuery)
+  {
+      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+      qDebug() << errCommand;
+      QSqlError error = query.lastError();
+      SQLERROR(std::move(query));
+      //throw SQLException(error.text() + " " + errCommand);
+      return ret;
+  }
+  while(query.next())
+  {
+   ret.append(query.value(0).toString());
+  }
+
+ return ret;
+}
+
 
 #if 0
 bool SQL::loadSqlite3Functions(QSqlDatabase db)
@@ -11986,4 +12023,17 @@ bool SQL::updateIdentitySequence(QString table, QString column)
     QString commandTxt = QString("SELECT setval(pg_get_serial_sequence('%1', '%2'),\
                                        (select max(%2) from %1))").arg(table,column);
      return executeCommand(commandTxt);
+}
+
+QString SQL::displayDbInfo(QSqlDatabase db)
+{
+    QString txt;
+    txt.append(tr("connection name: %1 ").arg(db.connectionName()));
+    txt.append(tr("driverName: %1 ").arg(db.driverName()));
+    txt.append(tr("databaseName: %1 ").arg(db.databaseName()));
+    txt.append(tr("hostName: %1 port: %2 ").arg(db.hostName()).arg(db.port()));
+    txt.append(tr("userName: %1 pwd: %2 ").arg(db.userName(),db.password()));
+    txt.append(tr("isOpen: %1 isValid: %2 ").arg(db.isOpen()?"true":"false", db.isValid()?"true":"false"));
+    txt.append(tr("last error: %1 ").arg(db.lastError().text()));
+    return txt;
 }

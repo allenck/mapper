@@ -1999,7 +1999,7 @@ void MainWindow::newCity(QAction* act )
 
   // Save any changes to currentCity
 //    config->cityList.replace(config->currentCityId, config->currCity);
-    companyView = new CompanyView(this);
+    //companyView = new CompanyView(this);
     tractionTypeView = new TractionTypeView(this);
     config->currCity->lastRoute = m_routeNbr;
     config->currCity->lastRouteName = m_routeName;
@@ -2091,6 +2091,7 @@ void MainWindow::newCity(QAction* act )
     refreshCompanies();
     ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(config->currCity->companyKey));
     refreshRoutes();
+    companyView->refresh();
     //stationView->showStations();
     m_latitude = config->currCity->center.lat();
     m_longitude = config->currCity->center.lon();

@@ -84,12 +84,7 @@ public:
     QList<StationInfo> getStationAtPoint(LatLng pt);
     bool updateStation(qint32 stationKey, qint32 infoKey);
     bool updateStation(StationInfo sti);
-    //bool updateStationRoute(qint32 stationKey, qint32 route);
-//    Q_DECL_DEPRECATED bool insertPoint(qint32 pt, qint32 SegmentId, double newLat, double newLon);
-//    Q_DECL_DEPRECATED bool insertPoint(qint32 pt, qint32 SegmentId, double newLat, double newLon/*,  qint32* lineSegmentKey*/);
-//    Q_DECL_DEPRECATED bool deletePoint(qint32 pt, qint32 SegmentId, qint32 nbrPts);
-    //QList<segmentData> getIntersectingSegments(double lat, double lon, double radius) __attribute_deprecated__;
-
+    QString displayDbInfo(QSqlDatabase db);
     QT_DEPRECATED QString getSegmentOneWay(qint32 SegmentId);
     bool doesSegmentExist(QString descr, QString oneWay, QString location = "");
     QString getSegmentDescription(qint32 SegmentId);
@@ -242,8 +237,9 @@ public:
     bool createSqlDatabase(QString dbName, QSqlDatabase db, QString dbType);
     QString getDatabase(QString serverType, QSqlDatabase db = QSqlDatabase());
     bool useDatabase(QString dbName, QString serverType, QSqlDatabase db);
-    QStringList  showMySqlDatabases(QSqlDatabase db);
+    QStringList showMySqlDatabases(QSqlDatabase db);
     QStringList showMsSqlDatabases(QSqlDatabase db);
+    QStringList showPostgreSQLDatabases(QSqlDatabase db);
     int sqlErrorMessage(QSqlQuery query, QMessageBox::StandardButtons buttons);
     SegmentInfo convertSegment(int segmentId, int tracks);
     int nextRouteNumberInRange(int lowRange, int highRange);
