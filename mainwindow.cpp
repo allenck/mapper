@@ -629,7 +629,7 @@ Configuration* MainWindow::getConfiguration()
 
 void MainWindow::reloadMap()
 {
- disconnect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
+ //disconnect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
     if(config->bRunInBrowser)
     {
      if(!QDesktopServices::openUrl(fileUrl))
@@ -637,7 +637,7 @@ void MainWindow::reloadMap()
          qCritical() << "open webbrowser failed " << fileUrl.toDisplayString();
          QMessageBox::critical(nullptr, tr("Error"), "open webbrowser failed ");
      }
-     connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
+     //connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
      if(!channel)
          setupbridge();
     }
@@ -2181,6 +2181,7 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
         QApplication::beep();
         //infoPanel.ForeColor = Color.Red;
         //infoPanel.Text = "select an item!";
+        statusBar()->setStyleSheet("color: black");
         statusBar()->showMessage(tr("select an item"));
     }
     else
@@ -2218,6 +2219,7 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
                                                        sd->endDate().toString("yyyy/MM/dd")) != true)
                                {
                                    //infoPanel.Text = "Delete Error";
+                               statusBar()->setStyleSheet("color: red");
                                    statusBar()->showMessage(tr("Delete failed"));
                                    //infoPanel.ForeColor = Color.Red;
                                    //System.Media.SystemSounds.Beep.Play();
@@ -2236,6 +2238,7 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
                            if (!sql->addSegmentToRoute(sd))
                            {
                                    //infoPanel.Text = "Update Error";
+                               statusBar()->setStyleSheet("color: red");
                                    statusBar()->showMessage(tr("Update failed"));
                                    //infoPanel.ForeColor = Color.Red;
                                    //System.Media.SystemSounds.Beep.Play();
@@ -2297,6 +2300,7 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
             QApplication::beep();
             //infoPanel.ForeColor = Color.Red;
             //infoPanel.Text = "deleteSegment failed";
+            statusBar()->setStyleSheet("color: red");
             statusBar()->showMessage("deleteSegment failed",2000);
         }
     }
@@ -2547,7 +2551,7 @@ void MainWindow::On_displayRoute(RouteData rd)
   SegmentData* sd = segmentDataList.at(i);
   if(sd->segmentId() == 367)
    qDebug() << "halt";
-#if 0
+#if 1
   objArray.clear();
   objArray << sd->segmentId();
   m_bridge->processScript("clearPolyline", objArray);
@@ -2600,6 +2604,7 @@ void MainWindow::On_displayRoute(RouteData rd)
   bBoundsValid = bounds.updateBounds(sd->bounds());
 #endif
  }
+ statusBar()->setStyleSheet("color: black");
  statusBar()->showMessage(tr("route length = %1 km, %2 miles").arg(length).arg(length*0.621371192));
 
  QString markerType = "green";
@@ -3379,6 +3384,7 @@ void MainWindow::setDebug(QString str)
  if(bDisplayWebDebug)
  {
   qDebug() << str;
+  statusBar()->setStyleSheet("color: blue");
   statusBar()->showMessage(str, 2000);
  }
 }
@@ -3745,6 +3751,7 @@ void MainWindow::btnSplit_Clicked()    // SLOT
    //System.Media.SystemSounds.Beep.Play();
    QApplication::beep();
    //infoPanel.ForeColor = Color.Red;
+   statusBar()->setStyleSheet("color: red");
    statusBar()->showMessage(tr("updateSegment failed"));
   }
   if (sql->updateSegment(segmentDlg.newSegmentId()) != true)
@@ -3752,6 +3759,7 @@ void MainWindow::btnSplit_Clicked()    // SLOT
    //System.Media.SystemSounds.Beep.Play();
    QApplication::beep();
    //infoPanel.ForeColor = Color.Red;
+   statusBar()->setStyleSheet("color: red");
    statusBar()->showMessage(tr("updateSegment failed"));
   }
  }
@@ -4307,6 +4315,7 @@ void MainWindow::btnDeletePtClicked()
    {
     if(m_nbrPoints < 3)
     {
+        statusBar()->setStyleSheet("color: red");
      statusBar()->showMessage("only 2 points. use deleteSegment instead!");
      return;
     }
@@ -4854,6 +4863,7 @@ void MainWindow::opacityChanged(QString name, qint32 opacity)
     //ov->name = name;
     //ov.opacity = opacity;
     config->setOverlay(ov);
+    statusBar()->setStyleSheet("color: black");
     statusBar()->showMessage(tr("%2 opacity=%1").arg(opacity).arg(name));
     //m_bridge->processScript("setOverlayOpacity", QString::number(opacity));
 }
@@ -5457,8 +5467,8 @@ bool MainWindow::setupbridge()
     // wrap WebSocket clients in QWebChannelAbstractTransport objects
     m_clientWrapper = new WebSocketClientWrapper (m_server);
 
-    if(!webView)
-        connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
+    // if(!webView)
+    //     connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
 
     // setup the channel
     channel = new QWebChannel();
@@ -5473,7 +5483,7 @@ bool MainWindow::setupbridge()
         }
     });
     connect(m_clientWrapper,  &WebSocketClientWrapper::clientClosed, this, [=]{
-        enableControls(false);
+        onWebSocketClosed();
     });
     return true;
 }
@@ -5626,7 +5636,7 @@ bool MainWindow::verifyAPIKey(QString path, QString apiKey)
 
 void MainWindow::onWebSocketClosed()
 {
-    enableControls(false);
+  enableControls(false);
   if(config->bRunInBrowser)
   {
      //QMessageBox::critical(this, tr("Browser closed"), tr("The browser window has closed"));
@@ -5640,7 +5650,8 @@ void MainWindow::onWebSocketClosed()
   else
   {
       int rslt = QMessageBox::question(this, tr("Connection closed"), tr("The connection to the browser has closed."
-                                                                         "Click Yes to reload Map,  Close to exit"), QMessageBox::Yes|QMessageBox::Close);
+                                                                         "Click Yes to reload Map,  Close to exit"),
+                                       QMessageBox::Yes|QMessageBox::Close);
       if(rslt == QMessageBox::Close)
       {
           close();
@@ -5723,6 +5734,16 @@ void MainWindow::enableControls( bool b)
     ui->chkAddPt->setEnabled(b);
     if(webView)
         webView->setEnabled(b);
+    if(!b)
+    {
+        ui->statusbar->setStyleSheet("color: magenta");
+        ui->statusbar->showMessage(tr("Connection to browser closed!"));
+    }
+    else
+    {
+        ui->statusbar->setStyleSheet("color: black");
+        ui->statusbar->showMessage(tr("Connection to browser restored!"));
+    }
 }
 
 void MainWindow::describeRoute()

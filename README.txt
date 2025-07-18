@@ -1,3 +1,9 @@
+**Recent Changes July 2025 VERSION=1.2.2
+1. Detect if connection to browser has failed.
+2. Corrections to edit connections dialog.
+3. Show status of browser connection in statusbar.
+4. fix display of route lenght when displaying route.
+
 **Recent Changes May 2025 VERSION=1.2.1
 1. Corrections to Route Comments sql.
 

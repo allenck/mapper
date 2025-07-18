@@ -167,7 +167,7 @@ DEPENDPATH += $$PWD/.
 INCLUDEPATH += $$(QTDIR)/../Src/qtbase/src/3rdparty/sqlite
 
 
-VERSION=1.2.1
+VERSION=1.2.2
 MY_VERSION_STR = '\\"$${VERSION}\\"'
 DEFINES += MY_VERSION=\"$${MY_VERSION_STR}\"
 macx: {
