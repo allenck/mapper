@@ -305,10 +305,10 @@ void WebViewBridge::queryOverlay()
  emit queryOverlaySignal();
 }
 
-void WebViewBridge::initialized()
-{
- //m_parent->showGoogleMapFeaturesAct->trigger();
-}
+// void WebViewBridge::initialized()
+// {
+//  //m_parent->showGoogleMapFeaturesAct->trigger();
+// }
 
 void WebViewBridge::opacityChanged(QString name, qint32 opacity)
 {

@@ -17,7 +17,7 @@ var socket = new WebSocket(baseUrl);
 socket.onclose = function()
 {
  console.error("web channel closed");
-    alert("connection to application has been closed. ");
+    //alert("connection to application has been closed. ");
     closeWindow();
 };
 socket.onerror = function(error)

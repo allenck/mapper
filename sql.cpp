@@ -10034,7 +10034,8 @@ bool SQL::processFile(QTextStream* in, QSqlDatabase db, bool bIsInclude)
        qDebug() << errCommand;
        QSqlError error = query.lastError();
        SQLERROR(std::move(query));
-       throw SQLException(error.text() + " " + errCommand);
+       //throw SQLException(error.text() + " " + errCommand);
+       return false;
    }
    sqltext="";
   }

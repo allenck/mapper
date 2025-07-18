@@ -78,6 +78,7 @@ signals:
     void clickLatLng(LatLng);
     void on_pinClicked(int pinId, LatLng latLng, QString street, int streetid, QString location, int seq);
     void on_pinMarkerMoved(LatLng latLng);
+    void on_connection_closed();
 
 public slots:
     void selectSegment(qint32 i, qint32 SegmentId); //19
@@ -118,7 +119,7 @@ public slots:
     void cityBounds(double neLat, double neLng, double swLat, double swLng);
     void rightClicked(double lat, double lon);
     void screenshot(QString base64image);
-    void initialized();
+    //void initialized();
     void addPointMode(bool);
     void pinClicked(int, double lat, double lon, QString street, int streetId, QString location, int seq);
     void pinMarkerMoved(double lat, double lon);

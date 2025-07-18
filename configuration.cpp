@@ -186,6 +186,7 @@ void Configuration::saveSettings()
  settings->setValue("foreignKeyCheck", bForeignKeyCheck);
  settings->setValue("displayDebugMsgs", bDisplayDebugMsgs);
  settings->setValue("displayArrows", bDisplaySegmentArrows);
+ settings->setValue("displayRouteOnReload",bDisplayRouteOnReload);
  settings->setValue("font",font.toString());
  settings->setValue("mapId", mapId);
  settings->setValue("tileServerUrl", tileServerUrl);
@@ -495,7 +496,10 @@ void Configuration::getSettings()
    bForeignKeyCheck = settings.value("foreignKeyCheck", true).toBool();
    bDisplayDebugMsgs = settings.value("displayDebugMsgs", false).toBool();
    bDisplaySegmentArrows = settings.value("displayArrows", false).toBool();
+   bDisplayRouteOnReload = settings.value("displayRouteOnReload",false).toBool();
    mapId = settings.value("mapId", "99f6ba1d184ea0b6").toString();
+   if(mapId.isEmpty())
+       mapId = "DEMO_MAP_ID";
    tileServerUrl = settings.value("tileServerUrl", "https://ubuntu-2/public/map_tiles/").toString();
    QFont f;
    f.fromString(settings.value("font").toString());

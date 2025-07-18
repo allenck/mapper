@@ -343,7 +343,7 @@ function myArrow(lLat, lLon, mLat, mLon, rLat, rLon, color, segmentId)
     // Select segment (click)
     google.maps.event.addListener(polygon, "click", function(){
 //        alert("arrow clicked on " + segment);
-        selectSegment(segment);
+        selectSegment(0,segment);
     });
 } //end myArrow
 
@@ -908,7 +908,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, showArrow, Color
         var path = si.getPath();
         var len = path.getLength();
 
-        webViewBridge.selectSegment(si.segmentId);
+        webViewBridge.selectSegment(0,si.segmentId);
         webViewBridge.setLen(len);
         var i;
         var mIx = 1;
@@ -977,7 +977,7 @@ async function initMap() {
     google.maps.event.addListenerOnce(map, 'idle', function(){
            //this part runs when the mapobject is created and rendered
            google.maps.event.addListenerOnce(map, 'idle', function(){
-               //this part runs when the mapobject shown for the first time
+               //this part runs when the map object shown for the first time
                webViewBridge.mapInit();
            });
        });
@@ -993,13 +993,13 @@ async function initMap() {
      maxZoom: 18
     });
 
-    google.maps.event.addListenerOnce(map, 'idle', function(){
-        //this part runs when the mapobject is created and rendered
-        google.maps.event.addListenerOnce(map, 'idle', function(){
-            //this part runs when the mapobject shown for the first time
-            webViewBridge.mapInit();
-        });
-    });
+    // google.maps.event.addListenerOnce(map, 'idle', function(){
+    //     //this part runs when the mapobject is created and rendered
+    //     google.maps.event.addListenerOnce(map, 'idle', function(){
+    //         //this part runs when the mapobject shown for the first time
+    //         webViewBridge.mapInit();
+    //     });
+    // });
 
     google.maps.event.addListener(mapDiv, 'resize', function(){
      google.maps.event.trigger(map, 'resize');
@@ -1099,7 +1099,7 @@ async function initMap() {
            ];
      pins ={"default":0, "start":1, "end":2, "yellow":3};
 
-
+    webViewBridge.mapInit();
 
     // function latLng2Point(latLng, map) {
     //   var topRight = map.getProjection().fromLatLngToPoint(map.getBounds().getNorthEast());

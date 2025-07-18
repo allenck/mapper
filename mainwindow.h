@@ -177,12 +177,12 @@ public:
 #ifndef USE_WEBENGINE
     QWebView* webView;
 #else
-    QWebEngineView* webView;
-    QWebChannel* channel;
-    QWebSocketServer* m_server;
-    WebSocketClientWrapper* m_clientWrapper;
-    QWebSocketServer* m_OverlayServer;
-    WebSocketClientWrapper* m_overlayWrapper;
+    QWebEngineView* webView = nullptr;
+    QWebChannel* channel = nullptr;
+    QWebSocketServer* m_server=nullptr;
+    WebSocketClientWrapper* m_clientWrapper= nullptr;
+    QWebSocketServer* m_OverlayServer=nullptr;
+    WebSocketClientWrapper* m_overlayWrapper= nullptr;
 #endif
     int selectedSegment() {return m_segmentId;}
     QDir htmlDir;
@@ -402,6 +402,7 @@ private:
     QAction* updateStreetsAct;
     QAction* editRouteSqlAct;
     QAction* populateRouteIdAct;
+    QAction* displayRouteOnReloadAct;
 
     QWidgetAction *sortTypeAct;
     QComboBox * cbSort;

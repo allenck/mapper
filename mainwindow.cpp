@@ -121,6 +121,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
          i++;
      }
 }
+ enableControls(false);
 
  cwd = QDir::currentPath();
 // config = Configuration::instance();
@@ -268,6 +269,9 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
       segmentView->sourceModel->setList(sql->getIntersectingSegments(latLng.lat(), latLng.lon(), .020));
   });
 
+  connect(m_bridge, &WebViewBridge::on_connection_closed, this, [=]{
+      qDebug() << "WebViewBridge connection closed.";
+  });
   streetView = new StreetView(this);
 
   // setup routeDlg
@@ -322,6 +326,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
           si.setLocation(ui->txtLocation->text());
           sql->updateSegment(&si);
       }
+  });
+  connect(m_bridge, &WebViewBridge::on_connection_closed,this,[=]{
   });
 
   connect(ui->btnSplit, SIGNAL(clicked()),this, SLOT(btnSplit_Clicked()));
@@ -608,8 +614,12 @@ void MainWindow::mapInit() // map initialization completed
  if(config->currCity->bUserMap)
   m_bridge->processScript("setOptions");
  else
+ {
   m_bridge->processScript("setDefaultOptions");
-
+  if(config->bDisplayRouteOnReload)
+    btnDisplayRouteClicked();
+ }
+ enableControls(true);
 }
 
 Configuration* MainWindow::getConfiguration()
@@ -1386,31 +1396,6 @@ void MainWindow::createActions()
 
  selAllCompaniesAct = new QAction(tr("All Companies"), this);
  selAllCompaniesAct->setStatusTip(tr("Show routes for all companies"));
- // connect(selAllCompaniesAct, &QAction::triggered, [=]{
- //     QStandardItemModel* mod = (QStandardItemModel*)ui->cbCompany->model();
- //     config->currCity->selectedCompanies.clear();
- //     for(int i=0; i < mod->columnCount(); i++)
- //     {
- //         QStandardItem* item = mod->item(i);
- //         item->setCheckState(Qt::Checked);
- //         if(config->currCity->selectedCompanies.isEmpty())
- //             config->currCity->selectedCompanies.append(item->data().toString());
- //         else
- //             config->currCity->selectedCompanies.append(","+item->data().toString());
- //     }
-
- // });
- // clearAllCompaniesAct = new QAction(tr("clear company selections"),this);
- // connect(clearAllCompaniesAct, &QAction::triggered, [=]{
- //     QStandardItemModel* mod = (QStandardItemModel*)ui->cbCompany->model();
- //     //QStringList selectedCompanyList = config->currCity->selectedCompanies.split(",");
- //     config->currCity->selectedCompanies.clear();
- //     for(int i=0; i < mod->columnCount(); i++)
- //     {
- //         QStandardItem* item = mod->item(i);
- //         item->setCheckState(Qt::Unchecked);
- //     }
- // });
 
  combineRoutesAct = new QAction(tr("Combine two routes"), this);
  combineRoutesAct->setStatusTip(tr("Combine two routes into one"));
@@ -1419,21 +1404,6 @@ void MainWindow::createActions()
  refreshRoutesAct = new QAction(tr("Refresh Routes"),this);
  refreshRoutesAct->setStatusTip(tr("Refresh the routes combobox. Especially after executing manual queries to the database."));
  connect(refreshRoutesAct, SIGNAL(triggered()), this, SLOT(refreshRoutes()));
-
-// cbSort = new QComboBox(this);
-// cbSort->setVisible(true);
-// cbSort->activateWindow();
-// cbSort->addItem("Route, end date");
-// cbSort->addItem("Route, start date");
-// cbSort->addItem("Route, name, end date");
-// cbSort->addItem("Route, name, start date");
-// cbSort->addItem("Name, Route, start date");
-
-// cbSort->setCurrentIndex(config->currCity->routeSortType);
-// connect(cbSort, SIGNAL(currentIndexChanged(int)), this, SLOT(cbSortSelectionChanged(int)));
-
-// sortTypeAct = new QWidgetAction(this);
-// sortTypeAct->setDefaultWidget(cbSort);
 
  rerouteAct = new QAction(tr("Temp rerouting"),this);
  rerouteAct->setStatusTip(tr("Temporarily reroute a route between two dates. After the end date, the route will revert back to the route before the start date"));
@@ -1583,6 +1553,14 @@ void MainWindow::createActions()
       dialogUpdateStreets->raise();
       dialogUpdateStreets->show();
       //dlg.exec();
+  });
+
+  displayRouteOnReloadAct = new QAction(tr("Display route on reload"),this);
+  displayRouteOnReloadAct->setStatusTip(tr("Display current route when reloading map"));
+  displayRouteOnReloadAct->setCheckable(true);
+  displayRouteOnReloadAct->setChecked(config->bDisplayRouteOnReload);
+  connect(displayRouteOnReloadAct, &QAction::toggled,this,[=](bool b){
+      config->bDisplayRouteOnReload = b;
   });
 }
 
@@ -1829,6 +1807,9 @@ void MainWindow::createMenus()
       optionsMenu->addAction(displaySegmentArrows);
       displaySegmentArrows->setChecked(config->bDisplaySegmentArrows);
       optionsMenu->addAction(displayRoutesForSelectedCompaniesAct);
+      optionsMenu->addAction(displayRouteOnReloadAct);
+      displayRouteOnReloadAct->setCheckable(true);
+      displayRouteOnReloadAct->setChecked(config->bDisplayRouteOnReload);
     menuBar()->addMenu(optionsMenu);
     menuBar()->addMenu(toolsMenu);
 
@@ -4656,8 +4637,6 @@ bool MainWindow::deleteRoute()
     QMessageBox::StandardButton reply;
     reply=QMessageBox::warning(this, tr("Confirm Delete"),tr("Are you sure you want to delete route ")
                                + rd.alphaRoute() + " " + rd.routeName() + "?", QMessageBox::Yes | QMessageBox::No);
-    //DialogResult rslt =  MessageBox.Show("Are you sure you want to delete route " + rd.alphaRoute + " " + rd.name + "?",
-        //"Confirm Delete", MessageBoxButtons.YesNo);
     if(reply== QMessageBox::Yes)
     {
         sql->beginTransaction("deleteRoute");
@@ -5477,6 +5456,7 @@ bool MainWindow::setupbridge()
 
     // wrap WebSocket clients in QWebChannelAbstractTransport objects
     m_clientWrapper = new WebSocketClientWrapper (m_server);
+
     if(!webView)
         connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
 
@@ -5486,7 +5466,15 @@ bool MainWindow::setupbridge()
                   channel, &QWebChannel::connectTo);
     qInfo() << "registering webViewBridge";
     channel->registerObject("webViewBridge", m_bridge);
-
+    connect(m_clientWrapper, &WebSocketClientWrapper::clientConnected,this, [=]{
+        if(config->bDisplayRouteOnReload)
+        {
+            ui->btnDisplayRoute->click();
+        }
+    });
+    connect(m_clientWrapper,  &WebSocketClientWrapper::clientClosed, this, [=]{
+        enableControls(false);
+    });
     return true;
 }
 
@@ -5638,6 +5626,7 @@ bool MainWindow::verifyAPIKey(QString path, QString apiKey)
 
 void MainWindow::onWebSocketClosed()
 {
+    enableControls(false);
   if(config->bRunInBrowser)
   {
      //QMessageBox::critical(this, tr("Browser closed"), tr("The browser window has closed"));
@@ -5647,6 +5636,18 @@ void MainWindow::onWebSocketClosed()
    mbox->show();
    QTimer::singleShot(2000, mbox, SLOT(hide()));
    channel = nullptr;
+  }
+  else
+  {
+      int rslt = QMessageBox::question(this, tr("Connection closed"), tr("The connection to the browser has closed."
+                                                                         "Click Yes to reload Map,  Close to exit"), QMessageBox::Yes|QMessageBox::Close);
+      if(rslt == QMessageBox::Close)
+      {
+          close();
+          return;
+      }
+      qInfo() << "reload map initiated!";
+      reloadMapAct->trigger();
   }
 }
 
@@ -5720,6 +5721,8 @@ void MainWindow::enableControls( bool b)
     ui->txtSegment->setEnabled(b);
     ui->sbTracks->setEnabled(b);
     ui->chkAddPt->setEnabled(b);
+    if(webView)
+        webView->setEnabled(b);
 }
 
 void MainWindow::describeRoute()
@@ -5979,3 +5982,4 @@ bool MainWindow::restoreDatabases()
     return false;
 
 }
+
