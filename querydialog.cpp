@@ -484,6 +484,7 @@ bool QueryDialog::handleComment(QString line)
 
 bool QueryDialog::processStream(QTextStream* in)
 {
+    _delimiter = ";";
  while(!in->atEnd())
  {
   QString queryStr;
@@ -491,9 +492,16 @@ bool QueryDialog::processStream(QTextStream* in)
   {
    QString line = in->readLine();
    linesRead++;
+   if(line.contains("DELIMITER", Qt::CaseInsensitive))
+   {
+       int ix = line.indexOf("DELIMITER",Qt::CaseInsensitive)+ 9;
+       QString delim = line.mid(ix).trimmed();
+       _delimiter = delim;
+       continue;
+   }
    //qDebug()<<line;
    queryStr += line;
-  } while (!queryStr.endsWith(";"));
+  } while (!queryStr.endsWith(_delimiter));
   //qDebug()<<queryStr;
   QSqlQuery query = QSqlQuery(queryStr, db);
   //QStringList sa_Message_Text;
@@ -553,14 +561,23 @@ void QueryDialog::on_go_QueryButton_clicked()
 
  QStringList lines = text.split("\n");
  QString combined;
+ _delimiter = ";";
+
  foreach(QString line, lines)
  {
   line = line.replace(QChar(8233)," ");
   if(line.startsWith("#"))
    continue;
+  if(line.contains("DELIMITER", Qt::CaseInsensitive))
+  {
+      int ix = line.indexOf("DELIMITER",Qt::CaseInsensitive)+ 9;
+      QString delim = line.mid(ix).trimmed();
+      _delimiter = delim;
+      continue;
+  }
   combined.append(line + " ");
  }
- QStringList statements = combined.split(";");
+ QStringList statements = combined.split(_delimiter);
  QStringList viewList = SQL::instance()->listViews();
  foreach(QString txt, statements)
  {
@@ -724,7 +741,7 @@ bool QueryDialog::processALine(QString txt, QString tabName)
 void QueryDialog::processSelect(QString table, QString commandLine)
 {
  QWidget *tab_First_Result=0;
-
+    _delimiter = ";";
  //QSqlDatabase db = QSqlDatabase::database();
  QueryEditModel* model = new QueryEditModel(nullptr, db);
  model->setTable(table);
@@ -733,7 +750,7 @@ void QueryDialog::processSelect(QString table, QString commandLine)
  {
   whereClause = commandLine.mid(commandLine.indexOf("where", Qt::CaseInsensitive)+5).trimmed();
   int ix;
-  if((ix = whereClause.indexOf(";")) >= 0)
+  if((ix = whereClause.indexOf(_delimiter)) >= 0)
    whereClause = whereClause.mid(0,ix);
   if((ix = whereClause.indexOf("order by", Qt::CaseInsensitive))>= 0)
    whereClause = whereClause.mid(0,ix);

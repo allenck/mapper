@@ -77,8 +77,11 @@ bool ExportSql::openDb()
    _targetDb = QSqlDatabase::addDatabase(tgtConn->driver(), "export");
    tgtConn->configureDb(_targetDb, tgtConn , config);
    tgtDbType = tgtConn->servertype();
-   _targetDb.setUserName(tgtConn->userId());
-   _targetDb.setPassword(tgtConn->pwd());
+   if(config->currConnection->connectString().isEmpty() && tgtConn->connectionType() != "ODBC")
+   {
+       _targetDb.setUserName(tgtConn->userId());
+       _targetDb.setPassword(tgtConn->pwd());
+   }
 
    if(! _targetDb.open())
    {
@@ -96,7 +99,7 @@ bool ExportSql::openDb()
       QSqlQuery* query = new QSqlQuery(_targetDb);
       QString cmd;
       if(tgtConn->servertype() == "MySql")
-        cmd = QString("use %1").arg(tgtConn->defaultSqlDatabase());
+        cmd = QString("use %1").arg(tgtConn->database());
       else
        cmd = QString("use [%1]").arg(tgtConn->defaultSqlDatabase());
 

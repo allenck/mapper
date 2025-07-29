@@ -74,7 +74,11 @@ QSqlDatabase Connection::configure(const QString cName)
 
 // if(ok)
 // {
- if((bOpen = db.open(_userId, _PWD)))
+ if(config->currConnection->connectionType()== "ODBC")
+     bOpen = db.open();
+ else
+     bOpen = db.open(_userId, _PWD);
+ if((bOpen))
  {
   if(config->currConnection->servertype() != "Sqlite")
   {
@@ -86,7 +90,7 @@ QSqlDatabase Connection::configure(const QString cName)
   if(config->currConnection->database()  != "")
   {
     // PostgreSQL does not support a user to access different databases from a login. A new connection
-    // must be made to switc.
+    // must be made to switch.
     if(config->currConnection->servertype() != "PostgreSQL")
     {
        QSqlQuery query = QSqlQuery(db);

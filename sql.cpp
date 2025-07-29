@@ -9189,7 +9189,9 @@ QStringList SQL::showPostgreSQLDatabases(QSqlDatabase db)
   }
   while(query.next())
   {
-   ret.append(query.value(0).toString());
+   QString value = query.value(0).toString();
+   if(value != "postgres")
+    ret.append(value);
   }
 
  return ret;

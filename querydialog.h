@@ -81,6 +81,7 @@ private:
  QMenu* selectMenu = nullptr;
  void loadFile(QString s_File_Name);
  FindReplaceWidget* frw = nullptr;
+ QString _delimiter = ";";
 
 private slots:
  void on_go_QueryButton_clicked();

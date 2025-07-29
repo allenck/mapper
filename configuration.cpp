@@ -634,7 +634,7 @@ void Configuration::createDefaultSettings()
     Connection* nc = new Connection();
     nc->setId(0);
     nc->setSqliteFileName("StLouis.sqlite3");
-    nc->setDescription ("SQLITE3 connection");
+    nc->setDescription ("StLouis SQLITE3 connection");
     nc->setDriver("QSQLITE");
     nc->setServerType("Sqlite");
     nc->setConnectionType("Local");
@@ -668,7 +668,7 @@ void Configuration::createDefaultSettings()
     nc = new Connection();
     nc->setId(0);
     nc->setSqliteFileName("cincinnati.sqlite3");
-    nc->setDescription ("SQLITE3 connection");
+    nc->setDescription ("Cincinnati SQLITE3 connection");
     nc->setDriver("QSQLITE");
     nc->setServerType("Sqlite");
     nc->setConnectionType("Local");
@@ -701,7 +701,7 @@ void Configuration::createDefaultSettings()
     nc = new Connection();
     nc->setId(0);
     nc->setSqliteFileName("louisville.sqlite3");
-    nc->setDescription ("SQLITE3 connection");
+    nc->setDescription ("Louisville SQLITE3 connection");
     nc->setServerType("Sqlite");
     nc->setCityName(newCity->name());
     nc->setConnectionType("Local");
@@ -732,7 +732,7 @@ void Configuration::createDefaultSettings()
     nc = new Connection();
     nc->setId(0);
     nc->setSqliteFileName("berlinerstrassenbahn.sqlite3");
-    nc->setDescription ("SQLITE3 connection");
+    nc->setDescription ("Berlin SQLITE3 connection");
     nc->setDriver("QSQLITE");
     nc->setServerType("Sqlite");
     nc->setCityName(newCity->name());
@@ -766,7 +766,7 @@ void Configuration::createDefaultSettings()
     nc = new Connection();
     nc->setId(0);
     nc->setSqliteFileName("indianapolis.sqlite3");
-    nc->setDescription ("SQLITE3 connection");
+    nc->setDescription ("Indianapolis SQLITE3 connection");
     nc->setDriver("QSQLITE");
     nc->setServerType("Sqlite");
     nc->setCityName(newCity->name());

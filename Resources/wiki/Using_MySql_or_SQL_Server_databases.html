@@ -4,19 +4,27 @@
 <h1>Using MySql or SQL Server databases</h1>
 Mapper has an 'Export' function which provides for transferring data from Mapper's Sqlite3 database to a local or remote database such as MySql or Microsoft's Sql Server. 
 Data can also be exported to another Sqlite database on the same PC. 
+
+Currently. Mapper supports exporting to MySql, Microsoft Sql Server (MsSql) or PostgreSQL. 
 <h2>Prerequisites</h3>
 <h3>MySql</h3>
 Generally, to access a MySql database requires that MySql driver
 plugins are configured and compiled for your version of Qt and
-operating system. This is explained <a href="http://doc.qt.io/qt-4.8/sql-driver.html">here</a>. MySql databases can also be accessed via ODBC.<br>
+operating system. This is explained <a href="http://doc.qt.io/qt-4.8/sql-driver.html">here</a>. 
+MySql databases can also be accessed via ODBC. Given that it is somewhat difficult to compile the MySql Qt plugin,
+it is easier to downlooad and use the PostgreSQL ODBC driver.<br>
 <h3>SQL Server<br>
 </h3>
 &nbsp;Accessing PostgreSQL and SQL Server databases requires ODBC. ODBC is supported
 in Windows automatically but must be added for Unix and MacOS systems. <br>
 <br>
-
+<h3>PostgreSQL</h3>
+In order to access a PostgreSQL database, either the PostgreSQL client or the PostgreSQL ODBC driver 
+must be installed. In practice, the QPSQL direct driver rather than the PostgreSQL ODBC driver may be easier to use since 
+there isn't any way to use an ODBC DSN for any other database than the one it is configured for. 
+<br>
 <h3>Other databases</h3>
-Exporting to other databases such as <b>Postgresql</b> or <b>Oracle</b> can also be supported either thru the use of ODBC or a 
+Exporting to other databases such as  <b>Oracle</b> can also be supported either thru the use of ODBC or a 
 Qt Sql plugin. However, while SQL commands
 generally are interpreted the same for different databases, the commands for adding or modifying tables and views may require 
 explicit coding for a given type of database. 

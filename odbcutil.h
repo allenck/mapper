@@ -19,13 +19,21 @@ struct Driver
     QString pswd;
 };
 
-struct DSN
+class DSN : public QObject
 {
+public:
+    DSN() {}
+    ~DSN() {}
     QString name;
     QString lib;
     QString type;
     QString descr;
-    QString driver;
+    QString driverName;
+    QString server;
+    int port=-1;
+    QString database;
+    QString userId;
+    QString password;
     bool userDsn =false;
 };
 
@@ -41,13 +49,14 @@ public:
     void getDSNs(QString ini);
     void fillDSNCombo(QComboBox* box, QString type);
     QString connectString(QString connector, QString host, int port, QString user, QString pswd, QString database);
-
+    QString connectString2(QString driver, QString host, int port, QString user, QString pswd, QString database);
+    DSN* getDsn(QString dsn);
 signals:
     void odbc_changed();
 
 private:
     explicit ODBCUtil(QObject *parent = nullptr);
-    QMap<QString, QList<QPair<QString,QString>>> odbcPairMap;
+    QMap<QString, QMap<QString,QString>> odbcPairMap;
     QStringList databases;
     static ODBCUtil* _instance;
     QString currLine;
@@ -61,7 +70,8 @@ private:
     QMap<QString, DSN*> dsnByName;
     void initialize();
     QFileSystemWatcher * odbcinstWatcher = nullptr;
-
+    void getWinDSNs();
+    void getWinDrivers();
 };
 
 #endif // ODBCUTIL_H

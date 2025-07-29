@@ -20,6 +20,8 @@ void City::addOverlay(Overlay* ov)
 
 void City::addConnection(Connection* connection)
 {
+    if(connection->description().contains("\n"))
+        connection->description().remove("\n");
    if(!connectionMap.contains(connection->uniqueId().toString()))
    {
        connectionMap.insert(connection->uniqueId().toString(), connection);

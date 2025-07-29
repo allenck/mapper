@@ -1,5 +1,4 @@
-
-
+DELIMITER $$
 CREATE FUNCTION `distance`( inLat1 DOUBLE , inLon1 DOUBLE , inLat2 DOUBLE , inLon2 DOUBLE ) 
 RETURNS double 
 DETERMINISTIC 
@@ -29,4 +28,4 @@ BEGIN
     SET d = R * c;  
     /* distance in km */
     RETURN d; 
-END
+END$$
