@@ -40,25 +40,25 @@
         <file>show-password.png</file>
         <file>reload.png</file>
         <file>sql/addBiDirectionalToRoutes.sql</file>
-        <file>sql/CreateMsSqlFunction.sql</file>
-        <file>sql/CreateMySqlFunction.sql</file>
-        <file>sql/mySql_createDatabase.sql</file>
-        <file>sql/sqlite3_recreateAltRoute.sql</file>
+        <file>sql/MsSql/CreateMsSqlFunction.sql</file>
+        <file>sql/MySql/CreateMySqlFunction.sql</file>
+        <file>sql/MySql/mySql_createDatabase.sql</file>
+        <file>sql/Sqlite3/sqlite3_recreateAltRoute.sql</file>
         <file>sql/recreateRouteComments.sql</file>
-        <file>sql/sqlite3_recreateSegmentsTable.sql</file>
+        <file>sql/Sqlite3/sqlite3_recreateSegmentsTable.sql</file>
         <file>sql/recreateStationTable.sql</file>
         <file>sql/recreateTractionTypes.sql</file>
-        <file>sql/sqlite3_create_tables.sql</file>
-        <file>sql/mysql_recreateCompanies.sql</file>
-        <file>sql/sqlite3_recreateCompanies.sql</file>
-        <file>sql/mySql_recreateSegmentsTable.sql</file>
-        <file>sql/sqlite3_recreate_routes.sql</file>
-        <file>sql/mssql_create_routes.sql</file>
-        <file>sql/mysql_create_routes.sql</file>
-        <file>sql/sqlite3_create_routes.sql</file>
+        <file>sql/Sqlite3/sqlite3_create_tables.sql</file>
+        <file>sql/MySql/mysql_recreateCompanies.sql</file>
+        <file>sql/Sqlite3/sqlite3_recreateCompanies.sql</file>
+        <file>sql/MySql/mySql_recreateSegmentsTable.sql</file>
+        <file>sql/Sqlite3/sqlite3_recreate_routes.sql</file>
+        <file>sql/MsSql/mssql_create_routes.sql</file>
+        <file>sql/MySql/mysql_create_routes.sql</file>
+        <file>sql/Sqlite3/sqlite3_create_routes.sql</file>
         <file>sql/create_stations.sql</file>
-        <file>sql/mssql_create_stations.sql</file>
-        <file>sql/mssql_recreateStationTable.sql</file>
+        <file>sql/MsSql/mssql_create_stations.sql</file>
+        <file>sql/MsSql/mssql_recreateStationTable.sql</file>
         <file>qwebchannel.js</file>
         <file>ExtDraggableObject.js</file>
         <file>opacityControl.js</file>
@@ -70,26 +70,26 @@
         <file>apikey.js</file>
         <file>opacity-slider2.png</file>
         <file>overlays.xml</file>
-        <file>sql/mysql_recreate_routes.sql</file>
-        <file>sql/mysql_create_routeView.sql</file>
-        <file>sql/mssql_recreate_routes.sql</file>
+        <file>sql/MySql/mysql_recreate_routes.sql</file>
+        <file>sql/MySql/mysql_create_routeView.sql</file>
+        <file>sql/MsSql/mssql_recreate_routes.sql</file>
         <file>contextmenu.js</file>
-        <file>sql/mysql_recreateRouteComments.sql</file>
-        <file>sql/mssql_create_routeView.sql</file>
+        <file>sql/MySql/mysql_recreateRouteComments.sql</file>
+        <file>sql/MsSql/mssql_create_routeView.sql</file>
         <file>S-Bahn-Logo.svg</file>
         <file>U-Bahn.svg</file>
         <file>Strassenbahn-Haltestelle.svg</file>
         <file>sl-metro-logo.svg</file>
         <file>sql/create_routeView.sql</file>
-        <file>sql/sqlite3_recreate_parameters.sql</file>
-        <file>sql/sqlite3_create_streetdef.sql</file>
+        <file>sql/Sqlite3/sqlite3_recreate_parameters.sql</file>
+        <file>sql/SqLite3/sqlite3_create_streetdef.sql</file>
         <file>sql/create_routeName.sql</file>
-        <file>sql/mySql_create_routeName.sql</file>
-        <file>sql/mysql_create_streetdef.sql</file>
-        <file>sql/mssql_create_streetdef.sql</file>
-        <file>sql/mssql_create_routeName.sql</file>
+        <file>sql/MySql/mySql_create_routeName.sql</file>
+        <file>sql/MySql/mysql_create_streetdef.sql</file>
+        <file>sql/MsSql/mssql_create_streetdef.sql</file>
+        <file>sql/MsSql/mssql_create_routeName.sql</file>
         <file>sql/recreate_streetdef.sql</file>
-        <file>sql/mysql_create_stations.sql</file>
+        <file>sql/MySql/mysql_create_stations.sql</file>
         <file>dump_databases.bat</file>
         <file>dump_databases.sh</file>
         <file>restore_databases.bat</file>

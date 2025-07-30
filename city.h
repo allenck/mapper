@@ -74,6 +74,7 @@ public:
  QUuid _connectionUniqueId;
 
 signals:
+ void connectionAdded(Connection* connection);
 
 public slots:
 

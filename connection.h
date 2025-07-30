@@ -22,7 +22,7 @@ class Connection : public QObject
  //QString _useDatabase; // MySql or MsSql
  QSqlDatabase db;
  SQL* sql;
- QString _servertype = "Sqlite"; // "MsSql (default), "MySql"
+ QString _servertype = "Sqlite"; // "MsSql (default), "MySql, PostgreSQL"
  Configuration* config;
  bool bOpen = false;
  QString _cityName;

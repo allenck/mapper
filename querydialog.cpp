@@ -52,15 +52,18 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
       menu.addAction(act);
       menu.exec(QCursor::pos());
       connect(act, &QAction::triggered,this,[=]{
-      ui->cbConnections->clear();
-      for(int i=0; i<config->currCity->connections.count(); i++)
-      {
-          Connection* c = config->currCity->connections.at(i);
-          ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
-          if(c->id() == config->currConnection->id())
-              ui->cbConnections->setCurrentIndex(i);
-      }
-    });
+          ui->cbConnections->clear();
+          for(int i=0; i<config->currCity->connections.count(); i++)
+          {
+              Connection* c = config->currCity->connections.at(i);
+              ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
+              if(c->id() == config->currConnection->id())
+                  ui->cbConnections->setCurrentIndex(i);
+          }
+      });
+  });
+  connect(config->currCity, &City::connectionAdded, this, [=](Connection* c){
+      ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
   });
   makeSelectedIncludeAct = new QAction(tr("Make include file of selection"), this);
   connect(makeSelectedIncludeAct, &QAction::triggered, [=]{
@@ -1119,7 +1122,12 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 //             loadSqlite3Functions(db));
 //   }
    Connection::configureDb(db, tgtConn, config);
-   if(!db.open(tgtConn->userId(), tgtConn->pwd()))
+   bool bOpen;
+   if(tgtConn->connectionType()== "ODBC" && !tgtConn->connectString().isEmpty())
+       bOpen = db.open();
+   else
+       bOpen =db.open(tgtConn->userId(), tgtConn->pwd());
+   if(!bOpen)
    {
     ui->go_QueryButton->setEnabled(false);
     qDebug() << "Database not open: " + ui->cbConnections->currentText() + ", current databasename: " + db.databaseName() + " " + db.lastError().text();

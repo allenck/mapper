@@ -31,6 +31,7 @@ void City::addConnection(Connection* connection)
        //curConnectionId = connection->id();
        _connectionUniqueId = connection->uniqueId();
    }
+   emit connectionAdded(connection);
 }
 
 void City::removeOverlay(Overlay* ov)
