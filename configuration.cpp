@@ -94,6 +94,12 @@ void Configuration::saveSettings()
        settings->setValue("PWD", cn->pwd());
        settings->setValue("UID", cn->userId());
        settings->setValue("connectString",cn->connectString());
+       settings->setValue("sslMode", cn->getSslMode());
+       settings->setValue("pwdMethod", cn->getPwdMethod());
+       if(cn->host() != "")
+           settings->setValue("hostname", cn->host());
+       if(cn->port() > 0)
+           settings->setValue("port", cn->port());
    }
    else if(cn->connectionType()== "Direct")
    {
@@ -394,6 +400,8 @@ void Configuration::getSettings()
            ncn->setHost(settings.value("hostname").toString());
            ncn->setPort(settings.value("port").toInt());
            ncn->setConnectString(settings.value("connectString").toString());
+           ncn->setSslMode(settings.value("sslMode").toString());
+           ncn->setPwdMethod(settings.value("pwdMethod").toString());
         }
 
         if(!nc->connections.contains(ncn))

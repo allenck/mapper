@@ -3528,9 +3528,9 @@ bool ExportSql::createRouteNameTable(QSqlDatabase db, QString dbType)
     if(dbType == "Sqlite")
         return SQL::instance()->executeScript(":/sql/create_routeName.sql", db);
     if(dbType == "MySql")
-        return SQL::instance()->executeScript(":/sql/mySql_create_routeName.sql", db);
+        return SQL::instance()->executeScript(":/sql/MySql/mySql_create_routeName.sql", db);
     if(dbType == "MsSql")
-        return SQL::instance()->executeScript(":/sql/mssql_create_routeName.sql", db);
+        return SQL::instance()->executeScript(":/sql/MsSql/mssql_create_routeName.sql", db);
     if(dbType == "PostgreSQL")
     {
         QString commandString = "CREATE TABLE if not exists RouteName  (\
@@ -3547,11 +3547,11 @@ bool ExportSql::createRouteNameTable(QSqlDatabase db, QString dbType)
 bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
 {
  if(dbType == "Sqlite")
-  return SQL::instance()->executeScript(":/sql/sqlite3_create_routes.sql", db);
+  return SQL::instance()->executeScript(":/sql/SqLite3/sqlite3_create_routes.sql", db);
  if(dbType == "MySql")
-  return SQL::instance()->executeScript(":/sql/mysql_create_routes.sql", db);
+  return SQL::instance()->executeScript(":/sql/MySql/mysql_create_routes.sql", db);
  if(dbType == "MsSql")
-  return SQL::instance()->executeScript(":/sql/mssql_create_routes.sql", db);
+  return SQL::instance()->executeScript(":/sql/MsSql/mssql_create_routes.sql", db);
  if(dbType == "PostgreSQL")
  {
  QString commandString = "CREATE TABLE  Routes  (\
@@ -3761,11 +3761,11 @@ bool ExportSql::createStationsTable(QSqlDatabase db, QString dbType)
 {
  if(dbType == "MsSql")
  {
-  return SQL::instance()->executeScript(":/sql/mssql_create_stations.sql",db);
+  return SQL::instance()->executeScript(":/sql/MsSql/mssql_create_stations.sql",db);
  }
  else if(dbType == "MySql")
  {
-     return SQL::instance()->executeScript(":/sql/mysql_create_stations.sql",db);
+     return SQL::instance()->executeScript(":/sql/MySql/mysql_create_stations.sql",db);
  }
  else if(dbType == "Sqlite")
  {
@@ -4408,15 +4408,15 @@ bool ExportSql::createStreetDefTable(QSqlDatabase db, QString dbType)
 {
     if(dbType == "MsSql")
     {
-        return SQL::instance()->executeScript(":/sql/mssql_create_streetdef.sql",db);
+        return SQL::instance()->executeScript(":/sql/MsSql/mssql_create_streetdef.sql",db);
     }
     else if(dbType == "MySql")
     {
-        return SQL::instance()->executeScript(":/sql/mysql_create_streetdef.sql",db);
+        return SQL::instance()->executeScript(":/sql/MySql/mysql_create_streetdef.sql",db);
     }
     else if(dbType == "Sqlite")
     {
-        return SQL::instance()->executeScript(":/sql/sqlite3_create_streetdef.sql",db);
+        return SQL::instance()->executeScript(":/sql/Sqlite3/sqlite3_create_streetdef.sql",db);
     }
     else
     if(dbType == "PostgreSQL")

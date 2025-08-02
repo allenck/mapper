@@ -9714,7 +9714,7 @@ void SQL::checkTables(QSqlDatabase db)
   {
    addColumn("Companies", "RoutePrefix", "varchar(10 NOT NULL default '')");
    if(config->currConnection->servertype() == "Sqlite")
-    executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
+    executeScript(":/sql/Sqlite3/sqlite3_recreateSegmentsTable.sql",db);
   }
 
   if(!doesColumnExist("Companies", "info"))
@@ -9774,12 +9774,12 @@ void SQL::checkTables(QSqlDatabase db)
   if(!tableList.contains("StreetDef",Qt::CaseInsensitive))
   {
       if(config->currConnection->servertype() == "Sqlite")
-       executeScript(":/sql/sqlite3_create_streetdef.sql",db);
+       executeScript(":/sql/Sqlite3/sqlite3_create_streetdef.sql",db);
   }
   if(!doesColumnExist("Routes", "routeId"))
   {
     addColumn("Routes", "routeId", "int(11) NOT NULL DEFAULT -1", "Name");
-    //executeScript(":/sql/sqlite3_recreate_routes.sql",db);
+    //executeScript(":/sql/Sqlite3/sqlite3_recreate_routes.sql",db);
   }
   if(config->currConnection->servertype() == "PostgreSQL")
   {
@@ -9842,7 +9842,7 @@ void SQL::checkTables(QSqlDatabase db)
   {
    addColumn("Segments", "Location", "varchar(30) not null default ''", "Tracks");
    if(config->currConnection->servertype() == "Sqlite")
-    executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
+    executeScript(":/sql/Sqlite3/sqlite3_recreateSegmentsTable.sql",db);
    else
    {
     if(config->currConnection->servertype() != "MySql")
@@ -9857,7 +9857,7 @@ void SQL::checkTables(QSqlDatabase db)
    addColumn("Stations", "routes", "varchar(50)");
    addColumn("Stations", "segments", "varchar(50)");
    if(config->currConnection->servertype() == "MsSql")
-    executeScript(":/sql/mssql_recreateStationTable.sql",db);
+    executeScript(":/sql/MsSql/mssql_recreateStationTable.sql",db);
    else
     executeScript(":/sql/recreateStationTable.sql",db); // sqlite & mysql
   }
@@ -9926,7 +9926,7 @@ void SQL::checkTables(QSqlDatabase db)
   {
       addColumn("Parameters", "abbreviationsList", "varchar[200] not null default ''");
       if(config->currConnection->servertype() == "Sqlite")
-         executeScript(":/sql/sqlite3_recreate_parameters.sql");
+         executeScript(":/sql/Sqlite3/sqlite3_recreate_parameters.sql");
   }
   QStringList routesPk = listPkColumns("Routes", config->currConnection->servertype(), db);
   if(!routesPk.contains("CompanyKey", Qt::CaseInsensitive)!=0)
@@ -9947,7 +9947,7 @@ void SQL::checkTables(QSqlDatabase db)
 //  QStringList views = listViews();
 //  if(!views.contains("RouteView", Qt::CaseInsensitive))
   if(config->currConnection->servertype() == "MsSql")
-   executeScript(":/sql/mssql_create_routeView.sql");
+   executeScript(":/sql/MsSql/mssql_create_routeView.sql");
   else
    executeScript(":/sql/create_routeView.sql");
 
@@ -9967,7 +9967,7 @@ void SQL::checkTables(QSqlDatabase db)
  setForeignKeyCheck(config->foreignKeyCheck());
 }
 
-bool SQL::executeCommand(QString commandString, QSqlDatabase db)
+bool SQL::executeCommand(QString commandString, QSqlDatabase db,  QList<QVariant> *pList)
 {
  QSqlQuery query = QSqlQuery(db);
  if(!query.exec(commandString))
@@ -9977,6 +9977,15 @@ bool SQL::executeCommand(QString commandString, QSqlDatabase db)
      QSqlError error = query.lastError();
      SQLERROR(std::move(query));
      throw SQLException(error.text() + " " + errCommand);
+ }
+ if(pList)
+ {
+     pList->clear();
+     int ix =0;
+     while(query.next())
+     {
+         pList->append(query.value(ix++));
+     }
  }
  return true;
 }

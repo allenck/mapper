@@ -39,6 +39,8 @@ class Connection : public QObject
  bool _sqlite_user_function_loaded = false; // true for Sqlite only!
  QStringList _tables;
  QString _connectString;
+ QString _sslMode;      // for PostgreSQL connection string
+ QString _pwdMethod;    // for PostgreSQL connection string
 
 public:
  Connection(QObject* parent = nullptr);
@@ -100,6 +102,10 @@ public:
  void setSqliteUserFunctionLoaded(bool b) {_sqlite_user_function_loaded = b;}
  QStringList tables(){return db.tables();}
  void setTables(QStringList tables){_tables = tables;}
+ QString getSslMode() {return _sslMode;}
+ void setSslMode(QString sslMode){_sslMode = sslMode;}
+ QString getPwdMethod() {return _pwdMethod;}
+ void setPwdMethod(QString pwdMethod){_pwdMethod = pwdMethod;}
 };
 
 #endif // CONNECTION_H

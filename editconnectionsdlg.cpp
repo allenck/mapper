@@ -33,6 +33,18 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
 
    refreshCities();
 
+   connect(ui->btnPgSetup, &QPushButton::clicked, this, [=]{
+       if(setupPostgreSQLDatabases(ui->txtHost->text(), ui->txtUserId->text(),ui->txtPWD->text()))
+       {
+          ui->lblHelp->setStyleSheet("QLabel {  color :green; }");
+          ui->lblHelp->setText(tr("databases setup!!"));
+       }
+       else {
+           ui->lblHelp->setStyleSheet("QLabel {  color : #FF8000; }");
+           ui->lblHelp->setText(tr("failed!"));
+       }
+   });
+   ui->btnPgSetup->setVisible(false);
 
    dbTypes <<"MySql"<<"MsSql"<<"Sqlite"<<"PostgreSQL";  // currently supported database types.
    for(int i=0; i < dbTypes.count(); i++)
@@ -204,21 +216,26 @@ void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
 {
  disconnect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(cbDbType_selectionChanged(QString)));
  disconnect(ui->cbDriverType, SIGNAL(currentTextChanged(QString)),this,SLOT(cbDriverTypeSelectionChanged(QString)));
+ ui->btnPgSetup->setVisible(false);
  if(dbType == "Sqlite")
  {
      ui->label_2->setVisible(true);
      ui->txtSqliteFileName->setVisible(true);
      ui->tbBrowse->setVisible(true);
-  foreach (QString driver, drivers) {
-   int index = ui->cbDriverType->findText(driver);
-   setComboBoxItemEnabled(ui->cbDriverType,index, driver == "QSQLITE" || driver == "QSQLITE3");
-  }
+     foreach (QString driver, drivers) {
+        int index = ui->cbDriverType->findText(driver);
+        setComboBoxItemEnabled(ui->cbDriverType,index, driver == "QSQLITE" || driver == "QSQLITE3");
+     }
 
      setComboBoxItemEnabled(ui->cbConnect, 0, true); // Local"
      setComboBoxItemEnabled(ui->cbConnect, 1, false); // Direct");
      setComboBoxItemEnabled(ui->cbConnect, 2, false); // ODBC");
      ui->cbConnect->setCurrentText("Local");
      ui->cbDriverType->setCurrentText("QSQLITE");
+     ui->lblSslMode->setVisible(false);
+     ui->lblPwdMethod->setVisible(false);
+     ui->cbPwdMethod->setVisible(false);
+     ui->cbSslMode->setVisible(false);
  }
  else if(dbType == "MySql")
  {
@@ -241,6 +258,10 @@ void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
      setComboBoxItemEnabled(ui->cbConnect, 2, true); //ODBC
      ui->cbDriverType->setCurrentText("QODBC");
      ui->cbConnect->setCurrentText("ODBC");
+     ui->lblSslMode->setVisible(false);
+     ui->lblPwdMethod->setVisible(false);
+     ui->cbPwdMethod->setVisible(false);
+     ui->cbSslMode->setVisible(false);
 
  }
  else if(dbType == "MsSql")
@@ -260,9 +281,15 @@ void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
      setComboBoxItemEnabled(ui->cbConnect, 2, true); // ODBC");
      ui->cbDriverType->setCurrentText("QODBC");
      ui->cbConnect->setCurrentText("ODBC");
+     ui->lblSslMode->setVisible(false);
+     ui->lblPwdMethod->setVisible(false);
+     ui->cbPwdMethod->setVisible(false);
+     ui->cbSslMode->setVisible(false);
  }
  else if(dbType == "PostgreSQL")
  {
+     ui->btnPgSetup->setVisible(true);
+
      ui->label_2->setVisible(false);
      ui->txtSqliteFileName->setVisible(false);
      ui->tbBrowse->setVisible(false);
@@ -282,6 +309,10 @@ void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
      ui->cbDriverType->setCurrentText("QODBC");
      ui->cbConnect->setCurrentText("ODBC");
      qApp->processEvents();
+     ui->lblSslMode->setVisible(true);
+     ui->lblPwdMethod->setVisible(true);
+     ui->cbPwdMethod->setVisible(true);
+     ui->cbSslMode->setVisible(true);
  }
  else
  {
@@ -413,6 +444,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
  // ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
  if(sel < 0)
   return;
+
  //ui->btnSave->setText(tr("update"));
  connection = VPtr<Connection>::asPtr(ui->cbConnections->itemData(sel));
  if(connection == nullptr)
@@ -475,49 +507,27 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
   db.setDatabaseName(ODBCDsn);
   db.setUserName(connection->userId());
   db.setPassword(connection->pwd());
-
-
-  //QList<QPair<QString,QString>> pairs = odbcPairMap.value(ui->cbODBCDsn->currentData().toString());
-  // QMap<QString,QString> map = odbcPairMap.value(ui->cbODBCDsn->currentData().toString());
-  // //for(std::pair <QString,QString> pair : pairs)
-  // QMapIterator<QString,QString> iter(map);
-  // while(iter.hasNext())
-  // {
-  //     iter.next();
-  //     QString key = iter.key();
-  //     QString val = iter.value();
-  //     if(key.compare("port",Qt::CaseInsensitive)==0)
-  //     {
-  //         ui->txtPort->setPlaceholderText(val);
-  //         //db.setPort(pair.second.toInt());
-  //     }
-  //     if(key.compare("PWD",Qt::CaseInsensitive)==0)
-  //     {
-  //         ui->txtPWD->setPlaceholderText("dsn password");
-  //     }
-  //     if(key.compare("SERVER",Qt::CaseInsensitive)==0)
-  //     {
-  //         ui->txtHost->setPlaceholderText(val);
-  //         //db.setHostName(pair.second);
-  //     }
-  //     if(key.compare("UID",Qt::CaseInsensitive)==0)
-  //     {
-  //         ui->txtUserId->setPlaceholderText(val);
-  //         //db.setUserName(pair.second);
-  //     }
-  //     // if(testConnection())
-  //     // {
-  //     //     QStringList list = SQL::instance()->showMySqlDatabases(db);
-  //     //     QCompleter* completer = new QCompleter(list);
-  //     //     ui->txtUseDatabase->setCompleter(completer);
-  //     //     ui->lblHelp->setStyleSheet("color: green");
-  //     // }
-  // }
+  ui->txtHost->setText(connection->host());
+  if(connection->port()>0)
+    ui->txtPort->setText(QString::number(connection->port()));
 
   if(connection->servertype() == "PostgreSQL" && connection->connectionType() == "ODBC" && !connection->database().isEmpty())
   {
       db.setDatabaseName(connection->dsn());
       db.setConnectOptions(tr("database=%1;").arg(connection->database()));
+      ui->lblSslMode->setVisible(true);
+      ui->lblPwdMethod->setVisible(true);
+      ui->cbPwdMethod->setVisible(true);
+      ui->cbSslMode->setVisible(true);
+      ui->cbPwdMethod->setCurrentText(connection->getPwdMethod());
+      ui->cbSslMode->setCurrentText(connection->getSslMode());
+  }
+  else
+  {
+      ui->lblSslMode->setVisible(false);
+      ui->lblPwdMethod->setVisible(false);
+      ui->cbPwdMethod->setVisible(false);
+      ui->cbSslMode->setVisible(false);
   }
   // if(connection->servertype() == "PostgreSQL" && connection->connectionType() == "ODBC" && !connection->connectString().isEmpty())
   // {
@@ -759,6 +769,10 @@ void EditConnectionsDlg::setControls(QString txt)
   ui->txtSqliteFileName->setCompleter(nullptr);
   ui->label_12->setVisible(false);
   ui->cbODBCDsn->setVisible(false);
+  ui->lblSslMode->setVisible(false);
+  ui->lblPwdMethod->setVisible(false);
+  ui->cbPwdMethod->setVisible(false);
+  ui->cbSslMode->setVisible(false);
  }
  else if(txt == "ODBC")
  {
@@ -773,79 +787,6 @@ void EditConnectionsDlg::setControls(QString txt)
   ui->tbView->setEnabled(true);
   ui->txtUserId->setEnabled(true);
 
-  //odbcPairMap.clear();
-
-// #ifdef Q_OS_WIN
-//   QSettings winReg1("HKEY_CURRENT_USER\\Software\\ODBC\\ODBC.INI\\ODBC Data Sources", QSettings::NativeFormat);
-//   QSettings winReg2("HKEY_LOCAL_MACHINE\\Software\\ODBC\\ODBC.INI\\ODBC Data Sources", QSettings::NativeFormat);
-//   //odbcMap.clear();
-//   //QList<QPair<QString,QString> > list;
-//   QMap<QString,QString> map;
-//   QStringList iniKeys;
-//   databases = winReg1.childKeys();
-//   qDebug() << QString("%1").arg(databases.count());
-//   foreach (QString key, databases) {
-//      QString keyVal = winReg1.value(key).toString();
-//      // if( keyVal.contains("SQL Server"))
-//      // {
-//          //list.clear();
-//      map.clear();
-//      QString regKey = QString("HKEY_CURRENT_USER\\Software\\ODBC\\ODBC.INI\\") + key;
-//      QSettings winReg(regKey,QSettings::NativeFormat);
-
-//      iniKeys = winReg.childKeys();
-//      for(QString iniKey : iniKeys)
-//      {
-//          QStringList childKeys = winReg.childKeys();
-//          for(QString iniKey3 : childKeys)
-//          {
-//              QPair<QString,QString>  pair(iniKey3, winReg.value(iniKey3).toString());
-//              //list.append(pair);
-//              map.insert(iniKey3, winReg.value(iniKey3).toString());
-//          }
-//      }
-//      //odbcPairMap.insert(key, list);
-//      odbcPairMap.insert(key,map);
-//   }
-
-//   // add also systemDsn
-//   databases = winReg2.childKeys();
-//   qDebug() << QString("%1").arg(databases.count());
-//   foreach (QString key, databases) {
-//       QString keyVal = winReg2.value(key).toString();
-//       // if( keyVal.contains("SQL Server"))
-//       // {
-//       map.clear();
-//       QString regKey = QString("HKEY_LOCAL_MACHINE\\Software\\ODBC\\ODBC.INI\\") + key;
-//       QSettings winReg(regKey,QSettings::NativeFormat);
-
-//       iniKeys = winReg.childKeys();
-//       for(QString iniKey : iniKeys)
-//       {
-//           QStringList childKeys = winReg.childKeys();
-//           for(QString iniKey3 : childKeys)
-//           {
-//               //QPair<QString,QString>  pair(iniKey3, winReg.value(iniKey3).toString());
-//               //list.append(pair);
-//               map.insert(iniKey3, winReg.value(iniKey3).toString());
-//           }
-//       }
-//       odbcPairMap.insert(key, map);
-//   }
-// #else
-// #  ifdef Q_OS_MACOS
-//   findODBCDsn("/Library/ODBC/odbc.ini", &databases);
-//   findODBCDsn(QDir::home().absolutePath() + QDir::separator()+ ".odbc.ini", &databases);
-// #  else
-//   // location of unixODBC config files
-//   findODBCDsn(QDir::home().absolutePath() + QDir::separator()+ ".odbc.ini", &databases);
-//   //findODBCDsn("/usr/local/etc/odbc.ini", &databases);
-//   findODBCDsn("/etc/odbc.ini", &databases);
-// #  endif
-//   connect(odbcUtil, &ODBCUtil::odbc_changed,this,[=]{
-//       odbcUtil->fillDSNCombo(ui->cbODBCDsn, ui->cbDbType->currentText());
-//   });
-// #endif
   // use database (required for ODBC)
   ui->label_10->setVisible(true);
   ui->cbUseDatabase->setVisible(true);
@@ -876,32 +817,20 @@ void EditConnectionsDlg::setControls(QString txt)
   ui->txtSqliteFileName->setVisible(false);
   ui->label_12->setVisible(true);
   ui->cbODBCDsn->setVisible(true);
-  //odbcUtil->fillDSNCombo(ui->cbODBCDsn, ui->cbDbType->currentText());
-// #ifdef  Q_OS_WIN
-//   //ui->cbODBCDsn->clear();
-//   QMapIterator<QString, QMap<QString,QString>> iter(odbcPairMap);
-//   while(iter.hasNext())
-//   {
-//       iter.next();
-//       //if(iter.key() == ui->cbDbType->currentText())
-//       QMap<QString,QString> map = iter.value();
-//       QString description;
-//       QMapIterator<QString,QString> iter2(map);
-//       while(iter2.hasNext())
-//       {
-//           iter2.next();
-//           if(iter2.key().compare("Description",Qt::CaseInsensitive)==0)
-//           {
-//               description = iter2.value();
-//               break;
-//           }
-//       }
-//           //sources.append(iter.key());
-//       //if(ui->cbODBCDsn->findData(iter.key())<0 && description.startsWith(ui->cbDbType->currentText()))
-//         //ui->cbODBCDsn->addItem(iter.key() + " - " + description, iter.key());
-//   }
-//   //ui->cbODBCDsn->addItems(sources);
-// #endif
+  if(ui->cbDbType->currentText()=="PostgreSQL")
+  {
+      ui->lblSslMode->setVisible(true);
+      ui->lblPwdMethod->setVisible(true);
+      ui->cbPwdMethod->setVisible(true);
+      ui->cbSslMode->setVisible(true);
+  }
+  else
+  {
+      ui->lblSslMode->setVisible(false);
+      ui->lblPwdMethod->setVisible(false);
+      ui->cbPwdMethod->setVisible(false);
+      ui->cbSslMode->setVisible(false);
+  }
  }
  else if(txt == "Local") // Local (Sqlite only)
  {
@@ -942,6 +871,10 @@ void EditConnectionsDlg::setControls(QString txt)
   ui->txtSqliteFileName->setCompleter(nullptr);
   ui->label_12->setVisible(false);
   ui->cbODBCDsn->setVisible(false);
+  ui->lblSslMode->setVisible(false);
+  ui->lblPwdMethod->setVisible(false);
+  ui->cbPwdMethod->setVisible(false);
+  ui->cbSslMode->setVisible(false);
  }
 }
 
@@ -1147,10 +1080,11 @@ void EditConnectionsDlg::btnSaveClicked()
      connection->setUserId(ui->txtUserId->text());
      connection->setPWD(ui->txtPWD->text());
      if(ui->cbDbType->currentText() == "PostgreSQL" && ui->cbConnect->currentText()=="ODBC")
-         // connection->setConnectString(odbcUtil->connectString(ui->cbODBCDsn->currentData().toString(),
-         //                                                      ui->txtHost->text(), ui->txtPort->text().toInt(), ui->txtUserId->text(),
-         //                                                      ui->txtPWD->text(), ui->cbUseDatabase->currentText().toLower()));
+     {
          connection->setConnectString(db.databaseName());
+         connection->setPwdMethod(ui->cbPwdMethod->currentText());
+         connection->setSslMode(ui->cbSslMode->currentText());
+     }
   }
   else if(ui->cbDbType->currentText() == "Sqlite")
   {
@@ -1633,6 +1567,7 @@ bool EditConnectionsDlg::openTestDb()
    //     if(ui->cbDbType->currentText() == "PostgreSQL")
    //         db.setDatabaseName(ui->cbUseDatabase->currentText());
    // }
+
     if(ui->cbDbType->currentText() == "Sqlite"  )
     {
         QFileInfo info(ui->txtSqliteFileName->text());
@@ -1645,15 +1580,15 @@ bool EditConnectionsDlg::openTestDb()
     else if(ui->cbConnect->currentText() == "ODBC")
     {
         QString connector = ui->cbODBCDsn->currentData().toString();
-#ifndef Q_OS_WIN
-        DSN* dsn = odbcUtil->getDsn(ui->cbODBCDsn->currentData().toString());
+// #ifndef Q_OS_WIN
+//         DSN* dsn = odbcUtil->getDsn(ui->cbODBCDsn->currentData().toString());
 
 
 
-        connstring = odbcUtil->connectString2("{" + dsn->driverName + "}", ui->txtHost->text(), ui->txtPort->text().toInt(),
-                                          ui->txtUserId->text(), (ui->cbDbType->currentText()=="PostgreSQL")?"md5"+md5String:ui->txtPWD->text(), ui->cbUseDatabase->currentText() );
+//         connstring = odbcUtil->connectString2("{" + dsn->driverName + "}", ui->txtHost->text(), ui->txtPort->text().toInt(),
+//                                           ui->txtUserId->text(), (ui->cbDbType->currentText()=="PostgreSQL")?"md5"+md5String:ui->txtPWD->text(), ui->cbUseDatabase->currentText() );
 
-#else // windows
+// #else // windows
         if(ui->cbDbType->currentText() == "PostgreSQL" && ui->cbDriverType->currentText() == "QODBC")
         {
             DSN* dsn = odbcUtil->getDsn(ui->cbODBCDsn->currentData().toString());
@@ -1665,10 +1600,10 @@ bool EditConnectionsDlg::openTestDb()
           //                                        dsn->userId, dsn->password, ui->cbUseDatabase->currentText() );
           connstring = odbcUtil->connectString2("{" + dsn->driverName + "}",ui->txtHost->text(), dsn->port,
                                                  ui->txtUserId->text(), ui->txtPWD->text(), ui->cbUseDatabase->currentText() );
-          connstring.append("sslmode=require;");
+          connstring.append(QString("sslmode=%1;").arg(ui->cbSslMode->currentText()));
         }
 
-#endif
+//#endif
         if(ui->cbDbType->currentText() == "PostgreSQL" && ui->cbConnect->currentText() == "ODBC")
         {
             db.setDatabaseName(connstring);
@@ -2301,3 +2236,55 @@ void EditConnectionsDlg::displayDbInfo(QSqlDatabase db)
     qDebug() <<(tr(" last error: %1 ").arg(db.lastError().text()));
 }
 
+bool EditConnectionsDlg::setupPostgreSQLDatabases(QString host, QString user, QString password)
+{
+    QFileInfo info(":/sql/PostgreSQL/PostgreSQL_create_distance_function.sql");
+    qDebug() << "execute psql script " << info.filePath();
+    QFile file(info.filePath());
+    if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qCritical()<<file.errorString() + " '" + file.fileName()+"'";
+        QMessageBox::critical(nullptr, tr("error"), tr("Error opening file %1 %2").arg(file.fileName(), file.errorString()));
+        //ui->lblHelp->setText(file.errorString() + " '" + file.fileName()+"'");
+        return false;
+    }
+    QString scriptName = info.fileName();
+    QTextStream* in = new QTextStream(&file);
+    QString data = in->readAll();
+
+    QString program = "psql";
+    QStringList arguments;
+    arguments << "-h" << host << "-U" << user  << "-d" << "postgres" << "-c" << data;
+    QProcess *psqlProcess = new QProcess(this);
+
+    QObject::connect(psqlProcess, &QProcess::started,this, [=](){
+        qDebug() << "psql process started!";
+
+    });
+
+    QObject::connect(psqlProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                     [](int exitCode, QProcess::ExitStatus exitStatus) {
+                         qDebug() << "Process finished with exit code:" << exitCode
+                                  << "and exit status:" << exitStatus;
+    });
+
+    QObject::connect(psqlProcess, &QProcess::errorOccurred, [=](QProcess::ProcessError error) {
+        qDebug() << "Process error occurred:" << error;
+    });
+    QObject::connect(psqlProcess, &QProcess::readyReadStandardOutput, [=](){
+        qDebug() << "psql output:" << psqlProcess->readAllStandardOutput();
+    });
+
+    QObject::connect(psqlProcess, &QProcess::readyReadStandardError, [=](){
+        QString msg = psqlProcess->readAllStandardError();
+        qDebug() << "psql error:" << msg;
+        if(msg.startsWith("Password for user"))
+            psqlProcess->write(password.toLocal8Bit());
+    });
+
+    psqlProcess->start(program, arguments);
+
+
+    psqlProcess->waitForFinished(-1); // -1 means wait indefinitely
+    return true;
+}

@@ -82,6 +82,7 @@ private:
  void loadFile(QString s_File_Name);
  FindReplaceWidget* frw = nullptr;
  QString _delimiter = ";";
+ void fill_cbConnections();
 
 private slots:
  void on_go_QueryButton_clicked();

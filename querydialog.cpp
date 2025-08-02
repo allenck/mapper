@@ -33,6 +33,10 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   setTitle();
   bChanging = false;
   tgtConn = config->currCity->connections.at(config->currCity->curConnectionId);
+  ui->chkShowOnly->setText(tr("Show only %1 connections").arg(config->currCity->name()));
+  connect(ui->chkShowOnly, &QCheckBox::checkStateChanged,this,[=]{
+      fill_cbConnections();
+  });
   db = QSqlDatabase::database();
   tgtConn->setConnectionName(db.connectionName());
   connect(ui->editQuery, SIGNAL(textChanged()), this, SLOT(textChanged()));
@@ -45,25 +49,25 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
    ui->editQuery->clear();
   });
 
-  ui->cbConnections->setContextMenuPolicy(Qt::CustomContextMenu);
-  connect(ui->cbConnections, &QComboBox::customContextMenuRequested, this,[=](QPoint pt){
-      QMenu menu;
-      QAction* act = new QAction(tr("Refresh connections"),this);
-      menu.addAction(act);
-      menu.exec(QCursor::pos());
-      connect(act, &QAction::triggered,this,[=]{
-          ui->cbConnections->clear();
-          for(int i=0; i<config->currCity->connections.count(); i++)
-          {
-              Connection* c = config->currCity->connections.at(i);
-              ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
-              if(c->id() == config->currConnection->id())
-                  ui->cbConnections->setCurrentIndex(i);
-          }
-      });
-  });
-  connect(config->currCity, &City::connectionAdded, this, [=](Connection* c){
-      ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
+  // ui->cbConnections->setContextMenuPolicy(Qt::CustomContextMenu);
+  // connect(ui->cbConnections, &QComboBox::customContextMenuRequested, this,[=](QPoint pt){
+  //     QMenu menu;
+  //     QAction* act = new QAction(tr("Refresh connections"),this);
+  //     menu.addAction(act);
+  //     menu.exec(QCursor::pos());
+  //     connect(act, &QAction::triggered,this,[=]{
+  //         ui->cbConnections->clear();
+  //         for(int i=0; i<config->currCity->connections.count(); i++)
+  //         {
+  //             Connection* c = config->currCity->connections.at(i);
+  //             ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
+  //             if(c->id() == config->currConnection->id())
+  //                 ui->cbConnections->setCurrentIndex(i);
+  //         }
+  //     });
+  // });
+  connect(config->currCity, &City::connectionAdded,this,[=]{
+      fill_cbConnections();
   });
   makeSelectedIncludeAct = new QAction(tr("Make include file of selection"), this);
   connect(makeSelectedIncludeAct, &QAction::triggered, [=]{
@@ -209,28 +213,8 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   ui->cb_sql_execute_after_loading->setChecked(config->q.b_sql_execute_after_loading);
   restoreGeometry(config->q.geometry);
 
-  ui->cbConnections->clear();
-  for(int i=0; i<config->currCity->connections.count(); i++)
-  {
-   Connection* c = config->currCity->connections.at(i);
-   ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
-   if(c->id() == config->currConnection->id())
-    ui->cbConnections->setCurrentIndex(i);
-  }
-  // add other cities as well
-  for(City* city : config->cityList)
-  {
-   if(city->name() == config->currCity->name())
-    continue; // aleady got these!
-   for(int i=0; i<city->connections.count(); i++)
-   {
-    Connection* c = city->connections.at(i);
-    ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
-    if(c->id() == config->currConnection->id())
-     ui->cbConnections->setCurrentIndex(i);
-   }
-  }
-  setWindowTitle(tr("Manual Sql Query (%1)").arg(ui->cbConnections->currentText()));
+  fill_cbConnections();
+
 
 //  for(int i=0; i<config->currCity->connections.count(); i++)
 //  {
@@ -256,15 +240,17 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   connect(MainWindow::instance(), &MainWindow::newCitySelected, [=]
   {
       bChanging = true;
-      ui->cbConnections->clear();
-      for(int i=0; i<config->currCity->connections.count(); i++)
-      {
-       Connection* c = config->currCity->connections.at(i);
-       ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
-       if(c->id() == config->currConnection->id())
-        ui->cbConnections->setCurrentIndex(i);
+      // ui->cbConnections->clear();
+      // for(int i=0; i<config->currCity->connections.count(); i++)
+      // {
+      //  Connection* c = config->currCity->connections.at(i);
+      //  ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
+      //  if(c->id() == config->currConnection->id())
+      //   ui->cbConnections->setCurrentIndex(i);
 
-      }
+      // }
+      ui->chkShowOnly->setText(tr("Show only %1 connections").arg(config->currCity->name()));
+      fill_cbConnections();
       bChanging = false;
       setWindowTitle(tr("Manual Sql Query (%1)").arg(ui->cbConnections->currentText()));
   });
@@ -278,6 +264,33 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
 
 }
 
+void QueryDialog::fill_cbConnections()
+{
+    ui->cbConnections->clear();
+    for(int i=0; i<config->currCity->connections.count(); i++)
+    {
+        Connection* c = config->currCity->connections.at(i);
+        ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
+        if(c->id() == config->currConnection->id())
+            ui->cbConnections->setCurrentIndex(i);
+    }
+    if(!ui->chkShowOnly->isChecked())
+        return;
+    // add other cities as well
+    for(City* city : config->cityList)
+    {
+        if(city->name() == config->currCity->name())
+            continue; // aleady got these!
+        for(int i=0; i<city->connections.count(); i++)
+        {
+            Connection* c = city->connections.at(i);
+            ui->cbConnections->addItem(c->description(), VPtr<Connection>::asQVariant(c));
+            if(c->id() == config->currConnection->id())
+                ui->cbConnections->setCurrentIndex(i);
+        }
+    }
+    setWindowTitle(tr("Manual Sql Query (%1)").arg(ui->cbConnections->currentText()));
+}
 QueryDialog::~QueryDialog()
 {
  delete ui;
@@ -508,6 +521,7 @@ bool QueryDialog::processStream(QTextStream* in)
   //qDebug()<<queryStr;
   QSqlQuery query = QSqlQuery(queryStr, db);
   //QStringList sa_Message_Text;
+  query.setForwardOnly(false);
   if (query.lastError().isValid())
   {
    errors++;
@@ -1090,6 +1104,9 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   if(bChanging) return;
   setCursor(Qt::WaitCursor);
   Connection* tgtConn = VPtr<Connection>::asPtr(ui->cbConnections->itemData(ix));
+  if(tgtConn== nullptr)
+      return;
+
   if(ui->cbConnections->currentText() == config->currCity->connections.at(config->currCity->curConnectionId)->description())
   {
    // reverting to default (currrent) database!
@@ -1115,6 +1132,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   {
    db = QSqlDatabase::addDatabase(tgtConn->driver(), QString("query-%1").arg(tgtConn->description()));
    tgtConn->setConnectionName(db.connectionName());
+   tgtConn->setDb(db);
 //   if(tgtConn->servertype() == "Sqlite")
 //   {
 //    if(!tgtConn->isSqliteUserFunctionLoaded())
@@ -1123,10 +1141,10 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 //   }
    Connection::configureDb(db, tgtConn, config);
    bool bOpen;
-   if(tgtConn->connectionType()== "ODBC" && !tgtConn->connectString().isEmpty())
+   if(tgtConn->connectionType() == "ODBC" && !tgtConn->connectString().isEmpty())
        bOpen = db.open();
    else
-       bOpen =db.open(tgtConn->userId(), tgtConn->pwd());
+       bOpen = db.open(tgtConn->userId(), tgtConn->pwd());
    if(!bOpen)
    {
     ui->go_QueryButton->setEnabled(false);
@@ -1149,6 +1167,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
     if(tgtConn->database() != "default" || tgtConn->database() != "")
     {
      QSqlQuery query = QSqlQuery(db);
+        query.setForwardOnly(false);
      if(!query.exec(tr("use [%1]").arg(tgtConn->database())))
      {
       SQLERROR(std::move(query));
@@ -1164,8 +1183,11 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   }
   else
   {
+    db = tgtConn->getDb();
    qDebug() << "connection name:" << tgtConn->connectionName();
    qDebug() << "driver:" << db.driverName() << " database:" << db.databaseName();
+   if(db.isOpen())
+       ui->go_QueryButton->setEnabled(true);
   }
   setCursor(Qt::ArrowCursor);
 }
@@ -1276,6 +1298,9 @@ void QueryDialog::setTitle()
 
  QWidgetAction* QueryDialog::createWidgetAction()
  {
+     QString dirName = tgtConn->servertype();
+     if(dirName == "Sqlite")
+         dirName = "Sqlite3";
      cbFile = new QComboBox(this);
      QDirIterator dirIterator(":/sql", QDirIterator::Subdirectories);
      while (dirIterator.hasNext()) {
@@ -1283,8 +1308,10 @@ void QueryDialog::setTitle()
          QFileInfo fileInfo = dirIterator.fileInfo();
          if (fileInfo.isFile())
          {
-             // Do not add directories to the list
-             cbFile->addItem(fileInfo.fileName(), fileInfo.filePath());
+             QStringList parts = fileInfo.path().split("/");
+             if(parts.count() == 2 || (parts.count() == 3 && parts.at(2)== dirName))
+                 // Do not add directories to the list
+                 cbFile->addItem(fileInfo.fileName(), fileInfo.filePath());
          }
      }
      cbFile->setVisible(true);

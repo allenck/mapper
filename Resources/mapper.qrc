@@ -82,7 +82,6 @@
         <file>sl-metro-logo.svg</file>
         <file>sql/create_routeView.sql</file>
         <file>sql/Sqlite3/sqlite3_recreate_parameters.sql</file>
-        <file>sql/SqLite3/sqlite3_create_streetdef.sql</file>
         <file>sql/create_routeName.sql</file>
         <file>sql/MySql/mySql_create_routeName.sql</file>
         <file>sql/MySql/mysql_create_streetdef.sql</file>
@@ -96,5 +95,7 @@
         <file>restore_databases.sh</file>
         <file>dump_databases.cmd</file>
         <file>restore_databases.cmd</file>
+        <file>sql/PostgreSQL/PostgreSQL_create_distance_function.sql</file>
+        <file>sql/Sqlite3/sqlite3_create_streetdef.sql</file>
     </qresource>
 </RCC>

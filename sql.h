@@ -219,7 +219,7 @@ public:
     bool updateTractionType(qint32 tractionType, QString description, QString displayColor, int routeType, QSqlDatabase db = QSqlDatabase());
     void checkTables(QSqlDatabase db);
     bool executeScript(QString path, QSqlDatabase db = QSqlDatabase());
-    bool executeCommand(QString commandString, QSqlDatabase db  = QSqlDatabase());
+    bool executeCommand(QString commandString, QSqlDatabase db  = QSqlDatabase(), QList<QVariant> *pList=nullptr);
     QString getPrevRouteName(QDate dt);
     QString getNextRouteName(QDate dt);
     bool testAltRoute();

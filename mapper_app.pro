@@ -104,6 +104,8 @@ DISTFILES += \
     Resources/restore_databases.sh \
     # Resources/scripts/createMsSqlDistance.sql \
     Resources/sql/CreatePostgreSQLFunction.sql \
+    Resources/sql/PostgreSQL/.gitignore \
+    Resources/sql/PostgreSQL/PostgreSQL_create_distance_function.sql \
     Resources/sql/mysql_create_stations.sql \
     Resources/sql/sqlite3_create_route.sql \
     Resources/sql/addBiDirectionalToRoutes.sql \
