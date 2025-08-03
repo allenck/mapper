@@ -288,7 +288,7 @@ void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
  }
  else if(dbType == "PostgreSQL")
  {
-     ui->btnPgSetup->setVisible(true);
+     //ui->btnPgSetup->setVisible(true); // disabled. not working yet
 
      ui->label_2->setVisible(false);
      ui->txtSqliteFileName->setVisible(false);
@@ -2238,7 +2238,7 @@ void EditConnectionsDlg::displayDbInfo(QSqlDatabase db)
 
 bool EditConnectionsDlg::setupPostgreSQLDatabases(QString host, QString user, QString password)
 {
-    QFileInfo info(":/sql/PostgreSQL/PostgreSQL_create_distance_function.sql");
+    QFileInfo info("Resources/sql/PostgreSQL/allen_PostgreSQL_create_distance_function.sql");
     qDebug() << "execute psql script " << info.filePath();
     QFile file(info.filePath());
     if(!file.open(QIODevice::ReadOnly | QIODevice::Text))

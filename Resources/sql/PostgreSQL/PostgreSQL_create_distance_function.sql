@@ -87,7 +87,7 @@ EXCEPTION WHEN duplicate_database THEN
 END $$;
 ALTER DATABASE berlin OWNER TO mapper;
 
-DROP FUNCTION distance(double precision,double precision,double precision,double precision);
+/*DROP FUNCTION distance(double precision,double precision,double precision,double precision);*/
 CREATE OR REPLACE FUNCTION public.distance(inLat1 double precision, inLon1 double precision,
                                                                                         inLat2 double precision, inLon2 double precision)
                                                                                         RETURNS double precision AS $dist$
