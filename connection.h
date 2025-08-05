@@ -41,6 +41,8 @@ class Connection : public QObject
  QString _connectString;
  QString _sslMode;      // for PostgreSQL connection string
  QString _pwdMethod;    // for PostgreSQL connection string
+ bool _DSNCanBeUsed = false;
+ bool _verified = false;
 
 public:
  Connection(QObject* parent = nullptr);
@@ -106,6 +108,10 @@ public:
  void setSslMode(QString sslMode){_sslMode = sslMode;}
  QString getPwdMethod() {return _pwdMethod;}
  void setPwdMethod(QString pwdMethod){_pwdMethod = pwdMethod;}
+ bool dsnCanBeUsed(){return _DSNCanBeUsed;}
+ void setDSNCanBeUsed(bool b){_DSNCanBeUsed = b;}
+ void setVerified(bool verified){_verified = verified;}
+ bool verified() {return _verified;}
 };
 
 #endif // CONNECTION_H

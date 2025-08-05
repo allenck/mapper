@@ -538,3 +538,4 @@ void ODBCUtil::getWinDrivers()
         drvByLib.insert(driver->lib, driver);
     }
 }
+

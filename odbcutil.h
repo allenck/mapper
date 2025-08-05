@@ -51,6 +51,7 @@ public:
     QString connectString(QString connector, QString host, int port, QString user, QString pswd, QString database);
     QString connectString2(QString driver, QString host, int port, QString user, QString pswd, QString database);
     DSN* getDsn(QString dsn);
+
 signals:
     void odbc_changed();
 

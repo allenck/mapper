@@ -64,6 +64,9 @@ private:
   int findId(Connection* c);
   Connection* _testConnection = nullptr;
   ODBCUtil* odbcUtil = nullptr;
+  bool bDSNCanBeUsed =false;
+  QString getConnectionParameter(QSqlDatabase db, QString key);
+  void displayODBCConnection(QSqlDatabase db);
 
 private slots:
  void cbCitiesSelectionChanged(int sel);
@@ -81,12 +84,14 @@ private slots:
  void txtHostLeave();
  void txtPortLeave();
  void txtPwdLeave();
+ void txtUserIdLeave();
  void txtDsnTextChanged(QString text);
  void on_tbBrowse_clicked();
  void ontxtSqliteFileName_editingFinished();
  void setupComboBoxes(QString);
  void cbDbType_selectionChanged(QString);
  void cbConnections_contextMenuRequested(QPoint);
+ void cbUseDatabase_changed();
 
  public slots:
  void cbODBCDsn_currentIndex_changed(int ix);

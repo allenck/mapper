@@ -96,6 +96,7 @@ void Configuration::saveSettings()
        settings->setValue("connectString",cn->connectString());
        settings->setValue("sslMode", cn->getSslMode());
        settings->setValue("pwdMethod", cn->getPwdMethod());
+       settings->setValue("dsnCanBeUsed",cn->dsnCanBeUsed());
        if(cn->host() != "")
            settings->setValue("hostname", cn->host());
        if(cn->port() > 0)
@@ -402,6 +403,7 @@ void Configuration::getSettings()
            ncn->setConnectString(settings.value("connectString").toString());
            ncn->setSslMode(settings.value("sslMode").toString());
            ncn->setPwdMethod(settings.value("pwdMethod").toString());
+           ncn->setDSNCanBeUsed(settings.value("dsnCanBeUsed",ncn->connectString().isEmpty()).toBool());
         }
 
         if(!nc->connections.contains(ncn))
