@@ -161,11 +161,11 @@ void QueryDialog::fill_cbConnections()
     }
     setWindowTitle(tr("Manual Sql Query (%1)").arg(ui->cbConnections->currentText()));
 }
+
 QueryDialog::~QueryDialog()
 {
  delete ui;
 }
-
 
 void QueryDialog::showContextMenu(const QPoint &pt)
 {
@@ -235,7 +235,7 @@ void QueryDialog::createMenus()
     QAction* loadFileAct = new QAction(tr("Load query"), this);
     fileMenu->addAction(loadFileAct);
     connect(loadFileAct, &QAction::triggered, this,[=]{
-      on_load_QueryButton_clicked();
+        on_load_QueryButton_clicked();
     });
     saveFileAct = new QAction(tr("Save query"), this);
     saveFileAct->setEnabled(false);
@@ -352,111 +352,79 @@ void QueryDialog::createMenus()
 
 void QueryDialog::on_load_QueryButton_clicked()
 {
- setCursor(Qt::WaitCursor);
- on_clear_QueryButton_clicked();
- QString s_File_Name = QFileDialog::getOpenFileName(this, "Choose a SQL text file",
+    setCursor(Qt::WaitCursor);
+    on_clear_QueryButton_clicked();
+    QString s_File_Name = QFileDialog::getOpenFileName(this, "Choose a SQL text file",
                        config->q.s_query_path, "SQL text files (*.sql *.txt);;All Files (*.*)");
- // QFileDialog take a long time to close, this should tak care of this - but does not.
- QCoreApplication::processEvents();
- setCursor(Qt::ArrowCursor);
- if (s_File_Name.isEmpty()) return;
- loadFile(s_File_Name);
+    // QFileDialog take a long time to close, this should tak care of this - but does not.
+    QCoreApplication::processEvents();
+    setCursor(Qt::ArrowCursor);
+    if (s_File_Name.isEmpty()) return;
+    loadFile(s_File_Name);
 }
 
 void QueryDialog::loadFile(QString s_File_Name)
 {
- QFile this_file(s_File_Name);
- QFileInfo this_fi(s_File_Name);
+    QFile this_file(s_File_Name);
+    QFileInfo this_fi(s_File_Name);
 
- if (!this_file.open(QIODevice::ReadOnly | QIODevice::Text))
- {
-  QMessageBox::critical(this,tr("Error"), "Could not load sql query text file");
-  return;
- }
- config->q.s_query_path = this_fi.dir().absolutePath();
- currQueryFilename = s_File_Name;
- setTitle();
- saveFileAct->setEnabled(true);
+    if (!this_file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QMessageBox::critical(this,tr("Error"), "Could not load sql query text file");
+        return;
+    }
+    config->q.s_query_path = this_fi.dir().absolutePath();
+    currQueryFilename = s_File_Name;
+    setTitle();
+    saveFileAct->setEnabled(true);
 
- if(this_fi.size() > 1000000)
- {
-  // large file
-  QMessageBox msgBox;
-  msgBox.setText(tr("The query is very large"));
-  msgBox.setInformativeText(tr("The query is too large to display.\n"
-                               "Select 'No' to load it anyway, 'Yes' to process "
-                               "in the background or 'Cancel'.\n"
-                               "Do you wish to process the queries in the background?"));
-  msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
-  msgBox.setDefaultButton(QMessageBox::Yes);
-  msgBox.setIcon(QMessageBox::Warning);
-  switch(msgBox.exec())
-  {
-   case QMessageBox::Cancel:
-    return;
-   case QMessageBox::No:
-    goto loadIt;
-   case QMessageBox::Yes:
-    break;
-  }
-  for (int ix =ui->widget_query_view->count()-1; ix > 0; ix--)
-   ui->widget_query_view->removeTab(ix);
-  ui->queryResultText->clear();
+    if(this_fi.size() > 1000000)
+    {
+        // large file
+        QMessageBox msgBox;
+        msgBox.setText(tr("The query is very large"));
+        msgBox.setInformativeText(tr("The query is too large to display.\n"
+                                   "Select 'No' to load it anyway, 'Yes' to process "
+                                   "in the background or 'Cancel'.\n"
+                                   "Do you wish to process the queries in the background?"));
+        msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+        msgBox.setDefaultButton(QMessageBox::Yes);
+        msgBox.setIcon(QMessageBox::Warning);
+        switch(msgBox.exec())
+        {
+        case QMessageBox::Cancel:
+        return;
+        case QMessageBox::No:
+        goto loadIt;
+        case QMessageBox::Yes:
+        break;
+        }
+        for (int ix =ui->widget_query_view->count()-1; ix > 0; ix--)
+        ui->widget_query_view->removeTab(ix);
+        ui->queryResultText->clear();
 
-  //DbConnection *dbc = this_dblist->getDbConnection(this_dblist->current_index);
-  QTextStream* in = new QTextStream(&this_file);
-  this->setCursor(Qt::WaitCursor);
-  qApp->processEvents();
+        //DbConnection *dbc = this_dblist->getDbConnection(this_dblist->current_index);
+        QTextStream* in = new QTextStream(&this_file);
+        this->setCursor(Qt::WaitCursor);
+        qApp->processEvents();
 
-//  while(!in->atEnd())
-//  {
-//   QString queryStr;
-//   do
-//   {
-//    QString line = in.readLine();
-//    linesRead++;
-//    //qDebug()<<line;
-//    queryStr += line;
-//   } while (!queryStr.endsWith(";"));
-//   //qDebug()<<queryStr;
-//   QSqlQuery query = QSqlQuery(queryStr, db);
-//   //QStringList sa_Message_Text;
-//   if (query.lastError().isValid())
-//   {
-//    errors++;
-//    ui->queryResultText->append(QString("<FONT COLOR=\"#FF0000\">%1<BR>%2<FONT COLOR=\"#000000\"><BR>")
-//                                .arg(query.lastError().driverText(),query.lastError().databaseText())+"<BR>");
-//    ui->queryResultText->append(QString(tr("Line %1 ")).arg(linesRead--)+" " +query.lastQuery()+"<BR>");
-//    if(ui->cb_stop_query_on_error->isChecked())
-//    {
-//     ui->queryResultText->append(tr("Query stopped because of errors<BR>"));
-//     this->setCursor(Qt::ArrowCursor);
-//     return;
-//    }
-//   }
-//   recordsProcessed++;
-//   if(recordsProcessed%1000 == 0)
-//    ui->queryResultText->append(QString(tr("Records processed: %1<BR>")).arg(recordsProcessed));
-
-//   qApp->processEvents();
-   if(!processStream(in))
-    return;
-//  } // !while.atEnd()
-  this->setCursor(Qt::ArrowCursor);
-  ui->queryResultText->append(QString(tr("Records processed: %1<BR>")).arg(recordsProcessed));
-  ui->queryResultText->append(QString(tr("There were errors: %1<BR>")).arg(errors));
-  return;
- }
+       if(!processStream(in))
+        return;
+            this->setCursor(Qt::ArrowCursor);
+            ui->queryResultText->append(QString(tr("Records processed: %1<BR>")).arg(recordsProcessed));
+            ui->queryResultText->append(QString(tr("There were errors: %1<BR>")).arg(errors));
+            return;
+    }
 loadIt:
- QTextStream* in = new QTextStream(&this_file);
- //ui->editQuery->setPlainText(in.readAll());
- if(!loadStream(in))
-  return;
- if (ui->cb_sql_execute_after_loading->checkState() == Qt::Checked)
- {
-  ui->cb_sql_execute_after_loading->setChecked(false);
-  on_go_QueryButton_clicked();
- }
+    QTextStream* in = new QTextStream(&this_file);
+    //ui->editQuery->setPlainText(in.readAll());
+    if(!loadStream(in))
+    return;
+    if (ui->cb_sql_execute_after_loading->checkState() == Qt::Checked)
+    {
+    ui->cb_sql_execute_after_loading->setChecked(false);
+    on_go_QueryButton_clicked();
+    }
 }
 
 bool QueryDialog::loadStream(QTextStream* in)
@@ -545,129 +513,128 @@ bool QueryDialog::processStream(QTextStream* in)
 
 void QueryDialog::on_go_QueryButton_clicked()
 {
- i_Message_Error=0;
- i_Message_Result_Yes=0;
- i_Message_Result_No=0;
- i_Message_Rows_effected=0;
- i_Message_Total=0;
- i_Rows_Total=0;
- sa_Message_Text.clear();
+    i_Message_Error=0;
+    i_Message_Result_Yes=0;
+    i_Message_Result_No=0;
+    i_Message_Rows_effected=0;
+    i_Message_Total=0;
+    i_Rows_Total=0;
+    sa_Message_Text.clear();
 
- // remove all but the first tab.
- for (int ix =ui->widget_query_view->count()-1; ix > 0; ix--)
-  ui->widget_query_view->removeTab(ix);
- ui->queryResultText->clear();
+    // remove all but the first tab.
+    for (int ix =ui->widget_query_view->count()-1; ix > 0; ix--)
+        ui->widget_query_view->removeTab(ix);
+    ui->queryResultText->clear();
 
- this->setCursor(Qt::WaitCursor);
- timer = new QTimer(this);
- connect(timer,SIGNAL(timeout()),this,SLOT(quickProcess()));
- timer->start(1000);
- //query_View_modell = new QGeomCollQueryModel(this,dbc->db,this,tab_GeomColl,tab_main_child);
- this->setCursor(Qt::WaitCursor);
- QString text;
- QTextCursor cur = ui->editQuery->textCursor();
- if (cur.hasSelection())
- {
-  text = cur.selectedText();
-  //text = cur.selection().toRawText();
- }
- else
-  text = ui->editQuery->toPlainText(); // select all lines
+    this->setCursor(Qt::WaitCursor);
+    timer = new QTimer(this);
+    connect(timer,SIGNAL(timeout()),this,SLOT(quickProcess()));
+    timer->start(1000);
+    //query_View_modell = new QGeomCollQueryModel(this,dbc->db,this,tab_GeomColl,tab_main_child);
+    this->setCursor(Qt::WaitCursor);
+    QString text;
+    QTextCursor cur = ui->editQuery->textCursor();
+    if (cur.hasSelection())
+    {
+        text = cur.selectedText();
+        //text = cur.selection().toRawText();
+    }
+    else
+        text = ui->editQuery->toPlainText(); // select all lines
 
- QStringList lines = text.split("\n");
- QString combined;
- _delimiter = ";";
+    QStringList lines = text.split("\n");
+    QString combined;
+    _delimiter = ";";
 
- foreach(QString line, lines)
- {
-  line = line.replace(QChar(8233)," ");
-  if(line.startsWith("#"))
-   continue;
-  if(line.contains("DELIMITER", Qt::CaseInsensitive))
-  {
-      int ix = line.indexOf("DELIMITER",Qt::CaseInsensitive)+ 9;
-      QString delim = line.mid(ix).trimmed();
-      _delimiter = delim;
-      continue;
-  }
-  combined.append(line + " ");
- }
- QStringList statements = combined.split(_delimiter);
- QStringList viewList = SQL::instance()->listViews();
- foreach(QString txt, statements)
- {
-  if (txt.trimmed().isEmpty())
-   continue;
-  QStringList tokens = txt.split(" ");
-  if(tokens.count() >= 4
-     && tokens.at(0).compare("select", Qt::CaseInsensitive)  == 0
-     && tokens.at(1) == "*"
-     && tokens.at(2).compare("from", Qt::CaseInsensitive) == 0
-     && !viewList.contains(tokens.at(3),Qt::CaseInsensitive) && db.isValid())
-  {
-   processSelect(tokens.at(3), txt);
-  }
-  else
-  {
+    foreach(QString line, lines)
+    {
+        line = line.replace(QChar(8233)," ");
+        if(line.startsWith("#"))
+            continue;
+        if(line.contains("DELIMITER", Qt::CaseInsensitive))
+        {
+            int ix = line.indexOf("DELIMITER",Qt::CaseInsensitive)+ 9;
+            QString delim = line.mid(ix).trimmed();
+            _delimiter = delim;
+            continue;
+        }
+        combined.append(line + " ");
+    }
+    QStringList statements = combined.split(_delimiter);
+    QStringList viewList = SQL::instance()->listViews();
+    foreach(QString txt, statements)
+    {
+        if (txt.trimmed().isEmpty())
+        continue;
+        QStringList tokens = txt.split(" ");
+        if(tokens.count() >= 4
+             && tokens.at(0).compare("select", Qt::CaseInsensitive)  == 0
+             && tokens.at(1) == "*"
+             && tokens.at(2).compare("from", Qt::CaseInsensitive) == 0
+             && !viewList.contains(tokens.at(3),Qt::CaseInsensitive) && db.isValid())
+        {
+        processSelect(tokens.at(3), txt);
+        }
+        else
+        {
+            sa_Message_Text.append("<I>"+txt+ "</I><BR>");
 
-   sa_Message_Text.append("<I>"+txt+ "</I><BR>");
-
-   if(!processALine(txt))
-    break;
-  }
-  qApp->processEvents();
- }
- s_Search="";
- if (i_Message_Error > 0)
- {
-  if (i_Message_Error > 1)
-   s_Search="s";
-  sa_Message_Text.append(QString("%1 Statement%2 - that produced errors<BR>").arg(i_Message_Error).arg(s_Search));
-  s_Search="";
-  i_Message_Total+=i_Message_Error;
- }
- if (i_Message_Result_Yes > 0)
- {
-  if (i_Message_Result_Yes > 1)
-   s_Search="s";
-  sa_Message_Text.append(QString(tr("%1 Statement%2 - that produced results - were completed correctly.<BR>")).arg(i_Message_Result_Yes).arg(s_Search));
-  s_Search="";
-  i_Message_Total+=i_Message_Result_Yes;
- }
- if (i_Message_Result_No > 0)
- {
-  if (i_Message_Result_No > 1)
-   s_Search="s";
-  sa_Message_Text.append(QString(tr("%1 Statement%2 - that produced no results - were completed correctly.<BR>")).arg(i_Message_Result_No).arg(s_Search));
-  s_Search="";
-  i_Message_Total+=i_Message_Result_No;
- }
- if (i_Message_Total > 0)
- {
-  if (i_Message_Total > 1)
-   s_Search="s";
-  sa_Message_Text.append(QString(tr("%1 Statement%2 - total<BR>")).arg(i_Message_Total).arg(s_Search));
-  s_Search="";
- }
- if (i_Rows_Total > 0)
- {
-  if (i_Rows_Total > 1)
-   s_Search="s";
-  sa_Message_Text.append(QString(tr("%1 Query-Row%2 returned.<BR>")).arg(i_Rows_Total).arg(s_Search));
-  s_Search="";
- }
- //sa_Message_Text.append(QString(tr("Rows affected : %1 <BR>")).arg(i_Message_Rows_effected));
- for (int i=0; i<sa_Message_Text.count(); i++)
-  s_Search+=sa_Message_Text[i]+"\n";
- ui->queryResultText->setText(s_Search);
- sa_Message_Text.clear();
- if (tab_First_Result != 0)
- {
-  ui->widget_query_view->setCurrentWidget(tab_First_Result);
- }
- this->setCursor(Qt::ArrowCursor);
- timer->stop();
- ui->rollback_toolButton->setEnabled(SQL::instance()->isTransactionActive());
+            if(!processALine(txt))
+            break;
+        }
+        qApp->processEvents();
+    }
+    s_Search="";
+    if (i_Message_Error > 0)
+    {
+        if (i_Message_Error > 1)
+            s_Search="s";
+        sa_Message_Text.append(QString("%1 Statement%2 - that produced errors<BR>").arg(i_Message_Error).arg(s_Search));
+        s_Search="";
+        i_Message_Total+=i_Message_Error;
+    }
+    if (i_Message_Result_Yes > 0)
+    {
+        if (i_Message_Result_Yes > 1)
+            s_Search="s";
+        sa_Message_Text.append(QString(tr("%1 Statement%2 - that produced results - were completed correctly.<BR>")).arg(i_Message_Result_Yes).arg(s_Search));
+        s_Search="";
+        i_Message_Total+=i_Message_Result_Yes;
+    }
+    if (i_Message_Result_No > 0)
+    {
+        if (i_Message_Result_No > 1)
+            s_Search="s";
+        sa_Message_Text.append(QString(tr("%1 Statement%2 - that produced no results - were completed correctly.<BR>")).arg(i_Message_Result_No).arg(s_Search));
+        s_Search="";
+        i_Message_Total+=i_Message_Result_No;
+    }
+    if (i_Message_Total > 0)
+    {
+        if (i_Message_Total > 1)
+            s_Search="s";
+        sa_Message_Text.append(QString(tr("%1 Statement%2 - total<BR>")).arg(i_Message_Total).arg(s_Search));
+        s_Search="";
+    }
+    if (i_Rows_Total > 0)
+    {
+        if (i_Rows_Total > 1)
+            s_Search="s";
+        sa_Message_Text.append(QString(tr("%1 Query-Row%2 returned.<BR>")).arg(i_Rows_Total).arg(s_Search));
+        s_Search="";
+    }
+    //sa_Message_Text.append(QString(tr("Rows affected : %1 <BR>")).arg(i_Message_Rows_effected));
+    for (int i=0; i<sa_Message_Text.count(); i++)
+        s_Search+=sa_Message_Text[i]+"\n";
+    ui->queryResultText->setText(s_Search);
+    sa_Message_Text.clear();
+    if (tab_First_Result != 0)
+    {
+        ui->widget_query_view->setCurrentWidget(tab_First_Result);
+    }
+    this->setCursor(Qt::ArrowCursor);
+    timer->stop();
+    ui->rollback_toolButton->setEnabled(SQL::instance()->isTransactionActive());
 }
 
 bool QueryDialog::processALine(QString txt, QString tabName)
@@ -1205,146 +1172,144 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 void QueryDialog::setTitle()
 {
     Connection c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
- QString database = SQL::instance()->getDatabase(c.servertype());
-
- if(currQueryFilename.isEmpty())
-
-  QWidget::setWindowTitle(tr("Manual Sql Query (%1) %2")
+    QString database = SQL::instance()->getDatabase(c.servertype());
+    if(currQueryFilename.isEmpty())
+        QWidget::setWindowTitle(tr("Manual Sql Query (%1) %2")
                           .arg(ui->cbConnections->currentText(),database));
- else
- {
-  QFileInfo info(currQueryFilename);
-  QWidget::setWindowTitle(tr("Manual Sql Query (%1) - %2 %3")
-                          .arg(ui->cbConnections->currentText(),info.fileName(),database));
- }
+    else
+    {
+        QFileInfo info(currQueryFilename);
+        QWidget::setWindowTitle(tr("Manual Sql Query (%1) - %2 %3")
+                              .arg(ui->cbConnections->currentText(),info.fileName(),database));
+    }
 }
 
- void QueryDialog::executeQuery(QString commandText)
- {
-  ui->editQuery->clear();
-  ui->editQuery->setText(commandText);
-  on_go_QueryButton_clicked();
- }
+void QueryDialog::executeQuery(QString commandText)
+{
+    ui->editQuery->clear();
+    ui->editQuery->setText(commandText);
+    on_go_QueryButton_clicked();
+}
 
- QTextLine QueryDialog::currentTextLine(const QTextCursor &cursor)
- {
-     const QTextBlock block = cursor.block();
-     if (!block.isValid())
-         return QTextLine();
+QTextLine QueryDialog::currentTextLine(const QTextCursor &cursor)
+{
+    const QTextBlock block = cursor.block();
+    if (!block.isValid())
+     return QTextLine();
 
-     const QTextLayout *layout = block.layout();
-     if (!layout)
-         return QTextLine();
+    const QTextLayout *layout = block.layout();
+    if (!layout)
+     return QTextLine();
 
-     const int relativePos = cursor.position() - block.position();
-     return layout->lineForTextPosition(relativePos);
- }
+    const int relativePos = cursor.position() - block.position();
+    return layout->lineForTextPosition(relativePos);
+}
 
- void QueryDialog::textChanged()
- {
-  QTextCursor cursor = ui->editQuery->textCursor();
-  QTextBlock block = cursor.block();
-  QString text = block.text();
-  QTextLine textLine = currentTextLine(cursor);
- }
+void QueryDialog::textChanged()
+{
+    QTextCursor cursor = ui->editQuery->textCursor();
+    QTextBlock block = cursor.block();
+    QString text = block.text();
+    QTextLine textLine = currentTextLine(cursor);
+}
 
- void QueryDialog::replaceWithInclude()
- {
-  setCursor(Qt::WaitCursor);
-  QString s_File_Name = QFileDialog::getOpenFileName(this, "Choose a SQL text file",
+void QueryDialog::replaceWithInclude()
+{
+    setCursor(Qt::WaitCursor);
+    QString s_File_Name = QFileDialog::getOpenFileName(this, "Choose a SQL text file",
                         config->q.s_query_path, "SQL text files (*.sql *.txt);;All Files (*.*)");
-  // QFileDialog take a long time to close, this should tak care of this - but does not.
-  QCoreApplication::processEvents();
-  setCursor(Qt::ArrowCursor);
-  if (s_File_Name.isEmpty()) return;
-  QFile this_file(s_File_Name);
-  QFileInfo this_fi(s_File_Name);
-  if (!this_file.open(QIODevice::ReadOnly | QIODevice::Text))
-  {
-   QMessageBox::critical(this,tr("Error"), "Could not load sql query text file");
-   return;
-  }
+    // QFileDialog take a long time to close, this should tak care of this - but does not.
+    QCoreApplication::processEvents();
+    setCursor(Qt::ArrowCursor);
+    if (s_File_Name.isEmpty()) return;
+    QFile this_file(s_File_Name);
+    QFileInfo this_fi(s_File_Name);
+    if (!this_file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+    QMessageBox::critical(this,tr("Error"), "Could not load sql query text file");
+    return;
+    }
 
-  QTextCursor cur = ui->editQuery->textCursor();
-  QTextStream in(&this_file);
-  QString newText = in.readAll();
-  cur.removeSelectedText();
-  cur.insertHtml(QString("<FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\"><BR>")
+    QTextCursor cur = ui->editQuery->textCursor();
+    QTextStream in(&this_file);
+    QString newText = in.readAll();
+    cur.removeSelectedText();
+    cur.insertHtml(QString("<FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\"><BR>")
                  .arg("#include " + s_File_Name ));
-  cur.insertText(newText);
-  cur.insertHtml(QString("<FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\">")
+    cur.insertText(newText);
+    cur.insertHtml(QString("<FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\">")
                  .arg("#end" + s_File_Name ));
- }
+}
 
- void QueryDialog::makeSelectedInclude()
- {
-  QTextCursor cur = ui->editQuery->textCursor();
-  QString text = cur.selectedText();
-  QString s_File_Name = QFileDialog::getSaveFileName(this, "Choose the name of a SQL text file to save to",
+void QueryDialog::makeSelectedInclude()
+{
+    QTextCursor cur = ui->editQuery->textCursor();
+    QString text = cur.selectedText();
+    QString s_File_Name = QFileDialog::getSaveFileName(this, "Choose the name of a SQL text file to save to",
                         config->q.s_query_path,"SQL text files (*.sql *.txt);;All Files (*.*)");
-  if (s_File_Name.isEmpty()) return;
+    if (s_File_Name.isEmpty()) return;
 
-  QFileInfo this_fi(s_File_Name);
-  if (this_fi.completeSuffix() == "")
-   s_File_Name+=".sql";
-  QFile this_file(s_File_Name);
-  if (!this_file.open(QIODevice::WriteOnly | QIODevice::Text))
-  {
-   QMessageBox::critical(this,qApp->applicationName(), "Could not save sql query text file");
-   return;
-  }
+    QFileInfo this_fi(s_File_Name);
+    if (this_fi.completeSuffix() == "")
+    s_File_Name+=".sql";
+    QFile this_file(s_File_Name);
+    if (!this_file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+    QMessageBox::critical(this,qApp->applicationName(), "Could not save sql query text file");
+    return;
+    }
 
-  //config->q.s_query_path = this_fi.dir().absolutePath();
-  QTextStream out(&this_file);
-  out << text;
-  cur.removeSelectedText();
-  cur.removeSelectedText();
-  cur.insertHtml(QString("<FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\"><BR>")
+    //config->q.s_query_path = this_fi.dir().absolutePath();
+    QTextStream out(&this_file);
+    out << text;
+    cur.removeSelectedText();
+    cur.removeSelectedText();
+    cur.insertHtml(QString("<FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\"><BR>")
                  .arg("#include " + s_File_Name ));
-  cur.insertText(text);
-  cur.insertHtml(QString("<BR><FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\">")
+    cur.insertText(text);
+    cur.insertHtml(QString("<BR><FONT COLOR=\"#A0A0A0\">%1<FONT COLOR=\"#000000\">")
                  .arg("#end" + s_File_Name ));
- }
+}
 
- QWidgetAction* QueryDialog::createWidgetAction()
- {
-     QString dirName = tgtConn->servertype();
-     if(dirName == "Sqlite")
-         dirName = "Sqlite3";
-     cbFile = new QComboBox(this);
-     QDirIterator dirIterator(":/sql/" + dirName, QDirIterator::Subdirectories);
-     while (dirIterator.hasNext()) {
-         dirIterator.next();
-         QFileInfo fileInfo = dirIterator.fileInfo();
-         if (fileInfo.isFile())
-         {
-             QStringList parts = fileInfo.path().split("/");
-             if(parts.count() == 2 || (parts.count() == 3 && parts.at(2)== dirName))
-                 // Do not add directories to the list
-                 cbFile->addItem(fileInfo.fileName(), fileInfo.filePath());
-         }
-     }
-     cbFile->setVisible(true);
-     cbFile->activateWindow();
-     cbFile->model()->sort(0, Qt::AscendingOrder);
+QWidgetAction* QueryDialog::createWidgetAction()
+{
+    QString dirName = tgtConn->servertype();
+    if(dirName == "Sqlite")
+     dirName = "Sqlite3";
+    cbFile = new QComboBox(this);
+    QDirIterator dirIterator(":/sql/" + dirName, QDirIterator::Subdirectories);
+    while (dirIterator.hasNext()) {
+        dirIterator.next();
+        QFileInfo fileInfo = dirIterator.fileInfo();
+        if (fileInfo.isFile())
+        {
+            QStringList parts = fileInfo.path().split("/");
+            if(parts.count() == 2 || (parts.count() == 3 && parts.at(2)== dirName))
+             // Do not add directories to the list
+                cbFile->addItem(fileInfo.fileName(), fileInfo.filePath());
+        }
+    }
+    cbFile->setVisible(true);
+    cbFile->activateWindow();
+    cbFile->model()->sort(0, Qt::AscendingOrder);
 
-     connect(cbFile, &QComboBox::currentTextChanged,this, [=](){
-         loadFile(cbFile->currentData().toString());
-         qInfo() << "file selection changed:" << cbFile->currentText();
-         selectMenu->close();
-     });
-     wAct = new QWidgetAction(this);
-     wAct->setDefaultWidget(cbFile);
-     return wAct;
- }
+    connect(cbFile, &QComboBox::currentTextChanged,this, [=](){
+        loadFile(cbFile->currentData().toString());
+        qInfo() << "file selection changed:" << cbFile->currentText();
+        selectMenu->close();
+    });
+    wAct = new QWidgetAction(this);
+    wAct->setDefaultWidget(cbFile);
+    return wAct;
+}
 
- void QueryDialog::keyPressEvent(QKeyEvent *event)
- {
-     if(event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_F)
-     {
+void QueryDialog::keyPressEvent(QKeyEvent *event)
+{
+    if(event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_F)
+    {
          QTextCursor cursor = ui->editQuery->textCursor();
          QString selection = cursor.selectedText();
          frw->setTextSelection(selection);
-     }
-     QWidget::keyPressEvent(event);
- }
+    }
+    QWidget::keyPressEvent(event);
+}
