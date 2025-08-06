@@ -83,6 +83,7 @@ private:
  FindReplaceWidget* frw = nullptr;
  QString _delimiter = ";";
  void fill_cbConnections();
+ void createMenus();
 
 private slots:
  void on_go_QueryButton_clicked();
@@ -101,7 +102,7 @@ private slots:
  void on_cb_sql_execute_after_loading_toggled(bool b_checked);
 // void onMoveOrRezize_columns();
 // void onResizeToData();
- void On_cbConnections_CurrentIndexChanged(int);
+ void on_cbConnections_CurrentIndexChanged(int);
  bool processALine(QString txt, QString tabName = "");
  void textChanged();
  void showContextMenu(const QPoint &pt);

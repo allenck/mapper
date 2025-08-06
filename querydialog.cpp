@@ -84,128 +84,9 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   });
 
   menuBar = new QMenuBar();
-  toolsMenu = new QMenu(tr("Tools"));
   layout()->setMenuBar(menuBar);
 
-  fileMenu= new Menu(tr("File"));
-  menuBar->addMenu(fileMenu);
-  selectMenu = new QMenu(tr("Load Resource script"));
-  this->selectMenu->addAction(createWidgetAction());
-  this->selectMenu->setStatusTip(tr("load a read-only resource script"));
-  fileMenu->addMenu(selectMenu);
-  QAction* loadFileAct = new QAction(tr("Load query"), this);
-  fileMenu->addAction(loadFileAct);
-  connect(loadFileAct, &QAction::triggered, this,[=]{
-      on_load_QueryButton_clicked();
-  });
-  saveFileAct = new QAction(tr("Save query"), this);
-  saveFileAct->setEnabled(false);
-  fileMenu->addAction(saveFileAct);
-  connect(saveFileAct, &QAction::triggered, this,[=]{
-      on_save_QueryButton_clicked(currQueryFilename);
-  });
-  saveAsFileAct = new QAction(tr("Save query as ..."), this);
-  fileMenu->addAction(saveAsFileAct);
-  connect(saveAsFileAct, &QAction::triggered,this, [=]{
-      on_saveAs_QueryButton_clicked();
-  });
-  refreshRoutesAct = new QAction(tr("Refresh routes"),this);
-  refreshRoutesAct->setCheckable(true);
-  connect(refreshRoutesAct, &QAction::triggered, this,[=]{
-   MainWindow::instance()->refreshRoutes();
-   if(refreshRoutesAct->isChecked())
-    MainWindow::instance()->btnDisplayRouteClicked();
-  });
-
-  menuBar->addMenu(toolsMenu);
-  toolsMenu->addAction(refreshRoutesAct);
-  //QMenu* tablesMenu = new QMenu(tr("Tables"));
-  connect(toolsMenu, &QMenu::aboutToShow, this,[=]{
-   Connection* c = tgtConn;
-   QSqlDatabase db;
-   //if(c->connectionName().isEmpty())
-    db = QSqlDatabase::database(tgtConn->connectionName());
-   // else
-   //  db = QSqlDatabase::database(c->connectionName());
-   QStringList tableList = db.tables(QSql::Tables);
-   QStringList sysTableList = db.tables(QSql::SystemTables);
-   toolsMenu->clear();
-   toolsMenu->addAction(refreshRoutesAct);
-
-   QMenu* tablesMenu = new QMenu(tr("Tables"));
-   toolsMenu->addMenu(tablesMenu);
-   foreach(QString tableName, tableList)
-   {
-    if(c->servertype()!="PostgreSQL")
-    {
-     if(sysTableList.contains(tableName))
-      continue;
-    }
-    if(c->servertype() == "Sqlite" && tableName.startsWith("sqlite_"))
-     continue;
-    QMenu* tableMenu = new QMenu(tableName);
-    tablesMenu->addMenu(tableMenu);
-    QAction* act = new QAction(tr("show table"),this);
-    act->setData(tableName);
-    tableMenu->addAction(act);
-    connect(act, &QAction::triggered, [=]{
-     QString txt;
-     if(c->servertype() == "Sqlite")
-      txt = QString("pragma table_info('%1')").arg(tableName);
-     else if(c->servertype() == "MySql")
-      txt = "describe " + tableName;
-     else if(c->servertype() == "MsSql")// SQL Server
-      txt = "select *"
-         " from INFORMATION_SCHEMA.COLUMNS"
-         " where TABLE_NAME='" + tableName + "'";
-      else
-        txt = QString("Select * from INFORMATION_SCHEMA.COLUMNS"
-                  "where TABLE_NAME='%1'").arg(tableName);
-
-     processALine(txt, tableName);
-    });
-    act = new QAction(tr("select table"),this);
-    act->setData(tableName);
-    tableMenu->addAction(act);
-    connect(act, &QAction::triggered, [=]{
-        QString txt = "select * from " + tableName;
-        //processALine(txt, tableName);
-        processSelect(tableName, txt);
-    }); }
-   toolsMenu->addSeparator();
-   QMenu* viewsMenu = new QMenu(tr("Views"));
-   QStringList views = SQL::instance()->listViews();
-   foreach(QString v, views)
-   {
-    QMenu* viewMenu = new QMenu(v);
-    viewsMenu->addMenu(viewMenu);
-    QAction* act = new QAction(tr("show View"),this);
-    act->setData(v);
-    viewMenu->addAction(act);
-    connect(act, &QAction::triggered, [=]{
-     QString txt;
-     if(c->servertype() == "Sqlite")
-      txt = QString("pragma table_info('%1')").arg(v);
-     else if(c->servertype() == "MySql")
-      txt = "describe " + v;
-     else if(c->servertype() == "PostgreSQL")
-         txt = QString("select column_name, data_type, character_maximum_length, column_default, is_nullable\
-                       from INFORMATION_SCHEMA.COLUMNS where table_name = '&1';").arg(v);
-     else // SQL Server
-      txt = "EXEC sp_help " + v;
-
-     processALine(txt, v);
-    });
-   }
-   toolsMenu->addMenu(viewsMenu);
-   QAction* act = new QAction(tr("Show find/replace"),this);
-   act->setCheckable(true);
-   act->setChecked(frw->isVisible());
-   connect(act, &QAction::triggered,this,[=](bool bChecked){
-       frw->setVisible(bChecked);
-   });
-   toolsMenu->addAction(act);
-  });
+  createMenus();
 
   tgtDbType = tgtConn->servertype();
   i_Max_Tab_Results = 10;
@@ -214,18 +95,7 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   restoreGeometry(config->q.geometry);
 
   fill_cbConnections();
-
-
-//  for(int i=0; i<config->currCity->connections.count(); i++)
-//  {
-//   Connection* c = config->currCity->connections.at(i);
-//   if(c->id() == config->currCity->curConnectionId)
-//   {
-//    ui->cbConnections->setCurrentIndex(i);
-//    break;
-//   }
-//  }
-  connect(ui->cbConnections, SIGNAL(currentIndexChanged(int)), this, SLOT(On_cbConnections_CurrentIndexChanged(int)));
+  connect(ui->cbConnections, SIGNAL(currentIndexChanged(int)), this, SLOT(on_cbConnections_CurrentIndexChanged(int)));
   connect(ui->rollback_toolButton, &QToolButton::clicked, [=]{
    try{
    SQL::instance()->rollbackTransaction("");
@@ -351,6 +221,134 @@ void QueryDialog::on_clear_QueryButton_clicked()
  saveFileAct->setEnabled(false);
 }
 
+void QueryDialog::createMenus()
+{
+    menuBar->clear();
+    toolsMenu = new QMenu(tr("Tools"));
+
+    fileMenu= new Menu(tr("File"));
+    menuBar->addMenu(fileMenu);
+    selectMenu = new QMenu(tr("Load Resource script"));
+    this->selectMenu->addAction(createWidgetAction());
+    this->selectMenu->setStatusTip(tr("load a read-only resource script"));
+    fileMenu->addMenu(selectMenu);
+    QAction* loadFileAct = new QAction(tr("Load query"), this);
+    fileMenu->addAction(loadFileAct);
+    connect(loadFileAct, &QAction::triggered, this,[=]{
+      on_load_QueryButton_clicked();
+    });
+    saveFileAct = new QAction(tr("Save query"), this);
+    saveFileAct->setEnabled(false);
+    fileMenu->addAction(saveFileAct);
+    connect(saveFileAct, &QAction::triggered, this,[=]{
+      on_save_QueryButton_clicked(currQueryFilename);
+    });
+    saveAsFileAct = new QAction(tr("Save query as ..."), this);
+    fileMenu->addAction(saveAsFileAct);
+    connect(saveAsFileAct, &QAction::triggered,this, [=]{
+      on_saveAs_QueryButton_clicked();
+    });
+    refreshRoutesAct = new QAction(tr("Refresh routes"),this);
+    refreshRoutesAct->setCheckable(true);
+    connect(refreshRoutesAct, &QAction::triggered, this,[=]{
+    MainWindow::instance()->refreshRoutes();
+    if(refreshRoutesAct->isChecked())
+    MainWindow::instance()->btnDisplayRouteClicked();
+    });
+
+    menuBar->addMenu(toolsMenu);
+    toolsMenu->addAction(refreshRoutesAct);
+    //QMenu* tablesMenu = new QMenu(tr("Tables"));
+    connect(toolsMenu, &QMenu::aboutToShow, this,[=]{
+        Connection* c = tgtConn;
+        QSqlDatabase db;
+        //if(c->connectionName().isEmpty())
+        db = QSqlDatabase::database(tgtConn->connectionName());
+        // else
+        //  db = QSqlDatabase::database(c->connectionName());
+        QStringList tableList = db.tables(QSql::Tables);
+        QStringList sysTableList = db.tables(QSql::SystemTables);
+        toolsMenu->clear();
+        toolsMenu->addAction(refreshRoutesAct);
+
+        QMenu* tablesMenu = new QMenu(tr("Tables"));
+        toolsMenu->addMenu(tablesMenu);
+        foreach(QString tableName, tableList)
+        {
+            if(c->servertype()!="PostgreSQL")
+            {
+             if(sysTableList.contains(tableName))
+              continue;
+            }
+            if(c->servertype() == "Sqlite" && tableName.startsWith("sqlite_"))
+             continue;
+            QMenu* tableMenu = new QMenu(tableName);
+            tablesMenu->addMenu(tableMenu);
+            QAction* act = new QAction(tr("show table"),this);
+            act->setData(tableName);
+            tableMenu->addAction(act);
+            connect(act, &QAction::triggered,this, [=]{
+                QString txt;
+                if(c->servertype() == "Sqlite")
+                txt = QString("pragma table_info('%1')").arg(tableName);
+                else if(c->servertype() == "MySql")
+                txt = "describe " + tableName;
+                else if(c->servertype() == "MsSql")// SQL Server
+                txt = "select *"
+                " from INFORMATION_SCHEMA.COLUMNS"
+                " where TABLE_NAME='" + tableName + "'";
+                else
+                txt = QString("Select * from INFORMATION_SCHEMA.COLUMNS"
+                      "where TABLE_NAME='%1'").arg(tableName);
+
+                processALine(txt, tableName);
+            });
+            act = new QAction(tr("select table"),this);
+            act->setData(tableName);
+            tableMenu->addAction(act);
+            connect(act, &QAction::triggered,this, [=]{
+                QString txt = "select * from " + tableName;
+                //processALine(txt, tableName);
+                processSelect(tableName, txt);
+            });
+        }
+        toolsMenu->addSeparator();
+        QMenu* viewsMenu = new QMenu(tr("Views"));
+        QStringList views = SQL::instance()->listViews();
+        foreach(QString v, views)
+        {
+            QMenu* viewMenu = new QMenu(v);
+            viewsMenu->addMenu(viewMenu);
+            QAction* act = new QAction(tr("show View"),this);
+            act->setData(v);
+            viewMenu->addAction(act);
+            connect(act, &QAction::triggered,this, [=]{
+                QString txt;
+                if(c->servertype() == "Sqlite")
+                txt = QString("pragma table_info('%1')").arg(v);
+                else if(c->servertype() == "MySql")
+                txt = "describe " + v;
+                else if(c->servertype() == "PostgreSQL")
+                 txt = QString("select column_name, data_type, character_maximum_length, column_default, is_nullable\
+                               from INFORMATION_SCHEMA.COLUMNS where table_name = '&1';").arg(v);
+                else // SQL Server
+                txt = "SELECT * "
+                       "   FROM INFORMATION_SCHEMA.COLUMNS"
+                       "       WHERE TABLE_NAME = '" + v+ "'";
+
+                processALine(txt, v);
+            });
+        }
+        toolsMenu->addMenu(viewsMenu);
+        QAction* act = new QAction(tr("Show find/replace"),this);
+        act->setCheckable(true);
+        act->setChecked(frw->isVisible());
+        connect(act, &QAction::triggered,this,[=](bool bChecked){
+           frw->setVisible(bChecked);
+        });
+        toolsMenu->addAction(act);
+    });
+}
 
 void QueryDialog::on_load_QueryButton_clicked()
 {
@@ -1099,14 +1097,14 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   }
  }
 
- void QueryDialog::On_cbConnections_CurrentIndexChanged(int ix)
+ void QueryDialog::on_cbConnections_CurrentIndexChanged(int ix)
  {
   if(bChanging) return;
   setCursor(Qt::WaitCursor);
-  Connection* tgtConn = VPtr<Connection>::asPtr(ui->cbConnections->itemData(ix));
-  if(tgtConn== nullptr)
+  Connection* tgt = VPtr<Connection>::asPtr(ui->cbConnections->itemData(ix));
+  if(tgt== nullptr)
       return;
-
+  this->tgtConn = tgt;
   if(ui->cbConnections->currentText() == config->currCity->connections.at(config->currCity->curConnectionId)->description())
   {
    // reverting to default (currrent) database!
@@ -1130,30 +1128,40 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 #if 1
   if(tgtConn->connectionName().isEmpty())
   {
-   db = QSqlDatabase::addDatabase(tgtConn->driver(), QString("query-%1").arg(tgtConn->description()));
-   tgtConn->setConnectionName(db.connectionName());
-   tgtConn->setDb(db);
+      if(tgtConn->getDb().isOpen())
+          db = tgtConn->getDb();
+      else
+      {
+          db = QSqlDatabase::addDatabase(tgtConn->driver(), QString("query-%1").arg(tgtConn->description()));
+          tgtConn->setConnectionName(db.connectionName());
+          tgtConn->setDb(db);
+          Connection::configureDb(db, tgtConn, config);
+      }
 //   if(tgtConn->servertype() == "Sqlite")
 //   {
 //    if(!tgtConn->isSqliteUserFunctionLoaded())
 //     tgtConn->setSqliteUserFunctionLoaded(SQL::instance()->
 //             loadSqlite3Functions(db));
 //   }
-   Connection::configureDb(db, tgtConn, config);
-   bool bOpen;
-   if(tgtConn->connectionType() == "ODBC" && !tgtConn->connectString().isEmpty())
-       bOpen = db.open();
-   else
-       bOpen = db.open(tgtConn->userId(), tgtConn->pwd());
+   bool bOpen = db.isOpen();
+   if(!bOpen)
+   {
+       if(tgtConn->connectionType() == "ODBC" && !tgtConn->connectString().isEmpty())
+           bOpen = db.open();
+       else
+           bOpen = db.open(tgtConn->userId(), tgtConn->pwd());
+   }
    if(!bOpen)
    {
     ui->go_QueryButton->setEnabled(false);
     qDebug() << "Database not open: " + ui->cbConnections->currentText() + ", current databasename: " + db.databaseName() + " " + db.lastError().text();
     qDebug() << "current dir: " + QDir::currentPath();
+    return;
    }
    else
    {
     ui->go_QueryButton->setEnabled(true);
+    createMenus();
     if(tgtConn->servertype() == "Sqlite")
     {
 #ifndef NO_UDF
@@ -1164,17 +1172,17 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
     else if(tgtConn->servertype() == "MsSql")
     {
 #if 1
-    if(tgtConn->database() != "default" || tgtConn->database() != "")
-    {
-     QSqlQuery query = QSqlQuery(db);
-        query.setForwardOnly(false);
-     if(!query.exec(tr("use [%1]").arg(tgtConn->database())))
-     {
-      SQLERROR(std::move(query));
-        db.close();
-        return;
-     }
-    }
+        if(tgtConn->database() != "default" || tgtConn->database() != "")
+        {
+         QSqlQuery query = QSqlQuery(db);
+            query.setForwardOnly(false);
+         if(!query.exec(tr("use [%1]").arg(tgtConn->database())))
+         {
+          SQLERROR(std::move(query));
+            db.close();
+            return;
+         }
+        }
 #endif
     }
    }
@@ -1187,7 +1195,9 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    qDebug() << "connection name:" << tgtConn->connectionName();
    qDebug() << "driver:" << db.driverName() << " database:" << db.databaseName();
    if(db.isOpen())
+   {
        ui->go_QueryButton->setEnabled(true);
+   }
   }
   setCursor(Qt::ArrowCursor);
 }
@@ -1302,7 +1312,7 @@ void QueryDialog::setTitle()
      if(dirName == "Sqlite")
          dirName = "Sqlite3";
      cbFile = new QComboBox(this);
-     QDirIterator dirIterator(":/sql", QDirIterator::Subdirectories);
+     QDirIterator dirIterator(":/sql/" + dirName, QDirIterator::Subdirectories);
      while (dirIterator.hasNext()) {
          dirIterator.next();
          QFileInfo fileInfo = dirIterator.fileInfo();

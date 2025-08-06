@@ -83,7 +83,7 @@ void ODBCUtil::getDrivers()
                                 drv->type = "MySql";
                             else if(drv->name.startsWith("PostgreSQL",Qt::CaseInsensitive))
                                 drv->type = "PostgreSQL";
-                            else if(drv->name.startsWith("SQL Server",Qt::CaseInsensitive))
+                            else if(drv->name.contains("SQL Server",Qt::CaseInsensitive))
                                 drv->type = "MsSql";
                             else
                                 drv->type = "Other";
@@ -519,7 +519,7 @@ void ODBCUtil::getWinDrivers()
             driver->type = "PostgreSQL";
         else if(drvName.startsWith("MySql",Qt::CaseInsensitive))
             driver->type = "MySql";
-        else if(drvName.startsWith("Sql Server",Qt::CaseInsensitive))
+        else if(drvName.contains("Sql Server",Qt::CaseInsensitive))
             driver->type = "MsSql";
         else
             driver->type = "other";
