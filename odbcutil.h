@@ -45,12 +45,15 @@ class ODBCUtil : public QObject
     Q_OBJECT
 public:
     static ODBCUtil* instance();
+#ifndef Q_OS_WINDOWS
     void getDrivers();
     void getDSNs(QString ini);
+#endif
+    DSN* getDsn(QString dsn);
     void fillDSNCombo(QComboBox* box, QString type);
     QString connectString(QString connector, QString host, int port, QString user, QString pswd, QString database);
     QString connectString2(QString driver, QString host, int port, QString user, QString pswd, QString database);
-    DSN* getDsn(QString dsn);
+static bool isIp(QString txt);
 
 signals:
     void odbc_changed();
@@ -62,12 +65,14 @@ private:
     static ODBCUtil* _instance;
     QString currLine;
     QMap<QString, QString> mapDsn;
+#ifndef Q_OS_WINDOWS
     QList<QPair<QString, QString> > parseSection();
     QString getSection(QString str);
+    void updateDriverInfo(Driver* drv, QList<QPair<QString, QString >> pairs);
+#endif
     QMap<QString,Driver*> drvByName;
     QMap<QString,Driver*> drvByLib;
     QFile* ini = nullptr;
-    void updateDriverInfo(Driver* drv, QList<QPair<QString, QString >> pairs);
     QMap<QString, DSN*> dsnByName;
     void initialize();
     QFileSystemWatcher * odbcinstWatcher = nullptr;

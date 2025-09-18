@@ -14,7 +14,7 @@ class ExportDlg : public QDialog
     Q_OBJECT
 
 public:
-    ExportDlg(Configuration *cfg, QWidget *parent = 0);
+    ExportDlg(QWidget *parent = 0);
     ~ExportDlg();
 
 private:

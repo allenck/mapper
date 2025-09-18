@@ -30,6 +30,11 @@ void City::addConnection(Connection* connection)
        //curConnectionId = connections.count()-1;
        //curConnectionId = connection->id();
        _connectionUniqueId = connection->uniqueId();
+
+       connectionMap3.clear();
+       foreach (Connection * connect, connections) {
+           connectionMap3.insert(connect, connect->description());
+       }
    }
    emit connectionAdded(connection);
 }

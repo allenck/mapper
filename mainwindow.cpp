@@ -5127,7 +5127,7 @@ void MainWindow::exportDb()
 {
  if(form == nullptr)
  {
-  form = new ExportDlg(config, this);
+  form = new ExportDlg(this);
  }
  form->show();
 }

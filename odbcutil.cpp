@@ -2,8 +2,11 @@
 #include "QtWidgets/qcombobox.h"
 #include "exceptions.h"
 #include "qdir.h"
+#include "qlineedit.h"
 #include "qsettings.h"
 #include <QFileSystemWatcher>
+#include <QHostInfo>
+#include <QMessageBox>
 
 ODBCUtil* ODBCUtil::_instance = nullptr;
 ODBCUtil::ODBCUtil(QObject *parent)
@@ -48,6 +51,7 @@ ODBCUtil* ODBCUtil::instance()
     return _instance;
 }
 
+#ifndef Q_OS_WINDOWS
 void ODBCUtil::getDrivers()
 {
     QString odbcinst;
@@ -209,10 +213,6 @@ QList<QPair<QString, QString>> ODBCUtil::parseSection()
     return list;
 }
 
-DSN* ODBCUtil::getDsn(QString dsn)
-{
-    return dsnByName.value(dsn);
-}
 
 
 void ODBCUtil::updateDriverInfo(Driver* drv, QList<QPair<QString, QString >> pairs)
@@ -308,6 +308,11 @@ void ODBCUtil::getDSNs(QString odbcini)
         }
     }
 }
+#endif
+DSN* ODBCUtil::getDsn(QString dsn)
+{
+    return dsnByName.value(dsn);
+}
 
 void ODBCUtil::fillDSNCombo(QComboBox* box, QString type)
 {
@@ -328,11 +333,13 @@ void ODBCUtil::fillDSNCombo(QComboBox* box, QString type)
     {
         if(dsn->type == type)
         {
-            box->addItem(dsn->name+"-"+dsn->descr, dsn->name);
+            box->addItem(dsn->name+" -- "+dsn->descr, dsn->name);
         }
     }
     if(box->count())
         box->setCurrentIndex(0);
+    else
+        box->lineEdit()->setPlaceholderText(tr("no %1 DSNs defined!").arg(type));
     if(!currDsn.isEmpty())
     {
         int ix = box->findData(currDsn);
@@ -416,8 +423,11 @@ void ODBCUtil::getWinDSNs()
                 {
                     QString lib = winReg.value(iniKey3).toString();
                     Driver* pDriver = drvByLib.value(lib);
-                    dsn->lib = lib;
-                    dsn->driverName = pDriver->name;
+                    if(pDriver)
+                    {
+                        dsn->lib = lib;
+                        dsn->driverName = pDriver->name;
+                    }
                 }
                 if(iniKey3.compare("Description",Qt::CaseInsensitive)==0)
                 {
@@ -425,7 +435,26 @@ void ODBCUtil::getWinDSNs()
                 }
                 if(iniKey3.compare("Server", Qt::CaseInsensitive)==0)
                 {
-                    dsn->server = winReg.value(iniKey3).toString();
+                    QString server = winReg.value(iniKey3).toString();
+                    QString host;
+                    if(server.contains("\\"))
+                    {
+                        host = server.mid(0, server.indexOf("\\"));
+                    }
+                    else
+                    if(server.contains("/"))
+                    {
+                        host = server.mid(0, server.indexOf("/"));
+                    }
+                    else
+                        host = server;
+                    QHostInfo info = QHostInfo::fromName(host);
+                    if(info.error())
+                    {
+                        QMessageBox::warning(nullptr, tr("Warning"), tr("Invalid server: %1 for %2 error: %3").arg(server, iniKey3, info.errorString()));
+                    }
+
+                    dsn->server = server;
                 }
                 if(iniKey3.compare("Database", Qt::CaseInsensitive)==0)
                 {
@@ -497,11 +526,38 @@ void ODBCUtil::getWinDSNs()
                     dsn->password = winReg.value(iniKey3).toString();
                 }
             }
+
+            if(!dsn->server.isEmpty())
+            {
+                if(isIp(dsn->server))
+                {
+                    QHostInfo info = QHostInfo::fromName(dsn->server);
+                    if(info.hostName() == dsn->server)
+                    {
+                        QMessageBox::warning(nullptr, tr("Warning"),tr("DSN %1 uses invalid IP addr. ").arg(dsn->server));
+                    }
+                    else
+                    {
+                        QMessageBox::warning(nullptr, tr("Warning"),tr("DSN %1 uses IP addr %2. Do you want to use %2 instead?").arg(iniKey, dsn->server, info.hostName()));
+                    }
+                }
+            }
         }
         odbcPairMap.insert(key, map);
         dsnByName.insert(key, dsn);
-
     }
+}
+
+bool ODBCUtil::isIp(QString txt)
+{
+    // ist txt a valid ip address exptression?
+    static QRegularExpression ipV4 ("\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b");
+    QRegularExpressionMatch match = ipV4.match(txt);
+    if(match.hasMatch())
+        return true;
+    static QRegularExpression ipV6("\\A(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}\\Z");
+    match = ipV6.match(txt.toUpper());
+    return match.hasMatch();
 }
 
 void ODBCUtil::getWinDrivers()

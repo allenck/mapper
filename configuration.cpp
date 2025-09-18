@@ -412,6 +412,7 @@ void Configuration::getSettings()
 //    nc->connectionNames.append(ncn->description());
 //    nc->connectionMap.insert(ncn->uniqueId().toString(), ncn);
            nc->addConnection(ncn);
+           nc->connectionMap3.insert(ncn, ncn->description());
         }
       }
       settings.endArray();

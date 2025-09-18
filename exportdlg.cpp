@@ -10,13 +10,13 @@
 #include <QFuture>
 #endif
 
-ExportDlg::ExportDlg(Configuration *cfg, QWidget *parent) :
+ExportDlg::ExportDlg( QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ExportDlg)
 {
  ui->setupUi(this);
  this->setWindowTitle(tr("Export Database"));
- config = cfg;
+ config = Configuration::instance();
 
  // timer = new QTimer(this);
  // timer->setInterval(1000);
@@ -42,6 +42,7 @@ ExportDlg::ExportDlg(Configuration *cfg, QWidget *parent) :
 
 
  ui->cbConnections->clear();
+ qDebug() << "create connections list for " << config->currCity->name();
  for(int i=0; i<config->currCity->connections.count(); i++)
  {
      Connection* c = config->currCity->connections.at(i);

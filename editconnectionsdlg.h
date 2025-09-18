@@ -10,6 +10,7 @@ namespace Ui {
     class editConnectionsDlg;
 }
 
+class QHostInfo;
 class ODBCUtil;
 class EditConnectionsDlg : public QDialog
 {
@@ -67,6 +68,8 @@ private:
   bool bDSNCanBeUsed =false;
   QString getConnectionParameter(QSqlDatabase db, QString key);
   void displayODBCConnection(QSqlDatabase db);
+  bool bCheckingHost = false;
+  void checkHost(QString txtHost);
 
 private slots:
  void cbCitiesSelectionChanged(int sel);
@@ -92,6 +95,8 @@ private slots:
  void cbDbType_selectionChanged(QString);
  void cbConnections_contextMenuRequested(QPoint);
  void cbUseDatabase_changed();
+ void printResults(const QHostInfo &info);
+ void cbConnectionsTextEditFinished();
 
  public slots:
  void cbODBCDsn_currentIndex_changed(int ix);
