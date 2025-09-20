@@ -107,6 +107,8 @@ QSqlDatabase Connection::configure(const QString cName)
    //if(config->currConnection->servertype() == "Sqlite" )
     sql->checkTables(db);
    tableList = db.tables();
+    if(tableList.isEmpty())
+       throw Exception(tr("No tables exist in this database"));
    sysTableList = db.tables(QSql::SystemTables);
    ExportSql* eSql = new ExportSql(config, false);
    bool tableError = false;

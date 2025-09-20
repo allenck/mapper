@@ -80,7 +80,7 @@ OTHER_FILES += \
     Resources/diropen.png \
     wiki/index.htm \
     Resources/sql/recreateAltRoute.sql \
-    Resources/sql/CreateMySqlFunction.sql \
+    Resources/sql/MySql/CreateMySqlFunction.sql \
     Resources/sql/recreateStationTable.sql \
     Resources/sql/recreateTractionTypes.sql \
     Resources/sql/recreateCompanies.sql \

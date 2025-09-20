@@ -414,6 +414,14 @@ void Configuration::getSettings()
            nc->addConnection(ncn);
            nc->connectionMap3.insert(ncn, ncn->description());
         }
+        if(!uuidConnectionMap.contains(ncn->uniqueId()))
+            uuidConnectionMap.insert(ncn->uniqueId(),ncn);
+        else
+        {
+            ncn->setUniqueId(QUuid::createUuid());
+            nc->connectionMap3.insert(ncn, ncn->description());
+
+        }
       }
       settings.endArray();
 

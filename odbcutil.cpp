@@ -486,6 +486,8 @@ void ODBCUtil::getWinDSNs()
             QStringList childKeys = winReg.childKeys();
             for(QString iniKey3 : childKeys)
             {
+                if(iniKey3 == "ODBC Data Sources")
+                    continue;
                 //QPair<QString,QString>  pair(iniKey3, winReg.value(iniKey3).toString());
                 //list.append(pair);
                 map.insert(iniKey3, winReg.value(iniKey3).toString());

@@ -1245,6 +1245,7 @@ void EditConnectionsDlg::btnDeleteClicked()
       if(f.exists())
           f.remove();
     }
+    config->uuidConnectionMap.remove(c->uniqueId());
    }
 //   if(config->currCity->id == currCity->id)
 //    config->currCity->connections = currCity->connections;

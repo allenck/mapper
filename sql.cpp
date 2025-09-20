@@ -9712,7 +9712,7 @@ void SQL::checkTables(QSqlDatabase db)
 
   if(!doesColumnExist("Companies", "RoutePrefix"))
   {
-   addColumn("Companies", "RoutePrefix", "varchar(10 NOT NULL default '')");
+   addColumn("Companies", "RoutePrefix", "varchar(10) NOT NULL default ''");
    if(config->currConnection->servertype() == "Sqlite")
     executeScript(":/sql/Sqlite3/sqlite3_recreateSegmentsTable.sql",db);
   }

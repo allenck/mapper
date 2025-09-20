@@ -112,6 +112,10 @@ public:
  void setDSNCanBeUsed(bool b){_DSNCanBeUsed = b;}
  void setVerified(bool verified){_verified = verified;}
  bool verified() {return _verified;}
+ bool operator==(const Connection& other)const{
+     return other._uuid == this->_uuid;
+ }
+
 };
 
 #endif // CONNECTION_H

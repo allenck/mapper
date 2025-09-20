@@ -101,6 +101,8 @@ public:
  QString startCwd;
 #endif
  QString tileServerUrl;
+ QMap<QUuid,Connection*> uuidConnectionMap;
+
 private:
  static Configuration* _instance;
  explicit Configuration(QObject *parent = 0);
@@ -110,10 +112,6 @@ private:
  bool bForeignKeyCheck = false;
  QString cwd;
  QString devEnv;
- //bool copyFiles(QString from, QString to);
-// #ifdef Q_OS_MACOS
-//  bool processCopyList();
-// #endif
 
 signals:
   void newCityCreated(City*);
