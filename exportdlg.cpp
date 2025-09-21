@@ -65,6 +65,7 @@ ExportDlg::ExportDlg( QWidget *parent) :
 //     Connection* c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
 //     c->configure();
 // });
+ chkAll_changed(true);
  on_chkAll_toggled(ui->chkAll->isChecked());
 }
 

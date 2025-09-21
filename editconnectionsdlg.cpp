@@ -1189,13 +1189,14 @@ void EditConnectionsDlg::btnSaveClicked()
   config->currentCityId = config->currCity->id;
   if(ui->cbConnections->currentIndex() < 1)
   {
-   connection->setId(currCity->connections.count());
-   if(!currCity->connections.contains(connection))
-   {
-//     currCity->connections.append(connection);
-//     currCity->connectionNames.append(connection->description());
+    connection->setId(currCity->connections.count());
+    if(!currCity->connections.contains(connection))
+    {
+    //     currCity->connections.append(connection);
+    //     currCity->connectionNames.append(connection->description());
        currCity->addConnection(connection);
-   }
+        config->uuidConnectionMap.insert(connection->uniqueId(),connection);
+    }
   }
   else
   {
@@ -1391,8 +1392,12 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
     ui->btnSave->setEnabled(true);
 
     if(ui->cbConnections->lineEdit()->text().isEmpty())
-        ui->cbConnections->lineEdit()->setText(ui->cbDbType->currentText() + " " + ui->txtHost->text() + " "
+    {
+        QString newDescr = QString(ui->cbDbType->currentText() + " " + ui->txtHost->text() + " "
                                             + ui->cbConnect->currentText() + " connection ("+ui->cbUseDatabase->currentText() + ")" );
+        this->connection->setDescription(newDescr);
+        ui->cbConnections->addItem(newDescr, VPtr<Connection>::asQVariant(connection));
+    }
 
     timer->start(1000);
     ui->lblHelp->setStyleSheet("QLabel {  color : #FF8000; }");
@@ -1460,11 +1465,12 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
             if(ui->cbDbType->currentText()=="PostgreSQL")
             {
                 if(db.isOpen())
-                db.close();
+                    db.close();
             }
             else
             {
-                db.setDatabaseName(ui->cbODBCDsn->currentData().toString());
+                //db.setDatabaseName(ui->cbODBCDsn->currentData().toString());
+                //db.setDatabaseName(ui->cbUseDatabase->currentText());
                 if(!ui->txtHost->text().isEmpty())
                     db.setHostName(ui->txtHost->text());
                 if(!ui->txtUserId->text().isEmpty())
@@ -1504,7 +1510,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
         return false;
     }
 
-    QString currDb = getDatabase();
+    QString currDb = getDatabase(); //DSN or connect string
 #if 0
 #ifdef Q_OS_MACOS
  // iODBC not setting default db
@@ -1561,7 +1567,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
      {
          QString host= getConnectionParameter(db,"Server");
          QString user = getConnectionParameter(db, "User Id");
-         QString currDb = getConnectionParameter(db, "Database");
+         QString currDb = SQL::instance()->getDatabase(ui->cbDbType->currentText(), db);
 
          ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
          ui->lblHelp->setText(tr("Connection succeeded! Database <B><I>%1</I></B> on <B><I>%4</I></B>. user: <B><I>%5</I></B> has <B><I>%2</I></B> tables!<br> <I>%3</I>")
@@ -1833,11 +1839,11 @@ bool EditConnectionsDlg::populateDatabases()
             if(SQL::instance()->createSqlDatabase(currDatabase, db, "ui->cbDbType->currentText()"))
             {
                 if(ui->cbDbType->currentText() == "MySql")
-                 SQL::instance()->executeScript(":/sql/CreateMySqlFunction.sql");
+                 SQL::instance()->executeScript(":/sql/MySql/CreateMySqlFunction.sql");
                 else if(ui->cbDbType->currentText() == "MsSql")
-                    SQL::instance()->executeScript(":/sql/CreateMsSqlFunction.sql");
+                    SQL::instance()->executeScript(":/sql/MsSql/CreateMsSqlFunction.sql");
                 else if(ui->cbDbType->currentText() == "PostgreSQL")
-                        SQL::instance()->executeScript(":/sql/CreatePostgreSQLFunction.sql");
+                        SQL::instance()->executeScript(":/sql/PostgreSQL/CreatePostgreSQLFunction.sql");
                 else throw IllegalArgumentException("invalid db type");
             }
 
@@ -1994,7 +2000,7 @@ bool EditConnectionsDlg::setDatabase(QString useDatabase)
         throw SQLException(tr("db not open!"));
     QString commandText;
     //if(ui->cbDbType->currentText() == "MsSql")
-     commandText = "use " +useDatabase;
+     commandText = "use " + useDatabase;
     if(!query.exec(commandText))
     {
          QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";

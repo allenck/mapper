@@ -101,7 +101,7 @@ bool ExportSql::openDb()
       if(tgtConn->servertype() == "MySql")
         cmd = QString("use %1").arg(tgtConn->database());
       else
-       cmd = QString("use [%1]").arg(tgtConn->defaultSqlDatabase());
+       cmd = QString("use [%1]").arg(tgtConn->database());
 
       if(!query->exec(cmd))
       {

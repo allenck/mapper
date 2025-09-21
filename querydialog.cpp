@@ -144,7 +144,7 @@ void QueryDialog::fill_cbConnections()
         if(c->id() == config->currConnection->id())
             ui->cbConnections->setCurrentIndex(i);
     }
-    if(!ui->chkShowOnly->isChecked())
+    if(ui->chkShowOnly->isChecked())
         return;
     // add other cities as well
     for(City* city : config->cityList)
@@ -229,7 +229,8 @@ void QueryDialog::createMenus()
     fileMenu= new Menu(tr("File"));
     menuBar->addMenu(fileMenu);
     selectMenu = new QMenu(tr("Load Resource script"));
-    this->selectMenu->addAction(createWidgetAction());
+    wAct = createWidgetAction();
+    this->selectMenu->addAction(wAct);
     this->selectMenu->setStatusTip(tr("load a read-only resource script"));
     fileMenu->addMenu(selectMenu);
     QAction* loadFileAct = new QAction(tr("Load query"), this);
@@ -356,7 +357,7 @@ void QueryDialog::on_load_QueryButton_clicked()
     on_clear_QueryButton_clicked();
     QString s_File_Name = QFileDialog::getOpenFileName(this, "Choose a SQL text file",
                        config->q.s_query_path, "SQL text files (*.sql *.txt);;All Files (*.*)");
-    // QFileDialog take a long time to close, this should tak care of this - but does not.
+    // QFileDialog take a long time to close, this should take care of this - but does not.
     QCoreApplication::processEvents();
     setCursor(Qt::ArrowCursor);
     if (s_File_Name.isEmpty()) return;
@@ -1166,6 +1167,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
        ui->go_QueryButton->setEnabled(true);
    }
   }
+  wAct = createWidgetAction();
   setCursor(Qt::ArrowCursor);
 }
 
