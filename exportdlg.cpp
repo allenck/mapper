@@ -378,17 +378,20 @@ void ExportDlg::btnGo_clicked()
    }
    ui->chkRouteSeq->setChecked(false);
    qApp->processEvents();
-  }ui->lblHelp->setText(tr("Done"));
+  }
+  ui->lblHelp->setText(tr("Done"));
 
   //exprt->export_geodb_geometry();
   if(stopEnabled)
       break;
+  this->close();
+
  }
  // timer->stop();
  // this->close();
 
- ui->btnGo->setEnabled(true);
- ui->cbConnections->setEnabled(true);
+    ui->btnGo->setEnabled(true);
+    ui->cbConnections->setEnabled(true);
     } catch (Exception e)
     {
         QMessageBox::warning(this,"Exception", tr("The export failed: %1").arg(e.msg));

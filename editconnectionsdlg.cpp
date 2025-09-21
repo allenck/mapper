@@ -581,6 +581,7 @@ void EditConnectionsDlg::cbODBCDsn_currentIndex_changed(int ix)
     ui->txtPort->setText("");
     ui->txtUserId->setText("");
     ui->txtPWD->setText("");
+    ui->cbUseDatabase->clear();
     bDSNCanBeUsed =false;
     db.setDatabaseName(ui->cbODBCDsn->currentData().toString());
     bDSNCanBeUsed = db.open();
@@ -1535,34 +1536,36 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
  }
 #endif
 #endif
- QStringList tableList = db.tables();
- bool bOpen = db.open(/*ui->txtUserId->text(), ui->txtPWD->text()*/);
- if(tableList.contains("Parameters"))
-    parms = SQL::instance()->getParameters(db);
- if(!currDb.isEmpty() && !tableList.contains("Parameters", Qt::CaseInsensitive))
- {
-  //createSqliteTables(db);
-  ExportSql* expSql = new ExportSql(Configuration::instance(), false);
-  if(ui->cbDbType->currentText() == "Sqlite")
-      expSql->createParametersTable(db, ui->cbDbType->currentText());
-  else
-  {
-      ui->tbReload->click();
-      QMessageBox::warning(nullptr, tr("Setup database"),
-                               tr("No tables exist in this database. \n"
-                               "The database administrator must create the tables and users.\n"
-                               "Or you can export to this database."));
-      ui->lblHelp->setStyleSheet("color: magenta");
-      ui->lblHelp->setText("Connection OK but no tables exist!");
-      return true;
-  }
- }
+    bool bOpen = db.open(/*ui->txtUserId->text(), ui->txtPWD->text()*/);
+    if(!ui->cbUseDatabase->currentText().isEmpty())
+        setDatabase(ui->cbUseDatabase->currentText());
+    QStringList tableList = db.tables();
+    if(tableList.contains("Parameters"))
+        parms = SQL::instance()->getParameters(db);
+    if(!currDb.isEmpty() && !tableList.contains("Parameters", Qt::CaseInsensitive))
+    {
+        //createSqliteTables(db);
+        ExportSql* expSql = new ExportSql(Configuration::instance(), false);
+        if(ui->cbDbType->currentText() == "Sqlite")
+            expSql->createParametersTable(db, ui->cbDbType->currentText());
+        else
+        {
+            ui->tbReload->click();
+            QMessageBox::warning(nullptr, tr("Setup database"),
+                                   tr("No tables exist in this database. \n"
+                                   "The database administrator must create the tables and users.\n"
+                                   "Or you can export to this database."));
+            ui->lblHelp->setStyleSheet("color: magenta");
+            ui->lblHelp->setText("Connection OK but no tables exist!");
+            return true;
+        }
+    }
 
- QString odbcDsn = db.databaseName();
+    QString odbcDsn = db.databaseName();
 
- //if(ui->cbDbType->currentText() =="MsSql" || ui->cbDbType->currentText() =="MySql")
- if(ui->cbConnect->currentText() == "ODBC")
- {
+    //if(ui->cbDbType->currentText() =="MsSql" || ui->cbDbType->currentText() =="MySql")
+    if(ui->cbConnect->currentText() == "ODBC")
+    {
      if(!currDb.isEmpty())
      {
          QString host= getConnectionParameter(db,"Server");
@@ -1609,7 +1612,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
          currCity->setNameOverride(parms.city);
          ui->cbCities->setCurrentText(parms.city);
      }
-     if(!ui->cbUseDatabase->currentText().isEmpty())
+     if(ui->cbUseDatabase->count() == 0)
      {
         populateDatabases();
      }
@@ -1618,22 +1621,21 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
          ui->cbConnections->setCurrentText(ui->cbCities->currentText() + " " + ui->cbDbType->currentText()
                                            + " " + ui->cbConnect->currentText() + " " + ui->txtHost->text());
      }
- }
- else // direct
- {
-  ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
-  ui->lblHelp->setText(tr("Connection succeeded! Database <B><I>%1</I></B> on <B><I>%4</I></B>, user <B><I>%5</I></B> Has <B><I>%2</I></B> tables!<br> <I>%3</I>").arg(currDb).arg(tableList.count())
-                           .arg(tableList.join(", "), db.hostName(), db.userName()));
+    }
+    else // direct
+    {
+        ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
+        ui->lblHelp->setText(tr("Connection succeeded! Database <B><I>%1</I></B> on <B><I>%4</I></B>, user <B><I>%5</I></B> Has <B><I>%2</I></B> tables!<br> <I>%3</I>").arg(currDb).arg(tableList.count())
+                               .arg(tableList.join(", "), db.hostName(), db.userName()));
+    }
+    timer->stop();
+    this->setCursor(QCursor(Qt::ArrowCursor));
 
- }
- timer->stop();
- this->setCursor(QCursor(Qt::ArrowCursor));
+    db.close();
+    ui->btnSave->setEnabled(true);
 
- db.close();
- ui->btnSave->setEnabled(true);
-
- _testConnection->setVerified(true);
- return true;
+    _testConnection->setVerified(true);
+    return true;
 }
 
 bool EditConnectionsDlg::openTestDb()
@@ -1785,7 +1787,8 @@ open1:
         {
             QString defaultDatabase = getDatabase();
             ui->txtDefaultDb->setText(defaultDatabase);
-            populateDatabases();
+            if(ui->cbUseDatabase->count() ==0)
+                populateDatabases();
             // if(!availableDatabases.contains( ui->cbUseDatabase->currenttext()))
             //     ui->txtUseDatabase->setText(defaultDatabase);
         }
@@ -1802,31 +1805,31 @@ open1:
 
 bool EditConnectionsDlg::populateDatabases()
 {
-  QString currDatabase = ui->cbUseDatabase->currentText();
-  QSqlQuery query = QSqlQuery(db);
+    QString currDatabase = ui->cbUseDatabase->currentText();
+    QSqlQuery query = QSqlQuery(db);
 
-  if(!db.open())
-  {
-      QSqlError err = db.lastError();
-       displayDbInfo(db);
-      //throw SQLException(tr("database not open ") +txt );
-      return false;
-  }
+    if(!db.open())
+    {
+        QSqlError err = db.lastError();
+        displayDbInfo(db);
+        //throw SQLException(tr("database not open ") +txt );
+        return false;
+    }
 
-  //QStringList list;
-  if(ui->cbDbType->currentText() == "MySql")
-      availableDatabases = SQL::instance()->showMySqlDatabases(db);
-  else if(ui->cbDbType->currentText() == "MsSql")
-      availableDatabases = SQL::instance()->showMsSqlDatabases(db);
-  else if(ui->cbDbType->currentText() == "PostgreSQL")
-      availableDatabases = SQL::instance()->showPostgreSQLDatabases(db);
-  else
-      return false; // Sqlite
-  ui->cbUseDatabase->clear();
-  ui->cbUseDatabase->setCurrentText(currDatabase);
-  ui->cbUseDatabase->addItems(availableDatabases);
+    //QStringList list;
+    if(ui->cbDbType->currentText() == "MySql")
+        availableDatabases = SQL::instance()->showMySqlDatabases(db);
+    else if(ui->cbDbType->currentText() == "MsSql")
+        availableDatabases = SQL::instance()->showMsSqlDatabases(db);
+    else if(ui->cbDbType->currentText() == "PostgreSQL")
+        availableDatabases = SQL::instance()->showPostgreSQLDatabases(db);
+    else
+        return false; // Sqlite
+    ui->cbUseDatabase->clear();
+    ui->cbUseDatabase->setCurrentText(currDatabase);
+    ui->cbUseDatabase->addItems(availableDatabases);
     if(ui->cbUseDatabase->currentText().isEmpty() && availableDatabases.count()==1)
-     ui->cbUseDatabase->setCurrentText(availableDatabases.at(0));
+        ui->cbUseDatabase->setCurrentText(availableDatabases.at(0));
     if(!currDatabase.isEmpty() && !availableDatabases.contains(currDatabase))
     {
         int rslt = QMessageBox::question(nullptr, tr("Create database?"),
@@ -1839,11 +1842,11 @@ bool EditConnectionsDlg::populateDatabases()
             if(SQL::instance()->createSqlDatabase(currDatabase, db, "ui->cbDbType->currentText()"))
             {
                 if(ui->cbDbType->currentText() == "MySql")
-                 SQL::instance()->executeScript(":/sql/MySql/CreateMySqlFunction.sql");
+                    SQL::instance()->executeScript(":/sql/MySql/CreateMySqlFunction.sql");
                 else if(ui->cbDbType->currentText() == "MsSql")
                     SQL::instance()->executeScript(":/sql/MsSql/CreateMsSqlFunction.sql");
                 else if(ui->cbDbType->currentText() == "PostgreSQL")
-                        SQL::instance()->executeScript(":/sql/PostgreSQL/CreatePostgreSQLFunction.sql");
+                    SQL::instance()->executeScript(":/sql/PostgreSQL/CreatePostgreSQLFunction.sql");
                 else throw IllegalArgumentException("invalid db type");
             }
 
@@ -1860,132 +1863,37 @@ bool EditConnectionsDlg::populateDatabases()
         qDebug() << "database " << currDatabase << " exists";
     }
     return false;
-   }
-//   }
-//   else if(ui->cbDbType->currentText() == "MySql")
-//   {
-//    // MySql
-//    QStringList availableDatabases = SQL::instance()->showMySqlDatabases(db);
-//    QCompleter* completer = new QCompleter(availableDatabases);
-//    ui->txtUseDatabase->setCompleter(completer);
-//    if(ui->cbUseDatabase->currenttext().isEmpty() && availableDatabases.size()==1)
-//        ui->txtUseDatabase->setText(availableDatabases.at(0));
-//    if(!availableDatabases.contains(currDatabase))
-//    {
-//          QString database = currDatabase;
-//          if(db.isOpen())
-//          {
-//           QSqlQuery query = QSqlQuery(db);
-//           bool retry = true;
-//           while (retry)
-//           {
-//             if(!database.isEmpty())
-//             {
-//               QString commandText = "use " + database;
-//               if(!query.exec(commandText))
-//               {
-//                 if(query.lastError().databaseText().contains("Unknown database"))
-//                 {
-//                   int rslt = QMessageBox::question(nullptr, tr("Create database?"),
-//                                                    tr("The database %1 does not exist on the server.<br>"
-//                                                       "Do you wish to create it?").arg(database));
-//                   if(rslt == QMessageBox::Yes)
-//                   {
-//                     SQL::instance()->createSqlDatabase(database, db, ui->cbDbType->currentText());
-//                     SQL::instance()->executeScript(":/sql/CreateMySqlFunctions.sql");
-//                   }
-//                   else if(rslt == QMessageBox::No)
-//                   {
-//                      retry = false;
-//                   }
-//                 }
-//                 else
-//                 {
-//                   int rslt = QMessageBox::critical(nullptr, tr("Sql Error"), tr("An SqL error has occurred.\n"
-//                                             "Sql error:%1\nquery:\" %2\"").arg(query.lastError().text()).arg(query.lastQuery()),
-//                                             QMessageBox::Retry|QMessageBox::Ignore);
-//                   if(rslt == QMessageBox::Retry)
-//                     continue;
-//                   else retry = false;
-//                 }
-//             }
-//            }
-//             else
-//                 break;
-//           }
-//        }
-//    }
-//   }
-//   else if(ui->cbDbType->currentText() != "Sqlite"){
-//    // Sqlite
-// //#ifndef Q_OS_MACOS
-//       QDir dir("Resources/databases");
-// // #else
-// //       QDir dir(config->macOSPublic + "/databases");
-// // #endif
-//       QStringList nameFilter = {"*.sqlite3"};
-//       if(dir.exists())
-//       {
-//           QStringList databases = dir.entryList(nameFilter, QDir::Files);
-//           QCompleter *completer = new QCompleter(databases, this);
-//           completer->setCaseSensitivity(Qt::CaseInsensitive);
-//           ui->txtSqliteFileName->setCompleter(completer);
-//       }
-//   }
-//   // PostgreSQL DSN can only connect to one database so trying to do this is invalid
-//   if(ui->cbDbType->currentText() != "PostgreSQL")
-//   {
-//       // use desired db
-//       if(!currDatabase.isEmpty())
-//       {
-//           if(!query.exec("use "+ currDatabase))
-//           {
-//             qDebug() << query.lastError().driverText()+ query.lastError().databaseText();
-//             ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
-//             ui->lblHelp->setText(query.lastError().driverText() + query.lastError().databaseText());
-//             return false;
-//           }
-//           ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
-//           ui->lblHelp->setText(tr("using ")+currDatabase);
-//       }
-//       else
-//       {
-//           ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
-//           ui->lblHelp->setText(tr("using PostgreSQL database")+currDatabase);
-//       }
-//   }
-//   return true;
-// }
+}
 
 QString EditConnectionsDlg::getDatabase()
 {
- if(!db.isOpen()) return QString();
+    if(!db.isOpen()) return QString();
 
- QSqlQuery query = QSqlQuery(db);
- QString dbName ="";
- QString commandText;
- if(ui->cbDbType->currentText() == "MsSql")
-  commandText = "SELECT DB_NAME() ";
- else if(ui->cbDbType->currentText() == "MySql")
-  commandText = "SELECT DATABASE()";
- else if(ui->cbDbType->currentText() == "PostgreSQL")
-     commandText = "SELECT current_database()";
- else
-  return dbName;
- if(!query.exec(commandText))
- {
-  SQLERROR(std::move(query));
- }
- else
- {
-  while(query.next())
-  {
-   if(!query.value(0).isNull())
-   dbName = query.value(0).toString();
-  }
-  ui->txtDefaultDb->setText(dbName);
- }
- return dbName;
+    QSqlQuery query = QSqlQuery(db);
+    QString dbName ="";
+    QString commandText;
+    if(ui->cbDbType->currentText() == "MsSql")
+        commandText = "SELECT DB_NAME() ";
+    else if(ui->cbDbType->currentText() == "MySql")
+        commandText = "SELECT DATABASE()";
+    else if(ui->cbDbType->currentText() == "PostgreSQL")
+        commandText = "SELECT current_database()";
+    else
+        return dbName;
+    if(!query.exec(commandText))
+    {
+        SQLERROR(std::move(query));
+    }
+    else
+    {
+    while(query.next())
+    {
+        if(!query.value(0).isNull())
+            dbName = query.value(0).toString();
+    }
+    ui->txtDefaultDb->setText(dbName);
+    }
+    return dbName;
 }
 
 bool EditConnectionsDlg::setDatabase(QString useDatabase)
@@ -2053,9 +1961,11 @@ void EditConnectionsDlg::txtHostLeave()
 
 void EditConnectionsDlg::checkHost(QString txtHost)
 {
+    if(txtHost.isEmpty())
+        return;
     bCheckingHost = true;
     setCursor(Qt::WaitCursor);
-    QHostInfo::lookupHost(txtHost,this, &EditConnectionsDlg::printResults);
+    QHostInfo::lookupHost(txtHost.contains('/')?txtHost.mid(0,txtHost.indexOf('/')):txtHost,this, &EditConnectionsDlg::printResults);
 }
 
 void  EditConnectionsDlg::printResults(const QHostInfo& info)
@@ -2143,9 +2053,12 @@ void EditConnectionsDlg::txtUserIdLeave()
 
     if(!ui->txtUserId->text().isEmpty())
         bDSNCanBeUsed=false;
+    if(ui->txtPWD->text().isEmpty())
+        return;
     if(!openTestDb())
         return;
-    populateDatabases();
+    if(availableDatabases.empty())
+        populateDatabases();
 }
 
 void EditConnectionsDlg::txtPwdLeave()
@@ -2156,7 +2069,8 @@ void EditConnectionsDlg::txtPwdLeave()
         bDSNCanBeUsed=false;
     if(!openTestDb())
         return;
-    populateDatabases();
+    if(availableDatabases.empty())
+        populateDatabases();
 }
 
 void EditConnectionsDlg::cbUseDatabase_changed()
