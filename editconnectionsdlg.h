@@ -70,6 +70,8 @@ private:
   void displayODBCConnection(QSqlDatabase db);
   bool bCheckingHost = false;
   void checkHost(QString txtHost);
+  void createDescription();
+
 
 private slots:
  void cbCitiesSelectionChanged(int sel);

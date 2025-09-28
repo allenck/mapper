@@ -119,276 +119,276 @@ void ExportDlg::btnGo_clicked()
       exprt->setOverride(ui->exportDate->dateTime());
      }
      exprt->setNoDelete(ui->chkNoDelete->checkState());
- //timer->start();
- for(int i=0; i<config->currCity->connections.count(); i++)
- {
-  Connection* c = config->currCity->connections.at(i);
-  if( c->description() == ui->cbConnections->currentText())
-  {
-   config->currCity->curExportConnId = c->id();
-   config->saveSettings();
-   currConnection = c;
-   exprt->setTargetConn(c);
-   break;
-  }
- }
- currConnection = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
- if(!currConnection)
-  return;
- connect(exprt, SIGNAL(progress(int)), ui->progressBar, SLOT(setValue(int)));
- connect(exprt,SIGNAL(progressMsg(QString)), this, SLOT(newProgressMsg(QString)));
- connect(exprt, SIGNAL(uncheck(QString)),  this, SLOT(uncheckControl(QString)));
- connect(exprt, &ExportSql::requestStop, [=] {
-     stopEnabled = true;
-     close();
- });
+    //timer->start();
+    for(int i=0; i<config->currCity->connections.count(); i++)
+    {
+        Connection* c = config->currCity->connections.at(i);
+        if( c->description() == ui->cbConnections->currentText())
+        {
+            config->currCity->curExportConnId = c->id();
+            config->saveSettings();
+            currConnection = c;
+            exprt->setTargetConn(c);
+            break;
+        }
+    }
+    currConnection = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
+    if(!currConnection)
+    return;
+    connect(exprt, SIGNAL(progress(int)), ui->progressBar, SLOT(setValue(int)));
+    connect(exprt,SIGNAL(progressMsg(QString)), this, SLOT(newProgressMsg(QString)));
+    connect(exprt, SIGNAL(uncheck(QString)),  this, SLOT(uncheckControl(QString)));
+    connect(exprt, &ExportSql::requestStop, [=] {
+        stopEnabled = true;
+        close();
+    });
 
 // if(ui->chkAll->isChecked())
 //     exprt.exportAll();
 // else
 
- stopEnabled = true;
+    stopEnabled = true;
  // if(currConnection->servertype() == "MsSql")
  //     SQL::instance()->useDatabase(currConnection->defaultSqlDatabase(), exprt->targetDb());
 
- while(stopEnabled)
- {
-  if(ui->chkRouteView->isChecked())
-  {
-    if(exprt->dropView("RouteView"))
-      ui->chkRouteView->setCheckState(Qt::PartiallyChecked);
-  }
-  if(ui->chkParameters->isChecked())
-  {
-      ui->lblHelp->setText(tr("Parameters"));
-      qApp->processEvents();
-      ui->progressBar->setValue(0);
-      if(!exprt->exportTable("Parameters"))
-      {
-       ui->lblHelp->setText("Export of Parameters has errors");
-       ui->btnGo->setEnabled(true);
-       return;
-      }
-      ui->chkParameters->setChecked(false);
-      qApp->processEvents();
-  }
-  if(ui->chkCompanies->isChecked())
-  {
-      ui->lblHelp->setText(tr("Companies"));
-      qApp->processEvents();
-      ui->progressBar->setValue(0);
-      if(!exprt->dropRoutes())
-        ui->lblHelp->setText("Drop table Routes failed");
-      if(!exprt->exportTable("Companies"))
-      {
-       ui->lblHelp->setText("Export of Companies has errors");
-       ui->btnGo->setEnabled(true);
-       return;
-      }
-      ui->chkCompanies->setChecked(false);
-      qApp->processEvents();
-  }
-  if(ui->chkTractionTypes->isChecked())
-  {
-      ui->lblHelp->setText(tr("Traction Types"));
-      qApp->processEvents();
-      ui->progressBar->setValue(0);
-      if(!exprt->dropRoutes())
-        ui->lblHelp->setText("Drop table Routes failed");
-      if(!exprt->exportTable("TractionTypes"))
-      {
-       ui->lblHelp->setText("Export of TractionTypes has errors");
-       ui->btnGo->setEnabled(true);
-       return;
-      }
-      ui->chkTractionTypes->setChecked(false);
-      qApp->processEvents();
-  }
-  if(ui->chkAltRoute->isChecked())
-  {
-      ui->lblHelp->setText(tr("Alt Routes"));
-      qApp->processEvents();
-      ui->progressBar->setValue(0);
-      if(!exprt->dropRoutes())
-        ui->lblHelp->setText("Drop table Routes failed");
-      if(!exprt->exportTable("AltRoute"))
-      {
-       ui->lblHelp->setText("Export of altRoute has errors");
-       ui->btnGo->setEnabled(true);
-       return;
-      }
-      ui->chkAltRoute->setChecked(false);
-      qApp->processEvents(QEventLoop::AllEvents);
-  }
-  if(ui->chkComments->isChecked())
-  {
-      ui->lblHelp->setText(tr("Comments"));
-      qApp->processEvents();
-      if(!exprt->dropRouteComments())
-        ui->lblHelp->setText("Drop table RouteComments failed");
-      ui->progressBar->setValue(0);
-      if(!exprt->exportTable("Comments"))
-      {
-       ui->lblHelp->setText("Export of Comments has errors");
-       ui->btnGo->setEnabled(true);
-       return;
-      }
-      ui->chkComments->setChecked(false);
-      qApp->processEvents();
-  }
-  if(ui->chkIntersections->isChecked())
-  {
-      ui->lblHelp->setText(tr("Intersections"));
-      qApp->processEvents();
-      ui->progressBar->setValue(0);
-#ifndef USE_QTCONCURRENT
-      if(!exprt->exportTable("Intersections"))
-      {
-       ui->lblHelp->setText("Export of Intersections has errors");
-       ui->btnGo->setEnabled(true);
-       return;
-      }
-#else
-      QFuture<bool> future = QtConcurrent::run(std::bind1st(std::mem_fun( &ExportSql::exportTable), exprt),"Intersections");
-      int result = future.result();
-      if(!result)
-      {
-          ui->lblHelp->setText("Export of Intersections has errors");
-          ui->btnGo->setEnabled(true);
-          return;
-      }
-#endif
-      ui->chkIntersections->setChecked(false);
-      qApp->processEvents();
-  }
-  if(ui->chkStreetDef->isChecked())
-  {
-      ui->lblHelp->setText(tr("StreetDef"));
-      qApp->processEvents();
-      ui->progressBar->setValue(0);
-      if(!exprt->exportTable("StreetDef"))
-      {
-          ui->lblHelp->setText("Export of StreetDef has errors");
-          ui->btnGo->setEnabled(true);
-          return;
-      }
-      ui->chkStreetDef->setChecked(false);
-      qApp->processEvents();
-  }
-  if(ui->chkSegments->isChecked())
-  {
-      ui->lblHelp->setText(tr("Segments"));
-      qApp->processEvents();
-      ui->progressBar->setValue(0);
-      if(!exprt->dropRoutes())
-       ui->lblHelp->setText("Drop Route failed");
-      if(!exprt->dropStations())
-       ui->lblHelp->setText("Drop Stations failed");
-      if(!exprt->exportTable("Segments"))
-      {
-       ui->lblHelp->setText("Export of Segments has errors");
-       ui->btnGo->setEnabled(true);
-       return;
-      }
-      ui->chkSegments->setChecked(false);
-      qApp->processEvents();
-  }
-  if(ui->chkRouteName->isChecked())
-  {
-      ui->lblHelp->setText(tr("RouteName"));
-      qApp->processEvents();
-      ui->progressBar->setValue(0);
-      if(!exprt->exportTable("RouteName"))
-      {
-          ui->lblHelp->setText("Export of RouteName has errors");
-          ui->btnGo->setEnabled(true);
-          return;
-      }
-      ui->chkRouteName->setChecked(false);
-      qApp->processEvents();
-  }
-  if(ui->chkRoutes->isChecked())
-  {
-      ui->lblHelp->setText(tr("Routes"));
-      qApp->processEvents();
-      ui->progressBar->setValue(0);
-      //if(!exprt->exportRoutes())
-      if(!exprt->exportTable("Routes"))
-      {
-       ui->lblHelp->setText("Export of Routes has errors");
-       ui->btnGo->setEnabled(true);
-       return;
-      }
-      ui->chkRoutes->setChecked(false);
-      qApp->processEvents();
-  }
-  if(ui->chkStations->isChecked())
-  {
-      ui->lblHelp->setText(tr("Stations"));
-      qApp->processEvents();
-      ui->progressBar->setValue(0);
-      if(!exprt->exportTable("Stations"))
-      {
-       ui->lblHelp->setText("Export of Stations has errors");
-       ui->btnGo->setEnabled(true);
-       return;
-      }
-      ui->chkStations->setChecked(false);
-      qApp->processEvents();
-  }
-  if(ui->chkTerminals->isChecked())
-  {
-      ui->lblHelp->setText(tr("Terminals"));
-      qApp->processEvents();
-      ui->progressBar->setValue(0);
-      if(!exprt->exportTable("Terminals"))
-      {
-       ui->lblHelp->setText("Export of Terminals has errors");
-       ui->btnGo->setEnabled(true);
-       return;
-      }
-      ui->chkTerminals->setChecked(false);
-      qApp->processEvents();
-  }
-  if(ui->chkRouteComments->isChecked())
-  {
-   ui->lblHelp->setText(tr("RouteComments"));
-   qApp->processEvents();
-   ui->progressBar->setValue(0);
-   if(!exprt->exportTable("RouteComments"))
-   {
-    ui->lblHelp->setText("Export of RouteComments has errors");
-    ui->btnGo->setEnabled(true);
-    return;
-   }
-   ui->chkRouteComments->setChecked(false);
-   qApp->processEvents();
-  }
-  if(ui->chkRouteSeq->isChecked())
-  {
-   ui->lblHelp->setText(tr("RouteSeq"));
-   qApp->processEvents();
-   ui->progressBar->setValue(0);
-   bool bOk = exprt->exportTable("RouteSeq");
-   if(!bOk)
-   {
-    ui->lblHelp->setText("Export of RouteSeq has errors");
-    ui->btnGo->setEnabled(true);
-    return;
-   }
-   ui->chkRouteSeq->setChecked(false);
-   qApp->processEvents();
-  }
-  ui->lblHelp->setText(tr("Done"));
+    while(stopEnabled)
+    {
+        if(ui->chkRouteView->isChecked())
+        {
+        if(exprt->dropView("RouteView"))
+          ui->chkRouteView->setCheckState(Qt::PartiallyChecked);
+        }
+        if(ui->chkParameters->isChecked())
+        {
+          ui->lblHelp->setText(tr("Parameters"));
+          qApp->processEvents();
+          ui->progressBar->setValue(0);
+          if(!exprt->exportTable("Parameters"))
+          {
+           ui->lblHelp->setText("Export of Parameters has errors");
+           ui->btnGo->setEnabled(true);
+           return;
+          }
+          ui->chkParameters->setChecked(false);
+          qApp->processEvents();
+        }
+        if(ui->chkCompanies->isChecked())
+        {
+          ui->lblHelp->setText(tr("Companies"));
+          qApp->processEvents();
+          ui->progressBar->setValue(0);
+          if(!exprt->dropRoutes())
+            ui->lblHelp->setText("Drop table Routes failed");
+          if(!exprt->exportTable("Companies"))
+          {
+           ui->lblHelp->setText("Export of Companies has errors");
+           ui->btnGo->setEnabled(true);
+           return;
+          }
+          ui->chkCompanies->setChecked(false);
+          qApp->processEvents();
+        }
+        if(ui->chkTractionTypes->isChecked())
+        {
+          ui->lblHelp->setText(tr("Traction Types"));
+          qApp->processEvents();
+          ui->progressBar->setValue(0);
+          if(!exprt->dropRoutes())
+            ui->lblHelp->setText("Drop table Routes failed");
+          if(!exprt->exportTable("TractionTypes"))
+          {
+           ui->lblHelp->setText("Export of TractionTypes has errors");
+           ui->btnGo->setEnabled(true);
+           return;
+          }
+          ui->chkTractionTypes->setChecked(false);
+          qApp->processEvents();
+        }
+        if(ui->chkAltRoute->isChecked())
+        {
+          ui->lblHelp->setText(tr("Alt Routes"));
+          qApp->processEvents();
+          ui->progressBar->setValue(0);
+          if(!exprt->dropRoutes())
+            ui->lblHelp->setText("Drop table Routes failed");
+          if(!exprt->exportTable("AltRoute"))
+          {
+           ui->lblHelp->setText("Export of altRoute has errors");
+           ui->btnGo->setEnabled(true);
+           return;
+          }
+          ui->chkAltRoute->setChecked(false);
+          qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if(ui->chkComments->isChecked())
+        {
+          ui->lblHelp->setText(tr("Comments"));
+          qApp->processEvents();
+          if(!exprt->dropRouteComments())
+            ui->lblHelp->setText("Drop table RouteComments failed");
+          ui->progressBar->setValue(0);
+          if(!exprt->exportTable("Comments"))
+          {
+           ui->lblHelp->setText("Export of Comments has errors");
+           ui->btnGo->setEnabled(true);
+           return;
+          }
+          ui->chkComments->setChecked(false);
+          qApp->processEvents();
+        }
+        if(ui->chkIntersections->isChecked())
+        {
+          ui->lblHelp->setText(tr("Intersections"));
+          qApp->processEvents();
+          ui->progressBar->setValue(0);
+        #ifndef USE_QTCONCURRENT
+          if(!exprt->exportTable("Intersections"))
+          {
+           ui->lblHelp->setText("Export of Intersections has errors");
+           ui->btnGo->setEnabled(true);
+           return;
+          }
+        #else
+          QFuture<bool> future = QtConcurrent::run(std::bind1st(std::mem_fun( &ExportSql::exportTable), exprt),"Intersections");
+          int result = future.result();
+          if(!result)
+          {
+              ui->lblHelp->setText("Export of Intersections has errors");
+              ui->btnGo->setEnabled(true);
+              return;
+          }
+        #endif
+          ui->chkIntersections->setChecked(false);
+          qApp->processEvents();
+        }
+        if(ui->chkStreetDef->isChecked())
+        {
+          ui->lblHelp->setText(tr("StreetDef"));
+          qApp->processEvents();
+          ui->progressBar->setValue(0);
+          if(!exprt->exportTable("StreetDef"))
+          {
+              ui->lblHelp->setText("Export of StreetDef has errors");
+              ui->btnGo->setEnabled(true);
+              return;
+          }
+          ui->chkStreetDef->setChecked(false);
+          qApp->processEvents();
+        }
+        if(ui->chkSegments->isChecked())
+        {
+          ui->lblHelp->setText(tr("Segments"));
+          qApp->processEvents();
+          ui->progressBar->setValue(0);
+          if(!exprt->dropRoutes())
+           ui->lblHelp->setText("Drop Route failed");
+          if(!exprt->dropStations())
+           ui->lblHelp->setText("Drop Stations failed");
+          if(!exprt->exportTable("Segments"))
+          {
+           ui->lblHelp->setText("Export of Segments has errors");
+           ui->btnGo->setEnabled(true);
+           return;
+          }
+          ui->chkSegments->setChecked(false);
+          qApp->processEvents();
+        }
+        if(ui->chkRouteName->isChecked())
+        {
+          ui->lblHelp->setText(tr("RouteName"));
+          qApp->processEvents();
+          ui->progressBar->setValue(0);
+          if(!exprt->exportTable("RouteName"))
+          {
+              ui->lblHelp->setText("Export of RouteName has errors");
+              ui->btnGo->setEnabled(true);
+              return;
+          }
+          ui->chkRouteName->setChecked(false);
+          qApp->processEvents();
+        }
+        if(ui->chkRoutes->isChecked())
+        {
+          ui->lblHelp->setText(tr("Routes"));
+          qApp->processEvents();
+          ui->progressBar->setValue(0);
+          //if(!exprt->exportRoutes())
+          if(!exprt->exportTable("Routes"))
+          {
+           ui->lblHelp->setText("Export of Routes has errors");
+           ui->btnGo->setEnabled(true);
+           return;
+          }
+          ui->chkRoutes->setChecked(false);
+          qApp->processEvents();
+        }
+        if(ui->chkStations->isChecked())
+        {
+          ui->lblHelp->setText(tr("Stations"));
+          qApp->processEvents();
+          ui->progressBar->setValue(0);
+          if(!exprt->exportTable("Stations"))
+          {
+           ui->lblHelp->setText("Export of Stations has errors");
+           ui->btnGo->setEnabled(true);
+           return;
+          }
+          ui->chkStations->setChecked(false);
+          qApp->processEvents();
+        }
+        if(ui->chkTerminals->isChecked())
+        {
+          ui->lblHelp->setText(tr("Terminals"));
+          qApp->processEvents();
+          ui->progressBar->setValue(0);
+          if(!exprt->exportTable("Terminals"))
+          {
+           ui->lblHelp->setText("Export of Terminals has errors");
+           ui->btnGo->setEnabled(true);
+           return;
+          }
+          ui->chkTerminals->setChecked(false);
+          qApp->processEvents();
+        }
+        if(ui->chkRouteComments->isChecked())
+        {
+        ui->lblHelp->setText(tr("RouteComments"));
+        qApp->processEvents();
+        ui->progressBar->setValue(0);
+        if(!exprt->exportTable("RouteComments"))
+        {
+        ui->lblHelp->setText("Export of RouteComments has errors");
+        ui->btnGo->setEnabled(true);
+        return;
+        }
+        ui->chkRouteComments->setChecked(false);
+        qApp->processEvents();
+        }
+        if(ui->chkRouteSeq->isChecked())
+        {
+        ui->lblHelp->setText(tr("RouteSeq"));
+        qApp->processEvents();
+        ui->progressBar->setValue(0);
+        bool bOk = exprt->exportTable("RouteSeq");
+        if(!bOk)
+        {
+        ui->lblHelp->setText("Export of RouteSeq has errors");
+        ui->btnGo->setEnabled(true);
+        return;
+        }
+        ui->chkRouteSeq->setChecked(false);
+        qApp->processEvents();
+        }
+        ui->lblHelp->setText(tr("Done"));
 
-  //exprt->export_geodb_geometry();
-  if(stopEnabled)
-      break;
-  this->close();
+        //exprt->export_geodb_geometry();
+        if(stopEnabled)
+          break;
+        this->close();
 
- }
- // timer->stop();
- // this->close();
+    }
+    // timer->stop();
+    this->close();
 
     ui->btnGo->setEnabled(true);
     ui->cbConnections->setEnabled(true);

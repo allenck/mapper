@@ -145,6 +145,7 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
         if(bCheckingHost)
             return;
         checkHost(ui->txtHost->text());
+        createDescription();
     });
 
 
@@ -325,6 +326,7 @@ void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
  setControls(ui->cbConnect->currentText());
  connect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(cbDbType_selectionChanged(QString)));
  connect(ui->cbDriverType, SIGNAL(currentTextChanged(QString)),this,SLOT(cbDriverTypeSelectionChanged(QString)));
+ createDescription();
 }
 
 void EditConnectionsDlg::setCity(City* city)
@@ -572,6 +574,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
 
 void EditConnectionsDlg::cbODBCDsn_currentIndex_changed(int ix)
 {
+
     _testConnection = nullptr;
 
     DSN* dsn = odbcUtil->getDsn(ui->cbODBCDsn->currentData().toString());
@@ -661,6 +664,8 @@ void EditConnectionsDlg::cbODBCDsn_currentIndex_changed(int ix)
         }
     }
 
+    createDescription();
+
     if(db.open())
     {
         ui->lblHelp->setText("DSN open");
@@ -690,6 +695,8 @@ void EditConnectionsDlg::cbConnections_contextMenuRequested(QPoint pos)
 void EditConnectionsDlg::cbDriverTypeSelectionChanged(QString sel)
 {
  Q_UNUSED(sel)
+    createDescription();
+
  QString text = ui->cbDriverType->currentText();
  QString connectionType = ui->cbConnect->currentText();
  Connection*  c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
@@ -1957,6 +1964,7 @@ void EditConnectionsDlg::txtHostLeave()
             socket.close();
         }
     }
+    createDescription();
 }
 
 void EditConnectionsDlg::checkHost(QString txtHost)
@@ -2059,6 +2067,7 @@ void EditConnectionsDlg::txtUserIdLeave()
         return;
     if(availableDatabases.empty())
         populateDatabases();
+    createDescription();
 }
 
 void EditConnectionsDlg::txtPwdLeave()
@@ -2491,4 +2500,35 @@ void EditConnectionsDlg::displayODBCConnection(QSqlDatabase db)
         currCity->setCenter(LatLng(parms.lat, parms.lon));
         ui->txtDefaultDb->setText(currDb);
     }
+}
+
+void EditConnectionsDlg::createDescription()
+{
+    ui->btnSave->setEnabled(false);
+    QString name = ui->cbCities->currentText();
+    QString descr;
+    descr.append(name.mid(0, name.indexOf(',')));
+    descr.append(" ");
+    descr.append(ui->cbDbType->currentText());
+    if(ui->cbDbType->currentText()=="Sqlite")
+    {
+        descr.append(" ");
+        descr.append("connection");
+        ui->cbConnections->setCurrentText(descr);
+        return;
+    }
+    descr.append(" ");
+    descr.append(ui->cbConnect->currentText());
+    descr.append(" ");
+    if(!ui->cbUseDatabase->currentText().isEmpty())
+    {
+        descr.append("(");
+        descr.append(ui->cbUseDatabase->currentText());
+        descr.append("(");
+    }
+    descr.append(" on ");
+    descr.append(ui->txtHost->text());
+    descr.append(" ");
+    descr.append(ui->txtUserId->text());
+    ui->cbConnections->setCurrentText(descr);
 }
