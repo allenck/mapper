@@ -274,6 +274,8 @@ public:
     bool updateRouteName(RouteInfo ri);
     bool insertRouteName(RouteInfo ri);
     bool updateIdentitySequence(QString table, QString column);
+    bool processStream(QTextStream* in, QSqlDatabase db);
+    QSqlQuery* getQuery() {return query;}
 
 signals:
     void details(QString);
@@ -293,7 +295,9 @@ private:
     QString scriptName;
     void setDefaultCompanyMnemonic(CompanyData* cd);
     QMessageBox::StandardButton errReturn;
-
+    QString _delimiter;
+    int linesRead =0;
+    QSqlQuery* query = nullptr;
 };
 class NotifyRouteChange
 {

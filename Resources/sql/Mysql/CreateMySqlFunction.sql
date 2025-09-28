@@ -1,4 +1,5 @@
 DELIMITER $$
+
 CREATE FUNCTION `distance`( inLat1 DOUBLE , inLon1 DOUBLE , inLat2 DOUBLE , inLon2 DOUBLE ) 
 RETURNS double 
 DETERMINISTIC 

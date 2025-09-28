@@ -6,10 +6,12 @@
 #include <QTcpSocket>
 #include <QComboBox>
 
+
 namespace Ui {
     class editConnectionsDlg;
 }
 
+class QSqlQuery;
 class QHostInfo;
 class ODBCUtil;
 class EditConnectionsDlg : public QDialog
@@ -71,7 +73,6 @@ private:
   bool bCheckingHost = false;
   void checkHost(QString txtHost);
   void createDescription();
-
 
 private slots:
  void cbCitiesSelectionChanged(int sel);

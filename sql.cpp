@@ -9976,7 +9976,8 @@ bool SQL::executeCommand(QString commandString, QSqlDatabase db,  QList<QVariant
      qDebug() << errCommand;
      QSqlError error = query.lastError();
      SQLERROR(std::move(query));
-     throw SQLException(error.text() + " " + errCommand);
+     //throw SQLException(error.text() + " " + errCommand);
+     return false;
  }
  if(pList)
  {
@@ -12048,4 +12049,36 @@ QString SQL::displayDbInfo(QSqlDatabase db)
     txt.append(tr("isOpen: %1 isValid: %2 ").arg(db.isOpen()?"true":"false", db.isValid()?"true":"false"));
     txt.append(tr("last error: %1 ").arg(db.lastError().text()));
     return txt;
+}
+
+bool SQL::processStream(QTextStream* in, QSqlDatabase db)
+{
+    _delimiter = ";";
+    linesRead =0;
+    while(!in->atEnd())
+    {
+        QString queryStr;
+        do
+        {
+            QString line = in->readLine();
+            linesRead++;
+            if(line.contains("DELIMITER", Qt::CaseInsensitive))
+            {
+               int ix = line.indexOf("DELIMITER",Qt::CaseInsensitive)+ 9;
+               QString delim = line.mid(ix).trimmed();
+               _delimiter = delim;
+               continue;
+            }
+            //qDebug()<<line;
+            queryStr += line;
+        } while (!queryStr.endsWith(_delimiter));
+        queryStr.replace(_delimiter, "");
+        //qDebug()<<queryStr;
+        query = new QSqlQuery(queryStr, db);
+        //QStringList sa_Message_Text;
+        query->setForwardOnly(false);
+        if(query->lastError().isValid())
+            return false;
+    }
+    return true;
 }

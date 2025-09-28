@@ -498,7 +498,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
     else
     {
         // ODBC (MsSql, MySql/MariaDb or PostgreSQL
-        ui->cbUseDatabase->setCurrentText(connection->defaultSqlDatabase());
+        ui->cbUseDatabase->setCurrentText(connection->database());
         ui->txtDefaultDb->setText(connection->defaultSqlDatabase());
         ui->cbODBCDsn->setVisible(true);
         odbcUtil->fillDSNCombo(ui->cbODBCDsn, ui->cbDbType->currentText());
@@ -507,7 +507,9 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
         db = QSqlDatabase::addDatabase(connection->driver(),"testConnection");
         //db.setDatabaseName(ODBCDsn);
         // db.setUserName(connection->userId());
+        ui->txtUserId->setText(connection->userId());
         // db.setPassword(connection->pwd());
+        ui->txtPWD->setText(connection->pwd());
         ui->txtHost->setText(connection->host());
         setCursor(Qt::WaitCursor);
         checkHost(connection->host());
@@ -1090,21 +1092,14 @@ void EditConnectionsDlg::btnSaveClicked()
        ui->lblHelp->setText(tr("Use database required"));
        ui->btnSave->setEnabled(false);
        return;
-
    }
-//   if(connection->cityName() != currCity->name())
-//   {
-//       //throw IllegalArgumentException("internal error, connection not for city");
-//       ui->lblHelp->setStyleSheet("color:red");
-//       ui->lblHelp->setText("connection city name is invalid");
-//   }
-    //QString savedb = ui->cbUseDatabase->currenttext();
 
    if(!_testConnection || (_testConnection && !_testConnection->verified()))
    {
        if(!testConnection(true)) // create files or databases
          return;
    }
+
    if(!config->cityList.contains(currCity))
        config->addCity(currCity);
 
@@ -1468,32 +1463,58 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
         {
          setDatabase(ui->cbUseDatabase->currentText());
         }
-        if(ui->cbDbType->currentText() == "ODBC")
+        if(ui->cbConnect->currentText() != "Local")
         {
-            if(ui->cbDbType->currentText()=="PostgreSQL")
-            {
-                if(db.isOpen())
-                    db.close();
-            }
-            else
-            {
-                //db.setDatabaseName(ui->cbODBCDsn->currentData().toString());
-                //db.setDatabaseName(ui->cbUseDatabase->currentText());
-                if(!ui->txtHost->text().isEmpty())
-                    db.setHostName(ui->txtHost->text());
-                if(!ui->txtUserId->text().isEmpty())
-                    db.setUserName(ui->txtUserId->text());
-                if(!ui->txtPWD->text().isEmpty())
-                    db.setUserName(ui->txtPWD->text());
-            }
-            if(!db.open())
-                return false;
+            // either ODBC or Direct
+
+            // if(ui->cbDbType->currentText()=="PostgreSQL")
+            // {
+            //     if(db.isOpen())
+            //         db.close();
+            // }
+            // else
+            // {
+            //     //db.setDatabaseName(ui->cbODBCDsn->currentData().toString());
+            //     //db.setDatabaseName(ui->cbUseDatabase->currentText());
+            //     if(!ui->txtHost->text().isEmpty())
+            //         db.setHostName(ui->txtHost->text());
+            //     if(!ui->txtUserId->text().isEmpty())
+            //         db.setUserName(ui->txtUserId->text());
+            //     if(!ui->txtPWD->text().isEmpty())
+            //         db.setUserName(ui->txtPWD->text());
+            // }
+            // if(!db.open())
+            //     return false;
             QVariantList vl;
-            if(!SQL::instance()->executeCommand("select(distance(1,1,3, 4)",db,&vl))
+            if(!SQL::instance()->executeCommand("select distance(1,1,3, 4)",db,&vl))
             {
-                ui->lblHelp->setStyleSheet("QLabel {  color : #FF8000; }");
-                ui->lblHelp->setText(tr("required user function, distance() not present"));
-                return false;
+                QString script;
+                if(ui->cbDbType->currentText() == "MySql")
+                    script = ":/sql/MySql/CreateMySqlFunction.sql";
+                else if(ui->cbDbType->currentText() == "MsSql")
+                    script = ":/sql/MsSql/CreateMsSqlFunction.sql";
+                else if(ui->cbDbType->currentText() == "PostgreSQL")
+                    script = ":/sql/PostgreSQL/CreatePostgreSQLFunction.sql";
+                else throw IllegalArgumentException("invalid db type");
+                QFile this_file(script);
+                if (!this_file.open(QIODevice::ReadOnly | QIODevice::Text))
+                {
+                    QMessageBox::critical(this,tr("Error"), "Could not load sql query text file");
+                    return false;
+                }
+                QTextStream* in = new QTextStream(&this_file);
+                if(!SQL::instance()->processStream(in, db))
+                {
+                    if(SQL::instance()->getQuery())
+                    {
+                        QSqlError error = SQL::instance()->getQuery()->lastError();
+                        qCritical() << "processStream failed: " << script << " " << error.text();
+                        qDebug() << SQL::instance()->getQuery()->lastQuery();
+                    }
+                    ui->lblHelp->setStyleSheet("QLabel {  color : #FF8000; }");
+                    ui->lblHelp->setText(tr("required user function, distance() not present"));
+                    //return false;
+                }
             }
             double val;
             if(vl.count() == 1 )
@@ -2078,8 +2099,13 @@ void EditConnectionsDlg::txtPwdLeave()
         bDSNCanBeUsed=false;
     if(!openTestDb())
         return;
+    QString saveUse = ui->cbUseDatabase->currentText();
     if(availableDatabases.empty())
         populateDatabases();
+    if(!saveUse.isEmpty())
+    {
+        ui->cbUseDatabase->setCurrentText(saveUse);
+    }
 }
 
 void EditConnectionsDlg::cbUseDatabase_changed()
@@ -2524,7 +2550,7 @@ void EditConnectionsDlg::createDescription()
     {
         descr.append("(");
         descr.append(ui->cbUseDatabase->currentText());
-        descr.append("(");
+        descr.append(")");
     }
     descr.append(" on ");
     descr.append(ui->txtHost->text());

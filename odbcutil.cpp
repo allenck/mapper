@@ -69,10 +69,10 @@ void ODBCUtil::getDrivers()
         {
             if(!currLine.startsWith("["))
                 currLine = ini->readLine().trimmed();
-
+            QString sectionName;
             if(currLine.trimmed().startsWith("["))
             {
-                QString sectionName = getSection(currLine);
+                sectionName = getSection(currLine);
                 if(sectionName == "ODBC")
                     continue;
                 if(sectionName == "ODBC Drivers")
@@ -110,6 +110,22 @@ void ODBCUtil::getDrivers()
                         Driver* drv = drvByName.value(sectionName);
                         if(drv)
                         {
+                            if(p.second.startsWith('/'))
+                            {
+                                QFileInfo info(p.second);
+                                if(!info.exists())
+                                {
+                                    qWarning() << "Warning! ODBC driver " << sectionName << " library " << p.second << " not found!";
+                                }
+                            }
+                            else
+                            {
+                                QFileInfo info("/usr/lib/x86_64-linux-gnu/odbc/" + p.second);
+                                if(!info.exists())
+                                {
+                                    qWarning() << "Warning! ODBC driver " << sectionName << " library " << p.second << " not found!";
+                                }
+                            }
                             drv->lib = p.second;
                             drvByLib.insert(drv->lib, drv);
                             bUpdated = true;
@@ -294,9 +310,12 @@ void ODBCUtil::getDSNs(QString odbcini)
                             }
                             else {
                                 drv = drvByName.value(p.second);
-                                dsn->driverName = p.second;
-                                dsn->lib = drv->lib;
-                                dsn->type = drv->type;
+                                if(drv)
+                                {
+                                    dsn->driverName = p.second;
+                                    dsn->lib = drv->lib;
+                                    dsn->type = drv->type;
+                                }
                             }
                         }
                         if(p.first.compare("description",Qt::CaseInsensitive)==0)

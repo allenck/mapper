@@ -410,11 +410,13 @@ void QueryDialog::loadFile(QString s_File_Name)
         qApp->processEvents();
 
        if(!processStream(in))
-        return;
-            this->setCursor(Qt::ArrowCursor);
-            ui->queryResultText->append(QString(tr("Records processed: %1<BR>")).arg(recordsProcessed));
-            ui->queryResultText->append(QString(tr("There were errors: %1<BR>")).arg(errors));
+       {
             return;
+       }
+        this->setCursor(Qt::ArrowCursor);
+        ui->queryResultText->append(QString(tr("Records processed: %1<BR>")).arg(recordsProcessed));
+        ui->queryResultText->append(QString(tr("There were errors: %1<BR>")).arg(errors));
+        return;
     }
 loadIt:
     QTextStream* in = new QTextStream(&this_file);
@@ -1295,9 +1297,10 @@ QWidgetAction* QueryDialog::createWidgetAction()
     cbFile->activateWindow();
     cbFile->model()->sort(0, Qt::AscendingOrder);
 
-    connect(cbFile, &QComboBox::currentTextChanged,this, [=](){
-        loadFile(cbFile->currentData().toString());
-        qInfo() << "file selection changed:" << cbFile->currentText();
+    connect(cbFile, &QComboBox::currentIndexChanged,this, [=](int ix){
+        ui->editQuery->clear();
+        loadFile(cbFile->itemData(ix).toString());
+        qInfo() << "file selection changed:" << ix << " " << cbFile->currentText();
         selectMenu->close();
     });
     wAct = new QWidgetAction(this);
