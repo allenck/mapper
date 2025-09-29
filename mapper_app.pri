@@ -9,6 +9,7 @@ SOURCES += main.cpp\
     $$PWD/mytextedit.cpp \
     $$PWD/odbcutil.cpp \
     $$PWD/overlay.cpp \
+    $$PWD/psql.cpp \
     $$PWD/queryeditmodel.cpp \
     $$PWD/replacesegmentdialog.cpp \
     $$PWD/routeselector.cpp \
@@ -92,6 +93,7 @@ HEADERS  += mainwindow.h \
     $$PWD/mytextedit.h \
     $$PWD/odbcutil.h \
     $$PWD/overlay.h \
+    $$PWD/psql.h \
     $$PWD/queryeditmodel.h \
     $$PWD/replacesegmentdialog.h \
     $$PWD/routeselector.h \

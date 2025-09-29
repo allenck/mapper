@@ -13,6 +13,7 @@
 #include "exportsql.h"
 #include "odbcutil.h"
 #include <QHostInfo>
+#include "psql.h"
 
 EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
   QDialog(parent),
@@ -36,18 +37,18 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
    refreshCities();
    ui->cbCities->setEnabled(true);
 
-   connect(ui->btnPgSetup, &QPushButton::clicked, this, [=]{
-       if(setupPostgreSQLDatabases(ui->txtHost->text(), ui->txtUserId->text(),ui->txtPWD->text()))
-       {
-          ui->lblHelp->setStyleSheet("QLabel {  color :green; }");
-          ui->lblHelp->setText(tr("databases setup!!"));
-       }
-       else {
-           ui->lblHelp->setStyleSheet("QLabel {  color : #FF8000; }");
-           ui->lblHelp->setText(tr("failed!"));
-       }
-   });
-   ui->btnPgSetup->setVisible(false);
+   // connect(ui->btnPgSetup, &QPushButton::clicked, this, [=]{
+   //     if(setupPostgreSQLDatabases(ui->txtHost->text(), ui->txtUserId->text(),ui->txtPWD->text()))
+   //     {
+   //        ui->lblHelp->setStyleSheet("QLabel {  color :green; }");
+   //        ui->lblHelp->setText(tr("databases setup!!"));
+   //     }
+   //     else {
+   //         ui->lblHelp->setStyleSheet("QLabel {  color : #FF8000; }");
+   //         ui->lblHelp->setText(tr("failed!"));
+   //     }
+   // });
+   // ui->btnPgSetup->setVisible(false);
 
    dbTypes <<"MySql"<<"MsSql"<<"Sqlite"<<"PostgreSQL";  // currently supported database types.
    for(int i=0; i < dbTypes.count(); i++)
@@ -192,7 +193,7 @@ void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
 {
  disconnect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(cbDbType_selectionChanged(QString)));
  disconnect(ui->cbDriverType, SIGNAL(currentTextChanged(QString)),this,SLOT(cbDriverTypeSelectionChanged(QString)));
- ui->btnPgSetup->setVisible(false);
+ //ui->btnPgSetup->setVisible(false);
  if(dbType == "Sqlite")
  {
      ui->label_2->setVisible(true);
@@ -1495,15 +1496,23 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
                 else if(ui->cbDbType->currentText() == "MsSql")
                     script = ":/sql/MsSql/CreateMsSqlFunction.sql";
                 else if(ui->cbDbType->currentText() == "PostgreSQL")
-                    script = ":/sql/PostgreSQL/CreatePostgreSQLFunction.sql";
+                {
+                    script = ":/sql/PostgreSQL/createPostgreSQLFunction.sql";
+                }
                 else throw IllegalArgumentException("invalid db type");
                 QFile this_file(script);
                 if (!this_file.open(QIODevice::ReadOnly | QIODevice::Text))
                 {
-                    QMessageBox::critical(this,tr("Error"), "Could not load sql query text file");
+                    QMessageBox::critical(this,tr("Error"), "Could not load sql query text file: " + script);
                     return false;
                 }
                 QTextStream* in = new QTextStream(&this_file);
+                if(ui->cbDbType->currentText() == "PostgreSQL")
+                {
+                    Psql::runPsql(ui->txtHost->text(), ui->txtUserId->text(),ui->txtPWD->text(),ui->cbUseDatabase->currentText(),":/sql/PostgreSQL/CreatePostgreSQLFunction.sql");
+
+                }
+                else
                 if(!SQL::instance()->processStream(in, db))
                 {
                     if(SQL::instance()->getQuery())
@@ -1515,6 +1524,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
                     ui->lblHelp->setStyleSheet("QLabel {  color : #FF8000; }");
                     ui->lblHelp->setText(tr("required user function, distance() not present"));
                     //return false;
+                    Psql::runPsql(ui->txtHost->text(), ui->txtUserId->text(),ui->txtPWD->text(),ui->cbUseDatabase->currentText(),":/sql/PostgreSQL/CreatePostgreSQLFunction.sql");
                 }
             }
             else
@@ -1877,7 +1887,10 @@ bool EditConnectionsDlg::populateDatabases()
                 else if(ui->cbDbType->currentText() == "MsSql")
                     SQL::instance()->executeScript(":/sql/MsSql/CreateMsSqlFunction.sql");
                 else if(ui->cbDbType->currentText() == "PostgreSQL")
-                    SQL::instance()->executeScript(":/sql/PostgreSQL/CreatePostgreSQLFunction.sql");
+                {
+                    //SQL::instance()->executeScript(":/sql/PostgreSQL/CreatePostgreSQLFunction.sql");
+                    Psql::runPsql(ui->txtHost->text(), ui->txtUserId->text(),ui->txtPWD->text(),ui->cbUseDatabase->currentText(),":/sql/PostgreSQL/CreatePostgreSQLFunction.sql");
+                }
                 else throw IllegalArgumentException("invalid db type");
             }
 
@@ -2415,58 +2428,58 @@ void EditConnectionsDlg::displayDbInfo(QSqlDatabase db)
     qDebug() <<(tr(" last error: %1 ").arg(db.lastError().text()));
 }
 
-bool EditConnectionsDlg::setupPostgreSQLDatabases(QString host, QString user, QString password)
-{
-    QFileInfo info("Resources/sql/PostgreSQL/allen_PostgreSQL_create_distance_function.sql");
-    qDebug() << "execute psql script " << info.filePath();
-    QFile file(info.filePath());
-    if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        qCritical()<<file.errorString() + " '" + file.fileName()+"'";
-        QMessageBox::critical(nullptr, tr("error"), tr("Error opening file %1 %2").arg(file.fileName(), file.errorString()));
-        //ui->lblHelp->setText(file.errorString() + " '" + file.fileName()+"'");
-        return false;
-    }
-    QString scriptName = info.fileName();
-    QTextStream* in = new QTextStream(&file);
-    QString data = in->readAll();
+// bool EditConnectionsDlg::setupPostgreSQLDatabases(QString host, QString user, QString password)
+// {
+//     QFileInfo info("Resources/sql/PostgreSQL/allen_PostgreSQL_create_distance_function.sql");
+//     qDebug() << "execute psql script " << info.filePath();
+//     QFile file(info.filePath());
+//     if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
+//     {
+//         qCritical()<<file.errorString() + " '" + file.fileName()+"'";
+//         QMessageBox::critical(nullptr, tr("error"), tr("Error opening file %1 %2").arg(file.fileName(), file.errorString()));
+//         //ui->lblHelp->setText(file.errorString() + " '" + file.fileName()+"'");
+//         return false;
+//     }
+//     QString scriptName = info.fileName();
+//     QTextStream* in = new QTextStream(&file);
+//     QString data = in->readAll();
 
-    QString program = "psql";
-    QStringList arguments;
-    arguments << "-h" << host << "-U" << user  << "-d" << "postgres" << "-c" << data;
-    QProcess *psqlProcess = new QProcess(this);
+//     QString program = "psql";
+//     QStringList arguments;
+//     arguments << "-h" << host << "-U" << user  << "-d" << "postgres" << "-c" << data;
+//     QProcess *psqlProcess = new QProcess(this);
 
-    QObject::connect(psqlProcess, &QProcess::started,this, [=](){
-        qDebug() << "psql process started!";
+//     QObject::connect(psqlProcess, &QProcess::started,this, [=](){
+//         qDebug() << "psql process started!";
 
-    });
+//     });
 
-    QObject::connect(psqlProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-                     [](int exitCode, QProcess::ExitStatus exitStatus) {
-                         qDebug() << "Process finished with exit code:" << exitCode
-                                  << "and exit status:" << exitStatus;
-    });
+//     QObject::connect(psqlProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+//                      [](int exitCode, QProcess::ExitStatus exitStatus) {
+//                          qDebug() << "Process finished with exit code:" << exitCode
+//                                   << "and exit status:" << exitStatus;
+//     });
 
-    QObject::connect(psqlProcess, &QProcess::errorOccurred, [=](QProcess::ProcessError error) {
-        qDebug() << "Process error occurred:" << error;
-    });
-    QObject::connect(psqlProcess, &QProcess::readyReadStandardOutput, [=](){
-        qDebug() << "psql output:" << psqlProcess->readAllStandardOutput();
-    });
+//     QObject::connect(psqlProcess, &QProcess::errorOccurred, [=](QProcess::ProcessError error) {
+//         qDebug() << "Process error occurred:" << error;
+//     });
+//     QObject::connect(psqlProcess, &QProcess::readyReadStandardOutput, [=](){
+//         qDebug() << "psql output:" << psqlProcess->readAllStandardOutput();
+//     });
 
-    QObject::connect(psqlProcess, &QProcess::readyReadStandardError, [=](){
-        QString msg = psqlProcess->readAllStandardError();
-        qDebug() << "psql error:" << msg;
-        if(msg.startsWith("Password for user"))
-            psqlProcess->write(password.toLocal8Bit());
-    });
+//     QObject::connect(psqlProcess, &QProcess::readyReadStandardError, [=](){
+//         QString msg = psqlProcess->readAllStandardError();
+//         qDebug() << "psql error:" << msg;
+//         if(msg.startsWith("Password for user"))
+//             psqlProcess->write(password.toLocal8Bit());
+//     });
 
-    psqlProcess->start(program, arguments);
+//     psqlProcess->start(program, arguments);
 
 
-    psqlProcess->waitForFinished(-1); // -1 means wait indefinitely
-    return true;
-}
+//     psqlProcess->waitForFinished(-1); // -1 means wait indefinitely
+//     return true;
+// }
 
 QString EditConnectionsDlg::getConnectionParameter(QSqlDatabase db, QString key)
 {

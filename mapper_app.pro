@@ -106,6 +106,9 @@ DISTFILES += \
     Resources/sql/CreatePostgreSQLFunction.sql \
     Resources/sql/PostgreSQL/.gitignore \
     Resources/sql/PostgreSQL/PostgreSQL_create_distance_function.sql \
+    Resources/sql/PostgreSQL/createPostgreSQLFunction.sql \
+    Resources/sql/PostgreSQL/dropPostgreSQLFunction.sql \
+    Resources/sql/PostgreSQL/replacePostgreSQLFunction \
     Resources/sql/mysql_create_stations.sql \
     Resources/sql/sqlite3_create_route.sql \
     Resources/sql/addBiDirectionalToRoutes.sql \

@@ -24,7 +24,7 @@ public:
  void refreshCities();
  void setParameter(Parameters p);
  void displayDbInfo(QSqlDatabase db);
- bool setupPostgreSQLDatabases(QString host, QString user, QString password);
+//bool setupPostgreSQLDatabases(QString host, QString user, QString password);
 
  ~EditConnectionsDlg();
  enum DBTYPE {MySql, MsSql,Sqlite,PostgreSQL};

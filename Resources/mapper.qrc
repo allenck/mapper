@@ -97,5 +97,8 @@
         <file>restore_databases.cmd</file>
         <file>sql/PostgreSQL/PostgreSQL_create_distance_function.sql</file>
         <file>sql/Sqlite3/sqlite3_create_streetdef.sql</file>
+        <file>sql/PostgreSQL/createPostgreSQLFunction.sql</file>
+        <file>sql/PostgreSQL/replacePostgreSQLFunction</file>
+        <file>sql/PostgreSQL/dropPostgreSQLFunction.sql</file>
     </qresource>
 </RCC>
