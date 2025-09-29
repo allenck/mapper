@@ -80,7 +80,9 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui(new Ui::MainWindow)
 {
  ui->setupUi(this);
-    //ui->setupUi(this);
+    ui->splitter->setStretchFactor(0,1);
+    ui->splitter->setStretchFactor(1,2);
+
     QSystemTrayIcon * sys = new QSystemTrayIcon(this);
     sys->setIcon(QIcon(":/gui/tram-icon.ico"));
     sys->show();
