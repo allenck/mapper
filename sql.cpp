@@ -12082,3 +12082,42 @@ bool SQL::processStream(QTextStream* in, QSqlDatabase db)
     }
     return true;
 }
+
+bool SQL::isFunctionInstalled(QString function, QString dbType,QString dbName, QSqlDatabase db)
+{
+    QString commandText;
+    if(dbType == "Sqlite")
+        return true;
+    else if(dbType == "MySql")
+    {
+        commandText = QString("SELECT ROUTINE_NAME "
+                              "FROM INFORMATION_SCHEMA.ROUTINES "
+                              "WHERE "
+                              "       ROUTINE_TYPE='FUNCTION'"
+                              "   AND ROUTINE_SCHEMA='%1' ;").arg(dbName);
+
+    }
+    else {
+        throw IllegalArgumentException(tr("bad dbtype: %1").arg(dbType));
+    }
+    QSqlQuery query = QSqlQuery(db);
+
+    bool bQuery = query.exec(commandText);
+    if(!bQuery)
+    {
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
+        //throw SQLException(error.text() + " " + errCommand);
+        return false;
+    }
+
+    while(query.next())
+    {
+        QString rslt = query.value(0).toString();
+        if(rslt == function)
+            return true;
+    }
+    return false;
+}

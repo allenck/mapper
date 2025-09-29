@@ -1486,7 +1486,8 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
             // if(!db.open())
             //     return false;
             QVariantList vl;
-            if(!SQL::instance()->executeCommand("select distance(1,1,3, 4)",db,&vl))
+            //if(!SQL::instance()->executeCommand("select distance(1,1,3, 4)",db,&vl))
+            if(!SQL::instance()->isFunctionInstalled("distance",ui->cbDbType->currentText(),ui->cbUseDatabase->currentText(),db))
             {
                 QString script;
                 if(ui->cbDbType->currentText() == "MySql")
@@ -1516,6 +1517,8 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
                     //return false;
                 }
             }
+            else
+                qInfo() << "distance function is installed";
             double val;
             if(vl.count() == 1 )
             {

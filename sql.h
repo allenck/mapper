@@ -276,6 +276,8 @@ public:
     bool updateIdentitySequence(QString table, QString column);
     bool processStream(QTextStream* in, QSqlDatabase db);
     QSqlQuery* getQuery() {return query;}
+    bool isFunctionInstalled(QString function, QString dbType, QString dbName, QSqlDatabase db);
+
 
 signals:
     void details(QString);
