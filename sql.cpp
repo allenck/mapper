@@ -12054,31 +12054,66 @@ QString SQL::displayDbInfo(QSqlDatabase db)
 bool SQL::processStream(QTextStream* in, QSqlDatabase db)
 {
     _delimiter = ";";
+    delimiters.clear();
+    delimiters.push(_delimiter);
     linesRead =0;
-    while(!in->atEnd())
+    QString queryStr;
+    QString text = in->readAll();
+    QStringList lines = text.split("\n");
+    foreach(QString line, lines)
     {
-        QString queryStr;
-        do
+        line = line.replace(QChar(8233)," ");
+        if(line.contains("DELIMITER", Qt::CaseInsensitive))
         {
-            QString line = in->readLine();
-            linesRead++;
-            if(line.contains("DELIMITER", Qt::CaseInsensitive))
+           int ix = line.indexOf("DELIMITER",Qt::CaseInsensitive)+ 9;
+           QString delim = line.mid(ix).trimmed();
+           _delimiter = delim;
+           delimiters.push(_delimiter);
+           continue;
+        }
+        if(line.contains(_delimiter))
+        {
+            queryStr.append(line);
+            // if(delimiters.count(0) > 1)
+            //     combined.replace(_delimiter,"delimiters.at(1)");
+            delimiters.pop();
+            _delimiter = delimiters.top();
+            if(queryStr.endsWith(_delimiter))
             {
-               int ix = line.indexOf("DELIMITER",Qt::CaseInsensitive)+ 9;
-               QString delim = line.mid(ix).trimmed();
-               _delimiter = delim;
-               continue;
+                //queryStr.clear();
             }
-            //qDebug()<<line;
-            queryStr += line;
-        } while (!queryStr.endsWith(_delimiter));
-        queryStr.replace(_delimiter, "");
-        //qDebug()<<queryStr;
-        query = new QSqlQuery(queryStr, db);
-        //QStringList sa_Message_Text;
-        query->setForwardOnly(false);
-        if(query->lastError().isValid())
-            return false;
+            continue;
+        }
+        if(line.contains("$"))
+        {
+            int ix = line.indexOf("$");
+            QString delim = "$";
+            int i =ix+1;
+            while (i < line.length())
+            {
+                delim.append(line.at(i));
+                if(line.at(i)== "$")
+                {
+                    _delimiter = delim;
+                    delimiters.push(_delimiter);
+                    break;
+                }
+                i++;
+            }
+        }
+        queryStr.append(line);
+    }
+    //qDebug()<<queryStr;
+    query = new QSqlQuery(db);
+    //QStringList sa_Message_Text;
+    query->setForwardOnly(false);
+
+    if(!query->exec(queryStr))
+    {
+        QSqlError error = query->lastError();
+        qCritical() << "processStream failed with error: " << error.text();
+        qCritical() << queryStr;
+        return false;
     }
     return true;
 }
@@ -12096,6 +12131,18 @@ bool SQL::isFunctionInstalled(QString function, QString dbType,QString dbName, Q
                               "       ROUTINE_TYPE='FUNCTION'"
                               "   AND ROUTINE_SCHEMA='%1' ;").arg(dbName);
 
+    }
+    else if(dbType == "PostgreSQL")
+    {
+        commandText = "select p.oid::regproc "
+                "from pg_proc p "
+                "     join pg_namespace n "
+                "     on p.pronamespace = n.oid "
+               "where n.nspname not in ('pg_catalog', 'information_schema');";
+    }
+    else if(dbType == "MsSql")
+    {
+        commandText = QString("SELECT %1' FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_NAME = '%1' AND ROUTINE_TYPE = 'FUNCTION'").arg(dbName);
     }
     else {
         throw IllegalArgumentException(tr("bad dbtype: %1").arg(dbType));

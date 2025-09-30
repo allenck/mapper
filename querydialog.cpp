@@ -548,6 +548,8 @@ void QueryDialog::on_go_QueryButton_clicked()
     QStringList lines = text.split("\n");
     QString combined;
     _delimiter = ";";
+    delimiters.push(_delimiter);
+    QStringList statements;
 
     foreach(QString line, lines)
     {
@@ -559,33 +561,86 @@ void QueryDialog::on_go_QueryButton_clicked()
             int ix = line.indexOf("DELIMITER",Qt::CaseInsensitive)+ 9;
             QString delim = line.mid(ix).trimmed();
             _delimiter = delim;
+            delimiters.push(_delimiter);
             continue;
+        }
+        if(line.contains(_delimiter))
+        {
+            combined.append(line);
+            // if(delimiters.count(0) > 1)
+            //     combined.replace(_delimiter,"delimiters.at(1)");
+            delimiters.pop();
+            _delimiter = delimiters.top();
+            if(combined.endsWith(_delimiter))
+            {
+                statements.append(combined);
+                combined.clear();
+            }
+            continue;
+        }
+        if(line.contains("$"))
+        {
+            int ix = line.indexOf("$");
+            QString delim = "$";
+            int i =ix+1;
+            while (i < line.length())
+            {
+                delim.append(line.at(i));
+                if(line.at(i)== "$")
+                {
+                    _delimiter = delim;
+                    delimiters.push(_delimiter);
+                    break;
+                }
+                i++;
+            }
         }
         combined.append(line + " ");
     }
-    QStringList statements = combined.split(_delimiter);
-    QStringList viewList = SQL::instance()->listViews();
-    foreach(QString txt, statements)
+    // if(delimiters.count()>1)
+    // {
+    //     processALine(combined);
+    // }
+    //else
     {
-        if (txt.trimmed().isEmpty())
-        continue;
-        QStringList tokens = txt.split(" ");
-        if(tokens.count() >= 4
-             && tokens.at(0).compare("select", Qt::CaseInsensitive)  == 0
-             && tokens.at(1) == "*"
-             && tokens.at(2).compare("from", Qt::CaseInsensitive) == 0
-             && !viewList.contains(tokens.at(3),Qt::CaseInsensitive) && db.isValid())
+        QStringList viewList = SQL::instance()->listViews();
+        foreach(QString txt, statements)
         {
-        processSelect(tokens.at(3), txt);
-        }
-        else
-        {
-            sa_Message_Text.append("<I>"+txt+ "</I><BR>");
+            if (txt.trimmed().isEmpty())
+                continue;
+            QStringList tokens = txt.split(" ");
+            if(tokens.count() >= 4
+                 && tokens.at(0).compare("select", Qt::CaseInsensitive)  == 0
+                 && tokens.at(1) == "*"
+                 && tokens.at(2).compare("from", Qt::CaseInsensitive) == 0
+                 && !viewList.contains(tokens.at(3),Qt::CaseInsensitive) && db.isValid())
+            {
+                processSelect(tokens.at(3), txt);
+            }
+            else
+            {
+                sa_Message_Text.append("<I>"+txt+ "</I><BR>");
 
-            if(!processALine(txt))
-            break;
+                // if(!processALine(txt))
+                //     break;
+                QSqlQuery query = QSqlQuery(db);
+                bool bQuery = query.exec(txt);
+                if(!bQuery)
+                {
+                    sa_Message_Text.append(QString("<FONT COLOR=\"#FF0000\">%1<BR>%2<FONT COLOR=\"#000000\"></BR>").arg(query.lastError().driverText(),
+                                                                                                                       query.lastError().databaseText()));
+                    sa_Message_Text.append(txt);
+                    i_Message_Error++;
+                }
+                else
+                {
+                    sa_Message_Text.append("<BR>Success!</BR>");
+                    i_Rows_Total += 1;
+                    i_Message_Result_Yes++;
+                }
+            }
+            qApp->processEvents();
         }
-        qApp->processEvents();
     }
     s_Search="";
     if (i_Message_Error > 0)
@@ -598,9 +653,13 @@ void QueryDialog::on_go_QueryButton_clicked()
     }
     if (i_Message_Result_Yes > 0)
     {
+        QString was_were = "was";
         if (i_Message_Result_Yes > 1)
+        {
             s_Search="s";
-        sa_Message_Text.append(QString(tr("%1 Statement%2 - that produced results - were completed correctly.<BR>")).arg(i_Message_Result_Yes).arg(s_Search));
+            was_were = "were";
+        }
+        sa_Message_Text.append(QString(tr("%1 Statement%2 - that produced results - %3 completed correctly.<BR>")).arg(i_Message_Result_Yes).arg(s_Search,was_were));
         s_Search="";
         i_Message_Total+=i_Message_Result_Yes;
     }
@@ -642,85 +701,84 @@ void QueryDialog::on_go_QueryButton_clicked()
 
 bool QueryDialog::processALine(QString txt, QString tabName)
 {
- QueryModel *query_view_model = new QueryModel(this ,db,
-                                               config->currConnection->servertype());
- query_view_model->setQuery(txt, db);
- if (query_view_model->lastError().isValid())
- {
-  //query_View->hide();
-  //queryResultText->show();
-  sa_Message_Text.append(QString("<FONT COLOR=\"#FF0000\">%1<BR>%2<FONT COLOR=\"#000000\"><BR>").arg(query_view_model->lastError().driverText(),
-                         query_view_model->lastError().databaseText()));
-  sa_Message_Text.append(txt);
-  i_Message_Error++;
-  if(ui->cb_stop_query_on_error->isChecked())
-  {
-   sa_Message_Text.append(tr("<BR>Query stopped because of errors<BR>"));
-   for (int i=0; i<sa_Message_Text.count(); i++)
-    s_Search+=sa_Message_Text[i];
-   ui->queryResultText->setText(s_Search);
-   return false;
-  }
- }
- else
- {
-  // query was successful
-  if (query_view_model->query().isSelect())
-  {
-   i_Rows_Total += query_view_model->rowCount();
-   i_Message_Result_Yes++;
-   if (i_Message_Result_Yes <= i_Max_Tab_Results)
-   {
-    QTableView *query_view = new QTableView();
-    query_view->setAlternatingRowColors(true);
-    query_view->setSelectionMode(QAbstractItemView::ContiguousSelection);
-    connect(query_view->horizontalHeader(),SIGNAL(sectionDoubleClicked(int)),this,SLOT(slot_QueryView_horizontalHeader_sectionDoubleClicked(int)));
-    connect(query_view,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(slot_queryView_row_DoubleClicked(QModelIndex)));
-    query_view->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(query_view,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(tablev_customContextMenu(QPoint)));
-    MyHeaderView *hv = new MyHeaderView(Qt::Horizontal, query_view);
-    query_view->setHorizontalHeader(hv);
-//     query_view->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
-//     connect(query_view->horizontalHeader(),SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(queryViewHeaderContextMenuRequested(const QPoint)));
-//     query_view->horizontalHeader()->setMovable(true);
-
-    query_view->setSortingEnabled(false);
-    QSortFilterProxyModel *sm = new QSortFilterProxyModel(query_view);
-    sm->setSourceModel(query_view_model);
-    query_view->setModel(sm);
-    query_view->setSortingEnabled(true);
-    query_view->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
-    sm->sort(-1,Qt::AscendingOrder);
-    QString tabTitle;
-    if(!tabName.isEmpty())
-     tabTitle = tabName;
-    else
-     tabTitle = tr("Result ") + QString("%1").arg(ui->widget_query_view->count());
-    if (tab_First_Result == 0)
+    QueryModel *query_view_model = new QueryModel(this ,db, config->currConnection->servertype());
+    query_view_model->setQuery(txt, db);
+    if (query_view_model->lastError().isValid())
     {
-     tab_First_Result=query_view;
+        //query_View->hide();
+        //queryResultText->show();
+        sa_Message_Text.append(QString("<FONT COLOR=\"#FF0000\">%1<BR>%2<FONT COLOR=\"#000000\"><BR>").arg(query_view_model->lastError().driverText(),
+                             query_view_model->lastError().databaseText()));
+        sa_Message_Text.append(txt);
+        i_Message_Error++;
+        if(ui->cb_stop_query_on_error->isChecked())
+        {
+            sa_Message_Text.append(tr("<BR>Query stopped because of errors<BR>"));
+            for (int i=0; i<sa_Message_Text.count(); i++)
+            s_Search+=sa_Message_Text[i];
+            ui->queryResultText->setText(s_Search);
+            return false;
+        }
     }
-    int i_tab = ui->widget_query_view->addTab(query_view, tabTitle);
-    //qDebug() << QString("tab %1 added").arg(i_tab);
-    query_view_model->setTabName(tabTitle);
-    query_view->resizeColumnsToContents();
-    query_view->resizeRowsToContents();
-   }
-   if (i_Message_Result_Yes == i_Max_Tab_Results)
-   {
-    sa_Message_Text.append(QString(tr("No more Tab-Results will be shown. Maximum allowed: %1 .")).arg(i_Max_Tab_Results));
-   }
-  }
-  else
-  {
-   //query_View->hide();
-   //queryResultText->show();
-   sa_Message_Text.append(QString("%1 rows affected.<BR>").arg(query_view_model->query().numRowsAffected()));
-   i_Message_Rows_effected+=query_view_model->query().numRowsAffected();
-   i_Message_Result_No++;
-  }
- }
- return true;
+    else
+    {
+        // query was successful
+        if (query_view_model->query().isSelect())
+        {
+            i_Rows_Total += query_view_model->rowCount();
+            i_Message_Result_Yes++;
+            if (i_Message_Result_Yes <= i_Max_Tab_Results)
+            {
+                QTableView *query_view = new QTableView();
+                query_view->setAlternatingRowColors(true);
+                query_view->setSelectionMode(QAbstractItemView::ContiguousSelection);
+                connect(query_view->horizontalHeader(),SIGNAL(sectionDoubleClicked(int)),this,SLOT(slot_QueryView_horizontalHeader_sectionDoubleClicked(int)));
+                connect(query_view,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(slot_queryView_row_DoubleClicked(QModelIndex)));
+                query_view->setContextMenuPolicy(Qt::CustomContextMenu);
+                connect(query_view,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(tablev_customContextMenu(QPoint)));
+                MyHeaderView *hv = new MyHeaderView(Qt::Horizontal, query_view);
+                query_view->setHorizontalHeader(hv);
+                //     query_view->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+                //     connect(query_view->horizontalHeader(),SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(queryViewHeaderContextMenuRequested(const QPoint)));
+                //     query_view->horizontalHeader()->setMovable(true);
+
+                query_view->setSortingEnabled(false);
+                QSortFilterProxyModel *sm = new QSortFilterProxyModel(query_view);
+                sm->setSourceModel(query_view_model);
+                query_view->setModel(sm);
+                query_view->setSortingEnabled(true);
+                query_view->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+                sm->sort(-1,Qt::AscendingOrder);
+                QString tabTitle;
+                if(!tabName.isEmpty())
+                    tabTitle = tabName;
+                else
+                    tabTitle = tr("Result ") + QString("%1").arg(ui->widget_query_view->count());
+                if (tab_First_Result == 0)
+                {
+                    tab_First_Result=query_view;
+                }
+                int i_tab = ui->widget_query_view->addTab(query_view, tabTitle);
+                //qDebug() << QString("tab %1 added").arg(i_tab);
+                query_view_model->setTabName(tabTitle);
+                query_view->resizeColumnsToContents();
+                query_view->resizeRowsToContents();
+            }
+            if (i_Message_Result_Yes == i_Max_Tab_Results)
+            {
+                sa_Message_Text.append(QString(tr("No more Tab-Results will be shown. Maximum allowed: %1 .")).arg(i_Max_Tab_Results));
+            }
+        }
+        else
+        {
+            //query_View->hide();
+            //queryResultText->show();
+            sa_Message_Text.append(QString("%1 rows affected.<BR>").arg(query_view_model->query().numRowsAffected()));
+            i_Message_Rows_effected+=query_view_model->query().numRowsAffected();
+            i_Message_Result_No++;
+        }
+    }
+    return true;
 }
 
 void QueryDialog::processSelect(QString table, QString commandLine)

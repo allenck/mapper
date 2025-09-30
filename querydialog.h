@@ -8,7 +8,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QTextLine>
-
+#include <QStack>
 
 namespace Ui {
 class QueryDialog;
@@ -84,6 +84,7 @@ private:
  QString _delimiter = ";";
  void fill_cbConnections();
  void createMenus();
+ QStack<QString> delimiters;
 
 private slots:
  void on_go_QueryButton_clicked();

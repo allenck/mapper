@@ -298,6 +298,7 @@ private:
     void setDefaultCompanyMnemonic(CompanyData* cd);
     QMessageBox::StandardButton errReturn;
     QString _delimiter;
+    QStack<QString> delimiters;
     int linesRead =0;
     QSqlQuery* query = nullptr;
 };

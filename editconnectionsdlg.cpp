@@ -525,6 +525,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
             else
               db.setDatabaseName(connection->dsn());
             db.setConnectOptions(tr("database=%1;").arg(connection->database()));
+            ui->cbUseDatabase->setCurrentText(connection->database());
             ui->lblSslMode->setVisible(true);
             ui->lblPwdMethod->setVisible(true);
             ui->cbPwdMethod->setVisible(true);
@@ -1507,12 +1508,12 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
                     return false;
                 }
                 QTextStream* in = new QTextStream(&this_file);
-                if(ui->cbDbType->currentText() == "PostgreSQL")
-                {
-                    Psql::runPsql(ui->txtHost->text(), ui->txtUserId->text(),ui->txtPWD->text(),ui->cbUseDatabase->currentText(),":/sql/PostgreSQL/CreatePostgreSQLFunction.sql");
+                // if(ui->cbDbType->currentText() == "PostgreSQL")
+                // {
+                //     Psql::runPsql(ui->txtHost->text(), ui->txtUserId->text(),ui->txtPWD->text(),ui->cbUseDatabase->currentText(),":/sql/PostgreSQL/CreatePostgreSQLFunction.sql");
 
-                }
-                else
+                // }
+                // else
                 if(!SQL::instance()->processStream(in, db))
                 {
                     if(SQL::instance()->getQuery())
@@ -1523,8 +1524,12 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
                     }
                     ui->lblHelp->setStyleSheet("QLabel {  color : #FF8000; }");
                     ui->lblHelp->setText(tr("required user function, distance() not present"));
-                    //return false;
-                    Psql::runPsql(ui->txtHost->text(), ui->txtUserId->text(),ui->txtPWD->text(),ui->cbUseDatabase->currentText(),":/sql/PostgreSQL/CreatePostgreSQLFunction.sql");
+                    return false;
+                    //Psql::runPsql(ui->txtHost->text(), ui->txtUserId->text(),ui->txtPWD->text(),ui->cbUseDatabase->currentText(),":/sql/PostgreSQL/CreatePostgreSQLFunction.sql");
+                }
+                else
+                {
+                    qInfo() << script << " installed";
                 }
             }
             else
