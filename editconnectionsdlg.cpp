@@ -155,6 +155,7 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
    ui->cbConnections->setCurrentIndex(ui->cbConnections->
                                        findText(connection->description()));
    // cbConnectionsSelectionChanged(ui->cbConnections->currentIndex());
+   cb_enable(ui->cbDbType,false);
 
    timer = new QTimer(this);
    timer->setInterval(1000);
@@ -573,6 +574,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
         ui->txtPWD->setEnabled(true);
         ui->cbUseDatabase->setCurrentText(connection->database());
     }
+    cb_enable(ui->cbDbType,false);
     connectionChanging=false;
 }
 
@@ -1342,6 +1344,7 @@ void EditConnectionsDlg::cbConnectionsLeave()
 
 void EditConnectionsDlg::newConnection(){
     ui->btnNew->setEnabled(false);
+    cb_enable(ui->cbDbType,true);
     ui->btnSave->setEnabled(false);
     ui->cbDriverType->setCurrentIndex(0); //QSQLITE
     ui->txtSqliteFileName->setText("");
@@ -2591,4 +2594,26 @@ void EditConnectionsDlg::createDescription()
     descr.append(" ");
     descr.append(ui->txtUserId->text());
     ui->cbConnections->setCurrentText(descr);
+}
+
+void EditConnectionsDlg::cb_enable(QComboBox* box, bool bEnable)
+{
+    // if bEnable, all combo box items will be enabled. Otherwise only the currently selected
+    // item will be enabled.
+    if(bEnable)
+    {
+        for(int i = 0; i < box->count();i++)
+            setComboBoxItemEnabled(box,i,true);
+    }
+    else
+    {
+        int ix = box->currentIndex();
+        if(ix < 0)
+            return;
+        for(int i = 0; i < box->count();i++)
+        {
+            if(i != ix)
+                setComboBoxItemEnabled(box,i,false);
+        }
+    }
 }

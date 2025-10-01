@@ -73,6 +73,7 @@ private:
   bool bCheckingHost = false;
   void checkHost(QString txtHost);
   void createDescription();
+  void cb_enable(QComboBox* box, bool b);
 
 private slots:
  void cbCitiesSelectionChanged(int sel);
