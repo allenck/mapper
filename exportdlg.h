@@ -9,6 +9,7 @@ namespace Ui {
     class ExportDlg;
 }
 
+class ExportSql;
 class ExportDlg : public QDialog
 {
     Q_OBJECT
@@ -23,6 +24,8 @@ private:
     //QTimer *timer;
     bool stopEnabled = false;
     Connection* currConnection = nullptr;
+    ExportSql* exprt= nullptr;
+
 
 private slots:
     void chkAll_changed(bool isChecked);

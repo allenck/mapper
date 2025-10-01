@@ -104,6 +104,10 @@ void ExportDlg::chkAll_changed(bool isChecked)
 
 void ExportDlg::btnCancel_clicked()
 {
+    if(exprt)
+    {
+        exprt->closeLogFile();
+    }
     this->close();
 }
 
@@ -113,7 +117,7 @@ void ExportDlg::btnGo_clicked()
     ui->btnGo->setEnabled(false);
     ui->cbConnections->setEnabled(false);
 
-     ExportSql* exprt = new ExportSql(config, ui->chkDrop->isChecked(), this);
+     exprt = new ExportSql(config, ui->chkDrop->isChecked(), this);
      if(ui->chkOverride->isChecked())
      {
       exprt->setOverride(ui->exportDate->dateTime());
@@ -384,9 +388,12 @@ void ExportDlg::btnGo_clicked()
         //exprt->export_geodb_geometry();
         if(stopEnabled)
           break;
+        exprt->closeLogFile();
+
         this->close();
 
     }
+    exprt->closeLogFile();
     // timer->stop();
     this->close();
 

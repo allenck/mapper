@@ -7,7 +7,7 @@ insert into `t1_backup` SELECT `StreetId`, `Street`, `Location`,`StartDate`, `En
 DROP TABLE streetdef;
 
 CREATE TABLE IF NOT EXISTS `StreetDef` ( `StreetId` INTEGER   AUTO_INCREMENT ,
-                                          `Street` varchar(30) NOT NULL DEFAULT '' ,
+                                          `Street` varchar(50) NOT NULL DEFAULT '' ,
                                           `Location` varchar(30),
                                           `StartDate` date NOT NULL DEFAULT '2050-01-01',
                                           `EndDate` date ,
