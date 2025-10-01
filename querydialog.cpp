@@ -612,6 +612,11 @@ void QueryDialog::on_go_QueryButton_clicked()
             if (txt.trimmed().isEmpty())
                 continue;
             QStringList tokens = txt.split(" ");
+            for(int i=tokens.count()-1; i >= 0; i--)
+            {
+                if(tokens.at(i).isEmpty())
+                    tokens.removeAt(i);
+            }
             if(tokens.count() >= 4
                  && tokens.at(0).compare("select", Qt::CaseInsensitive)  == 0
                  && tokens.at(1) == "*"
@@ -624,23 +629,9 @@ void QueryDialog::on_go_QueryButton_clicked()
             {
                 sa_Message_Text.append("<I>"+txt+ "</I><BR>");
 
-                // if(!processALine(txt))
-                //     break;
-                QSqlQuery query = QSqlQuery(db);
-                bool bQuery = query.exec(txt);
-                if(!bQuery)
-                {
-                    sa_Message_Text.append(QString("<FONT COLOR=\"#FF0000\">%1<BR>%2<FONT COLOR=\"#000000\"></BR>").arg(query.lastError().driverText(),
-                                                                                                                       query.lastError().databaseText()));
-                    sa_Message_Text.append(txt);
-                    i_Message_Error++;
-                }
-                else
-                {
-                    sa_Message_Text.append("<BR>Success!</BR>");
-                    i_Rows_Total += 1;
-                    i_Message_Result_Yes++;
-                }
+                if(!processALine(txt))
+                    break;
+
             }
             qApp->processEvents();
         }
