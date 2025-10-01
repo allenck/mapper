@@ -3221,10 +3221,10 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `FormatOK` int(1) NOT NULL DEFAULT FALSE,"
                 " `OneWay` char(1) ,"
                 " `Tracks` int(2) NOT NULL DEFAULT 2,"
-                " `Street` text,"
+                " `Street` varchar(30),"
                 " `StreetId` int(11),"
-                " `NewerName` text NOT NULL,"
-                " `Location` text,"
+                " `NewerName` varchar(30) NOT NULL,"
+                " `Location` varchar(30),"
                 " `Type` int NOT NULL Default 0,"
                 " `StartLat` decimal(15,13) NOT NULL,"
                 " `StartLon` decimal(15,13) NOT NULL,"
@@ -3236,7 +3236,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `DoubleDate` date,"
                 " `EndDate` date NOT NULL, "
                 " `Direction` varchar(6),"
-                " `pointArray` text NOT NULL,"
+                " `pointArray` varchar(max) NOT NULL,"
                 " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,PRIMARY KEY (`SegmentId`)) ENGINE=InnoDB AUTO_INCREMENT=1116 DEFAULT CHARSET=latin1";
  else  if(dbType == "PostgreSQL")
  {
@@ -3245,10 +3245,10 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                    Description varchar(100) NOT NULL, \
                    FormatOK smallint NOT NULL DEFAULT 0, \
                    Tracks smallint check(tracks in (1,2)) NOT NULL DEFAULT 1, \
-                   Street  text NOT NULL DEFAULT '', \
+                   Street  varchar(30) NOT NULL DEFAULT '', \
                    StreetId  integer, \
-                   NewerName  text NOT NULL DEFAULT '', \
-                   Location  text NOT NULL DEFAULT '', \
+                   NewerName  varchar(30) NOT NULL DEFAULT '', \
+                   Location  varchar(30) NOT NULL DEFAULT '', \
                    Type  integer NOT NULL DEFAULT 0, \
                    StartLat decimal(15,13) NOT NULL DEFAULT 0.0, \
                    StartLon decimal(15,13) NOT NULL DEFAULT 0.0, \
@@ -3261,7 +3261,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                    Direction varchar(6) , \
                    OneWay char(1) NOT NULL DEFAULT 'N', \
                    Points  integer NOT NULL default 0, \
-                   PointArray  text, \
+                   PointArray  varchar(max), \
                    lastUpdate timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP)";
                    // CONSTRAINT Segments_ibfk_1 FOREIGN KEY (StreetId) REFERENCES StreetDef (StreetId))";
  }
