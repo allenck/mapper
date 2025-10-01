@@ -12176,3 +12176,4 @@ bool SQL::isFunctionInstalled(QString function, QString dbType,QString dbName, Q
     }
     return false;
 }
+

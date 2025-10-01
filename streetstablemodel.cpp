@@ -1714,3 +1714,34 @@ bool StreetsTableModel::doesStreetExist(StreetInfo* sti)
         sti->streetId = streetId;
     return streetId > 0;
 }
+
+bool StreetsTableModel::createMissingStreetDef()
+{
+    QSqlDatabase db = QSqlDatabase::database();
+    QList<SegmentData*> segments;
+    QString where = "where streetId = -1" ;
+    QList<SegmentData*> list = SQL::instance()->segmentDataListFromView(where);
+    if(!list.isEmpty())
+        return true;
+
+    foreach (SegmentData* sd, segments) {
+        StreetInfo info;
+        info.street = sd->streetName();
+        info.location = sd->location();
+        info.dateStart = sd->startDate();
+        info.dateEnd = sd->endDate();
+        info.startLatLng = LatLng(sd->startLat(),sd->startLon());
+        info.endLatLng = LatLng(sd->endLat(),sd->endLon());
+        info.length = sd->length();
+
+        if(!newStreetDef(&info))
+            return false;
+        if(info.streetId > 0)
+        {
+            sd->setStreetId(info.streetId);
+            if(!SQL::instance()->updateSegment(sd))
+                return false;
+        }
+    }
+    return true;
+}

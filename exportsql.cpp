@@ -3201,7 +3201,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `Type` int(11) NOT NULL DEFAULT 0,"
                 " `StartLat` decimal(15,13) NOT NULL DEFAULT 0.0,"
                 " `StartLon` decimal(15,13) NOT NULL DEFAULT 0.0,"
-                " `EndLat` decimal(15,13) NOT NULL DEFAULT 0.0,"
+                 " `EndLat` decimal(15,13) NOT NULL DEFAULT 0.0,"
                 " `EndLon` decimal(15,13) NOT NULL DEFAULT 0.0,"
                 " `Length` decimal(15,5) NOT NULL DEFAULT 0,"
                 " `StartDate` date NOT NULL DEFAULT '1800-01-01',"

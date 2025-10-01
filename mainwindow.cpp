@@ -5127,6 +5127,9 @@ void MainWindow::chkOneWay_toggled(bool bChecked)
 
 void MainWindow::exportDb()
 {
+
+    if(! StreetsTableModel::instance()->StreetsTableModel::createMissingStreetDef())
+        return;
  if(form == nullptr)
  {
   form = new ExportDlg(this);

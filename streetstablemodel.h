@@ -78,6 +78,7 @@ public:
     void on_segmentChange(SegmentInfo si, SQL::CHANGETYPE t);
     bool doesStreetExist(StreetInfo* sti);
     QList<SegmentInfo*> getStreetsSegments(StreetInfo sti);
+    bool createMissingStreetDef();
 
 signals:
     void streetUpdated(int row, QString street);

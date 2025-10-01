@@ -277,6 +277,7 @@ public:
     bool processStream(QTextStream* in, QSqlDatabase db);
     QSqlQuery* getQuery() {return query;}
     bool isFunctionInstalled(QString function, QString dbType, QString dbName, QSqlDatabase db);
+    bool createMissingStreetDef(QSqlDatabase db);
 
 
 signals:
