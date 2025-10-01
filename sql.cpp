@@ -12060,6 +12060,7 @@ bool SQL::processStream(QTextStream* in, QSqlDatabase db)
     QString queryStr;
     QString text = in->readAll();
     QStringList lines = text.split("\n");
+    QStringList statements;
     foreach(QString line, lines)
     {
         line = line.replace(QChar(8233)," ");
@@ -12076,11 +12077,15 @@ bool SQL::processStream(QTextStream* in, QSqlDatabase db)
             queryStr.append(line);
             // if(delimiters.count(0) > 1)
             //     combined.replace(_delimiter,"delimiters.at(1)");
-            delimiters.pop();
-            _delimiter = delimiters.top();
+            if(delimiters.count()>1)
+            {
+                delimiters.pop();
+                _delimiter = delimiters.top();
+            }
             if(queryStr.endsWith(_delimiter))
             {
-                //queryStr.clear();
+                statements.append(queryStr);
+                queryStr.clear();//queryStr.clear();
             }
             continue;
         }
@@ -12103,17 +12108,20 @@ bool SQL::processStream(QTextStream* in, QSqlDatabase db)
         }
         queryStr.append(line);
     }
-    //qDebug()<<queryStr;
-    query = new QSqlQuery(db);
-    //QStringList sa_Message_Text;
-    query->setForwardOnly(false);
-
-    if(!query->exec(queryStr))
+    foreach(QString txt, statements)
     {
-        // QSqlError error = query->lastError();
-        // qCritical() << "processStream failed with error: " << error.text();
-        // qCritical() << queryStr;
-        return false;  // caller can gall getQueryn and report any error.
+        //qDebug()<<queryStr;
+        query = new QSqlQuery(db);
+        //QStringList sa_Message_Text;
+        query->setForwardOnly(false);
+
+        if(!query->exec(txt))
+        {
+            // QSqlError error = query->lastError();
+            // qCritical() << "processStream failed with error: " << error.text();
+            // qCritical() << queryStr;
+            return false;  // caller can gall getQueryn and report any error.
+        }
     }
     return true;
 }
@@ -12142,7 +12150,7 @@ bool SQL::isFunctionInstalled(QString function, QString dbType,QString dbName, Q
     }
     else if(dbType == "MsSql")
     {
-        commandText = QString("SELECT %1' FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_NAME = '%1' AND ROUTINE_TYPE = 'FUNCTION'").arg(dbName);
+        commandText = QString("SELECT '%1' FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_NAME = '%1' AND ROUTINE_TYPE = 'FUNCTION'").arg(dbName);
     }
     else {
         throw IllegalArgumentException(tr("bad dbtype: %1").arg(dbType));

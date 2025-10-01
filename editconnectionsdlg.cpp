@@ -2022,7 +2022,13 @@ void EditConnectionsDlg::checkHost(QString txtHost)
         return;
     bCheckingHost = true;
     setCursor(Qt::WaitCursor);
-    QHostInfo::lookupHost(txtHost.contains('/')?txtHost.mid(0,txtHost.indexOf('/')):txtHost,this, &EditConnectionsDlg::printResults);
+    QString host;
+    if(txtHost.contains('\\'))
+        host = txtHost.mid(0,txtHost.indexOf('\\'));
+    if(txtHost.contains('/'))
+        host = txtHost.mid(0,txtHost.indexOf('/'));
+
+    QHostInfo::lookupHost(host,this, &EditConnectionsDlg::printResults);
 }
 
 void  EditConnectionsDlg::printResults(const QHostInfo& info)

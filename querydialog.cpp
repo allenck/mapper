@@ -569,8 +569,11 @@ void QueryDialog::on_go_QueryButton_clicked()
             combined.append(line);
             // if(delimiters.count(0) > 1)
             //     combined.replace(_delimiter,"delimiters.at(1)");
-            delimiters.pop();
-            _delimiter = delimiters.top();
+            if(delimiters.count()>1)
+            {
+                delimiters.pop();
+                _delimiter = delimiters.top();
+            }
             if(combined.endsWith(_delimiter))
             {
                 statements.append(combined);
