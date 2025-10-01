@@ -5127,7 +5127,7 @@ void MainWindow::chkOneWay_toggled(bool bChecked)
 
 void MainWindow::exportDb()
 {
-
+    setCursor(Qt::WaitCursor);
     if(! StreetsTableModel::instance()->StreetsTableModel::createMissingStreetDef())
         return;
  if(form == nullptr)
@@ -5135,6 +5135,7 @@ void MainWindow::exportDb()
   form = new ExportDlg(this);
  }
  form->show();
+ setCursor(Qt::ArrowCursor);
 }
 
 void MainWindow::editConnections()

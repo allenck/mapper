@@ -3236,7 +3236,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `DoubleDate` date,"
                 " `EndDate` date NOT NULL, "
                 " `Direction` varchar(6),"
-                " `pointArray` varchar(max) NOT NULL,"
+                " `pointArray` varchar(21844) NOT NULL,"
                 " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,PRIMARY KEY (`SegmentId`)) ENGINE=InnoDB AUTO_INCREMENT=1116 DEFAULT CHARSET=latin1";
  else  if(dbType == "PostgreSQL")
  {
