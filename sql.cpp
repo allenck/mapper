@@ -12110,10 +12110,10 @@ bool SQL::processStream(QTextStream* in, QSqlDatabase db)
 
     if(!query->exec(queryStr))
     {
-        QSqlError error = query->lastError();
-        qCritical() << "processStream failed with error: " << error.text();
-        qCritical() << queryStr;
-        return false;
+        // QSqlError error = query->lastError();
+        // qCritical() << "processStream failed with error: " << error.text();
+        // qCritical() << queryStr;
+        return false;  // caller can gall getQueryn and report any error.
     }
     return true;
 }

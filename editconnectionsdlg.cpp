@@ -1996,7 +1996,14 @@ void EditConnectionsDlg::txtHostLeave()
         if(bDSNCanBeUsed)
         {
             bDSNCanBeUsed = false;
-            socket.connectToHost(ui->txtHost->text(), port, QIODevice::ReadWrite);
+            QString host = ui->txtHost->text();
+
+            if(ui->cbDbType->currentText() == "MsSql" && ui->txtHost->text().contains("\\ "))
+            {
+                int ix = host.indexOf("\\");
+                host = host.mid(0, ix);
+            }
+            socket.connectToHost(host, port, QIODevice::ReadWrite);
             if(!socket.waitForReadyRead(1000))
             {
                 ui->lblHelp->setStyleSheet("QLabel {  color : red; }");

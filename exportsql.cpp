@@ -3194,10 +3194,10 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `Description` varchar(100) NOT NULL,"
                 " `FormatOK` int(1) NOT NULL DEFAULT FALSE"
                 " `Tracks` int(2) check(`tracks` in (1,2)) NOT NULL DEFAULT 1,"
-                " `Street` 'text' NOT NULL DEFAULT '',"
+                " `Street` varchar(30) NOT NULL DEFAULT '',"
                 " `StreetId` int(11), NOT NULL DEFAULT -1,"
-                " `NewerName` 'text' NOT NULL DEFAULT '',"
-                " `Location` 'text' NOT NULL DEFAULT '',"
+                " `NewerName` varchar(30) NOT NULL DEFAULT '',"
+                " `Location` varchar(30) NOT NULL DEFAULT '',"
                 " `Type` int(11) NOT NULL DEFAULT 0,"
                 " `StartLat` decimal(15,13) NOT NULL DEFAULT 0.0,"
                 " `StartLon` decimal(15,13) NOT NULL DEFAULT 0.0,"
@@ -3210,7 +3210,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `Direction` varchar(6) ,"
                 " `OneWay` char(1) NOT NULL DEFAULT 'N',"
                 " `Points` int(11) NOT NULL default 0,"
-                " `PointArray` 'text',"
+                " `PointArray` varchar(max),"
                 " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP)"
                 " CONSTRAINT `Segments_ibfk_1` FOREIGN KEY (`StreetId`) REFERENCES `StreetDef` (`StreetId`))";
  }
@@ -3274,10 +3274,10 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
     "[FormatOK] int NOT NULL DEFAULT 0,"
     "[OneWay] [char](1),"\
     "[Tracks] [int] NOT NULL,"\
-    "[Street] [text] NULL,"\
+    "[Street] [varchar](30) NULL,"\
     "[StreetId] [int]," \
-    "[NewerName] text,"
-    "[Location] text,"
+    "[NewerName] [varchar](30),"
+    "[Location] [varchar](30),"
     "[Type] [int] NOT NULL,"\
     "[StartLat] [decimal](15, 13) NOT NULL,"\
     "[StartLon] [decimal](15, 13) NOT NULL,"\
@@ -3289,7 +3289,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
     "[DoubleDate] [date],"\
     "[EndDate] [date] NOT NULL,"\
     "[Direction] [varchar](6),"\
-    "[PointArray] [text] NULL,"\
+    "[PointArray] [varchar](max) NULL,"\
     "[lastUpdate] [datetime] NOT NULL,"\
  "CONSTRAINT [pk_Segments] PRIMARY KEY CLUSTERED"\
 "("\

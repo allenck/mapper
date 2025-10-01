@@ -107,7 +107,14 @@ bool compareSegmentDataByName(const SegmentData & s1, const SegmentData & s2)
 
 void SegmentSelectionWidget::refreshLocations()
 {
- _locations = sql->getLocations();
+    try {
+         _locations = sql->getLocations();
+    }
+    catch(SQLException ex)
+    {
+        _locations.clear();
+    }
+
  ui->cbLocation->clear();
  ui->cbLocation->addItems(_locations);
 }
@@ -119,7 +126,12 @@ void SegmentSelectionWidget::refreshSegmentCB()
  QStringList tokens2;
  QString description;
  QString selectedStreet =ui->cbStreets->currentText();
- QList<SegmentInfo> segList = sql->getSegmentsForStreet(selectedStreet,ui->cbLocation->currentText() );
+ QList<SegmentInfo> segList;
+ try{
+  segList = sql->getSegmentsForStreet(selectedStreet,ui->cbLocation->currentText() );
+ }
+ catch(SQLException ex)
+ {}
 
  QMutexLocker locker(&mutex);
  bRefreshingSegments = true;
