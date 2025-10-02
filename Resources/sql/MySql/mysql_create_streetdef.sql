@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS `StreetDef` ;
 CREATE TABLE IF NOT EXISTS `StreetDef` ( `StreetId` INTEGER   AUTO_INCREMENT ,
-                                          `Street` varchar(50) NOT NULL  ,
+                                          `Street` varchar(60) NOT NULL  ,
                                           `Location` varchar(30),
                                           `StartDate` date NOT NULL DEFAULT '2050-01-01',
                                           `EndDate` date ,

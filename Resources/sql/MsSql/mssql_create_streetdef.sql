@@ -1,5 +1,5 @@
 CREATE TABLE  [StreetDef] ( [StreetId] INTEGER   IDENTITY(1,1) ,
-                            [Street] varchar(50) NOT NULL DEFAULT '',
+                            [Street] varchar(60) NOT NULL DEFAULT '',
                             [Location] varchar(30),
                             [StartDate] date NOT NULL DEFAULT '2050-01-01',
                             [EndDate] date,

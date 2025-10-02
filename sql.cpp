@@ -4536,7 +4536,8 @@ qint32 SQL::addAltRoute(QString routeAlpha, QString routePrefix)
      baseRoute = addAltRoute(strBase, routePrefix);   // add the base route if it doesn't exist
  }
 
- commandText = "insert into AltRoute (route, routeAlpha, baseRoute, routePrefix) values ( " + QString("%1").arg(route) + ", '" + routeAlpha + "','" + QString("%1").arg(baseRoute) + "','" + routePrefix +"')";
+ commandText = "insert into AltRoute (route, routeAlpha, baseRoute, routePrefix) values ( "
+         + QString("%1").arg(route) + ", '" + routeAlpha + "','" + QString("%1").arg(baseRoute) + "','" + routePrefix.trimmed() +"')";
  bQuery = query.exec(commandText);
  if(!bQuery)
  {
@@ -4583,7 +4584,7 @@ bool SQL::addAltRoute(int routeNum, QString routeAlpha, QString routePrefix){
  }
  QString commandText = "insert into AltRoute (route, routeAlpha, routePrefix, baseRoute)"
                        " values (" +QString::number(routeNum)
-                       + ", '" + routeAlpha + "','" + routePrefix + "','" + QString::number(baseRoute) +"')";
+                       + ", '" + routeAlpha + "','" + routePrefix.trimmed() + "','" + QString::number(baseRoute) +"')";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)

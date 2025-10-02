@@ -79,6 +79,7 @@ public:
     QSqlDatabase targetDb() {return _targetDb;}
     bool exportTable(QString table);
     bool areTableDefsEqual(QString table, Connection* c1, Connection* c2, QSqlDatabase db1, QSqlDatabase db2);
+    void closeLogFile();
 
 signals:
     void progress(int value);
