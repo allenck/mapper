@@ -5128,6 +5128,7 @@ void MainWindow::chkOneWay_toggled(bool bChecked)
 void MainWindow::exportDb()
 {
     setCursor(Qt::WaitCursor);
+    qApp->processEvents();
     if(! StreetsTableModel::instance()->StreetsTableModel::createMissingStreetDef())
         return;
  if(form == nullptr)
@@ -5829,7 +5830,7 @@ QString MainWindow::createSortString(QString alphaRoute)
   {
    int digits = countDigits(alphaRoute.mid(index));
    int diff = 3-digits;
-   while(diff)
+   while(diff >0)
    {
     result.append(QChar('0'));
     diff--;
