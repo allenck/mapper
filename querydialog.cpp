@@ -604,6 +604,11 @@ void QueryDialog::on_go_QueryButton_clicked()
         combined.append(line + " ");
     }
     QStringList viewList = SQL::instance()->listViews();
+    if(statements.isEmpty())
+    {
+        ui->queryResultText->setText(QString("<FONT COLOR=\"#FF0000\">missing ';'<BR>%2<FONT COLOR=\"#000000\"><BR>"));
+        return;
+    }
     foreach(QString txt, statements)
     {
         if (txt.trimmed().isEmpty())
