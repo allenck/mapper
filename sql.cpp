@@ -10005,7 +10005,8 @@ bool SQL::executeScript(QString path, QSqlDatabase db)
  }
  scriptName = info.fileName();
  QTextStream* in = new QTextStream(&file);
- bool ret =processFile(in, db, false);
+ //bool ret =processFile(in, db, false);
+ bool ret= processStream(in,db);
  scriptName = "";
  return ret;
 }
@@ -10028,8 +10029,9 @@ bool SQL::processFile(QTextStream* in, QSqlDatabase db, bool bIsInclude)
      QMessageBox::critical(nullptr,tr("Error"), "Could not load sql query text file");
      return false;
      QTextStream* in = new QTextStream(&this_file);
-     if(!processFile(in, db, true))
-        return false;
+     // if(!processFile(in, db, true))
+     if(!processStream(in, db))
+             return false;
     }
    }
    else
