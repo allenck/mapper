@@ -1063,7 +1063,7 @@ void MainWindow::createActions()
  connect(modifyRouteTractionTypeAct, SIGNAL(triggered()), this, SLOT(modifyRouteTractionType()));
 
  editRouteSqlAct = new QAction(tr("Edit Route Sql"),this);
- editRouteSqlAct->setStatusTip(tr("edit sql rot route in SQL Query dialog."));
+ editRouteSqlAct->setStatusTip(tr("edit sql route in SQL Query dialog."));
  connect(editRouteSqlAct, &QAction::triggered, this,[=]{
      if(!queryDlg)
      {

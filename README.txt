@@ -1,3 +1,7 @@
+**Recent Changes September 2025 VERSION=1.2.4
+1. change querydialog to QMainWindow based.
+2. replace buttons in findwidget with clickable labels.
+
 **Recent Changes September 2025 VERSION=1.2.3
 1. generate new connection description.
 2. close export dialog when finished.

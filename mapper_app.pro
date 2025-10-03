@@ -172,7 +172,7 @@ DEPENDPATH += $$PWD/.
 INCLUDEPATH += $$(QTDIR)/../Src/qtbase/src/3rdparty/sqlite
 
 
-VERSION=1.2.3
+VERSION=1.2.4
 MY_VERSION_STR = '\\"$${VERSION}\\"'
 DEFINES += MY_VERSION=\"$${MY_VERSION_STR}\"
 macx: {
@@ -245,20 +245,3 @@ DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3460100
 #unix|win32: LIBS += -ldl
 unix: LIBS += -ldl
 
-FORMS += \
-    dialogeditstreets.ui \
-    dialogpreferences.ui \
-    dialogupdatestreets.ui \
-    findreplacewidget.ui
-
-HEADERS += \
-    dialogeditstreets.h \
-    dialogpreferences.h \
-    dialogupdatestreets.h \
-    findreplacewidget.h
-
-SOURCES += \
-    dialogeditstreets.cpp \
-    dialogpreferences.cpp \
-    dialogupdatestreets.cpp \
-    findreplacewidget.cpp

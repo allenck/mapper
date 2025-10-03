@@ -1,6 +1,6 @@
 #include "querydialog.h"
 #include "querymodel.h"
-#include "ui_querydialog.h"
+#include "ui_newquerydialog.h"
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QSortFilterProxyModel>
@@ -20,8 +20,8 @@
 /*static*/ QueryDialog* QueryDialog::_instance = nullptr;
 
 QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::QueryDialog)
+    QMainWindow(parent),
+    ui(new Ui::NewQueryDialog)
 {
   _instance = this;
   ui->setupUi(this);
@@ -569,7 +569,6 @@ void QueryDialog::on_go_QueryButton_clicked()
         }
         if(line.contains(_delimiter))
         {
-            line.replace(_delimiter,"");
             combined.append(line);
             // if(delimiters.count(0) > 1)
             //     combined.replace(_delimiter,"delimiters.at(1)");
@@ -1370,4 +1369,9 @@ void QueryDialog::keyPressEvent(QKeyEvent *event)
          frw->setTextSelection(selection);
     }
     QWidget::keyPressEvent(event);
+}
+
+void QueryDialog::show()
+{
+    this->showNormal();
 }

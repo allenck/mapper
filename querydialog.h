@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "configuration.h"
+#include "qmainwindow.h"
 #include "qwidgetaction.h"
 #include <QTableView>
 #include <QMenu>
@@ -11,12 +12,12 @@
 #include <QStack>
 
 namespace Ui {
-class QueryDialog;
+class NewQueryDialog;
 }
 
 class FindReplaceWidget;
 class QComboBox;
-class QueryDialog : public QDialog
+class QueryDialog : public QMainWindow
 {
  Q_OBJECT
     
@@ -26,12 +27,13 @@ public:
  void setMaxTabResults(int num);
  static QueryDialog* instance();
  void processSelect(QString table, QString commandLine);
+ void show();
 
 public slots:
  void executeQuery(QString commandText);
     
 private:
- Ui::QueryDialog *ui;
+ Ui::NewQueryDialog *ui;
  Configuration* config;
  QString currQueryFilename;
  QSqlDatabase db;

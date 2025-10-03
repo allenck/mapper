@@ -13,7 +13,7 @@ FindReplaceWidget::FindReplaceWidget(QTextEdit* editor,QWidget *parent)
     // QTextCursor cursor;
     // cursor.setPosition(1);
     // editor->setTextCursor(cursor);
-    connect(ui->btnFindNext, &QPushButton::clicked, this, [=]{
+    connect(ui->btnFindNext, &ClickableLabel::clicked, this, [=]{
         QTextDocument::FindFlags flags= QTextDocument::FindFlags();
         if(ui->chkCaseSensitive->isChecked())
             flags |= QTextDocument::FindCaseSensitively;
@@ -21,11 +21,11 @@ FindReplaceWidget::FindReplaceWidget(QTextEdit* editor,QWidget *parent)
             flags |= QTextDocument::FindWholeWords;
         find(ui->txtFind->text(),flags);
     });
-    connect(ui->btnReplace, &QPushButton::clicked, this,[=]{
+    connect(ui->btnReplace, &ClickableLabel::clicked, this,[=]{
         QTextCursor cursor = editor->textCursor();
         cursor.insertText(ui->txtReplace->text());
     });
-    connect(ui->btnFindPrev, &QPushButton::clicked, this,[=]{
+    connect(ui->btnFindPrev, &ClickableLabel::clicked, this,[=]{
         QTextDocument::FindFlags flags= QTextDocument::FindFlags();
         if(ui->chkCaseSensitive->isChecked())
             flags |= QTextDocument::FindCaseSensitively;
@@ -35,7 +35,7 @@ FindReplaceWidget::FindReplaceWidget(QTextEdit* editor,QWidget *parent)
         find(ui->txtFind->text(),flags);
 
     });
-    connect(ui->btnReplaceAndFind, &QPushButton::clicked, this,[=]{
+    connect(ui->btnReplaceAndFind, &ClickableLabel::clicked, this,[=]{
         QTextCursor cursor = editor->textCursor();
         cursor.insertText(ui->txtReplace->text());
 
@@ -47,7 +47,7 @@ FindReplaceWidget::FindReplaceWidget(QTextEdit* editor,QWidget *parent)
         find(ui->txtFind->text(),flags);
 
     });
-    connect(ui->btnReplaceAll, &QPushButton::clicked, this,[=]{
+    connect(ui->btnReplaceAll, &ClickableLabel::clicked, this,[=]{
         while(true)
         {
             QTextCursor cursor = editor->textCursor();
@@ -62,7 +62,7 @@ FindReplaceWidget::FindReplaceWidget(QTextEdit* editor,QWidget *parent)
                 break;
         }
     });
-    connect(ui->btnSelectAll, &QPushButton::clicked, this,[=]{
+    connect(ui->btnSelectAll, &ClickableLabel::clicked, this,[=]{
         while(true)
         {
             QTextCursor cursor;
@@ -80,7 +80,7 @@ FindReplaceWidget::FindReplaceWidget(QTextEdit* editor,QWidget *parent)
         }
     });
 
-    connect(ui->btnHide, &QPushButton::clicked,this,[=]{
+    connect(ui->btnHide, &ClickableLabel::clicked,this,[=]{
         this->setHidden(true);
     });
 }

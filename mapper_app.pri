@@ -1,5 +1,6 @@
 SOURCES += main.cpp\
     $$PWD/browsecommentsdialog.cpp \
+    $$PWD/clickablelabel.cpp \
     $$PWD/clipboard.cpp \
     $$PWD/dateeditdelegate.cpp \
     $$PWD/editsegmentdescr.cpp \
@@ -80,10 +81,22 @@ SOURCES += main.cpp\
     routenamewidget.cpp \
     splitcompanyroutesdialog.cpp \
     systemconsole2.cpp \
-    dialogtextedit.cpp
+    dialogtextedit.cpp \
+    dialogchangeroute.cpp \
+    mymessagebox.cpp \
+    modifyroutetractiontypedlg.cpp \
+    newcitydialog.cpp \
+    removecitydialog.cpp \
+    websocketclientwrapper.cpp \
+    websockettransport.cpp \
+    dialogeditstreets.cpp \
+    dialogpreferences.cpp \
+    dialogupdatestreets.cpp \
+    findreplacewidget.cpp
 
 HEADERS  += mainwindow.h \
     $$PWD/browsecommentsdialog.h \
+    $$PWD/clickablelabel.h \
     $$PWD/clipboard.h \
     $$PWD/dateeditdelegate.h \
     $$PWD/editsegmentdescr.h \
@@ -166,27 +179,21 @@ HEADERS  += mainwindow.h \
     routenamewidget.h \
     splitcompanyroutesdialog.h \
     systemconsole2.h \
-    dialogtextedit.h
-
-HEADERS += \
-        dialogchangeroute.h \
-        mymessagebox.h \
-        modifyroutetractiontypedlg.h \
-        newcitydialog.h \
-        removecitydialog.h \
-        websocketclientwrapper.h \
-        websockettransport.h
-
-    SOURCES += \
-        dialogchangeroute.cpp \
-        mymessagebox.cpp \
-        modifyroutetractiontypedlg.cpp \
-        newcitydialog.cpp \
-        removecitydialog.cpp \
-        websocketclientwrapper.cpp \
-        websockettransport.cpp
+    dialogtextedit.h \
+    dialogchangeroute.h \
+    mymessagebox.h \
+    modifyroutetractiontypedlg.h \
+    newcitydialog.h \
+    removecitydialog.h \
+    websocketclientwrapper.h \
+    websockettransport.h\
+    dialogeditstreets.h \
+    dialogpreferences.h \
+    dialogupdatestreets.h \
+    findreplacewidget.h
 
 FORMS += \
+    $$PWD/ui/newquerydialog.ui \
      ui/dialogchangeroute.ui \
      ui/modifyroutetractiontypedlg.ui \
      ui/newcitydialog.ui \
@@ -220,7 +227,11 @@ FORMS += \
     ui/editsegmentdialog.ui \
     ui/browsecommentsdialog.ui \
     ui/replacesegmentdialog.ui \
-    ui/segmentselectionwidget.ui
+    ui/segmentselectionwidget.ui \
+    dialogeditstreets.ui \
+    dialogpreferences.ui \
+    dialogupdatestreets.ui \
+    findreplacewidget.ui
 
 DISTFILES += \
  $$PWD/Resources/api_key.txt \

@@ -60,13 +60,10 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="1">
-    <widget class="QLineEdit" name="txtReplace"/>
-   </item>
-   <item row="0" column="2">
-    <widget class="QPushButton" name="btnFindPrev">
+   <item row="0" column="5">
+    <widget class="QCheckBox" name="chkWhole">
      <property name="text">
-      <string>Prev</string>
+      <string> Whole Words</string>
      </property>
     </widget>
    </item>
@@ -74,6 +71,13 @@
     <widget class="QLabel" name="label_2">
      <property name="text">
       <string>Replace with:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="3">
+    <widget class="ClickableLabel" name="btnFindNext">
+     <property name="text">
+      <string>Next</string>
      </property>
     </widget>
    </item>
@@ -90,78 +94,17 @@
      </property>
     </spacer>
    </item>
+   <item row="0" column="2">
+    <widget class="ClickableLabel" name="btnFindPrev">
+     <property name="text">
+      <string>Prev</string>
+     </property>
+    </widget>
+   </item>
    <item row="1" column="4">
-    <widget class="QPushButton" name="btnReplaceAll">
+    <widget class="ClickableLabel" name="btnReplaceAll">
      <property name="text">
-      <string>Replace all</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="3">
-    <widget class="QPushButton" name="btnReplaceAndFind">
-     <property name="text">
-      <string>Replace &amp;&amp; Find</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="3">
-    <widget class="QPushButton" name="btnFindNext">
-     <property name="text">
-      <string>Next</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="7">
-    <widget class="QPushButton" name="btnHide">
-     <property name="maximumSize">
-      <size>
-       <width>26</width>
-       <height>26</height>
-      </size>
-     </property>
-     <property name="palette">
-      <palette>
-       <active>
-        <colorrole role="Base">
-         <brush brushstyle="SolidPattern">
-          <color alpha="255">
-           <red>154</red>
-           <green>153</green>
-           <blue>150</blue>
-          </color>
-         </brush>
-        </colorrole>
-       </active>
-       <inactive>
-        <colorrole role="Base">
-         <brush brushstyle="SolidPattern">
-          <color alpha="255">
-           <red>154</red>
-           <green>153</green>
-           <blue>150</blue>
-          </color>
-         </brush>
-        </colorrole>
-       </inactive>
-       <disabled/>
-      </palette>
-     </property>
-     <property name="text">
-      <string>x</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="4">
-    <widget class="QPushButton" name="btnSelectAll">
-     <property name="text">
-      <string>SelectAll</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="2">
-    <widget class="QPushButton" name="btnReplace">
-     <property name="text">
-      <string>Replace</string>
+      <string>Replace all </string>
      </property>
     </widget>
    </item>
@@ -172,16 +115,6 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="1">
-    <widget class="QLineEdit" name="txtFind"/>
-   </item>
-   <item row="0" column="5">
-    <widget class="QCheckBox" name="chkWhole">
-     <property name="text">
-      <string> Whole Words</string>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="5">
     <widget class="QCheckBox" name="chkCaseSensitive">
      <property name="text">
@@ -189,8 +122,63 @@
      </property>
     </widget>
    </item>
+   <item row="1" column="2">
+    <widget class="ClickableLabel" name="btnReplace">
+     <property name="text">
+      <string>Replace </string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QLineEdit" name="txtReplace">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>1</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="3">
+    <widget class="ClickableLabel" name="btnReplaceAndFind">
+     <property name="text">
+      <string>Replace &amp; Find </string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="4">
+    <widget class="ClickableLabel" name="btnSelectAll">
+     <property name="text">
+      <string>Select all</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QLineEdit" name="txtFind">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>1</verstretch>
+      </sizepolicy>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="7">
+    <widget class="ClickableLabel" name="btnHide">
+     <property name="text">
+      <string>x</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ClickableLabel</class>
+   <extends>QLabel</extends>
+   <header location="global">clickablelabel.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
