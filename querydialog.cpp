@@ -47,6 +47,8 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   clearAct = new QAction("clear", this);
   connect(clearAct, &QAction::triggered, [=]{
    ui->editQuery->clear();
+   ui->editQuery->setTextColor(Qt::black);
+
   });
 
   // ui->cbConnections->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -209,6 +211,8 @@ void QueryDialog::on_cb_stop_query_on_error_toggled(bool b_checked)
 void QueryDialog::on_clear_QueryButton_clicked()
 {
  ui->editQuery->clear();
+ ui->editQuery->setTextColor(Qt::black);
+
  currQueryFilename = "";
  setTitle();
 
@@ -539,8 +543,7 @@ void QueryDialog::on_go_QueryButton_clicked()
     QTextCursor cur = ui->editQuery->textCursor();
     if (cur.hasSelection())
     {
-        text = cur.selectedText();
-        //text = cur.selection().toRawText();
+        text = cur.selectedText().trimmed();
     }
     else
         text = ui->editQuery->toPlainText(); // select all lines
@@ -566,6 +569,7 @@ void QueryDialog::on_go_QueryButton_clicked()
         }
         if(line.contains(_delimiter))
         {
+            line.replace(_delimiter,"");
             combined.append(line);
             // if(delimiters.count(0) > 1)
             //     combined.replace(_delimiter,"delimiters.at(1)");
@@ -600,41 +604,34 @@ void QueryDialog::on_go_QueryButton_clicked()
         }
         combined.append(line + " ");
     }
-    // if(delimiters.count()>1)
-    // {
-    //     processALine(combined);
-    // }
-    //else
+    QStringList viewList = SQL::instance()->listViews();
+    foreach(QString txt, statements)
     {
-        QStringList viewList = SQL::instance()->listViews();
-        foreach(QString txt, statements)
+        if (txt.trimmed().isEmpty())
+            continue;
+        QStringList tokens = txt.split(" ");
+        for(int i=tokens.count()-1; i >= 0; i--)
         {
-            if (txt.trimmed().isEmpty())
-                continue;
-            QStringList tokens = txt.split(" ");
-            for(int i=tokens.count()-1; i >= 0; i--)
-            {
-                if(tokens.at(i).isEmpty())
-                    tokens.removeAt(i);
-            }
-            if(tokens.count() >= 4
-                 && tokens.at(0).compare("select", Qt::CaseInsensitive)  == 0
-                 && tokens.at(1) == "*"
-                 && tokens.at(2).compare("from", Qt::CaseInsensitive) == 0
-                 && !viewList.contains(tokens.at(3),Qt::CaseInsensitive) && db.isValid())
-            {
-                processSelect(tokens.at(3), txt);
-            }
-            else
-            {
-                sa_Message_Text.append("<I>"+txt+ "</I><BR>");
-
-                if(!processALine(txt))
-                    break;
-
-            }
-            qApp->processEvents();
+            if(tokens.at(i).isEmpty())
+                tokens.removeAt(i);
         }
+        if(tokens.count() >= 4
+             && tokens.at(0).compare("select", Qt::CaseInsensitive)  == 0
+             && tokens.at(1) == "*"
+             && tokens.at(2).compare("from", Qt::CaseInsensitive) == 0
+             && !viewList.contains(tokens.at(3),Qt::CaseInsensitive) && db.isValid())
+        {
+            processSelect(tokens.at(3), txt);
+        }
+        else
+        {
+            sa_Message_Text.append("<I>"+txt+ "</I><BR>");
+
+            if(!processALine(txt))
+                break;
+
+        }
+        qApp->processEvents();
     }
     s_Search="";
     if (i_Message_Error > 0)
@@ -1243,6 +1240,8 @@ void QueryDialog::setTitle()
 void QueryDialog::executeQuery(QString commandText)
 {
     ui->editQuery->clear();
+    ui->editQuery->setTextColor(Qt::black);
+
     ui->editQuery->setText(commandText);
     on_go_QueryButton_clicked();
 }
@@ -1351,6 +1350,8 @@ QWidgetAction* QueryDialog::createWidgetAction()
 
     connect(cbFile, &QComboBox::currentIndexChanged,this, [=](int ix){
         ui->editQuery->clear();
+        ui->editQuery->setTextColor(Qt::black);
+
         loadFile(cbFile->itemData(ix).toString());
         qInfo() << "file selection changed:" << ix << " " << cbFile->currentText();
         selectMenu->close();

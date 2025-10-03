@@ -1527,7 +1527,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
                     }
                     ui->lblHelp->setStyleSheet("QLabel {  color : #FF8000; }");
                     ui->lblHelp->setText(tr("required user function, distance() not present"));
-                    return false;
+                    //return false;
                     //Psql::runPsql(ui->txtHost->text(), ui->txtUserId->text(),ui->txtPWD->text(),ui->cbUseDatabase->currentText(),":/sql/PostgreSQL/CreatePostgreSQLFunction.sql");
                 }
                 else

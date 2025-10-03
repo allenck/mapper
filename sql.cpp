@@ -12073,8 +12073,11 @@ bool SQL::processStream(QTextStream* in, QSqlDatabase db)
            delimiters.push(_delimiter);
            continue;
         }
+        if(line.isEmpty() || line.startsWith("#"))
+            continue;
         if(line.contains(_delimiter))
         {
+            line.replace(_delimiter,"");
             queryStr.append(line);
             // if(delimiters.count(0) > 1)
             //     combined.replace(_delimiter,"delimiters.at(1)");

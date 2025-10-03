@@ -29,4 +29,4 @@ BEGIN
     SET d = R * c;  
     /* distance in km */
     RETURN d; 
-END$$
+END$$;
