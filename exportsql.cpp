@@ -4621,7 +4621,8 @@ bool ExportSql::exportTable(QString inTable)
   if(table.compare("RouteSeq", Qt::CaseInsensitive)==0)
    if(!createRouteSeqTable(_targetDb, tgtConn->servertype())) return false;
   if(table.compare("StreetDef",Qt::CaseInsensitive)==0)
-   if(!createStreetDefTable(_targetDb,tgtConn->servertype())) return false;
+   if(!createStreetDefTable(_targetDb,tgtConn->servertype()))
+       return false;
   if(table.compare("Segments", Qt::CaseInsensitive)==0)
    if(!createSegmentsTable(_targetDb, tgtConn->servertype())) return false;
   if(table.compare("Stations", Qt::CaseInsensitive)==0)

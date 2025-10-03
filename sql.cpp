@@ -12060,7 +12060,7 @@ bool SQL::processStream(QTextStream* in, QSqlDatabase db)
     delimiters.clear();
     delimiters.push(_delimiter);
     linesRead =0;
-    QString queryStr;
+    QString combined;
     QString text = in->readAll();
     QStringList lines = text.split("\n");
     QStringList statements;
@@ -12079,8 +12079,7 @@ bool SQL::processStream(QTextStream* in, QSqlDatabase db)
             continue;
         if(line.contains(_delimiter))
         {
-            line.replace(_delimiter,"");
-            queryStr.append(line);
+            combined.append(line);
             // if(delimiters.count(0) > 1)
             //     combined.replace(_delimiter,"delimiters.at(1)");
             if(delimiters.count()>1)
@@ -12088,10 +12087,10 @@ bool SQL::processStream(QTextStream* in, QSqlDatabase db)
                 delimiters.pop();
                 _delimiter = delimiters.top();
             }
-            if(queryStr.endsWith(_delimiter))
+            if(combined.endsWith(_delimiter))
             {
-                statements.append(queryStr);
-                queryStr.clear();//queryStr.clear();
+                statements.append(combined);
+                combined.clear();//queryStr.clear();
             }
             continue;
         }
@@ -12112,7 +12111,7 @@ bool SQL::processStream(QTextStream* in, QSqlDatabase db)
                 i++;
             }
         }
-        queryStr.append(line);
+        combined.append(line);
     }
     foreach(QString txt, statements)
     {
