@@ -2025,7 +2025,7 @@ void EditConnectionsDlg::checkHost(QString txtHost)
         return;
     bCheckingHost = true;
     setCursor(Qt::WaitCursor);
-    QString host;
+    QString host = ui->txtHost->text();
     if(txtHost.contains('\\'))
         host = txtHost.mid(0,txtHost.indexOf('\\'));
     if(txtHost.contains('/'))
