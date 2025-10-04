@@ -3196,12 +3196,12 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `Tracks` int(2) check(`tracks` in (1,2)) NOT NULL DEFAULT 1,"
                 " `Street` varchar(60) NOT NULL DEFAULT '',"
                 " `StreetId` int(11), NOT NULL DEFAULT -1,"
-                " `NewerName` varchar(30) NOT NULL DEFAULT '',"
+                " `NewerName` varchar(60) NOT NULL DEFAULT '',"
                 " `Location` varchar(30) NOT NULL DEFAULT '',"
                 " `Type` int(11) NOT NULL DEFAULT 0,"
                 " `StartLat` decimal(15,13) NOT NULL DEFAULT 0.0,"
                 " `StartLon` decimal(15,13) NOT NULL DEFAULT 0.0,"
-                 " `EndLat` decimal(15,13) NOT NULL DEFAULT 0.0,"
+                " `EndLat` decimal(15,13) NOT NULL DEFAULT 0.0,"
                 " `EndLon` decimal(15,13) NOT NULL DEFAULT 0.0,"
                 " `Length` decimal(15,5) NOT NULL DEFAULT 0,"
                 " `StartDate` date NOT NULL DEFAULT '1800-01-01',"
@@ -3210,7 +3210,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `Direction` varchar(6) ,"
                 " `OneWay` char(1) NOT NULL DEFAULT 'N',"
                 " `Points` int(11) NOT NULL default 0,"
-                " `PointArray` varchar(max),"
+                " `PointArray` text,"
                 " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP)"
                 " CONSTRAINT `Segments_ibfk_1` FOREIGN KEY (`StreetId`) REFERENCES `StreetDef` (`StreetId`))";
  }
@@ -3223,7 +3223,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `Tracks` int(2) NOT NULL DEFAULT 2,"
                 " `Street` varchar(100),"
                 " `StreetId` int(11),"
-                " `NewerName` varchar(30) NOT NULL,"
+                " `NewerName` varchar(100) NOT NULL,"
                 " `Location` varchar(30),"
                 " `Type` int NOT NULL Default 0,"
                 " `StartLat` decimal(15,13) NOT NULL,"
@@ -3247,7 +3247,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                    Tracks smallint check(tracks in (1,2)) NOT NULL DEFAULT 1, \
                    Street  varchar(60) NOT NULL DEFAULT '', \
                    StreetId  integer, \
-                   NewerName  varchar(30) NOT NULL DEFAULT '', \
+                   NewerName  varchar(60) NOT NULL DEFAULT '', \
                    Location  varchar(30) NOT NULL DEFAULT '', \
                    Type  integer NOT NULL DEFAULT 0, \
                    StartLat decimal(15,13) NOT NULL DEFAULT 0.0, \
@@ -3276,7 +3276,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
     "[Tracks] [int] NOT NULL,"\
     "[Street] [varchar](60) NULL,"\
     "[StreetId] [int]," \
-    "[NewerName] [varchar](30),"
+    "[NewerName] [varchar](60),"
     "[Location] [varchar](30),"
     "[Type] [int] NOT NULL,"\
     "[StartLat] [decimal](15, 13) NOT NULL,"\

@@ -23,10 +23,11 @@ public:
 private:
     Ui::FindReplaceWidget *ui;
     QTextEdit* editor = nullptr;
-    bool find(QString s, QTextDocument::FindFlags flags= QTextDocument::FindFlags());
+    bool find(QString s, QTextDocument::FindFlags flags= QTextDocument::FindFlags(), int act=0);
     void replace(QString s);
     int curIndex = -1;
     QString selection;
+    QString allSelected;
 
 protected:
 

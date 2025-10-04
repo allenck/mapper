@@ -14,28 +14,48 @@ FindReplaceWidget::FindReplaceWidget(QTextEdit* editor,QWidget *parent)
     // cursor.setPosition(1);
     // editor->setTextCursor(cursor);
     connect(ui->btnFindNext, &ClickableLabel::clicked, this, [=]{
+        if(ui->txtFind->text().isEmpty())
+            return;
         QTextDocument::FindFlags flags= QTextDocument::FindFlags();
         if(ui->chkCaseSensitive->isChecked())
             flags |= QTextDocument::FindCaseSensitively;
         if(ui->chkWhole->isChecked())
             flags |= QTextDocument::FindWholeWords;
-        find(ui->txtFind->text(),flags);
+        if(!find(ui->txtFind->text(),flags))
+        {
+            QTextCursor cursor = editor->textCursor();
+            cursor.movePosition(QTextCursor::Start);
+            editor->setTextCursor(cursor);
+            find(ui->txtFind->text(),flags);
+        }
     });
     connect(ui->btnReplace, &ClickableLabel::clicked, this,[=]{
+        if(ui->txtFind->text().isEmpty())
+            return;
         QTextCursor cursor = editor->textCursor();
         cursor.insertText(ui->txtReplace->text());
     });
     connect(ui->btnFindPrev, &ClickableLabel::clicked, this,[=]{
+        if(ui->txtFind->text().isEmpty())
+            return;
         QTextDocument::FindFlags flags= QTextDocument::FindFlags();
         if(ui->chkCaseSensitive->isChecked())
             flags |= QTextDocument::FindCaseSensitively;
         if(ui->chkWhole->isChecked())
             flags |= QTextDocument::FindWholeWords;
         flags |= QTextDocument::FindBackward;
-        find(ui->txtFind->text(),flags);
+        if(!find(ui->txtFind->text(),flags))
+        {
+            QTextCursor cursor = editor->textCursor();
+            cursor.movePosition(QTextCursor::End);
+            editor->setTextCursor(cursor);
+            find(ui->txtFind->text(),flags);
+        }
 
     });
     connect(ui->btnReplaceAndFind, &ClickableLabel::clicked, this,[=]{
+        if(ui->txtFind->text().isEmpty())
+            return;
         QTextCursor cursor = editor->textCursor();
         cursor.insertText(ui->txtReplace->text());
 
@@ -44,10 +64,18 @@ FindReplaceWidget::FindReplaceWidget(QTextEdit* editor,QWidget *parent)
             flags |= QTextDocument::FindCaseSensitively;
         if(ui->chkWhole->isChecked())
             flags |= QTextDocument::FindWholeWords;
-        find(ui->txtFind->text(),flags);
+        if(!find(ui->txtFind->text(),flags))
+        {
+            QTextCursor cursor = editor->textCursor();
+            cursor.movePosition(QTextCursor::Start);
+            editor->setTextCursor(cursor);
+            find(ui->txtFind->text(),flags);
+        }
 
     });
     connect(ui->btnReplaceAll, &ClickableLabel::clicked, this,[=]{
+        if(ui->txtFind->text().isEmpty())
+            return;
         while(true)
         {
             QTextCursor cursor = editor->textCursor();
@@ -63,25 +91,63 @@ FindReplaceWidget::FindReplaceWidget(QTextEdit* editor,QWidget *parent)
         }
     });
     connect(ui->btnSelectAll, &ClickableLabel::clicked, this,[=]{
+        if(ui->txtFind->text().isEmpty())
+            return;
+        QTextCursor cursor;
+        cursor.setPosition(0);
+        editor->setTextCursor(cursor);
         while(true)
         {
-            QTextCursor cursor;
-            cursor.setPosition(0);
-            editor->setTextCursor(cursor);
-
             QTextDocument::FindFlags flags= QTextDocument::FindFlags();
             if(ui->chkCaseSensitive->isChecked())
                 flags |= QTextDocument::FindCaseSensitively;
             if(ui->chkWhole->isChecked())
                 flags |= QTextDocument::FindWholeWords;
             if(!find(ui->txtFind->text(),flags))
-                break;
-
+                return;
+            cursor = editor->textCursor();
         }
     });
 
     connect(ui->btnHide, &ClickableLabel::clicked,this,[=]{
         this->setHidden(true);
+    });
+
+    connect(ui->txtFind, &QLineEdit::textEdited, this, [=](QString txt){
+        QTextCursor cursor;
+
+        if(!allSelected.isEmpty())
+        {
+            cursor.setPosition(0);
+            editor->setTextCursor(cursor);
+            while(true)
+            {
+                QTextDocument::FindFlags flags= QTextDocument::FindFlags();
+                if(ui->chkCaseSensitive->isChecked())
+                    flags |= QTextDocument::FindCaseSensitively;
+                if(ui->chkWhole->isChecked())
+                    flags |= QTextDocument::FindWholeWords;
+                if(!find(allSelected,flags,2))
+                    break;
+                cursor = editor->textCursor();
+            }
+        }
+
+        cursor.setPosition(0);
+        editor->setTextCursor(cursor);
+        while(true)
+        {
+            QTextDocument::FindFlags flags= QTextDocument::FindFlags();
+            if(ui->chkCaseSensitive->isChecked())
+                flags |= QTextDocument::FindCaseSensitively;
+            if(ui->chkWhole->isChecked())
+                flags |= QTextDocument::FindWholeWords;
+            if(!find(txt,flags,1))
+                break;
+            cursor = editor->textCursor();
+        }
+        allSelected= txt;
+
     });
 }
 
@@ -90,7 +156,7 @@ FindReplaceWidget::~FindReplaceWidget()
     delete ui;
 }
 
-bool FindReplaceWidget::find(QString s, QTextDocument::FindFlags flags)
+bool FindReplaceWidget::find(QString s, QTextDocument::FindFlags flags, int act)
 {
     bool found = editor->find(s,flags);
     if(found)
@@ -101,6 +167,26 @@ bool FindReplaceWidget::find(QString s, QTextDocument::FindFlags flags)
         cursor.setPosition(curIndex, QTextCursor::KeepAnchor);
         editor->setTextCursor(cursor);
         selection = cursor.selectedText();
+
+        switch(act)
+        {
+            case 0:
+                break;
+            case 1:
+            {
+                QTextCharFormat backgrounder;
+                backgrounder.setBackground(Qt::yellow);
+                cursor.setCharFormat(backgrounder);
+                break;
+            }
+            case 2:
+            {
+                QTextCharFormat backgrounder;
+                backgrounder.setBackground(Qt::white);
+                cursor.setCharFormat(backgrounder);
+                break;
+            }
+        }
     }
     ui->btnReplace->setEnabled(found);
     return found;
