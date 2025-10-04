@@ -437,12 +437,15 @@ void EditConnectionsDlg::cbCitiesLeave()
 
 void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
 {
+    if(sel < 0)
+        return;
+    disconnect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(cbDbType_selectionChanged(QString)));
+    disconnect(ui->cbDriverType, SIGNAL(currentTextChanged(QString)), this, SLOT(cbDriverTypeSelectionChanged(QString)));
+
     ui->btnSave->setEnabled(false);
     ui->lblHelp->setText("");
  // ui->lblHelp->setStyleSheet("QLabel {  color : red; }");
     qApp->processEvents();
-    if(sel < 0)
-        return;
     _testConnection = nullptr;
 
     connection = VPtr<Connection>::asPtr(ui->cbConnections->itemData(sel));
@@ -575,12 +578,15 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
         ui->cbUseDatabase->setCurrentText(connection->database());
     }
     cb_enable(ui->cbDbType,false);
+
     connectionChanging=false;
+    connect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(cbDbType_selectionChanged(QString)));
+    connect(ui->cbDriverType, SIGNAL(currentTextChanged(QString)), this, SLOT(cbDriverTypeSelectionChanged(QString)));
+
 }
 
 void EditConnectionsDlg::cbODBCDsn_currentIndex_changed(int ix)
 {
-
     _testConnection = nullptr;
 
     DSN* dsn = odbcUtil->getDsn(ui->cbODBCDsn->currentData().toString());
@@ -592,6 +598,9 @@ void EditConnectionsDlg::cbODBCDsn_currentIndex_changed(int ix)
     ui->txtPWD->setText("");
     ui->cbUseDatabase->clear();
     bDSNCanBeUsed =false;
+    QString drvName = db.driverName();
+    if(drvName.isEmpty())
+        return;
     db.setDatabaseName(ui->cbODBCDsn->currentData().toString());
     bDSNCanBeUsed = db.open();
     if(bDSNCanBeUsed)
@@ -1875,8 +1884,8 @@ bool EditConnectionsDlg::populateDatabases()
     else
         return false; // Sqlite
     ui->cbUseDatabase->clear();
-    ui->cbUseDatabase->setCurrentText(currDatabase);
     ui->cbUseDatabase->addItems(availableDatabases);
+    ui->cbUseDatabase->setCurrentText(currDatabase);
     if(ui->cbUseDatabase->currentText().isEmpty() && availableDatabases.count()==1)
         ui->cbUseDatabase->setCurrentText(availableDatabases.at(0));
     if(!currDatabase.isEmpty() && !availableDatabases.contains(currDatabase))
