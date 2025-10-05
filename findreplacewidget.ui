@@ -68,6 +68,9 @@
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="5">
     <widget class="QCheckBox" name="chkWhole">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select only when complete word if checked.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string> Whole Words</string>
      </property>
@@ -82,6 +85,9 @@
    </item>
    <item row="0" column="3">
     <widget class="ClickableLabel" name="btnFindNext">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select next selection.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>Next</string>
      </property>
@@ -102,6 +108,9 @@
    </item>
    <item row="0" column="2">
     <widget class="ClickableLabel" name="btnFindPrev">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;select previous selection.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>Prev</string>
      </property>
@@ -109,6 +118,9 @@
    </item>
    <item row="1" column="4">
     <widget class="ClickableLabel" name="btnReplaceAll">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Replace all selections.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>Replace all </string>
      </property>
@@ -123,6 +135,9 @@
    </item>
    <item row="1" column="5">
     <widget class="QCheckBox" name="chkCaseSensitive">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Search case-insensitive if checked.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>Case Sensitive</string>
      </property>
@@ -130,6 +145,9 @@
    </item>
    <item row="1" column="2">
     <widget class="ClickableLabel" name="btnReplace">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Replace selection.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>Replace </string>
      </property>
@@ -143,10 +161,16 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;enter text to be replaced.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
     </widget>
    </item>
    <item row="1" column="3">
     <widget class="ClickableLabel" name="btnReplaceAndFind">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Relplace selection and find next.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>Replace &amp; Find </string>
      </property>
@@ -154,6 +178,9 @@
    </item>
    <item row="0" column="4">
     <widget class="ClickableLabel" name="btnSelectAll">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select all.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>Select all</string>
      </property>
@@ -166,6 +193,9 @@
        <horstretch>0</horstretch>
        <verstretch>1</verstretch>
       </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Enter text to be searched&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>

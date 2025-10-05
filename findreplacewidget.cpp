@@ -114,40 +114,15 @@ FindReplaceWidget::FindReplaceWidget(QTextEdit* editor,QWidget *parent)
     });
 
     connect(ui->txtFind, &QLineEdit::textEdited, this, [=](QString txt){
-        QTextCursor cursor;
+        highlightText(txt);
+    });
 
-        if(!allSelected.isEmpty())
-        {
-            cursor.setPosition(0);
-            editor->setTextCursor(cursor);
-            while(true)
-            {
-                QTextDocument::FindFlags flags= QTextDocument::FindFlags();
-                if(ui->chkCaseSensitive->isChecked())
-                    flags |= QTextDocument::FindCaseSensitively;
-                if(ui->chkWhole->isChecked())
-                    flags |= QTextDocument::FindWholeWords;
-                if(!find(allSelected,flags,2))
-                    break;
-                cursor = editor->textCursor();
-            }
-        }
+    connect(ui->chkCaseSensitive, &QCheckBox::checkStateChanged,this,[=]{
+        highlightText(ui->txtFind->text());
+    });
 
-        cursor.setPosition(0);
-        editor->setTextCursor(cursor);
-        while(true)
-        {
-            QTextDocument::FindFlags flags= QTextDocument::FindFlags();
-            if(ui->chkCaseSensitive->isChecked())
-                flags |= QTextDocument::FindCaseSensitively;
-            if(ui->chkWhole->isChecked())
-                flags |= QTextDocument::FindWholeWords;
-            if(!find(txt,flags,1))
-                break;
-            cursor = editor->textCursor();
-        }
-        allSelected= txt;
-
+    connect(ui->chkWhole, &QCheckBox::checkStateChanged,this,[=]{
+        highlightText(ui->txtFind->text());
     });
 }
 
@@ -191,6 +166,44 @@ bool FindReplaceWidget::find(QString s, QTextDocument::FindFlags flags, int act)
     ui->btnReplace->setEnabled(found);
     return found;
 }
+
+void FindReplaceWidget::highlightText(QString txt)
+{
+    QTextCursor cursor;
+
+    if(!allSelected.isEmpty())
+    {
+        cursor.setPosition(0);
+        editor->setTextCursor(cursor);
+        while(true)
+        {
+            // QTextDocument::FindFlags flags = QTextDocument::FindFlags();
+            // if(ui->chkCaseSensitive->isChecked())
+            //     flags |= QTextDocument::FindCaseSensitively;
+            // if(ui->chkWhole->isChecked())
+            //     flags |= QTextDocument::FindWholeWords;
+            if(!find(allSelected,oldflags,2))
+                break;
+            cursor = editor->textCursor();
+        }
+    }
+
+    cursor.setPosition(0);
+    editor->setTextCursor(cursor);
+    QTextDocument::FindFlags flags= QTextDocument::FindFlags();
+    if(ui->chkCaseSensitive->isChecked())
+        flags |= QTextDocument::FindCaseSensitively;
+    if(ui->chkWhole->isChecked())
+        flags |= QTextDocument::FindWholeWords;
+    oldflags = flags;
+    while(true)
+    {
+        if(!find(txt,flags,1))
+            break;
+        cursor = editor->textCursor();
+    }
+    allSelected= txt;
+};
 
 void FindReplaceWidget::replace(QString s)
 {

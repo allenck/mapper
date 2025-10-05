@@ -20,6 +20,9 @@ public:
     void show( bool b);
     void setTextSelection(QString s);
 
+public slots:
+    void highlightText(QString txt);
+
 private:
     Ui::FindReplaceWidget *ui;
     QTextEdit* editor = nullptr;
@@ -28,6 +31,7 @@ private:
     int curIndex = -1;
     QString selection;
     QString allSelected;
+    QTextDocument::FindFlags oldflags = QTextDocument::FindFlags();
 
 protected:
 
