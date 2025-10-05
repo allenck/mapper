@@ -1,0 +1,19 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"><title>Using the SQL query dialog</title></head>
+<body style="background-color:#faf0e6">
+<h1>Using the SQL query dialog</h1>
+Mapper has a built-in GUI SQL interface which can be brought up by selecting <strong>Tools->SQL query dialog</strong> from the main window. <BR>
+<BR>
+<img src="images/queryDialog.png" width="703" height="398" alt=""><br><br>
+The dialog has two main sections. The top section contains sql statements which can be typed in or loaded from .sql script files from storage. The bottom
+section displays messages and errors produced when the <img src="images/go.png" alt="go"> button is pressed. 
+<h5>A word of caution</h5>
+Executing any SQL statement that changes data stored in the database (e.g. insert, update, delete) can have disastrous results if not done correctly. Be sure 
+that any database table that youb are making changes to is backed up in case you need to back-track.
+<ul>
+<li>If executing multiple statements, consider executing <strong>BEGIN;</strong> as the first statement to initiate an sql transaction. Then, in case the result is not what was desired, 
+you can click on the <img src="images/rollback.png" alt="rollback"> button to roll back the changes. </li>
+<li>Unless you are doing something like correcting the spelling of a street, segment or route name, avoid changing any other data elements such as dates.</li>
+<li>Rather than executing an sql statement, for example, to change a nane, consider executing a "select * from <table> where.." statement. This will the produce
+a result set that can be changed.</li>
+</ul>

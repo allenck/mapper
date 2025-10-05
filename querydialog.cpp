@@ -29,6 +29,9 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   ui->query_splitter->insertWidget(1,frw);
   config = cfg;
   config->changeFonts(this, config->font);
+  cwd = QDir::currentPath();
+  wikiRoot = cwd+ QDir::separator()+ "Resources/wiki";
+
   // currQueryFilename = "";
   setTitle();
   bChanging = false;
@@ -352,6 +355,19 @@ void QueryDialog::createMenus()
            frw->setVisible(bChecked);
         });
         toolsMenu->addAction(act);
+
+    });
+    QMenu* helpMenu = new QMenu(tr("&Help"));
+    menuBar->addMenu(helpMenu);
+    QAction* act = new QAction(tr("Using the query dialog"),this);
+    helpMenu->addAction(act);
+    connect(act, &QAction::triggered,this, [=]{
+        QDir dir(wikiRoot);
+        if(dir.exists())
+        {
+            QDesktopServices::openUrl(QUrl::fromLocalFile(wikiRoot+"/queryDialog.html"));
+        }
+
     });
 }
 

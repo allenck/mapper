@@ -100,6 +100,7 @@ DISTFILES += \
     Resources/dump_databases.cmd \
     Resources/dump_databases.sh \
     # Resources/initMap.js \
+    Resources/go.png \
     Resources/restore_databases.cmd \
     Resources/restore_databases.sh \
     # Resources/scripts/createMsSqlDistance.sql \

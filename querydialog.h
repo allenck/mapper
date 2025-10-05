@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "configuration.h"
+#include "qdir.h"
 #include "qmainwindow.h"
 #include "qwidgetaction.h"
 #include <QTableView>
@@ -87,6 +88,8 @@ private:
  void fill_cbConnections();
  void createMenus();
  QStack<QString> delimiters;
+ QString wikiRoot;
+ QString cwd;
 
 private slots:
  void on_go_QueryButton_clicked();
