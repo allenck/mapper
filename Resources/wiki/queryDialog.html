@@ -11,9 +11,12 @@ section displays messages and errors produced when the <img src="images/go.png" 
 Executing any SQL statement that changes data stored in the database (e.g. insert, update, delete) can have disastrous results if not done correctly. Be sure 
 that any database table that youb are making changes to is backed up in case you need to back-track.
 <ul>
-<li>If executing multiple statements, consider executing <strong>BEGIN;</strong> as the first statement to initiate an sql transaction. Then, in case the result is not what was desired, 
-you can click on the <img src="images/rollback.png" alt="rollback"> button to roll back the changes. </li>
+<li>If executing multiple statements, consider executing <strong>BEGIN;</strong> as the first statement to initiate an sql transaction. Then, in case the 
+result is not what was desired, you can click on the <img src="images/rollback.png" alt="rollback"> button to roll back the changes. </li>
 <li>Unless you are doing something like correcting the spelling of a street, segment or route name, avoid changing any other data elements such as dates.</li>
 <li>Rather than executing an sql statement, for example, to change a nane, consider executing a "select * from <table> where.." statement. This will the produce
-a result set that can be changed.</li>
+a result set that can be edited.</li>
 </ul>
+<h5>Connections</h5>
+The connection used by any sql statements executed defaults to the connection of the main window. Howeverm, the combo box allows other connections to other 
+databases to be selected.

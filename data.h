@@ -555,6 +555,8 @@ class RouteInfo
         //QList<segmentGroup> segments;  // array of segmentGroup objects
         void setRouteId(int routeId){_routeId = routeId;}
         int routeId()const {return _routeId;}
+        void setRouteName(QString name) {routeName = name;}
+
  private:
         qint32	route=-1;
         QString routeName;
@@ -846,6 +848,8 @@ public:
     QString comments;
     QStringList usedByRoutes;
     QStringList usedByStations;
+    int routeCount;
+    int stationCount;
 };
 
 class RowChanged

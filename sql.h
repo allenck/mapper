@@ -161,7 +161,7 @@ public:
     qint32 splitSegment(qint32 pt, qint32 SegmentId, QString oldDesc, QString oldOneWay, QString newDesc, QString newOneWay, RouteType routeType, RouteType newRouteType, int oldTracks, int newTracks, QString oldStreet, QString newStreet);
     SegmentData *getSegmentData(qint32 route, qint32 SegmentId, QString startDate, QString endDate);
     QList<SegmentData *> getSegmentDataList(RouteData rd);
-    //QT_DEPRECATED bool updateSegmentToRoute(qint32 routeNbr, QString routeName, QString startDate, QString endDate, qint32 SegmentId, qint32 companyKey, qint32 tractionType, qint32 normalEnter, qint32 normalLeave, qint32 reverseEnter, qint32 reverseLeave, QString biDirectional, QString newerName);
+    QList<SegmentData*> getSegmentDataList(int route);
     SegmentData* getConflictingSegmentDataForRoute(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate);
     RouteData getRouteDataForRouteDates(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate);
     bool deleteRoute(qint32 route, int routeId, QString startDate, QString endDate);
@@ -194,6 +194,7 @@ public:
     int updateRouteSegment(int segmentId, QString startDate, QString endDate, int newSegment);
     QDate getFirstCommentDate(qint32 route, QDate date, qint32 companyKey);
     RouteComments getRouteComment(qint32 route, QDate date, qint32 companyKey);
+    QList<RouteComments*>getRouteComments(qint32 commentKey);
     bool updateRouteComment(RouteComments rc);
     int countCommentUsers(int commentKey);
     bool deleteRouteComment(RouteComments rc);
@@ -271,6 +272,7 @@ public:
     bool populateRouteId();
     qint32 addRouteName(RouteInfo ri, bool *bAlreadyExists);
     RouteInfo getRouteName(int routeId);
+    int getRouteId(QString routeName);
     bool updateRouteName(RouteInfo ri);
     bool insertRouteName(RouteInfo ri);
     bool updateIdentitySequence(QString table, QString column);
@@ -278,6 +280,8 @@ public:
     QSqlQuery* getQuery() {return query;}
     bool isFunctionInstalled(QString function, QString dbType, QString dbName, QSqlDatabase db);
     bool createMissingStreetDef(QSqlDatabase db);
+    QList<CommentInfo *> *commentsList();
+    bool updateComment(CommentInfo info);
 
 
 signals:

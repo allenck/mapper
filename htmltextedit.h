@@ -11,6 +11,7 @@ class HtmlTextEdit : public QTextBrowser
  Q_OBJECT
 public:
  explicit HtmlTextEdit(QWidget *parent = 0);
+    static bool isHtmlFragment(QString text);
 
 signals:
  void dirtySet(bool dirty);
@@ -34,6 +35,8 @@ private:
  QAction* setTextColorAct;
  QAction *setBackgroundColorAct;
  QAction* linkWebPageAct;
+ QAction* insertHtmlFragmentAct;
+ QAction* pasteLinkAct;
  bool bIsDirty;
  void setDirty(bool dirty);
  Configuration* config;
@@ -58,6 +61,9 @@ private slots:
  void OnSetTextColor(bool);
  void OnSetBackgroundColor(bool);
  void onLinkWebPage();
+ void onInsertHtmlFragment();
+ void onPasteLink();
+
 };
 
 #endif // HTMLTEXTEDIT_H

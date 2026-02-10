@@ -2860,7 +2860,7 @@ function displayRouteComment(latitude, longitude, HTMLText, route, date, company
  }
 
  // infowindow = new google.maps.InfoWindow({content:date+HTMLText, position:new google.maps.LatLng(lat, lon)}, 'return 0');
- infowindow = new google.maps.InfoWindow({content:HTMLText, maxWidth: 300});
+ infowindow = new google.maps.InfoWindow({content:HTMLText, maxWidth: 300, ariaLabel: "Comment"});
  //var icon = image[images.greenDownArrow];
  this.marker = new google.maps.Marker({
        position: new google.maps.LatLng(latitude, longitude),

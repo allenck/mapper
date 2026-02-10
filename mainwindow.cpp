@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "dialogeditcomments.h"
 #include "qcompleter.h"
 #include "removecitydialog.h"
 #include <QWebEngineHistory>
@@ -1556,6 +1557,13 @@ void MainWindow::createActions()
       dialogUpdateStreets->show();
       //dlg.exec();
   });
+  editCommentsAct = new QAction(tr("Edit Comments Dialog"),this);
+  connect(editCommentsAct, &QAction::triggered,this,[=]{
+      if(!dialogEditComments)
+          dialogEditComments = new DialogEditComments(this);
+      dialogEditComments->raise();
+      dialogEditComments->show();
+  });
 
   displayRouteOnReloadAct = new QAction(tr("Display route on reload"),this);
   displayRouteOnReloadAct->setStatusTip(tr("Display current route when reloading map"));
@@ -1766,7 +1774,8 @@ void MainWindow::createMenus()
     });
     //toolsMenu->addAction(companyChangeRoutes);
     //toolsMenu->addAction(editStreetsAct);
-    toolsMenu->addAction((updateStreetsAct));
+    toolsMenu->addAction(updateStreetsAct);
+    toolsMenu->addAction(editCommentsAct);
 #ifdef MYPREFIX_DEBUG
     toolsMenu->addSeparator();
     toolsMenu->addSection("Debug");
@@ -1788,8 +1797,11 @@ void MainWindow::createMenus()
       optionsMenu->addMenu(overlayMenu);
       connect(overlayMenu, SIGNAL(aboutToShow()), this, SLOT(fillOverlayMenu()));
       optionsMenu->addAction(displayRouteCommentsAct);
+      displayRouteCommentsAct->setChecked(config->currCity->bDisplayRouteComments);
       optionsMenu->addAction(displayStationMarkersAct);
+      displayStationMarkersAct->setChecked(config->currCity->bDisplayStationMarkers);
       optionsMenu->addAction(displayTerminalMarkersAct);
+      displayTerminalMarkersAct->setChecked(config->currCity->bDisplayTerminalMarkers);
       optionsMenu->addAction(showDebugMessages);
 #ifdef MYPREFIX_DEBUG
       optionsMenu->addAction(geocoderRequestAct);
@@ -2719,7 +2731,11 @@ default:
    m_bridge->processScript("fitMapBounds", objArray);
   }
 
-  loadRouteComment();
+  QDate dt = QDate::fromString(m_currRouteStartDate, "yyyy/MM/dd");
+  dt = sql->getFirstCommentDate(m_routeNbr, dt, _rd.companyKey());
+
+
+  loadRouteComment(dt);
 
   setCursor(Qt::ArrowCursor);
   //bFirstSegmentDisplayed=true;
@@ -2819,24 +2835,36 @@ bool MainWindow::isStationOnSegment(StationInfo* sti, QList<SegmentData*> segmen
  return false;
 }
 
-void MainWindow::loadRouteComment()
+void MainWindow::loadRouteComment(QDate dtIn)
 {
- double infoLat=0, infoLon = 0;
- QVariantList objArray;
 
- QDate dt = QDate::fromString(m_currRouteStartDate, "yyyy/MM/dd");
- dt = sql->getFirstCommentDate(m_routeNbr, dt, _rd.companyKey());
+ QDate dt;
+ if(dtIn.isNull())
+ {
+     QDate dt = QDate::fromString(m_currRouteStartDate, "yyyy/MM/dd");
+     dt = sql->getFirstCommentDate(m_routeNbr, dt, _rd.companyKey());
+ }
+ else
+     dt = dtIn;
  RouteComments rc = sql->getRouteComment(m_routeNbr, dt, -1);
+ displayRouteComment(rc);
+}
+
+void MainWindow::displayRouteComment(RouteComments rc)
+{
+    double infoLat=0, infoLon = 0;
+    QVariantList objArray;
+
  if(rc.commentKey < 0)
  {
-  rc = sql->getRouteComment(0, dt, -1);
+  rc = sql->getRouteComment(0, rc.date, -1);
  }
  if(rc.ci.comments.isEmpty())
  {
-  rc = sql->getNextRouteComment(m_routeNbr, dt, -1);
+  rc = sql->getNextRouteComment(m_routeNbr, rc.date, -1);
   if(rc.commentKey < 0)
   {
-   rc = sql->getNextRouteComment(0, dt, -1);
+   rc = sql->getNextRouteComment(0, rc.date, -1);
   }
 
  }
@@ -2855,14 +2883,17 @@ void MainWindow::loadRouteComment()
 //       if(rc.ci.comments == "")
 //           rc.ci.comments = "<body></body><";
   int i = rc.ci.comments.indexOf("</body>");
+  // add next and prev buttons
   if(i > 0)
   {
    rc.ci.comments.insert(i,"<input type='button' name='prev' value='<' onClick='prevRouteComment()'/><input type='button' name='next' value='>' onClick='nextRouteComment()'/>");
   }
   int ix = rc.ci.comments.indexOf("text-indent:0px;\">");
+  // add Route name and date
   if(ix > 0)
   {
-   rc.ci.comments.insert(ix+18, "<b>" + rc.date.toString("yyyy/MM/dd")+ "</b><p><h1>" + rc.routeAlpha + " " + rc.name + "</h1>");
+   //rc.ci.comments.insert(ix+18, "<b>" + rc.date.toString("yyyy/MM/dd")+ "</b><p><h1>" + rc.routeAlpha + " " + rc.name + "</h1>");
+   rc.ci.comments.insert(ix+18, "<h1>" + rc.routeAlpha + " " + rc.name + "</h1>" +"<b>" + rc.date.toString("yyyy/MM/dd")+ "</b><p>");
   }
   objArray.clear();
   objArray << infoLat << infoLon << rc.ci.comments << rc.route << rc.date.toString("yyyy/MM/dd") << rc.companyKey ;
@@ -4932,7 +4963,10 @@ void MainWindow::displayTerminalMarkersToggeled(bool bChecked)
 void MainWindow::displayRouteCommentsToggled(bool bChecked)
 {
     bDisplayRouteComments = bChecked;
-    loadRouteComment();
+    QDate dt = QDate::fromString(m_currRouteStartDate, "yyyy/MM/dd");
+    dt = sql->getFirstCommentDate(m_routeNbr, dt, _rd.companyKey());
+
+    loadRouteComment(dt);
     m_bridge->processScript("showRouteComment", bChecked?"true":"false");
 }
 

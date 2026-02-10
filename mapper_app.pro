@@ -173,7 +173,7 @@ DEPENDPATH += $$PWD/.
 INCLUDEPATH += $$(QTDIR)/../Src/qtbase/src/3rdparty/sqlite
 
 
-VERSION=1.2.4
+VERSION=1.2.5
 MY_VERSION_STR = '\\"$${VERSION}\\"'
 DEFINES += MY_VERSION=\"$${MY_VERSION_STR}\"
 macx: {
@@ -245,4 +245,16 @@ DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3460100
 
 #unix|win32: LIBS += -ldl
 unix: LIBS += -ldl
+
+FORMS += \
+    dialogeditcomments.ui \
+    dialoghtmledit.ui
+
+HEADERS += \
+    dialogeditcomments.h \
+    dialoghtmledit.h
+
+SOURCES += \
+    dialogeditcomments.cpp \
+    dialoghtmledit.cpp
 

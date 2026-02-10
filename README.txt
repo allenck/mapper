@@ -1,4 +1,10 @@
-**Recent Changes September 2025 VERSION=1.2.4
+**Recent Changes October 2025 VERSION=1.2.5
+1. Fix RouteComments next button to retrieve next item.
+2. Add DialogHtmlEdit to querydialog.
+3. Allow insert of html fragments in HtmlEdit.
+4. Check options Menu items with configuration settings.
+
+**Recent Changes October 2025 VERSION=1.2.4
 1. change querydialog to QMainWindow based.
 2. replace buttons in findwidget with clickable labels.
 

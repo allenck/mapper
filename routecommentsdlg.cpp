@@ -5,6 +5,7 @@
 #include <QClipboard>
 #include <QTextDocumentFragment>
 #include "htmltextedit.h"
+#include "mainwindow.h"
 
 RouteCommentsDlg::RouteCommentsDlg(QWidget *parent) :
     QDialog(parent),
@@ -19,6 +20,8 @@ RouteCommentsDlg::RouteCommentsDlg(QWidget *parent) :
     //sql->setConfig(config);
     sql = SQL::instance();
     ui->txtComments->setReadOnly(false);
+    setWindowTitle(tr("Route Comments"));
+
     connect(ui->txtTags, SIGNAL(editingFinished()), this, SLOT(OnTagsLeave()));
 
     connect(ui->btnOK, SIGNAL(clicked()), this, SLOT(btnOK_Clicked()));
@@ -32,10 +35,6 @@ RouteCommentsDlg::RouteCommentsDlg(QWidget *parent) :
     connect(ui->txtComments, &QTextBrowser::anchorClicked,this,[=](const QUrl &link){
         qDebug() << link.toDisplayString();
     });
-
-    setWindowTitle(tr("Route Comments"));
-
-
     connect(ui->btnNext, SIGNAL(clicked()), this, SLOT(OnBtnNext()));
     connect(ui->btnPrev, SIGNAL(clicked()), this, SLOT(OnBtnPrev()));
 //    connect(ui->txtRoute, SIGNAL(textChanged(QString)), this, SLOT(OnRouteTextChanged(QString)));
@@ -57,6 +56,13 @@ RouteCommentsDlg::RouteCommentsDlg(QWidget *parent) :
      }
     });
 
+    connect(ui->txtComments, &QTextEdit::textChanged,this, [=]{
+        _rc.ci.comments = ui->txtComments->toHtml();
+        _rc.date = ui->dateEdit->date();
+        _rc.commentKey = 0;
+        _rc.ci.commentKey = 0;
+        MainWindow::instance()->displayRouteComment(_rc);
+    });
 
  ui->btnApply->setEnabled(false);
  ui->btnOK->setEnabled(false);
@@ -66,6 +72,7 @@ RouteCommentsDlg::~RouteCommentsDlg()
 {
     delete ui;
 }
+
 void RouteCommentsDlg::setRoute(qint32 r)
 {
     _route = r;
@@ -142,6 +149,7 @@ bool RouteCommentsDlg::readComment(int pos)
         ui->txtComments->setHtml(_rc.ci.comments);
         ui->txtTags->setText(_rc.ci.tags);
         ui->dateEdit->setDate(_rc.date);
+        ui->lblCommentId->setText(QString::number(rc.commentKey));
         if(_rc.companyKey == 0 && _companyKey > 0)
             _rc.companyKey = _companyKey;
 

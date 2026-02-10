@@ -559,7 +559,7 @@ void QueryDialog::on_go_QueryButton_clicked()
     QTextCursor cur = ui->editQuery->textCursor();
     if (cur.hasSelection())
     {
-        text = cur.selectedText().trimmed();
+        text = cur.selectedText();
     }
     else
         text = ui->editQuery->toPlainText(); // select all lines
@@ -619,10 +619,12 @@ void QueryDialog::on_go_QueryButton_clicked()
         }
         combined.append(line + " ");
     }
+    if(!combined.isEmpty())
+        statements.append(combined);
     QStringList viewList = SQL::instance()->listViews();
     if(statements.isEmpty())
     {
-        ui->queryResultText->setText(QString("<FONT COLOR=\"#FF0000\">missing ';'<BR>%2<FONT COLOR=\"#000000\"><BR>"));
+        ui->queryResultText->setText(QString("<FONT COLOR=\"#FF0000\">missing ';'<BR><FONT COLOR=\"#000000\"><BR>"));
         return;
     }
     foreach(QString txt, statements)
@@ -718,6 +720,11 @@ bool QueryDialog::processALine(QString txt, QString tabName)
     {
         //query_View->hide();
         //queryResultText->show();
+        QSqlRecord record = query_view_model->query().record();
+        if(!record.isEmpty())
+        {
+            qDebug() << record;
+        }
         sa_Message_Text.append(QString("<FONT COLOR=\"#FF0000\">%1<BR>%2<FONT COLOR=\"#000000\"><BR>").arg(query_view_model->lastError().driverText(),
                              query_view_model->lastError().databaseText()));
         sa_Message_Text.append(txt);
@@ -1007,6 +1014,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   int curCol = view->columnAt(pt.x());
   currentIndexQueryView = view->indexAt(pt);
   currentColQueryView = curCol;
+  QString cellText = getCellText();
   if(boolGetItemTableView(view))
   {
    //menu = QMenu(m_parent*);
@@ -1028,6 +1036,17 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    connect(sortAction, &QAction::triggered, this, [=]{
        on_sortAction();
    });
+   QAction* editAction = nullptr;
+   if(cellText.startsWith("<!DOCTYPE HTML"))
+   {
+       editAction = new QAction(tr("edit HTML"),this);
+       connect(editAction, &QAction::triggered, this,[=]{
+           if(!dlgHtmlEdit)
+                dlgHtmlEdit = new DialogHtmlEdit();
+           dlgHtmlEdit->setData(cellText);
+           dlgHtmlEdit->show();
+       });
+   }
    //QClipboard *clip = QApplication::clipboard();
    QMenu menu;
 
@@ -1054,6 +1073,8 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
      menu.addAction(deleteAction);
     }
    }
+   if(editAction)
+       menu.addAction(editAction);
    menu.exec(QCursor::pos());
   }
  }//get QTableView selected item
@@ -1097,6 +1118,36 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 
   }
  }
+
+ QString QueryDialog::getCellText()
+ {
+     qint32 currTabIndex = ui->widget_query_view->currentIndex();
+     if(currTabIndex<1)
+         return QString();   // no results present
+     QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
+     view->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+     QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel *>(view->model());
+     if(qobject_cast<QueryModel*>(proxyModel->sourceModel()))
+     {
+         QueryModel * model = qobject_cast<QueryModel*>(proxyModel->sourceModel());
+         //QItemSelectionModel *selmodel = view->selectionModel();
+         //const QItemSelection &sellist = proxyModel->mapSelectionToSource (selmodel->selection());
+
+         QClipboard *clip = QApplication::clipboard();
+         return (model->data(currentIndexQueryView,Qt::DisplayRole).toString());
+     }
+     else
+     {
+         QueryEditModel * model = qobject_cast<QueryEditModel*>(proxyModel->sourceModel());
+         sv_model = model; //save for later update
+         sv_currentIndexQueryView = currentIndexQueryView;
+         QClipboard *clip = QApplication::clipboard();
+         return(model->data(currentIndexQueryView,Qt::DisplayRole).toString());
+
+     }
+ }
+
+
  void QueryDialog::on_sortAction()
  {
      qint32 currTabIndex = ui->widget_query_view->currentIndex();

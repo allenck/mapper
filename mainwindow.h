@@ -104,6 +104,7 @@ class CompanyView;
 class TractionTypeView;
 class DupSegmentView;
 class DialogUpdateStreets;
+class DialogEditComments;
 namespace Ui {
 class MainWindow;
 }
@@ -151,6 +152,7 @@ public:
     RouteCommentsDlg *routeCommentsDlg;
     QueryDialog* queryDlg = nullptr;
     DialogUpdateStreets* dialogUpdateStreets = nullptr;
+    DialogEditComments* dialogEditComments = nullptr;
 
     //QMenu cbRouteContextMenu;
     //QMenu menu;
@@ -207,6 +209,7 @@ public slots:
     QMenu* addSegmentMenu(SegmentData* sd);
     QT_DEPRECATED void getArrayResult(QVariant);
     void selectRoute(RouteData rd);
+    void displayRouteComment(RouteComments rc);
 
 private slots:
     void about();
@@ -306,6 +309,7 @@ private slots:
     void on_usingHelp();
     void processTileMapResource();
     void onNewSegment_triggered();
+    void loadRouteComment(QDate dtIn);
 
 private:
     //Webviewer *centralWidget;
@@ -403,6 +407,7 @@ private:
     QAction* editRouteSqlAct;
     QAction* populateRouteIdAct;
     QAction* displayRouteOnReloadAct;
+    QAction* editCommentsAct;
 
     QWidgetAction *sortTypeAct;
     QComboBox * cbSort;
@@ -506,7 +511,6 @@ private slots:
     void changeFonts(QFont f);
     void onCbSegmentsCustomContextMenu(const QPoint &pos);
     void addSegmentToRoute(SegmentData *sd);
-    void loadRouteComment();
     void initializeGoogleMaps(QUrl url);
     void displayAll();
 

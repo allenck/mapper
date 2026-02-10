@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "configuration.h"
+#include "dialoghtmledit.h"
 #include "qdir.h"
 #include "qmainwindow.h"
 #include "qwidgetaction.h"
@@ -16,6 +17,7 @@ namespace Ui {
 class NewQueryDialog;
 }
 
+class QueryEditModel;
 class FindReplaceWidget;
 class QComboBox;
 class QueryDialog : public QMainWindow
@@ -42,6 +44,8 @@ private:
  int i_Max_Tab_Results;
  bool boolGetItemTableView(QTableView *view);
  QModelIndex currentIndexQueryView;
+ QModelIndex sv_currentIndexQueryView;
+ QueryEditModel * sv_model = nullptr;
 // int queryViewCurrColumn;
  int currentColQueryView;
  void resizeEvent(QResizeEvent *e);
@@ -90,6 +94,8 @@ private:
  QStack<QString> delimiters;
  QString wikiRoot;
  QString cwd;
+ QString getCellText();
+ DialogHtmlEdit* dlgHtmlEdit = nullptr;
 
 private slots:
  void on_go_QueryButton_clicked();

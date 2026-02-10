@@ -39,7 +39,9 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
  pasteHtmlAct = new QAction(tr("Paste HTML"),this);
  pasteSaved = new QAction(tr("Paste saved"), this);
  copySaved = new QAction(tr("Copy to saved"), this);
- linkWebPageAct = new QAction(tr("create link"),this);
+ linkWebPageAct = new QAction(tr("Create link"),this);
+ insertHtmlFragmentAct = new QAction(tr("Paste Html fragment"),this);
+ pasteLinkAct = new QAction(tr("Paste link"),this);
  setPlaceholderText("Enter text");
 
  connect(boldAction, SIGNAL(triggered(bool)), this, SLOT(OnBoldAction(bool)));
@@ -62,7 +64,12 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
  connect(linkWebPageAct, &QAction::triggered, this,[=]{
      onLinkWebPage();
  });
-
+ connect(insertHtmlFragmentAct, &QAction::triggered, this, [=]{
+     onInsertHtmlFragment();
+ });
+ connect(pasteLinkAct, &QAction::triggered,this, [=]{
+     onPasteLink();
+ });
 
  setFontPointSize(9);
  setDirty(false);
@@ -75,8 +82,20 @@ void HtmlTextEdit::showContextMenu(QPoint pt)
 
  QTextCursor cur = this->textCursor();
  QMenu *menu = this->createStandardContextMenu();
+ QList<QAction*> acts = menu->actions();
+ if(isHtmlFragment( clipboard->text())) // if html or html fragment, disallow regular paste.
+ {
+     foreach (QAction* act, acts) {
+         if(act->objectName() == "edit-paste")
+         {
+             act->setEnabled(false);
+             break;
+         }
+     }
+ }
  if(cur.hasSelection())
  {
+     menu->addSeparator();
   QString anchor = this->anchorAt(pt);
   menu->addAction(boldAction);
   menu->addAction(italicAction);
@@ -94,6 +113,10 @@ void HtmlTextEdit::showContextMenu(QPoint pt)
   menu->addAction(setBackgroundColorAct);
   if(mimeData->hasHtml())
       menu->addAction((pasteHtmlAct));
+  if(isHtmlFragment(clipboard->text()))
+  {
+      menu->addAction(insertHtmlFragmentAct);
+  }
 
   if(this->fontWeight() == 75)
       boldAction->setChecked(true);
@@ -107,7 +130,19 @@ void HtmlTextEdit::showContextMenu(QPoint pt)
  }
  else
  {
-  menu->addAction((pasteHtmlAct));
+     if(clipboard->text().startsWith("<!DOCTYPE HTML"))
+        menu->addAction((pasteHtmlAct));
+    else if(isHtmlFragment(clipboard->text()))
+    {
+        menu->addAction(insertHtmlFragmentAct);
+    }
+    else
+    {
+        if(clipboard->text().startsWith("https://") && clipboard->text().endsWith("/"))
+        {
+            menu->addAction(pasteLinkAct);
+        }
+    }
  }
  if(config->currCity->savedClipboard.length()>0)
  {
@@ -127,6 +162,7 @@ void HtmlTextEdit::OnBoldAction(bool checked)
     boldAction->setChecked(!checked);
     setDirty(true);
 }
+
 void HtmlTextEdit::OnItalicAction(bool checked)
 {
     QTextCursor cur = this->textCursor();
@@ -134,12 +170,14 @@ void HtmlTextEdit::OnItalicAction(bool checked)
     italicAction->setChecked(!checked);
     setDirty(true);
 }
+
 void HtmlTextEdit::OnUnderlineAct(bool checked)
 {
     this->setFontUnderline(!checked);
     underlineAct->setChecked(!checked);
     setDirty(true);
 }
+
 void HtmlTextEdit::OnSelectionChanged()
 {
     if(this->fontWeight()< 75)
@@ -259,11 +297,17 @@ void HtmlTextEdit::OnPasteHtmlAct()
     QString mimeText = mimeData->text();
 
      if (mimeData->hasHtml()) {
-         this->setHtml(mimeData->html());
+         //this->insertHtml(mimeData->html());
+         this->insertFromMimeData(mimeData);
          //setTextFormat(Qt::RichText);
      } else if (mimeData->hasText()) {
-         this->setText(mimeData->text());
-         //setTextFormat(Qt::PlainText);
+         //this->insertPlainText(mimeData->text());
+         // QTextCursor cursor =textCursor();
+         // cursor.insertText(mimeData->text());
+         this->clear();
+         QString htmlText = this->toHtml();
+         int ix = htmlText.indexOf("</body>");
+         htmlText.insert(ix, mimeData->text());
      }
 //     else {
 //         setText(tr("Cannot display data"));
@@ -305,4 +349,45 @@ void HtmlTextEdit::onLinkWebPage()
     fmt.setToolTip(address);
     cursor.insertText(address, fmt);
 
+}
+
+bool HtmlTextEdit::isHtmlFragment(QString text)
+{
+    if(text.contains("<p ",Qt::CaseInsensitive)) return true;
+    if(text.contains("</p>>,",Qt::CaseInsensitive)) return true;
+    if(text.contains("<a ",Qt::CaseInsensitive)) return true;
+    if(text.contains("</a>,",Qt::CaseInsensitive)) return true;
+    if(text.contains("</span>",Qt::CaseInsensitive)) return true;
+    if(text.contains("<a ",Qt::CaseInsensitive)) return true;
+    if(text.contains("<span >",Qt::CaseInsensitive)) return true;
+    if(text.contains("<em>,",Qt::CaseInsensitive)) return true;
+    if(text.contains("</em>,",Qt::CaseInsensitive)) return true;
+    if(text.contains("<img >,",Qt::CaseInsensitive)) return true;
+    if(text.contains("</strong>,",Qt::CaseInsensitive)) return true;
+    if(text.contains("<strong>,",Qt::CaseInsensitive)) return true;
+    if(text.contains("<blockquote >,",Qt::CaseInsensitive)) return true;
+    if(text.contains("</script>,",Qt::CaseInsensitive)) return true;
+    if(text.contains("<script >,",Qt::CaseInsensitive)) return true;
+    if(text.contains("<br>,",Qt::CaseInsensitive)) return true;
+    if(text.contains("</br>,",Qt::CaseInsensitive)) return true;
+
+    return false;
+}
+
+void HtmlTextEdit::onInsertHtmlFragment()
+{
+    const QClipboard *clipboard = QApplication::clipboard();
+    QString clipText = clipboard->text();
+
+    QTextDocumentFragment frag = QTextDocumentFragment::fromHtml(clipText);
+    this->textCursor().insertFragment(frag);
+}
+
+void HtmlTextEdit::onPasteLink()
+{
+    const QClipboard *clipboard = QApplication::clipboard();
+
+    QTextDocumentFragment frag = QTextDocumentFragment::fromHtml("<a href=" + clipboard->text() + "><span style=\" font-family:'Ubuntu'; text-decoration: underline; color:#6c7565;\">"
+                                   + clipboard->text() + "</span></a></p>");
+    this->textCursor().insertFragment(frag);
 }

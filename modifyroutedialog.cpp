@@ -15,6 +15,13 @@ ModifyRouteDialog::ModifyRouteDialog(QWidget *parent) :
     connect(ui->btnSave, SIGNAL(clicked()), this, SLOT(btnOK_Click()));
     connect(ui->btnCancel,SIGNAL(clicked()),this, SLOT(reject()));
     //connect((ui->txtNewRouteNbr, SIGNAL(editingFinished()),this, SLOT()))
+    connect(ui->rnw,&RouteNameWidget::routeNameChanged,this,[=]{
+
+        if( sql->getRouteId(ui->rnw->newRouteName())>= 0)
+        {
+            ui->lblHelp->setText(tr("route name already exists!"));
+        }
+    });
 }
 
 ModifyRouteDialog::~ModifyRouteDialog()
@@ -79,6 +86,7 @@ QString ModifyRouteDialog::newName (){ return ui->rnw->newRouteName(); }
 
 void ModifyRouteDialog::btnOK_Click()
 {
+    ui->lblHelp->setText("");
     RouteData rd = (RouteData)routeDataList.at(ui->cbRoutes->currentIndex());
     if(ui->rnw->newRoute()<=0)
     {
@@ -91,6 +99,23 @@ void ModifyRouteDialog::btnOK_Click()
      ui->lblHelp->setText(tr("route name invalid"));
      return;
     }
+
+    if(rd.route() == _routeNbr)
+    {
+        // name change only!
+        if(ui->rnw->newRouteName() != rd.routeName())
+        {
+            rd.setRouteName(ui->rnw->newRouteName());
+            if(!sql->updateRouteName(rd))
+                return;
+            // this->setResult(QDialog::Accepted);
+            // setCursor(Qt::ArrowCursor);
+            // accept();
+        }
+    }
+    // handle a route number change;
+
+    int routeId = sql->getRouteId(ui->rnw->newRouteName());
 
     //QList<RouteData> myArray = sql->getRouteDatasForDate(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
     QList<SegmentData*> myArray = sql->getSegmentDataList(rd);
@@ -203,6 +228,7 @@ void ModifyRouteDialog::btnOK_Click()
 
     _rd.setAlphaRoute(_alphaRoute);
     _rd.setRouteName(ui->rnw->newRouteName());
+    _rd.setRouteId(routeId);
     _rd.setRoute(_routeNbr);
 
 //    this.DialogResult = DialogResult.OK;

@@ -16,6 +16,7 @@ RouteNameWidget::RouteNameWidget(QWidget *parent) :
      if(!text.isEmpty())
          bNbrEdited = true;
  });
+
  connect(ui->cbRouteName->lineEdit(), SIGNAL(editingFinished()),this, SLOT(txtRouteName_Leave()));
  connect(ui->cbRouteName, SIGNAL(currentTextChanged(QString)), this, SLOT(txtRouteName_Leave()));
  connect(ui->cbRouteName, SIGNAL(currentIndexChanged(int)), this, SLOT(routeChange(int)));
