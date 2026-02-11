@@ -7,19 +7,21 @@
 #include "htmltextedit.h"
 #include "mainwindow.h"
 
-RouteCommentsDlg::RouteCommentsDlg(QWidget *parent) :
+RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RouteCommentsDlg)
 {
+    this->routeList = routeList;
     ui->setupUi(this);
     _route = -1;
-    _companyKey = -1;
+    _companyKey = companyKey;
     //_date.setYMD(1800,1,1);
     _date = QDate(1800,1,1);
     config = Configuration::instance();
     //sql->setConfig(config);
     sql = SQL::instance();
     ui->txtComments->setReadOnly(false);
+    _model = (RouteSelectorTableModel*)ui->tableView->model();
     setWindowTitle(tr("Route Comments"));
 
     connect(ui->txtTags, SIGNAL(editingFinished()), this, SLOT(OnTagsLeave()));
@@ -41,7 +43,7 @@ RouteCommentsDlg::RouteCommentsDlg(QWidget *parent) :
 //    connect(ui->txtRoute, SIGNAL(editingFinished()), this, SLOT(OnRouteLeave()));
 //    connect(ui->txtRouteAlpha,SIGNAL(textChanged(QString)), this, SLOT(OnAlphaRouteTextChanged(QString)));
 //    connect(ui->txtRouteAlpha, SIGNAL(editingFinished()), this, SLOT(OnAlphaRouteLeave()));
-    connect(ui->tableView, &RouteSelector::selections_changed, [=](QModelIndexList /*added*/, QModelIndexList deleted){
+    connect(ui->tableView, &RouteSelector::selections_changed, [=](QModelIndexList added, QModelIndexList deleted){
      for(QModelIndex deletedIndex : deleted)
      {
       if(deletedIndex.isValid())
@@ -54,6 +56,17 @@ RouteCommentsDlg::RouteCommentsDlg(QWidget *parent) :
        sql->deleteRouteComment(rc);
       }
      }
+     QItemSelectionModel* sm = ui->tableView->selectionModel();
+     modelIndexList = sm->selectedRows();
+     routes = new QList<int>();
+     foreach (QModelIndex ix, modelIndexList) {
+         int selectedRoute = ix.data().toInt();
+         if(!routes->contains(selectedRoute))
+             routes->append(selectedRoute);
+     }
+     qDebug() << routes->count() << " routes selected";
+     foreach(int r, *routes)
+         qDebug() << " " << r;
     });
 
     connect(ui->txtComments, &QTextEdit::textChanged,this, [=]{
@@ -66,6 +79,9 @@ RouteCommentsDlg::RouteCommentsDlg(QWidget *parent) :
 
  ui->btnApply->setEnabled(false);
  ui->btnOK->setEnabled(false);
+ connect(ui->tableView, &RouteSelector::selections_changed, this, [=]{
+     ui->routesSelected->setText(QString::number(routes->count()));
+ });
 }
 
 RouteCommentsDlg::~RouteCommentsDlg()
@@ -78,7 +94,7 @@ void RouteCommentsDlg::setRoute(qint32 r)
     _route = r;
 //    ui->txtRoute->setText(QString("%1").arg(r));
 //    ui->txtRouteAlpha->setText(sql->getAlphaRoute(r, _companyKey));
-    QList<int>* routes = new QList<int>();
+    routes = new QList<int>();
     routes->append(r);
     ui->tableView->setSelections(routes);
 }
@@ -90,12 +106,16 @@ void RouteCommentsDlg::setCompanyKey(qint32 cc)
 
 void RouteCommentsDlg::setDate(QDate dt)
 {
+    bDateChanged = true;
     _date = dt;
     ui->dateEdit->setDate(dt);
 
-    readComment(0);
+    bool rslt = readComment(0);
 
     bDateChanged = false;
+
+    _model->createList(routeList, dt, _companyKey);
+    ui->tableView->setSelections(routes);
 
 }
 
@@ -136,30 +156,31 @@ bool RouteCommentsDlg::readComment(int pos)
     RouteComments rc;
     if(pos < 0)
         rc = sql->getPrevRouteComment(_route, _date, _companyKey);
-    else
-        if(pos > 0)
+    else if(pos > 0)
             rc = sql->getNextRouteComment(_route, _date, _companyKey);
     else
-            rc = sql->getRouteComment(_route, _date, _companyKey);
+         rc = sql->getRouteComment(_route, _date, _companyKey);
+    if(rc.commentKey == -1)
+         return false;
 
     if(rc.commentKey != -1)
     {
+        bDateChanged = true;
         _rc = rc;
         _date = _rc.date;
+        ui->dateEdit->setDate(rc.date);
         ui->txtComments->setHtml(_rc.ci.comments);
         ui->txtTags->setText(_rc.ci.tags);
-        ui->dateEdit->setDate(_rc.date);
         ui->lblCommentId->setText(QString::number(rc.commentKey));
         if(_rc.companyKey == 0 && _companyKey > 0)
             _rc.companyKey = _companyKey;
 
         bDateChanged = false;
         bIsDirty = false;
-        setWindowTitle(tr("Route Comments"));
         return true;
     }
     _rc = rc;
-    return false;
+    return true;
 }
 
 void RouteCommentsDlg::OnBtnPrev()
@@ -168,6 +189,7 @@ void RouteCommentsDlg::OnBtnPrev()
 
     readComment(-1);
 }
+
 void RouteCommentsDlg::OnDateChanged()
 {
     bDateChanged = true;
@@ -181,7 +203,7 @@ void RouteCommentsDlg::OnDateLeave()
  outputChanges();
 
  _date = date;
- ui->dateEdit->setDate(date);
+ ((RouteSelectorTableModel*)ui->tableView->model())->createList(routeList,_date,_companyKey);
  bDateChanged = false;
  ui->txtComments->clear();
  ui->txtComments->setFontPointSize(9);
@@ -216,6 +238,7 @@ void RouteCommentsDlg::outputChanges()
    foreach(int route, *selectedRoutes)
    {
      _rc.route = route;
+       _rc.name = _model->getRouteName(route);
      sql->updateRouteComment( _rc);
    }
 //  }

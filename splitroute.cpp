@@ -723,7 +723,7 @@ void SplitRoute::btnOK_Click()
 
     if(ui->chkAddComment->isChecked())
     {
-     RouteCommentsDlg *dlg = new RouteCommentsDlg();
+     RouteCommentsDlg *dlg = new RouteCommentsDlg(&routeDataList, _rd.companyKey());
      dlg->setDate(ui->dateFrom2->date());
      dlg->setRoute(ui->rnw2->newRoute());
      dlg->exec();

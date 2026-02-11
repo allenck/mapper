@@ -8255,11 +8255,12 @@ bool SQL::updateRouteComment(RouteComments rc)
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         QSqlQuery query = QSqlQuery(db);
+        beginTransaction("updaterouteComment");
 
         if(rc.commentKey == -1)
         {
             //db.transaction();
-            beginTransaction("updateouteComment");
+            // beginTransaction("updateouteComment");
             //qDebug()<< rc.ci.comments;
 
             rc.ci.commentKey = addComment(rc.ci.comments, rc.ci.tags);
@@ -8276,13 +8277,37 @@ bool SQL::updateRouteComment(RouteComments rc)
                 QSqlError error = query.lastError();
                 SQLERROR(std::move(query));
                 //throw SQLException(error.text() + " " + errCommand);
+                db.rollback();
                 return false;
             }
             db.commit();
             ret = true;
         }
-        else
+        else    // insert or update
         {
+            RouteComments oldRc = getRouteComment(rc.route, rc.date, rc.companyKey);
+            if(oldRc.commentKey == -1) // not found if -1
+            {
+                commandText = QString("insert into RouteComments (route, date, commentKey, companyKey,"
+                                      " latitude, longitude) "
+                " values(%1, '%2', %3, %4, %5, %6)").arg(rc.route).arg(rc.date.toString("yyyy/MM/dd"))
+                        .arg(rc.ci.commentKey ).arg(rc.companyKey).arg(rc.pos.lat()).arg(rc.pos.lon());
+                bQuery = query.exec(commandText);
+                if(!bQuery)
+                {
+                    QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+                    qDebug() << errCommand;
+                    QSqlError error = query.lastError();
+                    SQLERROR(std::move(query));
+                    //throw SQLException(error.text() + " " + errCommand);
+                    db.rollback();
+                    return false;
+                }
+                db.commit();
+                return true;
+
+            }
+            // record already exists!
             commandText = QString("update RouteComments set companyKey = %1, "
                           "latitude = %2, longitude=%3, "
                           "lastUpdate=CURRENT_TIMESTAMP  where route = %4 and date = '%5'")
@@ -8296,10 +8321,15 @@ bool SQL::updateRouteComment(RouteComments rc)
                 QSqlError error = query.lastError();
                 SQLERROR(std::move(query));
                 throw SQLException(error.text() + " " + errCommand);
+                db.rollback();
+                return false;
             }
 
-
             ret = updateComment(rc.ci.commentKey, rc.ci.comments, rc.ci.tags);
+            if(ret)
+                db.commit();
+            else
+                db.rollback();
         }
 
     }
@@ -8415,7 +8445,7 @@ bool SQL::deleteRouteComment(RouteComments rc)
          }
         }
         else
-         qDebug() << count  << "stations or route comments still use this comment ";
+         qDebug() << count  << " route comments still use this comment commentKey = " << rc.ci.commentKey;
    }
    catch (Exception e)
    {

@@ -5240,7 +5240,7 @@ void MainWindow::combineRoutes()
 
 void MainWindow::updateRouteComment()
 {
- RouteCommentsDlg routeCommentsDlg(this);
+ RouteCommentsDlg routeCommentsDlg(&routeList, m_companyKey, this);
 
  int row =         ui->cbRoute->currentIndex();
  RouteData rd = ((RouteData)routeList.at(row));

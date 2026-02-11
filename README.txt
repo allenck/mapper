@@ -1,4 +1,9 @@
+**Recent Changes October 2025 VERSION=1.2.6
+1. Add route's name to tableview.
+2. Implement multiple RouteComments using same Comment.
+
 **Recent Changes October 2025 VERSION=1.2.5
+
 1. Fix RouteComments next button to retrieve next item.
 2. Add DialogHtmlEdit to querydialog.
 3. Allow insert of html fragments in HtmlEdit.

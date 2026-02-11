@@ -5,6 +5,7 @@
 #include <QAbstractTableModel>
 
 class RouteName;
+class RouteData;
 class RouteSelector : public QTableView
 {
   Q_OBJECT
@@ -31,7 +32,10 @@ class RouteSelectorTableModel : public QAbstractTableModel
  Q_OBJECT
  public:
   RouteSelectorTableModel(QMap<int, RouteName *> *list, QObject *parent=0);
-  enum COLUMNS{ROUTEALPHA, ROUTEPREFIX, ROUTE, BASEROUTE};
+  enum COLUMNS{ROUTEALPHA, ROUTEPREFIX, ROUTE, NAME};
+  void createList(QList<RouteData>*rdList, QDate dt, int companyKey);
+  QString getRouteName(int route);
+
 
   int rowCount(const QModelIndex &parent) const;
   int columnCount(const QModelIndex &parent) const;
@@ -42,6 +46,8 @@ class RouteSelectorTableModel : public QAbstractTableModel
 
  private:
   QMap<int, RouteName*>* list;
+
+
 };
 
 class RouteName : public QObject
@@ -53,22 +59,25 @@ class RouteName : public QObject
   RouteName(const RouteName&) : QObject() {}
   int route() {return _route;}
   int baseRoute(){return _baseRoute;}
+  QString routeName() {return _name;}
   QString  routePrefix() {return _routePrefix;}
   QString routeAlpha(){return _routeAlpha;}
   void setRoute(int r){_route = r;}
   void setBaseRoute(int baseRoute){_baseRoute = baseRoute;}
   void setRoutePrefix(QString routePrefix){_routePrefix = routePrefix;}
   void setRouteAlpha(QString routeAlpha){_routeAlpha = routeAlpha;}
+  void setRouteName(QString name) {_name = name;}
   bool equals(const RouteName& other)
   {
    if(_route == other._route || _routeAlpha == _routeAlpha)
     return true;
    else return false;
   }
+  QString getRouteName(int route);
 
  private:
   int _route, _baseRoute;
-  QString _routePrefix, _routeAlpha;
+  QString _routePrefix, _routeAlpha, _name;
 };
 
 #endif // ROUTESELECTOR_H

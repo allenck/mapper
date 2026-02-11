@@ -16,7 +16,7 @@ class RouteCommentsDlg : public QDialog
     Q_OBJECT
     
 public:
-    explicit RouteCommentsDlg(QWidget *parent = 0);
+    explicit RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, QWidget *parent = 0);
     ~RouteCommentsDlg();
     void setRoute(qint32);
     void setDate(QDate);
@@ -30,6 +30,10 @@ private:
     SQL* sql;
     RouteComments _rc;
     Configuration *config;
+    QList<RouteData>* routeList = nullptr;
+    RouteSelectorTableModel* _model = nullptr;
+    QList<int>* routes = nullptr;
+    QModelIndexList modelIndexList;
 
     bool bIsDirty;
     bool bDateChanged;
@@ -38,7 +42,6 @@ private:
     void outputChanges();
     bool readComment(int pos);
     void setDirty(bool = true);
-
 
 private slots:
     void btnOK_Clicked();

@@ -889,12 +889,12 @@ public:
 class RouteComments
 {
 public:
-    qint32 route;
+    qint32 route=-1;
     QDate date;
-    qint32 commentKey;
+    qint32 commentKey=-1;
     CommentInfo ci;
     LatLng pos;
-    qint32 companyKey;
+    qint32 companyKey=-1;
     QString name;
     QString routeAlpha;
     RouteComments(){}

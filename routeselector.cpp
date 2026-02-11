@@ -8,7 +8,6 @@ RouteSelector::RouteSelector(QWidget *parent) : QTableView(parent)
  RouteSelectorTableModel* model = new RouteSelectorTableModel(list);
  setModel(model);
  setSelectionBehavior(QAbstractItemView::SelectRows);
- setSelectionMode(QAbstractItemView::SingleSelection);
  setMultiSelection(true);
 }
 
@@ -56,6 +55,7 @@ QList<RouteName*> RouteSelector::getList()
  return list->values();
 }
 
+
 //**************************************************************************
 
 RouteSelectorTableModel::RouteSelectorTableModel(QMap<int,RouteName*>* list, QObject* parent) : QAbstractTableModel(parent)
@@ -82,8 +82,8 @@ QVariant RouteSelectorTableModel::data(const QModelIndex &index, int role) const
   {
    case ROUTE:
    return routeName->route();
-  case BASEROUTE:
-   return routeName->baseRoute();
+  case NAME:
+   return routeName->routeName();
   case ROUTEPREFIX:
    return routeName->routePrefix();
   case ROUTEALPHA:
@@ -101,8 +101,8 @@ QVariant RouteSelectorTableModel::headerData(int section, Qt::Orientation orient
   {
    case ROUTE:
     return tr("Route");
-   case BASEROUTE:
-    return tr("BaseRoute");
+   case NAME:
+    return tr("RouteName");
    case ROUTEPREFIX:
     return tr("Prefix");
    case ROUTEALPHA:
@@ -118,10 +118,8 @@ Qt::ItemFlags RouteSelectorTableModel::flags(const QModelIndex &index) const
  {
   case ROUTEALPHA:
   case ROUTEPREFIX:
-  case BASEROUTE:
-  return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
-
- case ROUTE:
+  case ROUTE:
+  case NAME:
   return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
  }
 }
@@ -131,14 +129,45 @@ bool RouteSelectorTableModel::setData(const QModelIndex &index, const QVariant &
  if(role == Qt::EditRole)
  {
   RouteName* routeName = list->values().at(index.row());
-  switch(index.column())
-  {
-   case ROUTEPREFIX:
-   routeName->setRoutePrefix(value.toString());
-   SQL::instance()->updateAltRoute(routeName->route(), value.toString());
-  }
+  // switch(index.column())
+  // {
+  //  case ROUTEPREFIX:
+  //  routeName->setRoutePrefix(value.toString());
+  //  SQL::instance()->updateAltRoute(routeName->route(), value.toString());
+  // }
  }
  return false;
+}
+
+void RouteSelectorTableModel::createList(QList<RouteData>* rdList, QDate dt, int companyKey)
+{
+    beginResetModel();
+    list->clear();
+    foreach(RouteData rd, *rdList)
+    {
+        if(dt >= rd.startDate() && dt <= rd.endDate() && rd.companyKey() == companyKey)
+        {
+            RouteName* rn = new RouteName();
+            rn->setRoute(rd.route());
+            rn->setRouteName(rd.routeName());
+            rn->setRoutePrefix(rd.routePrefix());
+            rn->setRouteAlpha(rd.alphaRoute());
+            rn->setBaseRoute(rd.baseRoute());
+            list->insert(rd.route(), rn);
+        }
+    }
+    endResetModel();
+}
+
+QString RouteSelectorTableModel::getRouteName(int route)
+{
+    foreach (RouteName* rn , list->values()) {
+        if(rn->route() == route)
+        {
+            return rn->routeName();
+        }
+    }
+    return QString();
 }
 
 

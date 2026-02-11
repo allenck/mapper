@@ -14,10 +14,10 @@
    <string>Dialog</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="2">
-    <widget class="QPushButton" name="btnPrev">
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
      <property name="text">
-      <string>&lt;-</string>
+      <string>Select route(s):</string>
      </property>
     </widget>
    </item>
@@ -40,14 +40,55 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="3">
-    <widget class="QLabel" name="label_3">
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_4">
      <property name="text">
-      <string>CommentId:</string>
+      <string>RoutesSelected:</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="5">
+   <item row="1" column="1">
+    <widget class="QLineEdit" name="routesSelected">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2" colspan="4">
+    <spacer name="horizontalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>356</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="2" column="0">
+    <widget class="QDateEdit" name="dateEdit">
+     <property name="displayFormat">
+      <string>yyyy/MM/dd</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1" colspan="2">
+    <widget class="QPushButton" name="btnPrev">
+     <property name="text">
+      <string>&lt;-</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="3">
+    <widget class="QPushButton" name="btnNext">
+     <property name="text">
+      <string>-&gt;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="5">
     <spacer name="horizontalSpacer">
      <property name="orientation">
       <enum>Qt::Orientation::Horizontal</enum>
@@ -60,14 +101,31 @@
      </property>
     </spacer>
    </item>
-   <item row="3" column="0">
+   <item row="4" column="0">
     <widget class="QLabel" name="label_2">
      <property name="text">
       <string>Tags:</string>
      </property>
     </widget>
    </item>
-   <item row="5" column="0" colspan="6">
+   <item row="5" column="0" colspan="2">
+    <widget class="QLineEdit" name="txtTags"/>
+   </item>
+   <item row="5" column="3">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>CommentId:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="4">
+    <widget class="QLabel" name="lblCommentId">
+     <property name="text">
+      <string>00000</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0" colspan="6">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QPushButton" name="btnDelete">
@@ -99,39 +157,8 @@
      </item>
     </layout>
    </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Select route(s):</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QDateEdit" name="dateEdit">
-     <property name="displayFormat">
-      <string>yyyy/MM/dd</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="3">
-    <widget class="QPushButton" name="btnNext">
-     <property name="text">
-      <string>-&gt;</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="0" colspan="3">
-    <widget class="QLineEdit" name="txtTags"/>
-   </item>
-   <item row="2" column="0" colspan="6">
+   <item row="3" column="0" colspan="6">
     <widget class="HtmlTextEdit" name="txtComments"/>
-   </item>
-   <item row="4" column="4">
-    <widget class="QLabel" name="lblCommentId">
-     <property name="text">
-      <string>00000</string>
-     </property>
-    </widget>
    </item>
   </layout>
  </widget>
