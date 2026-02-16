@@ -383,6 +383,21 @@ void HtmlTextEdit::onInsertHtmlFragment()
     this->textCursor().insertFragment(frag);
 }
 
+/*static*/ bool HtmlTextEdit::isLink(QString text)
+{
+    if(!text.startsWith("https://"))
+        return false;
+    QTextEdit* edit = new QTextEdit();
+    edit->setHtml(text);
+    QString html = edit->toHtml();
+    QString search = "<a href = \"" +text + "\">";
+    int ix = html.indexOf(search);
+    if(ix > 0)
+        return true;
+    else
+        return false;
+}
+
 void HtmlTextEdit::onPasteLink()
 {
     const QClipboard *clipboard = QApplication::clipboard();

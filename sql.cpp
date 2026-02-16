@@ -331,7 +331,7 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
   where= " where r.companyKey = " + QString("%1").arg(companyKey);
  if(config->currConnection->servertype() == "MySql")
     commandText = "Select distinct a.baseRoute, r.route, n.name, r.startDate, "
-               "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic,r.routeId  "
+               "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic,r.routeId, c.description  "
                "from Routes r "
                "join AltRoute a on r.route =  a.route "
                "join Companies c on r.companyKey = c.`key` "
@@ -342,7 +342,7 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
                " order by a.routeAlpha, n.name, r.endDate ";
  else if(config->currConnection->servertype() == "MsSql")
      commandText = "Select distinct a.baseRoute, r.route, n.name, r.startDate, "
-                   "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic, r.routeId  "
+                   "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic, r.routeId, c.description  "
                    "from Routes r "
                    "join AltRoute a on r.route =  a.route "
                    "join Companies c on r.companyKey = c.[key] "
@@ -353,7 +353,7 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
                    " order by a.routeAlpha, n.name, r.endDate ";
  else
     commandText = "Select distinct a.baseRoute, r.route, n.name, r.startDate, "
-            "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic, r.routeId  "
+            "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic, r.routeId, c.description  "
             "from Routes r "
             "join AltRoute a on r.route =  a.route "
             "join Companies c on r.companyKey = c.key "
@@ -393,6 +393,7 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
   ri->alphaRoute = query.value(7).toString();
   ri->companyMnemonic = query.value(8).toString();
   ri->_routeId = query.value(9).toInt();
+  ri->_companyName = query.value(10).toString();
   riList.append(ri);
  }
  for(RouteInfo* ri : riList)
@@ -410,6 +411,7 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
   rd.setRoutePrefix(ri->routePrefix);
   rd.setCompanyMnemonic(ri->companyMnemonic);
   rd.setRouteId(ri->_routeId);
+  rd.setCompanyName(ri->_companyName);
   list.append(rd);
  }
  return list;;
@@ -725,7 +727,7 @@ QString SQL::getAlphaRoute(qint32 route, QString routePrefix)
    "where route = " + strRoute + " and routePrefix ='" +routePrefix + "'";
  else
    commandText = "select routeAlpha from AltRoute a " \
-                 "where route = " + strRoute + " and routePrefix ='" +routePrefix + "'";
+                 "where route = " + strRoute +"'";
 
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
@@ -1674,10 +1676,11 @@ QList<RouteData> SQL::getRoutes(qint32 segmentid, QString date )
 
         QString commandText = "select a.route, n.name, a.startdate, a.endDate, "
             "a.companyKey, tractionType,"
-            " b.routeAlpha, baseRoute, a.routeId"
+            " b.routeAlpha, baseRoute, a.routeId, c.description"
             " from Routes a "
             " join AltRoute b on a.route = b.route"
             " join RouteName n on a.routeId = n.routeId"
+            " join Companies c on a.companyKey = c.key"
             " where lineKey = " + QString("%1").arg(segmentid) +
             " and '" + date + "' between a.startDate and a.endDate";
         QSqlQuery query = QSqlQuery(db);
@@ -1706,6 +1709,7 @@ QList<RouteData> SQL::getRoutes(qint32 segmentid, QString date )
             rd._alphaRoute = query.value(6).toString();
             rd._baseRoute = query.value(7).toInt();
             rd._routeId = query.value(8).toInt();
+            rd._coName = query.value(9).toString();
             myArray.append(rd);
         }
     }
@@ -7865,7 +7869,7 @@ CommentInfo SQL::getComments(qint32 infoKey)
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
-        QString commandText = "SELECT commentKey, comments, tags from Comments where commentKey = " + QString("%1").arg(infoKey);
+        QString commandText = "SELECT commentKey, comments, tags, routeList from Comments where commentKey = " + QString("%1").arg(infoKey);
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -7895,6 +7899,7 @@ CommentInfo SQL::getComments(qint32 infoKey)
                 //qDebug()<<ci.comments;
             }
             ci.tags = query.value(2).toString();
+            ci.toRoutesTable(query.value(3).toString());
         }
     }
     catch (Exception e)
@@ -7904,7 +7909,173 @@ CommentInfo SQL::getComments(qint32 infoKey)
     return ci;
 }
 
-int SQL::addComment(QString comments, QString tags)
+//  Return list of comments that are not used
+QList<CommentInfo>* SQL::getOrphanComments()
+{
+    QString up = QString::fromUtf8("▲");
+    QString down = QString::fromUtf8("▼");
+    QList<CommentInfo>* list = new QList<CommentInfo>;
+
+    QString commandText = "select commentKey, comments, tags, routeList from Comments "
+                            "where commentKey not in (select commentkey from RouteComments)";
+    try
+    {
+        if(!dbOpen())
+            throw Exception(tr("database not open: %1").arg(__LINE__));
+        QSqlDatabase db = QSqlDatabase::database();
+
+        QSqlQuery query = QSqlQuery(db);
+        bool bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
+        }
+
+        if (!query.isActive())
+        {
+            return list;
+        }
+        while (query.next())
+        {
+            CommentInfo ci;
+            ci.commentKey = query.value(0).toInt();
+//            if(config->currConnection->servertype() != "MsSql")
+            ci.comments = query.value(1).toString();
+//            else
+            {
+                //ci.comments = query.value(1).toString().toUtf8();
+                //qDebug()<<ci.comments;
+                ci.comments.replace("&up", up);
+                ci.comments.replace("&down", down);
+                //qDebug()<<ci.comments;
+            }
+            ci.tags = query.value(2).toString();
+            ci.toRoutesTable(query.value(3).toString());
+            list->append(ci);
+        }
+    }
+    catch (Exception e)
+    {
+        myExceptionHandler(e);
+    }
+    return list;
+}
+
+// return list of possible duplicates
+QList<CommentInfo>* SQL::commentByText(QString text)
+{
+    QString up = QString::fromUtf8("▲");
+    QString down = QString::fromUtf8("▼");
+    QList<CommentInfo>* list = new QList<CommentInfo>;
+
+    QString commandText = "select commentKey, comments, tags, routeList from comments "
+                            "where comments ='" + text.replace("'","\''") + "'";
+    try
+    {
+        if(!dbOpen())
+            throw Exception(tr("database not open: %1").arg(__LINE__));
+        QSqlDatabase db = QSqlDatabase::database();
+
+        QSqlQuery query = QSqlQuery(db);
+        bool bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
+        }
+
+        if (!query.isActive())
+        {
+            return list;
+        }
+        while (query.next())
+        {
+            CommentInfo ci;
+            ci.commentKey = query.value(0).toInt();
+//            if(config->currConnection->servertype() != "MsSql")
+            ci.comments = query.value(1).toString();
+//            else
+            {
+                //ci.comments = query.value(1).toString().toUtf8();
+                //qDebug()<<ci.comments;
+                ci.comments.replace("&up", up);
+                ci.comments.replace("&down", down);
+                //qDebug()<<ci.comments;
+            }
+            ci.tags = query.value(2).toString();
+            ci.toRoutesTable(query.value(3).toString());
+            list->append(ci);
+        }
+    }
+    catch (Exception e)
+    {
+        myExceptionHandler(e);
+    }
+    return list;
+}
+
+QList<CommentInfo>* SQL::getComments()
+{
+    QString up = QString::fromUtf8("▲");
+    QString down = QString::fromUtf8("▼");
+    QList<CommentInfo>* list = new QList<CommentInfo>;
+
+    QString commandText = "select commentKey, comments, tags, routeList from comments ";
+    try
+    {
+        if(!dbOpen())
+            throw Exception(tr("database not open: %1").arg(__LINE__));
+        QSqlDatabase db = QSqlDatabase::database();
+
+        QSqlQuery query = QSqlQuery(db);
+        bool bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
+        }
+
+        if (!query.isActive())
+        {
+            return list;
+        }
+        while (query.next())
+        {
+            CommentInfo ci;
+            ci.commentKey = query.value(0).toInt();
+//            if(config->currConnection->servertype() != "MsSql")
+            ci.comments = query.value(1).toString();
+//            else
+            {
+                //ci.comments = query.value(1).toString().toUtf8();
+                //qDebug()<<ci.comments;
+                ci.comments.replace("&up", up);
+                ci.comments.replace("&down", down);
+                //qDebug()<<ci.comments;
+            }
+            ci.tags = query.value(2).toString();
+            ci.toRoutesTable(query.value(3).toString());
+            list->append(ci);
+        }
+    }
+    catch (Exception e)
+    {
+        myExceptionHandler(e);
+    }
+    return list;
+}
+
+int SQL::addComment(QString comments, QString tags, QList<int> routesUsed)
 {
     int infoKey = -1;
 //#ifdef WIN32
@@ -7928,9 +8099,10 @@ int SQL::addComment(QString comments, QString tags)
             comments = comments.replace(down, "&down");
             //comments = comments.toLatin1();
         }
+        QString routeList = CommentInfo::routesTableToString(routesUsed);
 
-        QString commandText = QString("insert into Comments (comments, tags ) "
-                                      "values('%1','%2')").arg(comments.replace("'","\''"),tags);
+        QString commandText = QString("insert into Comments (comments, tags, routeList ) "
+                                      "values('%1','%2','%3')").arg(comments.replace("'","\''"),tags, routeList);
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -7977,7 +8149,7 @@ int SQL::addComment(QString comments, QString tags)
     return infoKey;
 }
 
-bool SQL::updateComment(qint32 infoKey, QString comments, QString tags)
+bool SQL::updateComment(qint32 infoKey, QString comments, QString tags, QList<int> table)
 {
 //#ifdef WIN32
 //    QString up = QString::fromUtf8("?");
@@ -8003,6 +8175,7 @@ bool SQL::updateComment(qint32 infoKey, QString comments, QString tags)
 
         QString commandText = "update  Comments set comments='"+ comments.replace("'","\''")+"', "
                               "tags ='" + tags + "',"
+                              "routeList='" + CommentInfo::routesTableToString(table)+"',"
                               "lastUpdate=CURRENT_TIMESTAMP "
                               "where commentKey = " + QString("%1").arg(infoKey);
         QSqlQuery query = QSqlQuery(db);
@@ -8091,7 +8264,7 @@ QDate SQL::getFirstCommentDate(qint32 route, QDate date, qint32 companyKey)
  return result;
 }
 
-RouteComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
+RouteComments SQL::getRouteComment(qint32 route, QDate date, qint32 commentKey)
 {
 //#ifdef WIN32
 //    QString up = QString::fromUtf8("?");
@@ -8109,7 +8282,7 @@ RouteComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
     rc.ci.commentKey = -1;
     rc.ci.comments = "";
     rc.ci.tags = "";
-    rc.companyKey = companyKey;
+    rc.companyKey = -1;
     try
     {
         if(!dbOpen())
@@ -8118,14 +8291,18 @@ RouteComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
 
         QString commandText = QString("SELECT rc.commentKey, c.commentKey, rc.companyKey, comments, tags, rc.latitude, "
             "rc.longitude, n.name, a.routeAlpha "
-            "from Comments c "
-            "join RouteComments rc on rc.commentKey = c.commentKey "
+            "from RouteComments rc "
+            "join Comments c on rc.commentKey = c.commentKey "
             "join Routes r on r.route = rc.route and '%2' between r.startDate and r.endDate "
             "JOIN AltRoute a ON a.route = rc.route "
             "join RouteName n on r.routeid =n.routeid "
             "where rc.route = %1 and rc.date = '%2'").arg(route).arg(date.toString("yyyy/MM/dd"));
 
+        if(commentKey > 0)
+            commandText.append("and rc.commentKey = " + QString::number(commentKey));
+
         QSqlQuery query = QSqlQuery(db);
+        qDebug() << commandText;
         bool bQuery = query.exec(commandText);
         if(!bQuery)
         {
@@ -8159,7 +8336,7 @@ RouteComments SQL::getRouteComment(qint32 route, QDate date, qint32 companyKey)
                     //qDebug()<<rc.ci.comments;
                 }
             }
-            rc.name = query.value(7).toString();
+            rc.routeName = query.value(7).toString();
             rc.routeAlpha = query.value(8).toString();
         }
     }
@@ -8232,8 +8409,63 @@ QList<RouteComments*> SQL::getRouteComments(qint32 commentKey)
                     //qDebug()<<rc.ci.comments;
                 }
             }
-            rc->name = query.value(7).toString();
+            rc->routeName = query.value(7).toString();
             rc->routeAlpha = query.value(8).toString();
+            list.append(rc);
+        }
+    }
+    catch (Exception e)
+    {
+        myExceptionHandler(e);
+    }
+    return list;
+}
+
+// get list of all RouteComments
+QList<RouteComments*> SQL::listRouteComments()
+{
+    QString up = QString::fromUtf8("▲");
+    QString down = QString::fromUtf8("▼");
+    QList<RouteComments*> list;
+    try
+    {
+        if(!dbOpen())
+            throw Exception(tr("database not open: %1").arg(__LINE__));
+        QSqlDatabase db = QSqlDatabase::database();
+
+        QString commandText = "select route, date, rc.commentKey, c.tags, c.routeList, c.comments, companyKey, latitude, longitude "
+                              "from RouteComments rc "
+                              "join Comments c on c.commentKey = rc.commentKey";
+
+        QSqlQuery query = QSqlQuery(db);
+        bool bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
+        }
+
+        if (!query.isActive())
+        {
+            return list;
+        }
+        while (query.next())
+        {
+            RouteComments* rc = new RouteComments();
+
+            rc->route = query.value(0).toInt();
+            rc->date = query.value(1).toDate();
+            rc->commentKey = query.value(2).toInt();
+            rc->ci.commentKey = query.value(2).toInt();
+            rc->ci.tags = query.value(3).toString();
+            rc->ci.routesUsed = rc->ci.toRoutesTable(query.value(4).toString());
+            rc->ci.comments = query.value(5).toString();
+            rc->companyKey = query.value(6).toInt();
+            rc->pos = LatLng(query.value(7).toDouble(), query.value(8).toDouble());
+
             list.append(rc);
         }
     }
@@ -8255,7 +8487,8 @@ bool SQL::updateRouteComment(RouteComments rc)
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
         QSqlQuery query = QSqlQuery(db);
-        beginTransaction("updaterouteComment");
+        if(!isTransactionActive())
+            beginTransaction("updaterouteComment");
 
         if(rc.commentKey == -1)
         {
@@ -8263,7 +8496,7 @@ bool SQL::updateRouteComment(RouteComments rc)
             // beginTransaction("updateouteComment");
             //qDebug()<< rc.ci.comments;
 
-            rc.ci.commentKey = addComment(rc.ci.comments, rc.ci.tags);
+            rc.ci.commentKey = addComment(rc.ci.comments, rc.ci.tags, rc.ci.routesUsed);
 
             commandText = QString("insert into RouteComments (route, date, commentKey, companyKey,"
                                   " latitude, longitude) "
@@ -8277,15 +8510,16 @@ bool SQL::updateRouteComment(RouteComments rc)
                 QSqlError error = query.lastError();
                 SQLERROR(std::move(query));
                 //throw SQLException(error.text() + " " + errCommand);
-                db.rollback();
+                rollbackTransaction("updaterouteComment");
                 return false;
             }
-            db.commit();
+            commitTransaction("updaterouteComment");
             ret = true;
         }
         else    // insert or update
         {
-            RouteComments oldRc = getRouteComment(rc.route, rc.date, rc.companyKey);
+            RouteComments oldRc = getRouteComment(rc.route, rc.date, rc.commentKey);
+
             if(oldRc.commentKey == -1) // not found if -1
             {
                 commandText = QString("insert into RouteComments (route, date, commentKey, companyKey,"
@@ -8300,10 +8534,11 @@ bool SQL::updateRouteComment(RouteComments rc)
                     QSqlError error = query.lastError();
                     SQLERROR(std::move(query));
                     //throw SQLException(error.text() + " " + errCommand);
-                    db.rollback();
+                    rollbackTransaction("updaterouteComment");
                     return false;
                 }
-                db.commit();
+                if(!isTransactionActive())
+                    commitTransaction("updaterouteComment");
                 return true;
 
             }
@@ -8321,17 +8556,58 @@ bool SQL::updateRouteComment(RouteComments rc)
                 QSqlError error = query.lastError();
                 SQLERROR(std::move(query));
                 throw SQLException(error.text() + " " + errCommand);
-                db.rollback();
+                rollbackTransaction("updaterouteComment");
                 return false;
             }
 
             ret = updateComment(rc.ci.commentKey, rc.ci.comments, rc.ci.tags);
-            if(ret)
-                db.commit();
-            else
-                db.rollback();
+            if(!isTransactionActive())
+            {
+                if(ret)
+                    commitTransaction("updaterouteComment");
+                else
+                    rollbackTransaction("updaterouteComment");
+            }
         }
 
+    }
+    catch (Exception e)
+    {
+        myExceptionHandler(e);
+    }
+    return ret;
+}
+
+bool SQL::addRouteComment(RouteComments rc)
+{
+    bool ret = false;
+    bool bQuery;
+    int rows;
+    QString commandText;
+    try
+    {
+        if(!dbOpen())
+            throw Exception(tr("database not open: %1").arg(__LINE__));
+        QSqlDatabase db = QSqlDatabase::database();
+        QSqlQuery query = QSqlQuery(db);
+        commandText = QString("insert into RouteComments (route, date, commentKey, companyKey,"
+                                          " latitude, longitude) "
+                    " values(%1, '%2', %3, %4, %5, %6)").arg(rc.route).arg(rc.date.toString("yyyy/MM/dd"))
+                            .arg(rc.ci.commentKey ).arg(rc.companyKey).arg(rc.pos.lat()).arg(rc.pos.lon());
+        bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            //throw SQLException(error.text() + " " + errCommand);
+            //db.rollback();
+            return false;
+        }
+        rows = query.numRowsAffected();
+        if(rows)
+            ret=true;
     }
     catch (Exception e)
     {
@@ -8423,8 +8699,8 @@ bool SQL::deleteRouteComment(RouteComments rc)
 
         beginTransaction("deleteRouteComment");
 
-        commandText = QString("delete from RouteComments where route = %1 and date = '%2'")
-                .arg(rc.route).arg(rc.date.toString("yyyy/MM/dd"));
+        commandText = QString("delete from RouteComments where route = %1 and date = '%2' and commentKey = %3")
+                .arg(rc.route).arg(rc.date.toString("yyyy/MM/dd")).arg(rc.commentKey);
         bQuery = query.exec(commandText);
         if(!bQuery)
         {
@@ -8434,6 +8710,7 @@ bool SQL::deleteRouteComment(RouteComments rc)
             SQLERROR(std::move(query));
             throw SQLException(error.text() + " " + errCommand);
         }
+        ret = true;
 
         int count = countCommentUsers(rc.ci.commentKey);
         if(count ==0)
@@ -8445,7 +8722,10 @@ bool SQL::deleteRouteComment(RouteComments rc)
          }
         }
         else
+        {
          qDebug() << count  << " route comments still use this comment commentKey = " << rc.ci.commentKey;
+         ret = false;
+        }
    }
    catch (Exception e)
    {
@@ -8455,7 +8735,7 @@ bool SQL::deleteRouteComment(RouteComments rc)
    return ret;
 }
 
-RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyKey)
+RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 commentKey, qint32 companyKey)
 {
     QString commandText;
 #ifdef WIN32
@@ -8482,15 +8762,16 @@ RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyK
         QSqlDatabase db = QSqlDatabase::database();
 
         commandText = "SELECT rc.commentKey, comments, tags, date, rc.companyKey, n.name,"
-                " a.routeAlpha, rc.latitude, rc.longitude "
+                " a.routeAlpha, rc.latitude, rc.longitude, c.routeList "
                 "from RouteComments rc "
                 "join Comments c on rc.commentKey = c.commentKey "
                 "JOIN AltRoute a ON a.route = rc.route "
                 "join Routes r on r.route = rc.route and '"+date.toString("yyyy/MM/dd")+"' between r.startDate and r.endDate "
                 "join RouteName n on r.routeId = n.Routeid "
                 "and rc.route = " + QString::number(route) + " "
-                "and rc.date  > '" + date.toString("yyyy/MM/dd")+"' "
-                "order by rc.date";
+                "and rc.date  >= '" + date.toString("yyyy/MM/dd")+"' "
+                "and rc.commentKey != " + QString::number(commentKey) +" "
+                "order by rc.route, rc.date, rc.commentKey";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         //qDebug()<< query.lastQuery();
@@ -8527,9 +8808,10 @@ RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyK
                     //qDebug()<<rc.ci.comments;
                 }
             }
-            rc.name = query.value(5).toString();
+            rc.routeName = query.value(5).toString();
             rc.routeAlpha = query.value(6).toString();
             rc.pos = LatLng(query.value(7).toDouble(), query.value(8).toDouble());
+            rc.ci.routesUsed = rc.ci.toRoutesTable(query.value(9).toString());
             break; // only need first one
         }
     }
@@ -8541,7 +8823,7 @@ RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 companyK
     return rc;
 }
 
-RouteComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 companyKey)
+RouteComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 commentKey, qint32 companyKey)
 {
     Q_UNUSED(companyKey)
 #ifdef WIN32
@@ -8565,15 +8847,17 @@ RouteComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 companyK
         QSqlDatabase db = QSqlDatabase::database();
 
         QString commandText = "SELECT rc.commentKey, comments, tags, date, rc.companyKey, n.name,"
-                " a.routeAlpha, rc.latitude, rc.longitude "
+                " a.routeAlpha, rc.latitude, rc.longitude, c.routeList "
                 "from RouteComments rc "
                 "join Comments c on rc.commentKey = c.commentKey "
                 "JOIN AltRoute a ON a.route = rc.route "
-                "join Routes r on r.route = rc.route"
+                "join Routes r on r.route = rc.route and '"+date.toString("yyyy/MM/dd")+"' between r.startDate and r.endDate "
                 " and '"+date.toString("yyyy/MM/dd")+"' between r.startDate and r.endDate "
                 "join RouteName n on r.routeId = n.Routeid "
                 "where rc.route = "+ QString("%1").arg(route) +" "
-                "and rc.date  < '" + date.toString("yyyy/MM/dd")+"'";
+                "and rc.date  <= '" + date.toString("yyyy/MM/dd")+"' "
+                "and rc.commentKey != " +QString::number(commentKey) + " "
+                "order by rc.route, rc.date, rc.commentKey ";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -8608,9 +8892,11 @@ RouteComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 companyK
                     //qDebug()<<rc.ci.comments;
                 }
             }
-            rc.name = query.value(5).toString();
+            rc.routeName = query.value(5).toString();
             rc.routeAlpha = query.value(6).toString();
             rc.pos = LatLng(query.value(7).toDouble(),query.value(8).toDouble());
+            rc.ci.routesUsed = rc.ci.toRoutesTable(query.value(9).toString());
+            //break; // only need first result
         }
     }
     catch (Exception e)
@@ -8640,9 +8926,9 @@ CommentInfo SQL::getComment(qint32 commentKey, int pos)
 
         QString commandText;
         if(pos >0)
-         commandText = "select commentKey, comments, tags from Comments where commentKey > " + QString::number(commentKey)+ " limit 1";
+         commandText = "select commentKey, comments, tags, routeList from Comments where commentKey > " + QString::number(commentKey)+ " limit 1";
            else
-         commandText = "select commentKey, comments, tags from Comments where commentKey < " + QString::number(commentKey)+ " limit 1";
+         commandText = "select commentKey, comments, tags routeList from Comments where commentKey < " + QString::number(commentKey)+ " limit 1";
 
 
         QSqlQuery query = QSqlQuery(db);
@@ -8674,28 +8960,28 @@ CommentInfo SQL::getComment(qint32 commentKey, int pos)
              //qDebug()<<rc.ci.comments;
          }
          ci.tags = query.value(2).toString();
+         ci.toRoutesTable(query.value(3).toString());
         }
-
         // get usage by Station
-        commandText = "select stationKey from Stations where infoKey >= 0";
-        bQuery = query.exec(commandText);
-        if(!bQuery)
-        {
-            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
-            qDebug() << errCommand;
-            QSqlError error = query.lastError();
-            SQLERROR(std::move(query));
-            throw SQLException(error.text() + " " + errCommand);
-        }
+        // commandText = "select stationKey from Stations where infoKey >= 0";
+        // bQuery = query.exec(commandText);
+        // if(!bQuery)
+        // {
+        //     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        //     qDebug() << errCommand;
+        //     QSqlError error = query.lastError();
+        //     SQLERROR(std::move(query));
+        //     throw SQLException(error.text() + " " + errCommand);
+        // }
 
-        if (!query.isActive())
-        {
-            return ci;
-        }
-        while (query.next())
-        {
-         ci.usedByStations.append(query.value(0).toString());
-        }
+        // if (!query.isActive())
+        // {
+        //     return ci;
+        // }
+        // while (query.next())
+        // {
+        //  ci.usedByStations.append(query.value(0).toString());
+        // }
 
         // get usage by Routes
         commandText = "select route from routeComments"
@@ -9747,6 +10033,14 @@ void SQL::checkTables(QSqlDatabase db)
 
   //tableList = getTableList(db, config->currConnection->servertype());
   tableList = db.tables();
+
+  if(!doesColumnExist("Comments", "routeList"))
+  {
+   addColumn("Comments", "routeList", "varchar(100) NOT NULL default ''");
+   if(config->currConnection->servertype() == "Sqlite")
+    executeScript(":/sql/Sqlite3/sqlite3_recreateComments.sql",db);
+  }
+
 
   if(!doesColumnExist("Companies", "RoutePrefix"))
   {
@@ -12253,7 +12547,7 @@ QList<CommentInfo*>* SQL::commentsList()
  QSqlDatabase db = QSqlDatabase();
  QSqlQuery query = QSqlQuery(db);
 
- QString commandText =  "SELECT commentKey, tags, comments from Comments";
+ QString commandText =  "SELECT commentKey, tags, comments, routeList from Comments";
  if(!query.exec(commandText))
  {
      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
@@ -12268,6 +12562,7 @@ QList<CommentInfo*>* SQL::commentsList()
   cmt->commentKey = query.value(0).toInt();
   cmt->tags = query.value(1).toString();
   cmt->comments = query.value(2).toString();
+  cmt->toRoutesTable(query.value(3).toString());
   list->append(cmt);
  }
  foreach (CommentInfo* ci, *list) {
@@ -12288,11 +12583,17 @@ QList<CommentInfo*>* SQL::commentsList()
 
 bool SQL::updateComment(CommentInfo info)
 {
+    if(info.commentKey < 1 || info.routesUsed.empty() || info.comments.isEmpty())
+    {
+        qDebug() << "Error: commentkey invalid or routesUsed empty or comments empty";
+        return false;
+    }
     QSqlDatabase db = QSqlDatabase::database();
     if(!dbOpen())
         throw Exception(tr("database not open: %1").arg(__LINE__));
     QString commandText = "update comments set tags = '"  + info.tags + "',"
-            "comments = '" + info.comments + "' "
+            "comments = '" + info.comments.replace("'","\''") + "', "
+            "routeList = '" + info.routesTableToString(info.routesUsed) + "' "
             "where commentKey = " + QString::number(info.commentKey);
     QSqlQuery query = QSqlQuery(db);
 

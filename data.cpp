@@ -84,6 +84,9 @@ void Bearing::calculate()
     d = R * c;
 }
 
+
+
+
 RouteData::RouteData()
 {
  _route=-1;
@@ -127,6 +130,7 @@ RouteData::RouteData(const RouteData& o)
  _doubleDate = o._doubleDate;
  _companyMnemonic = o._companyMnemonic;
  _routeId = o._routeId;
+ _coName = o._coName;
 }
 
 RouteData::RouteData(const SegmentData& o)
@@ -1330,8 +1334,9 @@ RouteComments::RouteComments(const RouteComments& other)
     ci = other.ci;
     pos = other.pos;
     companyKey = other.companyKey;
-    name = other.name;
+    routeName = other.routeName;
     routeAlpha = other.routeAlpha;
+    companyName = other.companyName;
 }
 
 CommentInfo::CommentInfo(const CommentInfo& other){
@@ -1339,5 +1344,32 @@ CommentInfo::CommentInfo(const CommentInfo& other){
     tags = other.tags;
     comments = other.comments;
     usedByRoutes = other.usedByRoutes;
-    usedByStations = other.usedByStations;
+    //usedByStations = other.usedByStations;
+    routesUsed = other.routesUsed;
+    routeCount = other.routeCount;
+}
+
+QList<int> CommentInfo::toRoutesTable(QString routeList)
+{
+    QStringList sl = routeList.split(",");
+    routesUsed.clear();
+    foreach (QString s, sl) {
+        int route = s.toInt();
+        if(route > 0)
+            routesUsed.append(route);
+    }
+    routeCount = routesUsed.count();
+    return routesUsed;
+}
+/*static*/ QString CommentInfo::routesTableToString(QList<int> table)
+{
+    QString routeList;
+    foreach (int route, table) {
+        if(route < 1)
+            continue;
+        routeList.append(QString::number(route));
+        routeList.append(",");
+    }
+    routeList.chop(1);
+    return routeList;
 }

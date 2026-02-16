@@ -109,7 +109,7 @@ namespace Ui {
 class MainWindow;
 }
 
-//class webviewer;
+class RouteCommentsDlg;
 class ExportDlg;
 class MainWindow : public QMainWindow
 {
@@ -131,7 +131,7 @@ public:
     CompanyView * companyView =nullptr;
     TractionTypeView * tractionTypeView = nullptr;
     StreetView* streetView = nullptr;
-    void getInfoWindowComments(double lat, double lon, int route, QString date, int func);
+    void getInfoWindowComments(double lat, double lon, int route, QString date, int commentKey, int companyKey, int func);
     void SetPoint(qint32 i, double lat, double lon);
     QT_DEPRECATED void getArray();
     void setLen(qint32 len);
@@ -149,7 +149,7 @@ public:
     QString m_segmentStatus, m_segmentColor;
 
     RouteDlg *routeDlg;
-    RouteCommentsDlg *routeCommentsDlg;
+    RouteCommentsDlg *routeCommentsDlg = nullptr;
     QueryDialog* queryDlg = nullptr;
     DialogUpdateStreets* dialogUpdateStreets = nullptr;
     DialogEditComments* dialogEditComments = nullptr;
@@ -170,7 +170,7 @@ public:
     Q_DECL_DEPRECATED Configuration* getConfiguration();
     void updateStation(qint32 stationKey, qint32 segmentId);
     void moveStationMarker(qint32 stationKey, qint32 segmentId, double lat, double lon);
-    void moveRouteComment(int route, QString date, double latitude, double longitude, int companyKey);
+    void moveRouteComment(int route, QString date, int commentKey, double latitude, double longitude, int companyKey);
 
     RouteViewTableModel *routeViewSourceModel;
     Q_DECL_DEPRECATED void displaySegment(qint32 segmentId, QString segmentName, QString color, QString trackUsage, bool bClearFirst);

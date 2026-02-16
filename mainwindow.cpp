@@ -2857,14 +2857,14 @@ void MainWindow::displayRouteComment(RouteComments rc)
 
  if(rc.commentKey < 0)
  {
-  rc = sql->getRouteComment(0, rc.date, -1);
+  rc = sql->getRouteComment(0, rc.date,rc.commentKey);
  }
  if(rc.ci.comments.isEmpty())
  {
-  rc = sql->getNextRouteComment(m_routeNbr, rc.date, -1);
+  rc = sql->getNextRouteComment(m_routeNbr, rc.date, rc.commentKey,-1);
   if(rc.commentKey < 0)
   {
-   rc = sql->getNextRouteComment(0, rc.date, -1);
+   rc = sql->getNextRouteComment(0, rc.date, rc.commentKey,-1);
   }
 
  }
@@ -2893,10 +2893,10 @@ void MainWindow::displayRouteComment(RouteComments rc)
   if(ix > 0)
   {
    //rc.ci.comments.insert(ix+18, "<b>" + rc.date.toString("yyyy/MM/dd")+ "</b><p><h1>" + rc.routeAlpha + " " + rc.name + "</h1>");
-   rc.ci.comments.insert(ix+18, "<h1>" + rc.routeAlpha + " " + rc.name + "</h1>" +"<b>" + rc.date.toString("yyyy/MM/dd")+ "</b><p>");
+   rc.ci.comments.insert(ix+18, "<h1>" + rc.routeAlpha + " " + rc.routeName + "</h1>" +"<b>" + rc.date.toString("yyyy/MM/dd")+ "</b><p>");
   }
   objArray.clear();
-  objArray << infoLat << infoLon << rc.ci.comments << rc.route << rc.date.toString("yyyy/MM/dd") << rc.companyKey ;
+  objArray << infoLat << infoLon << rc.ci.comments << rc.commentKey<< rc.route << rc.date.toString("yyyy/MM/dd") << rc.companyKey ;
   if(bDisplayRouteComments)
   {
       m_bridge->processScript("displayRouteComment", objArray);
@@ -2905,7 +2905,7 @@ void MainWindow::displayRouteComment(RouteComments rc)
  }
 }
 
-void MainWindow::getInfoWindowComments(double lat, double lon, int route, QString date, int func)
+void MainWindow::getInfoWindowComments(double lat, double lon, int route, QString date, int commentKey, int companyKey, int func)
 {
  QDate dt = QDate::fromString(date, "yyyy/MM/dd");
  RouteComments rc;
@@ -2914,33 +2914,35 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
 
  if(func < 0)
  {
-  rc = sql->getPrevRouteComment(route, dt, -1);
+  rc = sql->getPrevRouteComment(route, dt, commentKey, companyKey);
   if(rc.commentKey < 0)
   {
-   rc = sql->getPrevRouteComment(0, dt, -1);
+   rc = sql->getPrevRouteComment(0, dt, commentKey, companyKey);
   }
  }
  else
  {
-  rc = sql->getNextRouteComment(route, dt, -1);
+  rc = sql->getNextRouteComment(route, dt, commentKey, companyKey);
   if(rc.commentKey < 0)
   {
-   rc = sql->getNextRouteComment(0, dt, -1);
+   rc = sql->getNextRouteComment(0, dt, commentKey, companyKey);
   }
  }
+ QString  sNext = "<input type='button' name='next' value='>' onClick='nextRouteComment()'/>";
+ QString      sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
+
+
  if(rc.route >= 0)
  {
   int i = rc.ci.comments.indexOf("</body>");
   if(i > 0)
   {
-   RouteComments rcNext = sql->getNextRouteComment(route, rc.date, -1);
-   QString sNext;
-   if(rcNext.commentKey>=0)
-    sNext = "<input type='button' name='next' value='>' onClick='nextRouteComment()'/>";
-   RouteComments rcPrev = sql->getPrevRouteComment(route, rc.date, -1);
-   QString sPrev;
-   if(rcPrev.commentKey >= 0)
-     sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
+   // RouteComments rcNext = sql->getNextRouteComment(route, rc.date, rc.commentKey,-1);
+
+   // if(rcNext.commentKey>=0)
+   // RouteComments rcPrev = sql->getPrevRouteComment(route, rc.date, rc.commentKey, -1);
+   // if(rcPrev.commentKey >= 0)
+   //   sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
    rc.ci.comments.insert(i,sPrev+sNext);
   }
   QVariantList objArray;
@@ -2954,9 +2956,9 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
   int ix = rc.ci.comments.indexOf("text-indent:0px;\">");
   if(ix > 0)
   {
-   rc.ci.comments.insert(ix+18, "<b>" + rc.date.toString("yyyy/MM/dd")+ "</b><p><h1>" + rc.routeAlpha + " " + rc.name + "</h1>");
+   rc.ci.comments.insert(ix+18, "<b>" + rc.date.toString("yyyy/MM/dd")+ "</b><p><h1>" + rc.routeAlpha + " " + rc.routeName + "</h1>");
   }
-  objArray << latitude << longitude << rc.ci.comments<< rc.route << rc.date.toString("yyyy/MM/dd");
+  objArray << latitude << longitude << rc.ci.comments<< rc.commentKey << rc.route << rc.date.toString("yyyy/MM/dd");
   m_bridge->processScript("displayRouteComment", objArray);
   m_bridge->processScript("showRouteComment", bDisplayRouteComments?"true": "false");
  }
@@ -5125,9 +5127,9 @@ void MainWindow::moveStationMarker(qint32 stationKey, qint32 segmentId, double l
     m_bridge->processScript("addStationMarker",objArray);
 }
 
-void MainWindow::moveRouteComment(int route, QString date, double latitude, double longitude, int companyKey)
+void MainWindow::moveRouteComment(int route, QString date, int commentKey,double latitude, double longitude, int companyKey)
 {
- RouteComments rc = sql->getRouteComment(route, QDate::fromString(date, "yyyy/MM/dd"), companyKey);
+ RouteComments rc = sql->getRouteComment(route, QDate::fromString(date, "yyyy/MM/dd"), commentKey);
  rc.pos = LatLng(latitude, longitude);
  sql->updateRouteComment(rc);
 }
@@ -5240,14 +5242,17 @@ void MainWindow::combineRoutes()
 
 void MainWindow::updateRouteComment()
 {
- RouteCommentsDlg routeCommentsDlg(&routeList, m_companyKey, this);
+    if(!routeCommentsDlg){
 
+        routeCommentsDlg = new RouteCommentsDlg(&routeList, m_companyKey, this);
+    }
  int row =         ui->cbRoute->currentIndex();
  RouteData rd = ((RouteData)routeList.at(row));
- routeCommentsDlg.setCompanyKey(rd.companyKey());
- routeCommentsDlg.setRoute(rd.route());
- routeCommentsDlg.setDate(rd.startDate());
- routeCommentsDlg.exec();
+ routeCommentsDlg->setCompanyKey(rd.companyKey());
+ routeCommentsDlg->setRoute(rd.route());
+ routeCommentsDlg->setDate(rd.startDate());
+ routeCommentsDlg->raise();
+ routeCommentsDlg->show();
 }
 
 void MainWindow::sbRouteTriggered(int sliderAction)

@@ -100,5 +100,6 @@
         <file>sql/PostgreSQL/createPostgreSQLFunction.sql</file>
         <file>sql/PostgreSQL/replacePostgreSQLFunction</file>
         <file>sql/PostgreSQL/dropPostgreSQLFunction.sql</file>
+        <file>sql/Sqlite3/sqlite3_recreateComments.sql</file>
     </qresource>
 </RCC>

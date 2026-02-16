@@ -9,6 +9,7 @@ namespace Ui {
 class DialogEditComments;
 }
 
+class RouteSelectorTableModel;
 class CommentSelectorTableModel;
 class DialogEditComments : public QDialog
 {
@@ -16,6 +17,7 @@ class DialogEditComments : public QDialog
 
 public:
     explicit DialogEditComments(QWidget *parent = nullptr);
+    DialogEditComments(CommentInfo *ci, QWidget *parent = nullptr);
     ~DialogEditComments();
     void setData(QString text);
     QString getSource();
@@ -29,6 +31,15 @@ private:
     QList<CommentInfo*> *list;
     CommentInfo* info;
     QList<RouteComments*> rcList;
+    QList<RouteData>* routeList = nullptr;
+    RouteSelectorTableModel* _model = nullptr;
+    QList<int>* routes = nullptr;
+    QStringList* aRoutes = nullptr;
+    QList<int>* dRoutes = nullptr;
+    QModelIndexList modelIndexList;
+
+    void common();
+
 
 protected:
     CommentSelectorTableModel* model = nullptr;

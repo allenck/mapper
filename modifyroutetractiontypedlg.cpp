@@ -141,7 +141,7 @@ void ModifyRouteTractionTypeDlg::btnOK_Click()      //SLOT
       if(ui->checkBox->isChecked())
       {
          QString text = "Traction type changed to " + ui->comboBox->currentText();
-         int commentKey =sql->addComment(text, "changeTT");
+          int commentKey =sql->addComment(text, "changeTT",QList<int>());
          RouteComments rc;
          rc.route = _rd.route();
          rc.commentKey = commentKey;

@@ -51,7 +51,6 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   connect(clearAct, &QAction::triggered, [=]{
    ui->editQuery->clear();
    ui->editQuery->setTextColor(Qt::black);
-
   });
 
   // ui->cbConnections->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -87,7 +86,8 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   connect(ui->widget_query_view, &QTabWidget::tabCloseRequested, this,[=](int tab){
       ui->widget_query_view->removeTab(tab);
   });
-
+  if(ui->widget_query_view->count() > 1)
+    ui->widget_query_view->removeTab(1);
   menuBar = new QMenuBar();
   layout()->setMenuBar(menuBar);
 

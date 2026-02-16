@@ -19,7 +19,8 @@ class RouteSelector : public QTableView
   QList<RouteName *> getList();
 
  signals:
-  void selections_changed(QModelIndexList added, QModelIndexList deleted);
+    void selections_changed(QModelIndexList added, QModelIndexList deleted);
+    void routeSelected(int route, int row);
 
  private:
   QMap<int, RouteName*>* list;
@@ -32,8 +33,8 @@ class RouteSelectorTableModel : public QAbstractTableModel
  Q_OBJECT
  public:
   RouteSelectorTableModel(QMap<int, RouteName *> *list, QObject *parent=0);
-  enum COLUMNS{ROUTEALPHA, ROUTEPREFIX, ROUTE, NAME};
-  void createList(QList<RouteData>*rdList, QDate dt, int companyKey);
+  enum COLUMNS{ROUTEALPHA, ROUTEPREFIX, ROUTE, NAME, COMPANYNAME, COMPANY};
+  void createList(QList<RouteData>*rdList, QDate dt);
   QString getRouteName(int route);
 
 
@@ -67,6 +68,10 @@ class RouteName : public QObject
   void setRoutePrefix(QString routePrefix){_routePrefix = routePrefix;}
   void setRouteAlpha(QString routeAlpha){_routeAlpha = routeAlpha;}
   void setRouteName(QString name) {_name = name;}
+  int companyKey() {return _companyKey;}
+  void setCompanyKey(int companyKey) {_companyKey = companyKey;}
+  QString companyName() {return _coName;}
+  void setCompanyName(QString name) {_coName = name;}
   bool equals(const RouteName& other)
   {
    if(_route == other._route || _routeAlpha == _routeAlpha)
@@ -76,8 +81,8 @@ class RouteName : public QObject
   QString getRouteName(int route);
 
  private:
-  int _route, _baseRoute;
-  QString _routePrefix, _routeAlpha, _name;
+  int _route, _baseRoute, _companyKey;
+  QString _routePrefix, _routeAlpha, _name,_coName;
 };
 
 #endif // ROUTESELECTOR_H

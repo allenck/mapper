@@ -397,7 +397,7 @@ void EditStation::btnEditText_Click()
     {
         if (_infoKey == -1)
         {
-            _infoKey = sql->addComment(commentsForm.HTML(), commentsForm.Tags());
+            _infoKey = sql->addComment(commentsForm.HTML(), commentsForm.Tags(), QList<int>());
             sql->updateStation(_stationKey, _infoKey);
         }
         else

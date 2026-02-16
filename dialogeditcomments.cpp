@@ -2,14 +2,44 @@
 #include "ui_dialogeditcomments.h"
 #include "sql.h"
 #include "mainwindow.h"
+#include <QModelIndexList>
 
 DialogEditComments::DialogEditComments(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::DialogEditComments)
 {
+    common();
+    setWindowTitle(tr("Edit comment"));
+    ui->label_5->setVisible(false);
+    ui->label_6->setVisible(false);
+    ui->txtRoute->setVisible(false);
+    ui->dateEdit->setVisible(false);
+}
+DialogEditComments::DialogEditComments(CommentInfo* ci, QWidget *parent)
+    : QDialog(parent)
+    , ui(new Ui::DialogEditComments)
+{
+    common();
+    setWindowTitle(tr("Add Route Comment"));
+    ui->tableView->setVisible(false);
+    ui->label_5->setVisible(true);
+    ui->label_6->setVisible(true);
+    ui->txtRoute->setVisible(true);
+    ui->dateEdit->setVisible(true);
+    ui->textEdit->setHtml(ci->comments);
+    ui->tags->setText(ci->tags);
+    info = ci;
+}
+
+void DialogEditComments::common()
+{
     ui->setupUi(this);
     config = Configuration::instance();
     ui->commentKey->setReadOnly(true);
+    routes = new QList<int>();
+    aRoutes = new QStringList();
+    _model = (RouteSelectorTableModel*)ui->tableView->model();
+
     connect(ui->htmlText, &QPlainTextEdit::textChanged, this, [=]{
         if(!textChangeing)
         {
@@ -44,6 +74,50 @@ DialogEditComments::DialogEditComments(QWidget *parent)
         ui->commentKey->setText(QString::number(info->commentKey));
         rcList = SQL::instance()->getRouteComments(info->commentKey);
     });
+    connect(ui->tableView, &RouteSelector::selections_changed,this, [=](QModelIndexList added, QModelIndexList deleted)
+    {
+     // for(QModelIndex deletedIndex : deleted)
+     // {
+     //  if(deletedIndex.isValid())
+     //  {
+     //   int deletedRow = deletedIndex.row();
+     //   RouteComments rc;
+     //   QList<RouteName*> routeNameList =  ui->tableView->getList();
+     //   rc.route = routeNameList.at(deletedRow)->route();
+     //   rc.date = ui->dateEdit->date();
+     //   sql->deleteRouteComment(rc);
+     //  }
+     // }
+     dRoutes = new QList<int>();
+     ui->lblInfo->clear();
+     for(QModelIndex deletedIndex : deleted)
+     {
+         if(deletedIndex.isValid())
+         {
+            if(deletedIndex.column()== RouteSelectorTableModel::ROUTE)
+            {
+                 dRoutes->append(deletedIndex.data().toInt());
+                ui->lblInfo->setText(QString("unselect %1").arg(deletedIndex.data().toInt()));
+            }
+         }
+     }
+
+     QItemSelectionModel* sm = ui->tableView->selectionModel();
+     modelIndexList = sm->selectedRows();
+     routes->clear();
+     aRoutes->clear();
+     QString txtRoutes;
+     foreach (QModelIndex ix, modelIndexList)
+     {
+         int selectedRoute = ix.data().toInt();
+         if(!routes->contains(selectedRoute))
+             routes->append(selectedRoute);
+         QModelIndex aix = _model->index(ix.row(), RouteSelectorTableModel::ROUTEALPHA);
+         aRoutes->append(aix.data().toString());
+         txtRoutes.append(aix.data().toString() + ",");
+     }
+     txtRoutes.chop(1);
+    });
 
     connect(ui->btnClose,&QPushButton::clicked, this, [=]{
         close();
@@ -51,6 +125,29 @@ DialogEditComments::DialogEditComments(QWidget *parent)
 
     connect(ui->btnSave,&QPushButton::clicked, this, [=]{  // ie Save
         info->comments = htmlText;
+        if(ui->label_5->isVisible())
+        {
+            RouteComments rc;
+            bool ok;
+            rc.route = ui->txtRoute->text().toInt(&ok);
+            rc.date = ui->dateEdit->date();
+            if(ok)
+            {
+                rc.commentKey= info->commentKey;
+                rc.ci.commentKey = info->commentKey;
+                rc.ci.comments = info->comments;
+                rc.ci.tags = info->tags;
+                rc.ci.routesUsed.append(rc.route);
+                if(!SQL::instance()->addRouteComment(rc))
+                {
+                    qDebug() << "add route comment failed!";
+                    ui->lblInfo->setText("addrouteComment failed");
+                    return;
+                }
+                accept();
+            }
+            reject();
+        }
     });
 
         ui->tags->clear();

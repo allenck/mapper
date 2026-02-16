@@ -177,12 +177,16 @@ public:
     QList<SegmentInfo> getSegmentsInOppositeDirection(SegmentInfo siIn);
     bool isRouteUsedOnDate(qint32 route, qint32 segmentId,  QString date);
     CommentInfo getComments(qint32 infoKey);
+    QList<CommentInfo>* getOrphanComments();
     QList<StationInfo> getStations(QString alphaRoute, QDate date);
+    QList<CommentInfo>* commentByText(QString htmlText);
+    QList<CommentInfo>* getComments();
     StationInfo getStationInfo(qint32 stationKey);
     QList<StationInfo> getStationsOnSegment(qint32 segmentId);
     StationInfo getStationInfo(QString name);
-    int addComment(QString comments, QString tags);
-    bool updateComment(qint32 infoKey, QString comments, QString tags = "");
+    int addComment(QString comments, QString tags, QList<int> routesUsed);
+    bool addRouteComment(RouteComments rc);
+    bool updateComment(qint32 infoKey, QString comments, QString tags = "", QList<int> table = QList<int>());
     bool deleteComment(qint32 infoKey);
     qint32 addStation(StationInfo sti);
     bool deleteStation(qint32 stationKey);
@@ -193,13 +197,14 @@ public:
     //QT_DEPRECATED int updateRouteDate(int segmentId, QString startDate, QString endDate);
     int updateRouteSegment(int segmentId, QString startDate, QString endDate, int newSegment);
     QDate getFirstCommentDate(qint32 route, QDate date, qint32 companyKey);
-    RouteComments getRouteComment(qint32 route, QDate date, qint32 companyKey);
+    RouteComments getRouteComment(qint32 route, QDate date, qint32 commentKey);
     QList<RouteComments*>getRouteComments(qint32 commentKey);
+    QList<RouteComments*> listRouteComments();
     bool updateRouteComment(RouteComments rc);
     int countCommentUsers(int commentKey);
     bool deleteRouteComment(RouteComments rc);
-    RouteComments getNextRouteComment(qint32 route, QDate date, qint32 companyKey);
-    RouteComments getPrevRouteComment(qint32 route, QDate date, qint32 companyKey);
+    RouteComments getNextRouteComment(qint32 route, QDate date, qint32 commentKey,qint32 companyKey);
+    RouteComments getPrevRouteComment(qint32 route, QDate date, qint32 commentKey, qint32 companyKey);
     CommentInfo getComment(qint32 commentKey, int pos);
 
     QStringList showDatabases(QString Connection, QString servertype);

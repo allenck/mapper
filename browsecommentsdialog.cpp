@@ -60,8 +60,8 @@ void BrowseCommentsDialog::getComment(int pos)
  ci = SQL::instance()->getComment(ci.commentKey, pos);
  ui->txtComments->setHtml(ci.comments);
  ui->txtKey->setText(tr("%1").arg(ci.commentKey));
- ui->txtUsedByS->setText(ci.usedByStations.join(","));
- ui->txtUsedByR->setText(ci.usedByRoutes.join(","));
+ //ui->txtUsedByS->setText(ci.usedByStations.join(","));
+ ui->txtUsedByRoutes->setText(ci.usedByRoutes.join(","));
 
 }
 

@@ -26,12 +26,17 @@ void RouteSelector::setSelections(QList<int> *sellist)
 {
  for(int route : *sellist)
  {
-  int row =0;
+  int row = 0;
 
   for(RouteName* item2 : list->values())
   {
    if(route==item2->route())
-    selectRow(row);
+   {
+       selectRow(row);
+       qDebug() << "select row:" << row << " route" << route;
+       emit routeSelected(route, row);
+       break;
+   }
    row++;
   }
  }
@@ -70,7 +75,7 @@ int RouteSelectorTableModel::rowCount(const QModelIndex &parent) const
 
 int RouteSelectorTableModel::columnCount(const QModelIndex &parent) const
 {
- return 4;
+ return 6;
 }
 
 QVariant RouteSelectorTableModel::data(const QModelIndex &index, int role) const
@@ -88,6 +93,10 @@ QVariant RouteSelectorTableModel::data(const QModelIndex &index, int role) const
    return routeName->routePrefix();
   case ROUTEALPHA:
    return routeName->routeAlpha();
+  case COMPANY:
+    return routeName->companyKey();
+  case COMPANYNAME:
+    return routeName->companyName();
   }
  }
  return QVariant();
@@ -107,6 +116,10 @@ QVariant RouteSelectorTableModel::headerData(int section, Qt::Orientation orient
     return tr("Prefix");
    case ROUTEALPHA:
     return tr("Alpha");
+   case COMPANY:
+    return tr("Company id");
+   case COMPANYNAME:
+    return tr("Company Name");
   }
  }
  return QVariant();
@@ -120,6 +133,9 @@ Qt::ItemFlags RouteSelectorTableModel::flags(const QModelIndex &index) const
   case ROUTEPREFIX:
   case ROUTE:
   case NAME:
+  case COMPANY:
+  case COMPANYNAME:
+  default:
   return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
  }
 }
@@ -139,13 +155,13 @@ bool RouteSelectorTableModel::setData(const QModelIndex &index, const QVariant &
  return false;
 }
 
-void RouteSelectorTableModel::createList(QList<RouteData>* rdList, QDate dt, int companyKey)
+void RouteSelectorTableModel::createList(QList<RouteData>* rdList, QDate dt)
 {
     beginResetModel();
     list->clear();
     foreach(RouteData rd, *rdList)
     {
-        if(dt >= rd.startDate() && dt <= rd.endDate() && rd.companyKey() == companyKey)
+        if(dt >= rd.startDate() && dt <= rd.endDate())
         {
             RouteName* rn = new RouteName();
             rn->setRoute(rd.route());
@@ -153,6 +169,8 @@ void RouteSelectorTableModel::createList(QList<RouteData>* rdList, QDate dt, int
             rn->setRoutePrefix(rd.routePrefix());
             rn->setRouteAlpha(rd.alphaRoute());
             rn->setBaseRoute(rd.baseRoute());
+            rn->setCompanyKey(rd.companyKey());
+            rn->setCompanyName(rd.companyName());
             list->insert(rd.route(), rn);
         }
     }

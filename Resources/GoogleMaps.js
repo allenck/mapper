@@ -2845,11 +2845,12 @@ function showRouteComment(bDisplay)
  return;
 }
 
-function displayRouteComment(latitude, longitude, HTMLText, route, date, companyKey)
+function displayRouteComment(latitude, longitude, HTMLText, commentKey, route, date, companyKey)
 {
  this.marker = null;
  if(infowindow !== null)
  {
+     infowindow.marker.setMap();
   infowindow.setMap();
   infowindow = null;
  }
@@ -2875,6 +2876,7 @@ function displayRouteComment(latitude, longitude, HTMLText, route, date, company
       alert("marker is null");
  //infowindow.setMap(map);
  infowindow.marker = this.marker;
+ infowindow.commentKey = commentKey;
  infowindow.route = route;
  infowindow.date = date;
  infowindow.lat = latitude;
@@ -2898,14 +2900,16 @@ function displayRouteComment(latitude, longitude, HTMLText, route, date, company
 function nextRouteComment()
 {
  infowindow.marker.setMap();
- webViewBridge.getInfoWindowComments(infowindow.lat, infowindow.lon, infowindow.route, infowindow.date, 1);
+ webViewBridge.getInfoWindowComments(infowindow.lat, infowindow.lon, infowindow.route, infowindow.date, infowindow.commentKey,
+                                     infowindow.companyKey, 1);
  return 0;
 }
 
 function prevRouteComment()
 {
  infowindow.marker.setMap();
- webViewBridge.getInfoWindowComments(infowindow.lat, infowindow.lon, infowindow.route, infowindow.date, -1);
+ webViewBridge.getInfoWindowComments(infowindow.lat, infowindow.lon, infowindow.route, infowindow.date, infowindow.commentKey,
+                                     infowindow.companyKey, -1);
 }
 
 function setDefaultOptions()

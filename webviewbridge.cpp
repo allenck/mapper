@@ -112,10 +112,9 @@ void WebViewBridge::selectSegmentX(qint32 i, qint32 SegmentId, QVariantList arra
 }
 
 // Display a route comment for date.
-void WebViewBridge::getInfoWindowComments(double lat, double lon, int route, QString date, int func)
+void WebViewBridge::getInfoWindowComments(double lat, double lon, int route, QString date, int commentKey, int companyKey, int func)
 {
-
- m_parent->getInfoWindowComments(lat, lon, route, date, func);
+ m_parent->getInfoWindowComments(lat, lon, route, date, commentKey, companyKey, func);
 }
 
 // receive result of function
@@ -334,10 +333,10 @@ void WebViewBridge::moveStationMarker(qint32 stationKey, qint32 segmentId, doubl
 
     m_parent->moveStationMarker(stationKey, segmentId, lat, lng);
 }
-void WebViewBridge::moveRouteComment(qint32 route, QString date, double lat, double lng, int companyKey)
+void WebViewBridge::moveRouteComment(qint32 route, QString date, double lat, double lng, int commentKey, int companyKey)
 {
 
-    m_parent->moveRouteComment(route, date, lat, lng, companyKey);
+    m_parent->moveRouteComment(route, date, lat, lng, commentKey, companyKey);
 }
 
 

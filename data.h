@@ -452,6 +452,8 @@ public:
     RouteType routeType() {return _routeType;}
     int routeId(){return _routeId;}
     bool operator==(const RouteData &o);
+    QString companyName() {return _coName;}
+    void setCompanyName(QString name) {_coName = name;}
 
  private:
     qint32 _route = -1;
@@ -460,6 +462,7 @@ public:
     QString _alphaRoute;
     QString _routePrefix;
     QString _name;
+    QString _coName;
     //QDate defaultDate;
     QDate _dateBegin;
     QDate _dateEnd;
@@ -560,6 +563,7 @@ class RouteInfo
  private:
         qint32	route=-1;
         QString routeName;
+        QString _companyName;
         qint32	tractionType;
         QList<SegmentData*> segmentDataList;
         double length;
@@ -847,9 +851,10 @@ public:
     QString tags;
     QString comments;
     QStringList usedByRoutes;
-    QStringList usedByStations;
     int routeCount;
-    int stationCount;
+    QList<int> routesUsed = QList<int>();
+    QList<int> toRoutesTable(QString routeList);
+    static QString routesTableToString(QList<int> table);
 };
 
 class RowChanged
@@ -895,8 +900,9 @@ public:
     CommentInfo ci;
     LatLng pos;
     qint32 companyKey=-1;
-    QString name;
+    QString routeName;
     QString routeAlpha;
+    QString companyName;
     RouteComments(){}
     ~RouteComments() {}
     RouteComments(const RouteComments&other);
