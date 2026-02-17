@@ -661,6 +661,8 @@ bool RouteCommentsDlg::processOrphan()
     bool rslt = false;
     ui->lblInfo->setStyleSheet("color: rgb(255, 170, 0)");
     ui->lblInfo->setText(tr("Scanning of orphan comments"));
+    ui->btnScan->setVisible(false);
+    ui->btnIgnore->setEnabled(true);
 
     for(ixOrphan = orphans->count()-1; ixOrphan >= 0; ixOrphan-- )
     {
@@ -707,6 +709,7 @@ bool RouteCommentsDlg::processOrphan()
         ui->txtTags->setText(info.tags);
         ui->txtCommentId->setText(QString::number(info.commentKey));
         ui->txtRoutesUsed->clear();
+        ui->dateEdit->setDate(QDate());
         _rc = RouteComments();
         _rc.route = -1;
         _rc.date = QDate();
@@ -758,16 +761,16 @@ bool RouteCommentsDlg::finishScan(int rslt)
         msgBox.setBaseSize(QSize(2000, 120));
         msgBox.setTextFormat(Qt::TextFormat::RichText);
         msgBox.setModal(true);
-        rtn = msgBox.exec();
+        int rs = msgBox.exec();
 
-        if(rtn == QMessageBox::Yes)
+        if(rs == QMessageBox::Yes)
         {
-            sql->commitTransaction("Scan");
+            sql->commitTransaction("scan");
             rtn = true;
         }
         else
         {
-            sql->rollbackTransaction("Scan");
+            sql->rollbackTransaction("scan");
             rtn = false;
         }
     }
@@ -775,7 +778,7 @@ bool RouteCommentsDlg::finishScan(int rslt)
     {
         QMessageBox::critical(nullptr, tr("Errors occured"), msg + "Results will be rolled back");
 
-        sql->rollbackTransaction("Scan");
+        sql->rollbackTransaction("scan");
         rtn = false;
     }
 
