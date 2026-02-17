@@ -2909,6 +2909,10 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
 {
  QDate dt = QDate::fromString(date, "yyyy/MM/dd");
  RouteComments rc;
+ RouteComments rcPrev;
+ RouteComments rcNext;
+ QString  sNext;
+ QString  sPrev;
  double latitude = lat;
  double longitude = lon;
 
@@ -2928,21 +2932,18 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
    rc = sql->getNextRouteComment(0, dt, commentKey, companyKey);
   }
  }
- QString  sNext = "<input type='button' name='next' value='>' onClick='nextRouteComment()'/>";
- QString      sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
-
+ rcNext = sql->getNextRouteComment(route, rc.date, rc.commentKey, -1);
+ rcPrev = sql->getPrevRouteComment(route, rc.date, rc.commentKey, -1);
 
  if(rc.route >= 0)
  {
   int i = rc.ci.comments.indexOf("</body>");
   if(i > 0)
   {
-   // RouteComments rcNext = sql->getNextRouteComment(route, rc.date, rc.commentKey,-1);
-
-   // if(rcNext.commentKey>=0)
-   // RouteComments rcPrev = sql->getPrevRouteComment(route, rc.date, rc.commentKey, -1);
-   // if(rcPrev.commentKey >= 0)
-   //   sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
+    if(rcNext.commentKey>=0)
+        sNext = "<input type='button' name='next' value='>' onClick='nextRouteComment()'/>";
+    if(rcPrev.commentKey >= 0)
+        sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
    rc.ci.comments.insert(i,sPrev+sNext);
   }
   QVariantList objArray;
