@@ -2866,8 +2866,16 @@ void MainWindow::displayRouteComment(RouteComments rc)
   {
    rc = sql->getNextRouteComment(0, rc.date, rc.commentKey,-1);
   }
-
  }
+ QString  sNext;
+ QString  sPrev;
+
+ RouteComments rcNext = sql->getNextRouteComment(rc.route, rc.date, rc.commentKey, -1);
+ if(rcNext.commentKey > 0)
+     sNext = "<input type='button' name='next' value='>' onClick='nextRouteComment()'/>";
+ RouteComments rcPrev = sql->getPrevRouteComment(rc.route, rc.date, rc.commentKey, -1);
+ if(rcPrev.commentKey >0)
+      sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
  if(rc.pos.lat() && rc.pos.lon())
  {
   infoLat = rc.pos.lat();
@@ -2886,7 +2894,7 @@ void MainWindow::displayRouteComment(RouteComments rc)
   // add next and prev buttons
   if(i > 0)
   {
-   rc.ci.comments.insert(i,"<input type='button' name='prev' value='<' onClick='prevRouteComment()'/><input type='button' name='next' value='>' onClick='nextRouteComment()'/>");
+   rc.ci.comments.insert(i,sPrev+sNext);
   }
   int ix = rc.ci.comments.indexOf("text-indent:0px;\">");
   // add Route name and date
@@ -2923,6 +2931,8 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
   {
    rc = sql->getPrevRouteComment(0, dt, commentKey, companyKey);
   }
+  if(rcPrev.commentKey >= 0)
+      sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
  }
  else
  {
@@ -2931,6 +2941,8 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
   {
    rc = sql->getNextRouteComment(0, dt, commentKey, companyKey);
   }
+  if(rcNext.commentKey >= 0)
+      sNext = "<input type='button' name='next' value='>' onClick='nextRouteComment()'/>";
  }
  rcNext = sql->getNextRouteComment(route, rc.date, rc.commentKey, -1);
  rcPrev = sql->getPrevRouteComment(route, rc.date, rc.commentKey, -1);
@@ -2940,10 +2952,6 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
   int i = rc.ci.comments.indexOf("</body>");
   if(i > 0)
   {
-    if(rcNext.commentKey>=0)
-        sNext = "<input type='button' name='next' value='>' onClick='nextRouteComment()'/>";
-    if(rcPrev.commentKey >= 0)
-        sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
    rc.ci.comments.insert(i,sPrev+sNext);
   }
   QVariantList objArray;

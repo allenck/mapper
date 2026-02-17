@@ -8476,6 +8476,56 @@ QList<RouteComments*> SQL::listRouteComments()
     return list;
 }
 
+// get list of all RouteComments
+QList<RouteComments*> SQL::listInvalidRouteComments()
+{
+    QString up = QString::fromUtf8("▲");
+    QString down = QString::fromUtf8("▼");
+    QList<RouteComments*> list;
+    try
+    {
+        if(!dbOpen())
+            throw Exception(tr("database not open: %1").arg(__LINE__));
+        QSqlDatabase db = QSqlDatabase::database();
+
+        QString commandText = "select route, date, commentKey,  companyKey, latitude, longitude "
+                              "from RouteComments where commentKey not in (select c.commentKey from comments c)";
+
+        QSqlQuery query = QSqlQuery(db);
+        bool bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
+        }
+
+        if (!query.isActive())
+        {
+            return list;
+        }
+        while (query.next())
+        {
+            RouteComments* rc = new RouteComments();
+
+            rc->route = query.value(0).toInt();
+            rc->date = query.value(1).toDate();
+            rc->commentKey = query.value(2).toInt();
+            rc->companyKey = query.value(3).toInt();
+            rc->pos = LatLng(query.value(4).toDouble(), query.value(5).toDouble());
+
+            list.append(rc);
+        }
+    }
+    catch (Exception e)
+    {
+        myExceptionHandler(e);
+    }
+    return list;
+}
+
 bool SQL::updateRouteComment(RouteComments rc)
 {
     bool ret = false;
@@ -8697,7 +8747,7 @@ bool SQL::deleteRouteComment(RouteComments rc)
         QSqlDatabase db = QSqlDatabase::database();
         QSqlQuery query = QSqlQuery(db);
 
-        beginTransaction("deleteRouteComment");
+        //beginTransaction("deleteRouteComment");
 
         commandText = QString("delete from RouteComments where route = %1 and date = '%2' and commentKey = %3")
                 .arg(rc.route).arg(rc.date.toString("yyyy/MM/dd")).arg(rc.commentKey);
@@ -8712,12 +8762,12 @@ bool SQL::deleteRouteComment(RouteComments rc)
         }
         ret = true;
 
-        int count = countCommentUsers(rc.ci.commentKey);
+        int count = countCommentUsers(rc.commentKey);
         if(count ==0)
         {
          if(deleteComment(rc.ci.commentKey))
          {
-          commitTransaction("deleteRouteComment");
+          //commitTransaction("deleteRouteComment");
           ret = true;
          }
         }
@@ -8731,7 +8781,7 @@ bool SQL::deleteRouteComment(RouteComments rc)
    {
        myExceptionHandler(e);
    }
-    rollbackTransaction("deleteRouteComment");
+    //rollbackTransaction("deleteRouteComment");
    return ret;
 }
 

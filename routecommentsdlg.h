@@ -49,13 +49,14 @@ private:
     int invalidRoutes = 0 ;
     int routesDeleted = 0;
     int linksFixed =0;
+    int invalidRouteComments = 0;
 
     bool bIsDirty = false;
     bool bDateChanged = false;
     bool bRouteChanged = false;
     bool bTagsChanged = false;
     QString scanLog;
-    void outputChanges();
+    bool outputChanges();
     bool readRouteComment(int pos);
     void setDirty(bool = true);
     bool bScanInProgress = false;

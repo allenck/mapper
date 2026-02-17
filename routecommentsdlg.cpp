@@ -195,7 +195,12 @@ void RouteCommentsDlg::btnOK_Clicked()
 
 void RouteCommentsDlg::OnBtnApply_clicked()
 {
-    outputChanges();
+    if(!outputChanges())
+    {
+        ui->lblInfo->setStyleSheet("color: red");
+        ui->lblInfo->setText(tr("add failed"));
+        return;
+    }
 
     if(bScanInProgress)
     {
@@ -346,12 +351,12 @@ void RouteCommentsDlg::OnDateLeave()
 //  bRouteChanged = true;
 //}
 
-void RouteCommentsDlg::outputChanges()
+bool RouteCommentsDlg::outputChanges()
 {
     if(routes->isEmpty())
     {
         QMessageBox::warning(this, tr("No Route"), tr("No routes are selected. Please select one or more."));
-        return;
+        return false;
     }
 
  if(bIsDirty)
@@ -364,7 +369,7 @@ void RouteCommentsDlg::outputChanges()
   //qDebug()<< _rc.ci.comments;
   if(!sql->updateRouteComment( _rc))
   {
-
+      return false;
   }
 
 
@@ -380,6 +385,7 @@ void RouteCommentsDlg::outputChanges()
 //  }
   setDirty(false);
  }
+ return true;
 }
 
 //void RouteCommentsDlg::OnRouteLeave()
@@ -486,12 +492,40 @@ void RouteCommentsDlg::scan()
     invalidRoutes = 0 ;
     routesDeleted = 0;
     htmlCorrected = 0;
+    invalidRouteComments = 0;
     scanLog.clear();
     ui->lblInfo->setText(tr("Begin scan"));
 
+    if(sql->isTransactionActive())
+    {
+        int r = QMessageBox::question(this, tr("Uncommitted changes"), tr("There are uncommited changes. "
+                                                                          "Click Yes to commit them, No to roll them back"
+                                                                          " or cancel to do nothing"), QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
+        switch (r) {
+        case QMessageBox::Yes:
+            sql->commitTransaction("");
+            break;
+        case QMessageBox::No:
+            sql->rollbackTransaction("");
+            break;
+        default:
+            return;
+        }
+    }
+    sql->beginTransaction("scan");
+
+    // Get a list of all RouteComments referencing invalid Comments
+    QList<RouteComments*> invalid = sql->listInvalidRouteComments();
+    foreach(RouteComments* rc, invalid)
+    {
+        if(sql->deleteRouteComment(*rc))
+        {
+            scanLog.append(tr("Delete invalid RouteComments route=%1 date=%2 referencing commentKey=%3").arg(rc->route).arg(rc->date.toString("yyyy/MM/dd").arg(rc->commentKey)));
+            invalidRouteComments++;
+        }
+    }
 
     QList<RouteComments*> list = sql->listRouteComments();
-    sql->beginTransaction("scan");
     scanResult = true;
     foreach(RouteComments* rc, list)
     {
@@ -625,6 +659,7 @@ void RouteCommentsDlg::scan()
 bool RouteCommentsDlg::processOrphan()
 {
     bool rslt = false;
+    ui->lblInfo->setStyleSheet("color: rgb(255, 170, 0)");
     ui->lblInfo->setText(tr("Scanning of orphan comments"));
 
     for(ixOrphan = orphans->count()-1; ixOrphan >= 0; ixOrphan-- )
@@ -684,6 +719,7 @@ bool RouteCommentsDlg::processOrphan()
         enableButtons();
         setDirty(false);
 
+        ui->lblInfo->setStyleSheet("color: rgb(255, 170, 0)");
         ui->lblInfo->setText(tr("Click Apply to add comment %1 to route or Ignore to process next orphan").arg(info.commentKey));
         return rslt;
     }
@@ -704,9 +740,11 @@ bool RouteCommentsDlg::finishScan(int rslt)
                           "routesDeleted: %7<br>\n"
                           "htmlCorrected:%8<br>\n"
                           "linksFixed:%9<br>\n"
+                          "invalidRouteCommentsDeleted: %10\n"
                           "*****************************************************************<br>\n")
                       .arg(commentsUpdated).arg(commentsDeleted).arg(routeCommentsDeleted)
-                      .arg(routeCommentsAdded).arg(invalidDates).arg(invalidRoutes).arg(routesDeleted).arg(htmlCorrected).arg(linksFixed);
+                      .arg(routeCommentsAdded).arg(invalidDates).arg(invalidRoutes).arg(routesDeleted).arg(htmlCorrected)
+                      .arg(linksFixed).arg(invalidRouteComments);
     if(rslt)
     {
         //int rtn = QMessageBox::question(this, tr("Commit changes"),msg + "Do you wish to commit changes?",QMessageBox::Yes | QMessageBox::No);

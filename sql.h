@@ -200,6 +200,7 @@ public:
     RouteComments getRouteComment(qint32 route, QDate date, qint32 commentKey);
     QList<RouteComments*>getRouteComments(qint32 commentKey);
     QList<RouteComments*> listRouteComments();
+    QList<RouteComments*> listInvalidRouteComments();
     bool updateRouteComment(RouteComments rc);
     int countCommentUsers(int commentKey);
     bool deleteRouteComment(RouteComments rc);
