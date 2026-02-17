@@ -205,6 +205,7 @@ void RouteCommentsDlg::OnBtnApply_clicked()
     if(bScanInProgress)
     {
         orphans->removeAt(ixOrphan);
+        orphansUsed++;
         if(orphans->count())
         {
             processOrphan();
@@ -254,6 +255,7 @@ void RouteCommentsDlg::btnDelete_Clicked()
             return;
         }
         orphans->removeAt(ixOrphan);
+        orphansDeleted++;
         if(orphans->count())
         {
             processOrphan();
@@ -493,6 +495,10 @@ void RouteCommentsDlg::scan()
     routesDeleted = 0;
     htmlCorrected = 0;
     invalidRouteComments = 0;
+    orphansDeleted = 0;
+    orphansUsed = 0;
+    dup_emptyOrphans =0;
+
     scanLog.clear();
     ui->lblInfo->setText(tr("Begin scan"));
 
@@ -650,8 +656,48 @@ void RouteCommentsDlg::scan()
 
     //QList<CommentInfo>* comments = \sql->getComments();
     orphans = sql->getOrphanComments();
+    dup_emptyOrphans =0;
     if(orphans->isEmpty())
         finishScan(scanResult);
+    // remove any empty or duplicate comments
+    for(int ix = orphans->count()-1; ix>=0; ix --)
+    {
+        CommentInfo info = orphans->at(ix);
+        if(info.comments.isEmpty())
+        {
+            if(sql->deleteComment(info.commentKey))
+            {
+                qDebug() << QString("delete %1 failed").arg(info.commentKey);
+                continue;
+            }
+            orphans->removeLast();
+            dup_emptyOrphans++;
+            continue;
+        }
+        QTextEdit* edit = new QTextEdit(this);
+        edit->setHtml(info.comments);
+        if(ix >=1)
+        {
+            for(int i = ix-1; i >=0; i--)
+            {
+                CommentInfo info2 = orphans->at(i);
+                QTextEdit* edit2 = new QTextEdit();
+                edit2->setHtml(info2.comments);
+                if(edit->toPlainText() == edit2->toPlainText())
+                {
+                    if(sql->deleteComment(info.commentKey))
+                    {
+                        qDebug() << QString("delete %1 failed").arg(info.commentKey);
+                        continue;
+                    }
+                    orphans->removeLast();
+                    dup_emptyOrphans++;
+                    continue;
+                }
+            }
+        }
+        continue;
+    }
     processOrphan();
     return;
 }
@@ -743,11 +789,14 @@ bool RouteCommentsDlg::finishScan(int rslt)
                           "routesDeleted: %7<br>\n"
                           "htmlCorrected:%8<br>\n"
                           "linksFixed:%9<br>\n"
-                          "invalidRouteCommentsDeleted: %10\n"
+                          "invalidRouteCommentsDeleted:%10<br>\n"
+                          "orphansDeleted:%11<br>\n"
+                          "orphansUsed:%12<br>\n"
+                          "dup_emptyOrphans:%13<br>\n"
                           "*****************************************************************<br>\n")
                       .arg(commentsUpdated).arg(commentsDeleted).arg(routeCommentsDeleted)
                       .arg(routeCommentsAdded).arg(invalidDates).arg(invalidRoutes).arg(routesDeleted).arg(htmlCorrected)
-                      .arg(linksFixed).arg(invalidRouteComments);
+                      .arg(linksFixed).arg(invalidRouteComments).arg(orphansDeleted).arg(orphansUsed).arg(dup_emptyOrphans);
     if(rslt)
     {
         //int rtn = QMessageBox::question(this, tr("Commit changes"),msg + "Do you wish to commit changes?",QMessageBox::Yes | QMessageBox::No);

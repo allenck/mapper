@@ -50,6 +50,9 @@ private:
     int routesDeleted = 0;
     int linksFixed =0;
     int invalidRouteComments = 0;
+    int orphansDeleted = 0;
+    int orphansUsed = 0;
+    int dup_emptyOrphans =0;
 
     bool bIsDirty = false;
     bool bDateChanged = false;

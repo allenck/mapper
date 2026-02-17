@@ -8085,6 +8085,12 @@ int SQL::addComment(QString comments, QString tags, QList<int> routesUsed)
     QString up = QString::fromUtf8("▲");
     QString down = QString::fromUtf8("▼");
 //#endif
+    if(comments.isEmpty())
+        return false;
+    QTextEdit edit;
+    edit.setHtml(comments);
+    if(edit.toPlainText().isEmpty())
+            return false;
 
     try
     {
@@ -8158,6 +8164,12 @@ bool SQL::updateComment(qint32 infoKey, QString comments, QString tags, QList<in
     QString up = QString::fromUtf8("▲");
     QString down = QString::fromUtf8("▼");
 //#endif
+    if(comments.isEmpty())
+        return false;
+    QTextEdit edit;
+    edit.setHtml(comments);
+    if(edit.toPlainText().isEmpty())
+            return false;
 
     int rows = 0;
     bool rtn = false;
@@ -12638,6 +12650,11 @@ bool SQL::updateComment(CommentInfo info)
         qDebug() << "Error: commentkey invalid or routesUsed empty or comments empty";
         return false;
     }
+    QTextEdit edit;
+    edit.setHtml(info.comments);
+    if(edit.toPlainText().isEmpty())
+            return false;
+
     QSqlDatabase db = QSqlDatabase::database();
     if(!dbOpen())
         throw Exception(tr("database not open: %1").arg(__LINE__));
