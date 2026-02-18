@@ -849,7 +849,8 @@ bool RouteCommentsDlg::finishScan(int rslt)
     htmlCorrected=0;
     linksFixed = 0;
     ixOrphan=-1;
-    orphans->clear();
+    if(orphans)
+        orphans->clear();
     return rtn;
 }
 
@@ -868,4 +869,16 @@ void RouteCommentsDlg::enableButtons()
 
 
     }
+}
+
+void RouteCommentsDlg::closeEvent(QCloseEvent *e)
+{
+    if(bScanInProgress)
+    {
+        finishScan(scanResult);
+        return;
+    }
+    this->reject();
+    this->close();
+
 }

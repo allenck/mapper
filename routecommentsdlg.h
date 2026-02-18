@@ -67,6 +67,7 @@ private:
     bool finishScan(int rslt);
     bool scanResult = false;
     void enableButtons();
+    void closeEvent(QCloseEvent *e) override;
 
 private slots:
     void btnOK_Clicked();
