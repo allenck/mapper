@@ -331,8 +331,10 @@ void RouteCommentsDlg::OnDateLeave()
      return;
  if(bIsDirty && !ui->txtComments->toPlainText().isEmpty())
     outputChanges();
-
+ if(date.isValid() && date.year()>=1800)
+     ui->dateEdit->setStyleSheet("color: black");
  _rc.date = date;
+ setDirty(true);
  QList<RouteData> list = sql->getRoutesByEndDate(0);
  ((RouteSelectorTableModel*)ui->tableView->model())->createList(&list,_rc.date);
  bDateChanged = false;
@@ -486,6 +488,7 @@ void RouteCommentsDlg::scan()
     ui->btnOK->setVisible(false);
     ui->btnIgnore->setVisible(true);
     ui->btnIgnore->setEnabled(false);
+    ui->btnCancel->setText(tr("Finish"));
     commentsUpdated = 0;
     commentsDeleted = 0;
     routeCommentsDeleted = 0;
@@ -500,7 +503,7 @@ void RouteCommentsDlg::scan()
     dup_emptyOrphans =0;
 
     scanLog.clear();
-    ui->lblInfo->setText(tr("Begin scan"));
+    ui->lblInfo->setText(tr("Begin scan<br>"));
 
     if(sql->isTransactionActive())
     {
@@ -715,6 +718,7 @@ bool RouteCommentsDlg::processOrphan()
         CommentInfo info = orphans->at(ixOrphan);
         QTextEdit* edit = new QTextEdit();
         edit->setHtml(info.comments);
+        setDirty(true);
         if(edit->toPlainText().isEmpty())
         {
             if(!sql->deleteComment(info.commentKey))
@@ -755,7 +759,8 @@ bool RouteCommentsDlg::processOrphan()
         ui->txtTags->setText(info.tags);
         ui->txtCommentId->setText(QString::number(info.commentKey));
         ui->txtRoutesUsed->clear();
-        ui->dateEdit->setDate(QDate());
+        ui->dateEdit->setDate(QDate::fromString("1799/12/31","yyyy/MM/dd"));
+        ui->dateEdit->setStyleSheet("color: red");
         _rc = RouteComments();
         _rc.route = -1;
         _rc.date = QDate();
@@ -837,6 +842,8 @@ bool RouteCommentsDlg::finishScan(int rslt)
     ui->btnOK->setVisible(true);
     ui->btnIgnore->setVisible(false);
     ui->btnIgnore->setEnabled(false);
+    ui->btnScan->setVisible(true);
+    ui->btnCancel->setText(tr("Cancel"));
     ui->txtComments->clear();
     ui->txtTags->clear();
     commentsUpdated = 0;

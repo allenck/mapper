@@ -8572,10 +8572,12 @@ bool SQL::updateRouteComment(RouteComments rc)
                 QSqlError error = query.lastError();
                 SQLERROR(std::move(query));
                 //throw SQLException(error.text() + " " + errCommand);
-                rollbackTransaction("updaterouteComment");
+                if(currentTransaction == "updaterouteComment")
+                    rollbackTransaction("updaterouteComment");
                 return false;
             }
-            commitTransaction("updaterouteComment");
+            if(currentTransaction == "updaterouteComment")
+                commitTransaction("updaterouteComment");
             ret = true;
         }
         else    // insert or update
@@ -8596,10 +8598,11 @@ bool SQL::updateRouteComment(RouteComments rc)
                     QSqlError error = query.lastError();
                     SQLERROR(std::move(query));
                     //throw SQLException(error.text() + " " + errCommand);
-                    rollbackTransaction("updaterouteComment");
+                    if(currentTransaction == "updaterouteComment")
+                        rollbackTransaction("updaterouteComment");
                     return false;
                 }
-                if(!isTransactionActive())
+                if(currentTransaction == "updaterouteComment")
                     commitTransaction("updaterouteComment");
                 return true;
 
@@ -8618,14 +8621,15 @@ bool SQL::updateRouteComment(RouteComments rc)
                 QSqlError error = query.lastError();
                 SQLERROR(std::move(query));
                 throw SQLException(error.text() + " " + errCommand);
-                rollbackTransaction("updaterouteComment");
+                if(currentTransaction == "updaterouteComment")
+                    rollbackTransaction("updaterouteComment");
                 return false;
             }
 
             ret = updateComment(rc.ci.commentKey, rc.ci.comments, rc.ci.tags);
-            if(!isTransactionActive())
+            if(currentTransaction == "updaterouteComment")
             {
-                if(ret)
+                if(ret )
                     commitTransaction("updaterouteComment");
                 else
                     rollbackTransaction("updaterouteComment");
