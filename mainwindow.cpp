@@ -2008,6 +2008,7 @@ void MainWindow::newCity(QAction* act )
     config->currentCityId = city->id;
     config->currCity->curConnectionId =connection->id();
     config->currConnection = connection;
+    m_bridge->processScript("showRouteComment", "false");
 
     qInfo() << city->name() + "/" + connection->description();
     // close the current database and open the new one
