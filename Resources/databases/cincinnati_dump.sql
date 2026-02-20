@@ -5,7 +5,7 @@ INSERT INTO TractionTypes VALUES(1,'Electric','#FF0000',0,'','2016-03-01 02:11:0
 INSERT INTO TractionTypes VALUES(2,'Horse/Mule','#61380b',0,'','2016-03-01 02:11:08');
 INSERT INTO TractionTypes VALUES(3,'Cable','#000080',0,'','2016-03-08');
 CREATE TABLE `Companies` (  `key` integer NOT NULL primary key AUTOINCREMENT,  `Description` varchar(50) NOT NULL,  `startDate` date DEFAULT NULL,  `endDate` date DEFAULT NULL,  `firstRoute` int(11) DEFAULT NULL,  `lastRoute` int(11) DEFAULT NULL,  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, 'routePrefix' 'varchar(10)', 'info' varchar(50), 'Mnemonic' varchar(10) NOT NULL default '', 'Url' varchar(100) NOT NULL default '', 'selected' int);
-INSERT INTO Companies VALUES(1,'Cincinnati Street Railway','1856/01/01','2050/12/31',1,1000,'2024-02-09T23:55:25.990Z',NULL,'','','',NULL);
+INSERT INTO Companies VALUES(1,'Cincinnati Street Railway','1856/01/01','2050/12/31',1,1000,'2024-02-09T23:55:25.990Z','','','','',NULL);
 INSERT INTO Companies VALUES(3,'Cincinnati, Newport & Covington (Green Line)','1899/01/01','1950/07/01',1,108,'2016-03-22T15:49:20Z','CNC','','','',NULL);
 INSERT INTO Companies VALUES(4,'Mt Adams & Eden Park Railway','1885/07/08','1950/12/31',1,53,'2025-07-23 16:17:15','MAEP','','','',NULL);
 INSERT INTO Companies VALUES(5,'Vine Street Cable Railway','1890/01/01','1950/12/31',0,0,'2025-07-07 20:36:16','VSCR','','VSCR','https://www.cable-car-guy.com/html/ccohio.html#vscr',0);
@@ -14,7 +14,6 @@ INSERT INTO Companies VALUES(7,'Cincinnati & Lake Erie','1930/01/01','1939/12/31
 INSERT INTO Companies VALUES(8,'Ohio Electric','1900/01/01','1921/12/31',110,110,'2025-01-23T23:53:37.699Z','OE','','','',NULL);
 INSERT INTO Companies VALUES(9,'Cincinnati, Hamilton & Dayton Railway','1926/01/01','1929/12/31',110,110,'2025-01-23T23:53:37.773Z','CHD','','','',NULL);
 INSERT INTO Companies VALUES(10,'Cincinnati Streetcar','2016/01/01','2050/12/31',112,112,'2018-08-08T18:58:58.625','CS','','','',NULL);
-CREATE TABLE `Comments` (  `commentKey` integer NOT NULL primary key AUTOINCREMENT,  `tags` varchar(1000) NOT NULL,  `comments` mediumtext NOT NULL,  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE `Intersections` (  `key` integer NOT NULL primary key AUTOINCREMENT,  `Street1` varchar(50) NOT NULL,  `Street2` varchar(50) NOT NULL,  `Latitude` decimal(15,13) NOT NULL,  `Longitude` decimal(15,13) NOT NULL,  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE `LineSegment` (  `Key` integer NOT NULL primary key AUTOINCREMENT,  `StartLat` decimal(15,13) NOT NULL,  `StartLon` decimal(15,13) NOT NULL,  `EndLat` decimal(15,13) NOT NULL,  `EndLon` decimal(15,13) NOT NULL,  `StreetName` varchar(50) NOT NULL,  `SegmentId` int(11) NOT NULL,  `Sequence` int(11) NOT NULL,  `Length` decimal(15,5) NOT NULL DEFAULT '0.00000',  `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,  constraint  `segment_sequence` UNIQUE (`SegmentId`,`Sequence`),  CONSTRAINT `LineSegment_ibfk_1` FOREIGN KEY (`SegmentId`) REFERENCES `Segments` (`SegmentId`));
 INSERT INTO LineSegment VALUES(1,0,0,0,0,'??',1,0,0,'2016-03-01 02:59:16');
@@ -189,7 +188,6 @@ INSERT INTO altRoute VALUES(109,'CLE','C&LE',109,'2016-03-21 23:05:54');
 INSERT INTO altRoute VALUES(110,'OE','C&LE',110,'2016-03-22 03:13:49');
 INSERT INTO altRoute VALUES(111,'','01',111,'2018-08-08 16:20:08');
 INSERT INTO altRoute VALUES(112,'CS','01',112,'2018-08-08 16:22:58');
-CREATE TABLE `RouteComments` (          `route` int(6) NOT NULL,          `date` date NOT NULL,          `commentKey` int(11) NOT NULL,          `companyKey` int(11) NOT NULL,          `latitude` decimal(15,5) NOT NULL DEFAULT '0.00000',          `longitude` decimal(15,5) NOT NULL DEFAULT '0.00000',          `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,          constraint pk PRIMARY KEY (`route`,`date`),          CONSTRAINT `RouteComments_ibfk_1` FOREIGN KEY (commentKey) REFERENCES Comments(commentKey) ON DELETE RESTRICT);
 CREATE TABLE `RouteSeq` ( `Route` int(11) NOT NULL, `Name` varchar(125) NOT NULL, `StartDate` date NOT NULL,  `EndDate` date NOT NULL,  `segmentList` text, `firstSegment` int(11) NOT NULL, `whichEnd` text, `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,  constraint pk PRIMARY key (`Route`,`Name`,`StartDate`,`EndDate`));
 INSERT INTO RouteSeq VALUES(101,'Chapel St','1912/05/08','1924/12/31','11,F,12,F,52,F,53,F,17,F,18,F,19,F,8,F,178,F,21,F,22,F,28,F,23,F,24,F,181,F,25,F,19,R,18,R,17,R,53,R,52,R,361,F,200,F',11,'S','2023-11-05 03:47:58');
 INSERT INTO RouteSeq VALUES(103,'Fort Mitchell','1900/01/01','1950/06/30','97,R,382,R,383,F,384,R,385,R,380,R,379,R,380,F,385,F,384,F,383,R,382,F,97,R,382,R,383,F,384,R,385,R,380,R,379,R,380,F,385,F,384,F,383,R,382,F',97,'S','2023-11-05 03:58:43');
@@ -1749,6 +1747,8 @@ INSERT INTO Routes VALUES(1,10,'1885/08/07','1886/10/08',106,' ',' ',4,3,'NE-SW'
 INSERT INTO Routes VALUES(1,10,'1885/08/07','1886/10/08',296,' ',' ',4,3,'NE-SW',-1,-1,0,0,0,0,-1,-1,-1,-1,'2025-07-23 16:16:57');
 INSERT INTO Routes VALUES(1,10,'1885/08/07','1886/10/08',19,' ',' ',4,3,'N-S',-1,-1,0,0,0,0,-1,-1,-1,-1,'2025-07-23 16:17:03');
 INSERT INTO Routes VALUES(1,10,'1885/08/07','1886/10/08',46,' ',' ',4,3,'NE-SW',-1,-1,0,0,0,0,-1,-1,-1,-1,'2025-07-23 16:17:15');
+CREATE TABLE `Comments` (	`commentKey` int(11) NOT NULL PRIMARY KEY,	`tags`  varchar(1000) NOT NULL,	`routeList` varchar(100) NOT NULL,	`comments` mediumtex NOT NULL,	lastUpdate timestamp  NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE `RouteComments` (           `route` int(6) NOT NULL,           `date` date NOT NULL,           `commentKey` int(11) NOT NULL,           `companyKey` int(11) NOT NULL,           `latitude` decimal(15,5) NOT NULL DEFAULT '0.00000',           `longitude` decimal(15,5) NOT NULL DEFAULT '0.00000',           `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,           constraint pk PRIMARY KEY (`route`,`date`,`commentKey`),           CONSTRAINT `RouteComments_ibfk_1` FOREIGN KEY (commentKey) REFERENCES Comments(commentKey) ON DELETE CASCADE);
 INSERT INTO sqlite_sequence VALUES('Companies',11);
 INSERT INTO sqlite_sequence VALUES('TractionTypes',4);
 INSERT INTO sqlite_sequence VALUES('LineSegment',104);
