@@ -578,19 +578,17 @@ void RouteCommentsDlg::scan()
         QString text = ui->txtComments->toPlainText();
         if(text.isEmpty())
         {
-            if(!sql->deleteComment(rc->ci.commentKey))
+            RouteComments rc1 = sql->getRouteComment(rc->route,rc->date, rc->commentKey);
+            if(rc1.commentKey < 1)
+                continue; // already deleted!
+            if(!sql->deleteRouteCommenUsingCommentKey(rc->ci.commentKey))
             {
                 scanLog.append(QString("- Error: delete commentKey %1 failed\n").arg(rc->ci.commentKey));
-                    scanResult = false;
-                break;
-            }
-            if(!sql->deleteRouteComment(*rc))
-            {
-                scanLog.append(QString("- Error: delete routeComment  %1 %2 failed\n").arg(rc->route).arg(rc->date.toString()));
-                    scanResult = false;
+                scanResult = false;
                 break;
             }
             scanLog.append(QString("- delete comment %1 html is empty route: %2 date: %3\n").arg(rc->ci.commentKey).arg(routeAlpha).arg(rc->date.toString()));
+            routeCommentsDeleted++;
             commentsDeleted++;
             routesDeleted++;
             continue;
@@ -635,7 +633,7 @@ void RouteCommentsDlg::scan()
             if(!sql->updateComment(rc->ci))
             {
                scanLog.append(QString("- Error: update commentKey %1 failed\n").arg(rc->ci.commentKey));
-                    scanResult = false;
+                scanResult = false;
                 break;
             }
             commentsUpdated++;
@@ -698,6 +696,7 @@ void RouteCommentsDlg::scan()
                     continue;
                 }
             }
+            break;
         }
         continue;
     }

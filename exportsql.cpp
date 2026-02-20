@@ -3603,7 +3603,9 @@ bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
                 "`latitude` decimal(15,5) NOT NULL DEFAULT '0.00000',"
                 "`longitude` decimal(15,5) NOT NULL DEFAULT '0.00000',"
                 "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,  "
-                "constraint pk PRIMARY KEY (`route`,`date`, `commentKey`))";
+                "constraint pk PRIMARY KEY (`route`,`date`, `commentKey`)) "
+                "CONSTRAINT `RouteComments_ibfk_1` FOREIGN KEY (commentKey) REFERENCES Comments(commentKey) ON DELETE CASCADE)";
+
  else  if(dbType == "PostgreSQL")
      commandText = "CREATE TABLE RouteComments (\
     route integer NOT NULL,\

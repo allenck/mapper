@@ -12,7 +12,7 @@ CREATE TABLE if not exists `RouteComments` (
           `longitude` decimal(15,5) NOT NULL DEFAULT '0.00000',
           `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
           constraint pk PRIMARY KEY (`route`,`date`,`commentKey`),
-          CONSTRAINT `RouteComments_ibfk_1` FOREIGN KEY (commentKey) REFERENCES Comments(commentKey) ON DELETE RESTRICT);
+          CONSTRAINT `RouteComments_ibfk_1` FOREIGN KEY (commentKey) REFERENCES Comments(commentKey) ON DELETE CASCADE);
 
 INSERT INTO `RouteComments` (`route`, `date`, `commentKey`, `CompanyKey`, lastUpdate)
        select `route`, `date`, `commentKey`, `CompanyKey`, lastUpdate FROM `t_routeComments`;
