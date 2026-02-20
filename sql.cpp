@@ -8790,7 +8790,7 @@ bool SQL::deleteRouteComment(RouteComments rc)
         else
         {
          qDebug() << count  << " route comments still use this comment commentKey = " << rc.ci.commentKey;
-         ret = false;
+         ret = true;
         }
    }
    catch (Exception e)
@@ -8800,6 +8800,53 @@ bool SQL::deleteRouteComment(RouteComments rc)
     //rollbackTransaction("deleteRouteComment");
    return ret;
 }
+
+bool SQL::deleteRouteCommenUsingCommentKey(int commentKey)
+{
+    bool ret = false;
+    bool bQuery;
+    QString commandText;
+    try
+    {
+        if(!dbOpen())
+            throw Exception(tr("database not open: %1").arg(__LINE__));
+        QSqlDatabase db = QSqlDatabase::database();
+        QSqlQuery query = QSqlQuery(db);
+
+        //beginTransaction("deleteRouteComment");
+
+        commandText = QString("delete from RouteComments where commentKey = %1").arg(commentKey);
+        bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
+        }
+        int rows = query.numRowsAffected();
+        if(rows == 0)
+            return false;
+        ret = true;
+        int count = countCommentUsers(commentKey);
+        if(count>0)
+        {
+            if(!deleteComment(commentKey))
+            {
+                ret = false;
+            }
+        }
+   }
+   catch (Exception e)
+   {
+       myExceptionHandler(e);
+   }
+    //rollbackTransaction("deleteRouteComment");
+   return ret;
+}
+
+
 
 RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 commentKey, qint32 companyKey)
 {

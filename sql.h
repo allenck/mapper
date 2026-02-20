@@ -204,6 +204,7 @@ public:
     bool updateRouteComment(RouteComments rc);
     int countCommentUsers(int commentKey);
     bool deleteRouteComment(RouteComments rc);
+    bool deleteRouteCommenUsingCommentKey(int commentKey);
     RouteComments getNextRouteComment(qint32 route, QDate date, qint32 commentKey,qint32 companyKey);
     RouteComments getPrevRouteComment(qint32 route, QDate date, qint32 commentKey, qint32 companyKey);
     CommentInfo getComment(qint32 commentKey, int pos);
