@@ -209,7 +209,7 @@ public slots:
     QMenu* addSegmentMenu(SegmentData* sd);
     QT_DEPRECATED void getArrayResult(QVariant);
     void selectRoute(RouteData rd);
-    void displayRouteComment(RouteComments rc);
+    void displayRouteComment(RouteComments rcIn);
 
 private slots:
     void about();
@@ -423,6 +423,9 @@ private:
     QList<CompanyData*> selectedCompanyList;
     SystemConsole2* consoleDlg = nullptr;
     QStringList currentStreetNames;
+
+    QList<RouteComments>* comments = nullptr;
+    int currIx = -1;
 
     TerminalInfo m_terminalInfo;
     //QString m_mapid = "99f6ba1d184ea0b6"; //"DEMO_MAP_ID";

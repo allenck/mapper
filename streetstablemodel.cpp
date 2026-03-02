@@ -1563,8 +1563,8 @@ void StreetsTableModel::on_segmentChange(SegmentInfo si, SQL::CHANGETYPE t)
 {
     int streetId = si.streetId();
     switch (t) {
-    case SQL::CHANGETYPE::ADDSEG:
-    case SQL::CHANGETYPE::MODIFYSEG:
+    case SQL::CHANGETYPE::ADD:
+    case SQL::CHANGETYPE::MODIFY:
     {
         if(!si.newerName().isEmpty())
         {
@@ -1645,7 +1645,7 @@ void StreetsTableModel::on_segmentChange(SegmentInfo si, SQL::CHANGETYPE t)
         }
         break;
     }
-    case SQL::CHANGETYPE::DELETESEG:
+    case SQL::CHANGETYPE::DELETE:
         break;
     default:
         break;

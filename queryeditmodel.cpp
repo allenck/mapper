@@ -42,7 +42,7 @@ bool QueryEditModel::setData(const QModelIndex &index, const QVariant &value, in
   sd.setTrackUsage(record.value("TrackUsage").toString());
   sd.setCompanyKey(record.value("CompanyKey").toInt());
   sd.setTractionType(record.value("TractionType").toInt());
-  NotifyRouteChange rc = NotifyRouteChange(SQL::MODIFYSEG, &sd);
+  NotifyRouteChange rc = NotifyRouteChange(SQL::MODIFY, &sd);
   emit routeChange(rc);
 
   MainWindow::instance()->refreshRoutes();

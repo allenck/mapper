@@ -405,8 +405,31 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
   connect(SQL::instance(), &SQL::routeChange, [=](NotifyRouteChange rc){
    SegmentData* sd = rc.sd();
-   if(sd->route()==m_routeNbr  && rc.type()!= SQL::DELETESEG)
+   if(sd->route()==m_routeNbr  && rc.type()!= SQL::DELETE)
     displaySegment(sd->segmentId(),sd->description(), getColor(sd->tractionType()),sd->trackUsage(),true);
+  });
+
+  connect(SQL::instance(), &SQL::routeCommentChange, this, [=](RouteComments rc, SQL::CHANGETYPE t){
+      RouteComments currRc;
+      if(comments && currIx)
+      {
+          currRc = comments->at(currIx);
+          currIx = -1;
+          comments = sql->getRouteCommentst(currRc.route, currRc.date, &currIx);
+          for(int i =0; i < comments->count(); i++)
+          {
+             RouteComments rc = comments->at(i);
+             if(rc.route == currRc.route && rc.date == currRc.date && rc.commentKey == currRc.commentKey)
+             {
+                 currIx = i;
+                 displayRouteComment(rc);
+                 break;
+             }
+             m_bridge->processScript("showRouteComment", "false");
+
+          }
+
+      }
   });
 //  connect(ui->cbSegments, SIGNAL(signalFocusOut()), this, SLOT( cbSegments_Leave()));
   connect(ui->cbRoute, SIGNAL(signalFocusOut()), this, SLOT(cbRoutes_Leave()));
@@ -2847,36 +2870,50 @@ void MainWindow::loadRouteComment(QDate dtIn)
  }
  else
      dt = dtIn;
- RouteComments rc = sql->getRouteComment(m_routeNbr, dt, -1);
+ //RouteComments rc = sql->getRouteComment(m_routeNbr, dt, -1);
+ currIx = -1;
+ comments = sql->getRouteCommentst(m_routeNbr, dt, &currIx);
+ RouteComments rc;
+ if(currIx >=0)
+     rc = comments->at(currIx);
  displayRouteComment(rc);
 }
 
-void MainWindow::displayRouteComment(RouteComments rc)
+void MainWindow::displayRouteComment(RouteComments rcIn)
 {
     double infoLat=0, infoLon = 0;
     QVariantList objArray;
 
- if(rc.commentKey < 0)
+ if(rcIn.commentKey < 0)
  {
-  rc = sql->getRouteComment(0, rc.date,rc.commentKey);
+  //rc = sql->getRouteComment(0, rc.date,rc.commentKey);
+     currIx = -1;
+     comments = sql->getRouteCommentst(rcIn.route, rcIn.date, &currIx);
  }
- if(rc.ci.comments.isEmpty())
- {
-  rc = sql->getNextRouteComment(m_routeNbr, rc.date, rc.commentKey,-1);
-  if(rc.commentKey < 0)
-  {
-   rc = sql->getNextRouteComment(0, rc.date, rc.commentKey,-1);
-  }
- }
+ RouteComments rc;
+ if(currIx >=0)
+     rc = comments->at(currIx);
+ // if(rc.ci.comments.isEmpty())
+ // {
+ //  rc = sql->getNextRouteComment(m_routeNbr, rc.date, rc.commentKey,-1);
+ //  if(rc.commentKey < 0)
+ //  {
+ //   rc = sql->getNextRouteComment(0, rc.date, rc.commentKey,-1);
+ //  }
+ // }
  QString  sNext;
  QString  sPrev;
 
- RouteComments rcNext = sql->getNextRouteComment(rc.route, rc.date, rc.commentKey, -1);
- if(rcNext.commentKey > 0)
+ // RouteComments rcNext = sql->getNextRouteComment(rc.route, rc.date, rc.commentKey, -1);
+ // if(rcNext.commentKey > 0)
+ //     sNext = "<input type='button' name='next' value='>' onClick='nextRouteComment()'/>";
+ // RouteComments rcPrev = sql->getPrevRouteComment(rc.route, rc.date, rc.commentKey, -1);
+ // if(rcPrev.commentKey > 0)
+ //      sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
+ if(currIx > 0)
+     sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
+ if(currIx >=0 && comments->count()-1 > currIx)
      sNext = "<input type='button' name='next' value='>' onClick='nextRouteComment()'/>";
- RouteComments rcPrev = sql->getPrevRouteComment(rc.route, rc.date, rc.commentKey, -1);
- if(rcPrev.commentKey >0)
-      sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
  if(rc.pos.lat() && rc.pos.lon())
  {
   infoLat = rc.pos.lat();
@@ -2895,7 +2932,7 @@ void MainWindow::displayRouteComment(RouteComments rc)
   // add next and prev buttons
   if(i > 0)
   {
-   rc.ci.comments.insert(i,sPrev+sNext);
+   rc.ci.comments.insert(i,sPrev + sNext);
   }
   int ix = rc.ci.comments.indexOf("text-indent:0px;\">");
   // add Route name and date
@@ -2914,6 +2951,7 @@ void MainWindow::displayRouteComment(RouteComments rc)
  }
 }
 
+// web page is requesting next or previous route comment
 void MainWindow::getInfoWindowComments(double lat, double lon, int route, QString date, int commentKey, int companyKey, int func)
 {
  QDate dt = QDate::fromString(date, "yyyy/MM/dd");
@@ -2925,28 +2963,52 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
  double latitude = lat;
  double longitude = lon;
 
- if(func < 0)
+ // if(func < 0)
+ // {
+ //  rc = sql->getPrevRouteComment(route, dt, commentKey, companyKey);
+ //  if(rc.commentKey < 0)
+ //  {
+ //   rc = sql->getPrevRouteComment(0, dt, commentKey, companyKey);
+ //  }
+ //  if(rcPrev.commentKey >= 0)
+ //      sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
+ // }
+ // else
+ // {
+ //  rc = sql->getNextRouteComment(route, dt, commentKey, companyKey);
+ //  if(rc.commentKey < 0)
+ //  {
+ //   rc = sql->getNextRouteComment(0, dt, commentKey, companyKey);
+ //  }
+ //  if(rcNext.commentKey >= 0)
+ //      sNext = "<input type='button' name='next' value='>' onClick='nextRouteComment()'/>";
+ // }
+ // rcNext = sql->getNextRouteComment(route, rc.date, rc.commentKey, -1);
+ // rcPrev = sql->getPrevRouteComment(route, rc.date, rc.commentKey, -1);
+
+ if(currIx < 0 || comments->isEmpty())
+     return;
+ if(func < 0) // prev
  {
-  rc = sql->getPrevRouteComment(route, dt, commentKey, companyKey);
-  if(rc.commentKey < 0)
-  {
-   rc = sql->getPrevRouteComment(0, dt, commentKey, companyKey);
-  }
-  if(rcPrev.commentKey >= 0)
-      sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
+     if(currIx <= 0)
+         return;
+     currIx--;
  }
  else
  {
-  rc = sql->getNextRouteComment(route, dt, commentKey, companyKey);
-  if(rc.commentKey < 0)
-  {
-   rc = sql->getNextRouteComment(0, dt, commentKey, companyKey);
-  }
-  if(rcNext.commentKey >= 0)
-      sNext = "<input type='button' name='next' value='>' onClick='nextRouteComment()'/>";
+     if(currIx >= comments->count()-1)
+         return;
+     currIx++;
  }
- rcNext = sql->getNextRouteComment(route, rc.date, rc.commentKey, -1);
- rcPrev = sql->getPrevRouteComment(route, rc.date, rc.commentKey, -1);
+ rc = comments->at(currIx);
+ displayRouteComment(rc);
+
+#if 0
+ if(currIx > 0)
+     sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
+ if(currIx >=0 && comments->count()-1 > currIx)
+     sNext = "<input type='button' name='next' value='>' onClick='nextRouteComment()'/>";
+
 
  if(rc.route >= 0)
  {
@@ -2963,6 +3025,11 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
    latitude = rc.pos.lat();
    longitude = rc.pos.lon();
   }
+  // add next and prev buttons
+  if(i > 0)
+  {
+   rc.ci.comments.insert(i,sPrev + sNext);
+  }
   int ix = rc.ci.comments.indexOf("text-indent:0px;\">");
   if(ix > 0)
   {
@@ -2972,6 +3039,7 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
   m_bridge->processScript("displayRouteComment", objArray);
   m_bridge->processScript("showRouteComment", bDisplayRouteComments?"true": "false");
  }
+#endif
 }
 
 void MainWindow::onCbRouteIndexChanged(int row)
@@ -5261,6 +5329,7 @@ void MainWindow::updateRouteComment()
  routeCommentsDlg->setCompanyKey(rd.companyKey());
  routeCommentsDlg->setRoute(rd.route());
  routeCommentsDlg->setDate(rd.startDate());
+ routeCommentsDlg->setDirty(false);
  routeCommentsDlg->raise();
  routeCommentsDlg->show();
 }

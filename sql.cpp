@@ -3370,7 +3370,7 @@ bool SQL::updateSegment(SegmentInfo* si, bool bNotify)
  }
  ret = true;
  if(bNotify)
-    emit segmentChanged(*si, CHANGETYPE::MODIFYSEG);
+    emit segmentChanged(*si, CHANGETYPE::MODIFY);
 
  return ret;
 }
@@ -3461,7 +3461,7 @@ bool SQL::updateSegment(SegmentData* sd)
   return ret;
  }
  ret = true;
- emit segmentChanged(*sd, CHANGETYPE::MODIFYSEG);
+ emit segmentChanged(*sd, CHANGETYPE::MODIFY);
 
  return ret;
 }
@@ -3568,7 +3568,7 @@ bool SQL::updateSegment(qint32 SegmentId)
  }
  ret = true;
  commitTransaction("UpdateSegment");
- emit segmentChanged(SegmentInfo(sd), CHANGETYPE::MODIFYSEG);
+ emit segmentChanged(SegmentInfo(sd), CHANGETYPE::MODIFY);
 
  return ret;
 }
@@ -4670,7 +4670,7 @@ bool SQL::deleteRouteSegment(SegmentData sd, bool bNotify)
         }
         rows = query.numRowsAffected();
         if(bNotify)
-            emit routeChange(NotifyRouteChange(DELETESEG, &sd));
+            emit routeChange(NotifyRouteChange(DELETE, &sd));
 
         // Scan the remaining routes to find a new start and end date
         commandText = "select min(startDate), max(endDate) from Routes where lineKey = " + QString("%1").arg(sd._segmentId);
@@ -4789,7 +4789,7 @@ bool SQL::deleteRouteSegment(qint32 route, int routeId, qint32 SegmentId,
         RouteInfo ri = getRouteName(routeId);
         SegmentData sd(route, ri.routeName, SegmentId, QDate::fromString(startDate,"yyyy/MM/dd"),
                                                QDate::fromString(endDate,"yyyy/MM/dd"));
-        emit routeChange(NotifyRouteChange(DELETESEG, &sd));
+        emit routeChange(NotifyRouteChange(DELETE, &sd));
 
         // Scan the remaining routes to find a new start and end date
         commandText = "select min(startDate), max(endDate) from Routes where lineKey = " + QString("%1").arg(SegmentId);
@@ -4956,7 +4956,7 @@ bool SQL::addSegmentToRoute(SegmentData* sd, bool notify)
         if(currentTransaction == "addSegmentToRoute")
             commitTransaction("addSegmentToRoute");
         if(notify)
-            emit routeChange(NotifyRouteChange(SQL::ADDSEG, sd));
+            emit routeChange(NotifyRouteChange(SQL::ADD, sd));
         ret = true;
     }
     catch (Exception e)
@@ -6316,7 +6316,7 @@ bool SQL::deleteSegment(qint32 segmentId)
         myExceptionHandler(e);
     }
     commitTransaction("deleteSegment");
-    emit segmentChanged(si, CHANGETYPE::DELETESEG);
+    emit segmentChanged(si, CHANGETYPE::DELETE);
     return ret;
 }
 /// <summary>
@@ -6602,7 +6602,7 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
  commitTransaction("addSegment");
 
  SegmentInfo si = getSegmentInfo(SegmentId);
- emit segmentChanged(si,CHANGETYPE::ADDSEG);
+ emit segmentChanged(si,CHANGETYPE::ADD);
  return SegmentId;
 }
 
@@ -6729,7 +6729,7 @@ qint32 SQL::addSegment(SegmentInfo si, bool *bAlreadyExists, bool forceInsert)
  commitTransaction("addSegment");
 
  si._segmentId = segmentId;
- emit segmentChanged(si, CHANGETYPE::ADDSEG);
+ emit segmentChanged(si, CHANGETYPE::ADD);
  return segmentId;
 }
 
@@ -7057,7 +7057,7 @@ try
      {
          return -1;
      }
-     emit routeChange(NotifyRouteChange(MODIFYSEG, &sd1));
+     emit routeChange(NotifyRouteChange(MODIFY, &sd1));
 
      qDebug()<< "assume update was successful:" + commandText + "\n";
     }
@@ -7281,7 +7281,7 @@ bool SQL::deleteRoute(SegmentData sd)
      qDebug()<<"deleteRoute: not found. " + commandText;
      return false;
  }
- emit routeChange(NotifyRouteChange(DELETESEG, &sd));
+ emit routeChange(NotifyRouteChange(DELETE, &sd));
  return ret;
 }
 // delete a single segment
@@ -7497,7 +7497,7 @@ bool SQL::insertRouteSegment(SegmentData sd, bool bNotify)
   }
  }
  if(bNotify)
-    emit routeChange(NotifyRouteChange(ADDSEG, &sd));
+    emit routeChange(NotifyRouteChange(ADD, &sd));
  return true;
 }
 
@@ -8679,6 +8679,8 @@ bool SQL::addRouteComment(RouteComments rc)
     {
         myExceptionHandler(e);
     }
+    if(ret)
+        emit routeCommentChange(rc, ADD);
     return ret;
 }
 
@@ -8882,8 +8884,9 @@ RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 commentK
                 "join Routes r on r.route = rc.route and '"+date.toString("yyyy/MM/dd")+"' between r.startDate and r.endDate "
                 "join RouteName n on r.routeId = n.Routeid "
                 "and rc.route = " + QString::number(route) + " "
-                "and rc.date  >= '" + date.toString("yyyy/MM/dd")+"' "
-                "and rc.commentKey != " + QString::number(commentKey) +" "
+                "and (rc.date  > '" + date.toString("yyyy/MM/dd")+"' "
+                "or (rc.date  > '" + date.toString("yyyy/MM/dd")+"' "
+                "and rc.commentKey > " + QString::number(commentKey) +")) "
                 "order by rc.route, rc.date, rc.commentKey";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
@@ -8968,8 +8971,9 @@ RouteComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 commentK
                 " and '"+date.toString("yyyy/MM/dd")+"' between r.startDate and r.endDate "
                 "join RouteName n on r.routeId = n.Routeid "
                 "where rc.route = "+ QString("%1").arg(route) +" "
-                "and rc.date  <= '" + date.toString("yyyy/MM/dd")+"' "
-                "and rc.commentKey != " +QString::number(commentKey) + " "
+                "and (rc.date  < '" + date.toString("yyyy/MM/dd")+"' "
+                "or (rc.date  = '" + date.toString("yyyy/MM/dd")+"' "
+                "and rc.commentKey < " +QString::number(commentKey) + ")) "
                 "order by rc.route, rc.date, rc.commentKey ";
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
@@ -9124,6 +9128,98 @@ CommentInfo SQL::getComment(qint32 commentKey, int pos)
     }
     return ci;
 }
+
+QList<RouteComments>* SQL::getRouteCommentst(qint32 route, QDate date, int* currIx)
+{
+    QList<RouteComments>* list = new QList<RouteComments>();
+    if(currIx == nullptr)
+        return nullptr;
+#ifdef WIN32
+    QString up = QString::fromUtf8("?");
+    QString down = QString::fromUtf8("?");
+#else
+    QString up = QString::fromUtf8("▲");
+    QString down = QString::fromUtf8("▼");
+#endif
+    RouteComments prev;
+    try
+    {
+        if(!dbOpen())
+            throw Exception(tr("database not open: %1").arg(__LINE__));
+        QSqlDatabase db = QSqlDatabase::database();
+
+        QString commandText = "SELECT rc.commentKey, comments, tags, date, rc.companyKey, n.name,"
+                " a.routeAlpha, rc.latitude, rc.longitude, c.routeList "
+                "from RouteComments rc "
+                "join Comments c on rc.commentKey = c.commentKey "
+                "JOIN AltRoute a ON a.route = rc.route "
+                "join Routes r on r.route = rc.route and '"+date.toString("yyyy/MM/dd")+"' between r.startDate and r.endDate "
+                "join RouteName n on r.routeId = n.Routeid "
+                "where rc.route = "+ QString("%1").arg(route) +" "
+                "order by rc.route, rc.date, rc.commentKey ";
+        QSqlQuery query = QSqlQuery(db);
+        bool bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            throw SQLException(error.text() + " " + errCommand);
+        }
+
+        if (!query.isActive())
+        {
+            return nullptr;
+        }
+        while (query.next())
+        {
+            RouteComments rc;
+            rc.route = route;
+            rc.commentKey=-1;
+            rc.ci.commentKey = -1;
+            rc.ci.comments = "";
+            rc.ci.tags = "";
+
+            rc.commentKey = query.value(0).toInt();
+            rc.ci.comments = query.value(1).toString();
+            rc.ci.tags = query.value(2).toString();
+            rc.date = query.value(3).toDate();
+            rc.companyKey = query.value(4).toInt();
+            //if(config->currConnection->servertype() != "MySql")
+            {
+                {
+                    //qDebug()<<rc.ci.comments;
+                    rc.ci.comments = rc.ci.comments.replace("&up", up);
+                    rc.ci.comments = rc.ci.comments.replace("&down", down);
+                    rc.ci.comments.replace("&amp;up", up);
+                    rc.ci.comments.replace("&amp;down", down);
+
+                    //qDebug()<<rc.ci.comments;
+                }
+            }
+            rc.routeName = query.value(5).toString();
+            rc.routeAlpha = query.value(6).toString();
+            rc.pos = LatLng(query.value(7).toDouble(),query.value(8).toDouble());
+            rc.ci.routesUsed = rc.ci.toRoutesTable(query.value(9).toString());
+            if(rc.route == prev.route && rc.date == prev.date && rc.commentKey == prev.commentKey)
+                continue;
+            prev = rc;
+            list->append(rc);
+            if(*currIx < 0)
+            {
+                if(date >= rc.date)
+                    *currIx = list->count()-1;
+            }
+        }
+    }
+    catch (Exception e)
+    {
+        myExceptionHandler(e);
+    }
+    return list;
+}
+
 
 #if 0
 qint32 SQL::addStation(QString name, LatLng location, qint32 lineSegmentId, RouteType type)
@@ -9510,7 +9606,7 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd, bool notify, bool ignoreE
  {
   SegmentData* sdNew = new SegmentData(sd);
   if(notify)
-   emit routeChange(NotifyRouteChange(MODIFYSEG, sdNew));
+   emit routeChange(NotifyRouteChange(MODIFY, sdNew));
   ret = true;
  }
  else

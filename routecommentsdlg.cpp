@@ -308,6 +308,8 @@ bool RouteCommentsDlg::readRouteComment(int pos)
         return true;
     }
     _rc = rc;
+    setDirty(false);
+
     return true;
 }
 
@@ -863,7 +865,7 @@ bool RouteCommentsDlg::finishScan(int rslt)
 // enable start and apply buttons if required input is present
 void RouteCommentsDlg::enableButtons()
 {
-    if(_rc.route > 0 && _rc.commentKey >0 && !_rc.ci.comments.isEmpty() && _rc.date.isValid() && !ui->txtComments->toPlainText().isEmpty())
+    if(_rc.route > 0 /*&& _rc.commentKey >0*/ && !_rc.ci.comments.isEmpty() && _rc.date.isValid() && !ui->txtComments->toPlainText().isEmpty())
     {
         ui->btnApply->setEnabled(true);
         ui->btnOK->setEnabled(true);

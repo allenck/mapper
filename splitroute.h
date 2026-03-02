@@ -10,6 +10,7 @@ namespace Ui {
     class SplitRoute;
 }
 
+class QDateEdit;
 class SplitRoute : public QDialog
 {
     Q_OBJECT
@@ -37,6 +38,10 @@ private:
     void fillTractionTypes();
     QDate maxEndDate;
     bool bIgnoreDateCheck = false;
+    CompanyData* cd1 = nullptr;
+    CompanyData* cd2 = nullptr;
+    bool checkDate(QString txt, QDateEdit *dt, CompanyData* cd);
+    QString defaultSS;
 
 private slots:
 //    void txtNewRouteNbr1_TextChanged(QString text);
@@ -45,12 +50,12 @@ private slots:
 //    void txtNewRouteNbr2_Leave();
 //    void txtNewRouteName1_Leave();
 //    void txtNewRouteName2_Leave();
-    void dateFrom1_Leave();
+    void dateFrom1_ValueChanged();
     void dateTo1_ValueChanged();
-    void dateTo1_Leave();
+    // void dateTo1_Leave();
     void dateFrom2_ValueChanged();
-    void dateFrom2_Leave();
-    void dateTo2_Leave();
+    // void dateFrom2_Leave();
+    void dateTo2_ValueChanged();
     void btnOK_Click();
     void Cancel_Click();
 

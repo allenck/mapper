@@ -4356,7 +4356,7 @@ bool ExportSql::createCommentsTable(QSqlDatabase db, QString dbType)
 
  if(dbType == "Sqlite")
   commandText = "CREATE TABLE if not exists `Comments` (\
-              `commentKey` integer NOT NULL primary key AUTOINCREMENT,\
+              `commentKey` INTEGER primary key AUTOINCREMENT,\
               `tags` varchar(1000) NOT NULL,\
               `routeList` varchar(100) NOT NULL, \
               `comments` mediumtext NOT NULL,\

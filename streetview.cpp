@@ -229,8 +229,8 @@ void StreetView::segmentChanged(SegmentInfo si, SQL::CHANGETYPE t)
         QList<StreetInfo*>* streets = StreetsTableModel::instance()->getStreetNames(si.streetId());
         foreach (StreetInfo* sti, *streets) {
             switch (t) {
-            case SQL::MODIFYSEG:
-            case SQL::ADDSEG:
+            case SQL::MODIFY:
+            case SQL::ADD:
                 sti->location = si.location();
                 sti->startLatLng = si.getStartLatLng();
                 sti->endLatLng =si.getEndLatLng();
@@ -239,7 +239,7 @@ void StreetView::segmentChanged(SegmentInfo si, SQL::CHANGETYPE t)
                     sti->segments.append(si.segmentId());
 
                 break;
-            case SQL::DELETESEG:
+            case SQL::DELETE:
                 if(sti->segments.contains(si.segmentId()))
                     sti->segments.removeOne(si.segmentId());
                 break;

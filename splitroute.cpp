@@ -14,31 +14,45 @@ SplitRoute::SplitRoute( QWidget *parent) :
     //fillCompanies();
     ui->lblHelp->setText("");
     ui->chkDeleteOriginal->setChecked(true);
-    connect(ui->dateFrom1, SIGNAL(editingFinished()), this, SLOT(dateFrom1_Leave()));
+    defaultSS = ui->dateFrom1->styleSheet();
+    connect(ui->dateFrom1, SIGNAL(editingFinished()), this, SLOT(dateFrom1_ValueChanged()));
     //connect(ui->dateFrom2, SIGNAL(editingFinished()), this, SLOT(dateFrom2_ValueChanged()));
-    connect(ui->dateFrom2, SIGNAL(editingFinished()),this, SLOT(dateFrom2_Leave()));
-    connect(ui->dateTo1, SIGNAL(editingFinished()), this, SLOT(dateTo1_Leave()));
+    connect(ui->dateFrom2, SIGNAL(editingFinished()),this, SLOT(dateFrom2_ValueChanged()));
+    connect(ui->dateTo1, SIGNAL(editingFinished()), this, SLOT(dateTo1_ValueChanged()));
     //connect(ui->dateTo1, SIGNAL(editingFinished()), this, SLOT(dateTo1_ValueChanged()));
-    connect(ui->dateTo2, SIGNAL(editingFinished()), this, SLOT(dateTo2_Leave()));
+    connect(ui->dateTo2, SIGNAL(editingFinished()), this, SLOT(dateTo2_ValueChanged()));
     connect(ui->btnOK, SIGNAL(clicked()), this, SLOT(btnOK_Click()));
     connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(Cancel_Click()));
-    // connect(ui->cbCompany1, &QComboBox::currentTextChanged, [=] ()
-    // {
-    //     int companyKey = ui->cbCompany1->currentData().toInt();
-    //     if(companyKey > 0)
-    //     {
-    //         CompanyData* cd = sql->getCompany(companyKey);
-    //         if(ui->dateTo1->date() > cd->endDate)
-    //         {
-    //             ui->dateTo1->setDate(cd->endDate);
-    //             ui->dateFrom2->setDate(cd->endDate.addDays(-1));
-    //         }
-    //         if(_rd.endDate() < cd->endDate)
-    //             ui->dateTo2->setDate(_rd.endDate() );
-    //         else
-    //             ui->dateTo2->setDate(cd->endDate);
-    //     }
-    // });
+    connect(ui->cbCompany1, &QComboBox::currentTextChanged, [=] ()
+    {
+        ui->lblHelp->clear();
+        int companyKey = ui->cbCompany1->currentData().toInt();
+        if(companyKey > 0)
+        {
+            cd1 = sql->getCompany(companyKey);
+            ui->dateFrom1->setStyleSheet(defaultSS);
+            if(!checkDate(tr("From 1"), ui->dateFrom1,cd1))
+                return;
+            ui->dateTo1->setStyleSheet(defaultSS);
+            if(!checkDate(tr("To 1"), ui->dateTo1,cd1))
+                return;
+        }
+    });
+    connect(ui->cbCompany2, &QComboBox::currentTextChanged, [=] ()
+    {
+        ui->lblHelp->clear();
+        int companyKey = ui->cbCompany2->currentData().toInt();
+        if(companyKey > 0)
+        {
+            cd2 = sql->getCompany(companyKey);
+            ui->dateFrom2->setStyleSheet(defaultSS);
+            if(!checkDate(tr("From 2"), ui->dateFrom2,cd2))
+                return;
+            ui->dateTo2->setStyleSheet(defaultSS);
+            if(!checkDate(tr("To 2"), ui->dateTo2,cd2))
+                return;
+        }
+    });
 
     fillTractionTypes();
 }
@@ -277,70 +291,91 @@ void SplitRoute::txtNewRouteName2_Leave()
     }
 }
 #endif
-void SplitRoute::dateFrom1_Leave()
+void SplitRoute::dateFrom1_ValueChanged()
 {
+    ui->lblHelp->clear();
+    ui->dateFrom1->setStyleSheet(defaultSS);
     if(ui->dateTo1->dateTime() < ui->dateFrom1->dateTime())
         ui->dateTo1->setFocus();;
+    checkDate(tr("From 1"), ui->dateFrom1,cd1);
 }
 
 void SplitRoute::dateTo1_ValueChanged()
 {
+    ui->dateTo1->setStyleSheet(defaultSS);
+    ui->lblHelp->clear();
     if(!ui->chkAllowGap->isChecked())
+    {
+        ui->dateFrom2->setStyleSheet(defaultSS);
         ui->dateFrom2->setDateTime( ui->dateTo1->dateTime().addDays(1));
+    }
+    checkDate(tr("To 1"), ui->dateTo1,cd1);
 }
 
-void SplitRoute::dateTo1_Leave()
-{
-    if (ui->dateTo1->dateTime() < ui->dateFrom1->dateTime() && !ui->chkAllowGap->isChecked())
-        //ui->dateTo1->setDateTime( ui->dateFrom1->dateTime().addDays(1));
-        ui->dateFrom2->setDateTime( ui->dateTo1->dateTime().addDays(1));
-
-}
 
 void SplitRoute::dateFrom2_ValueChanged()
 {
+    ui->lblHelp->clear();
+    ui->dateFrom2->setStyleSheet(defaultSS);
     if (ui->dateFrom2->dateTime() < ui->dateTo1->dateTime()&& !ui->chkAllowGap->isChecked())
         ui->dateFrom2->setDateTime(ui->dateTo1->dateTime().addDays( 1));
-
-}
-
-void SplitRoute::dateFrom2_Leave()
-{
     ui->lblHelp->setText ("");
     if(ui->dateFrom1->dateTime() > ui->dateFrom2->dateTime())
     {
+        ui->dateFrom2->setStyleSheet("background: pink");
         ui->lblHelp->setText (tr("From start date is after end date"));
         QApplication::beep();
         ui->dateFrom1->setFocus();;
         return;
     }
-    if(ui->dateTo1->date()< ui->dateTo2->date()&& !ui->chkAllowGap->isChecked())
-    {
-        ui->dateTo1->setDateTime(ui->dateFrom2->dateTime().addDays(-1));
-    }
-
+    checkDate(tr("From 2"), ui->dateFrom2,cd2);
 }
 
-void SplitRoute::dateTo2_Leave()
+
+void SplitRoute::dateTo2_ValueChanged()
 {
-    ui->lblHelp->setText ("");
+    ui->lblHelp->clear();
+    ui->dateTo2->setStyleSheet(defaultSS);
     if(ui->dateTo1->date() > ui->dateTo2->date())
     {
+        ui->dateTo2->setStyleSheet("background:pink");
         ui->lblHelp->setText (tr("To start date is after end date"));
         QApplication::beep();
         ui->dateTo1->setFocus();;
         return;
     }
-    CompanyData* cd = sql->getCompany(ui->cbCompany2->currentData().toInt());
-    if(ui->dateTo2->date()> cd->endDate)
-    {
-        ui->dateTo2->setDate(cd->endDate);
-    }
-    if (ui->dateTo2->date() < ui->dateFrom2->date()&& !ui->chkAllowGap->isChecked())
-    {
-        ui->dateTo2->setDate( ui->dateFrom2->date().addDays(1));
-    }
+    cd2 = sql->getCompany(ui->cbCompany2->currentData().toInt());
+    // if(ui->dateTo2->date()> cd2->endDate)
+    // {
+    //     ui->dateTo2->setDate(cd2->endDate);
+    // }
+    // if (ui->dateTo2->date() < ui->dateFrom2->date()&& !ui->chkAllowGap->isChecked())
+    // {
+    //     ui->dateTo2->setDate( ui->dateFrom2->date().addDays(1));
+    // }
+    checkDate(tr("To 2"), ui->dateTo2,cd1);
 }
+
+// check if date is valid for the company
+bool SplitRoute::checkDate(QString txt, QDateEdit* dt, CompanyData* cd)
+{
+    if(dt->date() < cd->startDate )
+    {
+        dt->setStyleSheet("background:pink");
+        ui->lblHelp->setStyleSheet("color: #FF5B00");
+        ui->lblHelp->setText(tr("Warning: Date %1 %2 is less than company start date %3").arg(txt, dt->date().toString("yy/MM/dd"),cd->startDate.toString("yyyy/MM/dd")));
+        return false;
+    }
+    if(dt->date() > cd->endDate )
+    {
+        dt->setStyleSheet("background:pink");
+        ui->lblHelp->setStyleSheet("color: #FF5B00");
+        ui->lblHelp->setText(tr("Warning: Date %1 %2 is greater than company end date %3").arg(txt, dt->date().toString("yy/MM/dd"),cd->startDate.toString("yyyy/MM/dd")));
+        return false;
+    }
+    return true;
+}
+
 
 void SplitRoute::btnOK_Click()
 {
@@ -348,6 +383,7 @@ void SplitRoute::btnOK_Click()
     ui->lblHelp->setText ("");
     if(ui->dateFrom1->dateTime() > ui->dateFrom2->dateTime())
     {
+        ui->lblHelp->setStyleSheet("color: red");
         ui->lblHelp->setText (tr("From start date1 is after end date1"));
         QApplication::beep();
         ui->dateFrom1->setFocus();;
@@ -355,6 +391,7 @@ void SplitRoute::btnOK_Click()
     }
     if(ui->dateTo1->dateTime() > ui->dateTo2->dateTime())
     {
+        ui->lblHelp->setStyleSheet("color: red");
         ui->lblHelp->setText (tr("To end date1 is after end date2"));
         QApplication::beep();
         ui->dateTo1->setFocus();;
@@ -362,6 +399,7 @@ void SplitRoute::btnOK_Click()
     }
     if(ui->dateFrom1->dateTime() > ui->dateTo1->dateTime())
     {
+        ui->lblHelp->setStyleSheet("color: red");
         ui->lblHelp->setText (tr("Date #1 from must be less or equal to than To date"));
         QApplication::beep();
         ui->dateFrom1->setFocus();;
@@ -370,12 +408,14 @@ void SplitRoute::btnOK_Click()
     CompanyData* cd = sql->getCompany(ui->cbCompany1->currentData().toInt());
     if (cd->companyKey < 0)
     {
+        ui->lblHelp->setStyleSheet("color: red");
         ui->lblHelp->setText (tr("Select a company 1"));
         QApplication::beep();
         return;
     }
     if (ui->dateTo1->date() < cd->startDate || ui->dateFrom1->date() > cd->endDate)
     {
+        ui->lblHelp->setStyleSheet("color: red");
         ui->lblHelp->setText (tr("Company 1 not valid for specified dates!"));
         QApplication::beep();
         ui->dateFrom1->setFocus();
@@ -384,12 +424,14 @@ void SplitRoute::btnOK_Click()
     cd =  sql->getCompany(ui->cbCompany2->currentData().toInt());
     if (cd->companyKey < 0)
     {
+        ui->lblHelp->setStyleSheet("color: red");
         ui->lblHelp->setText (tr("Select a company 2"));
         QApplication::beep();
         return;
     }
     if (ui->dateTo2->date() < cd->startDate || ui->dateFrom2->date() > cd->endDate)
     {
+        ui->lblHelp->setStyleSheet("color: red");
         ui->lblHelp->setText (tr("Company 2 not valid for specified dates! Must be > %1")
                                  .arg(cd->startDate.toString("yyyy/MM/dd")));
         QApplication::beep();
@@ -398,21 +440,24 @@ void SplitRoute::btnOK_Click()
     }
     if(ui->dateFrom1->dateTime() > ui->dateTo1->dateTime())
     {
-        ui->lblHelp->setText (tr("Start date 2 after end date"));
+        ui->lblHelp->setStyleSheet("color: red");
+        ui->lblHelp->setText (tr("From date 1 after To date 2"));
         QApplication::beep();
         ui->dateFrom1->setFocus();
         return;
     }
     if(ui->dateFrom2->dateTime() > ui->dateTo2->dateTime())
     {
-        ui->lblHelp->setText (tr("Start date 2 after end date"));
+        ui->lblHelp->setStyleSheet("color: red");
+        ui->lblHelp->setText (tr("From date 2 after To date 2"));
         QApplication::beep();
         ui->dateFrom2->setFocus();
         return;
     }
     if (ui->dateTo2->dateTime().date() > cd->endDate)
     {
-        ui->lblHelp->setText (tr("end date 2 > company enddate"));
+        ui->lblHelp->setStyleSheet("color: red");
+        ui->lblHelp->setText (tr("To date 2 %1 > company's enddate %2").arg(ui->dateTo2->date().toString("yyyy/MM/dd"),cd->endDate.toString("yyyy/MM/dd")));
         QApplication::beep();
         ui->dateFrom1->setFocus();;
         return;

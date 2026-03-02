@@ -22,6 +22,7 @@ public:
     void setDate(QDate);
     void setCompanyKey(qint32);
     void scan();
+    void setDirty(bool = true);
 
 private:
     Ui::RouteCommentsDlg *ui;
@@ -61,7 +62,6 @@ private:
     QString scanLog;
     bool outputChanges();
     bool readRouteComment(int pos);
-    void setDirty(bool = true);
     bool bScanInProgress = false;
     bool processOrphan();
     bool finishScan(int rslt);

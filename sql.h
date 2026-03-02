@@ -45,9 +45,9 @@ public:
  static SQL* instance();
     bool dbOpen();
     enum CHANGETYPE {
-     ADDSEG,
-     DELETESEG,
-     MODIFYSEG
+     ADD,
+     DELETE,
+     MODIFY
     };
     bool isTransactionActive();
     QList<RouteData> routeList;
@@ -208,6 +208,7 @@ public:
     RouteComments getNextRouteComment(qint32 route, QDate date, qint32 commentKey,qint32 companyKey);
     RouteComments getPrevRouteComment(qint32 route, QDate date, qint32 commentKey, qint32 companyKey);
     CommentInfo getComment(qint32 commentKey, int pos);
+    QList<RouteComments> *getRouteCommentst(qint32 route, QDate date, int *currIx);
 
     QStringList showDatabases(QString Connection, QString servertype);
     QStringList getAlphaRoutes(QString text);
@@ -295,6 +296,7 @@ signals:
     void details(QString);
     void segmentChanged(const SegmentInfo si, CHANGETYPE t);
     void routeChange(NotifyRouteChange rc);
+    void routeCommentChange(RouteComments rc, CHANGETYPE t);
 
 private:
     SQL();

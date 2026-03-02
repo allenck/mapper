@@ -4,7 +4,7 @@ INSERT INTO `t_Comments`  (`commentKey`, `tags`, `comments`, `routeList`, lastUp
 	select `commentKey`, `tags`, `comments`,  `routeList`, lastUpdate FROM `Comments` ;
 DROP TABLE `Comments`;
 CREATE TABLE if not exists `Comments` (
-	`commentKey` int(11) NOT NULL PRIMARY KEY,
+        `commentKey` INTEGER PRIMARY KEY AUTOINCREMENT,
 	`tags`  varchar(1000) NOT NULL,
 	`routeList` varchar(100) NOT NULL,
 	`comments` mediumtex NOT NULL,

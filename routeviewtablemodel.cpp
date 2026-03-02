@@ -70,16 +70,16 @@ void RouteViewTableModel::routeChange(NotifyRouteChange rc)
       break;
     }
   }
-  if(row == -1 && rc.type() != SQL::ADDSEG)
+  if(row == -1 && rc.type() != SQL::ADD)
     return;
-  if(rc.type() == SQL::DELETESEG)
+  if(rc.type() == SQL::DELETE)
   {
     beginRemoveRows(QModelIndex(), row, row);
     listOfSegments.removeAt(row);
     endRemoveRows();
     MainWindow::instance()->segmentChanged(rc.sd()->segmentId(),0);
   }
-  else if(rc.type() == SQL::ADDSEG)
+  else if(rc.type() == SQL::ADD)
   {
     beginInsertRows(QModelIndex(), listOfSegments.count(), listOfSegments.count());
     listOfSegments.append(new SegmentData(*rc.sd()));
@@ -95,7 +95,7 @@ void RouteViewTableModel::routeChange(NotifyRouteChange rc)
 
 void RouteViewTableModel::segmentChanged(SegmentInfo si, SQL::CHANGETYPE t)
 {
-    if(t != SQL::CHANGETYPE::MODIFYSEG)
+    if(t != SQL::CHANGETYPE::MODIFY)
         return;
  // update SegmentData with segment changes.
     int row = -1;
