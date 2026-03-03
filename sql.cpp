@@ -327,7 +327,7 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
      throw Exception(tr("database not open: %1").arg(__LINE__));
  QSqlDatabase db = QSqlDatabase::database();
  QString where;
- if(companyKey >0)
+ if(companyKey > 0)
   where= " where r.companyKey = " + QString("%1").arg(companyKey);
  if(config->currConnection->servertype() == "MySql")
     commandText = "Select distinct a.baseRoute, r.route, n.name, r.startDate, "
@@ -416,6 +416,7 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
  }
  return list;;
 }
+
 QList<RouteData> SQL::getRoutesByEndDate(QList<int> compayList)
 {
  QList<RouteData> list;
@@ -487,6 +488,82 @@ QList<RouteData> SQL::getRoutesByEndDate(QList<int> compayList)
   rd.setBaseRoute(ri->baseRoute);
   rd._routePrefix = ri->routePrefix;
   rd.setRouteId(ri->_routeId);
+  list.append(rd);
+ }
+ return list;;
+}
+
+QList<RouteData> SQL::getRoutesByStartDate(QDate date, int daysBefore)
+{
+ QList<RouteData> list;
+ QList<RouteInfo*> riList;
+ RouteData rd;
+ QSqlQuery query;
+ QString commandText;
+ if(!dbOpen())
+     throw Exception(tr("database not open: %1").arg(__LINE__));
+ QSqlDatabase db = QSqlDatabase::database();
+ QString  where= " where r.startDate > '" + date.addDays(-daysBefore).toString("yyyy/MM/dd") + "' ";
+ if(config->currConnection->servertype() == "MySql")
+    commandText = "Select distinct a.baseRoute, r.route, n.name, r.startDate, "
+               "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic,r.routeId, c.description  "
+               "from Routes r "
+               "join AltRoute a on r.route =  a.route "
+               "join Companies c on r.companyKey = c.`key` "
+               "join RouteName n on r.routeId = n.routeId "
+               + where +
+               " group by a.baseRoute, r.route, n.name, r.startDate, r.endDate, "
+               " r.companykey,tractionType, a.routeAlpha "
+               " order by a.routeAlpha, n.name, r.endDate ";
+ else if(config->currConnection->servertype() == "MsSql")
+     commandText = "Select distinct a.baseRoute, r.route, n.name, r.startDate, "
+                   "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic, r.routeId, c.description  "
+                   "from Routes r "
+                   "join AltRoute a on r.route =  a.route "
+                   "join Companies c on r.companyKey = c.[key] "
+                   "join RouteName n on r.routeId = n.routeId "
+                   + where +
+                   " group by a.baseRoute, r.route, n.name, r.startDate, r.endDate, "
+                   " r.companykey,tractionType, a.routeAlpha "
+                   " order by a.routeAlpha, n.name, r.endDate ";
+ else
+    commandText = "Select distinct a.baseRoute, r.route, n.name, r.startDate, "
+            "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic, r.routeId, c.description  "
+            "from Routes r "
+            "join AltRoute a on r.route =  a.route "
+            "join Companies c on r.companyKey = c.key "
+            "join RouteName n on r.routeId = n.routeId "
+            + where +
+            " group by a.baseRoute, r.route, n.name, r.startDate, r.endDate, "
+            " r.companykey,c.mnemonic,tractionType, a.routeAlpha, r.routeid "
+            " order by a.routeAlpha, n.name, r.endDate ";
+ query = QSqlQuery(db);
+ qDebug() << commandText;
+ bool bQuery = query.exec(commandText);
+ if(!bQuery)
+ {
+     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+     qDebug() << errCommand;
+     QSqlError error = query.lastError();
+     SQLERROR(std::move(query));
+     throw SQLException(error.text() + " " + errCommand);
+ }
+ int ix =-1;
+ while (query.next())
+ {
+  ix++;
+  RouteData rd;
+  rd._baseRoute = query.value(0).toInt();
+  rd._route = query.value(1).toInt();
+  rd._name = query.value(2).toString().trimmed();
+  rd._dateBegin = query.value(3).toDate();
+  rd._dateEnd = query.value(4).toDate();
+  rd._companyKey = query.value(5).toInt();
+  rd._tractionType = query.value(6).toInt();
+  rd._alphaRoute = query.value(7).toString();
+  rd._companyMnemonic = query.value(8).toString();
+  rd._routeId = query.value(9).toInt();
+  rd._coName = query.value(10).toString();
   list.append(rd);
  }
  return list;;
@@ -8538,7 +8615,7 @@ QList<RouteComments*> SQL::listInvalidRouteComments()
     return list;
 }
 
-bool SQL::updateRouteComment(RouteComments rc)
+bool SQL::updateRouteComment(RouteComments* rc)
 {
     bool ret = false;
     bool bQuery;
@@ -8552,18 +8629,18 @@ bool SQL::updateRouteComment(RouteComments rc)
         if(!isTransactionActive())
             beginTransaction("updaterouteComment");
 
-        if(rc.commentKey == -1)
+        if(rc->commentKey == -1)
         {
             //db.transaction();
             // beginTransaction("updateouteComment");
             //qDebug()<< rc.ci.comments;
 
-            rc.ci.commentKey = addComment(rc.ci.comments, rc.ci.tags, rc.ci.routesUsed);
+            rc->commentKey = rc->ci.commentKey = addComment(rc->ci.comments, rc->ci.tags, rc->ci.routesUsed);
 
             commandText = QString("insert into RouteComments (route, date, commentKey, companyKey,"
                                   " latitude, longitude) "
-            " values(%1, '%2', %3, %4, %5, %6)").arg(rc.route).arg(rc.date.toString("yyyy/MM/dd"))
-                    .arg(rc.ci.commentKey ).arg(rc.companyKey).arg(rc.pos.lat()).arg(rc.pos.lon());
+            " values(%1, '%2', %3, %4, %5, %6)").arg(rc->route).arg(rc->date.toString("yyyy/MM/dd"))
+                    .arg(rc->ci.commentKey ).arg(rc->companyKey).arg(rc->pos.lat()).arg(rc->pos.lon());
             bQuery = query.exec(commandText);
             if(!bQuery)
             {
@@ -8582,14 +8659,14 @@ bool SQL::updateRouteComment(RouteComments rc)
         }
         else    // insert or update
         {
-            RouteComments oldRc = getRouteComment(rc.route, rc.date, rc.commentKey);
+            RouteComments oldRc = getRouteComment(rc->route, rc->date, rc->commentKey);
 
             if(oldRc.commentKey == -1) // not found if -1
             {
                 commandText = QString("insert into RouteComments (route, date, commentKey, companyKey,"
                                       " latitude, longitude) "
-                " values(%1, '%2', %3, %4, %5, %6)").arg(rc.route).arg(rc.date.toString("yyyy/MM/dd"))
-                        .arg(rc.ci.commentKey ).arg(rc.companyKey).arg(rc.pos.lat()).arg(rc.pos.lon());
+                " values(%1, '%2', %3, %4, %5, %6)").arg(rc->route).arg(rc->date.toString("yyyy/MM/dd"))
+                        .arg(rc->ci.commentKey ).arg(rc->companyKey).arg(rc->pos.lat()).arg(rc->pos.lon());
                 bQuery = query.exec(commandText);
                 if(!bQuery)
                 {
@@ -8611,8 +8688,8 @@ bool SQL::updateRouteComment(RouteComments rc)
             commandText = QString("update RouteComments set companyKey = %1, "
                           "latitude = %2, longitude=%3, "
                           "lastUpdate=CURRENT_TIMESTAMP  where route = %4 and date = '%5'")
-                          .arg(rc.companyKey).arg(rc.pos.lat()).arg(rc.pos.lon()).arg(rc.route)
-                          .arg(rc.date.toString("yyyy/MM/dd"));
+                          .arg(rc->companyKey).arg(rc->pos.lat()).arg(rc->pos.lon()).arg(rc->route)
+                          .arg(rc->date.toString("yyyy/MM/dd"));
             bQuery = query.exec(commandText);
             if(!bQuery)
             {
@@ -8626,7 +8703,7 @@ bool SQL::updateRouteComment(RouteComments rc)
                 return false;
             }
 
-            ret = updateComment(rc.ci.commentKey, rc.ci.comments, rc.ci.tags);
+            ret = updateComment(rc->ci.commentKey, rc->ci.comments, rc->ci.tags);
             if(currentTransaction == "updaterouteComment")
             {
                 if(ret )
@@ -11394,7 +11471,7 @@ bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute, QString routePrefix
       return false;
      }
      rc.route = newRoute;
-     if(!updateRouteComment(rc))
+     if(!updateRouteComment(&rc))
      {
       rollbackTransaction("renumber");
       return false;

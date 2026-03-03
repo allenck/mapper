@@ -137,7 +137,9 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
          {
              if(ui->txtComments->toHtml() == rc.ci.comments)
              {
-                 QMessageBox::warning(this, tr("Warning"), tr("A comment for this route already exits! "));
+                 //QMessageBox::warning(this, tr("Warning"), tr("A comment for this route already exits! "));
+                 ui->lblInfo->setStyleSheet("color: rgb(255, 170, 0)");
+                 ui->lblInfo->setText(tr("A comment for this route already exits! "));
              }
          }
      }
@@ -337,7 +339,7 @@ void RouteCommentsDlg::OnDateLeave()
      ui->dateEdit->setStyleSheet("color: black");
  _rc.date = date;
  setDirty(true);
- QList<RouteData> list = sql->getRoutesByEndDate(0);
+ QList<RouteData> list = sql->getRoutesByStartDate(date, 700); // get routes 700 days after date
  ((RouteSelectorTableModel*)ui->tableView->model())->createList(&list,_rc.date);
  bDateChanged = false;
  if(bScanInProgress)
@@ -373,21 +375,24 @@ bool RouteCommentsDlg::outputChanges()
   _rc.ci.routesUsed = *routes;
   //_rc.commentKey =
   //qDebug()<< _rc.ci.comments;
-  if(!sql->updateRouteComment( _rc))
-  {
-      return false;
-  }
+  // if(!sql->updateRouteComment( _rc))
+  // {
+  //     return false;
+  // }
 
+  sql->beginTransaction("outputChanges");
 
-//  if(!ui->txtAdditionalRoutes->text().isEmpty())
-//  {
-//   QStringList routes = ui->txtAdditionalRoutes->text().split(",");
    foreach(int route, *routes)
    {
      _rc.route = route;
        _rc.routeName = _model->getRouteName(route);
-     sql->updateRouteComment( _rc);
+     if(!sql->updateRouteComment( &_rc))
+     {
+           sql->rollbackTransaction("outputChanges");
+         return false;
+     }
    }
+   sql->commitTransaction("outputChanges");
 //  }
   setDirty(false);
  }

@@ -5209,7 +5209,7 @@ void MainWindow::moveRouteComment(int route, QString date, int commentKey,double
 {
  RouteComments rc = sql->getRouteComment(route, QDate::fromString(date, "yyyy/MM/dd"), commentKey);
  rc.pos = LatLng(latitude, longitude);
- sql->updateRouteComment(rc);
+ sql->updateRouteComment(&rc);
 }
 
 void MainWindow::chkOneWay_toggled(bool bChecked)

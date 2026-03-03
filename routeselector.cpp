@@ -161,7 +161,7 @@ void RouteSelectorTableModel::createList(QList<RouteData>* rdList, QDate dt)
     list->clear();
     foreach(RouteData rd, *rdList)
     {
-        if(dt >= rd.startDate() && dt <= rd.endDate())
+        //if(dt >= rd.startDate().addDays(-700) && dt <= rd.endDate())
         {
             RouteName* rn = new RouteName();
             rn->setRoute(rd.route());

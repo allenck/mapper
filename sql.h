@@ -54,6 +54,8 @@ public:
     QList<RouteData> getRoutesByEndDate();
     QList<RouteData> getRoutesByEndDate(qint32 companyKey);
     QList<RouteData> getRoutesByEndDate(QList<int> compayList);
+    QList<RouteData> getRoutesByStartDate(QDate date, int days);
+
     //QT_DEPRECATED RouteInfo getRoutePoints(qint32 route, QString name, QString date);
     TerminalInfo getTerminalInfo(qint32 route, QString name, QDate endDate);
     QList<TerminalInfo> getTerminalInfoUsingSegment(int segmentId);
@@ -201,7 +203,7 @@ public:
     QList<RouteComments*>getRouteComments(qint32 commentKey);
     QList<RouteComments*> listRouteComments();
     QList<RouteComments*> listInvalidRouteComments();
-    bool updateRouteComment(RouteComments rc);
+    bool updateRouteComment(RouteComments *rc);
     int countCommentUsers(int commentKey);
     bool deleteRouteComment(RouteComments rc);
     bool deleteRouteCommenUsingCommentKey(int commentKey);

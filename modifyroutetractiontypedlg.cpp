@@ -148,7 +148,7 @@ void ModifyRouteTractionTypeDlg::btnOK_Click()      //SLOT
          rc.routeAlpha = _rd.alphaRoute();
          rc.date= ui->dateEdit->date();
          rc.companyKey = _rd.companyKey();
-         if(!sql->updateRouteComment(rc))
+         if(!sql->updateRouteComment(&rc))
          {
              //sql->rollbackTransaction("ModifyRouteTractionType");
              this->reject();
