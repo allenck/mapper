@@ -8379,12 +8379,10 @@ RouteComments SQL::getRouteComment(qint32 route, QDate date, qint32 commentKey)
         QSqlDatabase db = QSqlDatabase::database();
 
         QString commandText = QString("SELECT rc.commentKey, c.commentKey, rc.companyKey, comments, tags, rc.latitude, "
-            "rc.longitude, n.name, a.routeAlpha "
+            "rc.longitude, a.routeAlpha, rc.routeId "
             "from RouteComments rc "
             "join Comments c on rc.commentKey = c.commentKey "
-            "join Routes r on r.route = rc.route and '%2' between r.startDate and r.endDate "
             "JOIN AltRoute a ON a.route = rc.route "
-            "join RouteName n on r.routeid =n.routeid "
             "where rc.route = %1 and rc.date = '%2'").arg(route).arg(date.toString("yyyy/MM/dd"));
 
         if(commentKey > 0)
@@ -8425,8 +8423,8 @@ RouteComments SQL::getRouteComment(qint32 route, QDate date, qint32 commentKey)
                     //qDebug()<<rc.ci.comments;
                 }
             }
-            rc.routeName = query.value(7).toString();
-            rc.routeAlpha = query.value(8).toString();
+            rc.routeAlpha = query.value(7).toString();
+            rc.routeId = query.value(8).toInt();
         }
     }
     catch (Exception e)
@@ -8522,7 +8520,7 @@ QList<RouteComments*> SQL::listRouteComments()
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
-        QString commandText = "select route, date, rc.commentKey, c.tags, c.routeList, c.comments, companyKey, latitude, longitude "
+        QString commandText = "select route, date, rc.commentKey, c.tags, c.routeList, c.comments, companyKey, latitude, longitude, routeId "
                               "from RouteComments rc "
                               "join Comments c on c.commentKey = rc.commentKey";
 
@@ -8554,7 +8552,7 @@ QList<RouteComments*> SQL::listRouteComments()
             rc->ci.comments = query.value(5).toString();
             rc->companyKey = query.value(6).toInt();
             rc->pos = LatLng(query.value(7).toDouble(), query.value(8).toDouble());
-
+            rc->routeId = query.value(9).toInt();
             list.append(rc);
         }
     }
@@ -8638,9 +8636,9 @@ bool SQL::updateRouteComment(RouteComments* rc)
             rc->commentKey = rc->ci.commentKey = addComment(rc->ci.comments, rc->ci.tags, rc->ci.routesUsed);
 
             commandText = QString("insert into RouteComments (route, date, commentKey, companyKey,"
-                                  " latitude, longitude) "
-            " values(%1, '%2', %3, %4, %5, %6)").arg(rc->route).arg(rc->date.toString("yyyy/MM/dd"))
-                    .arg(rc->ci.commentKey ).arg(rc->companyKey).arg(rc->pos.lat()).arg(rc->pos.lon());
+                                  " latitude, longitude, routeId) "
+            " values(%1, '%2', %3, %4, %5, %6, %7)").arg(rc->route).arg(rc->date.toString("yyyy/MM/dd"))
+                    .arg(rc->ci.commentKey ).arg(rc->companyKey).arg(rc->pos.lat()).arg(rc->pos.lon()).arg(rc->routeId);
             bQuery = query.exec(commandText);
             if(!bQuery)
             {
@@ -8665,8 +8663,8 @@ bool SQL::updateRouteComment(RouteComments* rc)
             {
                 commandText = QString("insert into RouteComments (route, date, commentKey, companyKey,"
                                       " latitude, longitude) "
-                " values(%1, '%2', %3, %4, %5, %6)").arg(rc->route).arg(rc->date.toString("yyyy/MM/dd"))
-                        .arg(rc->ci.commentKey ).arg(rc->companyKey).arg(rc->pos.lat()).arg(rc->pos.lon());
+                " values(%1, '%2', %3, %4, %5, %6, %7)").arg(rc->route).arg(rc->date.toString("yyyy/MM/dd"))
+                        .arg(rc->ci.commentKey ).arg(rc->companyKey).arg(rc->pos.lat()).arg(rc->pos.lon()).arg(rc->routeId);
                 bQuery = query.exec(commandText);
                 if(!bQuery)
                 {
@@ -8686,10 +8684,10 @@ bool SQL::updateRouteComment(RouteComments* rc)
             }
             // record already exists!
             commandText = QString("update RouteComments set companyKey = %1, "
-                          "latitude = %2, longitude=%3, "
+                          "latitude = %2, longitude=%3, routeId=%4"
                           "lastUpdate=CURRENT_TIMESTAMP  where route = %4 and date = '%5'")
                           .arg(rc->companyKey).arg(rc->pos.lat()).arg(rc->pos.lon()).arg(rc->route)
-                          .arg(rc->date.toString("yyyy/MM/dd"));
+                          .arg(rc->date.toString("yyyy/MM/dd")).arg(rc->routeId);
             bQuery = query.exec(commandText);
             if(!bQuery)
             {
@@ -8734,9 +8732,9 @@ bool SQL::addRouteComment(RouteComments rc)
         QSqlDatabase db = QSqlDatabase::database();
         QSqlQuery query = QSqlQuery(db);
         commandText = QString("insert into RouteComments (route, date, commentKey, companyKey,"
-                                          " latitude, longitude) "
-                    " values(%1, '%2', %3, %4, %5, %6)").arg(rc.route).arg(rc.date.toString("yyyy/MM/dd"))
-                            .arg(rc.ci.commentKey ).arg(rc.companyKey).arg(rc.pos.lat()).arg(rc.pos.lon());
+                                          " latitude, longitude, routeId) "
+                    " values(%1, '%2', %3, %4, %5, %6, %7)").arg(rc.route).arg(rc.date.toString("yyyy/MM/dd"))
+                            .arg(rc.ci.commentKey ).arg(rc.companyKey).arg(rc.pos.lat()).arg(rc.pos.lon()).arg(rc.routeId);
         bQuery = query.exec(commandText);
         if(!bQuery)
         {
@@ -8954,7 +8952,7 @@ RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 commentK
         QSqlDatabase db = QSqlDatabase::database();
 
         commandText = "SELECT rc.commentKey, comments, tags, date, rc.companyKey, n.name,"
-                " a.routeAlpha, rc.latitude, rc.longitude, c.routeList "
+                " a.routeAlpha, rc.latitude, rc.longitude, c.routeList, n.routeId "
                 "from RouteComments rc "
                 "join Comments c on rc.commentKey = c.commentKey "
                 "JOIN AltRoute a ON a.route = rc.route "
@@ -9005,6 +9003,7 @@ RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 commentK
             rc.routeAlpha = query.value(6).toString();
             rc.pos = LatLng(query.value(7).toDouble(), query.value(8).toDouble());
             rc.ci.routesUsed = rc.ci.toRoutesTable(query.value(9).toString());
+            rc.routeId = query.value(10).toInt();
             break; // only need first one
         }
     }
@@ -9040,7 +9039,7 @@ RouteComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 commentK
         QSqlDatabase db = QSqlDatabase::database();
 
         QString commandText = "SELECT rc.commentKey, comments, tags, date, rc.companyKey, n.name,"
-                " a.routeAlpha, rc.latitude, rc.longitude, c.routeList "
+                " a.routeAlpha, rc.latitude, rc.longitude, c.routeList, n.routeId "
                 "from RouteComments rc "
                 "join Comments c on rc.commentKey = c.commentKey "
                 "JOIN AltRoute a ON a.route = rc.route "
@@ -9090,6 +9089,7 @@ RouteComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 commentK
             rc.routeAlpha = query.value(6).toString();
             rc.pos = LatLng(query.value(7).toDouble(),query.value(8).toDouble());
             rc.ci.routesUsed = rc.ci.toRoutesTable(query.value(9).toString());
+            rc.routeId = query.value(10).toInt();
             //break; // only need first result
         }
     }
@@ -9226,7 +9226,7 @@ QList<RouteComments>* SQL::getRouteCommentst(qint32 route, QDate date, int* curr
         QSqlDatabase db = QSqlDatabase::database();
 
         QString commandText = "SELECT rc.commentKey, comments, tags, date, rc.companyKey, n.name,"
-                " a.routeAlpha, rc.latitude, rc.longitude, c.routeList "
+                " a.routeAlpha, rc.latitude, rc.longitude, c.routeList, n.routeId "
                 "from RouteComments rc "
                 "join Comments c on rc.commentKey = c.commentKey "
                 "JOIN AltRoute a ON a.route = rc.route "
@@ -9279,6 +9279,7 @@ QList<RouteComments>* SQL::getRouteCommentst(qint32 route, QDate date, int* curr
             rc.routeAlpha = query.value(6).toString();
             rc.pos = LatLng(query.value(7).toDouble(),query.value(8).toDouble());
             rc.ci.routesUsed = rc.ci.toRoutesTable(query.value(9).toString());
+            rc.routeId = query.value(10).toInt();
             if(rc.route == prev.route && rc.date == prev.date && rc.commentKey == prev.commentKey)
                 continue;
             prev = rc;
@@ -10327,6 +10328,11 @@ void SQL::checkTables(QSqlDatabase db)
     executeScript(":/sql/Sqlite3/sqlite3_recreateComments.sql",db);
   }
 
+  if(!doesColumnExist("RouteComments", "routeId"))
+  {
+      addColumn("RouteComments", "routeId", "int NOT NULL DEFAULT -1");
+      executeScript(":/sql/recreateRouteComments.sql");
+  }
 
   if(!doesColumnExist("Companies", "RoutePrefix"))
   {

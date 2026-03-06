@@ -3600,6 +3600,7 @@ bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
                 "`date` date NOT NULL,  "
                 "`commentKey` integer NOT NULL,  "
                 "`companyKey` integer NOT NULL,  "
+                "`routeId` integer NOT NULL DEFAULT -1, "
                 "`latitude` decimal(15,5) NOT NULL DEFAULT '0.00000',"
                 "`longitude` decimal(15,5) NOT NULL DEFAULT '0.00000',"
                 "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,  "
@@ -3612,6 +3613,7 @@ bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
     date date NOT NULL,\
     commentKey integer NOT NULL,\
     companyKey integer NOT NULL,\
+    routeId integer NOT NULL DEFAULT -1,\
     latitude decimal(15,5) NOT NULL DEFAULT '0.00000',\
     longitude decimal(15,5) NOT NULL DEFAULT '0.00000',\
     lastUpdate timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\
@@ -3622,6 +3624,7 @@ bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
     `date` date NOT NULL,\
     `commentKey` int(11) NOT NULL,\
     `companyKey` integer NOT NULL,\
+    `routeId` integer NOT NULL DEFAULT -1,\
     `latitude` decimal(15,5) NOT NULL DEFAULT '0.00000',\
     `longitude` decimal(15,5) NOT NULL DEFAULT '0.00000',\
     `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\
@@ -3636,6 +3639,7 @@ bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
         "[date] [date] NOT NULL,"\
         "[commentKey] [int] NOT NULL,"\
         "[companyKey] [int] NOT NULL,"\
+        "[routeId] [int] NOT NULL DEFAULT -1,"\
         "[latitude] decimal(15,5) NOT NULL DEFAULT '0.00000',"\
         "[longitude] decimal(15,5) NOT NULL DEFAULT '0.00000',"\
         "[lastUpdate] [datetime] NOT NULL,"\

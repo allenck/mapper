@@ -75,7 +75,7 @@ int RouteSelectorTableModel::rowCount(const QModelIndex &parent) const
 
 int RouteSelectorTableModel::columnCount(const QModelIndex &parent) const
 {
- return 6;
+ return 7;
 }
 
 QVariant RouteSelectorTableModel::data(const QModelIndex &index, int role) const
@@ -97,6 +97,8 @@ QVariant RouteSelectorTableModel::data(const QModelIndex &index, int role) const
     return routeName->companyKey();
   case COMPANYNAME:
     return routeName->companyName();
+  case ROUTEID:
+      return routeName->routeId();
   }
  }
  return QVariant();
@@ -120,6 +122,8 @@ QVariant RouteSelectorTableModel::headerData(int section, Qt::Orientation orient
     return tr("Company id");
    case COMPANYNAME:
     return tr("Company Name");
+   case ROUTEID:
+       return "RouteId";
   }
  }
  return QVariant();
@@ -171,6 +175,7 @@ void RouteSelectorTableModel::createList(QList<RouteData>* rdList, QDate dt)
             rn->setBaseRoute(rd.baseRoute());
             rn->setCompanyKey(rd.companyKey());
             rn->setCompanyName(rd.companyName());
+            rn->setRouteId(rd.routeId());
             list->insert(rd.route(), rn);
         }
     }
@@ -186,6 +191,16 @@ QString RouteSelectorTableModel::getRouteName(int route)
         }
     }
     return QString();
+}
+int RouteSelectorTableModel::getRouteId(int route)
+{
+    foreach (RouteName* rn , list->values()) {
+        if(rn->route() == route)
+        {
+            return rn->routeId();
+        }
+    }
+    return -1;
 }
 
 

@@ -1337,6 +1337,7 @@ RouteComments::RouteComments(const RouteComments& other)
     routeName = other.routeName;
     routeAlpha = other.routeAlpha;
     companyName = other.companyName;
+    routeId = other.routeId;
 }
 
 CommentInfo::CommentInfo(const CommentInfo& other){

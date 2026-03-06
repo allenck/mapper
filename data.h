@@ -897,6 +897,7 @@ public:
     qint32 route=-1;
     QDate date;
     qint32 commentKey=-1;
+    qint32 routeId = -1;
     CommentInfo ci;
     LatLng pos;
     qint32 companyKey=-1;

@@ -23,6 +23,7 @@ public:
     void setCompanyKey(qint32);
     void scan();
     void setDirty(bool = true);
+    void displayComment(RouteComments newRc);
 
 private:
     Ui::RouteCommentsDlg *ui;

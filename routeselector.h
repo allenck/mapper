@@ -33,9 +33,10 @@ class RouteSelectorTableModel : public QAbstractTableModel
  Q_OBJECT
  public:
   RouteSelectorTableModel(QMap<int, RouteName *> *list, QObject *parent=0);
-  enum COLUMNS{ROUTEALPHA, ROUTEPREFIX, ROUTE, NAME, COMPANYNAME, COMPANY};
+  enum COLUMNS{ROUTEALPHA, ROUTEPREFIX, ROUTE, NAME, ROUTEID, COMPANYNAME, COMPANY};
   void createList(QList<RouteData>*rdList, QDate dt);
   QString getRouteName(int route);
+  int getRouteId(int route);
 
 
   int rowCount(const QModelIndex &parent) const;
@@ -72,6 +73,8 @@ class RouteName : public QObject
   void setCompanyKey(int companyKey) {_companyKey = companyKey;}
   QString companyName() {return _coName;}
   void setCompanyName(QString name) {_coName = name;}
+  int routeId() {return _routeId;}
+  void setRouteId(int routeId) {_routeId = routeId;}
   bool equals(const RouteName& other)
   {
    if(_route == other._route || _routeAlpha == _routeAlpha)
@@ -81,7 +84,7 @@ class RouteName : public QObject
   QString getRouteName(int route);
 
  private:
-  int _route, _baseRoute, _companyKey;
+  int _route, _baseRoute, _companyKey, _routeId;
   QString _routePrefix, _routeAlpha, _name,_coName;
 };
 
