@@ -5774,13 +5774,16 @@ void MainWindow::onWebSocketClosed()
   }
   else
   {
-      int rslt = QMessageBox::question(this, tr("Connection closed"), tr("The connection to the browser has closed."
-                                                                         "Click Yes to reload Map,  Close to exit"),
-                                       QMessageBox::Yes|QMessageBox::Close);
-      if(rslt == QMessageBox::Close)
+      if(config->bRunInBrowser)
       {
-          close();
-          return;
+          int rslt = QMessageBox::question(this, tr("Connection closed"), tr("The connection to the browser has closed."
+                                                                             "Click Yes to reload Map,  Close to exit"),
+                                           QMessageBox::Yes|QMessageBox::Close);
+          if(rslt == QMessageBox::Close)
+          {
+              close();
+              return;
+          }
       }
       qInfo() << "reload map initiated!";
       reloadMapAct->trigger();

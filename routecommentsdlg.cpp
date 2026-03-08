@@ -27,6 +27,10 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
     ui->btnIgnore->setVisible(false);
     ui->lblInfo->clear();
     _model = (RouteSelectorTableModel*)ui->tableView->model();
+    SQL::instance()->setForeignKeyCheck(true);
+    MainWindow::_instance->foreignKeyCheckAct->setChecked(true);
+    config->setForeignKeyCheck(true);
+
     setWindowTitle(tr("Route Comments"));
     setDirty(false);
 
@@ -231,8 +235,9 @@ void RouteCommentsDlg::OnBtnApply_clicked()
         else
             finishScan(scanResult);
     }
-    ui->txtComments->clear();
-    ui->txtTags->clear();
+    // ui->txtComments->clear();
+    // ui->txtTags->clear();
+    setDirty(false);
 }
 
 void RouteCommentsDlg::btnIgnore_clicked()
@@ -333,6 +338,21 @@ void RouteCommentsDlg::displayComment(RouteComments newRc)
     ui->txtRoutesUsed->setText(_rc.ci.routesTableToString(_rc.ci.routesUsed));
     ui->tableView->setSelections(&_rc.ci.routesUsed);
     ui->lblInfo->clear();
+    if(routes->isEmpty())
+        routes->append(_rc.route);
+    if(!_rc.ci.routesUsed.isEmpty())
+    {
+        routes = &_rc.ci.routesUsed;
+    }
+    if(_rc.routeId == -1 )
+    {
+        _rc.routeId = ((RouteSelectorTableModel*)ui->tableView->model())->getRouteId(_rc.route);
+        if(_rc.routeId > 0)
+        {
+            setDirty();
+            outputChanges();
+        }
+    }
     setDirty(false);
 }
 

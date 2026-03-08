@@ -8684,7 +8684,7 @@ bool SQL::updateRouteComment(RouteComments* rc)
             }
             // record already exists!
             commandText = QString("update RouteComments set companyKey = %1, "
-                          "latitude = %2, longitude=%3, routeId=%4"
+                          "latitude = %2, longitude=%3, routeId=%6,"
                           "lastUpdate=CURRENT_TIMESTAMP  where route = %4 and date = '%5'")
                           .arg(rc->companyKey).arg(rc->pos.lat()).arg(rc->pos.lon()).arg(rc->route)
                           .arg(rc->date.toString("yyyy/MM/dd")).arg(rc->routeId);

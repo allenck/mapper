@@ -529,6 +529,7 @@ signals:
     friend class SegmentView;
     friend class SegmentViewTableModel;
     friend class ExportDlg;
+    friend class RouteCommentsDlg;
 };
 
 class Menu : public QMenu
