@@ -4363,6 +4363,8 @@ bool ExportSql::createCommentsTable(QSqlDatabase db, QString dbType)
               `commentKey` INTEGER primary key AUTOINCREMENT,\
               `tags` varchar(1000) NOT NULL,\
               `routeList` varchar(100) NOT NULL, \
+              `date` date ,\
+              `jRouteList` JSON,\
               `comments` mediumtext NOT NULL,\
               `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP\
             );";

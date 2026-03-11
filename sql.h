@@ -210,7 +210,9 @@ public:
     RouteComments getNextRouteComment(qint32 route, QDate date, qint32 commentKey,qint32 companyKey);
     RouteComments getPrevRouteComment(qint32 route, QDate date, qint32 commentKey, qint32 companyKey);
     CommentInfo getComment(qint32 commentKey, int pos);
-    QList<RouteComments> *getRouteCommentst(qint32 route, QDate date, int *currIx);
+    CommentInfo getComment(QString aRoute, QDate date, int pos);
+
+    //QList<CommentInfo> *getRouteCommentst(qint32 route, QDate date, int *currIx);
 
     QStringList showDatabases(QString Connection, QString servertype);
     QStringList getAlphaRoutes(QString text);
@@ -256,6 +258,7 @@ public:
     int nextRouteNumberInRange(int lowRange, int highRange);
     bool renumberRoute(QString oldAlphaRoute, int newRoute, QString routePrefix);
     QList<RouteComments> commentsForRoute(int route);
+    QList<CommentInfo> *commentsForAlphaRoute(QString alphaRoute, QDate date, int *currIx);
     QList<TerminalInfo> terminalsForRoute(int route);
     bool updateRouteForStations(int oldRoute, int newRoute);
     bool deleteTerminalInfo(int route);
@@ -299,6 +302,7 @@ signals:
     void segmentChanged(const SegmentInfo si, CHANGETYPE t);
     void routeChange(NotifyRouteChange rc);
     void routeCommentChange(RouteComments rc, CHANGETYPE t);
+    void commentChange(CommentInfo ci, CHANGETYPE t);
 
 private:
     SQL();

@@ -209,7 +209,7 @@ public slots:
     QMenu* addSegmentMenu(SegmentData* sd);
     QT_DEPRECATED void getArrayResult(QVariant);
     void selectRoute(RouteData rd);
-    void displayRouteComment(RouteComments rcIn);
+    void displayRouteComment(CommentInfo ci);
 
 private slots:
     void about();
@@ -408,6 +408,7 @@ private:
     QAction* populateRouteIdAct;
     QAction* displayRouteOnReloadAct;
     QAction* editCommentsAct;
+    QAction* upgradeCommentsAct;
 
     QWidgetAction *sortTypeAct;
     QComboBox * cbSort;
@@ -424,7 +425,8 @@ private:
     SystemConsole2* consoleDlg = nullptr;
     QStringList currentStreetNames;
 
-    QList<RouteComments>* comments = nullptr;
+    //QList<RouteComments>* comments = nullptr;
+    QList<CommentInfo>* comments = nullptr;
     int currIx = -1;
 
     TerminalInfo m_terminalInfo;

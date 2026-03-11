@@ -24,6 +24,7 @@ public:
     void scan();
     void setDirty(bool = true);
     void displayComment(RouteComments newRc);
+    static bool upgrade();
 
 private:
     Ui::RouteCommentsDlg *ui;
@@ -31,6 +32,8 @@ private:
     // qint32 _companyKey;
     // QDate _date;
     SQL* sql;
+    //RouteComments _rc;
+    CommentInfo _ci;
     RouteComments _rc;
     Configuration *config;
     QList<RouteData>* routeList = nullptr;

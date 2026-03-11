@@ -70,70 +70,71 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
      //   sql->deleteRouteComment(rc);
      //  }
      // }
-     dRoutes = new QList<int>();
-     ui->lblInfo->clear();
-     for(QModelIndex deletedIndex : deleted)
-     {
-         if(deletedIndex.isValid())
+         dRoutes = new QList<int>();
+         ui->lblInfo->clear();
+         for(QModelIndex deletedIndex : deleted)
          {
-            if(deletedIndex.column()== RouteSelectorTableModel::ROUTE)
-            {
-                 dRoutes->append(deletedIndex.data().toInt());
-                ui->lblInfo->setText(QString("unselect %1").arg(deletedIndex.data().toInt()));
-            }
-         }
-     }
-     selectionModel = ui->tableView->selectionModel();
-     modelIndexList = selectionModel->selectedRows();
-     routes->clear();
-     aRoutes->clear();
-     ui->lblInfo->clear();
-     QString txtRoutes;
-     foreach (QModelIndex ix, modelIndexList) {
-         int selectedRoute = ix.data().toInt();
-         if(!routes->contains(selectedRoute))
-             routes->append(selectedRoute);
-         QModelIndex aix = _model->index(ix.row(), RouteSelectorTableModel::ROUTEALPHA);
-         aRoutes->append(aix.data().toString());
-         txtRoutes.append(aix.data().toString() + ",");
-         _rc.routeAlpha = aix.data().toString();
-         _rc.companyKey = _model->index(ix.row(),RouteSelectorTableModel::COMPANY).data().toInt();
-         _rc.companyName = _model->index(ix.row(),RouteSelectorTableModel::COMPANYNAME).data().toString();
-         _rc.routeName = _model->index(ix.row(),RouteSelectorTableModel::NAME).data().toString();
-         if(bScanInProgress)
-         {
-             _rc.route = _model->index(ix.row(),RouteSelectorTableModel::ROUTE).data().toInt();
-         }
-         else
-         {
-             RouteComments newRc =sql->getRouteComment(selectedRoute, ui->dateEdit->date(),-1);
+             if(deletedIndex.isValid())
              {
-                 if(newRc.commentKey > 0)
+                if(deletedIndex.column()== RouteSelectorTableModel::ROUTE)
+                {
+                     dRoutes->append(deletedIndex.data().toInt());
+                    ui->lblInfo->setText(QString("unselect %1").arg(deletedIndex.data().toInt()));
+                }
+             }
+         }
+         selectionModel = ui->tableView->selectionModel();
+         modelIndexList = selectionModel->selectedRows();
+         routes->clear();
+         aRoutes->clear();
+         ui->lblInfo->clear();
+         QString txtRoutes;
+         foreach (QModelIndex ix, modelIndexList) {
+             int selectedRoute = ix.data().toInt();
+             if(!routes->contains(selectedRoute))
+                 routes->append(selectedRoute);
+             QModelIndex aix = _model->index(ix.row(), RouteSelectorTableModel::ROUTEALPHA);
+             aRoutes->append(aix.data().toString());
+             txtRoutes.append(aix.data().toString() + ",");
+             _rc.commentKey = -1;
+             _rc.routeAlpha = aix.data().toString();
+             _rc.companyKey = _model->index(ix.row(),RouteSelectorTableModel::COMPANY).data().toInt();
+             _rc.companyName = _model->index(ix.row(),RouteSelectorTableModel::COMPANYNAME).data().toString();
+             _rc.routeName = _model->index(ix.row(),RouteSelectorTableModel::NAME).data().toString();
+             if(bScanInProgress)
+             {
+                 _rc.route = _model->index(ix.row(),RouteSelectorTableModel::ROUTE).data().toInt();
+             }
+             else
+             {
+                 RouteComments newRc =sql->getRouteComment(selectedRoute, ui->dateEdit->date(),-1);
                  {
-                     if(!bIsDirty)
+                     if(newRc.commentKey > 0)
                      {
-                         displayComment(newRc);
+                         if(!bIsDirty)
+                         {
+                             displayComment(newRc);
+                         }
                      }
                  }
              }
          }
-     }
-     txtRoutes.chop(1);
-     ui->txtRoutesUsed->setText(txtRoutes);
-     qDebug() << routes->count() << " routes selected";
-     foreach(int r, *routes)
-         qDebug() << " " << r;
+         txtRoutes.chop(1);
+         ui->txtRoutesUsed->setText(txtRoutes);
+         qDebug() << routes->count() << " routes selected";
+         foreach(int r, *routes)
+             qDebug() << " " << r;
 
-     enableButtons();
+         enableButtons();
     });
 
     connect(ui->txtComments, &QTextEdit::textChanged,this, [=]{
-         _rc.ci.comments = ui->txtComments->toHtml();
-         _rc.date = ui->dateEdit->date();
+         _ci.comments = ui->txtComments->toHtml();
+         _ci.date = ui->dateEdit->date();
          ui->lblInfo->clear();
         // _rc.commentKey = -1;
         // _rc.ci.commentKey = -1;
-        MainWindow::instance()->displayRouteComment(_rc);
+        MainWindow::instance()->displayRouteComment(_ci);
          enableButtons();
     });
 
@@ -943,5 +944,37 @@ void RouteCommentsDlg::closeEvent(QCloseEvent *e)
     }
     this->reject();
     this->close();
+}
 
+/*static*/ bool RouteCommentsDlg::upgrade()
+{
+    QList<RouteComments*> list = SQL::instance()->listRouteComments();
+
+    SQL::instance()->beginTransaction("upgrade");
+    for(RouteComments* rc : list)
+    {
+        QVariantList vl;
+        QSqlDatabase db = QSqlDatabase();
+        if(rc->ci.date.isNull())
+        {
+            rc->ci.aRoutes = QJsonArray();
+            rc->ci.date = rc->date;
+            QStringList sl;
+            if(rc->ci.routesUsed.isEmpty())
+                rc->ci.routesUsed.append(rc->route);
+            for(int route : rc->ci.routesUsed)
+            {
+                if(SQL::instance()->executeCommand(QString("select routeAlpha from altRoute where route = %1").arg(route),db,&vl)){
+                   rc->ci.aRoutes.append(vl.at(0).toString());
+                    sl.append(vl.at(0).toString());
+                }
+            }
+            rc->ci.aRoutesString = CommentInfo::jRoutesTableToString(sl);
+            if(!SQL::instance()->updateComment(rc->ci))
+            {
+                return false;
+            }
+        }
+    }
+    return true;
 }

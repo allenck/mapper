@@ -9,6 +9,7 @@
 #include <QPersistentModelIndex>
 #include <QRectF>
 #include "latlng.h"
+#include "qjsonarray.h"
 #include <iostream>
 #include <QUrl>
 
@@ -855,6 +856,15 @@ public:
     QList<int> routesUsed = QList<int>();
     QList<int> toRoutesTable(QString routeList);
     static QString routesTableToString(QList<int> table);
+    static QString jRoutesTableToString(QList<QString> table);
+    QJsonArray aRoutes = QJsonArray();
+    QString aRoutesString;
+    QDate date;
+    QString alphaRoute;
+    LatLng pos;
+    QString routeName;
+    qint32 companyKey;
+    qint32 routeId;
 };
 
 class RowChanged

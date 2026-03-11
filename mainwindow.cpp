@@ -410,19 +410,24 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   });
 
   connect(SQL::instance(), &SQL::routeCommentChange, this, [=](RouteComments rc, SQL::CHANGETYPE t){
-      RouteComments currRc;
+      //RouteComments currRc;
+      CommentInfo currCi;
       if(comments && currIx)
       {
-          currRc = comments->at(currIx);
+          currCi = comments->at(currIx);
           currIx = -1;
-          comments = sql->getRouteCommentst(currRc.route, currRc.date, &currIx);
+          comments = sql->commentsForAlphaRoute(currCi.alphaRoute, currCi.date, &currIx);
           for(int i =0; i < comments->count(); i++)
           {
-             RouteComments rc = comments->at(i);
-             if(rc.route == currRc.route && rc.date == currRc.date && rc.commentKey == currRc.commentKey)
+             //RouteComments rc = comments->at(i);
+             CommentInfo ci = comments->at(i);
+             RouteData rd = ui->cbRoute->currentData().value<RouteData>();
+             ci.routeId = rd.routeId();
+             ci.routeName = rd.routeName();
+             if(ci.alphaRoute == currCi.alphaRoute && ci.date == currCi.date && ci.commentKey == currCi.commentKey)
              {
                  currIx = i;
-                 displayRouteComment(rc);
+                 displayRouteComment(ci);
                  break;
              }
              m_bridge->processScript("showRouteComment", "false");
@@ -431,6 +436,33 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
       }
   });
+  connect(SQL::instance(), &SQL::commentChange, this, [=](CommentInfo ci, SQL::CHANGETYPE t){
+      //RouteComments currRc;
+      CommentInfo currCi;
+      if(comments && currIx)
+      {
+          currCi = comments->at(currIx);
+          currIx = -1;
+          comments = sql->commentsForAlphaRoute(currCi.alphaRoute, currCi.date, &currIx);
+          for(int i =0; i < comments->count(); i++)
+          {
+             //RouteComments rc = comments->at(i);
+             CommentInfo ci = comments->at(i);
+             RouteData rd = ui->cbRoute->currentData().value<RouteData>();
+             ci.routeId = rd.routeId();
+             ci.routeName = rd.routeName();
+             if(ci.alphaRoute == currCi.alphaRoute && ci.date == currCi.date && ci.commentKey == currCi.commentKey)
+             {
+                 currIx = i;
+                 displayRouteComment(ci);
+                 break;
+             }
+             m_bridge->processScript("showRouteComment", "false");
+
+          }
+      }
+  });
+
 //  connect(ui->cbSegments, SIGNAL(signalFocusOut()), this, SLOT( cbSegments_Leave()));
   connect(ui->cbRoute, SIGNAL(signalFocusOut()), this, SLOT(cbRoutes_Leave()));
   //connect(companyView, SIGNAL(dataChanged()), this, SLOT(refreshCompanies()));
@@ -1419,6 +1451,10 @@ void MainWindow::createActions()
      sql->populateRouteId();
  });
 
+ upgradeCommentsAct = new QAction(tr("upgrade comments"),this);
+ connect(upgradeCommentsAct, &QAction::triggered,this, [=]{
+     RouteCommentsDlg::upgrade();
+ });
 
  selAllCompaniesAct = new QAction(tr("All Companies"), this);
  selAllCompaniesAct->setStatusTip(tr("Show routes for all companies"));
@@ -1808,6 +1844,7 @@ void MainWindow::createMenus()
     toolsMenu->addAction(testLoadAct);
     toolsMenu->addAction(testRunJavaScriptAct);
     toolsMenu->addAction(populateRouteIdAct);
+    toolsMenu->addAction(upgradeCommentsAct);
 #endif
     optionsMenu = new Menu(tr("Options"));
     overlayMenu = new Menu(tr("Overlays"));
@@ -2861,38 +2898,47 @@ bool MainWindow::isStationOnSegment(StationInfo* sti, QList<SegmentData*> segmen
 
 void MainWindow::loadRouteComment(QDate dtIn)
 {
-
- QDate dt;
- if(dtIn.isNull())
- {
-     QDate dt = QDate::fromString(m_currRouteStartDate, "yyyy/MM/dd");
-     dt = sql->getFirstCommentDate(m_routeNbr, dt, _rd.companyKey());
- }
- else
-     dt = dtIn;
- //RouteComments rc = sql->getRouteComment(m_routeNbr, dt, -1);
- currIx = -1;
- comments = sql->getRouteCommentst(m_routeNbr, dt, &currIx);
- RouteComments rc;
- if(currIx >=0)
-     rc = comments->at(currIx);
- displayRouteComment(rc);
+    QDate dt;
+    if(dtIn.isNull())
+    {
+        QDate dt = QDate::fromString(m_currRouteStartDate, "yyyy/MM/dd");
+        dt = sql->getFirstCommentDate(m_routeNbr, dt, _rd.companyKey());
+    }
+    else
+        dt = dtIn;
+    //RouteComments rc = sql->getRouteComment(m_routeNbr, dt, -1);
+    currIx = -1;
+    comments = sql->commentsForAlphaRoute(m_alphaRoute, dt, &currIx);
+    //RouteComments rc;
+    CommentInfo ci;
+    if(currIx >=0)
+        ci = comments->at(currIx);
+    RouteData rd = ui->cbRoute->currentData().value<RouteData>();
+    ci.routeId = rd.routeId();
+    ci.routeName = rd.routeName();
+    displayRouteComment(ci);
 }
 
-void MainWindow::displayRouteComment(RouteComments rcIn)
+void MainWindow::displayRouteComment(CommentInfo ciIn)
 {
     double infoLat=0, infoLon = 0;
     QVariantList objArray;
 
- if(rcIn.commentKey < 0)
+ if(ciIn.commentKey < 0)
  {
   //rc = sql->getRouteComment(0, rc.date,rc.commentKey);
      currIx = -1;
-     comments = sql->getRouteCommentst(rcIn.route, rcIn.date, &currIx);
+     comments = sql->commentsForAlphaRoute(ciIn.alphaRoute, ciIn.date, &currIx);
  }
- RouteComments rc;
+ //RouteComments rc;
+ CommentInfo ci;
  if(currIx >=0)
-     rc = comments->at(currIx);
+ {
+     ci = comments->at(currIx);
+     RouteData rd = ui->cbRoute->currentData().value<RouteData>();
+     ci.routeId = rd.routeId();
+     ci.routeName = rd.routeName();
+ }
  // if(rc.ci.comments.isEmpty())
  // {
  //  rc = sql->getNextRouteComment(m_routeNbr, rc.date, rc.commentKey,-1);
@@ -2914,35 +2960,35 @@ void MainWindow::displayRouteComment(RouteComments rcIn)
      sPrev="<input type='button' name='prev' value='<' onClick='prevRouteComment()'/>";
  if(currIx >=0 && comments->count()-1 > currIx)
      sNext = "<input type='button' name='next' value='>' onClick='nextRouteComment()'/>";
- if(rc.pos.lat() && rc.pos.lon())
+ if(ci.pos.lat() && ci.pos.lon())
  {
-  infoLat = rc.pos.lat();
-  infoLon = rc.pos.lon();
+  infoLat = ci.pos.lat();
+  infoLon = ci.pos.lon();
  }
  else {
   m_bridge->processScript("getCenter");
   infoLat = m_latitude;
   infoLon = m_longitude;
  }
- if(rc.route >= 0 && rc.ci.comments != "")
+ if(ci.alphaRoute >= "" && ci.comments != "")
  {
 //       if(rc.ci.comments == "")
 //           rc.ci.comments = "<body></body><";
-  int i = rc.ci.comments.indexOf("</body>");
+  int i = ci.comments.indexOf("</body>");
   // add next and prev buttons
   if(i > 0)
   {
-   rc.ci.comments.insert(i,sPrev + sNext);
+   ci.comments.insert(i,sPrev + sNext);
   }
-  int ix = rc.ci.comments.indexOf("text-indent:0px;\">");
+  int ix = ci.comments.indexOf("text-indent:0px;\">");
   // add Route name and date
   if(ix > 0)
   {
    //rc.ci.comments.insert(ix+18, "<b>" + rc.date.toString("yyyy/MM/dd")+ "</b><p><h1>" + rc.routeAlpha + " " + rc.name + "</h1>");
-   rc.ci.comments.insert(ix+18, "<h1>" + rc.routeAlpha + " " + rc.routeName + "</h1>" +"<b>" + rc.date.toString("yyyy/MM/dd")+ "</b><p>");
+   ci.comments.insert(ix+18, "<h1>" + ci.alphaRoute + " " + ci.routeName + "</h1>" +"<b>" + ci.date.toString("yyyy/MM/dd")+ "</b><p>");
   }
   objArray.clear();
-  objArray << infoLat << infoLon << rc.ci.comments << rc.commentKey<< rc.route << rc.date.toString("yyyy/MM/dd") << rc.companyKey ;
+  objArray << infoLat << infoLon << ci.comments << ci.commentKey<< ci.alphaRoute << ci.date.toString("yyyy/MM/dd") << ci.companyKey ;
   if(bDisplayRouteComments)
   {
       m_bridge->processScript("displayRouteComment", objArray);
@@ -2955,9 +3001,12 @@ void MainWindow::displayRouteComment(RouteComments rcIn)
 void MainWindow::getInfoWindowComments(double lat, double lon, int route, QString date, int commentKey, int companyKey, int func)
 {
  QDate dt = QDate::fromString(date, "yyyy/MM/dd");
- RouteComments rc;
- RouteComments rcPrev;
- RouteComments rcNext;
+ // RouteComments rc;
+ // RouteComments rcPrev;
+ // RouteComments rcNext;
+ CommentInfo ci;
+ CommentInfo ciPrev;
+ CommentInfo ciNext;
  QString  sNext;
  QString  sPrev;
  double latitude = lat;
@@ -3000,8 +3049,12 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
          return;
      currIx++;
  }
- rc = comments->at(currIx);
- displayRouteComment(rc);
+ ci = comments->at(currIx);
+ RouteData rd = ui->cbRoute->currentData().value<RouteData>();
+ ci.routeId = rd.routeId();
+ ci.routeName = rd.routeName();
+
+ displayRouteComment(ci);
 
 #if 0
  if(currIx > 0)

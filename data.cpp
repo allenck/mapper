@@ -1348,6 +1348,14 @@ CommentInfo::CommentInfo(const CommentInfo& other){
     //usedByStations = other.usedByStations;
     routesUsed = other.routesUsed;
     routeCount = other.routeCount;
+    date = other.date;
+    aRoutesString = other.aRoutesString;
+    aRoutes = other.aRoutes;
+    alphaRoute = other.alphaRoute;
+    pos = other.pos;
+    routeName = other.routeName;
+    commentKey = other.commentKey;
+    routeId = other.routeId;
 }
 
 QList<int> CommentInfo::toRoutesTable(QString routeList)
@@ -1373,4 +1381,16 @@ QList<int> CommentInfo::toRoutesTable(QString routeList)
     }
     routeList.chop(1);
     return routeList;
+}
+
+/*static*/ QString CommentInfo::jRoutesTableToString(QList<QString> table){
+    QString routeList = "[";
+    foreach (QString aRoute, table) {
+        routeList.append("\"" + aRoute + "\"");
+        routeList.append(",");
+    }
+    routeList.chop(1);
+    routeList.append("]");
+    return routeList;
+
 }
