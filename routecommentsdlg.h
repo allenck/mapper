@@ -18,13 +18,15 @@ class RouteCommentsDlg : public QDialog
 public:
     explicit RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, QWidget *parent = 0);
     ~RouteCommentsDlg();
-    void setRoute(qint32);
-    void setDate(QDate);
-    void setCompanyKey(qint32);
+    //void setRoute(qint32);
+    //void setDate(QDate);
+    //void setCompanyKey(qint32);
     void scan();
     void setDirty(bool = true);
-    void displayComment(RouteComments newRc);
+    void displayComment(CommentInfo newCi);
     static bool upgrade();
+    void setRouteData(RouteData rd);
+    void onRouteSelected(int route, QString alphaRoute, int row);
 
 private:
     Ui::RouteCommentsDlg *ui;
@@ -33,6 +35,7 @@ private:
     // QDate _date;
     SQL* sql;
     //RouteComments _rc;
+    RouteData _rd;
     CommentInfo _ci;
     RouteComments _rc;
     Configuration *config;
@@ -44,17 +47,20 @@ private:
     QModelIndexList modelIndexList;
     QItemSelectionModel* selectionModel=nullptr;
     QList<CommentInfo>* orphans = nullptr;
+    QList<CommentInfo>* comments = nullptr;
+    int currIx = -1;
+
     int ixOrphan=-1;
-    int commentsUpdated = 0;
+    // int commentsUpdated = 0;
     int commentsDeleted = 0;
-    int routeCommentsDeleted = 0;
-    int routeCommentsAdded =0;
-    int htmlCorrected = 0;
-    int invalidDates = 0;
-    int invalidRoutes = 0 ;
-    int routesDeleted = 0;
-    int linksFixed =0;
-    int invalidRouteComments = 0;
+    // int routeCommentsDeleted = 0;
+    // int routeCommentsAdded =0;
+    // int htmlCorrected = 0;
+    // int invalidDates = 0;
+    // int invalidRoutes = 0 ;
+    // int routesDeleted = 0;
+    // int linksFixed =0;
+    // int invalidRouteComments = 0;
     int orphansDeleted = 0;
     int orphansUsed = 0;
     int dup_emptyOrphans =0;
@@ -65,7 +71,7 @@ private:
     bool bTagsChanged = false;
     QString scanLog;
     bool outputChanges();
-    bool readRouteComment(int pos);
+    QT_DEPRECATED bool readRouteComment(int pos);
     bool bScanInProgress = false;
     bool processOrphan();
     bool finishScan(int rslt);
@@ -91,6 +97,12 @@ private slots:
     void OnBtnApply_clicked();
     void OnDirtySet(bool);
     void OnAdditionalRoutesLeave();
+    void onChgDate();
+    void onSelectionsChanged(QModelIndexList added, QModelIndexList deleted);
+    void onCommentChange(CommentInfo ci, SQL::CHANGETYPE t);
+
+protected:
+    bool bSettingSelections = false;
 };
 
 #endif // ROUTECOMMENTSDLG_H

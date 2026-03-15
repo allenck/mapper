@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>640</width>
+    <width>721</width>
     <height>536</height>
    </rect>
   </property>
@@ -14,23 +14,23 @@
    <string>Dialog</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="3" column="3" colspan="4">
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>79</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="label_4">
+   <item row="6" column="5">
+    <widget class="QLabel" name="label_3">
      <property name="text">
-      <string>RoutesSelected:</string>
+      <string>CommentId:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QLineEdit" name="routesSelected">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
@@ -41,67 +41,40 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="0" colspan="7">
+   <item row="4" column="0" colspan="8">
     <widget class="HtmlTextEdit" name="txtComments">
      <property name="placeholderText">
       <string>Enter text or HTML</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
-    <widget class="QPushButton" name="btnPrev">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
+   <item row="5" column="0">
+    <widget class="QLabel" name="label_2">
      <property name="text">
-      <string>&lt;-</string>
+      <string>Tags:</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="2">
-    <widget class="QPushButton" name="btnNext">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>-&gt;</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0" colspan="7">
-    <widget class="QLabel" name="lblInfo">
-     <property name="styleSheet">
-      <string notr="true">color: rgb(255, 170, 0)</string>
-     </property>
-     <property name="text">
-      <string>info</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="4">
-    <widget class="QLabel" name="label_3">
-     <property name="text">
-      <string>CommentId:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="0" colspan="4">
-    <widget class="QLineEdit" name="txtTags">
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="0" colspan="4">
+   <item row="7" column="0" colspan="5">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
+      <widget class="QPushButton" name="btnChangeDate">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click tomove the comment to a different date.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>Move Date</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="btnDelete">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Click to remove the currently displayed comment&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
        <property name="text">
         <string>Delete</string>
        </property>
@@ -144,20 +117,51 @@
      </item>
     </layout>
    </item>
-   <item row="1" column="1">
-    <widget class="QLineEdit" name="routesSelected">
+   <item row="6" column="0" colspan="5">
+    <widget class="QLineEdit" name="txtTags">
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QPushButton" name="btnPrev">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="text">
+      <string>&lt;-</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QDateEdit" name="dateEdit">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Edit to load comments for a different date.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="displayFormat">
+      <string>yyyy/MM/dd</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Used by routes:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="6">
+    <widget class="QLineEdit" name="txtCommentId">
      <property name="readOnly">
       <bool>true</bool>
      </property>
     </widget>
    </item>
-   <item row="0" column="1" colspan="6">
+   <item row="0" column="1" colspan="7">
     <widget class="RouteSelector" name="tableView">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -176,36 +180,58 @@
      </property>
     </widget>
    </item>
-   <item row="5" column="0">
-    <widget class="QLabel" name="label_2">
+   <item row="3" column="2">
+    <widget class="QPushButton" name="btnNext">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="text">
-      <string>Tags:</string>
+      <string>-&gt;</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="2">
-    <widget class="QLabel" name="label_5">
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_4">
      <property name="text">
-      <string>Routes Used:</string>
+      <string>Routes selected:</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
-    <widget class="QDateEdit" name="dateEdit">
-     <property name="displayFormat">
-      <string>yyyy/MM/dd</string>
+   <item row="2" column="0" colspan="8">
+    <widget class="QLabel" name="lblInfo">
+     <property name="styleSheet">
+      <string notr="true">color: rgb(255, 170, 0)</string>
+     </property>
+     <property name="text">
+      <string>info</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="3" colspan="4">
+   <item row="3" column="5" colspan="3">
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>79</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="3" column="3" colspan="2">
+    <widget class="QLabel" name="lblInfo2">
+     <property name="text">
+      <string>0 of 0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="3" colspan="5">
     <widget class="QLineEdit" name="txtRoutesUsed">
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="5">
-    <widget class="QLineEdit" name="txtCommentId">
      <property name="readOnly">
       <bool>true</bool>
      </property>
@@ -215,14 +241,14 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>HtmlTextEdit</class>
-   <extends>QTextEdit</extends>
-   <header>htmltextedit.h</header>
-  </customwidget>
-  <customwidget>
    <class>RouteSelector</class>
    <extends>QTableView</extends>
    <header>routeselector.h</header>
+  </customwidget>
+  <customwidget>
+   <class>HtmlTextEdit</class>
+   <extends>QTextEdit</extends>
+   <header>htmltextedit.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

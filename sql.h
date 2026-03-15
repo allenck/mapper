@@ -182,11 +182,13 @@ public:
     QList<CommentInfo>* getOrphanComments();
     QList<StationInfo> getStations(QString alphaRoute, QDate date);
     QList<CommentInfo>* commentByText(QString htmlText);
-    QList<CommentInfo>* getComments();
+    QT_DEPRECATED QList<CommentInfo>* getComments();
     StationInfo getStationInfo(qint32 stationKey);
     QList<StationInfo> getStationsOnSegment(qint32 segmentId);
     StationInfo getStationInfo(QString name);
-    int addComment(QString comments, QString tags, QList<int> routesUsed);
+    QT_DEPRECATED int addComment(QString comments, QString tags, QList<int> routesUsed);
+    bool addComment(CommentInfo* ci);
+
     bool addRouteComment(RouteComments rc);
     bool updateComment(qint32 infoKey, QString comments, QString tags = "", QList<int> table = QList<int>());
     bool deleteComment(qint32 infoKey);
@@ -247,6 +249,7 @@ public:
     QPair<QDate,QDate> getStartAndEndDates(int segmentId);
     QList<FKInfo> getForeignKeyInfo(QSqlDatabase db, Connection *c, QString table="");
     QMap<int, RouteName*> *routeNameList();
+    QMap<QString,RouteName*>* routeNameAList();
     bool createSqlDatabase(QString dbName, QSqlDatabase db, QString dbType);
     QString getDatabase(QString serverType, QSqlDatabase db = QSqlDatabase());
     bool useDatabase(QString dbName, QString serverType, QSqlDatabase db);
@@ -295,6 +298,8 @@ public:
     bool createMissingStreetDef(QSqlDatabase db);
     QList<CommentInfo *> *commentsList();
     bool updateComment(CommentInfo info);
+    CommentInfo getPrevComment(CommentInfo ciIn);
+    CommentInfo getNextComment(CommentInfo ciIn);
 
 
 signals:

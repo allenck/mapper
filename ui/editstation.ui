@@ -147,6 +147,9 @@
    </item>
    <item row="8" column="2">
     <widget class="QPushButton" name="btnEditText">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="text">
       <string>Edit Text</string>
      </property>

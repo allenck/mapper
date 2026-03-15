@@ -268,6 +268,7 @@ private slots:
     void on_createKmlFile_triggered();
     void fillOverlayMenu();
     void queryOverlay();
+    void onCommentChange(CommentInfo ci, SQL::CHANGETYPE t);
 
     // webViewBridge
     void addPoint(int pt, double lat, double lon);

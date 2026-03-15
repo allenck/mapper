@@ -25,9 +25,12 @@ private:
  QAction *underlineAct;
  QAction *textZoomAct;
  QAction *textUnzoomAct;
+ QAction *textZoom2xAct;
+ QAction *textUnzoom2xAct;
  QAction *setColorRedAct;
  QAction *setColorGreenAct;
  QAction *setColorBlackAct;
+ QAction *setColorBlueAct;
  QAction *setColorGrayAct;
  QAction *setFontAct;
  QAction *pasteHtmlAct;
@@ -38,9 +41,17 @@ private:
  QAction* linkWebPageAct;
  QAction* insertHtmlFragmentAct;
  QAction* pasteLinkAct;
+ QAction* h1Act;
+ // QAction* h2Act;
+ // QAction* h3Act;
  bool bIsDirty;
  void setDirty(bool dirty);
  Configuration* config;
+ QTextCursor _cur;
+ QTextCharFormat _format;
+ double _pointsize;
+ QFont _font;
+ QColor _textColor;
 
 private slots:
  void showContextMenu(QPoint pt);
@@ -50,9 +61,12 @@ private slots:
  void OnSelectionChanged();
  void OnTextZoomAct();
  void OnTextUnzoomAct();
+ void OnTextZoom2xAct();
+ void OnTextUnzoom2xAct();
  void OnSetColorRedAct(bool checked);
  void OnSetColorGreenAct(bool checked);
  void OnSetColorBlackAct(bool checked);
+ void OnSetColorBlueAct(bool checked);
  void OnSetColorGrayAct(bool checked);
  void OnSetFontAct();
  void OnPasteHtmlAct();
@@ -64,7 +78,7 @@ private slots:
  void onLinkWebPage();
  void onInsertHtmlFragment();
  void onPasteLink();
-
+ void OnH1Act(bool);
 };
 
 #endif // HTMLTEXTEDIT_H

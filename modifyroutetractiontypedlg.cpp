@@ -138,22 +138,22 @@ void ModifyRouteTractionTypeDlg::btnOK_Click()      //SLOT
       }
       sql->commitTransaction("ModifyRouteTractionType");
 
-      if(ui->checkBox->isChecked())
-      {
-         QString text = "Traction type changed to " + ui->comboBox->currentText();
-          int commentKey =sql->addComment(text, "changeTT",QList<int>());
-         RouteComments rc;
-         rc.route = _rd.route();
-         rc.commentKey = commentKey;
-         rc.routeAlpha = _rd.alphaRoute();
-         rc.date= ui->dateEdit->date();
-         rc.companyKey = _rd.companyKey();
-         if(!sql->updateRouteComment(&rc))
-         {
-             //sql->rollbackTransaction("ModifyRouteTractionType");
-             this->reject();
-         }
-      }
+      // if(ui->checkBox->isChecked())
+      // {
+      //    QString text = "Traction type changed to " + ui->comboBox->currentText();
+      //     int commentKey =sql->addComment(text, "changeTT",QList<int>());
+      //    RouteComments rc;
+      //    rc.route = _rd.route();
+      //    rc.commentKey = commentKey;
+      //    rc.routeAlpha = _rd.alphaRoute();
+      //    rc.date= ui->dateEdit->date();
+      //    rc.companyKey = _rd.companyKey();
+      //    if(!sql->updateRouteComment(&rc))
+      //    {
+      //        //sql->rollbackTransaction("ModifyRouteTractionType");
+      //        this->reject();
+      //    }
+      // }
   }
   done(QDialog::Accepted);
 }

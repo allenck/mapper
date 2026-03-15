@@ -15,16 +15,19 @@ class RouteSelector : public QTableView
   RouteSelector(const RouteSelector &): QTableView() {}
   void setMultiSelection(bool);
   QList<int> *selectedRoutes();
+  QList<QString>* selectedARoutes();
   void setSelections(QList<int>* list);
+  void setSelections(QList<QString> *sellist);
   QList<RouteName *> getList();
 
  signals:
     void selections_changed(QModelIndexList added, QModelIndexList deleted);
-    void routeSelected(int route, int row);
+    void routeSelected(int route, QString alphaRoute, int row);
 
  private:
-  QMap<int, RouteName*>* list;
-  void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected) override;
+    QMap<int, RouteName*>* list = nullptr;
+    QMap<QString, RouteName*>* aList = nullptr;
+    void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected) override;
 
 };
 
@@ -32,11 +35,11 @@ class RouteSelectorTableModel : public QAbstractTableModel
 {
  Q_OBJECT
  public:
-  RouteSelectorTableModel(QMap<int, RouteName *> *list, QObject *parent=0);
+  RouteSelectorTableModel(QMap<QString, RouteName *> *aList, QObject *parent=0);
   enum COLUMNS{ROUTEALPHA, ROUTEPREFIX, ROUTE, NAME, ROUTEID, COMPANYNAME, COMPANY};
   void createList(QList<RouteData>*rdList, QDate dt);
-  QString getRouteName(int route);
-  int getRouteId(int route);
+  // QString getRouteName(int route);
+  // int getRouteId(int route);
 
 
   int rowCount(const QModelIndex &parent) const;
@@ -47,7 +50,8 @@ class RouteSelectorTableModel : public QAbstractTableModel
   bool setData(const QModelIndex &index, const QVariant &value, int role=Qt::EditRole);
 
  private:
-  QMap<int, RouteName*>* list;
+    //QMap<int, RouteName*>* list = nullptr;
+    QMap<QString, RouteName*>* aList;
 
 
 };

@@ -12,24 +12,29 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
     QDialog(parent),
     ui(new Ui::RouteCommentsDlg)
 {
-    this->routeList = routeList;
     ui->setupUi(this);
-    _rc.route = -1;
-    _rc.companyKey = companyKey;
+    this->routeList = routeList;
+    // _rc.route = -1;
+    // _rc.companyKey = companyKey;
+    _ci.alphaRoute = "";
+    _ci.route=-1;
+    _ci.companyKey = companyKey;
+    _ci.date = QDate(1800,1,1);
     routes = new QList<int>();
     aRoutes = new QStringList();
     //_date.setYMD(1800,1,1);
-    _rc.date = QDate(1800,1,1);
     config = Configuration::instance();
     //sql->setConfig(config);
     sql = SQL::instance();
     ui->txtComments->setReadOnly(false);
     ui->btnIgnore->setVisible(false);
+    ui->btnDelete->setEnabled(false);
+
     ui->lblInfo->clear();
     _model = (RouteSelectorTableModel*)ui->tableView->model();
-    SQL::instance()->setForeignKeyCheck(true);
-    MainWindow::_instance->foreignKeyCheckAct->setChecked(true);
-    config->setForeignKeyCheck(true);
+    SQL::instance()->setForeignKeyCheck(false);
+    MainWindow::_instance->foreignKeyCheckAct->setChecked(false);
+    //config->setForeignKeyCheck(false);
 
     setWindowTitle(tr("Route Comments"));
     setDirty(false);
@@ -53,89 +58,20 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
     });
     connect(ui->btnNext, SIGNAL(clicked()), this, SLOT(OnBtnNext()));
     connect(ui->btnPrev, SIGNAL(clicked()), this, SLOT(OnBtnPrev()));
-//    connect(ui->txtRoute, SIGNAL(textChanged(QString)), this, SLOT(OnRouteTextChanged(QString)));
-//    connect(ui->txtRoute, SIGNAL(editingFinished()), this, SLOT(OnRouteLeave()));
-//    connect(ui->txtRouteAlpha,SIGNAL(textChanged(QString)), this, SLOT(OnAlphaRouteTextChanged(QString)));
-//    connect(ui->txtRouteAlpha, SIGNAL(editingFinished()), this, SLOT(OnAlphaRouteLeave()));
+    connect(ui->btnChangeDate, SIGNAL(clicked(bool)),this, SLOT(onChgDate()));
     connect(ui->tableView, &RouteSelector::selections_changed,this, [=](QModelIndexList added, QModelIndexList deleted){
-     // for(QModelIndex deletedIndex : deleted)
-     // {
-     //  if(deletedIndex.isValid())
-     //  {
-     //   int deletedRow = deletedIndex.row();
-     //   RouteComments rc;
-     //   QList<RouteName*> routeNameList =  ui->tableView->getList();
-     //   rc.route = routeNameList.at(deletedRow)->route();
-     //   rc.date = ui->dateEdit->date();
-     //   sql->deleteRouteComment(rc);
-     //  }
-     // }
-         dRoutes = new QList<int>();
-         ui->lblInfo->clear();
-         for(QModelIndex deletedIndex : deleted)
-         {
-             if(deletedIndex.isValid())
-             {
-                if(deletedIndex.column()== RouteSelectorTableModel::ROUTE)
-                {
-                     dRoutes->append(deletedIndex.data().toInt());
-                    ui->lblInfo->setText(QString("unselect %1").arg(deletedIndex.data().toInt()));
-                }
-             }
-         }
-         selectionModel = ui->tableView->selectionModel();
-         modelIndexList = selectionModel->selectedRows();
-         routes->clear();
-         aRoutes->clear();
-         ui->lblInfo->clear();
-         QString txtRoutes;
-         foreach (QModelIndex ix, modelIndexList) {
-             int selectedRoute = ix.data().toInt();
-             if(!routes->contains(selectedRoute))
-                 routes->append(selectedRoute);
-             QModelIndex aix = _model->index(ix.row(), RouteSelectorTableModel::ROUTEALPHA);
-             aRoutes->append(aix.data().toString());
-             txtRoutes.append(aix.data().toString() + ",");
-             _rc.commentKey = -1;
-             _rc.routeAlpha = aix.data().toString();
-             _rc.companyKey = _model->index(ix.row(),RouteSelectorTableModel::COMPANY).data().toInt();
-             _rc.companyName = _model->index(ix.row(),RouteSelectorTableModel::COMPANYNAME).data().toString();
-             _rc.routeName = _model->index(ix.row(),RouteSelectorTableModel::NAME).data().toString();
-             if(bScanInProgress)
-             {
-                 _rc.route = _model->index(ix.row(),RouteSelectorTableModel::ROUTE).data().toInt();
-             }
-             else
-             {
-                 RouteComments newRc =sql->getRouteComment(selectedRoute, ui->dateEdit->date(),-1);
-                 {
-                     if(newRc.commentKey > 0)
-                     {
-                         if(!bIsDirty)
-                         {
-                             displayComment(newRc);
-                         }
-                     }
-                 }
-             }
-         }
-         txtRoutes.chop(1);
-         ui->txtRoutesUsed->setText(txtRoutes);
-         qDebug() << routes->count() << " routes selected";
-         foreach(int r, *routes)
-             qDebug() << " " << r;
-
-         enableButtons();
+        if(!bSettingSelections)
+            onSelectionsChanged(deleted, added);
     });
 
     connect(ui->txtComments, &QTextEdit::textChanged,this, [=]{
-         _ci.comments = ui->txtComments->toHtml();
-         _ci.date = ui->dateEdit->date();
+        _ci.comments = ui->txtComments->toHtml();
+        _ci.date = ui->dateEdit->date();
          ui->lblInfo->clear();
         // _rc.commentKey = -1;
         // _rc.ci.commentKey = -1;
         MainWindow::instance()->displayRouteComment(_ci);
-         enableButtons();
+        enableButtons();
     });
 
     ui->btnApply->setEnabled(false);
@@ -143,31 +79,12 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
     connect(ui->tableView, &RouteSelector::selections_changed, this, [=]{
      ui->routesSelected->setText(QString::number(routes->count()));
     });
-    connect(ui->tableView, &RouteSelector::routeSelected,this, [=](int route, int row){
-     RouteComments rc = sql->getRouteComment(route, _rc.date, -1);
-     if(rc.commentKey >=0)
-     {
-         if(!bIsDirty)
-         {
-             ui->txtComments->setHtml(rc.ci.comments);
-             ui->txtTags->setText(rc.ci.tags);
-             ui->txtCommentId->setText(QString::number(rc.ci.commentKey));
-         }
-         else
-         {
-             if(ui->txtComments->toHtml() == rc.ci.comments)
-             {
-                 //QMessageBox::warning(this, tr("Warning"), tr("A comment for this route already exits! "));
-                 ui->lblInfo->setStyleSheet("color: rgb(255, 170, 0)");
-                 ui->lblInfo->setText(tr("A comment for this route already exits! "));
-             }
-         }
-     }
-     else
-     {
-         if(!ui->txtComments->toPlainText().isEmpty())
-             setDirty(true);
-     }
+    connect(ui->tableView, &RouteSelector::routeSelected,this, [=](int route, QString aRoute,int row){
+        onRouteSelected(route, aRoute, row);
+    });
+
+    connect(sql, &SQL::commentChange, this, [=] (CommentInfo ci, SQL::CHANGETYPE t){
+        onCommentChange(ci, t);
     });
 }
 
@@ -176,34 +93,68 @@ RouteCommentsDlg::~RouteCommentsDlg()
     delete ui;
 }
 
-void RouteCommentsDlg::setRoute(qint32 r)
+// void RouteCommentsDlg::setRoute(qint32 r)
+// {
+// //    _rc.route = r;
+//     _ci.route = r;
+// //    ui->txtRoute->setText(QString("%1").arg(r));
+// //    ui->txtRouteAlpha->setText(sql->getAlphaRoute(r, _companyKey));
+//     routes->clear();
+//     aRoutes->clear();
+//     routes->append(r);
+//     ui->tableView->setSelections(routes);
+// }
+
+// void RouteCommentsDlg::setCompanyKey(qint32 cc)
+// {
+//     _rc.companyKey = cc;
+// }
+
+// void RouteCommentsDlg::setDate(QDate dt)
+// {
+//     bDateChanged = true;
+//     _ci.date = dt;
+//     ui->dateEdit->setDate(dt);
+
+//     bool rslt = readRouteComment(0);
+
+//     bDateChanged = false;
+
+//     _model->createList(routeList, dt);
+//     ui->tableView->setSelections(routes);
+// }
+
+void RouteCommentsDlg::setRouteData(RouteData rd)
 {
-    _rc.route = r;
-//    ui->txtRoute->setText(QString("%1").arg(r));
-//    ui->txtRouteAlpha->setText(sql->getAlphaRoute(r, _companyKey));
+    _rd = rd;
+    _ci.date = rd.startDate();
+    _ci.route = rd.route();
+    _ci.alphaRoute = rd.alphaRoute();
+    _ci.commentKey = rd.companyKey();
+    _ci.routeId = rd.routeId();
+    _ci.routeName = rd.routeName();
+    _ci.companyName = rd.companyName();
+    comments = sql->commentsForAlphaRoute(_ci.alphaRoute, _ci.date, &currIx);
+    //    ui->txtRoute->setText(QString("%1").arg(r));
+    //    ui->txtRouteAlpha->setText(sql->getAlphaRoute(r, _companyKey));
+    ui->lblInfo2->setText(tr("Route <B>%3</B> comment <B><I>%1 of %2</I></B>").arg(currIx +1).arg(comments->count()).arg(_ci.alphaRoute));
+    ui->btnPrev->setEnabled(currIx > 0);
+    ui->btnNext->setEnabled(currIx < comments->count()-1);
     routes->clear();
     aRoutes->clear();
-    routes->append(r);
-    ui->tableView->setSelections(routes);
-}
-
-void RouteCommentsDlg::setCompanyKey(qint32 cc)
-{
-    _rc.companyKey = cc;
-}
-
-void RouteCommentsDlg::setDate(QDate dt)
-{
-    bDateChanged = true;
-    _rc.date = dt;
-    ui->dateEdit->setDate(dt);
-
-    bool rslt = readRouteComment(0);
-
-    bDateChanged = false;
-
-    _model->createList(routeList, dt);
-    ui->tableView->setSelections(routes);
+    routes->append(rd.route());
+    aRoutes->append(rd.alphaRoute());
+    bSettingSelections = true;
+    ui->tableView->setSelections(aRoutes);
+    bSettingSelections = false;
+    //bool rslt = readRouteComment(0);
+    if(currIx >=0)
+    {
+        _ci = comments->at(currIx);
+        ui->dateEdit->setDate(_ci.date);
+        displayComment(_ci);
+    }
+    _model->createList(routeList, _ci.date);
 
 }
 
@@ -255,6 +206,7 @@ void RouteCommentsDlg::btnIgnore_clicked()
     }
     ui->txtComments->clear();
     ui->txtTags->clear();
+    ui->btnChangeDate->setEnabled(false);
 }
 
 void RouteCommentsDlg::btnCancel_Clicked()
@@ -289,79 +241,185 @@ void RouteCommentsDlg::btnDelete_Clicked()
 
         return;
     }
-    sql->deleteRouteComment(_rc);
-    this->close();
+    // sql->deleteRouteComment(_rc);
+    // this->close();
+    if(sql->deleteComment(_ci.commentKey))
+    {
+        ui->lblInfo->setStyleSheet("color:green");
+        ui->lblInfo->setText(tr("comment %1 deleted").arg(_ci.commentKey));
+        ui->btnDelete->setEnabled(false);
+    }
 }
 
 void RouteCommentsDlg::OnBtnNext()
 {
     outputChanges();
 
-    readRouteComment(+1);
+    //readRouteComment(+1);
+    if(comments && currIx >= 0 && currIx < comments->count()-1)
+    {
+        _ci = comments->at(++currIx);
+        ui->btnPrev->setEnabled(currIx > 0);
+        ui->btnNext->setEnabled(currIx < comments->count()-1);
+        displayComment(_ci);
+    }
 
 }
+
+void RouteCommentsDlg::onRouteSelected(int route, QString alphaRoute, int row)
+{
+    //RouteComments rc = sql->getRouteComment(route, _rc.date, -1);
+    CommentInfo ci = sql->getComment(alphaRoute,_ci.date, 0);
+    if(ci.commentKey >=0)
+    {
+        if(!bIsDirty)
+        {
+            ui->txtComments->setHtml(ci.comments);
+            ui->txtTags->setText(ci.tags);
+            ui->txtCommentId->setText(QString::number(ci.commentKey));
+        }
+        else
+        {
+            if(ui->txtComments->toHtml() == ci.comments)
+            {
+                //QMessageBox::warning(this, tr("Warning"), tr("A comment for this route already exits! "));
+                ui->lblInfo->setStyleSheet("color: rgb(255, 170, 0)");
+                ui->lblInfo->setText(tr("A comment for this route already exits! "));
+            }
+        }
+    }
+    else
+    {
+        if(!ui->txtComments->toPlainText().isEmpty())
+            setDirty(true);
+    }
+}
+
+void RouteCommentsDlg::onCommentChange(CommentInfo ci, SQL::CHANGETYPE t)
+{
+    CommentInfo oldCi;
+    if(comments && currIx >=0)
+    {
+        oldCi = comments->at(currIx);
+    }
+    comments = sql->commentsForAlphaRoute(_ci.alphaRoute,_ci.date,&currIx);
+    ui->lblInfo2->setText(tr("Route <B>%3</B> comment <B><I>%1 of %2</I></B>").arg(currIx +1).arg(comments->count()).arg(_ci.alphaRoute));
+    ui->btnPrev->setEnabled(currIx > 0);
+    ui->btnNext->setEnabled(currIx < comments->count()-1);
+}
+
 bool RouteCommentsDlg::readRouteComment(int pos)
 {
-    RouteComments rc;
+    //RouteComments rc;
+    CommentInfo ci;
     if(pos < 0)
-        rc = sql->getPrevRouteComment(_rc.route, _rc.date, _rc.commentKey, _rc.companyKey);
+        ci = sql->getPrevComment(_ci);
     else if(pos > 0)
-            rc = sql->getNextRouteComment(_rc.route, _rc.date, _rc.commentKey, _rc.companyKey);
+            ci = sql->getNextComment(_ci);
     else
-         rc = sql->getRouteComment(_rc.route, _rc.date, -1);
-    if(rc.commentKey == -1)
+         ci = sql->getComment(_ci.alphaRoute, _ci.date, -1);
+    if(ci.commentKey == -1)
          return false;
 
-    if(rc.commentKey != -1)
+    if(ci.commentKey != -1) // is there a comment for the  date?
     {
         bDateChanged = true;
-        _rc = rc;
+        //_rc = rc;
+        _ci = ci;
         //_date = _rc.date;
-        ui->dateEdit->setDate(rc.date);
-        displayComment(rc);
+        ui->dateEdit->setDate(ci.date);
+        displayComment(ci);
 
         bDateChanged = false;
         setDirty(false);
         return true;
     }
-    _rc = rc;
+    _ci = ci;
     setDirty(false);
 
     return true;
 }
 
-void RouteCommentsDlg::displayComment(RouteComments newRc)
+void RouteCommentsDlg::displayComment(CommentInfo newCi)
 {
-    _rc= newRc;
-    ui->txtCommentId->setText(QString::number( _rc.commentKey));
-    ui->txtComments->setHtml(_rc.ci.comments);
-    ui->txtTags->setText(_rc.ci.tags);
-    ui->txtRoutesUsed->setText(_rc.ci.routesTableToString(_rc.ci.routesUsed));
-    ui->tableView->setSelections(&_rc.ci.routesUsed);
+    //_rc= newRc;
+    _ci = newCi;
+    ui->lblInfo2->setText(tr("Route <B>%3</B> comment <B><I>%1 of %2</I></B>").arg(currIx +1).arg(comments->count()).arg(_ci.alphaRoute));
+
+    ui->txtCommentId->setText(QString::number( _ci.commentKey));
+    ui->txtComments->setHtml(_ci.comments);
+    ui->txtTags->setText(_ci.tags);
+
+    bSettingSelections = true;
+    ui->tableView->setSelections(&_ci.aRoutesList);
+    bSettingSelections = false;
+
+    ui->txtRoutesUsed->setText(_ci.aRoutesList.join(','));
+    ui->dateEdit->setDate(newCi.date);
+    ui->btnChangeDate->setEnabled(true);
     ui->lblInfo->clear();
-    if(routes->isEmpty())
-        routes->append(_rc.route);
-    if(!_rc.ci.routesUsed.isEmpty())
-    {
-        routes = &_rc.ci.routesUsed;
-    }
-    if(_rc.routeId == -1 )
-    {
-        _rc.routeId = ((RouteSelectorTableModel*)ui->tableView->model())->getRouteId(_rc.route);
-        if(_rc.routeId > 0)
-        {
-            setDirty();
-            outputChanges();
-        }
-    }
+    // if(routes->isEmpty())
+    //     routes->append(_ci.route);
+    // if(!_ci.routesUsed.isEmpty())
+    // {
+    //     routes = &_ci.routesUsed;
+    // }
+    // if(_rc.routeId == -1 )
+    // {
+    //     _ci.routeId = ((RouteSelectorTableModel*)ui->tableView->model())->getRouteId(_rc.route);
+    //     if(_rc.routeId > 0)
+    //     {
+    //         setDirty();
+    //         outputChanges();
+    //     }
+    // }
+    ui->btnDelete->setEnabled(true);
+
     setDirty(false);
+}
+
+void RouteCommentsDlg::onChgDate()
+{
+    QDateEdit* de = new QDateEdit(ui->dateEdit->date());
+    de->setDisplayFormat("yyyy/MM/dd");
+
+    QMessageBox box = QMessageBox(QMessageBox::Question, tr("Move Date"), tr("Enter a new date for this comment"), QMessageBox::Apply|QMessageBox::Cancel);
+    QLayout* layout = box.layout();
+    if(qobject_cast<QGridLayout*>(layout))
+    {
+        //layout->addWidget(cbCombo);
+        ((QGridLayout*)layout)->addWidget(de,1,2);
+
+        int rtn = box.exec();
+        if(rtn == QMessageBox::Cancel)
+            return;
+    }
+    _ci.date =  de->date();
+    if(!sql->updateComment(_ci))
+    {
+        ui->lblInfo->setStyleSheet("color:red");
+        ui->lblInfo->setText(tr("update failed"));
+        return;
+    }
+    ui->txtComments->clear();
+    ui->txtTags->clear();
+    ui->btnChangeDate->setEnabled(false);
+
+    OnDateLeave();
 }
 
 void RouteCommentsDlg::OnBtnPrev()
 {
     outputChanges();
 
-    readRouteComment(-1);
+    //readRouteComment(-1);
+    if(comments && currIx > 0 )
+    {
+        _ci = comments->at(--currIx);
+        ui->btnPrev->setEnabled(currIx > 0);
+        ui->btnNext->setEnabled(currIx < comments->count()-1);
+        displayComment(_ci);
+    }
 }
 
 void RouteCommentsDlg::OnDateChanged()
@@ -375,27 +433,31 @@ void RouteCommentsDlg::OnDateLeave()
     QDate date = ui->dateEdit->date();
     ui->lblInfo->clear();
     if(!bDateChanged)
-     return;
+        return;
     if(bIsDirty && !ui->txtComments->toPlainText().isEmpty())
-    outputChanges();
+        outputChanges();
     if(date.isValid() && date.year()>=1800)
-     ui->dateEdit->setStyleSheet("color: black");
-    _rc.date = date;
+        ui->dateEdit->setStyleSheet("color: black");
+    _ci.date = date;
     //setDirty(true);
     QList<RouteData> list = sql->getRoutesByStartDate(date, 700); // get routes 700 days after date
-    ((RouteSelectorTableModel*)ui->tableView->model())->createList(&list,_rc.date);
+    ((RouteSelectorTableModel*)ui->tableView->model())->createList(&list,_ci.date);
     bDateChanged = false;
     if(bScanInProgress)
-     return;
+        return;
     ui->txtComments->clear();
+    ui->btnChangeDate->setEnabled(false);
     ui->txtComments->setFontPointSize(9);
-    _rc.commentKey = _rc.ci.commentKey = -1;
+    ui->txtCommentId->clear();
+    _ci.commentKey = -1;
+    if(_ci.route < 1)
+        _ci.route = _rd.route();
     ui->txtTags->clear();
     if(!routes->isEmpty())
     {
-        RouteComments rc = sql->getRouteComment(routes->at(0), date, -1);
-        if(rc.commentKey > 0)
-            displayComment(rc);
+        CommentInfo ci = sql->getComment(_ci.alphaRoute, date, -1);
+        if(_ci.commentKey > 0)
+            displayComment(_ci);
     }
 
     setDirty(false);
@@ -403,50 +465,155 @@ void RouteCommentsDlg::OnDateLeave()
     readRouteComment(0);
 }
 
-//void RouteCommentsDlg::OnRouteTextChanged(QString text)
-//{
-// if(!text.isEmpty())
-//  bRouteChanged = true;
-//}
+void RouteCommentsDlg::onSelectionsChanged(QModelIndexList added, QModelIndexList deleted)
+{
+    dRoutes = new QList<int>();
+    ui->lblInfo->clear();
+    for(QModelIndex deletedIndex : deleted)
+    {
+        if(deletedIndex.isValid())
+        {
+            if(deletedIndex.column()== RouteSelectorTableModel::ROUTE)
+            {
+                dRoutes->append(deletedIndex.data().toInt());
+                ui->lblInfo->setText(QString("unselect %1").arg(deletedIndex.data().toInt()));
+            }
+        }
+    }
+    selectionModel = ui->tableView->selectionModel();
+    modelIndexList = selectionModel->selectedRows();
+    routes->clear();
+    aRoutes->clear();
+    ui->lblInfo->clear();
+    QString txtRoutes;
+    foreach (QModelIndex ix, modelIndexList) {
+        int selectedRoute = ix.data().toInt();
+        if(!routes->contains(selectedRoute))
+            routes->append(selectedRoute);
+        QModelIndex aix = _model->index(ix.row(), RouteSelectorTableModel::ROUTEALPHA);
+        QModelIndex rix = _model->index(ix.row(), RouteSelectorTableModel::ROUTE);
+        aRoutes->append(aix.data().toString());
+        txtRoutes.append(aix.data().toString() + ",");
+    }
+#if 0
+        // _rc.commentKey = -1;
+        // _rc.routeAlpha = aix.data().toString();
+        // _rc.companyKey = _model->index(ix.row(),RouteSelectorTableModel::COMPANY).data().toInt();
+        // _rc.companyName = _model->index(ix.row(),RouteSelectorTableModel::COMPANYNAME).data().toString();
+        // _rc.routeName = _model->index(ix.row(),RouteSelectorTableModel::NAME).data().toString();
+        _ci.commentKey = -1;
+        _ci.alphaRoute = aix.data().toString();
+        _ci.route = rix.data().toInt();
+        _ci.companyKey = _model->index(ix.row(),RouteSelectorTableModel::COMPANY).data().toInt();
+        _ci.companyName = _model->index(ix.row(),RouteSelectorTableModel::COMPANYNAME).data().toString();
+        _ci.routeName = _model->index(ix.row(),RouteSelectorTableModel::NAME).data().toString();
+        // if(bScanInProgress)
+        // {
+        //     _rc.route = _model->index(ix.row(),RouteSelectorTableModel::ROUTE).data().toInt();
+        // }
+        // else
+        {
+            //RouteComments newRc =sql->getRouteComment(selectedRoute, ui->dateEdit->date(),-1);
+            CommentInfo newCi = sql->getComment(_ci.alphaRoute, _ci.date, -1);
+            {
+                if(newCi.commentKey > 0)
+                {
+                    if(!bIsDirty)
+                    {
+                        displayComment(newCi);
+                    }
+                }
+            }
+        }
+    }
+    txtRoutes.chop(1);
+    ui->txtRoutesUsed->setText(txtRoutes);
+    qDebug() << routes->count() << " routes selected";
+    foreach(int r, *routes)
+        qDebug() << " " << r;
+
+    enableButtons();
+#endif
+    _ci.routesUsed = *routes;
+    _ci.aRoutesList = *aRoutes;
+    _ci.jRoutesListString = _ci.jRoutesTableToString(_ci.aRoutesList);
+    ui->txtRoutesUsed->setText(_ci.aRoutesList.join(','));
+}
 
 bool RouteCommentsDlg::outputChanges()
 {
     if(routes->isEmpty())
     {
-        QMessageBox::warning(this, tr("No Route"), tr("No routes are selected. Please select one or more."));
+        //QMessageBox::warning(this, tr("No Route"), tr("No routes are selected. Please select one or more."));
+        ui->lblInfo->setStyleSheet("color:magenta");
+        ui->lblInfo->setText("No routes are selected. Please select one or more.");
         return false;
     }
 
     ui->lblInfo->clear();
     if(bIsDirty)
     {
-        _rc.ci.comments = ui->txtComments->toHtml();
-        _rc.ci.tags = ui->txtTags->text();
-        _rc.date = ui->dateEdit->date();
-        _rc.ci.routesUsed = *routes;
+        _ci.comments = ui->txtComments->toHtml();
+        _ci.tags = ui->txtTags->text();
+        _ci.date = ui->dateEdit->date();
+        _ci.routesUsed = *routes;
 
         sql->beginTransaction("outputChanges");
 
-        foreach(int route, *routes)
-        {
-         _rc.route = route;
-         _rc.routeName = _model->getRouteName(route);
-         _rc.routeId = _model->getRouteId(route);
-         if(!sql->updateRouteComment( &_rc))
-         {
-            sql->rollbackTransaction("outputChanges");
-             ui->lblInfo->setStyleSheet("color:red");
-             ui->lblInfo->setText(tr("add failed"));
+        // foreach(int route, *routes)
+        // {
+        //  _rc.route = route;
+        //  _rc.routeName = _model->getRouteName(route);
+        //  _rc.routeId = _model->getRouteId(route);
+        //  if(!sql->updateRouteComment( &_rc))
+        //  {
 
-            return false;
-         }
+        //     return false;
+        //  }
+        // }
+        CommentInfo oldCi = sql->getComments(_ci.commentKey);
+        if(oldCi.commentKey != _ci.commentKey)
+        {
+            if(!sql->addComment(&_ci))
+            {
+                ui->lblInfo->setStyleSheet("color:red");
+                ui->lblInfo->setText(tr("add failed"));
+
+                return false;
+            }
+            ui->lblInfo->setStyleSheet("color:green");
+            ui->lblInfo->setText(tr("comment added key = &1").arg(_ci.commentKey));
+        }
+        else
+        {
+            if(_ci.commentKey ==-1)
+            {
+                if(!sql->addComment(&_ci))
+                {
+                    sql->rollbackTransaction("outputChanges");
+                    ui->lblInfo->setStyleSheet("color:red");
+                    ui->lblInfo->setText(tr("add failed"));
+                    return false;
+                }
+            }
+            else
+            {
+                if(!sql->updateComment(_ci))
+                {
+                    sql->rollbackTransaction("outputChanges");
+                    ui->lblInfo->setStyleSheet("color:red");
+                    ui->lblInfo->setText(tr("add failed"));
+                    return false;
+                }
+            }
         }
         sql->commitTransaction("outputChanges");
         //  }
         setDirty(false);
     }
     ui->lblInfo->setStyleSheet("color:green");
-    ui->lblInfo->setText(tr("comment added: key=%1").arg(_rc.commentKey));
+    ui->lblInfo->setText(tr("comment added: key=%1").arg(_ci.commentKey));
+    ui->txtCommentId->setText(QString::number(_ci.commentKey));
     return true;
 }
 
@@ -547,15 +714,15 @@ void RouteCommentsDlg::scan()
     ui->btnIgnore->setVisible(true);
     ui->btnIgnore->setEnabled(false);
     ui->btnCancel->setText(tr("Finish"));
-    commentsUpdated = 0;
+    // commentsUpdated = 0;
     commentsDeleted = 0;
-    routeCommentsDeleted = 0;
-    routeCommentsAdded =0;
-    invalidDates = 0;
-    invalidRoutes = 0 ;
-    routesDeleted = 0;
-    htmlCorrected = 0;
-    invalidRouteComments = 0;
+    // routeCommentsDeleted = 0;
+    // routeCommentsAdded =0;
+    // invalidDates = 0;
+    // invalidRoutes = 0 ;
+    // routesDeleted = 0;
+    // htmlCorrected = 0;
+    // invalidRouteComments = 0;
     orphansDeleted = 0;
     orphansUsed = 0;
     dup_emptyOrphans =0;
@@ -581,134 +748,135 @@ void RouteCommentsDlg::scan()
     }
     sql->beginTransaction("scan");
 
-    // Get a list of all RouteComments referencing invalid Comments
-    QList<RouteComments*> invalid = sql->listInvalidRouteComments();
-    foreach(RouteComments* rc, invalid)
-    {
-        if(sql->deleteRouteComment(*rc))
-        {
-            scanLog.append(tr("Delete invalid RouteComments route=%1 date=%2 referencing commentKey=%3").arg(rc->route).arg(rc->date.toString("yyyy/MM/dd").arg(rc->commentKey)));
-            invalidRouteComments++;
-        }
-    }
+    // // Get a list of all RouteComments referencing invalid Comments
+    // QList<RouteComments*> invalid = sql->listInvalidRouteComments();
+    // foreach(RouteComments* rc, invalid)
+    // {
+    //     if(sql->deleteRouteComment(*rc))
+    //     {
+    //         scanLog.append(tr("Delete invalid RouteComments route=%1 date=%2 referencing commentKey=%3").arg(rc->route).arg(rc->date.toString("yyyy/MM/dd").arg(rc->commentKey)));
+    //         invalidRouteComments++;
+    //     }
+    // }
 
-    QList<RouteComments*> list = sql->listRouteComments();
-    scanResult = true;
-    foreach(RouteComments* rc, list)
-    {
-        if(!rc->date.isValid())
-        {
-            scanLog.append( QString("- date invalid %1 route %2\n").arg(rc->date.toString()).arg(rc->route));
-            invalidDates++;
-        }
-        QString routeAlpha = sql->getAlphaRoute(rc->route, "");
-        if(routeAlpha.isEmpty() || rc->route < 1)
-        {
-            scanLog.append(QString("- route invalid %1 date %2\n").arg(rc->route).arg(rc->date.toString()));
-            invalidRoutes++;
-        }
-        if(rc->ci.comments.isEmpty())
-        {
-            if(!sql->deleteComment(rc->ci.commentKey))
-            {
-                scanLog.append(QString("- Error: delete commentKey %1 failed\n").arg(rc->ci.commentKey));
-                    scanResult = false;
-                break;
-            }
-            if(!sql->deleteRouteComment(*rc))
-            {
-                scanLog.append( QString("- Error: delete routeComment  %1 %2 failed\n").arg(rc->route).arg(rc->date.toString()));
-                    scanResult = false;
-                break;
-            }
-            scanLog.append( QString("- delete comment %1 plaintext is empty route: %2 date: %3\n").arg(rc->ci.commentKey).arg(routeAlpha).arg(rc->date.toString()));
-            commentsDeleted++;
-            routesDeleted++;
-            continue;
-        }
-        if(!HtmlTextEdit::isHtmlFragment(rc->ci.comments))
-        {
-            scanLog.append(QString("- not HTML commentKey: %1\n").arg(rc->ci.commentKey));
-        }
-        ui->txtComments->setHtml(rc->ci.comments);
-        ui->txtCommentId->setText(QString::number(rc->ci.commentKey));
-        qApp->processEvents();
-        QString text = ui->txtComments->toPlainText();
-        if(text.isEmpty())
-        {
-            RouteComments rc1 = sql->getRouteComment(rc->route,rc->date, rc->commentKey);
-            if(rc1.commentKey < 1)
-                continue; // already deleted!
-            if(!sql->deleteRouteCommenUsingCommentKey(rc->ci.commentKey))
-            {
-                scanLog.append(QString("- Error: delete commentKey %1 failed\n").arg(rc->ci.commentKey));
-                scanResult = false;
-                break;
-            }
-            scanLog.append(QString("- delete comment %1 html is empty route: %2 date: %3\n").arg(rc->ci.commentKey).arg(routeAlpha).arg(rc->date.toString()));
-            routeCommentsDeleted++;
-            commentsDeleted++;
-            routesDeleted++;
-            continue;
-        }
-        if(HtmlTextEdit::isHtmlFragment(text))
-        {
-            ui->txtComments->setHtml(text);
-            qApp->processEvents();
-            rc->ci.comments = ui->txtComments->toHtml();
-            if(!sql->updateComment(rc->ci))
-            {
-                scanLog.append(QString("- Error: update commentKey %1 failed\n").arg(rc->ci.commentKey));
-            }
-            else
-                htmlCorrected++;
-        }
-        if(text.startsWith("https://"))
-        {
-            if(!HtmlTextEdit::isLink(text))
-            {
-                QTextDocumentFragment frag = QTextDocumentFragment::fromHtml("<a href=" + text + "><span style=\" font-family:'Ubuntu'; text-decoration: underline; color:#6c7565;\">"
-                                                                             + text + "</span></a></p>");
-                ui->txtComments->clear();
-                ui->txtComments->textCursor().insertFragment(frag);
-                rc->ci.comments = ui->txtComments->toHtml();
-                if(rc->ci.routesUsed.isEmpty())
-                    rc->ci.routesUsed.append(rc->route);
-                if(!sql->updateComment(rc->ci))
-                {
-                    scanLog.append(tr("- Error: link fix failed %1 commentKey: %2\n").arg(text).arg(rc->commentKey));
-                }
-                else
-                {
-                    linksFixed++;
-                    scanLog.append(tr("- link fixed %1 commentKey: %2\n").arg(text).arg(rc->commentKey));
-                }
-            }
-        }
-        if(rc->ci.routesUsed.isEmpty() || !rc->ci.routesUsed.contains(rc->route))
-        {
-            rc->ci.routesUsed.append(rc->route);
-            if(!sql->updateComment(rc->ci))
-            {
-               scanLog.append(QString("- Error: update commentKey %1 failed\n").arg(rc->ci.commentKey));
-                scanResult = false;
-                break;
-            }
-            commentsUpdated++;
-        }
+    // QList<RouteComments*> list = sql->listRouteComments();
+    // scanResult = true;
+    // foreach(RouteComments* rc, list)
+    // {
+    //     if(!rc->date.isValid())
+    //     {
+    //         scanLog.append( QString("- date invalid %1 route %2\n").arg(rc->date.toString()).arg(rc->route));
+    //         invalidDates++;
+    //     }
+    //     QString routeAlpha = sql->getAlphaRoute(rc->route, "");
+    //     if(routeAlpha.isEmpty() || rc->route < 1)
+    //     {
+    //         scanLog.append(QString("- route invalid %1 date %2\n").arg(rc->route).arg(rc->date.toString()));
+    //         invalidRoutes++;
+    //     }
+    //     if(rc->ci.comments.isEmpty())
+    //     {
+    //         if(!sql->deleteComment(rc->ci.commentKey))
+    //         {
+    //             scanLog.append(QString("- Error: delete commentKey %1 failed\n").arg(rc->ci.commentKey));
+    //                 scanResult = false;
+    //             break;
+    //         }
+    //         if(!sql->deleteRouteComment(*rc))
+    //         {
+    //             scanLog.append( QString("- Error: delete routeComment  %1 %2 failed\n").arg(rc->route).arg(rc->date.toString()));
+    //                 scanResult = false;
+    //             break;
+    //         }
+    //         scanLog.append( QString("- delete comment %1 plaintext is empty route: %2 date: %3\n").arg(rc->ci.commentKey).arg(routeAlpha).arg(rc->date.toString()));
+    //         commentsDeleted++;
+    //         routesDeleted++;
+    //         continue;
+    //     }
+    //     if(!HtmlTextEdit::isHtmlFragment(rc->ci.comments))
+    //     {
+    //         scanLog.append(QString("- not HTML commentKey: %1\n").arg(rc->ci.commentKey));
+    //     }
+    //     ui->txtComments->setHtml(rc->ci.comments);
+    //     ui->txtCommentId->setText(QString::number(rc->ci.commentKey));
+    //     qApp->processEvents();
+    //     QString text = ui->txtComments->toPlainText();
+    //     if(text.isEmpty())
+    //     {
+    //         RouteComments rc1 = sql->getRouteComment(rc->route,rc->date, rc->commentKey);
+    //         if(rc1.commentKey < 1)
+    //             continue; // already deleted!
+    //         if(!sql->deleteRouteCommenUsingCommentKey(rc->ci.commentKey))
+    //         {
+    //             scanLog.append(QString("- Error: delete commentKey %1 failed\n").arg(rc->ci.commentKey));
+    //             scanResult = false;
+    //             break;
+    //         }
+    //         scanLog.append(QString("- delete comment %1 html is empty route: %2 date: %3\n").arg(rc->ci.commentKey).arg(routeAlpha).arg(rc->date.toString()));
+    //         routeCommentsDeleted++;
+    //         commentsDeleted++;
+    //         routesDeleted++;
+    //         continue;
+    //     }
+    //     if(HtmlTextEdit::isHtmlFragment(text))
+    //     {
+    //         ui->txtComments->setHtml(text);
+    //         qApp->processEvents();
+    //         rc->ci.comments = ui->txtComments->toHtml();
+    //         if(!sql->updateComment(rc->ci))
+    //         {
+    //             scanLog.append(QString("- Error: update commentKey %1 failed\n").arg(rc->ci.commentKey));
+    //         }
+    //         else
+    //             htmlCorrected++;
+    //     }
+    //     if(text.startsWith("https://"))
+    //     {
+    //         if(!HtmlTextEdit::isLink(text))
+    //         {
+    //             QTextDocumentFragment frag = QTextDocumentFragment::fromHtml("<a href=" + text + "><span style=\" font-family:'Ubuntu'; text-decoration: underline; color:#6c7565;\">"
+    //                                                                          + text + "</span></a></p>");
+    //             ui->txtComments->clear();
+    //             ui->btnChangeDate->setEnabled(true);
+    //             ui->txtComments->textCursor().insertFragment(frag);
+    //             rc->ci.comments = ui->txtComments->toHtml();
+    //             if(rc->ci.routesUsed.isEmpty())
+    //                 rc->ci.routesUsed.append(rc->route);
+    //             if(!sql->updateComment(rc->ci))
+    //             {
+    //                 scanLog.append(tr("- Error: link fix failed %1 commentKey: %2\n").arg(text).arg(rc->commentKey));
+    //             }
+    //             else
+    //             {
+    //                 linksFixed++;
+    //                 scanLog.append(tr("- link fixed %1 commentKey: %2\n").arg(text).arg(rc->commentKey));
+    //             }
+    //         }
+    //     }
+    //     if(rc->ci.routesUsed.isEmpty() || !rc->ci.routesUsed.contains(rc->route))
+    //     {
+    //         rc->ci.routesUsed.append(rc->route);
+    //         if(!sql->updateComment(rc->ci))
+    //         {
+    //            scanLog.append(QString("- Error: update commentKey %1 failed\n").arg(rc->ci.commentKey));
+    //             scanResult = false;
+    //             break;
+    //         }
+    //         commentsUpdated++;
+    //     }
 
-        // if(!rc->ci.routesUsed.contains(rc->route))
-        // {
-        //     rc->ci.routesUsed.append(rc->route);
-        //     if(!\sql->updateComment(rc->ci))
-        //     {
-        //         scanLog.append(QString("- Error: update commentKey %1 failed\n").arg(rc->ci.commentKey));
-        //             scanResult = false;
-        //         break;
-        //     }
-        //     commentsUpdated++;
-        // }
-    }
+    //     // if(!rc->ci.routesUsed.contains(rc->route))
+    //     // {
+    //     //     rc->ci.routesUsed.append(rc->route);
+    //     //     if(!\sql->updateComment(rc->ci))
+    //     //     {
+    //     //         scanLog.append(QString("- Error: update commentKey %1 failed\n").arg(rc->ci.commentKey));
+    //     //             scanResult = false;
+    //     //         break;
+    //     //     }
+    //     //     commentsUpdated++;
+    //     // }
+    // }
 
     // now see if any orphans can be used.
     ui->btnIgnore->setEnabled(true);
@@ -842,23 +1010,26 @@ bool RouteCommentsDlg::finishScan(int rslt)
     bool rtn = false;
     ui->lblInfo->clear();
     QString msg = QString("Scan results:\n"
-                          "commentsUpdated: %1<br>\n"
+    //                       "commentsUpdated: %1<br>\n"
                           "commentsDeleted: %2<br>\n"
-                          "routeCommentsDeleted: %3<br>\n"
-                          "routeCommentsAdded: %4<br>\n"
-                          "invalidDates: %5<br>\n"
-                          "invalidRoutes: %6<br>\n"
-                          "routesDeleted: %7<br>\n"
-                          "htmlCorrected:%8<br>\n"
-                          "linksFixed:%9<br>\n"
-                          "invalidRouteCommentsDeleted:%10<br>\n"
+    //                       "routeCommentsDeleted: %3<br>\n"
+    //                       "routeCommentsAdded: %4<br>\n"
+    //                       "invalidDates: %5<br>\n"
+    //                       "invalidRoutes: %6<br>\n"
+    //                       "routesDeleted: %7<br>\n"
+    //                       "htmlCorrected:%8<br>\n"
+    //                       "linksFixed:%9<br>\n"
+    //                       "invalidRouteCommentsDeleted:%10<br>\n"
                           "orphansDeleted:%11<br>\n"
                           "orphansUsed:%12<br>\n"
                           "dup_emptyOrphans:%13<br>\n"
                           "*****************************************************************<br>\n")
-                      .arg(commentsUpdated).arg(commentsDeleted).arg(routeCommentsDeleted)
-                      .arg(routeCommentsAdded).arg(invalidDates).arg(invalidRoutes).arg(routesDeleted).arg(htmlCorrected)
-                      .arg(linksFixed).arg(invalidRouteComments).arg(orphansDeleted).arg(orphansUsed).arg(dup_emptyOrphans);
+    //                   .arg(commentsUpdated)
+                      .arg(commentsDeleted)
+                      //.arg(routeCommentsDeleted)
+    //                   .arg(routeCommentsAdded).arg(invalidDates).arg(invalidRoutes).arg(routesDeleted).arg(htmlCorrected)
+    //                   .arg(linksFixed).arg(invalidRouteComments)
+                            .arg(orphansDeleted).arg(orphansUsed).arg(dup_emptyOrphans);
     if(rslt)
     {
         //int rtn = QMessageBox::question(this, tr("Commit changes"),msg + "Do you wish to commit changes?",QMessageBox::Yes | QMessageBox::No);
@@ -902,16 +1073,17 @@ bool RouteCommentsDlg::finishScan(int rslt)
     ui->btnScan->setVisible(true);
     ui->btnCancel->setText(tr("Cancel"));
     ui->txtComments->clear();
+    ui->btnChangeDate->setEnabled(false);
     ui->txtTags->clear();
-    commentsUpdated = 0;
+    //commentsUpdated = 0;
     commentsDeleted = 0;
-    routeCommentsDeleted = 0;
-    routeCommentsAdded =0;
-    invalidDates = 0;
-    invalidRoutes = 0 ;
-    routesDeleted = 0;
-    htmlCorrected=0;
-    linksFixed = 0;
+    //routeCommentsDeleted = 0;
+    //routeCommentsAdded =0;
+    //invalidDates = 0;
+    //invalidRoutes = 0 ;
+    //routesDeleted = 0;
+    //htmlCorrected=0;
+    //linksFixed = 0;
     ixOrphan=-1;
     if(orphans)
         orphans->clear();
@@ -921,7 +1093,7 @@ bool RouteCommentsDlg::finishScan(int rslt)
 // enable start and apply buttons if required input is present
 void RouteCommentsDlg::enableButtons()
 {
-    if(_rc.route > 0 /*&& _rc.commentKey >0*/ && !_rc.ci.comments.isEmpty() && _rc.date.isValid() && !ui->txtComments->toPlainText().isEmpty())
+    if(/*_ci.route > 0 &&*/ !_ci.alphaRoute.isEmpty() && !_ci.comments.isEmpty() && _ci.date.isValid() && !ui->txtComments->toPlainText().isEmpty())
     {
         ui->btnApply->setEnabled(true);
         ui->btnOK->setEnabled(true);
@@ -969,7 +1141,7 @@ void RouteCommentsDlg::closeEvent(QCloseEvent *e)
                     sl.append(vl.at(0).toString());
                 }
             }
-            rc->ci.aRoutesString = CommentInfo::jRoutesTableToString(sl);
+            rc->ci.jRoutesListString = rc->ci.jRoutesTableToString(sl);
             if(!SQL::instance()->updateComment(rc->ci))
             {
                 return false;

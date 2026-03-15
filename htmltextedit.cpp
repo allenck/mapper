@@ -21,17 +21,26 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
  underlineAct = new QAction(tr("Underline"), this );
  underlineAct->setCheckable(true);
  textZoomAct = new QAction(tr("Size +"), this);
- textZoomAct->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_Plus));
+ textZoomAct->setShortcut(QKeySequence(Qt::CTRL|Qt::Key_Plus));
  textZoomAct->setShortcutContext(Qt::WidgetShortcut);
  textUnzoomAct = new QAction(tr("Size -"), this);
- textUnzoomAct->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_Minus));
+ textUnzoomAct->setShortcut(QKeySequence(Qt::CTRL|Qt::Key_Minus));
  textUnzoomAct->setShortcutContext(Qt::WidgetShortcut);
+ textZoom2xAct = new QAction(tr("Size x2"), this);
+ textZoom2xAct->setShortcut(QKeySequence(Qt::CTRL|Qt::Key_Forward));
+ textZoom2xAct->setShortcutContext(Qt::WidgetShortcut);
+ textUnzoom2xAct = new QAction(tr("Size /2"), this);
+ textUnzoom2xAct->setShortcut(QKeySequence(Qt::CTRL|Qt::Key_Back));
+ textUnzoom2xAct->setShortcutContext(Qt::WidgetShortcut);
  setColorRedAct = new QAction(tr("Red"), this);
  setColorRedAct->setCheckable(true);
  setColorGreenAct = new QAction(tr("Green"),this);
  setColorGreenAct->setCheckable(true);
  setFontAct = new QAction(tr("Change Font..."),this);
  setColorBlackAct = new QAction(tr("Black"), this);
+ setColorBlackAct->setCheckable(true);
+ setColorBlueAct = new QAction(tr("Blue"),this);
+ setColorBlueAct->setCheckable(true);
  setColorGrayAct = new QAction(tr("Gray"),this);
  setColorGrayAct->setCheckable(true);
  setTextColorAct = new QAction(tr("set text color"),this);
@@ -40,8 +49,11 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
  pasteSaved = new QAction(tr("Paste saved"), this);
  copySaved = new QAction(tr("Copy to saved"), this);
  linkWebPageAct = new QAction(tr("Create link"),this);
+ linkWebPageAct->setCheckable(true);
  insertHtmlFragmentAct = new QAction(tr("Paste Html fragment"),this);
  pasteLinkAct = new QAction(tr("Paste link"),this);
+ h1Act = new QAction(tr("H1"), this);
+ h1Act->setCheckable(true);
  setPlaceholderText("Enter text");
 
  connect(boldAction, SIGNAL(triggered(bool)), this, SLOT(OnBoldAction(bool)));
@@ -49,9 +61,12 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
  connect(underlineAct, SIGNAL(triggered(bool)), this, SLOT(OnUnderlineAct(bool)));
  connect(textZoomAct, SIGNAL(triggered(bool)), this, SLOT(OnTextZoomAct()));
  connect(textUnzoomAct, SIGNAL(triggered(bool)), this, SLOT(OnTextUnzoomAct()));
+ connect(textZoom2xAct, SIGNAL(triggered(bool)), this, SLOT(OnTextZoom2xAct()));
+ connect(textUnzoom2xAct, SIGNAL(triggered(bool)), this, SLOT(OnTextUnzoom2xAct()));
  connect(setColorRedAct, SIGNAL(triggered(bool)), this , SLOT(OnSetColorRedAct(bool)));
  connect(setColorGreenAct, SIGNAL(triggered(bool)), this, SLOT(OnSetColorGreenAct(bool)));
  connect(setColorBlackAct, SIGNAL(triggered(bool)), this, SLOT(OnSetColorBlackAct(bool)));
+ connect(setColorBlueAct, SIGNAL(triggered(bool)), this, SLOT(OnSetColorBlueAct(bool)));
  connect(setColorGrayAct, SIGNAL(triggered(bool)),this, SLOT(OnSetColorGrayAct(bool)));
  this->setContextMenuPolicy(Qt::CustomContextMenu);
  connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showContextMenu(QPoint)));
@@ -70,6 +85,7 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
  connect(pasteLinkAct, &QAction::triggered,this, [=]{
      onPasteLink();
  });
+ connect(h1Act, SIGNAL(triggered(bool)),this, SLOT(OnH1Act()));
 
  setFontPointSize(9);
  setDirty(false);
@@ -77,104 +93,124 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
 
 void HtmlTextEdit::showContextMenu(QPoint pt)
 {
- const QClipboard *clipboard = QApplication::clipboard();
- const QMimeData *mimeData = clipboard->mimeData();
+    const QClipboard *clipboard = QApplication::clipboard();
+    const QMimeData *mimeData = clipboard->mimeData();
 
- QTextCursor cur = this->textCursor();
- QMenu *menu = this->createStandardContextMenu();
- QList<QAction*> acts = menu->actions();
- if(isHtmlFragment( clipboard->text())) // if html or html fragment, disallow regular paste.
- {
-     foreach (QAction* act, acts) {
-         if(act->objectName() == "edit-paste")
-         {
-             act->setEnabled(false);
-             break;
-         }
-     }
- }
- if(cur.hasSelection())
- {
-     menu->addSeparator();
-  QString anchor = this->anchorAt(pt);
-  menu->addAction(boldAction);
-  menu->addAction(italicAction);
-  menu->addAction(underlineAct);
-  QMenu *colorMenu = new QMenu(tr("Color"));
-  colorMenu->addAction(setColorRedAct);
-  colorMenu->addAction(setColorGreenAct);
-  colorMenu->addAction(setColorBlackAct);
-  colorMenu->addAction(setColorGrayAct);
-  menu->addMenu(colorMenu);
-  menu->addAction(setFontAct);
-  menu->addAction(textZoomAct);
-  menu->addAction(textUnzoomAct);
-  menu->addAction(setTextColorAct);
-  menu->addAction(setBackgroundColorAct);
-  if(mimeData->hasHtml())
-      menu->addAction((pasteHtmlAct));
-  if(isHtmlFragment(clipboard->text()))
-  {
-      menu->addAction(insertHtmlFragmentAct);
-  }
-
-  if(this->fontWeight() == 75)
-      boldAction->setChecked(true);
-  else
-      boldAction->setChecked(false);
-
-  italicAction->setChecked(this->fontItalic());
-
-  menu->addAction(copySaved);
-  menu->addAction(linkWebPageAct);
- }
- else
- {
-     if(clipboard->text().startsWith("<!DOCTYPE HTML"))
-        menu->addAction((pasteHtmlAct));
-    else if(isHtmlFragment(clipboard->text()))
+    QTextCursor cur = this->textCursor();
+    QMenu *menu = this->createStandardContextMenu();
+    QList<QAction*> acts = menu->actions();
+    if(isHtmlFragment( clipboard->text())) // if html or html fragment, disallow regular paste.
     {
-        menu->addAction(insertHtmlFragmentAct);
-    }
-    else
-    {
-        if(clipboard->text().startsWith("https://") && clipboard->text().endsWith("/"))
-        {
-            menu->addAction(pasteLinkAct);
+        foreach (QAction* act, acts) {
+            if(act->objectName() == "edit-paste")
+            {
+                act->setEnabled(false);
+                break;
+            }
         }
     }
- }
- if(config->currCity->savedClipboard.length()>0)
- {
-  menu->addAction(pasteSaved);
- }
+    if(cur.hasSelection())
+    {
+        menu->addSeparator();
+        _cur = this->textCursor();
+        _format = currentCharFormat();
+        _pointsize = this->fontPointSize();
+        _font = this->font();
+        _textColor = this->textColor();
 
- menu->exec(this->mapToGlobal(pt));
- delete menu;
+        menu->addAction(boldAction);
+        menu->addAction(italicAction);
+        menu->addAction(underlineAct);
+        menu->addAction(h1Act);
+        QMenu *colorMenu = new QMenu(tr("Color"));
+        colorMenu->addAction(setColorRedAct);
+        colorMenu->addAction(setColorGreenAct);
+        colorMenu->addAction(setColorBlackAct);
+        colorMenu->addAction(setColorBlueAct);
+        colorMenu->addAction(setColorGrayAct);
+        colorMenu->addAction(setTextColorAct);
+        colorMenu->addAction(setBackgroundColorAct);
+        menu->addMenu(colorMenu);
+        menu->addSection(tr("Font: %1").arg(_font.family()));
+        menu->addAction(setFontAct);
+        menu->addSection(tr("Pointsize: %1").arg(_pointsize));
+        QMenu* zoomMenu = new QMenu(tr("Zoom"));
+        menu->addMenu(zoomMenu);
+        zoomMenu->addAction(textZoomAct);
+        zoomMenu->addAction(textZoom2xAct);
+        zoomMenu->addAction(textUnzoomAct);
+        zoomMenu->addAction(textUnzoom2xAct);
+        if(mimeData->hasHtml())
+            menu->addAction((pasteHtmlAct));
+        if(isHtmlFragment(clipboard->text()))
+            menu->addAction(insertHtmlFragmentAct);
+
+        boldAction->setChecked(_format.fontWeight() == QFont::Bold);
+        italicAction->setChecked(_format.fontItalic());
+        underlineAct->setChecked(_format.fontUnderline());
+        bool bAnchor = _format.isAnchor();
+        QString hRef = _format.anchorHref();
+        QStringList anchorNames = _format.anchorNames();
+        linkWebPageAct->setChecked(bAnchor);
+        if(_textColor == Qt::red)
+            setColorRedAct->setChecked(true);
+        if(_textColor == Qt::black)
+            setColorBlackAct->setChecked(true);
+        if(_textColor == Qt::blue)
+            setColorBlueAct->setChecked(true);
+        if(_textColor == Qt::green)
+            setColorGreenAct->setChecked(true);
+        if(_textColor == Qt::gray)
+            setColorGrayAct->setChecked(true);
+
+        menu->addAction(copySaved);
+        menu->addAction(linkWebPageAct);
+     }
+     else
+     {
+         if(clipboard->text().startsWith("<!DOCTYPE HTML"))
+            menu->addAction((pasteHtmlAct));
+        else if(isHtmlFragment(clipboard->text()))
+        {
+            menu->addAction(insertHtmlFragmentAct);
+        }
+        else
+        {
+            if(clipboard->text().startsWith("https://") && clipboard->text().endsWith("/"))
+            {
+                menu->addAction(pasteLinkAct);
+            }
+        }
+     }
+     if(config->currCity->savedClipboard.length()>0)
+     {
+      menu->addAction(pasteSaved);
+     }
+
+    menu->exec(this->mapToGlobal(pt));
+    delete menu;
 }
 void HtmlTextEdit::OnBoldAction(bool checked)
 {
-    QTextCursor cur = this->textCursor();
     if(checked)
-        this->setFontWeight(75);
+        _format.setFontWeight(QFont::Bold);
     else
-        this->setFontWeight(50);
-    boldAction->setChecked(!checked);
+        _format.setFontWeight(QFont::Normal);
+    _cur.mergeCharFormat(_format);
     setDirty(true);
 }
 
 void HtmlTextEdit::OnItalicAction(bool checked)
 {
-    QTextCursor cur = this->textCursor();
-    this->setFontItalic(checked);
-    italicAction->setChecked(!checked);
+    _format.setFontItalic(checked);
+    _cur.mergeCharFormat(_format);
     setDirty(true);
 }
 
 void HtmlTextEdit::OnUnderlineAct(bool checked)
 {
-    this->setFontUnderline(!checked);
-    underlineAct->setChecked(!checked);
+    _format.setFontUnderline(checked);
+    _cur.mergeCharFormat(_format);
     setDirty(true);
 }
 
@@ -191,6 +227,7 @@ void HtmlTextEdit::OnSelectionChanged()
     setColorRedAct->setChecked(false);
     setColorGreenAct->setChecked(false);
     setColorBlackAct->setChecked(false);
+    setColorBlueAct->setChecked(false);
     setColorGrayAct->setChecked(false);
 
     if(this->textColor()== Qt::red)
@@ -199,6 +236,8 @@ void HtmlTextEdit::OnSelectionChanged()
         setColorGreenAct->setChecked(true);
     if(this->textColor()== Qt::black)
         setColorBlackAct->setChecked(true);
+    if(this->textColor()== Qt::blue)
+        setColorBlueAct->setChecked(true);
     if(this->textColor()== Qt::gray)
         setColorGrayAct->setChecked(true);
 
@@ -215,11 +254,25 @@ void HtmlTextEdit::OnTextZoomAct()
     this->setFontPointSize(this->fontPointSize()+1.);
     setDirty(true);
 }
+void HtmlTextEdit::OnTextZoom2xAct()
+{
+    double pointsize = this->fontPointSize();
+    if(pointsize <= 0)
+        this->setFontPointSize(11);
+    this->setFontPointSize(this->fontPointSize()*2.);
+    setDirty(true);
+}
 void HtmlTextEdit::OnTextUnzoomAct()
 {
     this->setFontPointSize(this->fontPointSize()-1.);
     setDirty(true);
 }
+void HtmlTextEdit::OnTextUnzoom2xAct()
+{
+    this->setFontPointSize(this->fontPointSize()/2.);
+    setDirty(true);
+}
+
 void HtmlTextEdit::OnSetColorRedAct(bool checked)
 {
     Q_UNUSED(checked)
@@ -245,6 +298,12 @@ void HtmlTextEdit::OnSetColorBlackAct(bool checked)
     //QColor black = new QColor(0,0,0,255);
 
     this->setTextColor(Qt::black);
+    setDirty(true);
+}
+void HtmlTextEdit::OnSetColorBlueAct(bool checked)
+{
+    Q_UNUSED(checked)
+    this->setTextColor(Qt::blue);
     setDirty(true);
 }
 void HtmlTextEdit::OnSetColorGrayAct(bool checked)
@@ -348,7 +407,6 @@ void HtmlTextEdit::onLinkWebPage()
     fmt.setAnchorHref(address);
     fmt.setToolTip(address);
     cursor.insertText(address, fmt);
-
 }
 
 bool HtmlTextEdit::isHtmlFragment(QString text)
@@ -405,4 +463,26 @@ void HtmlTextEdit::onPasteLink()
     QTextDocumentFragment frag = QTextDocumentFragment::fromHtml("<a href=" + clipboard->text() + "><span style=\" font-family:'Ubuntu'; text-decoration: underline; color:#6c7565;\">"
                                    + clipboard->text() + "</span></a></p>");
     this->textCursor().insertFragment(frag);
+}
+
+void HtmlTextEdit::OnH1Act(bool checked)
+{
+    QTextCursor cur = this->textCursor();
+    double pointsize = this->fontPointSize();
+    if(pointsize <= 0)
+        this->setFontPointSize(11);
+    if(checked)
+    {
+        this->setFontWeight(75);
+        this->setFontPointSize(this->fontPointSize()+4.);
+    }
+    else
+    {
+        this->setFontWeight(50);
+        this->setFontPointSize(this->fontPointSize()-4.);
+
+    }
+    h1Act->setChecked(!checked);
+
+    setDirty(true);
 }

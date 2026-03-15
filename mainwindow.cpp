@@ -436,32 +436,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
       }
   });
-  connect(SQL::instance(), &SQL::commentChange, this, [=](CommentInfo ci, SQL::CHANGETYPE t){
-      //RouteComments currRc;
-      CommentInfo currCi;
-      if(comments && currIx)
-      {
-          currCi = comments->at(currIx);
-          currIx = -1;
-          comments = sql->commentsForAlphaRoute(currCi.alphaRoute, currCi.date, &currIx);
-          for(int i =0; i < comments->count(); i++)
-          {
-             //RouteComments rc = comments->at(i);
-             CommentInfo ci = comments->at(i);
-             RouteData rd = ui->cbRoute->currentData().value<RouteData>();
-             ci.routeId = rd.routeId();
-             ci.routeName = rd.routeName();
-             if(ci.alphaRoute == currCi.alphaRoute && ci.date == currCi.date && ci.commentKey == currCi.commentKey)
-             {
-                 currIx = i;
-                 displayRouteComment(ci);
-                 break;
-             }
-             m_bridge->processScript("showRouteComment", "false");
 
-          }
-      }
-  });
+  connect(SQL::instance(), SIGNAL(commentChange(CommentInfo,CHANGETYPE)),this, SLOT(onCommentChange(CommentInfo,SQL::CHANGETYPE)));
 
 //  connect(ui->cbSegments, SIGNAL(signalFocusOut()), this, SLOT( cbSegments_Leave()));
   connect(ui->cbRoute, SIGNAL(signalFocusOut()), this, SLOT(cbRoutes_Leave()));
@@ -522,6 +498,33 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
    ui->chkShowOverlay->setEnabled(false);
   ui->tabWidget->setCurrentIndex(0);
   config->saveSettings();
+}
+
+void MainWindow::onCommentChange(CommentInfo ci, SQL::CHANGETYPE t)
+{
+    CommentInfo currCi;
+    if(comments && currIx)
+    {
+        currCi = comments->at(currIx);
+        currIx = -1;
+        comments = sql->commentsForAlphaRoute(currCi.alphaRoute, currCi.date, &currIx);
+        for(int i =0; i < comments->count(); i++)
+        {
+           //RouteComments rc = comments->at(i);
+           CommentInfo ci = comments->at(i);
+           RouteData rd = ui->cbRoute->currentData().value<RouteData>();
+           ci.routeId = rd.routeId();
+           ci.routeName = rd.routeName();
+           if(ci.alphaRoute == currCi.alphaRoute && ci.date == currCi.date && ci.commentKey == currCi.commentKey)
+           {
+               currIx = i;
+               displayRouteComment(ci);
+               break;
+           }
+           m_bridge->processScript("showRouteComment", "false");
+
+        }
+    }
 }
 
 void MainWindow::onCbSegmentsCustomContextMenu(const QPoint &pos)
@@ -5379,9 +5382,10 @@ void MainWindow::updateRouteComment()
     }
  int row =         ui->cbRoute->currentIndex();
  RouteData rd = ((RouteData)routeList.at(row));
- routeCommentsDlg->setCompanyKey(rd.companyKey());
- routeCommentsDlg->setRoute(rd.route());
- routeCommentsDlg->setDate(rd.startDate());
+ // routeCommentsDlg->setCompanyKey(rd.companyKey());
+ // routeCommentsDlg->setRoute(rd.route());
+ // routeCommentsDlg->setDate(rd.startDate());
+ routeCommentsDlg->setRouteData(rd);
  routeCommentsDlg->setDirty(false);
  routeCommentsDlg->raise();
  routeCommentsDlg->show();

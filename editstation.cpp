@@ -10,6 +10,7 @@ EditStation::EditStation(StationInfo sti, QWidget *parent) :
     ui(new Ui::editStation)
 {
     ui->setupUi(this);
+    ui->btnEditText->setVisible(false);
     _sti = sti;
     bDirty = false;
     config = Configuration::instance();
@@ -403,7 +404,6 @@ void EditStation::btnEditText_Click()
         else
             sql->updateComment(_infoKey, commentsForm.HTML(), commentsForm.Tags());
     }
-
 }
 
 void EditStation::btnDelete_Click()
