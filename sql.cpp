@@ -3409,15 +3409,21 @@ bool SQL::updateSegment(SegmentInfo* si, bool bNotify)
   Q_ASSERT(si->_endLat != 0);
   Q_ASSERT(si->_endLon != 0);
  }
+
  commandText = "Update Segments set startLat= " + QString("%1").arg(si->_startLat,0,'f',8)
    + ", startLon= " + QString("%1").arg(si->_startLon,0,'f',8)
    + ", endLat= " + QString("%1").arg(si->_endLat,0,'f',8)
    + ", endLon= " + QString("%1").arg(si->_endLon,0,'f',8)
    + ", length= " + QString("%1").arg(si->_length)
    + ", points= " + QString("%1").arg(si->pointList().count())
-   + ", type= " + QString("%1").arg((int)si->_routeType)
-   + ", StreetId = " + QString("%1").arg(si->_streetId)
-   + ", direction = '" + si->_direction + "', "
+   + ", type= " + QString("%1").arg((int)si->_routeType);
+ if(si->_streetId > 0)
+ {
+  commandText.append(
+    ", StreetId = " + QString("%1").arg(si->_streetId));
+ }
+  commandText.append(
+     ", direction = '" + si->_direction + "', "
    + "pointArray='" + si->pointsString() + "', "
    + "description='" + si->_description + "',"
    + "street='" + si->_streetName + "',"
@@ -3429,7 +3435,7 @@ bool SQL::updateSegment(SegmentInfo* si, bool bNotify)
    + "endDate='" + si->_dateEnd.toString("yyyy/MM/dd") + "', "
    + "formatOk=" + QString::number(si->_formatOK)  +", "
    + "lastUpdate=CURRENT_TIMESTAMP "
-   + "where SegmentId = " + QString("%1").arg(si->segmentId());
+   + "where SegmentId = " + QString("%1").arg(si->segmentId()));
  qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
  bQuery = query.exec(commandText);
  if(!bQuery)
