@@ -1136,6 +1136,8 @@ void RouteCommentsDlg::closeEvent(QCloseEvent *e)
                 rc->ci.routesUsed.append(rc->route);
             for(int route : rc->ci.routesUsed)
             {
+                if(route < 1)
+                    continue;
                 if(SQL::instance()->executeCommand(QString("select routeAlpha from altRoute where route = %1").arg(route),db,&vl)){
                    rc->ci.aRoutes.append(vl.at(0).toString());
                     sl.append(vl.at(0).toString());

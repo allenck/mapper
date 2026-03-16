@@ -3438,7 +3438,8 @@ bool SQL::updateSegment(SegmentInfo* si, bool bNotify)
      qDebug() << errCommand;
      QSqlError error = query.lastError();
      SQLERROR(std::move(query));
-     throw SQLException(error.text() + " " + errCommand);
+     //throw SQLException(error.text() + " " + errCommand);
+     return false;
  }
  rows = query.numRowsAffected();
  if (rows == 0)
@@ -8693,7 +8694,8 @@ QList<RouteComments*> SQL::listRouteComments()
             throw Exception(tr("database not open: %1").arg(__LINE__));
         QSqlDatabase db = QSqlDatabase::database();
 
-        QString commandText = "select route, rc.date, rc.commentKey, c.tags, c.routeList, c.comments, companyKey, rc.latitude, rc.longitude, routeId,"
+        QString commandText = "select route, rc.date, rc.commentKey, c.tags, c.routeList, c.comments, companyKey, rc.latitude, rc.longitude, "
+                              "rc.routeId,"
                               "c.date, c.jRouteList "
                               "from RouteComments rc "
                               "join Comments c on c.commentKey = rc.commentKey";

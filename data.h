@@ -855,16 +855,22 @@ public:
     int routeCount;
     QList<int> routesUsed = QList<int>();
     QList<int> toRoutesTable(QString routeList);
+    QStringList toAroutesList(QJsonArray aRoutes);
     static QString routesTableToString(QList<int> table);
-    static QString jRoutesTableToString(QList<QString> table);
+    QString jRoutesTableToString(QList<QString> table); // create jRoutesListString from table
+    QString aRoutesToString();  // create jRoutesListString from stringlist aRoutesList
+    void populateARoutes(QString jRouteList);
     QJsonArray aRoutes = QJsonArray();
-    QString aRoutesString;
+    QStringList aRoutesList;   // list of aRoutes
+    QString jRoutesListString; // string representation of QJsonArray, e.g ["81","82"]
     QDate date;
     QString alphaRoute;
+    qint32 route = -1;
     LatLng pos;
     QString routeName;
     qint32 companyKey;
     qint32 routeId;
+    QString companyName;
 };
 
 class RowChanged

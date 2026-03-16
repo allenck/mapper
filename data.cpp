@@ -4,6 +4,7 @@
 #include "webviewbridge.h"
 #include "sql.h"
 #include <QPair>
+#include "exceptions.h"
 
 //routeData::routeData(QObject *parent = 0)
 //{
@@ -1349,13 +1350,16 @@ CommentInfo::CommentInfo(const CommentInfo& other){
     routesUsed = other.routesUsed;
     routeCount = other.routeCount;
     date = other.date;
-    aRoutesString = other.aRoutesString;
+    jRoutesListString = other.jRoutesListString;
     aRoutes = other.aRoutes;
     alphaRoute = other.alphaRoute;
     pos = other.pos;
     routeName = other.routeName;
-    commentKey = other.commentKey;
     routeId = other.routeId;
+    route = other.route;
+    companyKey = other.companyKey;
+    companyName = other.companyName;
+    aRoutesList = other.aRoutesList;
 }
 
 QList<int> CommentInfo::toRoutesTable(QString routeList)
@@ -1370,6 +1374,34 @@ QList<int> CommentInfo::toRoutesTable(QString routeList)
     routeCount = routesUsed.count();
     return routesUsed;
 }
+
+QStringList CommentInfo::toAroutesList(QJsonArray aRoutes)
+{
+    QStringList list;
+    QVariantList vl = aRoutes.toVariantList();
+    foreach (QVariant v, vl) {
+        list.append(v.toString());
+    }
+    return list;
+}
+
+void CommentInfo::populateARoutes(QString jRouteList)
+{
+    if(jRouteList.isEmpty() || !(jRouteList.startsWith('[') && jRouteList.endsWith("]")))
+        return;
+    QString listOfStrings = jRouteList.mid(1, jRouteList.length()-2);
+    QStringList sl = listOfStrings.split(",");
+    foreach (QString s, sl) {
+        if(s.startsWith("\"") && s.endsWith("\""))
+        {
+            QString s1 = s.mid(1, s.length()-2);
+            aRoutes.append(s1);
+            aRoutesList.append(s1);
+        }
+    }
+}
+
+
 /*static*/ QString CommentInfo::routesTableToString(QList<int> table)
 {
     QString routeList;
@@ -1383,14 +1415,28 @@ QList<int> CommentInfo::toRoutesTable(QString routeList)
     return routeList;
 }
 
-/*static*/ QString CommentInfo::jRoutesTableToString(QList<QString> table){
+QString CommentInfo::jRoutesTableToString(QList<QString> table){
     QString routeList = "[";
     foreach (QString aRoute, table) {
         routeList.append("\"" + aRoute + "\"");
+        routeList.append(",");
+        aRoutes.append(aRoute);
+    }
+    routeList.chop(1);
+    routeList.append("]");
+    aRoutes = QJsonArray::fromStringList(table);
+    return routeList;
+}
+
+QString CommentInfo::aRoutesToString()
+{
+    QString routeList = "[";
+    QVariantList vl = aRoutes.toVariantList();
+    foreach (QVariant aRoute, vl) {
+        routeList.append("\"" + aRoute.toString() + "\"");
         routeList.append(",");
     }
     routeList.chop(1);
     routeList.append("]");
     return routeList;
-
 }

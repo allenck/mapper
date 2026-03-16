@@ -1,4 +1,8 @@
-**Recent Changes October 2025 VERSION=1.2.6
+**Recent Changes March 2026 VERSION=1.2.7
+1. Remove RouteComments table, expand Comments table.
+2. enhance editing options in htmltextedit.
+
+**Recent Changes February 2026 VERSION=1.2.6
 1. Add route's name to tableview.
 2. Implement multiple RouteComments using same Comment.
 3. Add scan button to RouteCommentsDlg to scan for errors.
