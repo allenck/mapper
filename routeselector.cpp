@@ -1,26 +1,35 @@
 #include "routeselector.h"
 #include "sql.h"
 #include <QItemSelectionModel>
+#include "mainwindow.h"
 
 RouteSelector::RouteSelector(QWidget *parent) : QTableView(parent)
 {
-    list = SQL::instance()->routeNameList();
-    aList = SQL::instance()->routeNameAList();
-    RouteSelectorTableModel* model = new RouteSelectorTableModel(aList);
-    setModel(model);
+    // list = SQL::instance()->routeNameList();
+    //aList = SQL::instance()->routeNameAList();
+
+
+    RouteSelectorTableModel* model = new RouteSelectorTableModel(this);
+
+    proxyModel = new QSortFilterProxyModel(this);
+    proxyModel->setSourceModel(model);
+    setModel(proxyModel);
     setSelectionBehavior(QAbstractItemView::SelectRows);
     setMultiSelection(true);
+    setSortingEnabled(true);
+    horizontalHeader()->setStretchLastSection(true);
 }
 
 QList<int>* RouteSelector::selectedRoutes()
 {
- QModelIndexList ixList = selectedIndexes();
- QList<int>* out = new QList<int>();
- for(QModelIndex index : ixList)
- {
-  out->append(list->values().at(index.row())->route());
- }
- return out;
+    QModelIndexList ixList = selectedIndexes();
+    QList<int>* out = new QList<int>();
+    for(QModelIndex index : ixList)
+    {
+        QModelIndex sIndex = proxyModel->mapToSource(index);
+        out->append(list->values().at(sIndex.row())->route());
+    }
+    return out;
 }
 
 QList<QString>* RouteSelector::selectedARoutes()
@@ -29,7 +38,8 @@ QList<QString>* RouteSelector::selectedARoutes()
     QList<QString>* out = new QList<QString>();
     for(QModelIndex index : ixList)
     {
-        out->append(aList->values().at(index.row())->routeAlpha());
+        QModelIndex sIndex = proxyModel->mapToSource(index);
+        out->append(aList->values().at(sIndex.row())->routeAlpha());
     }
     return out;
 }
@@ -58,6 +68,8 @@ void RouteSelector::setSelections(QList<int> *sellist)
 void RouteSelector::setSelections(QList<QString> *sellist)
 {
 
+    if(!aList)
+        return;
     for(QString alphaRoute : *sellist)
     {
         int row = 0;
@@ -95,13 +107,18 @@ QList<RouteName*> RouteSelector::getList()
  return list->values();
 }
 
+void RouteSelector::setAList(QList<RouteData> *routeList)
+{
+     ((RouteSelectorTableModel*)model())->createList(routeList, QDate());
+}
 
 //**************************************************************************
 
-RouteSelectorTableModel::RouteSelectorTableModel(QMap<QString,RouteName*>* aList, QObject* parent) : QAbstractTableModel(parent)
+RouteSelectorTableModel::RouteSelectorTableModel(QObject* parent) : QAbstractTableModel(parent)
 {
  //this->list = list;
-    this->aList = aList;
+    //this->aList = aList;
+ aList = createList(&MainWindow::instance()->routeList, QDate());
 }
 
 int RouteSelectorTableModel::rowCount(const QModelIndex &parent) const
@@ -111,7 +128,7 @@ int RouteSelectorTableModel::rowCount(const QModelIndex &parent) const
 
 int RouteSelectorTableModel::columnCount(const QModelIndex &parent) const
 {
- return 7;
+ return 8;
 }
 
 QVariant RouteSelectorTableModel::data(const QModelIndex &index, int role) const
@@ -135,6 +152,8 @@ QVariant RouteSelectorTableModel::data(const QModelIndex &index, int role) const
     return routeName->companyName();
   case ROUTEID:
       return routeName->routeId();
+  case DATE:
+      return routeName->date().toString("yyyy/MM/dd");
   }
  }
  return QVariant();
@@ -160,6 +179,8 @@ QVariant RouteSelectorTableModel::headerData(int section, Qt::Orientation orient
     return tr("Company Name");
    case ROUTEID:
        return "RouteId";
+    case DATE:
+       return "Date";
   }
  }
  return QVariant();
@@ -195,11 +216,15 @@ bool RouteSelectorTableModel::setData(const QModelIndex &index, const QVariant &
  return false;
 }
 
-void RouteSelectorTableModel::createList(QList<RouteData>* rdList, QDate dt)
+QMap<QString, RouteName*>* RouteSelectorTableModel::createList(QList<RouteData>* rdList, QDate dt)
 {
     beginResetModel();
     //list->clear();
-    aList->clear();
+    // if(!aList)
+    //     aList = SQL::instance()->routeNameAList();
+    // else
+    //     aList->clear();
+    aList = new QMap<QString, RouteName*>();
     foreach(RouteData rd, *rdList)
     {
         //if(dt >= rd.startDate().addDays(-700) && dt <= rd.endDate())
@@ -213,11 +238,12 @@ void RouteSelectorTableModel::createList(QList<RouteData>* rdList, QDate dt)
             rn->setCompanyKey(rd.companyKey());
             rn->setCompanyName(rd.companyName());
             rn->setRouteId(rd.routeId());
-            // list->insert(rd.route(), rn);
+            rn->setDate(rd.startDate());
             aList->insert(rd.alphaRoute(), rn);
         }
     }
     endResetModel();
+    return aList;
 }
 
 // QString RouteSelectorTableModel::getRouteName(int route)

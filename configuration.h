@@ -43,6 +43,14 @@ struct dupSegmentView
     QByteArray state;
 };
 
+struct routeCommentsDlg
+{
+    QByteArray state;
+    QByteArray geometry;
+    QList<QVariant> hiddenColumns;
+    int columnCount;
+};
+
 struct dlgUpdateStreets
 {
     QByteArray state;
@@ -75,6 +83,7 @@ public:
  routeView rv;
  dupSegmentView dsv;
  dlgUpdateStreets dus;
+ routeCommentsDlg rcd;
  static Configuration* instance();
  bool bDisplayWebDebug = false;
  bool bRunInBrowser = false;

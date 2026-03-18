@@ -185,6 +185,14 @@ void Configuration::saveSettings()
  settings->setValue("date", dus.date.toString("yyyy/MM/dd"));
  settings->endGroup();
 
+ settings->beginGroup("routeCommentsDlg");
+ settings->setValue("state", rcd.state);
+ settings->setValue("geometry", rcd.geometry);
+ settings->setValue("hidden_cols", rcd.hiddenColumns);
+ settings->setValue("columnCount", rcd.columnCount);
+ settings->endGroup();
+
+
  settings->setValue("currCity", currentCityId);
  settings->setValue("showDebugMessages", bDisplayWebDebug);
  settings->setValue("runInBrowser", bRunInBrowser);
@@ -557,6 +565,14 @@ void Configuration::getSettings()
    dus.text2 = settings.value("text2").toString();
    dus.date = settings.value("date").toDate();
    settings.endGroup();
+
+   settings.beginGroup("routeCommentsDlg");
+   rcd.state = settings.value("state").toByteArray();
+   rcd.geometry = settings.value("geometry").toByteArray();
+   rcd.hiddenColumns = settings .value("hidden_cols").toList();
+   rcd.columnCount = settings.value("columnCount").toInt();
+   settings.endGroup();
+
 
    for(Overlay* ov : Overlay::overlayList)
    {

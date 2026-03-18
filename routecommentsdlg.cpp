@@ -14,6 +14,13 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
 {
     ui->setupUi(this);
     this->routeList = routeList;
+    proxyModel = (QSortFilterProxyModel*)ui->tableView->model();
+    _sourceModel = (RouteSelectorTableModel*)proxyModel->sourceModel();
+    _sourceModel->createList(routeList, QDate());
+    config = Configuration::instance();
+    if(!config->rcd.geometry.isEmpty())
+        restoreGeometry(config->rcd.geometry);
+
     // _rc.route = -1;
     // _rc.companyKey = companyKey;
     _ci.alphaRoute = "";
@@ -23,7 +30,6 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
     routes = new QList<int>();
     aRoutes = new QStringList();
     //_date.setYMD(1800,1,1);
-    config = Configuration::instance();
     //sql->setConfig(config);
     sql = SQL::instance();
     ui->txtComments->setReadOnly(false);
@@ -31,7 +37,6 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
     ui->btnDelete->setEnabled(false);
 
     ui->lblInfo->clear();
-    _model = (RouteSelectorTableModel*)ui->tableView->model();
     SQL::instance()->setForeignKeyCheck(false);
     MainWindow::_instance->foreignKeyCheckAct->setChecked(false);
     //config->setForeignKeyCheck(false);
@@ -59,9 +64,9 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
     connect(ui->btnNext, SIGNAL(clicked()), this, SLOT(OnBtnNext()));
     connect(ui->btnPrev, SIGNAL(clicked()), this, SLOT(OnBtnPrev()));
     connect(ui->btnChangeDate, SIGNAL(clicked(bool)),this, SLOT(onChgDate()));
-    connect(ui->tableView, &RouteSelector::selections_changed,this, [=](QModelIndexList added, QModelIndexList deleted){
+    connect(ui->tableView, &RouteSelector::selections_changed,this, [=](QModelIndexList selected, QModelIndexList deselected){
         if(!bSettingSelections)
-            onSelectionsChanged(deleted, added);
+            onSelectionsChanged(selected, deselected);
     });
 
     connect(ui->txtComments, &QTextEdit::textChanged,this, [=]{
@@ -86,6 +91,49 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
     connect(sql, &SQL::commentChange, this, [=] (CommentInfo ci, SQL::CHANGETYPE t){
         onCommentChange(ci, t);
     });
+
+    config->rv.hiddenColumns.clear();
+    // connect(ui->tableView->horizontalHeader(), &QHeaderView::sectionResized, this,
+    //         [=](int logicalIndex, int oldSize, int newSize){
+    //             config->rcd.state = ui->tableView->horizontalHeader()->saveState();
+    //             if(!config->rcd.hiddenColumns.isEmpty())
+    //                 config->rcd.hiddenColumns.replace(logicalIndex,newSize);
+    // });
+
+    // ui->tableView->hideColumn(_sourceModel->ROUTEID);
+    // config->rcd.hiddenColumns.append(_sourceModel->ROUTEID);
+    // ui->tableView->hideColumn(_sourceModel->ROUTEPREFIX);
+    // config->rcd.hiddenColumns.append(_sourceModel->ROUTEPREFIX);
+    // ui->tableView->hideColumn(_sourceModel->COMPANY);
+    // config->rcd.hiddenColumns.append(_sourceModel->COMPANY);
+
+    for(int i=0; i < _sourceModel->columnCount(QModelIndex()); i++)
+    {
+        if(((RouteSelector*)ui->tableView)->horizontalHeader()->isSectionHidden(i))
+        {
+            if(!config->rcd.hiddenColumns.contains(QVariant(i)))
+                config->rcd.hiddenColumns.append(QVariant(i));
+        }
+        else
+        {
+            if(config->rcd.hiddenColumns.contains(QVariant(i)))
+                config->rcd.hiddenColumns.removeOne(QVariant(i));
+        }
+    }
+    ui->tableView->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    connect(ui->tableView->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), this,
+            SLOT(hdr_customContextMenu(QPoint)));
+
+    hideColumnAct = new QAction(tr("Hide Column"),this);
+
+    connect(hideColumnAct, &QAction::triggered, [=]{
+        int logicalIndex =hideColumnAct->data().toInt();
+        ui->tableView->hideColumn(logicalIndex);
+        if(!config->rcd.hiddenColumns.contains(logicalIndex))
+            config->rcd.hiddenColumns.append(logicalIndex);
+    });
+
 }
 
 RouteCommentsDlg::~RouteCommentsDlg()
@@ -93,36 +141,58 @@ RouteCommentsDlg::~RouteCommentsDlg()
     delete ui;
 }
 
-// void RouteCommentsDlg::setRoute(qint32 r)
-// {
-// //    _rc.route = r;
-//     _ci.route = r;
-// //    ui->txtRoute->setText(QString("%1").arg(r));
-// //    ui->txtRouteAlpha->setText(sql->getAlphaRoute(r, _companyKey));
-//     routes->clear();
-//     aRoutes->clear();
-//     routes->append(r);
-//     ui->tableView->setSelections(routes);
-// }
+void RouteCommentsDlg::resizeEvent(QResizeEvent *e)
+{
+    Q_UNUSED(e)
+    config->rcd.geometry = saveGeometry();
+}
 
-// void RouteCommentsDlg::setCompanyKey(qint32 cc)
-// {
-//     _rc.companyKey = cc;
-// }
+void RouteCommentsDlg::hdr_customContextMenu( const QPoint pt)
+{
+    // curRow = ui->rowAt(pt.y());
+    //curCol = ui->columnAt(pt.x());
+    QMenu menu;
+    hideColumnAct->setData(ui->tableView->horizontalHeader()->logicalIndexAt(pt));
+    menu.addAction(hideColumnAct);
+    if(config->rcd.hiddenColumns.count()>0)
+    {
+        QMenu* m = new QMenu(tr("Show column"));
+        menu.addMenu(m);
+        foreach(QVariant col, config->rcd.hiddenColumns)
+        {
+            QAction* a = new QAction(_sourceModel->headerData(col.toInt(),Qt::Horizontal, Qt::DisplayRole).toString(),this);
+            m->addAction(a);
+            connect(a, &QAction::triggered, [=]{
+                ui->tableView->showColumn(col.toInt());
+                config->rcd.hiddenColumns.removeOne(col.toInt());
+            });
+        }
+    }
+    menu.exec(QCursor::pos());
+}
 
-// void RouteCommentsDlg::setDate(QDate dt)
-// {
-//     bDateChanged = true;
-//     _ci.date = dt;
-//     ui->dateEdit->setDate(dt);
-
-//     bool rslt = readRouteComment(0);
-
-//     bDateChanged = false;
-
-//     _model->createList(routeList, dt);
-//     ui->tableView->setSelections(routes);
-// }
+QMap<QString, RouteName*>* RouteCommentsDlg::createList(QList<RouteData>* rdList, QDate dt)
+{
+    aList = new QMap<QString, RouteName*>();
+    foreach(RouteData rd, *rdList)
+    {
+        //if(dt >= rd.startDate().addDays(-700) && dt <= rd.endDate())
+        {
+            RouteName* rn = new RouteName();
+            rn->setRoute(rd.route());
+            rn->setRouteName(rd.routeName());
+            rn->setRoutePrefix(rd.routePrefix());
+            rn->setRouteAlpha(rd.alphaRoute());
+            rn->setBaseRoute(rd.baseRoute());
+            rn->setCompanyKey(rd.companyKey());
+            rn->setCompanyName(rd.companyName());
+            rn->setRouteId(rd.routeId());
+            rn->setDate(rd.startDate());
+            aList->insert(rd.alphaRoute(), rn);
+        }
+    }
+    return aList;
+}
 
 void RouteCommentsDlg::setRouteData(RouteData rd)
 {
@@ -144,9 +214,6 @@ void RouteCommentsDlg::setRouteData(RouteData rd)
     aRoutes->clear();
     routes->append(rd.route());
     aRoutes->append(rd.alphaRoute());
-    bSettingSelections = true;
-    ui->tableView->setSelections(aRoutes);
-    bSettingSelections = false;
     //bool rslt = readRouteComment(0);
     if(currIx >=0)
     {
@@ -154,7 +221,10 @@ void RouteCommentsDlg::setRouteData(RouteData rd)
         ui->dateEdit->setDate(_ci.date);
         displayComment(_ci);
     }
-    _model->createList(routeList, _ci.date);
+    _sourceModel->createList(routeList, _ci.date);
+    bSettingSelections = true;
+    ui->tableView->setSelections(aRoutes);
+    bSettingSelections = false;
 
 }
 
@@ -465,18 +535,20 @@ void RouteCommentsDlg::OnDateLeave()
     readRouteComment(0);
 }
 
-void RouteCommentsDlg::onSelectionsChanged(QModelIndexList added, QModelIndexList deleted)
+void RouteCommentsDlg::onSelectionsChanged(QModelIndexList selected, QModelIndexList deselected)
 {
+    //QSortFilterProxyModel* proxyModel = (QSortFilterProxyModel*)ui->tableView->model();
     dRoutes = new QList<int>();
     ui->lblInfo->clear();
-    for(QModelIndex deletedIndex : deleted)
+    for(QModelIndex deletedIndex : deselected)
     {
-        if(deletedIndex.isValid())
+        QModelIndex sIndex = proxyModel->mapToSource(deletedIndex);
+        if(sIndex.isValid())
         {
-            if(deletedIndex.column()== RouteSelectorTableModel::ROUTE)
+            if(sIndex.column()== RouteSelectorTableModel::ROUTE)
             {
-                dRoutes->append(deletedIndex.data().toInt());
-                ui->lblInfo->setText(QString("unselect %1").arg(deletedIndex.data().toInt()));
+                dRoutes->append(sIndex.data().toInt());
+                ui->lblInfo->setText(QString("unselect %1").arg(sIndex.data().toInt()));
             }
         }
     }
@@ -486,12 +558,13 @@ void RouteCommentsDlg::onSelectionsChanged(QModelIndexList added, QModelIndexLis
     aRoutes->clear();
     ui->lblInfo->clear();
     QString txtRoutes;
-    foreach (QModelIndex ix, modelIndexList) {
+    foreach (QModelIndex index, modelIndexList) {
+        QModelIndex ix = proxyModel->mapToSource(index);
         int selectedRoute = ix.data().toInt();
         if(!routes->contains(selectedRoute))
             routes->append(selectedRoute);
-        QModelIndex aix = _model->index(ix.row(), RouteSelectorTableModel::ROUTEALPHA);
-        QModelIndex rix = _model->index(ix.row(), RouteSelectorTableModel::ROUTE);
+        QModelIndex aix = _sourceModel->index(ix.row(), RouteSelectorTableModel::ROUTEALPHA);
+        QModelIndex rix = _sourceModel->index(ix.row(), RouteSelectorTableModel::ROUTE);
         aRoutes->append(aix.data().toString());
         txtRoutes.append(aix.data().toString() + ",");
     }
@@ -598,7 +671,7 @@ bool RouteCommentsDlg::outputChanges()
             }
             else
             {
-                if(!sql->updateComment(_ci))
+                if(!sql->updateComment(_ci, true))
                 {
                     sql->rollbackTransaction("outputChanges");
                     ui->lblInfo->setStyleSheet("color:red");
@@ -994,7 +1067,10 @@ bool RouteCommentsDlg::processOrphan()
         _rc.ci.tags = info.tags;
         _rc.ci.comments = info.comments;
 
-        selectionModel->clear();
+        if(selectionModel == nullptr)
+            selectionModel = ui->tableView->selectionModel();
+        else
+            selectionModel->clear();
         enableButtons();
         setDirty(false);
 
@@ -1144,11 +1220,14 @@ void RouteCommentsDlg::closeEvent(QCloseEvent *e)
                 }
             }
             rc->ci.jRoutesListString = rc->ci.jRoutesTableToString(sl);
-            if(!SQL::instance()->updateComment(rc->ci))
+            if(!SQL::instance()->updateComment(rc->ci,true))
             {
-                return false;
+                qDebug() << tr("upgrade: commentKey %1 not updated").arg(rc->ci.commentKey);
+                continue;
             }
         }
     }
+    SQL::instance()->commitTransaction("upgrade");
+
     return true;
 }

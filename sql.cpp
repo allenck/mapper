@@ -8411,24 +8411,27 @@ bool SQL::updateComment(qint32 infoKey, QString comments, QString tags, QList<in
     return rtn;
 }
 
-bool SQL::updateComment(CommentInfo info)
+bool SQL::updateComment(CommentInfo info, bool force)
 {
-    if(info.commentKey < 1 || info.routesUsed.empty() || info.comments.isEmpty())
+    if(force == false)
     {
-        qDebug() << "Error: commentkey invalid or routesUsed empty or comments empty";
-        return false;
-    }
-    if(info.aRoutes.isEmpty() )
-    {
-        qDebug() << "aRoutes invalid";
-        return false;
-    }
-    if(info.jRoutesListString.isEmpty() || !info.jRoutesListString.startsWith("[") || !info.jRoutesListString.endsWith("]"))
-    {
-        qDebug() << "aRoutesString invalid";
-        return false;
-    }
+        if(info.commentKey < 1 || info.routesUsed.empty() || info.comments.isEmpty())
+        {
+            qDebug() << "Error: commentkey invalid or routesUsed empty or comments empty";
+            return false;
+        }
+        if(info.aRoutes.isEmpty() )
+        {
+            qDebug() << "aRoutes invalid";
+            return false;
+        }
 
+        if(info.jRoutesListString.isEmpty() || !info.jRoutesListString.startsWith("[") || !info.jRoutesListString.endsWith("]"))
+        {
+            qDebug() << "aRoutesString invalid";
+            return false;
+        }
+    }
     // QTextEdit* edit = new QTextEdit();
     // edit->setHtml(info.comments);
     // qApp->processEvents();
@@ -8458,7 +8461,10 @@ bool SQL::updateComment(CommentInfo info)
     }
     int rows = query.numRowsAffected();
     if(rows == 0)
+    {
+        qDebug() << tr("updateComment commentKey =%1").arg(info.commentKey);
         return false;
+    }
     emit commentChange(info, CHANGETYPE::MODIFY);
     return true;
 }
@@ -8701,7 +8707,6 @@ QList<RouteComments*> SQL::listRouteComments()
         QSqlDatabase db = QSqlDatabase::database();
 
         QString commandText = "select route, rc.date, rc.commentKey, c.tags, c.routeList, c.comments, companyKey, rc.latitude, rc.longitude, "
-                              "rc.routeId,"
                               "c.date, c.jRouteList "
                               "from RouteComments rc "
                               "join Comments c on c.commentKey = rc.commentKey";
@@ -8734,9 +8739,8 @@ QList<RouteComments*> SQL::listRouteComments()
             rc->ci.comments = query.value(5).toString();
             rc->companyKey = query.value(6).toInt();
             rc->pos = LatLng(query.value(7).toDouble(), query.value(8).toDouble());
-            rc->routeId = query.value(9).toInt();
-            rc->ci.date = query.value(10).toDate();
-            rc->ci.jRoutesListString = query.value(11).toString();
+            rc->ci.date = query.value(9).toDate();
+            rc->ci.jRoutesListString = query.value(10).toString();
             list.append(rc);
         }
     }

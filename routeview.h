@@ -77,7 +77,7 @@ private:
     QAction* splitSegmentAct;
     QAction* sortNameAct;
     QAction* hideColumnAct;
-    QAction* showColumnAct;
+    //QAction* showColumnAct;
     QAction* addToAnotherRouteAct;
     QAction* deleteSelectedRowsAct;
     QAbstractButton* cornerButtonAct;

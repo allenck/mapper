@@ -27,6 +27,7 @@ public:
     static bool upgrade();
     void setRouteData(RouteData rd);
     void onRouteSelected(int route, QString alphaRoute, int row);
+    QMap<QString, RouteName *> *createList(QList<RouteData>* rdList, QDate dt);
 
 private:
     Ui::RouteCommentsDlg *ui;
@@ -40,7 +41,8 @@ private:
     RouteComments _rc;
     Configuration *config;
     QList<RouteData>* routeList = nullptr;
-    RouteSelectorTableModel* _model = nullptr;
+    QSortFilterProxyModel* proxyModel = nullptr;
+    RouteSelectorTableModel* _sourceModel = nullptr;
     QList<int>* routes = nullptr;
     QStringList* aRoutes = nullptr;
     QList<int>* dRoutes = nullptr;
@@ -49,6 +51,7 @@ private:
     QList<CommentInfo>* orphans = nullptr;
     QList<CommentInfo>* comments = nullptr;
     int currIx = -1;
+    QMap<QString, RouteName*>* aList = nullptr;
 
     int ixOrphan=-1;
     // int commentsUpdated = 0;
@@ -78,6 +81,9 @@ private:
     bool scanResult = false;
     void enableButtons();
     void closeEvent(QCloseEvent *e) override;
+    void resizeEvent(QResizeEvent *e) override;
+    QAction* hideColumnAct;
+    QAction* showColumnAct;
 
 private slots:
     void btnOK_Clicked();
@@ -100,6 +106,7 @@ private slots:
     void onChgDate();
     void onSelectionsChanged(QModelIndexList added, QModelIndexList deleted);
     void onCommentChange(CommentInfo ci, SQL::CHANGETYPE t);
+    void hdr_customContextMenu( const QPoint pt);
 
 protected:
     bool bSettingSelections = false;

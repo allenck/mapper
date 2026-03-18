@@ -1,9 +1,11 @@
 #ifndef ROUTESELECTOR_H
 #define ROUTESELECTOR_H
 
+#include "qdatetime.h"
 #include <QTableView>
 #include <QAbstractTableModel>
 
+class QSortFilterProxyModel;
 class RouteName;
 class RouteData;
 class RouteSelector : public QTableView
@@ -19,6 +21,7 @@ class RouteSelector : public QTableView
   void setSelections(QList<int>* list);
   void setSelections(QList<QString> *sellist);
   QList<RouteName *> getList();
+  void setAList(QList<RouteData> *routeList);
 
  signals:
     void selections_changed(QModelIndexList added, QModelIndexList deleted);
@@ -28,20 +31,16 @@ class RouteSelector : public QTableView
     QMap<int, RouteName*>* list = nullptr;
     QMap<QString, RouteName*>* aList = nullptr;
     void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected) override;
-
+    QSortFilterProxyModel* proxyModel = nullptr;
 };
 
 class RouteSelectorTableModel : public QAbstractTableModel
 {
  Q_OBJECT
  public:
-  RouteSelectorTableModel(QMap<QString, RouteName *> *aList, QObject *parent=0);
-  enum COLUMNS{ROUTEALPHA, ROUTEPREFIX, ROUTE, NAME, ROUTEID, COMPANYNAME, COMPANY};
-  void createList(QList<RouteData>*rdList, QDate dt);
-  // QString getRouteName(int route);
-  // int getRouteId(int route);
-
-
+  RouteSelectorTableModel(QObject *parent=0);
+  enum COLUMNS{ROUTEALPHA, ROUTEPREFIX, ROUTE, NAME, ROUTEID,  DATE, COMPANY, COMPANYNAME};
+  QMap<QString, RouteName*>* createList(QList<RouteData>*rdList, QDate dt);
   int rowCount(const QModelIndex &parent) const;
   int columnCount(const QModelIndex &parent) const;
   QVariant data(const QModelIndex &index, int role) const;
@@ -51,7 +50,7 @@ class RouteSelectorTableModel : public QAbstractTableModel
 
  private:
     //QMap<int, RouteName*>* list = nullptr;
-    QMap<QString, RouteName*>* aList;
+    QMap<QString, RouteName*>* aList = nullptr;
 
 
 };
@@ -79,6 +78,8 @@ class RouteName : public QObject
   void setCompanyName(QString name) {_coName = name;}
   int routeId() {return _routeId;}
   void setRouteId(int routeId) {_routeId = routeId;}
+  void setDate(QDate date) {_date = date;}
+  QDate date() {return _date;}
   bool equals(const RouteName& other)
   {
    if(_route == other._route || _routeAlpha == _routeAlpha)
@@ -90,6 +91,7 @@ class RouteName : public QObject
  private:
   int _route, _baseRoute, _companyKey, _routeId;
   QString _routePrefix, _routeAlpha, _name,_coName;
+  QDate _date;
 };
 
 #endif // ROUTESELECTOR_H
