@@ -27,7 +27,7 @@ public:
     static bool upgrade();
     void setRouteData(RouteData rd);
     void onRouteSelected(int route, QString alphaRoute, int row);
-    QMap<QString, RouteName *> *createList(QList<RouteData>* rdList, QDate dt);
+    QMap<QString, RouteData *> *createList(QList<RouteData>* rdList, QDate dt);
 
 private:
     Ui::RouteCommentsDlg *ui;
@@ -51,7 +51,7 @@ private:
     QList<CommentInfo>* orphans = nullptr;
     QList<CommentInfo>* comments = nullptr;
     int currIx = -1;
-    QMap<QString, RouteName*>* aList = nullptr;
+    QMap<QString, RouteData*>* aList = nullptr;
 
     int ixOrphan=-1;
     // int commentsUpdated = 0;
@@ -107,6 +107,7 @@ private slots:
     void onSelectionsChanged(QModelIndexList added, QModelIndexList deleted);
     void onCommentChange(CommentInfo ci, SQL::CHANGETYPE t);
     void hdr_customContextMenu( const QPoint pt);
+    void tablev_customContextMenu(const QPoint& pt);
 
 protected:
     bool bSettingSelections = false;

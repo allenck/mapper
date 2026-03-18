@@ -182,7 +182,7 @@ public:
     QList<CommentInfo>* getOrphanComments();
     QList<StationInfo> getStations(QString alphaRoute, QDate date);
     QList<CommentInfo>* commentByText(QString htmlText);
-    QT_DEPRECATED QList<CommentInfo>* getComments();
+    QList<CommentInfo>* getComments();
     StationInfo getStationInfo(qint32 stationKey);
     QList<StationInfo> getStationsOnSegment(qint32 segmentId);
     StationInfo getStationInfo(QString name);
@@ -248,8 +248,8 @@ public:
     QT_DEPRECATED void updateSegmentDates(int segmentId);
     QPair<QDate,QDate> getStartAndEndDates(int segmentId);
     QList<FKInfo> getForeignKeyInfo(QSqlDatabase db, Connection *c, QString table="");
-    QT_DEPRECATED QMap<int, RouteName*> *routeNameList();
-    QT_DEPRECATED QMap<QString,RouteName*>* routeNameAList();
+    // QT_DEPRECATED QMap<int, RouteName*> *routeNameList();
+    // QT_DEPRECATED QMap<QString,RouteName*>* routeNameAList();
     bool createSqlDatabase(QString dbName, QSqlDatabase db, QString dbType);
     QString getDatabase(QString serverType, QSqlDatabase db = QSqlDatabase());
     bool useDatabase(QString dbName, QString serverType, QSqlDatabase db);

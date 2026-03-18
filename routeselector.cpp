@@ -18,6 +18,7 @@ RouteSelector::RouteSelector(QWidget *parent) : QTableView(parent)
     setMultiSelection(true);
     setSortingEnabled(true);
     horizontalHeader()->setStretchLastSection(true);
+    setContextMenuPolicy(Qt::CustomContextMenu);
 }
 
 QList<int>* RouteSelector::selectedRoutes()
@@ -39,7 +40,7 @@ QList<QString>* RouteSelector::selectedARoutes()
     for(QModelIndex index : ixList)
     {
         QModelIndex sIndex = proxyModel->mapToSource(index);
-        out->append(aList->values().at(sIndex.row())->routeAlpha());
+        out->append(aList->values().at(sIndex.row())->alphaRoute());
     }
     return out;
 }
@@ -51,13 +52,13 @@ void RouteSelector::setSelections(QList<int> *sellist)
  {
   int row = 0;
 
-  for(RouteName* item2 : list->values())
+  for(RouteData* item2 : list->values())
   {
    if(route==item2->route())
    {
        selectRow(row);
-       qDebug() << "select row:" << row << " route" << route << " alphaRoute:" << item2->routeAlpha();
-       emit routeSelected(route, item2->routeAlpha(), row);
+       qDebug() << "select row:" << row << " route" << route << " alphaRoute:" << item2->alphaRoute();
+       emit routeSelected(route, item2->alphaRoute(), row);
        break;
    }
    row++;
@@ -74,13 +75,13 @@ void RouteSelector::setSelections(QList<QString> *sellist)
     {
         int row = 0;
 
-        for(RouteName* item2 : aList->values())
+        for(RouteData* item2 : aList->values())
         {
-            if(alphaRoute==item2->routeAlpha())
+            if(alphaRoute==item2->alphaRoute())
             {
                 selectRow(row);
-                qDebug() << "select row:" << row << " route" << item2->route() << " alphaRoute:" << item2->routeAlpha();
-                emit routeSelected(item2->route(), item2->routeAlpha(), row);
+                qDebug() << "select row:" << row << " route" << item2->route() << " alphaRoute:" << item2->alphaRoute();
+                emit routeSelected(item2->route(), item2->alphaRoute(), row);
                 break;
             }
             row++;
@@ -102,7 +103,7 @@ void RouteSelector::selectionChanged(const QItemSelection &selected, const QItem
  emit selections_changed(selected.indexes(), deselected.indexes());
 }
 
-QList<RouteName*> RouteSelector::getList()
+QList<RouteData*> RouteSelector::getList()
 {
  return list->values();
 }
@@ -135,7 +136,7 @@ QVariant RouteSelectorTableModel::data(const QModelIndex &index, int role) const
 {
  if(role == Qt::DisplayRole)
  {
-  RouteName* routeName = aList->values().at(index.row());
+  RouteData* routeName = aList->values().at(index.row());
   switch(index.column())
   {
    case ROUTE:
@@ -145,7 +146,7 @@ QVariant RouteSelectorTableModel::data(const QModelIndex &index, int role) const
   case ROUTEPREFIX:
    return routeName->routePrefix();
   case ROUTEALPHA:
-   return routeName->routeAlpha();
+   return routeName->alphaRoute();
   case COMPANY:
     return routeName->companyKey();
   case COMPANYNAME:
@@ -153,7 +154,7 @@ QVariant RouteSelectorTableModel::data(const QModelIndex &index, int role) const
   case ROUTEID:
       return routeName->routeId();
   case DATE:
-      return routeName->date().toString("yyyy/MM/dd");
+      return routeName->startDate().toString("yyyy/MM/dd");
   }
  }
  return QVariant();
@@ -205,7 +206,7 @@ bool RouteSelectorTableModel::setData(const QModelIndex &index, const QVariant &
 {
  if(role == Qt::EditRole)
  {
-  RouteName* routeName = aList->values().at(index.row());
+  RouteData* routeName = aList->values().at(index.row());
   // switch(index.column())
   // {
   //  case ROUTEPREFIX:
@@ -216,7 +217,7 @@ bool RouteSelectorTableModel::setData(const QModelIndex &index, const QVariant &
  return false;
 }
 
-QMap<QString, RouteName*>* RouteSelectorTableModel::createList(QList<RouteData>* rdList, QDate dt)
+QMap<QString, RouteData*>* RouteSelectorTableModel::createList(QList<RouteData>* rdList, QDate dt)
 {
     beginResetModel();
     //list->clear();
@@ -224,21 +225,21 @@ QMap<QString, RouteName*>* RouteSelectorTableModel::createList(QList<RouteData>*
     //     aList = SQL::instance()->routeNameAList();
     // else
     //     aList->clear();
-    aList = new QMap<QString, RouteName*>();
+    aList = new QMap<QString, RouteData*>();
     foreach(RouteData rd, *rdList)
     {
         //if(dt >= rd.startDate().addDays(-700) && dt <= rd.endDate())
         {
-            RouteName* rn = new RouteName();
+            RouteData* rn = new RouteData(rd);
             rn->setRoute(rd.route());
             rn->setRouteName(rd.routeName());
             rn->setRoutePrefix(rd.routePrefix());
-            rn->setRouteAlpha(rd.alphaRoute());
+            rn->setAlphaRoute(rd.alphaRoute());
             rn->setBaseRoute(rd.baseRoute());
             rn->setCompanyKey(rd.companyKey());
             rn->setCompanyName(rd.companyName());
             rn->setRouteId(rd.routeId());
-            rn->setDate(rd.startDate());
+            rn->setStartDate(rd.startDate());
             aList->insert(rd.alphaRoute(), rn);
         }
     }
@@ -268,8 +269,8 @@ QMap<QString, RouteName*>* RouteSelectorTableModel::createList(QList<RouteData>*
 // }
 
 
-//**************************************************************************************************
-RouteName::RouteName(QObject * parent) : QObject(parent)
-{
+// //**************************************************************************************************
+// RouteName::RouteName(QObject * parent) : QObject(parent)
+// {
 
-}
+// }

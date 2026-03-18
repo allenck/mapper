@@ -6,7 +6,7 @@
 #include <QAbstractTableModel>
 
 class QSortFilterProxyModel;
-class RouteName;
+//class RouteName;
 class RouteData;
 class RouteSelector : public QTableView
 {
@@ -20,7 +20,7 @@ class RouteSelector : public QTableView
   QList<QString>* selectedARoutes();
   void setSelections(QList<int>* list);
   void setSelections(QList<QString> *sellist);
-  QList<RouteName *> getList();
+  QList<RouteData *> getList();
   void setAList(QList<RouteData> *routeList);
 
  signals:
@@ -28,8 +28,8 @@ class RouteSelector : public QTableView
     void routeSelected(int route, QString alphaRoute, int row);
 
  private:
-    QMap<int, RouteName*>* list = nullptr;
-    QMap<QString, RouteName*>* aList = nullptr;
+    QMap<int, RouteData*>* list = nullptr;
+    QMap<QString, RouteData*>* aList = nullptr;
     void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected) override;
     QSortFilterProxyModel* proxyModel = nullptr;
 };
@@ -40,7 +40,7 @@ class RouteSelectorTableModel : public QAbstractTableModel
  public:
   RouteSelectorTableModel(QObject *parent=0);
   enum COLUMNS{ROUTEALPHA, ROUTEPREFIX, ROUTE, NAME, ROUTEID,  DATE, COMPANY, COMPANYNAME};
-  QMap<QString, RouteName*>* createList(QList<RouteData>*rdList, QDate dt);
+  QMap<QString, RouteData*>* createList(QList<RouteData>*rdList, QDate dt);
   int rowCount(const QModelIndex &parent) const;
   int columnCount(const QModelIndex &parent) const;
   QVariant data(const QModelIndex &index, int role) const;
@@ -50,11 +50,12 @@ class RouteSelectorTableModel : public QAbstractTableModel
 
  private:
     //QMap<int, RouteName*>* list = nullptr;
-    QMap<QString, RouteName*>* aList = nullptr;
+    QMap<QString, RouteData*>* aList = nullptr;
 
-
+     friend class RouteCommentsDlg;
 };
 
+#if 0
 class RouteName : public QObject
 {
   Q_OBJECT
@@ -93,5 +94,5 @@ class RouteName : public QObject
   QString _routePrefix, _routeAlpha, _name,_coName;
   QDate _date;
 };
-
+#endif
 #endif // ROUTESELECTOR_H

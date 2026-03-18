@@ -93,19 +93,6 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
     });
 
     config->rv.hiddenColumns.clear();
-    // connect(ui->tableView->horizontalHeader(), &QHeaderView::sectionResized, this,
-    //         [=](int logicalIndex, int oldSize, int newSize){
-    //             config->rcd.state = ui->tableView->horizontalHeader()->saveState();
-    //             if(!config->rcd.hiddenColumns.isEmpty())
-    //                 config->rcd.hiddenColumns.replace(logicalIndex,newSize);
-    // });
-
-    // ui->tableView->hideColumn(_sourceModel->ROUTEID);
-    // config->rcd.hiddenColumns.append(_sourceModel->ROUTEID);
-    // ui->tableView->hideColumn(_sourceModel->ROUTEPREFIX);
-    // config->rcd.hiddenColumns.append(_sourceModel->ROUTEPREFIX);
-    // ui->tableView->hideColumn(_sourceModel->COMPANY);
-    // config->rcd.hiddenColumns.append(_sourceModel->COMPANY);
 
     for(int i=0; i < _sourceModel->columnCount(QModelIndex()); i++)
     {
@@ -124,6 +111,7 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
 
     connect(ui->tableView->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), this,
             SLOT(hdr_customContextMenu(QPoint)));
+    connect(((RouteSelector*)ui->tableView), SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tablev_customContextMenu(QPoint)));
 
     hideColumnAct = new QAction(tr("Hide Column"),this);
 
@@ -171,23 +159,45 @@ void RouteCommentsDlg::hdr_customContextMenu( const QPoint pt)
     menu.exec(QCursor::pos());
 }
 
-QMap<QString, RouteName*>* RouteCommentsDlg::createList(QList<RouteData>* rdList, QDate dt)
+void RouteCommentsDlg::tablev_customContextMenu( const QPoint& pt)
 {
-    aList = new QMap<QString, RouteName*>();
+    QModelIndex ix = ui->tableView->indexAt(pt);
+    QModelIndex six = proxyModel->mapToSource(ix);
+    int curRow = six.row();
+    QMenu menu;
+    menu.clear();
+    QModelIndex rnix = _sourceModel->index(six.row(), RouteSelectorTableModel::NAME);
+    QString routeName = rnix.data().toString();
+    QModelIndex dtix = _sourceModel->index(six.row(), RouteSelectorTableModel::DATE);
+    QDate date = dtix.data().toDate();
+    RouteData* rd = _sourceModel->aList->values().at(six.row());
+    QAction* displayRouteAct = new QAction(tr("display route"));
+    connect(displayRouteAct, &QAction::triggered, this, [=]{
+        qDebug() << "display " << routeName << " " << date.toString("yyyy/MM/dd") << " row:" << ix.row();
+        MainWindow::instance()->On_displayRoute(*rd);
+    });
+    menu.addAction(displayRouteAct);
+    menu.exec(QCursor::pos());
+}
+
+QMap<QString, RouteData*>* RouteCommentsDlg::createList(QList<RouteData>* rdList, QDate dt)
+{
+    aList = new QMap<QString, RouteData*>();
     foreach(RouteData rd, *rdList)
     {
         //if(dt >= rd.startDate().addDays(-700) && dt <= rd.endDate())
         {
-            RouteName* rn = new RouteName();
+            RouteData* rn = new RouteData(rd);
             rn->setRoute(rd.route());
             rn->setRouteName(rd.routeName());
             rn->setRoutePrefix(rd.routePrefix());
-            rn->setRouteAlpha(rd.alphaRoute());
+            rn->setAlphaRoute(rd.alphaRoute());
             rn->setBaseRoute(rd.baseRoute());
             rn->setCompanyKey(rd.companyKey());
             rn->setCompanyName(rd.companyName());
             rn->setRouteId(rd.routeId());
-            rn->setDate(rd.startDate());
+            rn->setStartDate(rd.startDate());
+            //rn->setEndDate(rd.endDate());
             aList->insert(rd.alphaRoute(), rn);
         }
     }
@@ -833,7 +843,7 @@ void RouteCommentsDlg::scan()
     // }
 
     // QList<RouteComments*> list = sql->listRouteComments();
-    // scanResult = true;
+    scanResult = true;
     // foreach(RouteComments* rc, list)
     // {
     //     if(!rc->date.isValid())
@@ -950,6 +960,19 @@ void RouteCommentsDlg::scan()
     //     //     commentsUpdated++;
     //     // }
     // }
+    QList<CommentInfo>* commentsList = sql->getComments();
+
+    foreach (CommentInfo ci, *commentsList) {
+        if(ci.comments.isEmpty())
+        {
+            if(!sql->deleteComment(ci.commentKey))
+            {
+                scanLog.append(QString("- Error: delete commentKey %1 failed\n").arg(ci.commentKey));
+                scanResult=false;
+            }
+            commentsDeleted++;
+        }
+    }
 
     // now see if any orphans can be used.
     ui->btnIgnore->setEnabled(true);

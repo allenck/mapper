@@ -8126,7 +8126,7 @@ QList<CommentInfo>* SQL::getComments()
     QString down = QString::fromUtf8("▼");
     QList<CommentInfo>* list = new QList<CommentInfo>;
 
-    QString commandText = "select commentKey, comments, tags, routeList from comments ";
+    QString commandText = "select commentKey, comments, tags, routeList, jRoutelist, date, latitude, longitude from comments ";
     try
     {
         if(!dbOpen())
@@ -8164,6 +8164,11 @@ QList<CommentInfo>* SQL::getComments()
             }
             ci.tags = query.value(2).toString();
             ci.toRoutesTable(query.value(3).toString());
+            QString jRouteList = query.value(4).toString();
+            ci.date = query.value(5).toDate();
+            ci.pos = LatLng(query.value(6).toDouble(),query.value(7).toDouble());
+            ci.jRoutesListString = jRouteList.mid(1, jRouteList.length()-2);
+            ci.populateARoutes(ci.jRoutesListString);
             list->append(ci);
         }
     }
@@ -11568,7 +11573,7 @@ QList<FKInfo> SQL::getForeignKeyInfo(QSqlDatabase db, Connection* c, QString tab
  }
  return list;
 }
-
+#if 0
 QMap<int,RouteName*>* SQL::routeNameList()
 {
  QMap<int, RouteName*>* list = new QMap<int, RouteName*>();
@@ -11622,7 +11627,7 @@ QMap<QString,RouteName*>* SQL::routeNameAList()
  }
  return list;
 }
-
+#endif
 QString SQL::getDatabase(QString serverType, QSqlDatabase db)
 {
  //QSqlDatabase db = QSqlDatabase();
