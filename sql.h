@@ -260,7 +260,7 @@ public:
     SegmentInfo convertSegment(int segmentId, int tracks);
     int nextRouteNumberInRange(int lowRange, int highRange);
     bool renumberRoute(QString oldAlphaRoute, int newRoute, QString routePrefix);
-    QList<RouteComments> commentsForRoute(int route);
+    //QList<RouteComments> commentsForRoute(int route);
     QList<CommentInfo> *commentsForAlphaRoute(QString alphaRoute, QDate date, int *currIx);
     QList<TerminalInfo> terminalsForRoute(int route);
     bool updateRouteForStations(int oldRoute, int newRoute);
@@ -300,6 +300,7 @@ public:
     bool updateComment(CommentInfo info, bool force = false);
     CommentInfo getPrevComment(CommentInfo ciIn);
     CommentInfo getNextComment(CommentInfo ciIn);
+    bool validateJSON(QString s);
 
 
 signals:

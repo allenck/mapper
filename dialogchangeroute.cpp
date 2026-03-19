@@ -39,3 +39,8 @@ int DialogChangeRoute::getNumber()
 {
  return number;
 }
+
+QString DialogChangeRoute::get_aRoute()
+{
+    return "??";
+}

@@ -211,6 +211,9 @@ public slots:
     void selectRoute(RouteData rd);
     void displayRouteComment(CommentInfo ci);
 
+signals:
+    void routeListChanged(QList<RouteData>* routeList);
+
 private slots:
     void about();
     void quit();

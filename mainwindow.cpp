@@ -1555,6 +1555,7 @@ void MainWindow::createActions()
   if(rslt == QDialog::DialogCode::Accepted )
   {
    int newRoute = dlg->getNumber();
+   QString new_aRoute = dlg->get_aRoute();
    bool rslt = sql->renumberRoute(rd.alphaRoute(), newRoute, cd->routePrefix);
    if(rslt)
    {
@@ -2486,6 +2487,8 @@ void MainWindow::refreshRoutes()
     if( ui->cbRoute->currentIndex() <= 0 && ix >=0)
         ui->cbRoute->setCurrentIndex(ix);
     bCbRouteRefreshing = false;
+
+    emit routeListChanged(&routeList);
 }
 
 void MainWindow::selectRoute(RouteData rd)
@@ -5263,9 +5266,21 @@ void MainWindow::moveStationMarker(qint32 stationKey, qint32 segmentId, double l
 
 void MainWindow::moveRouteComment(int route, QString date, int commentKey,double latitude, double longitude, int companyKey)
 {
- RouteComments rc = sql->getRouteComment(route, QDate::fromString(date, "yyyy/MM/dd"), commentKey);
- rc.pos = LatLng(latitude, longitude);
- sql->updateRouteComment(&rc);
+ // RouteComments rc = sql->getRouteComment(route, QDate::fromString(date, "yyyy/MM/dd"), commentKey);
+ // rc.pos = LatLng(latitude, longitude);
+ // sql->updateRouteComment(&rc);
+    CommentInfo ci = sql->getComment(commentKey, 0);
+    if(ci.commentKey <0)
+    {
+        qDebug() << tr("get commetkey %1 with LatLng failed");
+        return;
+    }
+    ci.pos= LatLng(latitude, longitude);
+    if(!sql->updateComment(ci))
+    {
+        qDebug() << tr("update of commetkey %1 with LatLng failed");
+        return;
+    }
 }
 
 void MainWindow::chkOneWay_toggled(bool bChecked)

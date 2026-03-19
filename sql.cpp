@@ -8283,7 +8283,7 @@ bool SQL::addComment(CommentInfo* ci)
         qDebug() << "aRoutes empty";
         return false;
     }
-    if(ci->jRoutesListString.isEmpty() || !ci->jRoutesListString.startsWith("[") || !ci->jRoutesListString.endsWith("]"))
+    if(ci->jRoutesListString.isEmpty() || !validateJSON(ci->aRoutesToString()))
     {
         qDebug() << "aRoutesString  invalid";
         return false;
@@ -11933,6 +11933,7 @@ bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute, QString routePrefix
   foreach(SegmentData sd, routes)
   {
    int oldRouteNumber = sd._route;
+   QString old_aRoute = sd._alphaRoute;
    sd._route = newRoute;
    if(!insertRouteSegment(sd))
    {
@@ -11940,24 +11941,47 @@ bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute, QString routePrefix
     return false;
    }
 
-   QList<RouteComments> comments = commentsForRoute(oldRouteNumber);
-   if(!comments.isEmpty())
+   // QList<RouteComments> comments = commentsForRoute(oldRouteNumber);
+   // if(!comments.isEmpty())
+   // {
+   //  foreach(RouteComments rc, comments)
+   //  {
+   //   if(!deleteRouteComment(rc))
+   //   {
+   //    rollbackTransaction("renumber");
+   //    return false;
+   //   }
+   //   rc.route = newRoute;
+   //   if(!updateRouteComment(&rc))
+   //   {
+   //    rollbackTransaction("renumber");
+   //    return false;
+   //   }
+   //  }
+   // }
+   int currIx;
+   QList<CommentInfo>* comments = commentsForAlphaRoute(old_aRoute, sd.startDate(), &currIx);
+   if(!comments->isEmpty())
    {
-    foreach(RouteComments rc, comments)
-    {
-     if(!deleteRouteComment(rc))
-     {
-      rollbackTransaction("renumber");
-      return false;
-     }
-     rc.route = newRoute;
-     if(!updateRouteComment(&rc))
-     {
-      rollbackTransaction("renumber");
-      return false;
-     }
-    }
+       foreach(CommentInfo ci, *comments)
+       {
+           ci.aRoutesList.replaceInStrings(old_aRoute, QString::number(sd.route()));
+           ci.jRoutesTableToString(ci.aRoutesList);
+   //   if(!deleteRouteComment(rc))
+   //   {
+   //    rollbackTransaction("renumber");
+   //    return false;
+   //   }
+   //   rc.route = newRoute;
+            if(!updateComment(ci))
+            {
+                rollbackTransaction("renumber");
+                return false;
+            }
+       }
    }
+
+
    QList<TerminalInfo> terminals = terminalsForRoute(oldRouteNumber);
    if(!terminals.isEmpty())
    {
@@ -11995,36 +12019,36 @@ bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute, QString routePrefix
  return true;
 }
 
-QList<RouteComments> SQL::commentsForRoute(int route)
-{
+// QList<RouteComments> SQL::commentsForRoute(int route)
+// {
 
- QSqlDatabase db = QSqlDatabase::database();
- QString commandText = "select route, date, commentKey, companyKey, latitude, longitude "
-                       "from RouteComments where route = " +QString::number(route);
- QSqlQuery query = QSqlQuery(db);
- QList<RouteComments>myArray;
- bool bQuery = query.exec(commandText);
- if(!bQuery)
- {
-     QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
-     qDebug() << errCommand;
-     QSqlError error = query.lastError();
-     SQLERROR(std::move(query));
-     throw SQLException(error.text() + " " + errCommand);
- }
- while (query.next())
- {
-  RouteComments rc;
-  rc.route = query.value(0).toInt();
-  rc.date = query.value(1).toDate();
-  rc.commentKey = query.value(2).toInt();
-  rc.companyKey = query.value(3).toInt();
-  rc.pos = LatLng(query.value(4).toDouble(), query.value(5).toDouble());
-  myArray.append(rc);
- }
+//  QSqlDatabase db = QSqlDatabase::database();
+//  QString commandText = "select route, date, commentKey, companyKey, latitude, longitude "
+//                        "from RouteComments where route = " +QString::number(route);
+//  QSqlQuery query = QSqlQuery(db);
+//  QList<RouteComments>myArray;
+//  bool bQuery = query.exec(commandText);
+//  if(!bQuery)
+//  {
+//      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+//      qDebug() << errCommand;
+//      QSqlError error = query.lastError();
+//      SQLERROR(std::move(query));
+//      throw SQLException(error.text() + " " + errCommand);
+//  }
+//  while (query.next())
+//  {
+//   RouteComments rc;
+//   rc.route = query.value(0).toInt();
+//   rc.date = query.value(1).toDate();
+//   rc.commentKey = query.value(2).toInt();
+//   rc.companyKey = query.value(3).toInt();
+//   rc.pos = LatLng(query.value(4).toDouble(), query.value(5).toDouble());
+//   myArray.append(rc);
+//  }
 
- return myArray;
-}
+//  return myArray;
+// }
 
 QList<TerminalInfo> SQL::terminalsForRoute(int route)
 {
@@ -13347,3 +13371,22 @@ QList<CommentInfo*>* SQL::commentsList()
  return list;
 }
 
+bool SQL::validateJSON(QString s)
+{
+    QSqlDatabase db = QSqlDatabase();
+    QSqlQuery query = QSqlQuery(db);
+    QString commandText = QString("select json_valid(%1)").arg(s);
+    if(!query.exec(commandText))
+    {
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
+        throw SQLException(error.text() + " " + errCommand);
+    }
+    while(query.next())
+    {
+        return query.value(0).toBool();
+    }
+    return false;
+}

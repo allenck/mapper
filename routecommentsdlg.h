@@ -58,11 +58,11 @@ private:
     int commentsDeleted = 0;
     // int routeCommentsDeleted = 0;
     // int routeCommentsAdded =0;
-    // int htmlCorrected = 0;
+    int htmlCorrected = 0;
     // int invalidDates = 0;
     // int invalidRoutes = 0 ;
     // int routesDeleted = 0;
-    // int linksFixed =0;
+    int linksFixed =0;
     // int invalidRouteComments = 0;
     int orphansDeleted = 0;
     int orphansUsed = 0;

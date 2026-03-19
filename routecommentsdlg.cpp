@@ -122,6 +122,10 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
             config->rcd.hiddenColumns.append(logicalIndex);
     });
 
+    connect(MainWindow::instance(), &MainWindow::routeListChanged, this, [=](QList<RouteData>* routeList){
+        this->routeList = routeList;
+        _sourceModel->createList(routeList, QDate());
+    });
 }
 
 RouteCommentsDlg::~RouteCommentsDlg()
@@ -286,6 +290,7 @@ void RouteCommentsDlg::btnIgnore_clicked()
     }
     ui->txtComments->clear();
     ui->txtTags->clear();
+    ui->txtCommentId->clear();
     ui->btnChangeDate->setEnabled(false);
 }
 
@@ -483,6 +488,7 @@ void RouteCommentsDlg::onChgDate()
     }
     ui->txtComments->clear();
     ui->txtTags->clear();
+    ui->txtCommentId->clear();
     ui->btnChangeDate->setEnabled(false);
 
     OnDateLeave();
@@ -804,11 +810,12 @@ void RouteCommentsDlg::scan()
     // invalidDates = 0;
     // invalidRoutes = 0 ;
     // routesDeleted = 0;
-    // htmlCorrected = 0;
+    htmlCorrected = 0;
     // invalidRouteComments = 0;
     orphansDeleted = 0;
     orphansUsed = 0;
     dup_emptyOrphans =0;
+    linksFixed =0;
 
     scanLog.clear();
     ui->lblInfo->setText(tr("Begin scan<br>"));
@@ -962,7 +969,8 @@ void RouteCommentsDlg::scan()
     // }
     QList<CommentInfo>* commentsList = sql->getComments();
 
-    foreach (CommentInfo ci, *commentsList) {
+    foreach (CommentInfo ci, *commentsList)
+    {
         if(ci.comments.isEmpty())
         {
             if(!sql->deleteComment(ci.commentKey))
@@ -971,6 +979,57 @@ void RouteCommentsDlg::scan()
                 scanResult=false;
             }
             commentsDeleted++;
+        }
+        ui->txtComments->setHtml(ci.comments);
+        ui->txtCommentId->setText(QString::number(ci.commentKey));
+        qApp->processEvents();
+        QString text = ui->txtComments->toPlainText();
+        if(text.isEmpty())
+        {
+            if(!sql->deleteComment(ci.commentKey))
+            {
+                scanLog.append(QString("- Error: delete commentKey %1 failed\n").arg(ci.commentKey));
+                scanResult = false;
+                break;
+            }
+            scanLog.append(QString("- delete comment %1 html is empty \n").arg(ci.commentKey));
+            commentsDeleted++;
+            continue;
+        }
+        if(HtmlTextEdit::isHtmlFragment(text))
+        {
+            ui->txtComments->setHtml(text);
+            qApp->processEvents();
+            ci.comments = ui->txtComments->toHtml();
+            if(!sql->updateComment(ci))
+            {
+                scanLog.append(QString("- Error: update commentKey %1 failed\n").arg(ci.commentKey));
+            }
+            else
+                htmlCorrected++;
+        }
+        if(text.startsWith("https://"))
+        {
+            if(!HtmlTextEdit::isLink(text))
+            {
+                QTextDocumentFragment frag = QTextDocumentFragment::fromHtml("<a href=" + text + "><span style=\" font-family:'Ubuntu'; text-decoration: underline; color:#6c7565;\">"
+                                                                             + text + "</span></a></p>");
+                ui->txtComments->clear();
+                ui->btnChangeDate->setEnabled(true);
+                ui->txtComments->textCursor().insertFragment(frag);
+                ci.comments = ui->txtComments->toHtml();
+                // if(ci.routesUsed.isEmpty())
+                //     ci.routesUsed.append(rc->route);
+                if(!sql->updateComment(ci))
+                {
+                    scanLog.append(tr("- Error: link fix failed %1 commentKey: %2\n").arg(text).arg(ci.commentKey));
+                }
+                else
+                {
+                    linksFixed++;
+                    scanLog.append(tr("- link fixed %1 commentKey: %2\n").arg(text).arg(ci.commentKey));
+                }
+            }
         }
     }
 
@@ -1082,13 +1141,7 @@ bool RouteCommentsDlg::processOrphan()
         ui->txtRoutesUsed->clear();
         ui->dateEdit->setDate(QDate::fromString("1799/12/31","yyyy/MM/dd"));
         ui->dateEdit->setStyleSheet("color: red");
-        _rc = RouteComments();
-        _rc.route = -1;
-        _rc.date = QDate();
-        _rc.commentKey = info.commentKey;
-        _rc.ci.commentKey = info.commentKey;
-        _rc.ci.tags = info.tags;
-        _rc.ci.comments = info.comments;
+        _ci = info;
 
         if(selectionModel == nullptr)
             selectionModel = ui->tableView->selectionModel();
@@ -1108,7 +1161,7 @@ bool RouteCommentsDlg::finishScan(int rslt)
 {
     bool rtn = false;
     ui->lblInfo->clear();
-    QString msg = QString("Scan results:\n"
+    QString msg = QString("Scan results:<br>\n>"
     //                       "commentsUpdated: %1<br>\n"
                           "commentsDeleted: %2<br>\n"
     //                       "routeCommentsDeleted: %3<br>\n"
@@ -1116,8 +1169,8 @@ bool RouteCommentsDlg::finishScan(int rslt)
     //                       "invalidDates: %5<br>\n"
     //                       "invalidRoutes: %6<br>\n"
     //                       "routesDeleted: %7<br>\n"
-    //                       "htmlCorrected:%8<br>\n"
-    //                       "linksFixed:%9<br>\n"
+                           "htmlCorrected:%8<br>\n"
+                           "linksFixed:%9<br>\n"
     //                       "invalidRouteCommentsDeleted:%10<br>\n"
                           "orphansDeleted:%11<br>\n"
                           "orphansUsed:%12<br>\n"
@@ -1126,8 +1179,10 @@ bool RouteCommentsDlg::finishScan(int rslt)
     //                   .arg(commentsUpdated)
                       .arg(commentsDeleted)
                       //.arg(routeCommentsDeleted)
-    //                   .arg(routeCommentsAdded).arg(invalidDates).arg(invalidRoutes).arg(routesDeleted).arg(htmlCorrected)
-    //                   .arg(linksFixed).arg(invalidRouteComments)
+    //                   .arg(routeCommentsAdded).arg(invalidDates).arg(invalidRoutes).arg(routesDeleted)
+                       .arg(htmlCorrected)
+                       .arg(linksFixed)
+    //                  .arg(invalidRouteComments)
                             .arg(orphansDeleted).arg(orphansUsed).arg(dup_emptyOrphans);
     if(rslt)
     {
@@ -1181,8 +1236,8 @@ bool RouteCommentsDlg::finishScan(int rslt)
     //invalidDates = 0;
     //invalidRoutes = 0 ;
     //routesDeleted = 0;
-    //htmlCorrected=0;
-    //linksFixed = 0;
+    htmlCorrected=0;
+    linksFixed = 0;
     ixOrphan=-1;
     if(orphans)
         orphans->clear();

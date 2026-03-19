@@ -920,9 +920,9 @@ public:
     QString routeName;
     QString routeAlpha;
     QString companyName;
-    RouteComments(){}
+    QT_DEPRECATED RouteComments(){}
     ~RouteComments() {}
-    RouteComments(const RouteComments&other);
+    QT_DEPRECATED RouteComments(const RouteComments&other);
 };
 
 class RouteChangedEventArgs

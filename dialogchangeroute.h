@@ -15,6 +15,8 @@ class DialogChangeRoute : public QDialog
   explicit DialogChangeRoute(QWidget *parent = nullptr);
   ~DialogChangeRoute();
  int getNumber();
+  QString get_aRoute();
+
  private:
   Ui::DialogChangeRoute *ui;
   int number;
