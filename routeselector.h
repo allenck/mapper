@@ -25,7 +25,7 @@ class RouteSelector : public QTableView
 
  signals:
     void selections_changed(QModelIndexList added, QModelIndexList deleted);
-    void routeSelected(int route, QString alphaRoute, int row);
+    void routeSelected(int route, QString alphaRoute, QDate date, int row);
 
  private:
     QMap<int, RouteData*>* list = nullptr;
@@ -39,8 +39,9 @@ class RouteSelectorTableModel : public QAbstractTableModel
  Q_OBJECT
  public:
   RouteSelectorTableModel(QObject *parent=0);
-  enum COLUMNS{ROUTEALPHA, ROUTEPREFIX, ROUTE, NAME, ROUTEID,  DATE, COMPANY, COMPANYNAME};
+  enum COLUMNS{ROUTEALPHA, ROUTEPREFIX, ROUTE, DATE, NAME, ROUTEID, COMPANY, COMPANYNAME};
   QMap<QString, RouteData*>* createList(QList<RouteData>*rdList, QDate dt);
+  void setList(QList<RouteData>*rdList);
   int rowCount(const QModelIndex &parent) const;
   int columnCount(const QModelIndex &parent) const;
   QVariant data(const QModelIndex &index, int role) const;
@@ -51,7 +52,7 @@ class RouteSelectorTableModel : public QAbstractTableModel
  private:
     //QMap<int, RouteName*>* list = nullptr;
     QMap<QString, RouteData*>* aList = nullptr;
-
+     QList<RouteData>* routeList;
      friend class RouteCommentsDlg;
 };
 

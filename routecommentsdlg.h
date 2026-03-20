@@ -26,8 +26,8 @@ public:
     void displayComment(CommentInfo newCi);
     static bool upgrade();
     void setRouteData(RouteData rd);
-    void onRouteSelected(int route, QString alphaRoute, int row);
-    QMap<QString, RouteData *> *createList(QList<RouteData>* rdList, QDate dt);
+    void onRouteSelected(int route, QString alphaRoute, QDate date, int row);
+    //QMap<QString, RouteData *> *createList(QList<RouteData>* rdList, QDate dt);
 
 private:
     Ui::RouteCommentsDlg *ui;
@@ -59,7 +59,7 @@ private:
     // int routeCommentsDeleted = 0;
     // int routeCommentsAdded =0;
     int htmlCorrected = 0;
-    // int invalidDates = 0;
+    int invalidDates = 0;
     // int invalidRoutes = 0 ;
     // int routesDeleted = 0;
     int linksFixed =0;

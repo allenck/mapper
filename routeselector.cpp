@@ -19,6 +19,11 @@ RouteSelector::RouteSelector(QWidget *parent) : QTableView(parent)
     setSortingEnabled(true);
     horizontalHeader()->setStretchLastSection(true);
     setContextMenuPolicy(Qt::CustomContextMenu);
+    for(QVariant col : Configuration::instance()->rcd.hiddenColumns)
+    {
+        hideColumn(col.toInt());
+    }
+    horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 }
 
 QList<int>* RouteSelector::selectedRoutes()
@@ -58,7 +63,7 @@ void RouteSelector::setSelections(QList<int> *sellist)
    {
        selectRow(row);
        qDebug() << "select row:" << row << " route" << route << " alphaRoute:" << item2->alphaRoute();
-       emit routeSelected(route, item2->alphaRoute(), row);
+       emit routeSelected(route, item2->alphaRoute(), item2->startDate(),row);
        break;
    }
    row++;
@@ -81,7 +86,7 @@ void RouteSelector::setSelections(QList<QString> *sellist)
             {
                 selectRow(row);
                 qDebug() << "select row:" << row << " route" << item2->route() << " alphaRoute:" << item2->alphaRoute();
-                emit routeSelected(item2->route(), item2->alphaRoute(), row);
+                emit routeSelected(item2->route(), item2->alphaRoute(), item2->startDate(),row);
                 break;
             }
             row++;
@@ -100,7 +105,17 @@ void RouteSelector::setMultiSelection(bool multi)
 
 void RouteSelector::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
 {
- emit selections_changed(selected.indexes(), deselected.indexes());
+    QItemSelectionModel* selectionModel = this->selectionModel();
+    QModelIndexList modelIndexList = selectionModel->selectedRows();
+    foreach (QModelIndex index, modelIndexList) {
+        QModelIndex ix = proxyModel->mapToSource(index);
+        QModelIndex aix = proxyModel->sourceModel()->index(ix.row(), RouteSelectorTableModel::ROUTEALPHA);
+        QModelIndex rix = proxyModel->sourceModel()->index(ix.row(), RouteSelectorTableModel::ROUTE);
+        QModelIndex dtix = proxyModel->sourceModel()->index(ix.row(), RouteSelectorTableModel::DATE);
+        emit routeSelected(rix.data().toInt(), aix.data().toString(), dtix.data().toDate(), ix.row());
+    }
+
+    emit selections_changed(selected.indexes(), deselected.indexes());
 }
 
 QList<RouteData*> RouteSelector::getList()
@@ -120,6 +135,7 @@ RouteSelectorTableModel::RouteSelectorTableModel(QObject* parent) : QAbstractTab
  //this->list = list;
     //this->aList = aList;
  aList = createList(&MainWindow::instance()->routeList, QDate());
+ setList(&MainWindow::instance()->routeList);
 }
 
 int RouteSelectorTableModel::rowCount(const QModelIndex &parent) const
@@ -136,25 +152,26 @@ QVariant RouteSelectorTableModel::data(const QModelIndex &index, int role) const
 {
  if(role == Qt::DisplayRole)
  {
-  RouteData* routeName = aList->values().at(index.row());
+  //RouteData* routeName = aList->values().at(index.row());
+     RouteData rd = routeList->at(index.row());
   switch(index.column())
   {
    case ROUTE:
-   return routeName->route();
+   return rd.route();
   case NAME:
-   return routeName->routeName();
+   return rd.routeName();
   case ROUTEPREFIX:
-   return routeName->routePrefix();
+   return rd.routePrefix();
   case ROUTEALPHA:
-   return routeName->alphaRoute();
+   return rd.alphaRoute();
   case COMPANY:
-    return routeName->companyKey();
+    return rd.companyKey();
   case COMPANYNAME:
-    return routeName->companyName();
+    return rd.companyName();
   case ROUTEID:
-      return routeName->routeId();
+      return rd.routeId();
   case DATE:
-      return routeName->startDate().toString("yyyy/MM/dd");
+      return rd.startDate().toString("yyyy/MM/dd");
   }
  }
  return QVariant();
@@ -245,6 +262,13 @@ QMap<QString, RouteData*>* RouteSelectorTableModel::createList(QList<RouteData>*
     }
     endResetModel();
     return aList;
+}
+
+void RouteSelectorTableModel::setList(QList<RouteData>* routeList)
+{
+    beginResetModel();
+    this->routeList = routeList;
+    endResetModel();
 }
 
 // QString RouteSelectorTableModel::getRouteName(int route)
