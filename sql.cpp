@@ -3521,7 +3521,7 @@ bool SQL::updateSegment(SegmentData* sd)
    + "pointArray='" + sd->pointsString() + "', "
    + "description='" + sd->_description + "',"
    + "street='" + sd->_streetName + "',"
-   + "streetId= " + QString::number(sd->_streetId) + ","
+   + "streetId= " + (sd->streetId() > 0?QString::number(sd->_streetId):"null") + ","
    + "NewerName='" + sd->_newerName + "',"
    + "location='" + sd->_location + "',"
    + "tracks="+ QString::number(sd->_tracks) + ","
@@ -3537,7 +3537,8 @@ bool SQL::updateSegment(SegmentData* sd)
      qDebug() << errCommand;
      QSqlError error = query.lastError();
      SQLERROR(std::move(query));
-     throw SQLException(error.text() + " " + errCommand);
+     //throw SQLException(error.text() + " " + errCommand);
+     return false;
  }
  rows = query.numRowsAffected();
  if (rows == 0)
@@ -5035,7 +5036,11 @@ bool SQL::addSegmentToRoute(SegmentData* sd, bool notify)
         rows = query.numRowsAffected();
 
         //updateSegmentDates(sd->segmentId());
-        updateSegment(sd);
+        if(!updateSegment(sd))
+        {
+            rollbackTransaction("addSegmentToRoute");
+            return false;
+        }
 
         if(currentTransaction == "addSegmentToRoute")
             commitTransaction("addSegmentToRoute");
@@ -13375,7 +13380,24 @@ bool SQL::validateJSON(QString s)
 {
     QSqlDatabase db = QSqlDatabase();
     QSqlQuery query = QSqlQuery(db);
-    QString commandText = QString("select json_valid(%1)").arg(s);
+    QString commandText = QString("select json_valid('%1')").arg(s);
+    if(!query.exec(commandText))
+    {
+        QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+        qDebug() << errCommand;
+        QSqlError error = query.lastError();
+        SQLERROR(std::move(query));
+        //throw SQLException(error.text() + " " + errCommand);
+        return false;
+    }
+    while(query.next())
+    {
+        if(query.value(0).toBool() == 0)
+            return false;
+    }
+
+    commandText = QString("select json_array_length('%1')").arg(s);
+
     if(!query.exec(commandText))
     {
         QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
@@ -13386,7 +13408,9 @@ bool SQL::validateJSON(QString s)
     }
     while(query.next())
     {
-        return query.value(0).toBool();
+        if(query.value(0).toBool() == 0)
+            return false;
     }
-    return false;
+
+    return true;
 }

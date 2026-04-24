@@ -65,7 +65,7 @@
    <item row="2" column="2">
     <spacer name="horizontalSpacer">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="sizeHint" stdset="0">
       <size>
@@ -79,6 +79,9 @@
     <widget class="QCheckBox" name="checkBox">
      <property name="text">
       <string>Modify subsequent route start dates</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
@@ -149,10 +152,10 @@
    <item row="7" column="0" colspan="2">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel</set>
+      <set>QDialogButtonBox::StandardButton::Cancel</set>
      </property>
     </widget>
    </item>

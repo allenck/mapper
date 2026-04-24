@@ -399,11 +399,16 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
       ui->ssw->cbSegments()->lineEdit()->setText(SegmentDescription::updateToken(txt));
 
   });
+
   connect(SQL::instance(), &SQL::segmentChanged, [=](const SegmentInfo si){
+      if(bSegmentChangeDisabled)
+          return;
    cbSegmentInfoList = sql->getSegmentInfoList();
   });
 
   connect(SQL::instance(), &SQL::routeChange, [=](NotifyRouteChange rc){
+      if(bRouteChangeDisabled)
+          return;
    SegmentData* sd = rc.sd();
    if(sd->route()==m_routeNbr  && rc.type()!= SQL::DELETE)
     displaySegment(sd->segmentId(),sd->description(), getColor(sd->tractionType()),sd->trackUsage(),true);
@@ -499,6 +504,14 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui->tabWidget->setCurrentIndex(0);
   config->saveSettings();
 }
+
+void MainWindow::disableSegment_Route_changes(bool b)
+{
+    // called by dialogChangeRoute, modifyRouteDateDlg. etc
+    bSegmentChangeDisabled = b;
+    bRouteChangeDisabled = b;
+}
+
 
 void MainWindow::onCommentChange(CommentInfo ci, SQL::CHANGETYPE t)
 {
@@ -4595,6 +4608,8 @@ void MainWindow::getZoom(int zoom)
 
 void MainWindow::copyRouteInfo_Click()
 {
+    disableSegment_Route_changes(true);
+
     setCursor(Qt::WaitCursor);
  DialogCopyRoute form(routeList.at(ui->cbRoute->currentIndex()), this);
  //form.Configuration = config;
@@ -4616,11 +4631,14 @@ void MainWindow::copyRouteInfo_Click()
    }
   }
  }
+ disableSegment_Route_changes(false);
+
  setCursor(Qt::ArrowCursor);
 }
 
 void MainWindow::splitRoute_Click()
 {
+    disableSegment_Route_changes(true);
     //SplitRoute();
     SplitRoute splitRouteDlg(this);
     //splitRouteDlg.setConfiguration (config);
@@ -4643,6 +4661,7 @@ void MainWindow::splitRoute_Click()
             }
         }
     }
+    disableSegment_Route_changes(false);
 }
 void MainWindow::rerouteRoute()
 {
@@ -4681,7 +4700,6 @@ void MainWindow::renameRoute_Click()
 }
 void MainWindow::modifyRouteDate()
 {
-#if 1 // TODO
 
      ModifyRouteDateDlg form;
      //ModifyRouteDateDlg((routeData)cbRoutes.SelectedItem);
@@ -4689,6 +4707,8 @@ void MainWindow::modifyRouteDate()
     //form.setConfiguration(config);
     //form.setRouteData(routeList.at(ui->cbRoute->currentIndex()));
     form.setRouteData(&_rd);
+
+    disableSegment_Route_changes(true);
 
     qint32 rslt = form.exec();
     if (rslt == form.Accepted)
@@ -4708,9 +4728,8 @@ void MainWindow::modifyRouteDate()
      }
      routeView->updateRouteView();
     }
-#else
-    NotYetInplemented();
-#endif
+    disableSegment_Route_changes(false);
+    cbSegmentInfoList = sql->getSegmentInfoList();
 }
 #if 1 // not really needed since historically routes could hane multiple types
 void MainWindow::modifyRouteTractionType()

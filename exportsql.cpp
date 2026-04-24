@@ -3195,7 +3195,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `FormatOK` int(1) NOT NULL DEFAULT FALSE"
                 " `Tracks` int(2) check(`tracks` in (1,2)) NOT NULL DEFAULT 1,"
                 " `Street` varchar(60) NOT NULL DEFAULT '',"
-                " `StreetId` int(11), NOT NULL DEFAULT -1,"
+                " `StreetId` int(11),"
                 " `NewerName` varchar(60) NOT NULL DEFAULT '',"
                 " `Location` varchar(30) NOT NULL DEFAULT '',"
                 " `Type` int(11) NOT NULL DEFAULT 0,"

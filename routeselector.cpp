@@ -234,7 +234,7 @@ bool RouteSelectorTableModel::setData(const QModelIndex &index, const QVariant &
  return false;
 }
 
-QMap<QString, RouteData*>* RouteSelectorTableModel::createList(QList<RouteData>* rdList, QDate dt)
+QMultiMap<QString, RouteData*>* RouteSelectorTableModel::createList(QList<RouteData>* rdList, QDate dt)
 {
     beginResetModel();
     //list->clear();
@@ -242,7 +242,7 @@ QMap<QString, RouteData*>* RouteSelectorTableModel::createList(QList<RouteData>*
     //     aList = SQL::instance()->routeNameAList();
     // else
     //     aList->clear();
-    aList = new QMap<QString, RouteData*>();
+    aList = new QMultiMap<QString, RouteData*>();
     foreach(RouteData rd, *rdList)
     {
         //if(dt >= rd.startDate().addDays(-700) && dt <= rd.endDate())

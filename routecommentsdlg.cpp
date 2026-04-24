@@ -66,6 +66,8 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
     connect(ui->btnPrev, SIGNAL(clicked()), this, SLOT(OnBtnPrev()));
     connect(ui->btnChangeDate, SIGNAL(clicked(bool)),this, SLOT(onChgDate()));
     connect(ui->tableView, &RouteSelector::selections_changed,this, [=](QModelIndexList selected, QModelIndexList deselected){
+        if(bScanInProgress)
+            return;
         if(!bSettingSelections)
             onSelectionsChanged(selected, deselected);
     });
@@ -82,11 +84,12 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
 
     ui->btnApply->setEnabled(false);
     ui->btnOK->setEnabled(false);
-    connect(ui->tableView, &RouteSelector::selections_changed, this, [=]{
-     ui->routesSelected->setText(QString::number(routes->count()));
-    });
+    // connect(ui->tableView, &RouteSelector::selections_changed, this, [=]{
+    //  ui->routesSelected->setText(QString::number(routes->count()));
+    // });
     connect(ui->tableView, &RouteSelector::routeSelected,this, [=](int route, QString aRoute, QDate date, int row){
-        onRouteSelected(route, aRoute, date, row);
+        if(bScanInProgress)
+            onRouteSelected(route, aRoute, date, row);
     });
 
     connect(sql, &SQL::commentChange, this, [=] (CommentInfo ci, SQL::CHANGETYPE t){
@@ -257,7 +260,7 @@ void RouteCommentsDlg::OnBtnApply_clicked()
     if(!outputChanges())
     {
         ui->lblInfo->setStyleSheet("color: red");
-        ui->lblInfo->setText(tr("add failed"));
+        ui->lblInfo->setText(tr("update failed"));
         return;
     }
 
@@ -315,7 +318,7 @@ void RouteCommentsDlg::btnDelete_Clicked()
         CommentInfo info = orphans->at(ixOrphan);
         if(!sql->deleteComment(info.commentKey))
         {
-            return;
+            qDebug() << tr("delete comment %1 failed").arg(info.commentKey);
         }
         orphans->removeAt(ixOrphan);
         orphansDeleted++;
@@ -356,7 +359,33 @@ void RouteCommentsDlg::OnBtnNext()
 
 void RouteCommentsDlg::onRouteSelected(int route, QString alphaRoute, QDate date, int row)
 {
-    //RouteComments rc = sql->getRouteComment(route, _rc.date, -1);
+    if(bIsDirty)
+    {
+        int rtn =QMessageBox::question(this, tr("Change route?"), tr("To save this comment for route %1 click Save or click No tochange the route to %2 (apply)?")
+                                                                       .arg(_ci.alphaRoute,alphaRoute), QMessageBox::Save | QMessageBox::No);
+        if(rtn == QMessageBox::Save)
+            outputChanges();
+    }
+    _ci.alphaRoute = alphaRoute;
+    ui->dateEdit->setStyleSheet("color:black");
+    ui->dateEdit->setDate(date);
+    bDateChanged = true;
+    aRoutes->clear();
+    aRoutes->append(alphaRoute);
+    routes->clear();
+    routes->append(route);
+    //OnDateLeave();
+    _ci.date = date;
+    ui->dateEdit->setDate(date);
+    _ci.routesUsed = *routes;
+    _ci.aRoutesList = *aRoutes;
+    _ci.jRoutesListString = _ci.jRoutesTableToString(_ci.aRoutesList);
+    ui->txtRoutesUsed->setText(_ci.aRoutesList.join(','));
+    ui->routesSelected->setText(QString::number(routes->count()));
+#if 0
+    comments = sql->commentsForAlphaRoute(alphaRoute, date, &currIx);
+    ui->lblInfo2->setText(tr("Route <B>%1</B> comment <B><I>0 of 0</I></B>").arg(_ci.alphaRoute));
+
     CommentInfo ci = sql->getComment(alphaRoute,date, 0);
     if(ci.commentKey >=0)
     {
@@ -381,6 +410,7 @@ void RouteCommentsDlg::onRouteSelected(int route, QString alphaRoute, QDate date
         if(!ui->txtComments->toPlainText().isEmpty())
             setDirty(true);
     }
+#endif
 }
 
 void RouteCommentsDlg::onCommentChange(CommentInfo ci, SQL::CHANGETYPE t)
@@ -494,6 +524,7 @@ void RouteCommentsDlg::onChgDate()
     ui->txtComments->clear();
     ui->txtTags->clear();
     ui->txtCommentId->clear();
+    comments = sql->commentsForAlphaRoute(_ci.alphaRoute,_ci.date, &currIx);
     ui->lblInfo2->setText(tr("Route <B>%1</B> comment <B><I>0 of 0</I></B>").arg(_ci.alphaRoute));
     ui->btnChangeDate->setEnabled(false);
 
@@ -526,8 +557,11 @@ void RouteCommentsDlg::OnDateLeave()
     ui->lblInfo->clear();
     if(!bDateChanged)
         return;
-    if(bIsDirty && !ui->txtComments->toPlainText().isEmpty())
-        outputChanges();
+    if(bIsDirty && !ui->txtComments->toPlainText().isEmpty() && !bScanInProgress)
+    {
+        if(!outputChanges())
+            return;
+    }
     if(date.isValid() && date.year()>=1800)
         ui->dateEdit->setStyleSheet("color: black");
     _ci.date = date;
@@ -595,6 +629,11 @@ void RouteCommentsDlg::onSelectionsChanged(QModelIndexList selected, QModelIndex
         _ci.alphaRoute = aix.data().toString();
         _ci.route = rix.data().toInt();
         txtRoutes.append(aix.data().toString() + ",");
+        if(aRoutes->count() == 1)
+        {
+            comments = sql->commentsForAlphaRoute(_ci.alphaRoute, _ci.date, &currIx);
+            ui->lblInfo2->setText(tr("Route <B>%1</B> comment <B><I>0 of 0</I></B>").arg(_ci.alphaRoute));
+        }
     }
 #if 0
         // _rc.commentKey = -1;
@@ -639,6 +678,7 @@ void RouteCommentsDlg::onSelectionsChanged(QModelIndexList selected, QModelIndex
     _ci.aRoutesList = *aRoutes;
     _ci.jRoutesListString = _ci.jRoutesTableToString(_ci.aRoutesList);
     ui->txtRoutesUsed->setText(_ci.aRoutesList.join(','));
+    ui->routesSelected->setText(QString::number(routes->count()));
 }
 
 bool RouteCommentsDlg::outputChanges()
@@ -706,14 +746,14 @@ bool RouteCommentsDlg::outputChanges()
                     ui->lblInfo->setText(tr("add failed"));
                     return false;
                 }
+                ui->lblInfo->setStyleSheet("color:green");
+                ui->lblInfo->setText(tr("comment updated: key=%1").arg(_ci.commentKey));
             }
         }
         sql->commitTransaction("outputChanges");
         //  }
         setDirty(false);
     }
-    ui->lblInfo->setStyleSheet("color:green");
-    ui->lblInfo->setText(tr("comment added: key=%1").arg(_ci.commentKey));
     ui->txtCommentId->setText(QString::number(_ci.commentKey));
     return true;
 }
@@ -809,6 +849,7 @@ void RouteCommentsDlg::scan()
         sql->rollbackTransaction("scan");
     }
     bScanInProgress = true;
+    setCursor(Qt::WaitCursor);
     ui->btnNext->setVisible(false);
     ui->btnPrev->setVisible(false);
     ui->btnOK->setVisible(false);
@@ -845,6 +886,7 @@ void RouteCommentsDlg::scan()
             sql->rollbackTransaction("");
             break;
         default:
+            setCursor(Qt::ArrowCursor);
             return;
         }
     }
@@ -1055,7 +1097,10 @@ void RouteCommentsDlg::scan()
     orphans = sql->getOrphanComments();
     dup_emptyOrphans =0;
     if(orphans->isEmpty())
+    {
+        setCursor(Qt::ArrowCursor);
         finishScan(scanResult);
+    }
     // remove any empty or duplicate comments
     for(int ix = orphans->count()-1; ix>=0; ix --)
     {
@@ -1096,6 +1141,8 @@ void RouteCommentsDlg::scan()
         }
         continue;
     }
+    setCursor(Qt::ArrowCursor);
+
     processOrphan();
     return;
 }
@@ -1165,8 +1212,10 @@ bool RouteCommentsDlg::processOrphan()
         enableButtons();
         setDirty(false);
 
+        setCursor(Qt::ArrowCursor);
+        ui->btnDelete->setEnabled(true);
         ui->lblInfo->setStyleSheet("color: rgb(255, 170, 0)");
-        ui->lblInfo->setText(tr("Click Apply to add comment %1 to route or Ignore to process next orphan").arg(info.commentKey));
+        ui->lblInfo->setText(tr("Click Apply to add comment %1 to route, Delete to delete or Ignore to process next orphan").arg(info.commentKey));
         return rslt;
     }
     return rslt;
@@ -1318,8 +1367,12 @@ void RouteCommentsDlg::closeEvent(QCloseEvent *e)
                 if(route < 1)
                     continue;
                 if(SQL::instance()->executeCommand(QString("select routeAlpha from altRoute where route = %1").arg(route),db,&vl)){
-                   rc->ci.aRoutes.append(vl.at(0).toString());
-                    sl.append(vl.at(0).toString());
+                    QString aRoute = vl.at(0).toString();
+                    if(!rc->ci.aRoutes.contains(aRoute))
+                    {
+                        rc->ci.aRoutes.append(aRoute);
+                        sl.append(aRoute);
+                    }
                 }
             }
             rc->ci.jRoutesListString = rc->ci.jRoutesTableToString(sl);

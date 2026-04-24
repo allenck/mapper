@@ -449,6 +449,8 @@ private:
     bool bCbRouteRefreshing = false;
     bool bNoDisplay = false;
     bool bDisplayWebDebug = false;
+    bool bRouteChangeDisabled=false;
+    bool bSegmentChangeDisabled = false;
     QStringList overlays;
     bool bCbStreets_text_changed = false;
     QString saveStreet = "";
@@ -502,6 +504,7 @@ private:
     void processDescriptionChange(QString descr, QString street);
     bool backupDatabases();
     bool restoreDatabases();
+    void disableSegment_Route_changes(bool);
 
 private slots:
 //    void aCopy();
