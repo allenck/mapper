@@ -3510,6 +3510,9 @@ bool SQL::updateSegment(SegmentData* sd)
   Q_ASSERT(sd->_endLat != 0);
   Q_ASSERT(sd->_endLon != 0);
  }
+ QString sStreetId;
+ if(sd->streetId() > 0)
+     sStreetId = QString::number(sd->_streetId) + ",";
  commandText = "Update Segments set startLat= " + QString("%1").arg(sd->_startLat,0,'f',8)
    + ", startLon= " + QString("%1").arg(sd->_startLon,0,'f',8)
    + ", endLat= " + QString("%1").arg(sd->_endLat,0,'f',8)
@@ -3521,7 +3524,7 @@ bool SQL::updateSegment(SegmentData* sd)
    + "pointArray='" + sd->pointsString() + "', "
    + "description='" + sd->_description + "',"
    + "street='" + sd->_streetName + "',"
-   + "streetId= " + (sd->streetId() > 0?QString::number(sd->_streetId):"null") + ","
+   + sStreetId
    + "NewerName='" + sd->_newerName + "',"
    + "location='" + sd->_location + "',"
    + "tracks="+ QString::number(sd->_tracks) + ","

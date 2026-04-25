@@ -3195,7 +3195,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `FormatOK` int(1) NOT NULL DEFAULT FALSE"
                 " `Tracks` int(2) check(`tracks` in (1,2)) NOT NULL DEFAULT 1,"
                 " `Street` varchar(60) NOT NULL DEFAULT '',"
-                " `StreetId` int(11),"
+                " `StreetId` int(11) DEFAULT NULL,"
                 " `NewerName` varchar(60) NOT NULL DEFAULT '',"
                 " `Location` varchar(30) NOT NULL DEFAULT '',"
                 " `Type` int(11) NOT NULL DEFAULT 0,"
@@ -3212,7 +3212,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `Points` int(11) NOT NULL default 0,"
                 " `PointArray` text,"
                 " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP)"
-                " CONSTRAINT `Segments_ibfk_1` FOREIGN KEY (`StreetId`) REFERENCES `StreetDef` (`StreetId`))";
+                " FOREIGN KEY (`StreetId`) REFERENCES `StreetDef` (`StreetId`) ON UPDATE CASCADE)";
  }
  else if(dbType == "MySql")
   commandText = "CREATE TABLE IF NOT EXISTS `Segments` ("

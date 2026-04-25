@@ -15,7 +15,7 @@ CREATE TABLE `Segments` ( `SegmentId` integer  primary key AUTOINCREMENT NOT NUL
                           `FormatOK` int(1) NOT NULL DEFAULT FALSE,
                           `Tracks` int(11) check(`tracks` in (1,2) )NOT NULL DEFAULT 1,
                           `Street` varchar(60) not null default '',
-                          `StreetId` integer,
+                          `StreetId` integer DEFAULT NULL,
                           `NewerName` varchar(60) not null default '',
                           `Location` varchar(30) not null default '',
                           `Type` int(11) NOT NULL DEFAULT 0,
@@ -32,7 +32,7 @@ CREATE TABLE `Segments` ( `SegmentId` integer  primary key AUTOINCREMENT NOT NUL
                           `Points` int(11) NOT NULL default 0,
                           `PointArray` text,
                           `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                          CONSTRAINT `Segments_ibfk_1` FOREIGN KEY (`StreetId`) REFERENCES `StreetDef` (`StreetId`));
+                          FOREIGN KEY (`StreetId`) REFERENCES `StreetDef` (`StreetId`) ON UPDATE CASCADE);
 INSERT INTO `Segments` (SegmentId, Description, OneWay, FormatOK, Tracks,Street, NewerName, Location, `Type`,
                         StartLat, StartLon,EndLat, EndLon,Length, Points, StartDate, DoubleDate, endDate, Direction,
                         lastUpdate, pointArray, StreetId)
@@ -42,4 +42,5 @@ INSERT INTO `Segments` (SegmentId, Description, OneWay, FormatOK, Tracks,Street,
 drop table t1_backup;
 PRAGMA foreign_keys = 1;
 COMMIT;
+
 
