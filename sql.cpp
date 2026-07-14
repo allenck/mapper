@@ -3512,7 +3512,7 @@ bool SQL::updateSegment(SegmentData* sd)
  }
  QString sStreetId;
  if(sd->streetId() > 0)
-     sStreetId = QString::number(sd->_streetId) + ",";
+     sStreetId = "streetId=" +QString::number(sd->_streetId) + ", StreetSeq=" + QString::number(sd->_streetSeq) + ",";
  commandText = "Update Segments set startLat= " + QString("%1").arg(sd->_startLat,0,'f',8)
    + ", startLon= " + QString("%1").arg(sd->_startLon,0,'f',8)
    + ", endLat= " + QString("%1").arg(sd->_endLat,0,'f',8)
@@ -12399,6 +12399,7 @@ QList<SegmentData*>  SQL::segmentDataListFromView(QString where)
   sd->_routePrefix = query.value(40).toString();
   sd->_streetId = query.value(41).toInt();
   sd->_routeId = query.value(42).toInt();
+  sd->_streetSeq = query.value("StreetSeq").toInt();
   if(!sd->segmentStartDate().isValid() || !sd->segmentEndDate().isValid())
   {
       SegmentInfo si = SegmentInfo(*sd);

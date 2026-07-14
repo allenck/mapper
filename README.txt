@@ -1,3 +1,6 @@
+**Recent Changes July 2026 VERSION=1.2.8
+1. Include value of bDisplaySegmentArrows in SegmentInfo::displaySegment
+
 **Recent Changes March 2026 VERSION=1.2.7
 1. Remove RouteComments table, expand Comments table.
 2. enhance editing options in htmltextedit.

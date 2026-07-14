@@ -341,6 +341,8 @@ class SegmentData
     QString routePrefix() {return _routePrefix;}
     int streetId(){return _streetId;}
     void setStreetId(int streetId){_streetId = streetId;}
+    int streetSeq(){return _streetSeq;}
+    void setStreetSeq(int streetSeq){_streetSeq = streetSeq;}
 
  private:
     qint32 _segmentId=-1;
@@ -353,6 +355,7 @@ class SegmentData
     qint32	_points=0;
     QString _streetName;
     int _streetId;
+    int _streetSeq;
     QString _newerName;
     QString _description;
     QString _routePrefix;
@@ -641,6 +644,7 @@ class SegmentInfo
  qint8 _tracks;
  bool _bNeedsUpdate;
  int _streetId =-1;
+ int _streetSeq = 0;
  int _rowid = -1;
  //int routeCount;
  //QString trackUsage;
@@ -743,6 +747,9 @@ class SegmentInfo
  bool formatOK(){return _formatOK;}
  int streetId(){return _streetId;}
  void setStreetId(int streetId){_streetId = streetId;}
+ int streetSeq(){return _streetSeq;}
+ void setStreetSeq(int streetSeq){_streetSeq = streetSeq;}
+
  bool operator==(const SegmentInfo& other) const{
      return(other._segmentId == _segmentId);
 

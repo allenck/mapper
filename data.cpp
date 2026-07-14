@@ -263,6 +263,7 @@ SegmentData::SegmentData(const SegmentData& o)
  _nextR = o._nextR;
  _prevR = o._prevR;
  _streetId = o._streetId;
+ _streetSeq = o._streetSeq;
  _sequence = o._sequence;
  _returnSeq = o._returnSeq;
  _reverseEnter = o._reverseEnter;
@@ -363,6 +364,7 @@ SegmentData::SegmentData(const SegmentInfo& o)
  _location = o._location;
  _whichEnd = o._whichEnd;
  _streetId = o._streetId;
+ _streetSeq = o._streetSeq;
  _segRowid = o._rowid;
 }
 
@@ -673,6 +675,7 @@ SegmentInfo::SegmentInfo(const SegmentInfo& o)
  _location = o._location;
  _dateDoubled = o._dateDoubled;
  _streetId = o._streetId;
+ _streetSeq = o._streetSeq;
  _rowid = o._rowid;
 }
 
@@ -707,6 +710,7 @@ SegmentInfo::SegmentInfo(const SegmentData& o)
  _location = o._location;
  _dateDoubled = o._dateDoubled;
  _streetId = o._streetId;
+ _streetSeq = o._streetSeq;
 }
 
 #if 1
@@ -891,7 +895,7 @@ void SegmentInfo::displaySegment(QString date, QString color, QString trackUsage
  if(trackUsage.isEmpty()) // fix for MySql not storing field correctly
   trackUsage =" ";
  objArray.clear();
- objArray << _segmentId << routeNames<<_description << "N" << true <<color<< tracks
+ objArray << _segmentId << routeNames<<_description << "N" << Configuration::instance()->bDisplaySegmentArrows <<color<< tracks
           << dash << _routeType << trackUsage << points.count();
  objArray.append(points);
  WebViewBridge::instance()->processScript("createSegment", objArray);

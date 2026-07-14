@@ -3196,6 +3196,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `Tracks` int(2) check(`tracks` in (1,2)) NOT NULL DEFAULT 1,"
                 " `Street` varchar(60) NOT NULL DEFAULT '',"
                 " `StreetId` int(11) DEFAULT NULL,"
+                " `StreetSeq` integer DEFAULT 0,"
                 " `NewerName` varchar(60) NOT NULL DEFAULT '',"
                 " `Location` varchar(30) NOT NULL DEFAULT '',"
                 " `Type` int(11) NOT NULL DEFAULT 0,"
@@ -3212,7 +3213,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `Points` int(11) NOT NULL default 0,"
                 " `PointArray` text,"
                 " `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP)"
-                " FOREIGN KEY (`StreetId`) REFERENCES `StreetDef` (`StreetId`) ON UPDATE CASCADE)";
+                " FOREIGN KEY (`StreetId`, `StreetSeq`) REFERENCES `StreetDef` (`StreetId`,`Seq`) ON UPDATE CASCADE)";
  }
  else if(dbType == "MySql")
   commandText = "CREATE TABLE IF NOT EXISTS `Segments` ("
@@ -3222,7 +3223,8 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `OneWay` char(1) ,"
                 " `Tracks` int(2) NOT NULL DEFAULT 2,"
                 " `Street` varchar(100),"
-                " `StreetId` int(11),"
+                " `StreetId` int(11) DEFAULT NULL,"
+                " `StreetSeq` integer DEFAULT 0,"
                 " `NewerName` varchar(100) NOT NULL,"
                 " `Location` varchar(30),"
                 " `Type` int NOT NULL Default 0,"
@@ -3246,7 +3248,8 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                    FormatOK smallint NOT NULL DEFAULT 0, \
                    Tracks smallint check(tracks in (1,2)) NOT NULL DEFAULT 1, \
                    Street  varchar(60) NOT NULL DEFAULT '', \
-                   StreetId  integer, \
+                   StreetId  integer DEFAULT NULL, \
+                   StreetSeq integer DEFAULT 0, \
                    NewerName  varchar(60) NOT NULL DEFAULT '', \
                    Location  varchar(30) NOT NULL DEFAULT '', \
                    Type  integer NOT NULL DEFAULT 0, \
@@ -3271,13 +3274,14 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
   commandText.append("CREATE TABLE [dbo].[Segments]("\
     "[SegmentId] [int] IDENTITY(1,1) NOT NULL,"\
     "[Description] [varchar](100) NOT NULL,"\
-    "[FormatOK] int NOT NULL DEFAULT 0,"
+    "[FormatOK] int NOT NULL DEFAULT 0," \
     "[OneWay] [char](1),"\
     "[Tracks] [int] NOT NULL,"\
     "[Street] [varchar](60) NULL,"\
-    "[StreetId] [int]," \
-    "[NewerName] [varchar](60),"
-    "[Location] [varchar](30),"
+    "[StreetId] [int] DEFAULT NULL," \
+    "[StreetSeq] [int] DEFAULT 0," \
+    "[NewerName] [varchar](60)," \
+    "[Location] [varchar](30)," \
     "[Type] [int] NOT NULL,"\
     "[StartLat] [decimal](15, 13) NOT NULL,"\
     "[StartLon] [decimal](15, 13) NOT NULL,"\

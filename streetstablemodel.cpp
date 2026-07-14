@@ -1562,6 +1562,7 @@ int StreetsTableModel::maxStreetDefSeq(int streetId)
 void StreetsTableModel::on_segmentChange(SegmentInfo si, SQL::CHANGETYPE t)
 {
     int streetId = si.streetId();
+    int streetSeq = si.streetSeq();
     switch (t) {
     case SQL::CHANGETYPE::ADD:
     case SQL::CHANGETYPE::MODIFY:
@@ -1597,8 +1598,8 @@ void StreetsTableModel::on_segmentChange(SegmentInfo si, SQL::CHANGETYPE t)
                 {
                     processStreetUpdate(streetId, si);
                 }
-                SQL::instance()->executeCommand(QString("update Segments set streetId = %1 where segmentid = %3")
-                                                    .arg(streetId).arg(si.segmentId()));
+                SQL::instance()->executeCommand(QString("update Segments set streetId = %1, streetSeq=%2 where segmentid = %3")
+                                                    .arg(streetId).arg(streetSeq).arg(si.segmentId()));
             }
             else
             {
