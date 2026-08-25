@@ -176,16 +176,15 @@ public:
     Q_DECL_DEPRECATED void displaySegment(qint32 segmentId, QString segmentName, QString color, QString trackUsage, bool bClearFirst);
     static QString pwd;
     static QString pgmDir;
-#ifndef USE_WEBENGINE
-    QWebView* webView;
-#else
+// #ifndef USE_WEBENGINE
+//     QWebView* webView;
+// #else
     QWebEngineView* webView = nullptr;
-    QWebChannel* channel = nullptr;
-    QWebSocketServer* m_server=nullptr;
-    WebSocketClientWrapper* m_clientWrapper= nullptr;
-    QWebSocketServer* m_OverlayServer=nullptr;
-    WebSocketClientWrapper* m_overlayWrapper= nullptr;
-#endif
+//     QWebSocketServer* m_server=nullptr;
+//     WebSocketClientWrapper* m_clientWrapper= nullptr;
+//     QWebSocketServer* m_OverlayServer=nullptr;
+//     WebSocketClientWrapper* m_overlayWrapper= nullptr;
+// #endif
     int selectedSegment() {return m_segmentId;}
     QDir htmlDir;
     static MainWindow* _instance;
@@ -213,6 +212,8 @@ public slots:
 
 signals:
     void routeListChanged(QList<RouteData>* routeList);
+    void windowActivated();
+    void newCitySelected();
 
 private slots:
     void about();
@@ -482,7 +483,7 @@ private:
     void createBridge();
     bool openBrowserWindow();
     bool openWebViewPanel();
-    bool setupbridge();
+    // bool setupbridge();
     void loadOverlay(Overlay* ov);
     QString wikiRoot;
     QString cwd;
@@ -528,11 +529,8 @@ private slots:
 
 protected:
     void resizeEvent(QResizeEvent *event);
+    void changeEvent(QEvent *event);
     QColor txtSegment_color;
-
-signals:
-    //void sendRows(int, int);
-    void newCitySelected();
     friend class RouteView;
     friend class WebViewBridge;
     friend class SegmentView;

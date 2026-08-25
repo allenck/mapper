@@ -712,8 +712,8 @@ void MainWindow::reloadMap()
          QMessageBox::critical(nullptr, tr("Error"), "open webbrowser failed ");
      }
      //connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
-     if(!channel)
-         setupbridge();
+     //if(!m_bridge->isSignalConnected(m_bridge->channel))
+         m_bridge->setupbridge();
     }
     else
     {
@@ -723,8 +723,8 @@ void MainWindow::reloadMap()
      fileUrl = QUrl("qrc:/GoogleMaps2b.htm");
 //#endif
     webView->setUrl(fileUrl);
-    setupbridge();
-    webView->page()->setWebChannel(channel);
+    m_bridge->setupbridge();
+    webView->page()->setWebChannel(m_bridge->channel);
   }
 
  QVariantList objArray;
@@ -3883,6 +3883,14 @@ void MainWindow::closeEvent(QCloseEvent *event)
  //QMainWindow::closeEvent(event);
  event->accept();
 }
+
+void MainWindow::changeEvent(QEvent *event)  {
+    if (event->type() == QEvent::ActivationChange) {
+        emit windowActivated();
+    }
+    QMainWindow::changeEvent(event);
+}
+
 void MainWindow::btnSplit_Clicked()    // SLOT
 {
 // if(!bFirstSegmentDisplayed)
@@ -5509,7 +5517,7 @@ void MainWindow::on_runInBrowser(bool bRunInBrowser)
  {
   m_bridge->processScript("alertClose");
  }
- m_server->close();
+ m_bridge->m_server->close();
  delete m_bridge;
  createBridge();  // create the webViewBridge
  if(bRunInBrowser)
@@ -5607,7 +5615,7 @@ bool MainWindow::openBrowserWindow()
         QMessageBox::critical(nullptr, tr("Error"), "open webbrowser failed ");
     }
 
-    setupbridge();
+    m_bridge->setupbridge();
 
    return true;
 }
@@ -5649,60 +5657,61 @@ bool MainWindow::openWebViewPanel()
      });
      fileUrl = QUrl("qrc:/GoogleMaps2b.htm");
     webView->setUrl(fileUrl);
-    setupbridge();
-    webView->page()->setWebChannel(channel);
+    m_bridge->setupbridge();
+    webView->page()->setWebChannel(m_bridge->channel);
     return true;
 }
 
-bool MainWindow::setupbridge()
-{
-    // setup the QWebSocketServer
-    m_server = new QWebSocketServer(QStringLiteral("WebViewBridge"), QWebSocketServer::NonSecureMode);
-    if (!m_server->listen(QHostAddress::LocalHost, 12345))
-    {
-        QString err = m_server->errorString();
-        qCritical() <<tr("Failed to connect to web socket server(%1).").arg(err);
-        return false;
-    }
-    connect(m_server, &QWebSocketServer::newConnection, [=]{
-        qInfo() << "new connection to browser";
+// bool MainWindow::setupbridge()
+// {
+//     // setup the QWebSocketServer
+//     m_server = new QWebSocketServer(QStringLiteral("WebViewBridge"), QWebSocketServer::NonSecureMode);
+//     if (!m_server->listen(QHostAddress::LocalHost, 12345))
+//     {
+//         QString err = m_server->errorString();
+//         qCritical() << "QWebSocketServer:" <<tr("Failed to connect to web socket server(%1).").arg(err);
+//         return false;
+//     }
+//     connect(m_server, &QWebSocketServer::newConnection, [=]{
+//         qInfo() << "QWebSocketServer:" << "new connection to browser: " << (m_server->isListening()? "listening":"not listening");
 
-    });
-    connect(m_server, &QWebSocketServer::serverError, [=](QWebSocketProtocol::CloseCode closeCode){
-        qDebug() << "server error" << m_server->errorString();
-    });
-    connect(m_server, &QWebSocketServer::acceptError, [=](QAbstractSocket::SocketError socketError){
-        qDebug() << "server socket error" << socketError;
-    });
-    connect(m_server, &QWebSocketServer::closed, [=] {
-        qDebug()  << "server closed";
-    });
-    if(m_server->isListening())
-        qInfo() << "listening on localhost:12345";
+//     });
+//     connect(m_server, &QWebSocketServer::serverError, [=](QWebSocketProtocol::CloseCode closeCode){
+//         qDebug() << "QWebSocketServer:" << "server error" << m_server->errorString();
+//     });
+//     connect(m_server, &QWebSocketServer::acceptError, [=](QAbstractSocket::SocketError socketError){
+//         qDebug() << "QWebSocketServer:" << "server socket error" << socketError;
+//     });
+//     connect(m_server, &QWebSocketServer::closed, [=] {
+//         qDebug()  << "QWebSocketServer:" << "server closed";
+//         m_server = nullptr;
+//     });
+//     if(m_server->isListening())
+//         qInfo() << "QWebSocketServer:" << "listening on localhost:12345";
 
-    // wrap WebSocket clients in QWebChannelAbstractTransport objects
-    m_clientWrapper = new WebSocketClientWrapper (m_server);
+//     // wrap WebSocket clients in QWebChannelAbstractTransport objects
+//     m_clientWrapper = new WebSocketClientWrapper (m_server);
 
-    // if(!webView)
-    //     connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
+//     // if(!webView)
+//     //     connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
 
-    // setup the channel
-    channel = new QWebChannel();
-    QObject::connect(m_clientWrapper, &WebSocketClientWrapper::clientConnected,
-                  channel, &QWebChannel::connectTo);
-    qInfo() << "registering webViewBridge";
-    channel->registerObject("webViewBridge", m_bridge);
-    connect(m_clientWrapper, &WebSocketClientWrapper::clientConnected,this, [=]{
-        if(config->bDisplayRouteOnReload)
-        {
-            ui->btnDisplayRoute->click();
-        }
-    });
-    connect(m_clientWrapper,  &WebSocketClientWrapper::clientClosed, this, [=]{
-        onWebSocketClosed();
-    });
-    return true;
-}
+//     // setup the channel
+//     channel = new QWebChannel();
+//     QObject::connect(m_clientWrapper, &WebSocketClientWrapper::clientConnected,
+//                   channel, &QWebChannel::connectTo);
+//     qInfo() << "registering webViewBridge";
+//     channel->registerObject("webViewBridge", m_bridge);
+//     connect(m_clientWrapper, &WebSocketClientWrapper::clientConnected,this, [=]{
+//         if(config->bDisplayRouteOnReload)
+//         {
+//             ui->btnDisplayRoute->click();
+//         }
+//     });
+//     connect(m_clientWrapper,  &WebSocketClientWrapper::clientClosed, this, [=]{
+//         onWebSocketClosed();
+//     });
+//     return true;
+// }
 
 bool MainWindow::copyAndUpdate(QString inFile, QString outDir, QString apiKey)
 {
@@ -5861,14 +5870,15 @@ void MainWindow::onWebSocketClosed()
    mbox->setText("The browser window has closed");
    mbox->show();
    QTimer::singleShot(2000, mbox, SLOT(hide()));
-   channel = nullptr;
+   m_bridge->channel = nullptr;
   }
   else
   {
       if(config->bRunInBrowser)
       {
-          int rslt = QMessageBox::question(this, tr("Connection closed"), tr("The connection to the browser has closed."
-                                                                             "Click Yes to reload Map,  Close to exit"),
+          int rslt = QMessageBox::question(this, tr("Connection closed"),
+                                           tr("The connection to the browser has closed."
+                                           "Click Yes to reload Map,  Close to exit"),
                                            QMessageBox::Yes|QMessageBox::Close);
           if(rslt == QMessageBox::Close)
           {

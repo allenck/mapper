@@ -31,6 +31,14 @@ WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString maptype, QString m
 
  _instance = this;
  config = Configuration::instance();
+
+ connect(m_parent, &MainWindow::windowActivated, this, [=]{
+     if(m_server && isListening())
+     {
+         qDebug() << "WebViewBridge: begin auto reload of GoogleMaps";
+         m_parent->reloadMap();
+     }
+ });
 }
 
 WebViewBridge::~WebViewBridge()
@@ -76,10 +84,26 @@ void WebViewBridge::processScript(QString func)
  emit executeScript( func, "");
 }
 
+bool WebViewBridge::isListening()
+{
+    if(m_server && m_server->isListening())
+    {
+        return true;
+    }
+    qDebug() << "WebViewBridge: not listening. " << m_server->errorString();
+
+    return false;
+}
+
 void WebViewBridge::processScript(QString func, QString parms, QString name, QString value)
 {
  //qDebug() << "processScript " << func;
  bResultReceived = false;
+ if(!isListening())
+ {
+    // return;
+     qDebug() << "web channel not listening!";
+ }
  emit executeScript2( func,  parms, name, value);
  if(func == "loadOverlay")
   qDebug()<<func + " " + parms + "\n";
@@ -90,6 +114,11 @@ void WebViewBridge::processScript(QString func, QVariantList objArray)
  qDebug() << "processScript " << func;
 
  bResultReceived = false;
+ if(!isListening())
+ {
+    // return;
+    qDebug() << "web channel not listening!";
+ }
  emit executeScript3(func, objArray, objArray.count() );
  if(func == "loadOverlay")
   qDebug()<<func + " + " + QString("%1").arg(objArray.count()) + " parameters";
@@ -420,5 +449,57 @@ QList<LatLng> WebViewBridge::buildPoints(QVariantList array)
         points.append(LatLng(array.at(i).toDouble(), array.at(i+1).toDouble()));
     }
     return points;
+}
+
+bool WebViewBridge::setupbridge()
+{
+    // setup the QWebSocketServer
+    if(!m_server)
+        m_server = new QWebSocketServer(QStringLiteral("WebViewBridge"), QWebSocketServer::NonSecureMode);
+    if (!m_server->listen(QHostAddress::LocalHost, 12345))
+    {
+        QString err = m_server->errorString();
+        qCritical() << "QWebSocketServer:" <<tr("Failed to connect to web socket server(%1).").arg(err);
+        return false;
+    }
+    connect(m_server, &QWebSocketServer::newConnection, [=]{
+        qInfo() << "QWebSocketServer:" << "new connection to browser: " << (m_server->isListening()? "listening":"not listening");
+
+    });
+    connect(m_server, &QWebSocketServer::serverError, [=](QWebSocketProtocol::CloseCode closeCode){
+        qDebug() << "QWebSocketServer:" << "server error" << m_server->errorString();
+    });
+    connect(m_server, &QWebSocketServer::acceptError, [=](QAbstractSocket::SocketError socketError){
+        qDebug() << "QWebSocketServer:" << "server socket error" << socketError;
+    });
+    connect(m_server, &QWebSocketServer::closed, [=] {
+        qDebug()  << "QWebSocketServer:" << "server closed";
+        m_server = nullptr;
+    });
+    if(m_server->isListening())
+        qInfo() << "QWebSocketServer:" << "listening on localhost:12345";
+
+    // wrap WebSocket clients in QWebChannelAbstractTransport objects
+    m_clientWrapper = new WebSocketClientWrapper (m_server);
+
+    // if(!webView)
+    //     connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
+
+    // setup the channel
+    channel = new QWebChannel();
+    QObject::connect(m_clientWrapper, &WebSocketClientWrapper::clientConnected,
+                     channel, &QWebChannel::connectTo);
+    qInfo() << "registering webViewBridge";
+    channel->registerObject("webViewBridge", this);
+    connect(m_clientWrapper, &WebSocketClientWrapper::clientConnected,this, [=]{
+        if(config->bDisplayRouteOnReload)
+        {
+            m_parent->ui->btnDisplayRoute->click();
+        }
+    });
+    connect(m_clientWrapper,  &WebSocketClientWrapper::clientClosed, this, [=]{
+        m_parent->onWebSocketClosed();
+    });
+    return true;
 }
 

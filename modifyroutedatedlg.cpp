@@ -193,7 +193,7 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
   }
  }
 
-
+ setCursor(Qt::WaitCursor);
  if (sql->modifyRouteDate(_rd, ui->rbStart->isChecked(), ui->dateTimePicker1->date()/*,
                           ui->txtName1->text(), ui->txtName2->text()*/))
  {
@@ -209,6 +209,7 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
  {
   ui->lblError->setText(tr("Nothing changed!"));
   ui->dateTimePicker1->setFocus();
+  setCursor(Qt::ArrowCursor);
   return;
  }
 }

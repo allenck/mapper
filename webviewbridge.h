@@ -4,6 +4,8 @@
 #include <QtGui>
 #include "data.h"
 #include "configuration.h"
+#include "qwebengineview.h"
+#include "websocketclientwrapper.h"
 
 class MainWindow;
 class WebViewBridge : public QObject
@@ -35,6 +37,7 @@ public:
     void processScript(QString func);
     QT_DEPRECATED void processScript(QString func, QString parms, QString name, QString value);
     void processScript(QString func, QList<QVariant>objArray);
+    bool isListening();
 
     //QVariant rslt;
     QVariant myRslt;
@@ -123,6 +126,7 @@ public slots:
     void addPointMode(bool);
     void pinClicked(int, double lat, double lon, QString street, int streetId, QString location, int seq);
     void pinMarkerMoved(double lat, double lon);
+    bool setupbridge();
 
 private slots:
 
@@ -139,6 +143,14 @@ private:
     Configuration* config;
     LatLng _rightClickLoc;
     QList<LatLng> buildPoints(QVariantList array);
+
+    QWebChannel* channel = nullptr;
+    QWebSocketServer* m_server=nullptr;
+    WebSocketClientWrapper* m_clientWrapper= nullptr;
+    QWebSocketServer* m_OverlayServer=nullptr;
+    WebSocketClientWrapper* m_overlayWrapper= nullptr;
+
+    friend class MainWindow;
 };
 
 #endif // WEBVIEWBRIDGE_H

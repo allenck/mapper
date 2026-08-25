@@ -1,3 +1,6 @@
+**Recent Changes August 2026 VERSION=1.2.9
+1. Move webchannel logic to WebViewBridge
+
 **Recent Changes July 2026 VERSION=1.2.8
 1. Include value of bDisplaySegmentArrows in SegmentInfo::displaySegment
 
