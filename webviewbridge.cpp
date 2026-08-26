@@ -33,7 +33,8 @@ WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString maptype, QString m
  config = Configuration::instance();
 
  connect(m_parent, &MainWindow::windowActivated, this, [=]{
-     if(m_server && isListening())
+     //if(m_server && isListening())
+     if(!m_server)
      {
          qDebug() << "WebViewBridge: begin auto reload of GoogleMaps";
          m_parent->reloadMap();
@@ -475,6 +476,7 @@ bool WebViewBridge::setupbridge()
     connect(m_server, &QWebSocketServer::closed, [=] {
         qDebug()  << "QWebSocketServer:" << "server closed";
         m_server = nullptr;
+        m_parent->ui->statusbar->showMessage(tr("connection to browser closed"));
     });
     if(m_server->isListening())
         qInfo() << "QWebSocketServer:" << "listening on localhost:12345";

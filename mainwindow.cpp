@@ -713,6 +713,7 @@ void MainWindow::reloadMap()
      }
      //connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
      //if(!m_bridge->isSignalConnected(m_bridge->channel))
+     if(!(m_bridge->m_server))
          m_bridge->setupbridge();
     }
     else
