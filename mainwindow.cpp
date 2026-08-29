@@ -5863,7 +5863,7 @@ bool MainWindow::verifyAPIKey(QString path, QString apiKey)
 void MainWindow::onWebSocketClosed()
 {
   enableControls(false);
-  if(config->bRunInBrowser)
+  if(!config->bRunInBrowser)
   {
      //QMessageBox::critical(this, tr("Browser closed"), tr("The browser window has closed"));
    QMessageBox *mbox = new QMessageBox;
@@ -5872,6 +5872,7 @@ void MainWindow::onWebSocketClosed()
    mbox->show();
    QTimer::singleShot(2000, mbox, SLOT(hide()));
    m_bridge->channel = nullptr;
+   reloadMap();
   }
   else
   {
