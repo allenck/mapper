@@ -2439,7 +2439,7 @@ void MainWindow::refreshRoutes()
     if(routeList.isEmpty())
      qDebug() << "no routes selected for company " << companyKey;
 
-    QMap<QString, RouteData> map;
+    QMultiMap<QString, RouteData> map;
     QString rSort;
 
     for(RouteData rd : routeList)
