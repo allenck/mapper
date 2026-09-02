@@ -91,7 +91,8 @@ bool WebViewBridge::isListening()
     {
         return true;
     }
-    qDebug() << "WebViewBridge: not listening. " << m_server->errorString();
+    if(m_server)
+        qDebug() << "WebViewBridge: not listening. " << m_server->errorString();
 
     return false;
 }
@@ -464,7 +465,8 @@ bool WebViewBridge::setupbridge()
         return false;
     }
     connect(m_server, &QWebSocketServer::newConnection, [=]{
-        qInfo() << "QWebSocketServer:" << "new connection to browser: " << (m_server->isListening()? "listening":"not listening");
+        if(m_server)
+            qInfo() << "QWebSocketServer:" << "new connection to browser: " << (m_server->isListening()? "listening":"not listening");
 
     });
     connect(m_server, &QWebSocketServer::serverError, [=](QWebSocketProtocol::CloseCode closeCode){
@@ -476,7 +478,8 @@ bool WebViewBridge::setupbridge()
     connect(m_server, &QWebSocketServer::closed, [=] {
         qDebug()  << "QWebSocketServer:" << "server closed";
         m_server = nullptr;
-        m_parent->ui->statusbar->showMessage(tr("connection to browser closed"));
+        //m_parent->ui->statusbar->showMessage(tr("connection to browser closed"));
+        MainWindow::instance()->ui->statusbar->showMessage(tr("connection to browser closed"));
     });
     if(m_server->isListening())
         qInfo() << "QWebSocketServer:" << "listening on localhost:12345";

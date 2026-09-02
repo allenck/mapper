@@ -205,6 +205,7 @@ void Configuration::saveSettings()
  settings->setValue("font",font.toString());
  settings->setValue("mapId", mapId);
  settings->setValue("tileServerUrl", tileServerUrl);
+ settings->setValue("mapSource", mapSource);
 }
 
 
@@ -528,6 +529,7 @@ void Configuration::getSettings()
    if(mapId.isEmpty())
        mapId = "DEMO_MAP_ID";
    tileServerUrl = settings.value("tileServerUrl", "https://ubuntu-2/public/map_tiles/").toString();
+   mapSource = settings.value("mapSource", MAPSOURCE::GOOGLEMAPS).toInt();
    QFont f;
    f.fromString(settings.value("font").toString());
    font =f;

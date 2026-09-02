@@ -96,6 +96,8 @@ DISTFILES += \
     README.txt \
     # Resources/GoogleMaps2n.htm \
     # Resources/copyList.txt \
+    Resources/MapQuest.htm \
+    Resources/MapQuest.js \
     Resources/databases/.gitignore \
     Resources/dump_databases.cmd \
     Resources/dump_databases.sh \

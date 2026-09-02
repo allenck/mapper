@@ -704,8 +704,20 @@ Configuration* MainWindow::getConfiguration()
 void MainWindow::reloadMap()
 {
  //disconnect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
+    switch(config->mapSource)
+    {
+    case Configuration::GOOGLEMAPS:
+        fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2b.htm");
+        break;
+    case Configuration::MAPQUEST:
+        fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"MapQuest.htm");
+        break;
+    default:
+        fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2b.htm");
+    }
     if(config->bRunInBrowser)
     {
+
      if(!QDesktopServices::openUrl(fileUrl))
      {
          qCritical() << "open webbrowser failed " << fileUrl.toDisplayString();
@@ -721,7 +733,17 @@ void MainWindow::reloadMap()
 // #ifdef Q_OS_WINDOWS
 //      fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2b.htm");
 // #else
-     fileUrl = QUrl("qrc:/GoogleMaps2b.htm");
+        switch(config->mapSource)
+        {
+        case Configuration::GOOGLEMAPS:
+            fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2b.htm");
+            break;
+        case Configuration::MAPQUEST:
+            fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"MapQuest.htm");
+            break;
+        default:
+            fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2b.htm");
+        }
 //#endif
     webView->setUrl(fileUrl);
     m_bridge->setupbridge();
@@ -1663,6 +1685,23 @@ QWidgetAction *MainWindow::createWidgetAction()
  return sortTypeAct;
 }
 
+QWidgetAction *MainWindow::createMapSourceAction()
+{
+ cbMapSource = new QComboBox(this);
+
+ initMapSourceCb(cbMapSource);
+
+ mapSourceAct = new QWidgetAction(this);
+ mapSourceAct->setDefaultWidget(cbMapSource);
+
+ connect(cbMapSource, &QComboBox::currentIndexChanged, this, [=](int sel){
+     config->mapSource = sel;
+     reloadMap();
+ });
+
+ return mapSourceAct;
+}
+
 void MainWindow::initRouteSortCb(QComboBox* cbSort)
 {
     cbSort->setVisible(true);
@@ -1677,7 +1716,15 @@ void MainWindow::initRouteSortCb(QComboBox* cbSort)
     cbSort->addItem("CompanyKey,Route, start date");
 
     cbSort->setCurrentIndex(config->currCity->routeSortType);
+}
 
+void MainWindow::initMapSourceCb(QComboBox* cbMapSource)
+{
+    cbMapSource->setVisible(true);
+    cbMapSource->activateWindow();
+    cbMapSource->addItem(tr("Google Maps"), Configuration::MAPSOURCE::GOOGLEMAPS);
+    cbMapSource->addItem(tr("Open Street Maps"), Configuration::MAPSOURCE::OPENSTREETMAPS);
+    cbMapSource->addItem(tr("MapQuest"), Configuration::MAPSOURCE::MAPQUEST);
 }
 
 void MainWindow::addSegmentToRoute(SegmentData* sd)
@@ -1891,6 +1938,9 @@ void MainWindow::createMenus()
 
       sortMenu = new Menu(tr("Route Sort option"));
       sortMenu->addAction(createWidgetAction());
+      mapSourceMenu = new Menu(tr("Map Source"));
+      mapSourceMenu->addAction(createMapSourceAction());
+      optionsMenu->addMenu(mapSourceMenu);
       optionsMenu->addMenu(sortMenu);
       optionsMenu->addAction(showGoogleMapFeaturesAct);
       optionsMenu->addAction(foreignKeyCheckAct);
@@ -5443,12 +5493,17 @@ void MainWindow::sbRouteTriggered(int sliderAction)
   btnDisplayRouteClicked();
 }
 
-void MainWindow::cbSortSelectionChanged(int sel)
-{
- config->currCity->routeSortType = sel;
- refreshRoutes();
- toolsMenu->close();
-}
+// void MainWindow::cbSortSelectionChanged(int sel)
+// {
+//  config->currCity->routeSortType = sel;
+//  refreshRoutes();
+//  toolsMenu->close();
+// }
+
+// void MainWindow::cbMapSourceSelectionChanged(int sel)
+// {
+
+// }
 
 void MainWindow::newSqliteDbAct_triggered()
 {
@@ -5608,6 +5663,17 @@ bool MainWindow::openBrowserWindow()
     cwd.replace("/", QDir::separator());
 #endif
     fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources"  + QDir::separator() + "GoogleMaps2b.htm");
+    switch(config->mapSource)
+    {
+    case Configuration::GOOGLEMAPS:
+        fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources"  + QDir::separator() + "GoogleMaps2b.htm");
+        break;
+    case Configuration::MAPQUEST:
+        fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources"  + QDir::separator() + "MapQuest.htm");
+        break;
+    default:
+        fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources"  + QDir::separator() + "GoogleMaps2b.htm");
+    }
 
     qInfo() << "open " << fileUrl.toString();
     if(!QDesktopServices::openUrl(fileUrl))
@@ -5656,7 +5722,18 @@ bool MainWindow::openWebViewPanel()
 
         return error.defer();
      });
-     fileUrl = QUrl("qrc:/GoogleMaps2b.htm");
+     //fileUrl = QUrl("qrc:/GoogleMaps2b.htm");
+     switch(config->mapSource)
+     {
+     case Configuration::GOOGLEMAPS:
+         fileUrl = QUrl("qrc:/GoogleMaps2b.htm");
+         break;
+     case Configuration::MAPQUEST:
+         fileUrl = QUrl("qrc:/MapQuest.htm");
+         break;
+     default:
+         fileUrl = QUrl("qrc:/GoogleMaps2b.htm");
+     }
     webView->setUrl(fileUrl);
     m_bridge->setupbridge();
     webView->page()->setWebChannel(m_bridge->channel);

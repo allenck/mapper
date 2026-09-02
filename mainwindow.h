@@ -191,6 +191,8 @@ public:
     static MainWindow* instance();
     QString getColor(qint32 tractionType);
     void initRouteSortCb(QComboBox *cbSort);
+    void initMapSourceCb(QComboBox* cbMapSource);
+
 
 public slots:
     void copyRouteInfo_Click();
@@ -299,7 +301,8 @@ private slots:
     void on_selectSegment(int segmentId);
     void updateRouteComment();
     void geocoderRequestToggled(bool bChecked);
-    void cbSortSelectionChanged(int sel);
+    // void cbSortSelectionChanged(int sel);
+    // void cbMapSourceSelectionChanged(int sel);
     void rerouteRoute();
     void newSqliteDbAct_triggered();
     void QueryDialogAct_triggered();
@@ -330,6 +333,7 @@ private:
     QMenu tab1Menu;
     QMenu *sortMenu;
     QMenu* cbCompanyMenu;
+    QMenu* mapSourceMenu;
 
 //    QAction *copyAction;
 //    QAction *pasteAction;
@@ -418,6 +422,10 @@ private:
     QWidgetAction *sortTypeAct;
     QComboBox * cbSort;
 
+    QWidgetAction *mapSourceAct;
+    QComboBox * cbMapSource;
+
+
     QList<QAction*> cityActions;
     QList<QAction*> overlayActions;
 
@@ -499,6 +507,8 @@ private:
     ExportDlg* form = nullptr;
     void enableControls( bool b);
     QWidgetAction* createWidgetAction();
+    QWidgetAction *createMapSourceAction();
+
     bool isStationOnSegment(StationInfo* sti, QList<SegmentData*> segmentDataList);
     QString createSortString(QString alphaRoute);
     int countDigits(QString str);

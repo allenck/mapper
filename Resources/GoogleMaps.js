@@ -946,10 +946,10 @@ async function initMap() {
     if(bGoogleInit)
         return;
 
-     console.log("begin GoogleMaps.js initMap()");
+     console.log("begin MapQuest.js initMap()");
      webViewBridge.debug("initMap started");
      connectSlots();
-     geocoder  = new google.maps.Geocoder();
+     //geocoder  = new google.maps.Geocoder();
 
      //var Lat = 52.0;
      var Lat = webViewBridge.lat;
@@ -1046,7 +1046,7 @@ async function initMap() {
       }
      });
      map.setOptions(defaultOptions);
-      map.setOptions( { styles: styles["hide"] })
+     map.setOptions( { styles: styles["hide"] })
      map.setMapTypeId(mapTypeId);
      stationArray = new google.maps.MVCArray();
 

@@ -111,6 +111,13 @@ public:
 #endif
  QString tileServerUrl;
  QMap<QUuid,Connection*> uuidConnectionMap;
+ enum MAPSOURCE
+ {
+     GOOGLEMAPS,
+     OPENSTREETMAPS,
+     MAPQUEST
+ };
+ int mapSource = GOOGLEMAPS;
 
 private:
  static Configuration* _instance;
