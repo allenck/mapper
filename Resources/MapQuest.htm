@@ -49,13 +49,20 @@
   <script type="text/javascript" src="myMapQuest.js"> </script>
   <script type="text/javascript" src="apiKey.js"> </script>
   <script type="text/javascript" src="WebChannel.js"> </script>
-  <!--script type="text/javascript" src="contextmenu.js"> </script-->
-  <script src="https://api.mqcdn.com/sdk/mapquest-js/v1.3.2/mapquest.js"></script>
 
-  <link type="text/css" rel="stylesheet" href="https://api.mqcdn.com/sdk/mapquest-js/v1.3.2/mapquest.css"/>
+<!-- MapQuest.js Styles and Scripts -->
+<link type="text/css" rel="stylesheet" href="https://api.mqcdn.com/sdk/mapquest-js/v1.3.2/mapquest.css"/>
+<script src="https://api.mqcdn.com/sdk/mapquest-js/v1.3.2/mapquest.js"></script>
+
+<!-- Leaflet PolylineDecorator Plugin (Must be loaded AFTER MapQuest.js) -->
+<script src=" https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js "></script>
+<!--script type="text/javascript" src="scripts/L.PolylineDecorator.js"></script>
+<script type="text/javascript" src="scripts/L.Symbol.js"></script-->
+
 
   <script type="text/javascript">
       window.onload = function() {
+      console.log("window loaded, calling 'onLoad()'");
       onLoad();
       }
   </script>
@@ -68,10 +75,7 @@
   <!--The div element for the map -->
   <div id="map" ></div>
 
- <script src= "apikey.js"></script>
- <!-- prettier-ignore -->
- <script src="https://api.mqcdn.com/sdk/mapquest-js/v1.3.2/mapquest.js"></script>
- <link type="text/css" rel="stylesheet" href="https://api.mqcdn.com/sdk/mapquest-js/v1.3.2/mapquest.css"/>
+
   <div class="menu" id="menu">
       <div class="menu-item"><i class="glyphicon glyphicon-file"></i>Manage files</div>
   </div>

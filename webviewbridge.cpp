@@ -34,11 +34,11 @@ WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString maptype, QString m
 
  connect(m_parent, &MainWindow::windowActivated, this, [=]{
      //if(m_server && isListening())
-     if(!m_server)
-     {
-         qDebug() << "WebViewBridge: begin auto reload of GoogleMaps";
-         m_parent->reloadMap();
-     }
+     // if(!m_server)
+     // {
+     //     qDebug() << "WebViewBridge: begin auto reload of GoogleMaps";
+     //     m_parent->reloadMap();
+     // }
  });
 }
 
@@ -374,7 +374,8 @@ void WebViewBridge::moveRouteComment(qint32 route, QString date, double lat, dou
 void WebViewBridge::mapInit()
 {
 
- m_parent->mapInit();
+    m_parent->mapInit();
+    m_parent->enableControls(true);
 }
 
 void WebViewBridge::debug(QString text)

@@ -106,6 +106,8 @@ DISTFILES += \
     Resources/restore_databases.cmd \
     Resources/restore_databases.sh \
     # Resources/scripts/createMsSqlDistance.sql \
+    Resources/scripts/L.PolylineDecorator.js \
+    Resources/scripts/L.Symbol.js \
     Resources/sql/CreatePostgreSQLFunction.sql \
     Resources/sql/PostgreSQL/.gitignore \
     Resources/sql/PostgreSQL/PostgreSQL_create_distance_function.sql \

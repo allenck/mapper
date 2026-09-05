@@ -465,6 +465,8 @@ private:
     QString saveStreet = "";
     bool bCbStreetsRefreshing = false;
     //bool bFirstSegmentDisplayed = false;
+    bool bReloadInProgress = false;
+
 
     void createActions();
     void createMenus();

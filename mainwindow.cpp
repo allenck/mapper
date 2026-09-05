@@ -330,8 +330,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
           sql->updateSegment(&si);
       }
   });
-  connect(m_bridge, &WebViewBridge::on_connection_closed,this,[=]{
-  });
+  // connect(m_bridge, &WebViewBridge::on_connection_closed,this,[=]{
+  // });
 
   connect(ui->btnSplit, SIGNAL(clicked()),this, SLOT(btnSplit_Clicked()));
   connect(ui->chkShowOverlay, SIGNAL(clicked(bool)),this, SLOT(chkShowOverlayChanged(bool)));
@@ -690,7 +690,7 @@ void MainWindow::mapInit() // map initialization completed
  else
  {
   m_bridge->processScript("setDefaultOptions");
-  if(config->bDisplayRouteOnReload)
+  if(config->bDisplayRouteOnReload && ui->btnDisplayRoute->isEnabled())
     btnDisplayRouteClicked();
  }
  enableControls(true);
@@ -703,7 +703,11 @@ Configuration* MainWindow::getConfiguration()
 
 void MainWindow::reloadMap()
 {
- //disconnect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
+    bReloadInProgress = true;
+    m_bridge->processScript("alertClose");
+    //m_bridge->m_server->close();
+    //m_bridge->m_server = nullptr;
+
     switch(config->mapSource)
     {
     case Configuration::GOOGLEMAPS:
@@ -723,7 +727,6 @@ void MainWindow::reloadMap()
          qCritical() << "open webbrowser failed " << fileUrl.toDisplayString();
          QMessageBox::critical(nullptr, tr("Error"), "open webbrowser failed ");
      }
-     //connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
      //if(!m_bridge->isSignalConnected(m_bridge->channel))
      if(!(m_bridge->m_server))
          m_bridge->setupbridge();
@@ -746,7 +749,9 @@ void MainWindow::reloadMap()
         }
 //#endif
     webView->setUrl(fileUrl);
-    m_bridge->setupbridge();
+    if(!(m_bridge->m_server))
+        m_bridge->setupbridge();
+    bReloadInProgress=false;
     webView->page()->setWebChannel(m_bridge->channel);
   }
 
@@ -1366,8 +1371,8 @@ void MainWindow::createActions()
  addPointModeAct->setChecked(false);
  connect(addPointModeAct, SIGNAL(triggered(bool)), this, SLOT(addModeToggled(bool)));
 
- reloadMapAct = new QAction(tr("Reload Google Maps"), this);
- reloadMapAct->setStatusTip(tr("Reload the Google Maps window"));
+ reloadMapAct = new QAction(tr("Reload Map"), this);
+ reloadMapAct->setStatusTip(tr("Reload the Maps window"));
  connect(reloadMapAct, SIGNAL(triggered()), this, SLOT(reloadMap()));
 
  displayStationMarkersAct = new QAction(tr("Display station markers"),this);
@@ -1725,6 +1730,8 @@ void MainWindow::initMapSourceCb(QComboBox* cbMapSource)
     cbMapSource->addItem(tr("Google Maps"), Configuration::MAPSOURCE::GOOGLEMAPS);
     cbMapSource->addItem(tr("Open Street Maps"), Configuration::MAPSOURCE::OPENSTREETMAPS);
     cbMapSource->addItem(tr("MapQuest"), Configuration::MAPSOURCE::MAPQUEST);
+
+    cbMapSource->setCurrentIndex(config->mapSource);
 }
 
 void MainWindow::addSegmentToRoute(SegmentData* sd)
@@ -5771,7 +5778,6 @@ bool MainWindow::openWebViewPanel()
 //     m_clientWrapper = new WebSocketClientWrapper (m_server);
 
 //     // if(!webView)
-//     //     connect(m_clientWrapper, SIGNAL(clientClosed()), this, SLOT(onWebSocketClosed()));
 
 //     // setup the channel
 //     channel = new QWebChannel();
@@ -5955,6 +5961,8 @@ void MainWindow::onWebSocketClosed()
   {
       if(config->bRunInBrowser)
       {
+          if(bReloadInProgress)
+              return;
           int rslt = QMessageBox::question(this, tr("Connection closed"),
                                            tr("The connection to the browser has closed."
                                            "Click Yes to reload Map,  Close to exit"),

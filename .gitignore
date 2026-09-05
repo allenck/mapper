@@ -11,4 +11,13 @@ obj/
 *~
 *.log
 data/
-scripts/
+scripts/createMsSqlDistance.sql
+scripts/CustomTileOverlay.js
+scripts/ExtDraggableObject.js
+scripts/mbtiles.php
+scripts/*.png
+scripts/*.css
+scripts/opacityControl.js
+scripts/popmenu.js
+scripts/qwebchannel.js
+scripts/WebChannel.js
