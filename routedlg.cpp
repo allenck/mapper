@@ -386,8 +386,8 @@ void RouteDlg::setAddMode (bool value)
 //    ui->dateEnd->setMaximumDate( parms.maxDate);
 //    ui->dateEnd->setMinimumDate(parms.minDate);
     displayDates(__FUNCTION__);
-
 }
+
 void RouteDlg::SegmentChanged(qint32 segmentId)
 {
     Q_UNUSED(segmentId)
@@ -649,8 +649,8 @@ void RouteDlg::fillCompanies()
     }
     //cbCompany.SelectedIndex = 0;
     //cbCompany.Text = "";
-
 }
+
 void RouteDlg::fillTractionTypes()
 {
     ui->cbTractionType->clear();
@@ -760,6 +760,7 @@ void RouteDlg::setCompany(qint32 companyKey)
    }
   }
  }
+ ui->rnw->setCompanyKey(companyKey);
  CalculateDates();
 }
 
@@ -1619,7 +1620,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
  try
  {
      QDate nextStartDate = sql->getNextStartOrEndDate(_routeNbr, ui->dateStart->date(), 0, true);
-     if(nextStartDate.isValid() && ui->dateEnd->date() > nextStartDate)
+     if(!bAddMode && nextStartDate.isValid() && ui->dateEnd->date() > nextStartDate)
      {
         ui->lblHelpText->setText( tr("end date must be before %1").arg(nextStartDate.toString("yyyy/MM/dd")));
         return;
@@ -2357,5 +2358,14 @@ void RouteDlg::cbOneWay_checkedChanged(bool oneWay)
   ui->rbRight->setChecked(false);
   ui->gbUsage->setVisible(sd->tracks() == 2);
  }
+}
 
+void RouteDlg::setupToAdd()
+{
+    bAddMode = true;
+    _alphaRoute="";
+    bNewRouteNbr=false;
+    strNoRoute = tr("New Route Name");
+    RouteData* rd = new RouteData();
+    ui->rnw->setRouteData(rd);
 }

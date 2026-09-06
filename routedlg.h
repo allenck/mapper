@@ -28,6 +28,7 @@ public:
     //enum TypeOfChange{Add,Delete,Update};
     void setSegmentData(RouteData value);
     void setSegmentData(SegmentData *sd);
+    void setupToAdd();
 
 
 public slots:
@@ -35,7 +36,7 @@ public slots:
     void routeChanged(RouteData rd);
     void setAddMode(bool value);
     void OnNewCity();
-    void fillCompanies();
+    void setCompany(qint32 companyKey);
 
 signals:
     void SegmentChangedEvent(qint32 changedSegment, qint32 newSegment);
@@ -80,13 +81,13 @@ private:
     void checkUpdate(QString str);
     void setDefaultTurnInfo();
     void checkTurnInfo();
-    void setCompany(qint32 companyKey);
     void checkDirection(QString routeDirection);
     void displayDates(QString str);
     MainWindow* myParent;
     QDate minDate;
     QDate maxDate;
     void CalculateDates();
+    void fillCompanies();
 
 private slots:
     void Form_Load();

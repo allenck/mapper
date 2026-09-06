@@ -50,6 +50,7 @@ void RouteNameWidget::setRouteData(RouteData* rd)
  ui->txtRouteNbr->setText(rd->alphaRoute());
  //setRouteName(rd->routeName());
  ui->cbRouteName->addItem(rd->toString(), QVariant::fromValue(rd));
+ ui->cbRouteName->setCurrentIndex(-1);
 }
 
 void RouteNameWidget::setRouteName(QString name)

@@ -391,9 +391,10 @@ function addMarker(i, lat, lon, icon, text, SegmentId)
      var changedMarker = event.target;
      var position = changedMarker.getLatLng();
 
+     var si = getSegmentInfo(SegmentId);
      console.log("New position: " + position.lat + ", " + position.lng);
-     //webViewBridge.movePoint(SegmentId, i, pt.latLng.lat(), pt.latLng.lng());
-     // path[mIx]= position;
+     webViewBridge.movePoint(SegmentId, i, pt.lat, pt.lng);
+     currSegment.path[i]= position;
      if(currSegment.leftLine)
      {
          currSegment.leftLine.remove();
@@ -419,18 +420,19 @@ function addMarker(i, lat, lon, icon, text, SegmentId)
          currSegment.decorator.addTo(map);
      }
 
-     webViewBridge.movePoint(segmentId, mIx, position.lat, position.lng);
+     webViewBridge.movePoint(segmentId, i, position.lat, position.lng);
 
      var array = [];
      //new Array(0,0);
      //path.forEach(function(pt, ix)
-     for ([pt,ix] of currSegment.path.entries())
+     for ([ix, pt] of currSegment.path.entries())
      {
       array.push(position.lat);
       array.push(position.lng);
      };
-     webViewBridge.movePointX(segmentId, mIx, position.lat, position.lng, array);
+     webViewBridge.movePointX(segmentId, ix, position.lat, position.lng, array);
  });
+
  //google.maps.event.addListener(marker, "rightclick", function(){
   marker.on('contextmenu', function(){
 
@@ -593,7 +595,7 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
               }
             }
 
-            addMarker(i, closestPoint.lat, closestPoint.lng, mIx, segmentName + " route:" + routeName, segmentId);
+            addMarker(mIx, closestPoint.lat, closestPoint.lng, 1, segmentName + " route:" + routeName, segmentId);
             // //OK            window.external.selectSegment(i, SegmentId);
             var array = [];
             //path.forEach(function(pt, ix)

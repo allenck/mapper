@@ -5154,7 +5154,8 @@ void MainWindow::addRoute()
      SegmentData* sd = new SegmentData(ui->ssw->segmentSelected());
      routeDlg->setSegmentData(sd);
     }
-    routeDlg->setAddMode(true);
+    routeDlg->setupToAdd(); // want to create a new route
+    routeDlg->setCompany(m_companyKey);
     routeDlg->show();
     routeDlg->raise();
     routeDlg->activateWindow();
