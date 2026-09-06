@@ -108,6 +108,7 @@ DISTFILES += \
     # Resources/scripts/createMsSqlDistance.sql \
     Resources/scripts/L.PolylineDecorator.js \
     Resources/scripts/L.Symbol.js \
+    Resources/scripts/leaflet.polylineoffset.js \
     Resources/sql/CreatePostgreSQLFunction.sql \
     Resources/sql/PostgreSQL/.gitignore \
     Resources/sql/PostgreSQL/PostgreSQL_create_distance_function.sql \
