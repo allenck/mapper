@@ -107,8 +107,10 @@ DISTFILES += \
     Resources/restore_databases.sh \
     # Resources/scripts/createMsSqlDistance.sql \
     Resources/scripts/L.PolylineDecorator.js \
+    Resources/scripts/L.RotatedMarker.js \
     Resources/scripts/L.Symbol.js \
     Resources/scripts/leaflet.polylineoffset.js \
+    Resources/scripts/patternUtils.js \
     Resources/sql/CreatePostgreSQLFunction.sql \
     Resources/sql/PostgreSQL/.gitignore \
     Resources/sql/PostgreSQL/PostgreSQL_create_distance_function.sql \

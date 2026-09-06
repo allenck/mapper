@@ -5144,7 +5144,7 @@ void MainWindow::addRoute()
 {
     if(routeDlg == 0)
         routeDlg = new RouteDlg(this);
-    if(!ui->ssw->cbSegments()->currentIndex()>0)
+    if(ui->ssw->cbSegments()->currentIndex()>0)
     {
      QMessageBox::warning(this, tr("No Segment"), tr("In order to create a newRoute, an existing segment must be selected."));
      return;
@@ -5159,6 +5159,7 @@ void MainWindow::addRoute()
     routeDlg->raise();
     routeDlg->activateWindow();
 }
+
 void MainWindow::addModeToggled(bool isChecked)
 {
     if(!isChecked)

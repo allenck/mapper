@@ -412,6 +412,12 @@ function addMarker(i, lat, lon, icon, text, SegmentId)
          currSegment.singleLine.setLatLngs(path);
          currSegment.singleLine.addTo(map);
      }
+     if(currSegment.decorator)
+     {
+         currSegment.decorator.remove();
+         currSegment.decorator.setLatLngs(path);
+         currSegment.decorator.addTo(map);
+     }
 
      webViewBridge.movePoint(segmentId, mIx, position.lat, position.lng);
 
@@ -494,7 +500,7 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
   this.type = "SegmentInfo";
   this.line = null;
   this.path = path;
-  this.grayLine = null;
+  //this.grayLine = null;
   this.segmentId = segmentId;
   this.routeName = routeName;
   this.segmentName = segmentName;
@@ -506,10 +512,17 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
   this.trackUsage = trackUsage;
   this.arrow = null;
   this.routeType = routeType;
-  this.leftLineColor = null;
-  this.rightLineColor = null;
-  this.singleLineColor = null;
   this.marker = null;
+
+    var singleLine = null;
+    var leftLine = null;
+    var rightLine = null;
+    var leftLineColor = null;
+    var rightLineColor = null;
+    var singleLineColor = null;
+    var decorator = null;
+    var arrowDecorator = null;
+
 
     // methods
     // return the path as an array of lat,lng, lat,lng, ...
@@ -602,37 +615,36 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
             // var path = si.getPath();
             // var len = path.getLength();
 
-            // webViewBridge.selectSegment(0,si.segmentId);
-            // webViewBridge.setLen(len);
-            // var i;
-            // var mIx = 1;
-            // for(i=0; i < path.getLength()-1; i++)
-            // {
-            //     begin = path.getAt(i);
-            //     end = path.getAt(i+1);
-            //     bounds = setBounds( begin, end);
-            //     if( bounds.contains(e.latLng))
-            //     {
-            //         break;
-            //     }
-            // }
-            // si.insertPoint(i, e.latLng); // insert point after i
-            // webViewBridge.insertPoint(si.segmentId, i, e.latLng.lat(), e.latLng.lng());
-            // webViewBridge.insertPointX(si.segmentId, i, si.getPointArray());
+            webViewBridge.selectSegment(0,si.segmentId);
+            webViewBridge.setLen(len);
+            var i;
+            var mIx = 1;
+            for(i=0; i < path.getLength()-1; i++)
+            {
+                begin = path.getAt(i);
+                end = path.getAt(i+1);
+                bounds = setBounds( begin, end);
+                if( bounds.contains(e.latLng))
+                {
+                    break;
+                }
+            }
+            si.insertPoint(i, e.latLng); // insert point after i
+            webViewBridge.insertPoint(si.segmentId, i, e.latLng.lat, e.latLng.lng);
+            webViewBridge.insertPointX(si.segmentId, i, si.getPointArray());
 
-            // webViewBridge.selectSegment(i+1, si.segmentId);
-            // webViewBridge.selectSegmentX(i+1, si.segmentId, si.getPointArray());
+            webViewBridge.selectSegment(i+1, si.segmentId);
+            webViewBridge.selectSegmentX(i+1, si.segmentId, si.getPointArray());
 
-            // addModeOff();
-            // if(i>0)
-            //   mIx=0;
-            // addMarker(i+1, e.latLng.lat(), e.latLng.lng(), mIx, si.segmentName + " route:" + si.routeName, si.segmentId);
+            addModeOff();
+            if(i>0)
+              mIx=0;
+            addMarker(i+1, e.latLng.lat, e.latLng.lng, mIx, si.segmentName + " route:" + si.routeName, si.segmentId);
         });
     }  // end SegmentInfo.setEvents()
 
     function hiLiteLine()
     {
-
         if(leftLine)
             leftLine.setStyle({color: "#04b4B4"});
         if(rightLine)
@@ -641,11 +653,13 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
             singleLine.setStyle({color: "#04b4B4"});
         if(arrowDecorator)
             arrowDecorator.setStyle({color: "#04b4B4"});
-    }   // end SegmentInfo.hiLiteLine()
+        if(decorator)
+           decorator.setStyle({color: "#04b4B4"});
+    }
+// end SegmentInfo.hiLiteLine()
 
     function restoreLine()
     {
-
         if(leftLine)
             leftLine.setStyle({color: leftLineColor});
         if(rightLine)
@@ -653,7 +667,10 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
         if(singleLine)
             singleLine.setStyle({color: singleLineColor});
         if(arrowDecorator)
-            arrowDecorator.setStyle({color: arrowDecoratorColor});
+            arrowDecorator.setStyle({color: color});
+        if(decorator)
+           decorator.setStyle({color: color});
+
     }   // end SegmentInfo.restoreLine()
 
 
@@ -764,11 +781,6 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
 
 
     // create the polylines, arrows. etc
-    var singleLine;
-    var leftLine = null;
-    var rightLine = null;
-    var decorator = null;
-    var arrowDecorator = null;
     this.remove = function()
     {
         if(leftLine)
@@ -792,16 +804,16 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
         if(tracks === 2)
         {
           leftLine = L.polyline(path, {color: color, weight: 2, offset: -2}).addTo(map);
-            leftLineColor = color;
-            if(trackUsage !== "L" && trackUsage !== " ")
-                leftLineColor = "#A9A9A9";
-            setEvents(leftLine);
+          leftLineColor = color;
+          if(trackUsage !== "L" && trackUsage !== " ")
+            leftLineColor = "#A9A9A9";
+          setEvents(leftLine);
           rightLine = L.polyline(path, {color: color, weight: 2, offset: +2}).addTo(map);
-            rightLineColor = color;
-            if(trackUsage !== "R" && trackUsage !== " ")
-                rightLineColor = "#A9A9A9";
-            setEvents(rightLine);
-            if(showArrow)
+          rightLineColor = color;
+          if(trackUsage !== "R" && trackUsage !== " ")
+          rightLineColor = "#A9A9A9";
+          setEvents(rightLine);
+          if(showArrow)
                 arrowDecorator = L.polylineDecorator(rightLine,{
                     patterns: [
                       {
@@ -811,6 +823,26 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
                       }
                         ]
               }).addTo(map);
+          if(dash ===2)
+          {
+              //  Add the Tick Marks layer over the polyline
+                      decorator = L.polylineDecorator(leftLine, {
+                          patterns: [
+                              {
+                                  offset: 0,          // Where to start the ticks (0 means the beginning)
+                                  repeat: '12px',     // Put a tick mark every 50 pixels along the line
+                                  symbol: L.Symbol.dash({
+                                      pixelSize: 10,  // The length of the tick mark
+                                      pathOptions: {
+                                          color: color, // Color of the tick marks
+                                          weight: 1,        // Thickness of the tick marks
+                                          angle: 90         // Rotates the dash 90 degrees to make it a tick
+                                      }
+                                  })
+                              }
+                          ]
+                      }).addTo(map);
+          }
         }
         else
         {
@@ -938,7 +970,7 @@ var lineR = {
              return;
          }
      }
-     console.error("clearPolyline: unable to remove segmentId " + segmentId );
+     //console.error("clearPolyline: unable to remove segmentId " + segmentId );
 
     return null;
  }
@@ -1423,73 +1455,6 @@ function setBounds( pt1, pt2)
     map.fitBounds(bounds);
 }
 
-function hiLiteLine(segmentId)
-{
-
-    siArray.forEach(function(si, ix)
-    {
-        if(si.segmentId !== null && si.segmentId === segmentId)
-        {
-            line = si.line;
-            grayline = si.grayLine;
-            arrow = si.arrow;
-        }
-    });
-    var color = line.strokeColor;
-    if(hiLitedSegment != null)
-    {
-        restoreLine();
-    }
-    line.setOptions({strokeColor: "#04b4B4", cursor:'Crosshair'}) ;
-    var grayLineClr;
-    if(grayLine)
-    {
-        grayLineClr = grayLine.strokeColor;
-        grayLine.setOptions({strokeColor: "#dedede"});
-    }
-
-    if(arrow)
-    {
-        var poly;
-        poly = arrow.getPoly();
-        poly.setOptions({strokeColor: "#04b4B4", fillColor:"#04b4B4" });
-        selectedPoly = arrow.getPoly();
-    }
-
-    hiLitedSegment = {segmentId: segmentId, line: line, arrow: arrow, grayLine: grayLine,
-                      color: color, grayColor: grayLineClr};
-    return null;
-}
-
-// Find the closest point on the line
-function findClosestPointOnLineToPolygon(polyGeo, lineGeo) {
-    // Treat the polygon's outer boundary as a line
-    const polygonTarget = turf.polygonToLine(polyGeo);
-
-    let minDistance = Infinity;
-    let closestPointOnLine = null;
-
-    // Explode the polygon boundary into individual vertices (points)
-    const vertices = turf.explode(polygonTarget);
-
-    // Loop through each vertex of the polygon to find the closest spot on our polyline
-    turf.featureEach(vertices, function (currentVertex) {
-        // Find the math-checked closest point on the line from this specific vertex
-        const snapped = turf.nearestPointOnLine(lineGeo, currentVertex);
-
-        // Measure the distance between the vertex and that snapped point
-        const distance = turf.distance(currentVertex, snapped, { units: 'kilometers' });
-
-        // If it's shorter than what we found before, save it!
-        if (distance < minDistance) {
-            minDistance = distance;
-            closestPointOnLine = snapped;
-        }
-    });
-
-    return closestPointOnLine; // Returns a GeoJSON Point feature
-}
-
 function getCurrBounds()
 {
     var bounds =  map.getBounds();
@@ -1498,3 +1463,28 @@ function getCurrBounds()
     webViewBridge.cityBounds( ne.lat, ne.lng, sw.lat, sw.lng);
 
 }
+
+function hiLiteSelectedLine(segmentId)
+{
+    for (const {ix, si} of siArray.entries())
+    {
+        if(si.segmentId === segmentId)
+        {
+            si.highLiteLine();
+            return;
+        }
+    }
+}
+
+function restoreSelectedLine(segmentId)
+{
+    for (const {ix, si} of siArray.entries())
+    {
+        if(si.segmentId === segmentId)
+        {
+            si.restoreLine();
+            return;
+        }
+    }
+}
+
