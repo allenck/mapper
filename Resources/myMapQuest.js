@@ -782,7 +782,6 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
             decorator.remove();
         if(arrowDecorator)
             arrowDecorator.remove();
-
     }
 
     this.createLines = function()
@@ -792,12 +791,12 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
 
         if(tracks === 2)
         {
-          leftLine = L.polyline(path, {color: color, weight: 2, offset: -4}).addTo(map);
+          leftLine = L.polyline(path, {color: color, weight: 2, offset: -2}).addTo(map);
             leftLineColor = color;
             if(trackUsage !== "L" && trackUsage !== " ")
                 leftLineColor = "#A9A9A9";
             setEvents(leftLine);
-          rightLine = L.polyline(path, {color: color, weight: 2, offset: +4}).addTo(map);
+          rightLine = L.polyline(path, {color: color, weight: 2, offset: +2}).addTo(map);
             rightLineColor = color;
             if(trackUsage !== "R" && trackUsage !== " ")
                 rightLineColor = "#A9A9A9";
@@ -927,11 +926,20 @@ var lineR = {
     name:  "lineR"
 };
 
- // Erase a line segment
- function clearPolyline(si)
+ // Erase a line segment and remove from the map
+ function clearPolyline(segmentId)
  {
-     if(si)
-        si.remove();
+     for (const [index, si] of this.siArray.entries())
+     {
+         if(si.segmentId === segmentId)
+         {
+             si.remove();
+             this.siArray.splice(index,1);
+             return;
+         }
+     }
+     console.error("clearPolyline: unable to remove segmentId " + segmentId );
+
     return null;
  }
 
@@ -959,121 +967,70 @@ function clearMarker()
 function clearAll()
 {
     //clear all segments
-    while(this.siArray.length > 0)
+    while(this.siArray.length)
     {
-        var si = this.siArray.pop();
-        clearPolyline(si);
+        si = siArray.pop();
+        si.remove();
     }
 
     // clear other things
-
-    return null;
-}
-
-function clearAll_x()
-{
-
-    var path;
-    while(siArray.length > 0)
+    if(marker)
     {
-      var si = siArray.pop();
-      line = si.getLine();
-      line.setMap(null);
-      path = line.getPath();
-      while(path.getLength() > 0)
-      {
-          path.pop();
-      }
-      line.setPath(path);
-      line = null;
+        marker.remove();
+        marker = null;
+    }
+    if(circle)
+    {
+        circle.remove();
+        circle = null;
+    }
+    if(poly2)
+    {
+        poly2.remove();
+        poly2 = null;
+    }
+    if(rtStartMarker !== null)
+    {
+        rtStartMarker.remove();
+        rtStartMarker = null;
+    }
+    if(rtEndMarker !== null)
+    {
+        rtEndMarker.remove();
+        rtEndMarker = null;
+    }
+    if(infowindow !== null)
+    {
+        infowindow.remove();
+        if(infowindow.marker !== null)
+            infowindow.marker.remove();
+        infowindow = null;
+    }
+    clearRectangle();
+    selectedLine = null;
+  //   clearPins();
 
-      grayLine = si.getGrayLine();
-      if(grayLine)
-      {
-          grayLine.setMap(null);
-          path = grayLine.getPath();
-          while(path.getLength() > 0)
-          {
-              path.pop();
-          }
-          grayLine.setPath(path);
-          grayLine = null;
-      }
-      var showArrow = si.showArrow;
-      Arrow = si.getArrow();
-     // alert(Arrow.getInfo());
+  //   clearPinMarker();
 
-      if(Arrow )
-      {
-          Arrow.setMap();
-          if(Arrow.getMap())
-              alert(Arrow.getInfo + " setmap failed");
-          var poly = Arrow.getPoly();
-          var path = Arrow.getPath();
-          path = null;
-          poly = null;
-          Arrow = null;
-      }
-      si=null;
-  }
-  if(marker)
-  {
-      marker.remove();
-      marker = null;
-  }
-  if(circle)
-  {
-      circle.remove();
-      circle = null;
-  }
-  if(poly2)
-  {
-      poly2.setMap();
-      poly2 = null;
-  }
-  if(rtStartMarker !== null)
-  {
-      rtStartMarker.setMap();
-      rtStartMarker = null;
-  }
-  if(rtEndMarker !== null)
-  {
-      rtEndMarker.setMap();
-      rtEndMarker = null;
-  }
-  if(infowindow !== null)
-  {
-      infowindow.setMap();
-      if(infowindow.marker !== null)
-          infowindow.marker.setMap();
-      infowindow = null;
-  }
-  clearRectangle();
-  selectedLine = null;
-  clearPins();
-
-  clearPinMarker();
-
-  if(stationArray)
-      while(stationArray.getLength() > 0)
-      {
-          var stationMarker = stationArray.pop();
-          stationMarker.setMap();
-          if(stationMarker.infoWindow)
-              stationMarker.infoWindow.setMap();
-          stationMarker = null;
-      }
-  return null;
+    if(stationArray)
+        while(stationArray.length > 0)
+        {
+            var stationMarker = stationArray.pop();
+            stationMarker.remove();
+            if(stationMarker.infoWindow)
+                stationMarker.infoWindow.remove();
+            stationMarker = null;
+        }return null;
 }
 
 function getSegmentInfo(segmentId)
 {
-    if(siArray.length ===0 )
+    if(siArray.length === 0 )
     {
         console.log("siArray is empty");
         return null;
     }
-    for (const [si, index] of siArray.entries())
+    for (const [index, si] of siArray.entries())
     {
         if(si.segmentId === segmentId)
             return si;
@@ -1122,7 +1079,7 @@ function removeStationMarker(stationKey)
 {
  var count = stationArray.getLength();
  //stationArray.forEach(function(element, index)
-  for (const [element, index] of stationArray.entries())
+  for (const [index, element] of stationArray.entries())
  {
   if(index >= count)
       return;
@@ -1142,7 +1099,7 @@ function removeStationMarkers()
         return;
  var count = stationArray.length;
  //stationArray.forEach(function(element, index)
- for (const [element, index] of stationArray.entries())
+ for (const [index, element] of stationArray.entries())
  {
   if(index >= count)
       return;
@@ -1163,7 +1120,7 @@ function getStationMarkerIconType(stationKey)
  var count = stationArray.getLength();
  var rVal = "???";
  //stationArray.forEach(function(element, index)
- for (const [element, index] of stationArray.entries())
+ for (const [index, element] of stationArray.entries())
  {
   if(index >= count)
    return rVal;
@@ -1184,7 +1141,7 @@ function displayStationMarker(stationKey, bDisplay)
  var count = stationArray.getLength();
  console.error("displayStationMarker " + stationKey + " count = " + count);
  //stationArray.forEach(function(element, index)
- for (const [element, index] of stationArray.entries())
+ for (const [index, element] of stationArray.entries())
  {
   if(index >= count)
     return;
@@ -1208,7 +1165,7 @@ function updateStationMarker(stationKey, typeIcon)
  var count = stationArray.getLength();
  console.error("displayStationMarker " + stationKey + " count = " + count);
  //stationArray.forEach(function(element, index)
- for (const [element, index] of stationArray.entries())
+ for (const [index,element] of stationArray.entries())
  {
   if(index >= count)
     return;
@@ -1226,7 +1183,7 @@ function isStationMarkerDisplayed(stationKey)
  var count = stationArray.getLength();
  var rVal = "false";
  //stationArray.forEach(function(element, index)
- for (const [element, index] of stationArray.entries())
+ for (const [index,element] of stationArray.entries())
  {
   if(index >= count)
   {
@@ -1281,7 +1238,7 @@ function getPinLocations()
 {
     const pointsArray = [];
     //markerPins.forEach(function(pinMarker, index)
-    for (const [pinMarker, index] of markerPins.entries())
+    for (const [index, pinMarker] of markerPins.entries())
     {
        pointsArray.push(pinMarker.position);
        console.log(pinMarker.position);

@@ -2435,9 +2435,6 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
             //refreshSegmentCB();
          ui->ssw->refresh();
             // Display the new segment in Google Maps
-//            Object[] objArray = new Object[1];
-//            objArray[0] = sI.SegmentId;
-//            webBrowser1.Document.InvokeScript("clearPolyline"); // clears the old line
             QVariantList objArray;
             objArray<<sd.segmentId();
             m_bridge->processScript("clearPolyline", objArray);
