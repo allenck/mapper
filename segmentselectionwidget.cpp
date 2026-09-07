@@ -21,6 +21,21 @@ SegmentSelectionWidget::SegmentSelectionWidget(QWidget *parent) :
  sql = SQL::instance();
  QCompleter* completer = ui->cbStreets->completer();
 
+ connect(ui->cbSegments, &QComboBox::currentIndexChanged, this,[=](int index){
+     QColor bkColor = Qt::white;
+     if(index >=0)
+     {
+         const QModelIndex idx = ui->cbSegments->model()->index(index,0);
+         bkColor = ui->cbSegments->model()->data(idx, Qt::BackgroundRole).value<QColor>();
+     }
+     if(bkColor != Qt::red)
+     {
+         bkColor = Qt::white;
+     }
+     QPalette p = ui->cbSegments->lineEdit()->palette();
+     p.setColor(ui->cbSegments->lineEdit()->backgroundRole(),bkColor);
+     ui->cbSegments->lineEdit()->setPalette(p);
+ });
 }
 
 void SegmentSelectionWidget::initialize()
@@ -142,10 +157,15 @@ void SegmentSelectionWidget::refreshSegmentCB()
  cbSegmentInfoMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
  if(!segList.isEmpty())
  {
-     foreach(SegmentData si, segList)
+     for(int i=0; i<segList.count(); i++)
      {
+         SegmentData si=  segList.at(i);
          if(!si.toString().isEmpty())
+         {
             ui->cbSegments->addItem(si.toString(), si.segmentId());
+             if(si.pointList().count() < 2)
+                ui->cbSegments->setItemData(i, QColor(255,0,0), Qt::BackgroundRole);
+         }
      }
      return;
  }
