@@ -278,45 +278,51 @@ function getMapType()
 }
 
 var circle;
-function addMarker(i, lat, lon, icon, text, SegmentId)
+function addMarker(index, lat, lon, icon, text, segmentId)
 {
- console.log("addMarker "+  i + " " + lat+ " " + lon+ " " + icon+ " " + text+ " " + SegmentId);
- segmentId = SegmentId;
+ this.index = index;
+ this.lat = lat;
+ this.lon = lon;
+ this.icon = icon;
+ this.text = text;
+ this.segmentId = segmentId;
+
+ console.log("addMarker "+  index + " " + lat+ " " + lon+ " " + icon+ " " + text+ " " + segmentId);
   var position = L.latLng(lat,lon);
 
  //siArray.forEach(function(si, ix)
- for(const [ix,si] of siArray.entries())
+ for(const si of siArray)
  {
   if(si.segmentId === segmentId)
   {
       currSegment = si;
-      break;
   }
  };
- // var line = currSegment.line;
- // var grayLine = currSegment.grayLine;
- // var arrow = currSegment.arrow;
  if(marker)
  {
   marker.remove();
   marker = null;
  }
  //marker.brkpt();
- webViewBridge.setDebug("add marker at lat: " + lat + " lon: " + lon + " point: " + i);
+ webViewBridge.setDebug("add marker at lat: " + lat + " lon: " + lon + " point: " + index);
  //window.external.showSegmentsAtPoint(lat,lon);
- webViewBridge.showSegmentsAtPoint(lat,lon, SegmentId);
+ webViewBridge.showSegmentsAtPoint(lat,lon, segmentId);
  if(typeof icon == "number")
  {
      if(icon === -1) // use default icon
      {
+         var iconUrl = 'https://assets.mapquestapi.com/icon/v2/marker-red.png';
+
+         if(Number(text) >= 0)
+             iconUrl = 'https://assets.mapquestapi.com/icon/v2/marker-' + text + '.png';
          var myCustomIcon = L.icon({
-            iconUrl: 'https://assets.mapquestapi.com/icon/v2/marker-red.png', // Your URL here
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-         });
+               iconUrl: iconUrl, // Your URL here
+               shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+               iconSize: [25, 41],
+               iconAnchor: [12, 41],
+               popupAnchor: [1, -34],
+               shadowSize: [41, 41]
+            });
 
          // marker = new google.maps.marker.AdvancedMarkerElement({map: map, position: new google.maps.LatLng(lat, lon),
          //         gmpDraggable: true,  content: pin.element});
@@ -372,65 +378,35 @@ function addMarker(i, lat, lon, icon, text, SegmentId)
                          draggable: true,
                          icon: icon}).addTo(map);
 
- marker.i = i;
+ marker.icon  = icon;
 
  //google.maps.event.addListener(marker, "drag", function(pt) {
   marker.on('drag', function(pt){
   //window.external.SetDebug("drag end " + pt.latLng.lat() + ", " + pt.latLng.lng());
-  var path = currSegment.path;
+  //var path = currSegment.path;
   //path.setAt(i,  pt.latLng );
-  path[i] = pt;
-  // if(grayLine)
-  //   grayLine.setPath(path);
-  // if(arrow)
-  //     arrow.setMap(null);
+  currSegment.path[index] = pt.latlng;
+      currSegment.remove();
+      currSegment.createLines();
+
  });
 
  //google.maps.event.addListener(marker, "dragend", function(pt) {
  marker.on('dragend', function(event) {
-     var changedMarker = event.target;
-     var position = changedMarker.getLatLng();
+     var si = getSegmentInfo(segmentId);
+     var position0 = si.path[index];
+     var position = event.target.getLatLng();
 
-     var si = getSegmentInfo(SegmentId);
      console.log("New position: " + position.lat + ", " + position.lng);
-     webViewBridge.movePoint(SegmentId, i, pt.lat, pt.lng);
-     currSegment.path[i]= position;
-     if(currSegment.leftLine)
-     {
-         currSegment.leftLine.remove();
-         currSegment.leftLine.setLatLngs(path);
-         currSegment.leftLine.addTo(map);
-     }
-     if(currSegment.rightLine)
-     {
-         currSegment.rightLine.remove();
-         currSegment.rightLine.setLatLngs(path);
-         currSegment.rightLine.addTo(map);
-     }
-     if(currSegment.singleLine)
-     {
-         currSegment.singleLine.remove();
-         currSegment.singleLine.setLatLngs(path);
-         currSegment.singleLine.addTo(map);
-     }
-     if(currSegment.decorator)
-     {
-         currSegment.decorator.remove();
-         currSegment.decorator.setLatLngs(path);
-         currSegment.decorator.addTo(map);
-     }
+     webViewBridge.movePoint(segmentId, index, position.lat, position.lng);
+     currSegment.path[index]= position;
+     currSegment.remove();
+     currSegment.createLines();
 
-     webViewBridge.movePoint(segmentId, i, position.lat, position.lng);
 
-     var array = [];
-     //new Array(0,0);
-     //path.forEach(function(pt, ix)
-     for ([ix, pt] of currSegment.path.entries())
-     {
-      array.push(position.lat);
-      array.push(position.lng);
-     };
-     webViewBridge.movePointX(segmentId, ix, position.lat, position.lng, array);
+     webViewBridge.movePoint(segmentId, index, position.lat, position.lng);
+
+     webViewBridge.movePointX(segmentId, index, position.lat, position.lng, currSegment.getPointArray());
  });
 
  //google.maps.event.addListener(marker, "rightclick", function(){
@@ -532,7 +508,7 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
     {
      var array = [];
      //path.forEach(function(pt, ix)
-     for ([pt,ix] of path.entries())
+     for ([ix,pt] of path.entries())
      {
       array.push(pt.lat);
       array.push(pt.lng);
@@ -612,36 +588,41 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
         //google.maps.event.addListener(this.line, "rightclick", function(e)
         line.on("contextmenu", function(e)
         {
-            var si;
-            si = hiLiteSelectedLine();
+            // var si;
+            // si = hiLiteLine();
             // var path = si.getPath();
             // var len = path.getLength();
 
-            webViewBridge.selectSegment(0,si.segmentId);
-            webViewBridge.setLen(len);
+            webViewBridge.selectSegment(0,segmentId);
+            webViewBridge.setLen(path.length);
             var i;
-            var mIx = 1;
-            for(i=0; i < path.getLength()-1; i++)
+            // var mIx = 1;
+            for(i=0; i < path.length-1; i++)
             {
-                begin = path.getAt(i);
-                end = path.getAt(i+1);
-                bounds = setBounds( begin, end);
-                if( bounds.contains(e.latLng))
+                begin = path[i];
+                end = path[i+1];
+                if(begin.lat === end.lat &&  begin.lng === end.lng)
+                    continue;
+                bounds = L.latLngBounds( begin, end);
+                if( bounds.contains(e.latlng))
                 {
                     break;
                 }
             }
-            si.insertPoint(i, e.latLng); // insert point after i
-            webViewBridge.insertPoint(si.segmentId, i, e.latLng.lat, e.latLng.lng);
-            webViewBridge.insertPointX(si.segmentId, i, si.getPointArray());
 
-            webViewBridge.selectSegment(i+1, si.segmentId);
-            webViewBridge.selectSegmentX(i+1, si.segmentId, si.getPointArray());
+            //insertPoint(i, e.latlng); // insert point after i
+            path.splice(i,0,e.latlng);
+
+            webViewBridge.insertPoint(segmentId, i, e.latlng.lat, e.latlng.lng);
+            // webViewBridge.insertPointX(segmentId, i, this.getPointArray());
+
+            webViewBridge.selectSegment(i+1, segmentId);
+            // webViewBridge.selectSegmentX(i+1, segmentId, this.getPointArray());
 
             addModeOff();
             if(i>0)
               mIx=0;
-            addMarker(i+1, e.latLng.lat, e.latLng.lng, mIx, si.segmentName + " route:" + si.routeName, si.segmentId);
+            addMarker(i+1, e.latlng.lat, e.latlng.lng, mIx, segmentName + " route:" + routeName, segmentId);
         });
     }  // end SegmentInfo.setEvents()
 
@@ -679,22 +660,12 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
 
 
     // insert new point after pt
-    this.insertPoint = function(pt, pos)
+    insertPoint = function(pt, pos)
     {
-        for(i=0; i < path.getLength()-1; i++)
-        {
-            begin = path.getAt(i);
-            end = path.getAt(i+1);
-            bounds = setBounds( begin, end);
-            if( bounds.contains(pos))
-            {
-                webViewBridge.setDebug("Insert " + i);
-                path.insertAt(i+1, pos);
-                this.setPath(path);
-                return true;
-            }
-        }
-        return false;
+        path.splice(pt, 0, pos);
+        remove();
+        createLines();
+
     }
 
     // move polyline's point at pt
@@ -796,6 +767,10 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
             decorator.remove();
         if(arrowDecorator)
             arrowDecorator.remove();
+        if(circle)
+        {
+            circle.remove();
+        }
     }
 
     this.createLines = function()
@@ -1466,27 +1441,19 @@ function getCurrBounds()
 
 }
 
-function hiLiteSelectedLine(segmentId)
-{
-    for (const {ix, si} of siArray.entries())
-    {
-        if(si.segmentId === segmentId)
-        {
-            si.highLiteLine();
-            return;
-        }
-    }
-}
+function getAdjacentPoints(latlngs, targetLatLng) {
+    //const latlngs = polyline.getLatLngs(); // Array of L.LatLng points
 
-function restoreSelectedLine(segmentId)
-{
-    for (const {ix, si} of siArray.entries())
-    {
-        if(si.segmentId === segmentId)
-        {
-            si.restoreLine();
-            return;
-        }
-    }
+    // Find the index of the target point (using a basic coordinate match)
+    const index = latlngs.findIndex(pt =>
+        pt.lat === targetLatLng.lat && pt.lng === targetLatLng.lng
+    );
+
+    if (index === -1) return { prev: null, next: null }; // Point not found
+
+    return {
+        prev: index > 0 ? latlngs[index - 1] : null,
+        next: index < latlngs.length - 1 ? latlngs[index + 1] : null
+    };
 }
 
