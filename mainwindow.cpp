@@ -362,6 +362,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
       p.setColor(ui->cbRoute->lineEdit()->backgroundRole(),bkColor);
       ui->cbRoute->lineEdit()->setPalette(p);
   });
+
   connect(ui->cbRoute, &QComboBox::currentTextChanged, this,[=](QString  text){
       int index = ui->cbRoute->currentIndex();
       QColor bkColor = Qt::white;
@@ -4080,7 +4081,7 @@ void MainWindow::cbSegmentsSelectedValueChanged(SegmentInfo si)
     }
     if(ui->chkAddPt->isChecked())
     {
-     m_bridge->processScript("addModeOn");
+     m_bridge->processScript("addModeOn", QString::number(m_segmentId));
      m_bAddMode = true;
     }
     addPointModeAct->setChecked(ui->chkAddPt->isChecked());
@@ -4883,7 +4884,7 @@ void MainWindow::addSegment()
         m_bridge->processScript("createSegment",objArray);
 
         //webBrowser1.Document.InvokeScript("addModeOn");
-        m_bridge->processScript("addModeOn");
+        m_bridge->processScript("addModeOn", QString::number(m_segmentId));
         m_bAddMode = true;
 
         SegmentInfo si = sql->getSegmentInfo(m_segmentId);
@@ -5014,7 +5015,6 @@ void MainWindow::selectSegment(int seg)
  ui->txtNewerName->setText(si.newerName());
  ui->txtSegment->setText(si.description());
  ui->txtStreet->setText(ui->txtSegment->streetName());
- m_bridge->processScript("setCurrentSegment", QString("%1").arg(seg));
 }
 
 void MainWindow::segmentChanged(qint32 changedSegment, qint32 newSegment)
@@ -5167,7 +5167,7 @@ void MainWindow::addModeToggled(bool isChecked)
     if(!isChecked)
         m_bridge->processScript("addModeOff");
     else
-        m_bridge->processScript("addModeOn");
+        m_bridge->processScript("addModeOn", QString::number(m_segmentId));
 }
 
 void MainWindow::displayStationMarkersToggeled(bool bChecked)

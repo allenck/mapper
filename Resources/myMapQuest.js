@@ -1068,11 +1068,17 @@ function getSegmentInfo(segmentId)
 
 function addModeOn(segmentId)
 {
-    currentSegment = getSegmentInfo(segmentId);
-    bAdding = true;
-    // map.setOptions({draggableCursor:'Crosshair'});
-    map.getContainer().style.cursor = 'crosshair';
-    webViewBridge.addPointMode(bAdding);
+    //currentSegment = getSegmentInfo(segmentId);
+    for (const [ix, si] of siArray.entries())
+    {
+       if(si.segmentId !== null && si.segmentId === segmentId)
+       {
+            currSegment = si;
+            bAdding = true;
+            map.getContainer().style.cursor = 'crosshair';
+            webViewBridge.addPointMode(bAdding);
+       }
+    }
     return null;
 }
 
@@ -1507,23 +1513,3 @@ function addNewPoint(e)
     }
 }
 
-function setCurrentSegment(segmentId)
-{
-    for (const [ix, si] of siArray.entries())
-    {
-        if(si.segmentId !== null && si.segmentId === segmentId)
-        {
-            //line.breakpt();
-            currSegment = si;
-            var path = currSegment.path;
-            var len = path.length;
-            webViewBridge.setLen(len);
-            //hiLiteSelectedLine(si.segmentId);
-            webViewBridge.selectSegment(0, segmentId);
-            webViewBridge.selectSegmentX(0, segmentId, currSegment.getPointArray());
-
-            return true;
-        }
-    };
-    return false;
-}

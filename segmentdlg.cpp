@@ -832,7 +832,6 @@ void SegmentDlg::btnOK_Click()  // SLOT
    return;
   }
   si = sql->getSegmentInfo(_newSegmentId);
-  WebViewBridge::instance()->processScript("setCurrentSegment", QString::number(_newSegmentId));
   if(!ui->cbLocation->currentText().isEmpty())
   {
    QString saveLoc = ui->cbLocation->currentText();
