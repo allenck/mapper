@@ -134,6 +134,11 @@ function initMap()
    webViewBridge.clickPoint(event.latlng.lat, event.latlng.lng);
   });
 
+    map.on('dblclick', function(event)
+    {
+        addNewPoint(event);
+    });
+
     siArray = [];
   var idleTimeout;
   var idleDelay = 500; // Time in milliseconds
@@ -386,9 +391,7 @@ function addMarker(index, lat, lon, icon, text, segmentId)
   //var path = currSegment.path;
   //path.setAt(i,  pt.latLng );
   currSegment.path[index] = pt.latlng;
-      currSegment.remove();
-      currSegment.createLines();
-
+  currSegment.setPath(currSegment.path);
  });
 
  //google.maps.event.addListener(marker, "dragend", function(pt) {
@@ -399,9 +402,7 @@ function addMarker(index, lat, lon, icon, text, segmentId)
 
      console.log("New position: " + position.lat + ", " + position.lng);
      webViewBridge.movePoint(segmentId, index, position.lat, position.lng);
-     currSegment.path[index]= position;
-     currSegment.remove();
-     currSegment.createLines();
+     currSegment.movePoint(index, position);
 
 
      webViewBridge.movePoint(segmentId, index, position.lat, position.lng);
@@ -516,7 +517,7 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
      return array;
     }
 
-    function setEvents(line)
+    function setEvents(line, target)
     {
         // Select segment (click)
         line.on( "mouseover", function(e){
@@ -678,7 +679,10 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
             rightLine.setLatLngs(path);
         if(singleLine)
             singleLine.setLatLngs(path);
-
+        if(decorator)
+            decorator.setLatLngs(path);
+        if(arrowDecorator)
+            arrowDecorator.setLatLngs(path);
         return path;
     }
 
@@ -728,6 +732,19 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
             this.placeArrow(path);
         }
         bAdding = false
+    }
+    this.setPath = function(path)
+    {
+        if(leftLine)
+            leftLine.setLatLngs(path);
+        if(rightLine)
+            rightLine.setLatLngs(path);
+        if(singleLine)
+            singleLine.setLatLngs(path);
+        if(decorator)
+            decorator.setLatLngs(path);
+        if(arrowDecorator)
+            arrowDecorator.setLatLngs(path);
     }
 
     // function to determine if the supplied point is on a begining or end linesegement of a segment
@@ -784,12 +801,12 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
           leftLineColor = color;
           if(trackUsage !== "L" && trackUsage !== " ")
             leftLineColor = "#A9A9A9";
-          setEvents(leftLine);
+          setEvents(leftLine, this);
           rightLine = L.polyline(path, {color: color, weight: 2, offset: +2}).addTo(map);
           rightLineColor = color;
           if(trackUsage !== "R" && trackUsage !== " ")
           rightLineColor = "#A9A9A9";
-          setEvents(rightLine);
+          setEvents(rightLine, this);
           if(showArrow)
                 arrowDecorator = L.polylineDecorator(rightLine,{
                     patterns: [
@@ -825,7 +842,7 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
         {
             singleLine = L.polyline(path,{color: color, weight: 2}).addTo(map);
             singleLineColor = color;
-            setEvents(singleLine);
+            setEvents(singleLine, this);
             if(showArrow)
                 arrowDecorator = L.polylineDecorator(singleLine,{
                     patterns: [
@@ -1457,3 +1474,56 @@ function getAdjacentPoints(latlngs, targetLatLng) {
     };
 }
 
+function addNewPoint(e)
+{
+    if(bAdding)
+    {
+        if(!currSegment)
+            return;
+        // var line = currSegment.line;
+
+        // if(line === null)
+        // {
+        //     //OK                    window.external.SetDebug("No line defined " + e.latLng.lat() + " " + e.latLng.lng());
+        //     webViewBridge.setDebug("No line defined " + e.latLng.lat() + " " + e.latLng.lng());
+        //     return;
+        // }
+        var path = currSegment.path;
+        if(path.length === 0)
+        {
+            addMarker(path.length, e.latlng.lat, e.latlng.lng, 1, currSegment.segmentName, currSegment.segmentId);
+        }
+        path.push(e.latlng);
+        //getPoints();
+        if(path.length > 0)
+            // window.external.addPoint();
+            webViewBridge.addPoint(0, e.latlng.lat, e.latlng.lng);
+        if(path.length > 1)
+        {
+
+        }
+
+        //currSegment.placeArrow(path);
+    }
+}
+
+function setCurrentSegment(segmentId)
+{
+    for (const [ix, si] of siArray.entries())
+    {
+        if(si.segmentId !== null && si.segmentId === segmentId)
+        {
+            //line.breakpt();
+            currSegment = si;
+            var path = currSegment.path;
+            var len = path.length;
+            webViewBridge.setLen(len);
+            //hiLiteSelectedLine(si.segmentId);
+            webViewBridge.selectSegment(0, segmentId);
+            webViewBridge.selectSegmentX(0, segmentId, currSegment.getPointArray());
+
+            return true;
+        }
+    };
+    return false;
+}

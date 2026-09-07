@@ -4266,32 +4266,32 @@ QString MainWindow::ProcessScript(QString func, QString params)
 void MainWindow::addPoint(int pt, double lat, double lon)
 {
     //SQL sql;
-    //getArray(); // get points from display.
-    SegmentInfo si = sql->getSegmentInfo(m_segmentId);
-    m_points = si.pointList();
-    m_points.append(LatLng(lat,lon));
-    m_nbrPoints = m_points.size();
-    //int begin = (int)m_nbrPoints - 2, End = (int)m_nbrPoints - 1;
-#if 1
-    if(m_nbrPoints == 2 && si.startLat() == 0 && si.startLon() == 0)
-    {
-     si.addPoint(m_points.at(0));
-     si.setStartLat(m_points.at(0).lat());
-     si.setStartLon(m_points.at(1).lon());
-    }
-    if(si.segmentId() == m_segmentId && m_nbrPoints > 0)
-    {
-     si.addPoint(m_points.at(m_nbrPoints-1 ));
-    }
-    else
-    {
-     si.addPoint(m_points.at(0));
-    }
-#endif
-    // if(m_nbrPoints > 1)
-    //     si.displaySegment(si.startDate().toString("yyyy/MM/dd"), getColor(_rd.tractionType()), " ",false);
+        //getArray(); // get points from display.
+        SegmentInfo si = sql->getSegmentInfo(m_segmentId);
+        m_points = si.pointList();
+        m_points.append(LatLng(lat,lon));
+        m_nbrPoints = m_points.size();
+        //int begin = (int)m_nbrPoints - 2, End = (int)m_nbrPoints - 1;
+    #if 1
+        if(m_nbrPoints == 2 && si.startLat() == 0 && si.startLon() == 0)
+        {
+         si.addPoint(m_points.at(0));
+         si.setStartLat(m_points.at(0).lat());
+         si.setStartLon(m_points.at(1).lon());
+        }
+        if(si.segmentId() == m_segmentId && m_nbrPoints > 0)
+        {
+         si.addPoint(m_points.at(m_nbrPoints-1 ));
+        }
+        else
+        {
+         si.addPoint(m_points.at(0));
+        }
+    #endif
+        // if(m_nbrPoints > 1)
+        //     si.displaySegment(si.startDate().toString("yyyy/MM/dd"), getColor(_rd.tractionType()), " ",false);
 
-    ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(si.pointList().count()));
+        ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(si.pointList().count()));
 }
 #else
 void MainWindow::addPoint(int pt, double lat, double lon)
@@ -5014,6 +5014,7 @@ void MainWindow::selectSegment(int seg)
  ui->txtNewerName->setText(si.newerName());
  ui->txtSegment->setText(si.description());
  ui->txtStreet->setText(ui->txtSegment->streetName());
+ m_bridge->processScript("setCurrentSegment", QString("%1").arg(seg));
 }
 
 void MainWindow::segmentChanged(qint32 changedSegment, qint32 newSegment)

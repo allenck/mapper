@@ -818,6 +818,12 @@ void SegmentDlg::btnOK_Click()  // SLOT
    si.setDoubleDate(ui->dateStart->date());
   SegmentDescription* sdr = new SegmentDescription(ui->txtNewName->text());
   si.setFormatOK(sdr->isValidFormat(si.description()));
+  WebViewBridge::instance()->processScript("getCenter");
+  si.setStartLat(MainWindow::instance()->m_latitude);
+  si.setEndLat(MainWindow::instance()->m_latitude);
+  si.setStartLon(MainWindow::instance()->m_longitude);
+  si.setEndLon(MainWindow::instance()->m_longitude);
+
   _newSegmentId = sql->addSegment(si, &bAlreadyExists, false);
   if (_newSegmentId < 0)
   {
@@ -826,6 +832,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
    return;
   }
   si = sql->getSegmentInfo(_newSegmentId);
+  WebViewBridge::instance()->processScript("setCurrentSegment", QString::number(_newSegmentId));
   if(!ui->cbLocation->currentText().isEmpty())
   {
    QString saveLoc = ui->cbLocation->currentText();
