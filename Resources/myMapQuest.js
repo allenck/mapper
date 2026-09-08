@@ -449,9 +449,9 @@ function addMarker(index, lat, lon, icon, text, segmentId)
  }
  //circle = new google.maps.Circle({center:new google.maps.LatLng(lat, lon), fillOpacity: 0, map: map, strokeColor:"#000000", strokeWeight:1, radius:20});
  circle = L.circle([lat,lon], {
-     color: 'red',
-     fillColor: '#f03',
-     fillOpacity: 0.5,
+     color: 'black',
+     fillColor: 'white',
+     fillOpacity: 0,
      radius: 20
  }).addTo(map);
  // if(bGeocoderRequest)
@@ -721,7 +721,16 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
                 addMarker(path.getLength(), e.latLng.lat(), e.latLng.lng(), 1, segment.getInfo(), segment.segmentId);
             }
             var pt =path.push(e.latLng);
-            this.setPath(path);
+            if(leftLine)
+                leftLine.setLatLngs(path);
+            if(rightLine)
+                rightLine.setLatLngs(path);
+            if(singleLine)
+                singleLine.setLatLngs(path);
+            if(decorator)
+                decorator.setLatLngs(path);
+            if(arrowDecorator)
+                arrowDecorator.setLatLngs(path);
             //getPoints();
             if(path.length > 0)
             {
@@ -729,10 +738,24 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
                 window.webViewBridge.addPoint(pt, e.latLng.lat(), e.latLng.lng());
                 //window.webViewBridge.addPointX(pt, getPointArray());
             }
-            this.placeArrow(path);
+            var line;
+            if(leftLine)
+                line = leftLine;
+            if(singleLine)
+                line = singleLine;
+            arrowDecorator = L.polylineDecorator(line,{
+                patterns: [
+                    {
+                        offset: '100%',
+                        repeat: 0,
+                        symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions:{color: color} })
+                    }
+                ]
+            }).addTo(map);
         }
         bAdding = false
     }
+
     this.setPath = function(path)
     {
         if(leftLine)
@@ -819,24 +842,41 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
               }).addTo(map);
           if(dash ===2)
           {
-              //  Add the Tick Marks layer over the polyline
-                      decorator = L.polylineDecorator(leftLine, {
-                          patterns: [
-                              {
-                                  offset: 0,          // Where to start the ticks (0 means the beginning)
-                                  repeat: '12px',     // Put a tick mark every 50 pixels along the line
-                                  symbol: L.Symbol.dash({
-                                      pixelSize: 10,  // The length of the tick mark
-                                      pathOptions: {
-                                          color: color, // Color of the tick marks
-                                          weight: 1,        // Thickness of the tick marks
-                                          angle: 90         // Rotates the dash 90 degrees to make it a tick
-                                      }
+              // //  Add the Tick Marks layer over the polyline
+              //         decorator = L.polylineDecorator(leftLine, {
+              //             patterns: [
+              //                 {
+              //                     offset: 0,          // Where to start the ticks (0 means the beginning)
+              //                     repeat: '12px',     // Put a tick mark every 50 pixels along the line
+              //                     symbol: L.Symbol.dash({
+              //                         pixelSize: 10,  // The length of the tick mark
+              //                         pathOptions: {
+              //                             color: color, // Color of the tick marks
+              //                             weight: 1,        // Thickness of the tick marks
+              //                             angle: 90         // Rotates the dash 90 degrees to make it a tick
+              //                         }
+              //                     })
+              //                 }
+              //             ]
+              //         }).addTo(map);
+              decorator = L.polylineDecorator(leftline, {
+                  patterns: [
+                      {
+                          offset: '5%',
+                          repeat: '50px',
+                          symbol: L.Symbol.marker({
+                              rotate: true, // Tells the decorator to rotate the marker along the line path
+                              markerOptions: {
+                                  icon: L.divIcon({
+                                      className: 'my-custom-dash',
+                                      html: '<div style="width:10px; height:2px; background:black;"></div>',
+                                      iconSize: [10, 2]
                                   })
                               }
-                          ]
-                      }).addTo(map);
-          }
+                          })
+                      }
+                  ]
+              }).addTo(map);}
         }
         else
         {
