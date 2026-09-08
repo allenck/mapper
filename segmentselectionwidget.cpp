@@ -157,6 +157,7 @@ void SegmentSelectionWidget::refreshSegmentCB()
  cbSegmentInfoMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
  if(!segList.isEmpty())
  {
+     setCursor(Qt::WaitCursor);
      for(int i=0; i<segList.count(); i++)
      {
          SegmentData si=  segList.at(i);
@@ -164,9 +165,10 @@ void SegmentSelectionWidget::refreshSegmentCB()
          {
             ui->cbSegments->addItem(si.toString(), si.segmentId());
              if(si.pointList().count() < 2)
-                ui->cbSegments->setItemData(i, QColor(255,0,0), Qt::BackgroundRole);
+                ui->cbSegments->setItemData(i, QColor("#FFADB0"), Qt::BackgroundRole);
          }
      }
+     setCursor(Qt::ArrowCursor);
      return;
  }
  foreach(SegmentData si, cbSegmentInfoMap.values())
