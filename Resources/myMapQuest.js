@@ -667,6 +667,14 @@ function initMap()
     webViewBridge.debug("initMap started");
     connectSlots();
 
+    const osmTiles = new L.TileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {
+        attribution:
+          '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+      },
+    );
+
   L.mapquest.key = MapQuestKey;
   var Lat = webViewBridge.lat;
   var Lon = webViewBridge.lng;
@@ -677,7 +685,8 @@ function initMap()
     center: [Lat, Lon],
     layers: L.mapquest.tileLayer('map'),
     zoom: zoom,
-    doubleClickZoom: false
+    doubleClickZoom: false,
+    renderer: new SvgPatternRenderer(),
   });
 
   map.addControl(L.mapquest.control());
@@ -726,6 +735,8 @@ function initMap()
   // });
 
     webViewBridge.mapInit();
+
+
 } // end initMap
 
 function isAddModeOn()
@@ -1372,22 +1383,22 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
         if(dash ===2)
         {
             //  Add the Tick Marks layer over the polyline
-                    decorator = L.polylineDecorator(line, {
-                        patterns: [
-                            {
-                                offset: 0,          // Where to start the ticks (0 means the beginning)
-                                repeat: '12px',     // Put a tick mark every 50 pixels along the line
-                                symbol: L.Symbol.dash({
-                                    // pixelSize: 10,  // The length of the tick mark
-                                    // pathOptions: {
-                                    //     color: color, // Color of the tick marks
-                                    //     weight: 1,        // Thickness of the tick marks
-                                    //     //angle: 90         // Rotates the dash 90 degrees to make it a tick
-                                      pixelSize: 0
-                                })
-                            }
-                        ]
-                    }).addTo(map);
+            decorator = L.polylineDecorator(line, {
+                patterns: [
+                    {
+                        offset: 0,          // Where to start the ticks (0 means the beginning)
+                        repeat: '12px',     // Put a tick mark every 50 pixels along the line
+                        symbol: L.Symbol.dash({
+                            // pixelSize: 10,  // The length of the tick mark
+                            // pathOptions: {
+                            //     color: color, // Color of the tick marks
+                            //     weight: 1,        // Thickness of the tick marks
+                            //     //angle: 90         // Rotates the dash 90 degrees to make it a tick
+                              pixelSize: 0
+                        })
+                    }
+                ]
+            }).addTo(map);
             // decorator = L.polylineDecorator(line, {
             //     patterns: [
             //         {
@@ -1406,6 +1417,20 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
             //         }
             //     ]
             // }).addTo(map);
+            // var feature = {
+            //     type: "Feature",
+            //     properties: {
+            //       label: "tick marks every 20% of clipped view",
+            //       pattern: "M-4 0 4 0,,20%,T",
+            //     },
+            //     geometry: {
+            //       type: "LineString",
+            //       coordinates: [
+            //         path
+            //       ],
+            //     },
+            //   };
+            // const decorator = new L.GeoJSON(feature).addTo(map);
         }
         // events
         map.on( "mousemove", function(e){
