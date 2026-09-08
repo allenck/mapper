@@ -53,235 +53,6 @@ var images = {"default":0, "start":1, "end":2, "shadow":3, "arrow":4, "arrowShad
   "blue-red":18,"orange":19, "bvgtram":20, "subway":21, "subwayshadow":22, "purple":23,
   "rail":24, "bus":25};
 
-// deprecated
-function processScript(func, parms)
-{
-  //alert("func: " + func + " parms: " +parms);
-  var call = "var myRslt = " +func;
-  call += "(";
-  call += parms;
-  call += ");";
-  call += "return myRslt;";
-  //alert(call);
-  try
-  {
-   //eval(call);
-   var myFucn =  Function(call);
-   var fRslt = myFucn();
-   if(fRslt === null) return;
-   if( fRslt instanceof Array)
-    webViewBridge.scriptArrayResult( fRslt);
-   else
-   {
-    if("fRslt" in window)
-     webViewBridge.scriptResult( fRslt);
-    else
-     console.trace("bad return: '" + call + fRslt + "'");
-   }
-  }
-  catch (err)
-  {
-   txt=err;
-   //alert("Error ocurred calling " + func + " '"+ parms + "'\n" + txt);
-   //console.error("Error ocurred calling " + func + " '"+ parms + "'\n" + txt);
-    webViewBridge.debug("Error ocurred calling " + func + " '"+ parms + "'\n" + txt);
-   //console.trace("trace");
-  }
-}
-
-window.initialize = function() // called by WebChannel .ie "onLoad()"
-{
-  initMap();
-}
-
-function initMap()
-{
-    console.log("begin GoogleMaps.js initMap()");
-    webViewBridge.debug("initMap started");
-    connectSlots();
-
-  L.mapquest.key = MapQuestKey;
-  var Lat = webViewBridge.lat;
-  var Lon = webViewBridge.lng;
-  var zoom = webViewBridge.zoom;
-  var mapTypeId = webViewBridge.maptype;
-  var mapDiv = document.getElementById("map");
-   map = L.mapquest.map('map', {
-    center: [Lat, Lon],
-    layers: L.mapquest.tileLayer('map'),
-    zoom: zoom,
-    doubleClickZoom: false
-  });
-
-  map.addControl(L.mapquest.control());
-
-   webViewBridge.queryOverlay();
-
-  webViewBridge.displayZoom(map.getZoom());
-
-  map.on("zoomend", function() {
-   webViewBridge.displayZoom(map.getZoom());
-  });
-
-  map.on( "contextmenu", function(event) {
-    // Prevent the browser's default right-click context menu from opening
-    L.DomEvent.preventDefault(event);
-
-    webViewBridge.rightClicked(event.latlng.lat, event.latlng.lng);
-  });
-
-  map.on( "click", function(event) {
-   webViewBridge.clickPoint(event.latlng.lat, event.latlng.lng);
-  });
-
-    map.on('dblclick', function(event)
-    {
-        addNewPoint(event);
-    });
-
-    siArray = [];
-  var idleTimeout;
-  var idleDelay = 500; // Time in milliseconds
-  // Function that runs when the map becomes idle
-  // function onMapIdle() {
-  //     console.log('Map is idle! Current bounds:', map.getBounds());
-  //     // Add your logic here (e.g., fetch markers via AJAX)
-  //   webViewBridge.mapInit();
-  //   webViewBridge.debug("initMap complete");}
-
-  // // Listen for movement and zoom events
-  // map.on('moveend zoomend', function() {
-  //     // Clear the previous timeout if the user keeps moving
-  //     clearTimeout(idleTimeout);
-
-  //     // Set a new timeout
-  //     idleTimeout = setTimeout(onMapIdle, idleDelay);
-  // });
-
-    webViewBridge.mapInit();
-} // end initMap
-
-
-// deprecated
-function processScript2(func, parms, name, value)
-{
-  alert("func: " + func + " parms: " +parms);
-  //eval("comments = value;");
-  window["comments"] = value;
-  var call = "var myRslt = " +func;
-  call += "(";
-  call += parms;
-  call += ");";
-  call += "return myRslt;";
-  //alert(call);
-  try
-  {
-      //eval(call);
-      var myFucn =  Function(call);
-      var fRslt = myFucn();
-      if(fRslt === null) return;
-      if("fRslt" in window)
-          webViewBridge.scriptResult( fRslt);
-  }
-  catch (err)
-  {
-      txt=err;
-      alert("Error occured calling " + func + "\n" + txt);
-  }
-}
-
-function processScript3(func, objArray, count)
-{
-  var i = 0;
-  if(count <=0)
-  {
-      alert("invalid call to processScript3");
-      return;
-  }
-  var parms = "var0";
-  //eval("var0 = objArray[0];");
-  window['var0'] = objArray[0];
-  var call = "var myRslt = " +func;
-  call += "(";
-  for(i=1; i < count; i++)
-  {
-      //eval("var"+i+"=objArray[i];");
-      window['var'+i] = objArray[i];
-      parms += ",var"+i;
-  }
-  call += parms;
-  call += ");";
-  call += "return myRslt;";
-  //alert(call);
-  try
-  {
-      //eval(call);
-      var myFucn =  Function(call);
-      var fRslt = myFucn();
-      if(fRslt === null) return;
-      if( fRslt instanceof Array)
-          webViewBridge.scriptArrayResult( fRslt);
-      else
-      {
-          if("fRslt" in window)
-              webViewBridge.scriptFunctionResult(func, fRslt);
-      }
-  }
-  catch (err)
-  {
-      txt=err;
-      //alert("Error occured calling " + func + "\n" + call+"\n"+txt);
-    webViewBridge.debug("Error occurred calling " + func + "\n" + call+"\n"+txt);
-  }
-}
-var connected = false;
-//We use this function because connect statements resolve their target once, immediately
-//not at signal emission so they must be connected once the webViewBridge object has been added to the frame
-//! <!--  [ connect slots ] -->
-function connectSlots()
-{
-  if ( !connected ) {
-  webViewBridge.executeScript.connect(this, processScript);
-  webViewBridge.executeScript2.connect(this, processScript2);
-  webViewBridge.executeScript3.connect(this, processScript3);
-  connected = true;
-  }
-  return;
-}
-
-function setCenter(Lat, Lon)
-{
-  //map.setCenter(L.latLng(Lat, Lon));
-  map.panTo([Lat,Lon]);
- // map.setOptions({disableDoubleClickZoom: true });
- return null;
-
-}
-
-function getCenter()
-{
- var latLng = map.getCenter();
- webViewBridge.setCenter(latLng.lat, latLng.lng, map.getZoom(), /*map.getMapTypeId()*/"");
- return latLng;
-}
-
-function setZoom(zoom)
-{
-    map.setZoom(zoom);
-    return null;
-}
-function setMapType(mapTypeId)
-{
-    if(mapTypeId === "")
-        mapTypeId = "ROADMAP";
-    map.setMapTypeId(mapTypeId);
-    return null;
-}
-function getMapType()
-{
-    return map.getMapTypeId();
-}
-
 var circle;
 function addMarker(index, lat, lon, icon, text, segmentId)
 {
@@ -459,6 +230,274 @@ function addMarker(index, lat, lon, icon, text, segmentId)
  return;
 }
 
+function addModeOn(segmentId)
+{
+    //currentSegment = getSegmentInfo(segmentId);
+    for (const [ix, si] of siArray.entries())
+    {
+       if(si.segmentId !== null && si.segmentId === segmentId)
+       {
+            currSegment = si;
+            bAdding = true;
+            map.getContainer().style.cursor = 'crosshair';
+            webViewBridge.addPointMode(bAdding);
+       }
+    }
+    return null;
+}
+
+function addModeOff()
+{
+    bAdding = false;
+//    map.setOptions({draggableCursor:'default'});
+    map.getContainer().style.cursor = '';
+    webViewBridge.addPointMode(bAdding);
+    currentSegment = null;
+    return null;
+}
+
+
+function addNewPoint(e)
+{
+    if(bAdding)
+    {
+        if(!currSegment)
+            return;
+        // var line = currSegment.line;
+
+        // if(line === null)
+        // {
+        //     //OK                    window.external.SetDebug("No line defined " + e.latLng.lat() + " " + e.latLng.lng());
+        //     webViewBridge.setDebug("No line defined " + e.latLng.lat() + " " + e.latLng.lng());
+        //     return;
+        // }
+        var path = currSegment.path;
+        if(path.length === 0)
+        {
+            addMarker(path.length, e.latlng.lat, e.latlng.lng, 1, currSegment.segmentName, currSegment.segmentId);
+        }
+        path.push(e.latlng);
+        //getPoints();
+        if(path.length > 0)
+            // window.external.addPoint();
+            webViewBridge.addPoint(0, e.latlng.lat, e.latlng.lng);
+        if(path.length > 1)
+        {
+
+        }
+
+        //currSegment.placeArrow(path);
+    }
+}
+
+function addPinMarker(latLng, title)
+{
+    var pinId = markerPins.length;
+    var pin = new google.maps.marker.PinElement({background: "#FFFF00", glyph:pinId.toString()});
+    var pinMarker = new google.maps.marker.AdvancedMarkerElement({map: map, position: latLng,
+            gmpDraggable: true,  content: pin.element, title:title});
+
+    markerPins.push(pinMarker);
+
+    google.maps.event.addListener(marker, "dragend", function(latLng, pinId) {
+
+        webViewBridge.pinClicked(pinId, latLng.lat(), event.latLng.lng(), title,-1,0,-1,'');
+    });
+
+}
+
+function alertClose()
+{
+    alert("you may now close this window");
+}
+
+// Class to calculate distance and bearing
+function bearing(startLat, startLon, endLat, endLon)
+{
+    //alert(startLat +" "+ startLon+" "+ endLat+" "+ endLon);
+    this.type = "bearing";
+    this.getInfo = function () {
+        return "bearing " + brng + " " + d + "km";
+    }
+    var R = 6371; // RADIUS OF THE EARTH IN KM
+    var dToRad = 0.0174532925;
+
+    var lat1 = startLat * dToRad;
+    var lon1 = startLon * dToRad;
+    var lat2 = endLat * dToRad;
+    var lon2 = endLon * dToRad;
+    var dLat = dToRad * (endLat - startLat);
+    var dLon = dToRad * (endLon - startLon);
+    var y = Math.sin(dLon) * Math.cos(lat2);
+    var x = Math.cos(lat1) * Math.sin(lat2) -
+            Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+    var brng = Math.atan2(y, x) / dToRad;
+    // save values for writing out later
+    if (brng < 0)
+        brng = 360.0 + brng;
+    //direction = (int)((brng + 22.5) / 45.0) ;
+    //if(direction >= 8)
+    //    direction = 0;
+
+    // calculate distance
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+            + Math.cos(lat1) * Math.cos(lat2)
+            * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    var d = R * c;
+
+    this.getBearing = function()
+    {
+        return brng;
+    }
+    this.getDistance = function()
+    {
+        return d;
+    }
+}   // end bearing
+
+
+
+
+function clearAll()
+{
+   //clear all segments
+   while(this.siArray.length)
+   {
+       si = siArray.pop();
+       si.remove();
+   }
+
+   // clear other things
+   if(marker)
+   {
+       marker.remove();
+       marker = null;
+   }
+   if(circle)
+   {
+       circle.remove();
+       circle = null;
+   }
+   if(poly2)
+   {
+       poly2.remove();
+       poly2 = null;
+   }
+   if(rtStartMarker !== null)
+   {
+       rtStartMarker.remove();
+       rtStartMarker = null;
+   }
+   if(rtEndMarker !== null)
+   {
+       rtEndMarker.remove();
+       rtEndMarker = null;
+   }
+   if(infowindow !== null)
+   {
+       infowindow.remove();
+       if(infowindow.marker !== null)
+           infowindow.marker.remove();
+       infowindow = null;
+   }
+   clearRectangle();
+   selectedLine = null;
+ //   clearPins();
+
+ //   clearPinMarker();
+
+   if(stationArray)
+       while(stationArray.length > 0)
+       {
+           var stationMarker = stationArray.pop();
+           stationMarker.remove();
+           if(stationMarker.infoWindow)
+               stationMarker.infoWindow.remove();
+           stationMarker = null;
+       }return null;
+}
+
+function clearMarker()
+{
+   if(marker)
+   {
+     marker.remove();
+     marker = null;
+   }
+   if(circle)
+   {
+     circle.remove();
+     circle = null;
+   }
+   if(infowindow !== null)
+   {
+     infowindow.setMap();
+     infowindow = null;
+   }
+   return;
+}
+
+function clearPinMarker()
+{
+    if(pinMarker)
+    {
+        pinMarker.setMap(null);
+        pinMarker = null;
+    }
+}
+
+// Erase a line segment and remove from the map
+function clearPolyline(segmentId)
+{
+    for (const [index, si] of this.siArray.entries())
+    {
+        if(si.segmentId === segmentId)
+        {
+            si.remove();
+            this.siArray.splice(index,1);
+            return;
+        }
+    }
+    //console.error("clearPolyline: unable to remove segmentId " + segmentId );
+
+   return null;
+}
+
+function clearPins()
+{
+    //markerPins.forEach(function(pinMarker, index)
+    for ([pinMarker, index] of pinMarker.entries())
+    {
+     pinMarker.setMap(null);
+    };
+    markerPins.clear();
+}
+
+function clearRectangle()
+{
+    if(myRect)
+    {
+        myRect.remove();
+        myRect = null;
+    }
+}
+
+var connected = false;
+//We use this function because connect statements resolve their target once, immediately
+//not at signal emission so they must be connected once the webViewBridge object has been added to the frame
+//! <!--  [ connect slots ] -->
+function connectSlots()
+{
+  if ( !connected ) {
+  webViewBridge.executeScript.connect(this, processScript);
+  webViewBridge.executeScript2.connect(this, processScript2);
+  webViewBridge.executeScript3.connect(this, processScript3);
+  connected = true;
+  }
+  return;
+}
+
 function createSegment(segmentId, routeName, segmentName, oneWay, showArrow, color, tracks, dash, routeType, trackUsage, points )
 {
     var linePath = [];
@@ -472,7 +511,487 @@ function createSegment(segmentId, routeName, segmentName, oneWay, showArrow, col
     var pts = siArray.push(newSegment);
     console.log(pts + " segmentId: "+ newSegment.segmentId + " name: " + newSegment.segmentName);
 
+} // end create segment
+
+function displayStationMarker(stationKey, bDisplay)
+{
+ if(!stationArray)
+    return ;
+ var count = stationArray.length;
+ console.error("displayStationMarker " + stationKey + " count = " + count);
+ //stationArray.forEach(function(element, index)
+ for (const [index, element] of stationArray.entries())
+ {
+  if(index >= count)
+    return;
+  if(element && element.stationKey === stationKey)
+  {
+   element.setVisible(bDisplay)
+   webViewBridge.setDebug("stationMarker " + stationKey + " is now visible " + element.getVisible());
+  }
+ };
+ return;
+} // end displayStationMarker
+
+function fitMapBounds(swLat, swLon, neLat, neLon)
+{
+  const bounds = [L.latLng(swLat, swLon), L.latLng(neLat, neLon)];
+    map.fitBounds(bounds);
+    return null;
+}// end fitMapBounds()
+
+function getAdjacentPoints(latlngs, targetLatLng) {
+    //const latlngs = polyline.getLatLngs(); // Array of L.LatLng points
+
+    // Find the index of the target point (using a basic coordinate match)
+    const index = latlngs.findIndex(pt =>
+        pt.lat === targetLatLng.lat && pt.lng === targetLatLng.lng
+    );
+
+    if (index === -1) return { prev: null, next: null }; // Point not found
+
+    return {
+        prev: index > 0 ? latlngs[index - 1] : null,
+        next: index < latlngs.length - 1 ? latlngs[index + 1] : null
+    };
+} // end getAdjacentPoints()
+
+// returns map center LatLng
+function getCenter()
+{
+ var latLng = map.getCenter();
+ webViewBridge.setCenter(latLng.lat, latLng.lng, map.getZoom(), /*map.getMapTypeId()*/"");
+ return latLng;
+} // end get Center
+
+function getCurrBounds()
+{
+    var bounds =  map.getBounds();
+    var ne = bounds.getNorthEast();
+    var sw = bounds.getSouthWest();
+    webViewBridge.cityBounds( ne.lat, ne.lng, sw.lat, sw.lng);
+
+} // end getCurrBounds()
+
+function getMapType()
+{
+    return map.getMapTypeId();
+} // end getMapType()
+
+function getPinLocations()
+{
+    const pointsArray = [];
+    //markerPins.forEach(function(pinMarker, index)
+    for (const [index, pinMarker] of markerPins.entries())
+    {
+       pointsArray.push(pinMarker.position);
+       console.log(pinMarker.position);
+    };
+
+    var array = [];//new Array(0,0);
+    //pointsArray.forEach(function(latLng, ix)
+    for ([latLng, ix] of pointsArray.entries())
+    {
+     array[ix*2] = latLng.lat;
+     array[(ix*2)+1] = latLng.lng;
+    };
+    return array;
+} // getPinLocations
+
+function getSegmentInfo(segmentId)
+{
+    if(siArray.length === 0 )
+    {
+        console.log("siArray is empty");
+        return null;
+    }
+    for (const [index, si] of siArray.entries())
+    {
+        if(si.segmentId === segmentId)
+            return si;
+    }
+    console.log("segment " + segmentId + " not found");
+
+    return null;
+} // getSegmentInfo
+
+function getStationMarkerIconType(stationKey)
+{
+ var count = stationArray.getLength();
+ var rVal = "???";
+ //stationArray.forEach(function(element, index)
+ for (const [index, element] of stationArray.entries())
+ {
+  if(index >= count)
+   return rVal;
+  if(element && element != 'undefined' && element.stationKey === stationKey)
+  {
+   //alert("icontype = " + element.typeIcon);
+   rVal =  element.typeIcon;
+   return rVal;
+  }
+ };
+ return rVal;
+} // end getStationMarkerIconType()
+
+function isStationMarkerDisplayed(stationKey)
+{
+ var count = stationArray.getLength();
+ var rVal = "false";
+ //stationArray.forEach(function(element, index)
+ for (const [index,element] of stationArray.entries())
+ {
+  if(index >= count)
+  {
+   console.error("stationKey " + stationKey + " not found");
+   return "false";
+  }
+  if(element  && element.stationKey === stationKey)
+  {
+    console.log("stationKey " + stationKey + " is visible " + element.getVisible());
+    if(element.getVisible())
+        return "visible";
+    else
+        return "hidden";
+  }
+  return rVal;
+ };
+ console.error("stationKey " + stationKey + " not found 2");
+ return rVal;
+} // end isStationMarkerDisplayed()
+
+// called onLoad by webChannel to initialize map
+function initMap()
+{
+    console.log("begin GoogleMaps.js initMap()");
+    webViewBridge.debug("initMap started");
+    connectSlots();
+
+  L.mapquest.key = MapQuestKey;
+  var Lat = webViewBridge.lat;
+  var Lon = webViewBridge.lng;
+  var zoom = webViewBridge.zoom;
+  var mapTypeId = webViewBridge.maptype;
+  var mapDiv = document.getElementById("map");
+   map = L.mapquest.map('map', {
+    center: [Lat, Lon],
+    layers: L.mapquest.tileLayer('map'),
+    zoom: zoom,
+    doubleClickZoom: false
+  });
+
+  map.addControl(L.mapquest.control());
+
+   webViewBridge.queryOverlay();
+
+  webViewBridge.displayZoom(map.getZoom());
+
+  map.on("zoomend", function() {
+   webViewBridge.displayZoom(map.getZoom());
+  });
+
+  map.on( "contextmenu", function(event) {
+    // Prevent the browser's default right-click context menu from opening
+    L.DomEvent.preventDefault(event);
+
+    webViewBridge.rightClicked(event.latlng.lat, event.latlng.lng);
+  });
+
+  map.on( "click", function(event) {
+   webViewBridge.clickPoint(event.latlng.lat, event.latlng.lng);
+  });
+
+    map.on('dblclick', function(event)
+    {
+        addNewPoint(event);
+    });
+
+    siArray = [];
+  var idleTimeout;
+  var idleDelay = 500; // Time in milliseconds
+  // Function that runs when the map becomes idle
+  // function onMapIdle() {
+  //     console.log('Map is idle! Current bounds:', map.getBounds());
+  //     // Add your logic here (e.g., fetch markers via AJAX)
+  //   webViewBridge.mapInit();
+  //   webViewBridge.debug("initMap complete");}
+
+  // // Listen for movement and zoom events
+  // map.on('moveend zoomend', function() {
+  //     // Clear the previous timeout if the user keeps moving
+  //     clearTimeout(idleTimeout);
+
+  //     // Set a new timeout
+  //     idleTimeout = setTimeout(onMapIdle, idleDelay);
+  // });
+
+    webViewBridge.mapInit();
+} // end initMap
+
+function isAddModeOn()
+{
+ if(bAdding)
+  return "true"
+ else
+  return "false";
+}// end isAddModeOn()
+
+function pointRadialDistance(start, bearing, inDistance)
+{
+    var dToRad = 0.0174532925;
+    var rEarth = 6371.01;  // Earth's average radius in km
+    var epsilon = 0.000001;  // threshold for floating-point equality
+
+    var degrees = bearing;
+    while (degrees < -180) degrees += 360;
+    while (degrees > 180) degrees -= 360;
+
+    // convert the angle to radians
+    var lat1 = start.lat() * dToRad;
+    var lon1 = start.lng() * dToRad;
+    var rbrng = degrees * dToRad;
+    var rd = inDistance / rEarth;    // normalize linear distance to radian angle
+
+    var rLat = 0, rLon = 0;
+    // http://www.movable-type.co.uk/scripts/latlong.html
+    rLat = Math.asin(Math.sin(lat1) * Math.cos(rd) +
+            Math.cos(lat1) * Math.sin(rd) * Math.cos(rbrng));
+    rLon = lon1 + Math.atan2(Math.sin(rbrng) * Math.sin(rd) * Math.cos(lat1),
+                               Math.cos(rd) - Math.sin(lat1) * Math.sin(rLat));
+    //alert("degrees " + degrees + " rLat " + rLat + " rLon " + rLon);
+    return L.latLng(rLat / dToRad, rLon / dToRad);
+} // end pointRadialDistance()
+
+function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
+{
+ console.log("load overlay: " + name + " opacity =" + opacity + " minZoom =" + minZoom + " maxZoom = " + maxZoom + " source = " + source + " bounds = " + bounds + " urls = " + urls);
+ console.log("urls type = " + typeof(urls));
+//  if( Object.prototype.toString.call( urls ) === '[object Array]' )
+//  {
+//   console.log("size = " + urls.length +" url = " + urls[0] );
+//  }
+
+//  if(minZoom < 0 || maxZoom > 20)
+//      console.warn("invalid min/max zoom for overlay: " + name + " opacity =" + opacity + " minZoom =" + minZoom + " maxZoom = " + maxZoom);
+//  if ( overlay !== null)
+//  {
+//   map.overlayMapTypes.clear();
+//   overlay = null;
+//   if(opacityControl !== null)
+//   {
+//    opacityControl.remove();
+//    opacityControl = null;
+//   }
+//  }
+//  if(name === null || name === "")
+//  {
+//   return;
+//  }
+//  var vals = bounds.split(",");
+
+// //     var mapBounds = new google.maps.LatLngBounds(
+// //                 new google.maps.LatLng(38.623972, -90.330807),
+// //                 new google.maps.LatLng(38.658606, -90.273631));
+// this.overlayBounds = new google.maps.LatLngBounds(new google.maps.LatLng(vals[1], vals[0]),  new google.maps.LatLng(vals[3], vals[2]));
+//    var mapMinZoom = minZoom;
+//    var mapMaxZoom = maxZoom;
+//    var opts = {
+//    streetViewControl: false,
+//    tilt: 0,
+//    mapTypeId: google.maps.MapTypeId.HYBRID,
+//    center: new google.maps.LatLng(0,0),
+//    zoom: mapMinZoom
+//    }
+
+//  overlay = new Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls);
+//  if(opacityControl === null)
+//  {
+//   opacityControl = new OpacityControl('opacityControl', map, google.maps.ControlPosition.RIGHT_TOP, overlay);
+//   opacityControl.initialize(map);
+//   google.maps.event.addListener(opacityControl, "opacitychanged", function()
+//   {
+//    webViewBridge.opacityChanged( overlay.name, overlay.getOpacity() );
+//   });
+//  }
+//  google.maps.event.addListener(map, "zoom_changed", function() {
+//   webViewBridge.displayZoom(map.getZoom());
+//   var newZoom = map.getZoom();
+
+//   if(overlay != null)
+//   {
+//    //console.error("zoom changed: zoom = "+ newZoom + " minZoom =" + overlay.minZoom + " maxZoom = " + overlay.maxZoom);
+//    if(newZoom < overlay.minZoom || newZoom > overlay.maxZoom)
+//    {
+//     if(opacityControl !== null) {
+//      opacityControl.remove();
+//      opacityControl = null;
+//     }
+//    }
+//    else
+//    {
+//     if(opacityControl === null)
+//     {
+//      opacityControl = new OpacityControl('opacityControl', map, google.maps.ControlPosition.RIGHT_TOP, overlay);
+//      opacityControl.initialize(map);
+//      google.maps.event.addListener(opacityControl, "opacitychanged", function()
+//      {
+//       webViewBridge.opacityChanged( overlay.name, overlay.getOpacity() );
+//      });
+//      webViewBridge.setDebug("opacity control added");
+//     }
+//    }
+//   }
+//  });
 }
+
+// deprecated
+function processScript(func, parms)
+{
+  //alert("func: " + func + " parms: " +parms);
+  var call = "var myRslt = " +func;
+  call += "(";
+  call += parms;
+  call += ");";
+  call += "return myRslt;";
+  //alert(call);
+  try
+  {
+   //eval(call);
+   var myFucn =  Function(call);
+   var fRslt = myFucn();
+   if(fRslt === null) return;
+   if( fRslt instanceof Array)
+    webViewBridge.scriptArrayResult( fRslt);
+   else
+   {
+    if("fRslt" in window)
+     webViewBridge.scriptResult( fRslt);
+    else
+     console.trace("bad return: '" + call + fRslt + "'");
+   }
+  }
+  catch (err)
+  {
+   txt=err;
+   //alert("Error ocurred calling " + func + " '"+ parms + "'\n" + txt);
+   //console.error("Error ocurred calling " + func + " '"+ parms + "'\n" + txt);
+    webViewBridge.debug("Error ocurred calling " + func + " '"+ parms + "'\n" + txt);
+   //console.trace("trace");
+  }
+} // end processScript()
+
+// deprecated
+function processScript2(func, parms, name, value)
+{
+  alert("func: " + func + " parms: " +parms);
+  //eval("comments = value;");
+  window["comments"] = value;
+  var call = "var myRslt = " +func;
+  call += "(";
+  call += parms;
+  call += ");";
+  call += "return myRslt;";
+  //alert(call);
+  try
+  {
+      //eval(call);
+      var myFucn =  Function(call);
+      var fRslt = myFucn();
+      if(fRslt === null) return;
+      if("fRslt" in window)
+          webViewBridge.scriptResult( fRslt);
+  }
+  catch (err)
+  {
+      txt=err;
+      alert("Error occured calling " + func + "\n" + txt);
+  }
+} // end processScript2()
+
+function processScript3(func, objArray, count)
+{
+  var i = 0;
+  if(count <=0)
+  {
+      alert("invalid call to processScript3");
+      return;
+  }
+  var parms = "var0";
+  //eval("var0 = objArray[0];");
+  window['var0'] = objArray[0];
+  var call = "var myRslt = " +func;
+  call += "(";
+  for(i=1; i < count; i++)
+  {
+      //eval("var"+i+"=objArray[i];");
+      window['var'+i] = objArray[i];
+      parms += ",var"+i;
+  }
+  call += parms;
+  call += ");";
+  call += "return myRslt;";
+  //alert(call);
+  try
+  {
+      //eval(call);
+      var myFucn =  Function(call);
+      var fRslt = myFucn();
+      if(fRslt === null) return;
+      if( fRslt instanceof Array)
+          webViewBridge.scriptArrayResult( fRslt);
+      else
+      {
+          if("fRslt" in window)
+              webViewBridge.scriptFunctionResult(func, fRslt);
+      }
+  }
+  catch (err)
+  {
+      txt=err;
+      //alert("Error occured calling " + func + "\n" + call+"\n"+txt);
+    webViewBridge.debug("Error occurred calling " + func + "\n" + call+"\n"+txt);
+  }
+} // end processScript3()
+
+function removeStationMarker(stationKey)
+{
+ var count = stationArray.getLength();
+ //stationArray.forEach(function(element, index)
+  for (const [index, element] of stationArray.entries())
+ {
+  if(index >= count)
+      return;
+  if(element && element !== 'undefined' && element.stationKey === stationKey)
+  {
+      element.setMap();
+      stationArray.removeAt(index);
+      return;
+  }
+ };
+    return null;
+}// end removeStationMarker()
+
+function removeStationMarkers()
+{
+    if(!stationArray)
+        return;
+ var count = stationArray.length;
+ //stationArray.forEach(function(element, index)
+ for (const [index, element] of stationArray.entries())
+ {
+  if(index >= count)
+      return;
+  while(stationArray.getLength() > 0)
+  {
+   var stationMarker = stationArray.pop();
+   stationMarker.setMap();
+   if(stationMarker.infoWindow)
+    stationMarker.infoWindow.setMap();
+   stationMarker = null;
+  }
+ };
+    return null;
+} // end removeStationMarkers()
 
 function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color, tracks, dash, routeType, trackUsage, path )
 {
@@ -773,20 +1292,20 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
     // function to determine if the supplied point is on a begining or end linesegement of a segment
     this.isPointOnEnd = function(pt)
     {
-        var line =newline;
-        var path = this.line.getPath();
-        var len = path.getLength();
+        // var line =newline;
+        // var path = this.line.getPath();
+        var len = path.length;
         webViewBridge.setLen(len);
         var i;
         var mIx = 1;
-        var b1 = bearing(pt.lat(), pt.lng(), path.getAt(0).lat(), path.getAt(0).lng());
+        var b1 = bearing(pt.lat, pt.lng, path[0].lat, path[0].lng);
         if(b1.getDistance() < .020)
           return 0;
-        var b2 =  bearing(pt.lat(), pt.lng(), path.getAt(len-1).lat(), path.getAt(len-1).lng());
+        var b2 =  bearing(pt.lat, pt.lng, path[len-1].lat, path[len-1].lng);
         if(b2.getDistance() < .020)
           return len-1;
         //alert("segment " + SegmentId + " distance = " + b1.getDistance() + " " + b2.getDistance());
-        webViewBridge.setDebug("segment " + SegmentId + " distance = " + b1.getDistance() + " " + b2.getDistance());
+        webViewBridge.setDebug("segment " + segmentId + " distance = " + b1.getDistance() + " " + b2.getDistance());
 
         return -1;
     }
@@ -817,10 +1336,11 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
     {
 
         webViewBridge.setDebug("SegmentId "+ segmentId + "usage: "+ trackUsage);
-
+        var line;
         if(tracks === 2)
         {
           leftLine = L.polyline(path, {color: color, weight: 2, offset: -2}).addTo(map);
+          line = leftLine;
           leftLineColor = color;
           if(trackUsage !== "L" && trackUsage !== " ")
             leftLineColor = "#A9A9A9";
@@ -830,71 +1350,63 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
           if(trackUsage !== "R" && trackUsage !== " ")
           rightLineColor = "#A9A9A9";
           setEvents(rightLine, this);
-          if(showArrow)
-                arrowDecorator = L.polylineDecorator(rightLine,{
-                    patterns: [
-                      {
-                          offset: '100%',
-                          repeat: 0,
-                          symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions:{color: color} })
-                      }
-                        ]
-              }).addTo(map);
-          if(dash ===2)
-          {
-              // //  Add the Tick Marks layer over the polyline
-              //         decorator = L.polylineDecorator(leftLine, {
-              //             patterns: [
-              //                 {
-              //                     offset: 0,          // Where to start the ticks (0 means the beginning)
-              //                     repeat: '12px',     // Put a tick mark every 50 pixels along the line
-              //                     symbol: L.Symbol.dash({
-              //                         pixelSize: 10,  // The length of the tick mark
-              //                         pathOptions: {
-              //                             color: color, // Color of the tick marks
-              //                             weight: 1,        // Thickness of the tick marks
-              //                             angle: 90         // Rotates the dash 90 degrees to make it a tick
-              //                         }
-              //                     })
-              //                 }
-              //             ]
-              //         }).addTo(map);
-              decorator = L.polylineDecorator(leftline, {
-                  patterns: [
-                      {
-                          offset: '5%',
-                          repeat: '50px',
-                          symbol: L.Symbol.marker({
-                              rotate: true, // Tells the decorator to rotate the marker along the line path
-                              markerOptions: {
-                                  icon: L.divIcon({
-                                      className: 'my-custom-dash',
-                                      html: '<div style="width:10px; height:2px; background:black;"></div>',
-                                      iconSize: [10, 2]
-                                  })
-                              }
-                          })
-                      }
-                  ]
-              }).addTo(map);}
         }
         else
         {
             singleLine = L.polyline(path,{color: color, weight: 2}).addTo(map);
+            line = singleLine;
             singleLineColor = color;
             setEvents(singleLine, this);
-            if(showArrow)
-                arrowDecorator = L.polylineDecorator(singleLine,{
-                    patterns: [
-                        {
-                            offset: '100%',
-                            repeat: 0,
-                            symbol: L.Symbol.arrowHead({pixelSize: 15, pathOptions:{color: color} })
-                        }
-                    ]
-            }).addTo(map);
         }
-
+        // now add decorator and arrow
+        if(showArrow)
+              arrowDecorator = L.polylineDecorator(line,{
+                  patterns: [
+                    {
+                        offset: '100%',
+                        repeat: 0,
+                        symbol: L.Symbol.arrowHead({pixelSize: 5, pathOptions:{color: color} })
+                    }
+                      ]
+            }).addTo(map);
+        if(dash ===2)
+        {
+            //  Add the Tick Marks layer over the polyline
+                    decorator = L.polylineDecorator(line, {
+                        patterns: [
+                            {
+                                offset: 0,          // Where to start the ticks (0 means the beginning)
+                                repeat: '12px',     // Put a tick mark every 50 pixels along the line
+                                symbol: L.Symbol.dash({
+                                    // pixelSize: 10,  // The length of the tick mark
+                                    // pathOptions: {
+                                    //     color: color, // Color of the tick marks
+                                    //     weight: 1,        // Thickness of the tick marks
+                                    //     //angle: 90         // Rotates the dash 90 degrees to make it a tick
+                                      pixelSize: 0
+                                })
+                            }
+                        ]
+                    }).addTo(map);
+            // decorator = L.polylineDecorator(line, {
+            //     patterns: [
+            //         {
+            //             offset: '5%',
+            //             repeat: '50px',
+            //             symbol: L.Symbol.marker()({
+            //                 rotate: true, // Tells the decorator to rotate the marker along the line path
+            //                 markerOptions: {
+            //                     icon: L.divIcon({
+            //                         className: 'my-custom-dash',
+            //                         html: '<div style="width:10px; height:2px; background:black;"></div>',
+            //                         iconSize: [10, 2]
+            //                     })
+            //                 }
+            //             })
+            //         }
+            //     ]
+            // }).addTo(map);
+        }
         // events
         map.on( "mousemove", function(e){
             if(bAdding)
@@ -992,467 +1504,44 @@ var lineR = {
     name:  "lineR"
 };
 
- // Erase a line segment and remove from the map
- function clearPolyline(segmentId)
- {
-     for (const [index, si] of this.siArray.entries())
-     {
-         if(si.segmentId === segmentId)
-         {
-             si.remove();
-             this.siArray.splice(index,1);
-             return;
-         }
-     }
-     //console.error("clearPolyline: unable to remove segmentId " + segmentId );
+function setCenter(Lat, Lon)
+{
+  //map.setCenter(L.latLng(Lat, Lon));
+  map.panTo([Lat,Lon]);
+ // map.setOptions({disableDoubleClickZoom: true });
+ return null;
 
+} // end set getCenter()
+
+function setMapType(mapTypeId)
+{
+    if(mapTypeId === "")
+        mapTypeId = "ROADMAP";
+    map.setMapTypeId(mapTypeId);
     return null;
- }
+} // end setMapType()
 
-
-function clearMarker()
+function setZoom(zoom)
 {
-    if(marker)
-    {
-      marker.remove();
-      marker = null;
-    }
-    if(circle)
-    {
-      circle.remove();
-      circle = null;
-    }
-    if(infowindow !== null)
-    {
-      infowindow.setMap();
-      infowindow = null;
-    }
-    return;
-}
-
-function clearAll()
-{
-    //clear all segments
-    while(this.siArray.length)
-    {
-        si = siArray.pop();
-        si.remove();
-    }
-
-    // clear other things
-    if(marker)
-    {
-        marker.remove();
-        marker = null;
-    }
-    if(circle)
-    {
-        circle.remove();
-        circle = null;
-    }
-    if(poly2)
-    {
-        poly2.remove();
-        poly2 = null;
-    }
-    if(rtStartMarker !== null)
-    {
-        rtStartMarker.remove();
-        rtStartMarker = null;
-    }
-    if(rtEndMarker !== null)
-    {
-        rtEndMarker.remove();
-        rtEndMarker = null;
-    }
-    if(infowindow !== null)
-    {
-        infowindow.remove();
-        if(infowindow.marker !== null)
-            infowindow.marker.remove();
-        infowindow = null;
-    }
-    clearRectangle();
-    selectedLine = null;
-  //   clearPins();
-
-  //   clearPinMarker();
-
-    if(stationArray)
-        while(stationArray.length > 0)
-        {
-            var stationMarker = stationArray.pop();
-            stationMarker.remove();
-            if(stationMarker.infoWindow)
-                stationMarker.infoWindow.remove();
-            stationMarker = null;
-        }return null;
-}
-
-function getSegmentInfo(segmentId)
-{
-    if(siArray.length === 0 )
-    {
-        console.log("siArray is empty");
-        return null;
-    }
-    for (const [index, si] of siArray.entries())
-    {
-        if(si.segmentId === segmentId)
-            return si;
-    }
-    console.log("segment " + segmentId + " not found");
-
+    map.setZoom(zoom);
     return null;
-}
-
-function addModeOn(segmentId)
-{
-    //currentSegment = getSegmentInfo(segmentId);
-    for (const [ix, si] of siArray.entries())
-    {
-       if(si.segmentId !== null && si.segmentId === segmentId)
-       {
-            currSegment = si;
-            bAdding = true;
-            map.getContainer().style.cursor = 'crosshair';
-            webViewBridge.addPointMode(bAdding);
-       }
-    }
-    return null;
-}
-
-function addModeOff()
-{
-    bAdding = false;
-//    map.setOptions({draggableCursor:'default'});
-    map.getContainer().style.cursor = '';
-    webViewBridge.addPointMode(bAdding);
-    currentSegment = null;
-    return null;
-}
-
-function isAddModeOn()
-{
- if(bAdding)
-  return "true"
- else
-  return "false";
-}
-
-function fitMapBounds(swLat, swLon, neLat, neLon)
-{
-  const bounds = [L.latLng(swLat, swLon), L.latLng(neLat, neLon)];
-    map.fitBounds(bounds);
-    return null;
-}
-
-function removeStationMarker(stationKey)
-{
- var count = stationArray.getLength();
- //stationArray.forEach(function(element, index)
-  for (const [index, element] of stationArray.entries())
- {
-  if(index >= count)
-      return;
-  if(element && element !== 'undefined' && element.stationKey === stationKey)
-  {
-      element.setMap();
-      stationArray.removeAt(index);
-      return;
-  }
- };
-    return null;
-}
-
-function removeStationMarkers()
-{
-    if(!stationArray)
-        return;
- var count = stationArray.length;
- //stationArray.forEach(function(element, index)
- for (const [index, element] of stationArray.entries())
- {
-  if(index >= count)
-      return;
-  while(stationArray.getLength() > 0)
-  {
-   var stationMarker = stationArray.pop();
-   stationMarker.setMap();
-   if(stationMarker.infoWindow)
-    stationMarker.infoWindow.setMap();
-   stationMarker = null;
-  }
- };
-    return null;
-}
-
-function getStationMarkerIconType(stationKey)
-{
- var count = stationArray.getLength();
- var rVal = "???";
- //stationArray.forEach(function(element, index)
- for (const [index, element] of stationArray.entries())
- {
-  if(index >= count)
-   return rVal;
-  if(element && element != 'undefined' && element.stationKey === stationKey)
-  {
-   //alert("icontype = " + element.typeIcon);
-   rVal =  element.typeIcon;
-   return rVal;
-  }
- };
- return rVal;
-}
-
-function displayStationMarker(stationKey, bDisplay)
-{
- if(!stationArray)
-    return ;
- var count = stationArray.getLength();
- console.error("displayStationMarker " + stationKey + " count = " + count);
- //stationArray.forEach(function(element, index)
- for (const [index, element] of stationArray.entries())
- {
-  if(index >= count)
-    return;
-  if(element && element.stationKey === stationKey)
-  {
-   element.setVisible(bDisplay)
-   webViewBridge.setDebug("stationMarker " + stationKey + " is now visible " + element.getVisible());
-  }
- };
- return;
-}
-
-function updateStationMarker(stationKey, typeIcon)
-{
- if(!stationArray)
-    return ;
- var icon = getIcon(typeIcon)
- var shadow = getShadow(typeIcon);
+} // end setZoom()
 
 
- var count = stationArray.getLength();
- console.error("displayStationMarker " + stationKey + " count = " + count);
- //stationArray.forEach(function(element, index)
- for (const [index,element] of stationArray.entries())
- {
-  if(index >= count)
-    return;
-  if(element && element.stationKey === stationKey)
-  {
-   element.setIcon(icon);
-   element.typeIcon = typeIcon;
-  }
- };
- return;
-}
 
-function isStationMarkerDisplayed(stationKey)
-{
- var count = stationArray.getLength();
- var rVal = "false";
- //stationArray.forEach(function(element, index)
- for (const [index,element] of stationArray.entries())
- {
-  if(index >= count)
-  {
-   console.error("stationKey " + stationKey + " not found");
-   return "false";
-  }
-  if(element  && element.stationKey === stationKey)
-  {
-    console.log("stationKey " + stationKey + " is visible " + element.getVisible());
-    if(element.getVisible())
-        return "visible";
-    else
-        return "hidden";
-  }
-  return rVal;
- };
- console.error("stationKey " + stationKey + " not found 2");
- return rVal;
-}
+
+
+
+
+
+
+
+
 
 function setDefaultOptions()
 {
 
-}
-
-function clearRectangle()
-{
-    if(myRect)
-    {
-        myRect.setMap(null);
-        myRect = null;
-    }
-}
-
-function addPinMarker(latLng, title)
-{
-    var pinId = markerPins.length;
-    var pin = new google.maps.marker.PinElement({background: "#FFFF00", glyph:pinId.toString()});
-    var pinMarker = new google.maps.marker.AdvancedMarkerElement({map: map, position: latLng,
-            gmpDraggable: true,  content: pin.element, title:title});
-
-    markerPins.push(pinMarker);
-
-    google.maps.event.addListener(marker, "dragend", function(latLng, pinId) {
-
-        webViewBridge.pinClicked(pinId, latLng.lat(), event.latLng.lng(), title,-1,0,-1,'');
-    });
-
-}
-
-function getPinLocations()
-{
-    const pointsArray = [];
-    //markerPins.forEach(function(pinMarker, index)
-    for (const [index, pinMarker] of markerPins.entries())
-    {
-       pointsArray.push(pinMarker.position);
-       console.log(pinMarker.position);
-    };
-
-    var array = [];//new Array(0,0);
-    //pointsArray.forEach(function(latLng, ix)
-    for ([latLng, ix] of pointsArray.entries())
-    {
-     array[ix*2] = latLng.lat;
-     array[(ix*2)+1] = latLng.lng;
-    };
-    return array;
-}
-
-function clearPinMarker()
-{
-    if(pinMarker)
-    {
-        pinMarker.setMap(null);
-        pinMarker = null;
-    }
-}
-
-function showStreetPins(firstlat, firstlon, secondlat, secondlon, title, id, location, draggable, seq)
-{
-    //clearPins();
-    latLng1 = new google.maps.LatLng(firstlat, firstlon);
-    latLng2 = new google.maps.LatLng(secondlat, secondlon);
-    var pin1 = new google.maps.marker.PinElement({background: "#FFFF00", glyph:"1"});
-    var pinMarker1 = new google.maps.marker.AdvancedMarkerElement({map: map, position: latLng1,
-            gmpDraggable: draggable,  content: pin1.element, title: title});
-    google.maps.event.addListener(pinMarker1, "dragend", function(pt) {
-        webViewBridge.pinClicked(0, pt.latLng.lat(), pt.latLng.lng(), title, id, location, seq);
-    });
-
-    markerPins.push(pinMarker1);
-    var pin2 = new google.maps.marker.PinElement({background: "#FFFF00", glyph:"2"});
-    var pinMarker2 = new google.maps.marker.AdvancedMarkerElement({map: map, position: latLng2,
-            gmpDraggable: draggable,  content: pin2.element, title: title});
-    google.maps.event.addListener(pinMarker2, "dragend", function(pt) {
-        webViewBridge.pinClicked(1, pt.latLng.lat(), pt.latLng.lng(), title, id, location, seq);
-    });
-    markerPins.push(pinMarker2);
-}
-
-function clearPins()
-{
-    //markerPins.forEach(function(pinMarker, index)
-    for ([pinMarker, index] of pinMarker.entries())
-    {
-     pinMarker.setMap(null);
-    };
-    markerPins.clear();
-}
-
-function alertClose()
-{
-    alert("you may now close this window");
-}
-
-function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
-{
- console.log("load overlay: " + name + " opacity =" + opacity + " minZoom =" + minZoom + " maxZoom = " + maxZoom + " source = " + source + " bounds = " + bounds + " urls = " + urls);
- console.log("urls type = " + typeof(urls));
-//  if( Object.prototype.toString.call( urls ) === '[object Array]' )
-//  {
-//   console.log("size = " + urls.length +" url = " + urls[0] );
-//  }
-
-//  if(minZoom < 0 || maxZoom > 20)
-//      console.warn("invalid min/max zoom for overlay: " + name + " opacity =" + opacity + " minZoom =" + minZoom + " maxZoom = " + maxZoom);
-//  if ( overlay !== null)
-//  {
-//   map.overlayMapTypes.clear();
-//   overlay = null;
-//   if(opacityControl !== null)
-//   {
-//    opacityControl.remove();
-//    opacityControl = null;
-//   }
-//  }
-//  if(name === null || name === "")
-//  {
-//   return;
-//  }
-//  var vals = bounds.split(",");
-
-// //     var mapBounds = new google.maps.LatLngBounds(
-// //                 new google.maps.LatLng(38.623972, -90.330807),
-// //                 new google.maps.LatLng(38.658606, -90.273631));
-// this.overlayBounds = new google.maps.LatLngBounds(new google.maps.LatLng(vals[1], vals[0]),  new google.maps.LatLng(vals[3], vals[2]));
-//    var mapMinZoom = minZoom;
-//    var mapMaxZoom = maxZoom;
-//    var opts = {
-//    streetViewControl: false,
-//    tilt: 0,
-//    mapTypeId: google.maps.MapTypeId.HYBRID,
-//    center: new google.maps.LatLng(0,0),
-//    zoom: mapMinZoom
-//    }
-
-//  overlay = new Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls);
-//  if(opacityControl === null)
-//  {
-//   opacityControl = new OpacityControl('opacityControl', map, google.maps.ControlPosition.RIGHT_TOP, overlay);
-//   opacityControl.initialize(map);
-//   google.maps.event.addListener(opacityControl, "opacitychanged", function()
-//   {
-//    webViewBridge.opacityChanged( overlay.name, overlay.getOpacity() );
-//   });
-//  }
-//  google.maps.event.addListener(map, "zoom_changed", function() {
-//   webViewBridge.displayZoom(map.getZoom());
-//   var newZoom = map.getZoom();
-
-//   if(overlay != null)
-//   {
-//    //console.error("zoom changed: zoom = "+ newZoom + " minZoom =" + overlay.minZoom + " maxZoom = " + overlay.maxZoom);
-//    if(newZoom < overlay.minZoom || newZoom > overlay.maxZoom)
-//    {
-//     if(opacityControl !== null) {
-//      opacityControl.remove();
-//      opacityControl = null;
-//     }
-//    }
-//    else
-//    {
-//     if(opacityControl === null)
-//     {
-//      opacityControl = new OpacityControl('opacityControl', map, google.maps.ControlPosition.RIGHT_TOP, overlay);
-//      opacityControl.initialize(map);
-//      google.maps.event.addListener(opacityControl, "opacitychanged", function()
-//      {
-//       webViewBridge.opacityChanged( overlay.name, overlay.getOpacity() );
-//      });
-//      webViewBridge.setDebug("opacity control added");
-//     }
-//    }
-//   }
-//  });
-}
+} // end setDefaultOptions()
 
 function setOverlayOpacity(Opacity) {
  if(overlay)
@@ -1460,7 +1549,7 @@ function setOverlayOpacity(Opacity) {
   overlay.setOpacity(Opacity);
  }
  return;
-}
+}// end setOverlayOpacity()
 
 function setBounds( pt1, pt2)
 {
@@ -1493,63 +1582,55 @@ function setBounds( pt1, pt2)
 
     // Make the map zoom and pan to fit this box
     map.fitBounds(bounds);
-}
+}// end setBounds()
 
-function getCurrBounds()
+function showStreetPins(firstlat, firstlon, secondlat, secondlon, title, id, location, draggable, seq)
 {
-    var bounds =  map.getBounds();
-    var ne = bounds.getNorthEast();
-    var sw = bounds.getSouthWest();
-    webViewBridge.cityBounds( ne.lat, ne.lng, sw.lat, sw.lng);
+    //clearPins();
+    latLng1 = new google.maps.LatLng(firstlat, firstlon);
+    latLng2 = new google.maps.LatLng(secondlat, secondlon);
+    var pin1 = new google.maps.marker.PinElement({background: "#FFFF00", glyph:"1"});
+    var pinMarker1 = new google.maps.marker.AdvancedMarkerElement({map: map, position: latLng1,
+            gmpDraggable: draggable,  content: pin1.element, title: title});
+    google.maps.event.addListener(pinMarker1, "dragend", function(pt) {
+        webViewBridge.pinClicked(0, pt.latLng.lat(), pt.latLng.lng(), title, id, location, seq);
+    });
 
-}
+    markerPins.push(pinMarker1);
+    var pin2 = new google.maps.marker.PinElement({background: "#FFFF00", glyph:"2"});
+    var pinMarker2 = new google.maps.marker.AdvancedMarkerElement({map: map, position: latLng2,
+            gmpDraggable: draggable,  content: pin2.element, title: title});
+    google.maps.event.addListener(pinMarker2, "dragend", function(pt) {
+        webViewBridge.pinClicked(1, pt.latLng.lat(), pt.latLng.lng(), title, id, location, seq);
+    });
+    markerPins.push(pinMarker2);
+}// end showStreetPins()
 
-function getAdjacentPoints(latlngs, targetLatLng) {
-    //const latlngs = polyline.getLatLngs(); // Array of L.LatLng points
-
-    // Find the index of the target point (using a basic coordinate match)
-    const index = latlngs.findIndex(pt =>
-        pt.lat === targetLatLng.lat && pt.lng === targetLatLng.lng
-    );
-
-    if (index === -1) return { prev: null, next: null }; // Point not found
-
-    return {
-        prev: index > 0 ? latlngs[index - 1] : null,
-        next: index < latlngs.length - 1 ? latlngs[index + 1] : null
-    };
-}
-
-function addNewPoint(e)
+function updateStationMarker(stationKey, typeIcon)
 {
-    if(bAdding)
-    {
-        if(!currSegment)
-            return;
-        // var line = currSegment.line;
+ if(!stationArray)
+    return ;
+ var icon = getIcon(typeIcon)
+ var shadow = getShadow(typeIcon);
 
-        // if(line === null)
-        // {
-        //     //OK                    window.external.SetDebug("No line defined " + e.latLng.lat() + " " + e.latLng.lng());
-        //     webViewBridge.setDebug("No line defined " + e.latLng.lat() + " " + e.latLng.lng());
-        //     return;
-        // }
-        var path = currSegment.path;
-        if(path.length === 0)
-        {
-            addMarker(path.length, e.latlng.lat, e.latlng.lng, 1, currSegment.segmentName, currSegment.segmentId);
-        }
-        path.push(e.latlng);
-        //getPoints();
-        if(path.length > 0)
-            // window.external.addPoint();
-            webViewBridge.addPoint(0, e.latlng.lat, e.latlng.lng);
-        if(path.length > 1)
-        {
 
-        }
+ var count = stationArray.getLength();
+ console.error("displayStationMarker " + stationKey + " count = " + count);
+ //stationArray.forEach(function(element, index)
+ for (const [index,element] of stationArray.entries())
+ {
+  if(index >= count)
+    return;
+  if(element && element.stationKey === stationKey)
+  {
+   element.setIcon(icon);
+   element.typeIcon = typeIcon;
+  }
+ };
+ return;
+}// end updateStationMarker()
 
-        //currSegment.placeArrow(path);
-    }
-}
-
+window.initialize = function() // called by WebChannel .ie "onLoad()"
+{
+  initMap();
+} // end window.initialize
