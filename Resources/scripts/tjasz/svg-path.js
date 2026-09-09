@@ -1,14 +1,14 @@
-enum CommandOperator {
-  Move = "M",
-  Line = "L",
-  Horizontal = "H",
-  Vertical = "V",
-  Cubic = "C",
-  SmoothCubic = "S",
-  Quadratic = "Q",
-  SmoothQuadratic = "T",
-  Arc = "A",
-  Close = "Z",
+const CommandOperator = {
+  Move: "M",
+  Line: "L",
+  Horizontal: "H",
+  Vertical: "V",
+  Cubic: "C",
+  SmoothCubic: "S",
+  Quadratic: "Q",
+  SmoothQuadratic: "T",
+  Arc: "A",
+  Close: "Z",
 }
 
 // export type PathCommand = {

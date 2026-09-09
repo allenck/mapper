@@ -132,3 +132,4 @@ L.Symbol.Marker = L.Class.extend({
 L.Symbol.marker = function (options) {
     return new L.Symbol.Marker(options);
 };
+

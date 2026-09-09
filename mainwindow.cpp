@@ -96,6 +96,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  config = Configuration::instance();
  config->getSettings();
 
+
  // see if there are any command line overrides
  if(argc >= 3)
  {
@@ -246,6 +247,9 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  m_resourcePath =  resource.absoluteFilePath("");
  if(!resource.exists())
   resource.mkdir(m_resourcePath);
+
+ createTickIcon("red00.png", "red_rect.png", Qt::red);
+
 
  //connect(ui->chkOneWay, SIGNAL(toggled(bool)), this, SLOT(chkOneWay_Leave(bool)));
  connect(ui->saveImage, SIGNAL(clicked(bool)), this, SLOT(On_saveImage_clicked()));
@@ -4258,6 +4262,67 @@ QString MainWindow::getMarkerImagePath(QString tmplt, QString name, QString text
     return str;
 }
 #endif
+QString MainWindow::createTickIcon(QString tmplt, QString name, QColor color)
+{
+    QString work = m_resourcePath;
+    QString str = "";
+    //QString name = "";
+    QDir dir(m_resourcePath);
+    if(!dir.exists("images"))
+        dir.mkdir("images");
+
+    QBrush brBkgnd = QBrush(Qt::SolidPattern);
+    QFont f;
+    QFile file(dir.filePath(work+ "/images/" + name));
+    str = "file://" + work + "/images/" + name;
+
+    if (file.exists( ) && file.size() > 0)
+    {
+        return str;
+    }
+    QFile temp(":/"+ tmplt);
+    if(!temp.exists())
+    {
+        qDebug() <<":/"+ tmplt +" resource not found " ;
+        return "";
+    }
+
+    // need to make a new one
+    QImage image = QImage(":/"+ tmplt);
+    QSize resultSize = QSize(image.size());
+    QImage resultImage = QImage(resultSize,QImage::Format_ARGB32_Premultiplied);
+    //image.save(work + "/images/" + name, "PNG",-1);  //temp
+    QRect r = QRect(image.rect());
+
+    QPainter painter(&resultImage);
+    painter.drawImage(0, 0, image);
+    //QRgb color = image.pixel(10,10);
+    painter.fillRect(resultImage.rect(), color);
+    brBkgnd = QBrush(QColor(color), Qt::SolidPattern);
+//    if (isStart)
+//        brBkgnd =  QBrush(Qt::green, Qt::SolidPattern);
+//    else
+//        brBkgnd = QBrush(Qt::red, Qt::SolidPattern);
+    // if(text.length() == 3)
+    //     f =  QFont("Arial", 7, QFont::Bold, false);
+    // else
+    //     f =  QFont("Arial", 6, QFont::Bold, false);
+    // painter.setFont(f);
+
+//    QRect eRect =painter.boundingRect(r, Qt::AlignCenter, "000");
+//    eRect.adjust(0, -3.0, 0, 0);
+//    painter.fillRect(eRect, brBkgnd);
+    //QRectF bRect = painter.boundingRect(r, Qt::AlignCenter, text); // bounding rectangle of text
+    // bRect.adjust(0, -3.0, 0, 0);
+    // bRect.moveTop(offset);
+    //painter.fillRect(bRect, brBkgnd);
+    // painter.setPen(Qt::white);
+    // painter.drawText(bRect, Qt::AlignCenter, text);
+    painter.end();
+    resultImage.save(work+ "/images/" + name, "PNG");
+
+    return str;
+}
 QString MainWindow::ProcessScript(QString func, QString params)
 {
     m_bridge->processScript(func, params);

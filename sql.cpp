@@ -6231,7 +6231,7 @@ bool SQL::doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QD
             ret = true;
         else
         {
-         qDebug() << "no results: " << commandText;
+         // qDebug() << "no results: " << commandText;
         }
     }
     catch (Exception e)

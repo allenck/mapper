@@ -467,6 +467,7 @@ private:
     //bool bFirstSegmentDisplayed = false;
     bool bReloadInProgress = false;
 
+    QString createTickIcon(QString tmplt, QString name,  QColor color);
 
     void createActions();
     void createMenus();

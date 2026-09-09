@@ -686,7 +686,7 @@ function initMap()
     layers: L.mapquest.tileLayer('map'),
     zoom: zoom,
     doubleClickZoom: false,
-    renderer: new SvgPatternRenderer(),
+    // renderer: new SvgPatternRenderer(),
   });
 
   map.addControl(L.mapquest.control());
@@ -1326,6 +1326,12 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
     // create the polylines, arrows. etc
     this.remove = function()
     {
+        if(decorator)
+            decorator.remove();
+        if(arrowDecorator)
+            arrowDecorator.remove();
+
+
         if(leftLine)
           leftLine.remove();
         if(rightLine)
@@ -1333,10 +1339,6 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
         if(singleLine)
           singleLine.remove();
 
-        if(decorator)
-            decorator.remove();
-        if(arrowDecorator)
-            arrowDecorator.remove();
         if(circle)
         {
             circle.remove();
@@ -1347,11 +1349,11 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
     {
 
         webViewBridge.setDebug("SegmentId "+ segmentId + "usage: "+ trackUsage);
-        var line;
+        var curLine;
         if(tracks === 2)
         {
           leftLine = L.polyline(path, {color: color, weight: 2, offset: -2}).addTo(map);
-          line = leftLine;
+          curLine = leftLine;
           leftLineColor = color;
           if(trackUsage !== "L" && trackUsage !== " ")
             leftLineColor = "#A9A9A9";
@@ -1365,13 +1367,13 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
         else
         {
             singleLine = L.polyline(path,{color: color, weight: 2}).addTo(map);
-            line = singleLine;
+            curLine = singleLine;
             singleLineColor = color;
             setEvents(singleLine, this);
         }
         // now add decorator and arrow
         if(showArrow)
-              arrowDecorator = L.polylineDecorator(line,{
+              arrowDecorator = L.polylineDecorator(curLine,{
                   patterns: [
                     {
                         offset: '100%',
@@ -1383,23 +1385,25 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
         if(dash ===2)
         {
             //  Add the Tick Marks layer over the polyline
-            decorator = L.polylineDecorator(line, {
-                patterns: [
-                    {
-                        offset: 0,          // Where to start the ticks (0 means the beginning)
-                        repeat: '12px',     // Put a tick mark every 50 pixels along the line
-                        symbol: L.Symbol.dash({
-                            // pixelSize: 10,  // The length of the tick mark
-                            // pathOptions: {
-                            //     color: color, // Color of the tick marks
-                            //     weight: 1,        // Thickness of the tick marks
-                            //     //angle: 90         // Rotates the dash 90 degrees to make it a tick
-                              pixelSize: 0
-                        })
-                    }
-                ]
-            }).addTo(map);
-            // decorator = L.polylineDecorator(line, {
+            // decorator = L.polylineDecorator(curLine, {
+            //     patterns: [
+            //         {
+            //             offset: 0,          // Where to start the ticks (0 means the beginning)
+            //             repeat: '12px',     // Put a tick mark every 50 pixels along the line
+            //             symbol: L.Symbol.dash({
+            //                 pixelSize: 10,  // The length of the tick mark
+            //                 pathOptions: {
+            //                     color: color, // Color of the tick marks
+            //                     weight: 1,        // Thickness of the tick marks
+            //                     angle: 90         // Rotates the dash 90 degrees to make it a tick
+            //                 }
+            //            })
+
+            //         }
+            //     ]
+            // }).addTo(map);
+
+            // decorator = L.polylineDecorator(curLine, {
             //     patterns: [
             //         {
             //             offset: '5%',
@@ -1417,6 +1421,7 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
             //         }
             //     ]
             // }).addTo(map);
+
             // var feature = {
             //     type: "Feature",
             //     properties: {
@@ -1431,6 +1436,30 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
             //     },
             //   };
             // const decorator = new L.GeoJSON(feature).addTo(map);
+
+
+            // decorator = L.polylineDecorator(curLine, {
+            //                                     patterns: [
+            //                                         {offset: 5, repeat: 25, symbol: L.Symbol.tickMark({pixelSize: 15, pathOptions: {fillOpacity: 1, weight: 0}})}
+            //                                     ]
+            //                                 }).addTo(map);
+
+        // --- Example with a rotated marker ---
+            decorator = L.polylineDecorator(
+                curLine,
+                {
+                    patterns: [
+                        { offset: 0, repeat: 10, symbol: L.Symbol.dash({pixelSize: 5, pathOptions: {color: '#000', weight: 1, opacity: 0.2}}) },
+                        { offset: 0, repeat: 5, symbol: L.Symbol.marker({rotate: true, markerOptions: {
+                            icon: L.icon({
+                                iconUrl: 'images/red_rect.png',
+                                iconSize: [12,1],
+                                iconAnchor: [6, 1]
+                            })
+                        }})}
+                    ]
+                }
+            ).addTo(map);
         }
         // events
         map.on( "mousemove", function(e){
@@ -1441,6 +1470,7 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
             }
         });
     } // end createLines
+
     this.createLines();
 }   // end SegmentInfo()
 
@@ -1659,3 +1689,5 @@ window.initialize = function() // called by WebChannel .ie "onLoad()"
 {
   initMap();
 } // end window.initialize
+
+
