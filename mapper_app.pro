@@ -110,7 +110,6 @@ DISTFILES += \
     Resources/scripts/L.RotatedMarker.js \
     Resources/scripts/L.Symbol.js \
     Resources/scripts/bbecquet/L.PolylineDecorator.js \
-    Resources/scripts/bbecquet/L.Symbol.js \
     Resources/scripts/leaflet.polylineoffset.js \
     Resources/scripts/patternUtils.js \
     Resources/sql/CreatePostgreSQLFunction.sql \
@@ -255,15 +254,4 @@ DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3460100
 #unix|win32: LIBS += -ldl
 unix: LIBS += -ldl
 
-FORMS += \
-    dialogeditcomments.ui \
-    dialoghtmledit.ui
-
-HEADERS += \
-    dialogeditcomments.h \
-    dialoghtmledit.h
-
-SOURCES += \
-    dialogeditcomments.cpp \
-    dialoghtmledit.cpp
 

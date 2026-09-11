@@ -66,10 +66,12 @@ QVariant WebViewBridge::getRslt(){return myRslt;}
 QString WebViewBridge::curMaptype(){return maptype;}
 QString WebViewBridge::curMapId(){return mapId;}
 void WebViewBridge::setMapId(QString mapid){this->mapId = mapid;}
+void WebViewBridge::setName(QString n){this->name = n;}
+QString WebViewBridge::curName(){return name;}
 
 void WebViewBridge::processScript(QString func, QString parms)
 {
- qDebug() << "processScript " << func << " " << parms;
+ //qDebug() << "processScript " << func << " " << parms;
 
  bResultReceived = false;
  emit executeScript( func,  parms);
@@ -78,7 +80,7 @@ void WebViewBridge::processScript(QString func, QString parms)
 }
 void WebViewBridge::processScript(QString func)
 {
- qDebug() << "processScript " << func;
+ //qDebug() << "processScript " << func;
  bResultReceived = false;
  //myRslt = QVariant();
  myList = QVariantList();
@@ -113,7 +115,7 @@ void WebViewBridge::processScript(QString func, QString parms, QString name, QSt
 
 void WebViewBridge::processScript(QString func, QVariantList objArray)
 {
- qDebug() << "processScript " << func;
+ //qDebug() << "processScript " << func;
 
  bResultReceived = false;
  if(!isListening())
@@ -140,6 +142,12 @@ void WebViewBridge::selectSegmentX(qint32 i, qint32 SegmentId, QVariantList arra
 //    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
     m_parent->segmentSelected(i, SegmentId);
  emit segmentSelectedX(i, SegmentId, buildPoints(array));
+}
+
+QString WebViewBridge::createIcon(QColor color)
+{
+    name = m_parent->createTickIcon(color);
+    return name;
 }
 
 // Display a route comment for date.
@@ -359,11 +367,12 @@ void WebViewBridge::updateStation(qint32 stationKey, qint32 segmentId)
 
     m_parent->updateStation(stationKey, segmentId);
 }
+
 void WebViewBridge::moveStationMarker(qint32 stationKey, qint32 segmentId, double lat, double lng)
 {
-
     m_parent->moveStationMarker(stationKey, segmentId, lat, lng);
 }
+
 void WebViewBridge::moveRouteComment(qint32 route, QString date, double lat, double lng, int commentKey, int companyKey)
 {
 

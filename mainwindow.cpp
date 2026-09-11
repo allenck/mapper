@@ -248,7 +248,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  if(!resource.exists())
   resource.mkdir(m_resourcePath);
 
- createTickIcon("red00.png", "red_rect.png", Qt::red);
+ createTickIcon( Qt::red);
+ createTickIcon(QColor("#04b4B4"));
 
 
  //connect(ui->chkOneWay, SIGNAL(toggled(bool)), this, SLOT(chkOneWay_Leave(bool)));
@@ -1706,6 +1707,7 @@ QWidgetAction *MainWindow::createMapSourceAction()
 
  connect(cbMapSource, &QComboBox::currentIndexChanged, this, [=](int sel){
      config->mapSource = sel;
+     config->saveSettings();
      reloadMap();
  });
 
@@ -2550,7 +2552,7 @@ void MainWindow::refreshRoutes()
          if(!(rd.startDate()>=rcd->startDate && rd.endDate()<= rcd->endDate))
          {
              const QModelIndex idx = ui->cbRoute->model()->index(i, 0);
-             ui->cbRoute->model()->setData(idx, QColor(255,0,0), Qt::BackgroundRole);
+             ui->cbRoute->model()->setData(idx, QColor("#fbd9d3"), Qt::BackgroundRole);
          }
          if( rd.toString() == currText)
             ui->cbRoute->setCurrentIndex(i);
@@ -2685,16 +2687,16 @@ void MainWindow::On_displayRoute(RouteData rd)
   TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, rd.endDate());
   if (ti.route >= 1 && ti.startLatLng.lat() > 0 && ti.startLatLng.lon() )
   {
-   objArray <<ti.startLatLng.lat() <<ti.startLatLng.lon() << //getRouteMarkerImagePath(m_alphaRoute, true);
-          "./green00.png" << "'" + m_alphaRoute + "'";
+   objArray <<ti.startLatLng.lat() << ti.startLatLng.lon() << //getRouteMarkerImagePath(m_alphaRoute, true) << m_alphaRoute;
+           "green00.png" << "'" + m_alphaRoute + "'";
    m_bridge->processScript("addRouteStartMarker", objArray);
    infoLat = ti.startLatLng.lat();
    infoLon = ti.startLatLng.lon();
    bFirst = false;
 
    objArray.clear();
-   objArray << ti.endLatLng.lat() << ti.endLatLng.lon()<<//getRouteMarkerImagePath(m_alphaRoute, false);
-       "./red00.png" << "'" + m_alphaRoute + "'";
+   objArray << ti.endLatLng.lat() << ti.endLatLng.lon()<<  //getRouteMarkerImagePath(m_alphaRoute, false)
+        "red00.png" << "'" + m_alphaRoute + "'";
    m_bridge->processScript("addRouteEndMarker", objArray);
   }
  }
@@ -2851,19 +2853,20 @@ default:
 
      objArray.clear();
      objArray << sti.latitude << sti.longitude << (bDisplayStationMarkers?true:false) << sti.segmentId << sti.stationName << sti.stationKey << sti.infoKey << ci.comments << sti.markerType;
-      m_bridge->processScript("addStationMarker", objArray);
      }
      else
      {
       objArray.clear();
-      objArray << sti.latitude << sti.longitude << (bDisplayStationMarkers?true:false) << sti.segmentId << sti.stationName << sti.stationKey << sti.infoKey << "" << sti.markerType;
-      m_bridge->processScript("addStationMarker", objArray);
+      objArray << sti.latitude << sti.longitude << (bDisplayStationMarkers?true:false) << sti.segmentId << sti.stationName << sti.stationKey << sti.infoKey << sti.stationName << sti.markerType;
      }
+    m_bridge->processScript("addStationMarker", objArray);
+
     }
 
     stationView->showStations(stationList);
    }
   } // if(bDisplayStationMarkers)
+
   if(!ui->chkNoPan->checkState() && bBoundsValid)
   {
    objArray.clear();
@@ -2873,7 +2876,7 @@ default:
 
   QDate dt = QDate::fromString(m_currRouteStartDate, "yyyy/MM/dd");
   dt = sql->getFirstCommentDate(m_routeNbr, dt, _rd.companyKey());
-
+  m_alphaRoute = rd.alphaRoute();
 
   loadRouteComment(dt);
 
@@ -3790,7 +3793,7 @@ void MainWindow::btnLastClicked()
     m_bridge->processScript("addMarker",QString("%1").arg(m_currPoint)+","
                             +QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lat(),0,'f',8)
                             +","+QString("%1").arg(((LatLng)m_points.at(m_currPoint)).lon(),0,'f',8 )
-                            +","+marker+",'point"+ QString("%1").arg(m_currPoint)+"',"+ QString("%1").arg(m_segmentId));
+                            +","+marker+",'"+ QString("%1").arg(m_currPoint)+"',"+ QString("%1").arg(m_segmentId));
 
     if(!ui->chkNoPan->isChecked())
     {
@@ -4181,7 +4184,7 @@ void MainWindow::cbRoutes_Leave()
  }
 }
 
-#if 0
+#if 1
 QString MainWindow::getRouteMarkerImagePath(QString route, bool isStart)
 {
  QString tmplt ="";
@@ -4262,7 +4265,7 @@ QString MainWindow::getMarkerImagePath(QString tmplt, QString name, QString text
     return str;
 }
 #endif
-QString MainWindow::createTickIcon(QString tmplt, QString name, QColor color)
+QString MainWindow::createTickIcon( QColor color)
 {
     QString work = m_resourcePath;
     QString str = "";
@@ -4270,6 +4273,9 @@ QString MainWindow::createTickIcon(QString tmplt, QString name, QColor color)
     QDir dir(m_resourcePath);
     if(!dir.exists("images"))
         dir.mkdir("images");
+    QString colorName = color.name();
+    QString name = colorName.mid(1) + "_rect.png";
+
 
     QBrush brBkgnd = QBrush(Qt::SolidPattern);
     QFont f;
@@ -4280,16 +4286,10 @@ QString MainWindow::createTickIcon(QString tmplt, QString name, QColor color)
     {
         return str;
     }
-    QFile temp(":/"+ tmplt);
-    if(!temp.exists())
-    {
-        qDebug() <<":/"+ tmplt +" resource not found " ;
-        return "";
-    }
 
     // need to make a new one
-    QImage image = QImage(":/"+ tmplt);
-    QSize resultSize = QSize(image.size());
+    QImage image = QImage(work + "/images/" + name);
+    QSize resultSize = QSize(27,27);
     QImage resultImage = QImage(resultSize,QImage::Format_ARGB32_Premultiplied);
     //image.save(work + "/images/" + name, "PNG",-1);  //temp
     QRect r = QRect(image.rect());
@@ -4323,11 +4323,13 @@ QString MainWindow::createTickIcon(QString tmplt, QString name, QColor color)
 
     return str;
 }
+
 QString MainWindow::ProcessScript(QString func, QString params)
 {
     m_bridge->processScript(func, params);
     return "";
 }
+
 #if 1
 void MainWindow::addPoint(int pt, double lat, double lon)
 {
@@ -5376,9 +5378,13 @@ void MainWindow::moveStationMarker(qint32 stationKey, qint32 segmentId, double l
 //  int stationKey = sql->addStation(sti.stationName,LatLng(sti.latitude, sti.longitude),segmentId,sd.startDate().toString("yyyy/MM/dd"),
 //                                   sd.endDate().toString("yyyy/MM/dd"),sti.geodb_loc_id, sti.infoKey,sd.routeType(),sti.markerType,sti.point);
   CommentInfo ci = sql->getComments(sti.infoKey);
+
   QVariantList objArray;
+  if(sti.markerType != "stlmetro")
+      qDebug() << "markerType " << sti.markerType;objArray.clear();
+
   objArray << lat<< lon << (bDisplayStationMarkers?true:false)<<segmentId<<sti.stationName
-           <<stationKey<<sti.infoKey<<ci.comments<<sti.markerType;
+           <<stationKey<<sti.infoKey << (ci.comments.isEmpty()?sti.stationName:ci.comments)<<sti.markerType;
   m_bridge->processScript("addStationMarker",objArray);
   // the Javascript will call this function again with the new stationKey
   stationView->changeStation("move", sti);
@@ -5408,9 +5414,9 @@ void MainWindow::moveStationMarker(qint32 stationKey, qint32 segmentId, double l
     CommentInfo ci = sql->getComments(sti.infoKey);
     //str = ci.comments;
     m_bridge->processScript("removeStationMarker", QString("%1").arg(stationKey));
-    //m_bridge->processScript("addStationMarker",QString("%1").arg(lat,0,'f',8) +","+QString("%1").arg(lon,0,'f',8) +","+(bDisplayStationMarkers?"true":"false")+","+QString("%1").arg(sti.segmentId)+",'"+sti.stationName+"',"+QString("%1").arg(stationKey)+","+QString("%1").arg(sti.infoKey)+",comments,'"+markerType+"'", "comments", ci.comments);
-    objArray.clear();
-    objArray << lat<< lon << (bDisplayStationMarkers?true:false)<<sti.segmentId<<sti.stationName<<stationKey<<sti.infoKey<<ci.comments<<sti.markerType;
+    if(sti.markerType != "stlmetro")
+        qDebug() << "markerType " << sti.markerType;objArray.clear();
+    objArray << lat<< lon << (bDisplayStationMarkers?true:false)<<sti.segmentId<<sti.stationName<<stationKey<<sti.infoKey<<(ci.comments.isEmpty()?sti.stationName:ci.comments)<<sti.markerType;
     m_bridge->processScript("addStationMarker",objArray);
 }
 
@@ -6010,7 +6016,6 @@ bool MainWindow::verifyAPIKey(QString path, QString apiKey)
 
 void MainWindow::onWebSocketClosed()
 {
-  enableControls(false);
   if(!config->bRunInBrowser)
   {
      //QMessageBox::critical(this, tr("Browser closed"), tr("The browser window has closed"));
@@ -6024,21 +6029,20 @@ void MainWindow::onWebSocketClosed()
   }
   else
   {
-      if(config->bRunInBrowser)
+      if(bReloadInProgress)
+          return;
+      int rslt = QMessageBox::question(this, tr("Connection closed"),
+                                       tr("The connection to the browser has closed. \n%1\n"
+                                       "Click Yes to reload Map,  Close to exit").arg(m_bridge->m_server->errorString()),
+                                       QMessageBox::Yes|QMessageBox::Close);
+      if(rslt == QMessageBox::Close)
       {
-          if(bReloadInProgress)
-              return;
-          int rslt = QMessageBox::question(this, tr("Connection closed"),
-                                           tr("The connection to the browser has closed."
-                                           "Click Yes to reload Map,  Close to exit"),
-                                           QMessageBox::Yes|QMessageBox::Close);
-          if(rslt == QMessageBox::Close)
-          {
-              close();
-              return;
-          }
+          close();
+          return;
       }
       qInfo() << "reload map initiated!";
+      enableControls(false);
+
       reloadMapAct->trigger();
   }
 }

@@ -38,7 +38,7 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
     ui->btnDelete->setEnabled(false);
 
     ui->lblInfo->clear();
-    SQL::instance()->setForeignKeyCheck(false);
+    sql->setForeignKeyCheck(false);
     MainWindow::_instance->foreignKeyCheckAct->setChecked(false);
     //config->setForeignKeyCheck(false);
 

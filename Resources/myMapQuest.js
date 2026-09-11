@@ -85,60 +85,68 @@ function addMarker(index, lat, lon, icon, text, segmentId)
  webViewBridge.showSegmentsAtPoint(lat,lon, segmentId);
  if(typeof icon == "number")
  {
+     var iconUrl;
+     var options;
      if(icon === -1) // use default icon
      {
-         var iconUrl = 'https://assets.mapquestapi.com/icon/v2/marker-red.png';
+        //  const pin = new google.maps.marker.PinElement({
+        //      scale: 1.0,
+        //     glyph:text,
+        //     background: "#FBBC04",
+        // });
 
-         if(Number(text) >= 0)
-             iconUrl = 'https://assets.mapquestapi.com/icon/v2/marker-' + text + '.png';
-         var myCustomIcon = L.icon({
-               iconUrl: iconUrl, // Your URL here
-               shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-               iconSize: [25, 41],
-               iconAnchor: [12, 41],
-               popupAnchor: [1, -34],
-               shadowSize: [41, 41]
-            });
+        // marker = new google.maps.marker.AdvancedMarkerElement({map: map, position: new google.maps.LatLng(lat, lon),
+        //         gmpDraggable: true,  content: pin.element});
+        options = {
+                     isAlphaNumericIcon: true
+                         , text: text
+                         , iconShape: 'marker'
+                         , borderColor: '#FBBC04'
+                         , textColor: '#00ABDC'
+                 };
+        var myCustomIcon = L.BeautifyIcon.icon(options);
 
-         // marker = new google.maps.marker.AdvancedMarkerElement({map: map, position: new google.maps.LatLng(lat, lon),
-         //         gmpDraggable: true,  content: pin.element});
-       marker = L.marker([lat,lon],{
+        marker = L.marker([lat,lon],{
                            draggable: true,
                            icon: myCustomIcon}).addTo(map);
      }
      else
      {
-         // var pin = null;
-         // switch(icon)
-         // {
-         // case 0:
-         //     pin = new google.maps.marker.PinElement();
-         //     break;
-         // case 1:
-         //     pin = new google.maps.marker.PinElement({background: "#00FF00", glyph:"0"});
-         //     break;
-         // case 2:
-         //     pin = new google.maps.marker.PinElement({background: "#FF0000" });
-         // }
-         var iconUrl = 'https://assets.mapquestapi.com/icon/v2/marker-start.png';
-         if(text.startsWith("point"))
+         switch(icon)
          {
-            let pt = text.replace("point", "");
-             if(pt === "0")
-                 iconUrl = 'https://assets.mapquestapi.com/icon/v2/marker-start.png';
-             else
-                 iconUrl = 'https://assets.mapquestapi.com/icon/v2/marker-' + pt + '.png';
+         case 0:
+             //pin = new google.maps.marker.PinElement();
+             options = {
+                         isAlphaNumericIcon: true
+                             , text: text
+                             , iconShape: 'marker'
+                             , borderColor: '#FF0000'
+                             , textColor: '#00ABDC'
+                     };
+             break;
+         case 1:
+             //pin = new google.maps.marker.PinElement({background: "#00FF00", glyph:"0"});
+             options = {
+                         isAlphaNumericIcon: true
+                             , text: "0"
+                             , iconShape: 'marker'
+                             , borderColor: '#00FF00'
+                             , textColor: '#00ABDC'
+                     };
+             break;
+         case 2:
+             //pin = new google.maps.marker.PinElement({background: "#FF0000" });
+             options = {
+                         isAlphaNumericIcon: true
+                             , text: text
+                             , iconShape: 'marker'
+                             , borderColor: '#FF0000'
+                             , textColor: '#FFFFFF'
+                             , backgroundColor: '#FF0000'
+                     };
+             break;
          }
-         else
-             iconUrl = 'https://assets.mapquestapi.com/icon/v2/marker-blue.png'
-         var myCustomIcon2 = L.icon({
-             iconUrl: iconUrl, // Your URL here
-             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-             iconSize: [25, 41],
-             iconAnchor: [12, 41],
-             popupAnchor: [1, -34],
-             shadowSize: [41, 41]
-         });
+         var myCustomIcon2 = L.BeautifyIcon.icon(options);
 
          // marker = new google.maps.marker.AdvancedMarkerElement({map: map, position: new google.maps.LatLng(lat, lon),
          //   gmpDraggable: true, content: pin.element});
@@ -288,23 +296,250 @@ function addNewPoint(e)
 
         //currSegment.placeArrow(path);
     }
-}
+} // end addNewPoint()
 
 function addPinMarker(latLng, title)
 {
     var pinId = markerPins.length;
-    var pin = new google.maps.marker.PinElement({background: "#FFFF00", glyph:pinId.toString()});
-    var pinMarker = new google.maps.marker.AdvancedMarkerElement({map: map, position: latLng,
-            gmpDraggable: true,  content: pin.element, title:title});
-
+    // var pin = new google.maps.marker.PinElement({background: "#FFFF00", glyph:pinId.toString()});
+    // var pinMarker = new google.maps.marker.AdvancedMarkerElement({map: map, position: latLng,
+    //         gmpDraggable: true,  content: pin.element, title:title});
+    options = {
+                isAlphaNumericIcon: true
+                    , text: title
+                    , iconShape: 'marker'
+                    , borderColor: '#FFFF00'
+                    , textColor: '#00ABDC'
+            };
+            L.marker([33.73, 73.487548828125], { icon: L.BeautifyIcon.icon(options), draggable: true }).addTo(map).bindPopup("I'm Beautify");
     markerPins.push(pinMarker);
 
-    google.maps.event.addListener(marker, "dragend", function(latLng, pinId) {
+    pinMarker.on(marker, "dragend", function(latLng, pinId) {
 
-        webViewBridge.pinClicked(pinId, latLng.lat(), event.latLng.lng(), title,-1,0,-1,'');
+        webViewBridge.pinClicked(pinId, latLng.lat, event.latLng.lng, title,-1,0,-1,'');
     });
 
+} //end addPinMarker()
+
+function addRouteEndMarker( lat, lon, image, label)
+{
+    if(rtEndMarker !== null)
+    {
+        rtEndMarker.remove();
+        rtEndMarker = null;
+    }
+    // rtEndMarker = new google.maps.Marker({map: map, position: new google.maps.LatLng(lat, lon),
+    //                                          draggable: true, icon: image, label: label});
+    // var options =         options = {
+    //     isAlphaNumericIcon: true
+    //         , text: text
+    //         , iconShape: 'marker'
+    //         , borderColor: red
+    //         , textColor: '#00ABDC'
+    // };
+    // var myCustomIcon = L.BeautifyIcon.icon(options);
+    var myCustomIcon = L.icon({
+                                  iconUrl: image, // The path to your file
+                                  iconSize: [25,41],              // Size of the icon [width, height]
+                                  iconAnchor: [12, 41],            // Point of the icon which will correspond to marker's location [x, y]
+                                  popupAnchor: [-3, -76]           // Point from which the popup should open relative to the iconAnchor [x, y]
+                                });
+
+    rtEndMarker = L.marker([lat,lon],{
+              draggable: true,
+              icon: myCustomIcon}).addTo(map);
+    rtEndMarker.bindToolTip(label,{
+                                permanent: true,   // Keeps the label open constantly
+                                direction: "top",  // Positions the label above the marker ('top', 'bottom', 'left', 'right', 'center')
+                                offset: [0, -10]   // Tweaks the exact position [x, y] pixel offsets)
+                                });
+    rtEndMarker.on( "dragend", function(pt) {
+        var found = false;
+        siArray.forEach(function(si, ix)
+        {
+                var i = si.isPointOnEnd(pt.latLng);
+                if(i >=0)
+                {
+                    webViewBridge.moveRouteEndMarker(pt.latlng.lat, pt.latlng.lng, si.segmentId, i );
+                   found = true;
+                }
+        });
+        if(found == false)
+            rtEndMarker.setLatLng([lat, lon]);
+    });
+    return null;
 }
+
+function addRouteStartMarker( lat, lon, image, label)
+{
+    // image ignored
+
+    if(rtStartMarker !== null)
+    {
+        rtStartMarker.remove();
+        rtStartMarker = null;
+    }
+
+    // rtStartMarker = new google.maps.Marker({map: map, position: new google.maps.LatLng(lat, lon),
+    //                                            draggable: true, icon: image, label: label});
+    // var options =         options = {
+    //     isAlphaNumericIcon: true
+    //         , text: text
+    //         , iconShape: 'marker'
+    //         , borderColor: green
+    //         , textColor: '#00ABDC'
+    // };
+    // var myCustomIcon = L.BeautifyIcon.icon(options);
+    var myCustomIcon = L.icon({
+                                  iconUrl: image, // The path to your file
+                                  iconSize: [25, 41],              // Size of the icon [width, height]
+                                  iconAnchor: [12, 41],            // Point of the icon which will correspond to marker's location [x, y]
+                                  popupAnchor: [-3, -76]           // Point from which the popup should open relative to the iconAnchor [x, y]
+                                });
+    rtStartMarker = L.marker([lat,lon],{
+              draggable: true,
+              icon: myCustomIcon}).addTo(map);
+    rtStartMarker.bindToolTip(label,{
+                                permanent: true,   // Keeps the label open constantly
+                                direction: "top",  // Positions the label above the marker ('top', 'bottom', 'left', 'right', 'center')
+                                offset: [0, -10]   // Tweaks the exact position [x, y] pixel offsets)
+                                });
+    rtStartMarker.on( "dragend", function(pt) {
+        var found = false;
+        for ( const [ix, si] of siArray.entries())
+        {
+                var i = si.isPointOnEnd(pt.latLng);
+                if(i >=0)
+                {
+                    webViewBridge.moveRouteStartMarker(pt.latlng.lat, pt.latlng.lng, si.segmentId, i );
+                    found = true;
+                }
+        };
+        if(found == false)
+            rtStartMarker.setLatLng([lat, lon]);
+    });
+    return null;
+}
+
+function addStationMarker(lat, lon, visible, segmentId, stationName, stationKey, infoKey, HTMLText, typeIcon)
+{
+ var stationMarker = null;
+ console.log("addStationMarker lat=" + lat +  " lon=" + lon + " visible=" +  visible  + " segmentid =" + segmentId + " name= "  + stationName + " stationKey=" +  stationKey + " infoKey="+ infoKey + " text =" + HTMLText +  " icon=" + typeIcon);
+
+ var bPresent = false;
+ if(stationArray)
+ {
+  // check to see if already present
+  var count = stationArray.length;
+  stationArray.forEach(function(element, index)
+  {
+   if(index >= count)
+   {
+    return;
+   }
+   if(element  && element.stationKey === stationKey)
+   {
+    console.error("stationKey " + stationKey + " is already present");
+    bPresent = true;
+    return;
+   }
+  });
+ }
+ if(bPresent)
+     return;
+ var icon = getIcon(typeIcon);
+ //var shadow = getShadow(typeIcon);
+
+ console.log("icon is typeof " + typeof(icon) + " " + icon)
+ // var stationMarker = new google.maps.Marker({
+ //                                              position: new google.maps.LatLng(lat, lon),
+ //                                              //icon:icon,
+ //                                                icon: new google.maps.MarkerImage(icon,
+ //                                                    null, null, null, new google.maps.Size(16,16)),shadow:shadow,
+ //                                              draggable:true,
+ //                                              title:stationName
+ //                                             });
+ // options = {
+ //              isAlphaNumericIcon: true
+ //                  , text: text
+ //                  , iconShape: 'marker'
+ //                  , borderColor: yellow
+ //                  , textColor: '#00ABDC'
+ //          };
+ // var myCustomIcon = L.BeautifyIcon.icon(options);
+
+ stationMarker = L.marker([lat,lon],{
+                    draggable: true,
+                    icon: icon}).addTo(map);
+ // stationMarker.setMap(map);
+ // stationMarker.setVisible(visible)
+ stationMarker.segmentId = segmentId;
+ stationMarker.stationKey = stationKey;
+ stationMarker.HTMLText = HTMLText;
+ stationMarker.typeIcon = typeIcon;
+ stationMarker.infoWindow = null;
+  //stationArray.push(stationMarker);
+
+ stationMarker.on("rightclick", function(){
+//                window.external.updateStation(stationMarker.stationKey, segmentId);
+      webViewBridge.updateStation(stationMarker.stationKey, segmentId);
+ });
+ if(HTMLText)
+ {
+     // var ifwo = {iconShape: 'rectangle', iconSize: [11,11], iconAnchor: [11,10],borderColor: 'yellow', draggable: true};
+     //  stationMarker.infoKey = infoKey;
+     // var ifwomicon = L.BeautifyIcon.icon(ifwo);
+     //  //stationMarker.infoWindow = new google.maps.InfoWindow({content:HTMLText, position:new google.maps.LatLng(lat, lon)});
+     //  stationMarker.infoWindow = L.marker([lat, lon], {icon: ifwomicon})
+     //  .addTo(map)
+     //  .bindPopup( HTMLText)
+ }
+ stationMarker.on('click', function(pt)
+ {
+     //stationMarker.infoWindow.openPopup();
+     stationMarker.infowindow = L.popup({offset: L.point(0, -22)})
+        .setLatLng([lat,lon])
+        .setContent(HTMLText)
+        .openOn(map); // Using openOn automatically closes other open popups
+ });
+ // stationMarker.infoWindow.on('click', function(pt)
+ // {
+ //     stationMarker.infoWindow.openPopup();
+ // });
+
+ stationMarker.on("dragend", function(pt)
+ {
+  //var found = false;
+  //var closestPoint=new google.maps.LatLng(0,0);
+  var closestPoint=pt.latLng;
+  var distance = 9999999.0;
+  var segmentId = stationMarker.segmentId;
+  siArray.forEach(function(si, ix)
+  {
+   //var line = si.getLine();
+   //var path = si.path;
+   path.forEach(function(pt2, ix2)
+   {
+    var newBearing =   bearing(pt.latlng.lat, pt.latlng.lng, pt2.lat, pt2.lng);
+    var newDistance = newBearing.getDistance();
+    if(newDistance < distance)
+    {
+     distance = newDistance;
+     //var x = distance.getx();
+     closestPoint = pt2;
+     segmentId = si.segmentId;
+    }
+   });
+  });
+  webViewBridge.moveStationMarker(stationMarker.stationKey, segmentId, closestPoint.lat, closestPoint.lng);
+ //if(found == false)
+ //    rtStartMarker.setPosition(new google.maps.LatLng(lat, lon));
+ });
+   stationArray.push(stationMarker);
+ //return null;
+ return;
+}
+
 
 function alertClose()
 {
@@ -397,7 +632,7 @@ function clearAll()
    if(infowindow !== null)
    {
        infowindow.remove();
-       if(infowindow.marker !== null)
+       if(infowindow.marker !== null && infowindow.marker !== undefined)
            infowindow.marker.remove();
        infowindow = null;
    }
@@ -407,7 +642,7 @@ function clearAll()
 
  //   clearPinMarker();
 
-   if(stationArray)
+   // if(stationArray)
        while(stationArray.length > 0)
        {
            var stationMarker = stationArray.pop();
@@ -415,7 +650,8 @@ function clearAll()
            if(stationMarker.infoWindow)
                stationMarker.infoWindow.remove();
            stationMarker = null;
-       }return null;
+       }
+   return null;
 }
 
 function clearMarker()
@@ -483,6 +719,14 @@ function clearRectangle()
     }
 }
 
+function closeCityBoundsButton()
+{
+    // TODO
+    // if(map.controls[google.maps.ControlPosition.BOTTOM_CENTER].length>0)
+    //     map.controls[google.maps.ControlPosition.BOTTOM_CENTER].removeAt(0);
+}
+
+
 var connected = false;
 //We use this function because connect statements resolve their target once, immediately
 //not at signal emission so they must be connected once the webViewBridge object has been added to the frame
@@ -513,6 +757,75 @@ function createSegment(segmentId, routeName, segmentName, oneWay, showArrow, col
 
 } // end create segment
 
+function displayRouteComment(latitude, longitude, HTMLText, commentKey, route, date, companyKey)
+{
+  marker = null;
+ if(infowindow !== null)
+ {
+     //infowindow.marker.remove();
+  infowindow.remove();
+  infowindow = null;
+ }
+ if(latitude === 0 && longitude === 0)
+ {
+  latitude = map.getCenter().lat;
+  longitude = map.getCenter().lon;
+ }
+ // var rectIcon = L.BeautifyIcon.icon({iconShape: 'rectangle', iconSize: [22,22]
+ //                                        , iconAnchor: [11,10],borderColor: 'yellow'});
+ var arrowIcon =  L.icon({iconUrl: 'https://www.google.com/mapfiles/arrow.png'});
+ //infowindow = new google.maps.InfoWindow({content:HTMLText, maxWidth: 300, ariaLabel: "Comment"});
+
+ infowindow = L.popup({offset: L.point(11, 6),
+                          autoClose: false,
+                          closeOnClick: false})
+ .setLatLng([latitude,longitude])
+ .setContent(HTMLText)
+ .openOn(map); // Using openOn automatically closes other open popups
+
+ // this.marker = new google.maps.Marker({
+ //       position: new google.maps.LatLng(latitude, longitude),
+ //       map: map,
+ //       icon: image[images.arrow],
+ //       zIndex: 10,
+ //       draggable: true,
+ //       visible: true,
+ //       title: "comment"
+ //     });
+ //    var customIcon = L.icon({iconUrl: icon});
+    infowindow.marker = L.marker([latitude, longitude], {
+                               icon: arrowIcon,
+                               draggable: true
+                           }).addTo(map).bindTooltip('drag to move');
+infowindow.on('remove', function()
+{
+    infowindow.marker.remove();
+});
+ //  if(this.marker === null)
+ //      alert("marker is null");
+ // //infowindow.setMap(map);
+ // infowindow.marker = this.marker;
+ infowindow.commentKey = commentKey;
+ infowindow.route = route;
+ infowindow.date = date;
+ infowindow.lat = latitude;
+ infowindow.lon = longitude;
+ infowindow.companyKey = companyKey
+ infowindow.marker.on("drag", function(pt)
+ {
+     infowindow.setLatLng(pt.latlng);
+ });
+
+ //google.maps.event.addListener(this.marker, "dragend", function(pt) {
+  infowindow.marker.on('dragend', function(pt) {
+  webViewBridge.moveRouteComment(infowindow.route, infowindow.date, pt.latlng.lat, pt.latlng.lng, infowindow.companyKey);
+  });
+ //google.maps.event.addListener(infowindow, "closeclick", function(){
+  infowindow.on( "closeclick", function(){
+ });
+ return 0;
+}// end displayRouteComment()
+
 function displayStationMarker(stationKey, bDisplay)
 {
  if(!stationArray)
@@ -533,12 +846,51 @@ function displayStationMarker(stationKey, bDisplay)
  return;
 } // end displayStationMarker
 
+function displayStationMarkers(bDisplay)
+{
+ //alert(stationArray);
+ if(!stationArray)
+  return null;
+ stationArray.forEach(function(element, index)
+ {
+  if(element)
+  {
+   element.setVisible(bDisplay);
+  }
+ });
+ return null;
+} // end displayStationMarkers()
+
+function displayTerminalMarkers(bDisplay)
+{
+    //alert("display terminal markers");
+    if(bDisplay)
+    {
+        if(rtStartMarker !== null)
+          rtStartMarker.remove();
+        if(rtEndMarker !== null)
+          rtEndMarker.remove();
+    }
+    else
+    {
+        if(rtStartMarker !== null)
+          rtStartMarker.addTo(map);
+        if(rtEndMarker !== null)
+          rtEndMarker.addTo(map);
+    }
+    return null;
+}
 function fitMapBounds(swLat, swLon, neLat, neLon)
 {
   const bounds = [L.latLng(swLat, swLon), L.latLng(neLat, neLon)];
     map.fitBounds(bounds);
     return null;
 }// end fitMapBounds()
+
+function geocoderRequest(lat, lon)
+{
+
+}
 
 function getAdjacentPoints(latlngs, targetLatLng) {
     //const latlngs = polyline.getLatLngs(); // Array of L.LatLng points
@@ -572,6 +924,78 @@ function getCurrBounds()
     webViewBridge.cityBounds( ne.lat, ne.lng, sw.lat, sw.lng);
 
 } // end getCurrBounds()
+
+function getIcon(typeIcon)
+{
+    var icon;
+    if(typeIcon)
+    {
+     switch (typeIcon)
+     {
+      case "arrow":
+         icon = image[images.arrow];
+         break;
+      case "red":
+         icon = image[images.smallred];
+         break;
+      case "blue":
+         icon = image[images.smallBlue];
+         break;
+      case "green":
+         icon = image[images.smallGreen];
+         break;
+      case "sbahn":
+         icon = image[images.sbahn];
+         break;
+      case "ubahn":
+         icon = image[images.ubahn];
+         break;
+      case "tram":
+         icon = image[images.tram];
+         break;
+      case "yellow":
+         icon = image[images.smallYellow];
+         break;
+      case "orange":
+         icon = image[images.orange];
+         break;
+      case "bvgtram":
+          icon = image[images.bvgtram];
+          break;
+      case "tram":
+          icon = image[images.tram];
+          break;
+      case "subway":
+          icon = image[images.subway];
+          break;
+      case "rail":
+          icon = image[images.rail];
+          break;
+      case "slmetro":
+          icon = image[images.slmetro];
+          break;
+      case "haltstelle":
+          icon = image[images.haltstelle];
+          break;
+      default:
+         //alert("icon type = " + typeIcon);
+          console.error("invalid typeIcon: " + typeIcon);
+         icon = image[images.default];;
+         break;
+     }
+    }
+    var markerIcon = new L.Icon({
+                                   iconUrl: icon,
+                                   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                   iconSize: [25, 41],
+                                   iconAnchor: [12, 41],
+                                   popupAnchor: [1, -34],
+                                   shadowSize: [41, 41]
+                                 });
+
+ return markerIcon;
+}
+
 
 function getMapType()
 {
@@ -716,6 +1140,8 @@ function initMap()
     });
 
     siArray = [];
+    markerPins = [];
+
   var idleTimeout;
   var idleDelay = 500; // Time in milliseconds
   // Function that runs when the map becomes idle
@@ -746,6 +1172,14 @@ function isAddModeOn()
  else
   return "false";
 }// end isAddModeOn()
+
+function nextRouteComment()
+{
+ infowindow.marker.remove();
+ webViewBridge.getInfoWindowComments(infowindow.lat, infowindow.lon, infowindow.route, infowindow.date, infowindow.commentKey,
+                                     infowindow.companyKey, 1);
+ return 0;
+} // nextRouteComment()
 
 function pointRadialDistance(start, bearing, inDistance)
 {
@@ -855,6 +1289,14 @@ function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
 //  });
 }
 
+function prevRouteComment()
+{
+ infowindow.marker.remove();
+ webViewBridge.getInfoWindowComments(infowindow.lat, infowindow.lon, infowindow.route, infowindow.date, infowindow.commentKey,
+                                     infowindow.companyKey, -1);
+} // end prevRouteComment()
+
+
 // deprecated
 function processScript(func, parms)
 {
@@ -869,6 +1311,11 @@ function processScript(func, parms)
   {
    //eval(call);
    var myFucn =  Function(call);
+   if(myFucn == null)
+   {
+       console.error("function not found: " + call);
+       return;
+   }
    var fRslt = myFucn();
    if(fRslt === null) return;
    if( fRslt instanceof Array)
@@ -907,6 +1354,11 @@ function processScript2(func, parms, name, value)
   {
       //eval(call);
       var myFucn =  Function(call);
+      if(myFucn == null)
+      {
+          console.error("function not found: " + call);
+          return;
+      }
       var fRslt = myFucn();
       if(fRslt === null) return;
       if("fRslt" in window)
@@ -946,6 +1398,11 @@ function processScript3(func, objArray, count)
   {
       //eval(call);
       var myFucn =  Function(call);
+      if(myFucn == null)
+      {
+          console.error("function not found: " + call);
+          return;
+      }
       var fRslt = myFucn();
       if(fRslt === null) return;
       if( fRslt instanceof Array)
@@ -964,9 +1421,10 @@ function processScript3(func, objArray, count)
   }
 } // end processScript3()
 
+
 function removeStationMarker(stationKey)
 {
- var count = stationArray.getLength();
+ var count = stationArray.length;
  //stationArray.forEach(function(element, index)
   for (const [index, element] of stationArray.entries())
  {
@@ -974,7 +1432,7 @@ function removeStationMarker(stationKey)
       return;
   if(element && element !== 'undefined' && element.stationKey === stationKey)
   {
-      element.setMap();
+      element.remove();
       stationArray.removeAt(index);
       return;
   }
@@ -1347,6 +1805,11 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
 
     this.createLines = function()
     {
+        var newIcon = webViewBridge.createIcon(color);
+        var iconName = color + '-rect.png';
+        iconName = iconName.replace('#','');
+        var IconPath = 'images/' + iconName;
+
 
         webViewBridge.setDebug("SegmentId "+ segmentId + "usage: "+ trackUsage);
         var curLine;
@@ -1445,14 +1908,36 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
             //                                 }).addTo(map);
 
         // --- Example with a rotated marker ---
+            // options = {
+            //             iconShape: 'rectangle'
+            //                , borderWidth: 0
+            //                , backgroundColor: color
+            //                , iconSize: [12,2]
+            //                , iconAnchor: [6, 2]
+            // };
+
+            // decorator = L.polylineDecorator(
+            //     curLine,
+            //     {
+            //         patterns: [
+            //             { offset: 0, repeat: 10, symbol: L.Symbol.dash({pixelSize: 5, pathOptions: {color: '#000000', weight: 1, opacity: 0.2}}) },
+            //             { offset: 0, repeat: 5, symbol: L.Symbol.marker({rotate: true, markerOptions: {
+            //                 icon: L.BeautifyIcon.icon(options)
+            //             }})}
+            //         ]
+            //     }
+            // ).addTo(map);
+
+            // using icon png file
+            var iconPath = 'images/FF0000_rect.png';
             decorator = L.polylineDecorator(
                 curLine,
                 {
                     patterns: [
-                        { offset: 0, repeat: 10, symbol: L.Symbol.dash({pixelSize: 5, pathOptions: {color: '#000', weight: 1, opacity: 0.2}}) },
+                        { offset: 0, repeat: 10, symbol: L.Symbol.dash({pixelSize: 5, pathOptions: {color: '#000000', weight: 1, opacity: 0.2}}) },
                         { offset: 0, repeat: 5, symbol: L.Symbol.marker({rotate: true, markerOptions: {
                             icon: L.icon({
-                                iconUrl: 'images/red_rect.png',
+                                iconUrl: iconPath,
                                 iconSize: [12,1],
                                 iconAnchor: [6, 1]
                             })
@@ -1638,6 +2123,23 @@ function setBounds( pt1, pt2)
     // Make the map zoom and pan to fit this box
     map.fitBounds(bounds);
 }// end setBounds()
+
+function showRouteComment(bDisplay)
+{
+ if(infowindow !== null)
+ {
+  if(bDisplay)
+  {
+   infowindow.addTo(map);
+  }
+  else
+  {
+   infowindow.remove();
+   infowindow.marker.remove();
+  }
+ }
+ return;
+} // end showRouteComment()
 
 function showStreetPins(firstlat, firstlon, secondlat, secondlon, title, id, location, draggable, seq)
 {

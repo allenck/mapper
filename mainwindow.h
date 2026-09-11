@@ -467,7 +467,7 @@ private:
     //bool bFirstSegmentDisplayed = false;
     bool bReloadInProgress = false;
 
-    QString createTickIcon(QString tmplt, QString name,  QColor color);
+    QString createTickIcon(QColor color);
 
     void createActions();
     void createMenus();
@@ -519,6 +519,8 @@ private:
     bool backupDatabases();
     bool restoreDatabases();
     void disableSegment_Route_changes(bool);
+    QString getRouteMarkerImagePath(QString route, bool isStart);
+    QString getMarkerImagePath(QString tmplt, QString name, QString text, double offset);
 
 private slots:
 //    void aCopy();

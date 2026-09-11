@@ -4,7 +4,7 @@
 #include <QtGui>
 #include "data.h"
 #include "configuration.h"
-#include "qwebengineview.h"
+#include "qwebchannel.h"
 #include "websocketclientwrapper.h"
 
 class MainWindow;
@@ -27,6 +27,8 @@ public:
     int curZoom();
     QString curMaptype();
     QString curMapId();
+    QString curName();
+    Q_PROPERTY(QString name READ curName WRITE setName NOTIFY onNameChanged FINAL)
     Q_PROPERTY(float lat READ curLat NOTIFY onLatChanged)
     Q_PROPERTY(float lng READ curLon NOTIFY onLngChanged)
     Q_PROPERTY(int zoom READ curZoom NOTIFY onZoomChanged)
@@ -49,7 +51,7 @@ public:
     bool isResultReceived();
     LatLng rightClick() {return _rightClickLoc;}
     void setMapId(QString);
-
+    void setName(QString);
     ~WebViewBridge();
 
 signals:
@@ -69,6 +71,7 @@ signals:
     void onLngChanged(QString);
     void onZoomChanged(QString);
     void onMapTypeChanged(QString);
+    void onNameChanged(QString);
     void latlngChanged(LatLng latLng);
     void segmentStatusSignal(QString txt, QString color);
     void queryOverlaySignal();
@@ -127,6 +130,7 @@ public slots:
     void pinClicked(int, double lat, double lon, QString street, int streetId, QString location, int seq);
     void pinMarkerMoved(double lat, double lon);
     bool setupbridge();
+    QString createIcon(QColor color);
 
 private slots:
 
@@ -143,6 +147,7 @@ private:
     Configuration* config;
     LatLng _rightClickLoc;
     QList<LatLng> buildPoints(QVariantList array);
+    QString name;
 
     QWebChannel* channel = nullptr;
     QWebSocketServer* m_server=nullptr;

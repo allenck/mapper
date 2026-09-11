@@ -108,3 +108,4 @@ QString LatLng::str()
     }
     return rslt;
 }
+

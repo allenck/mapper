@@ -1873,6 +1873,14 @@ function addMarker(i, lat, lon, icon, text, SegmentId)
 
          marker = new google.maps.marker.AdvancedMarkerElement({map: map, position: new google.maps.LatLng(lat, lon),
                  gmpDraggable: true,  content: pin.element});
+         options = {
+                     isAlphaNumericIcon: true
+                         , text: pt
+                         , iconShape: 'marker'
+                         , borderColor: '#FF0000'
+                         , textColor: '#00ABDC'
+                 };
+         var myCustomIcon2 = L.BeautifyIcon.icon(options);
      }
      else
      {
@@ -3059,7 +3067,6 @@ function addPinMarker(latLng, title)
 
         webViewBridge.pinClicked(pinId, latLng.lat(), event.latLng.lng(), title,-1,0,-1,'');
     });
-
 }
 
 function getPinLocations()

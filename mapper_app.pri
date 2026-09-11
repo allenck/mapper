@@ -92,7 +92,9 @@ SOURCES += main.cpp\
     dialogeditstreets.cpp \
     dialogpreferences.cpp \
     dialogupdatestreets.cpp \
-    findreplacewidget.cpp
+    findreplacewidget.cpp \
+    dialogeditcomments.cpp \
+    dialoghtmledit.cpp
 
 HEADERS  += mainwindow.h \
     $$PWD/browsecommentsdialog.h \
@@ -190,7 +192,9 @@ HEADERS  += mainwindow.h \
     dialogeditstreets.h \
     dialogpreferences.h \
     dialogupdatestreets.h \
-    findreplacewidget.h
+    findreplacewidget.h \
+    dialogeditcomments.h \
+    dialoghtmledit.h
 
 FORMS += \
     $$PWD/ui/newquerydialog.ui \
@@ -231,7 +235,9 @@ FORMS += \
     dialogeditstreets.ui \
     dialogpreferences.ui \
     dialogupdatestreets.ui \
-    findreplacewidget.ui
+    findreplacewidget.ui \
+    dialogeditcomments.ui \
+    dialoghtmledit.ui
 
 DISTFILES += \
  $$PWD/Resources/api_key.txt \
