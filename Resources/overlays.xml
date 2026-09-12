@@ -83,6 +83,19 @@ p, li { white-space: pre-wrap; }
     <wmtsUrl>https://maps.georeferencer.com/georeferences/a800c204-3d6e-5d26-bc15-04b816d5a8d6/2020-05-02T12:20:42.829484Z/wmts?key=mpP5xNUZ8b1t9mFrcFfI&amp;SERVICE=WMTS&amp;REQUEST=GetCapabilities</wmtsUrl>
     <url>https://maps.georeferencer.com/georeferences/a800c204-3d6e-5d26-bc15-04b816d5a8d6/2020-05-02T12:20:42.829484Z/map/{z}/{x}/{y}.png?key=mpP5xNUZ8b1t9mFrcFfI</url>
   </overlay>
+  <overlay cityName="Indianapolis, IN" maxZoom="21" minZoom="8" name="Indianapolis." opacity="65" selected="yes" source="georeferencer" year="1903">
+    <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;meta charset="utf-8" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: "\2610"; }
+li.checked::marker { content: "\2612"; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Rand, McNally &amp;amp; Co.'s Indianapolis. (with) Business Portion of Indianapolis on an Enlarged Scale.&lt;/p>&lt;/body>&lt;/html></description>
+    <bounds eastLongtude="-85.858" northLatitude="40.0685" southLatitude="39.4685" westLongitude="-86.458"/>
+    <wmtsUrl>https://maps.georeferencer.com/georeferences/9b4ceaef-4b5e-5bb2-8ac4-c7259057165e/2018-11-30T12:08:40.876570Z/wmts?key=caj1mpUbIDuRGkUmcxkG&amp;SERVICE=WMTS&amp;REQUEST=GetCapabilities</wmtsUrl>
+    <url>https://maps.georeferencer.com/georeferences/9b4ceaef-4b5e-5bb2-8ac4-c7259057165e/2018-11-30T12:08:40.876570Z/map/{z}/{x}/{y}.png?key=caj1mpUbIDuRGkUmcxkG</url>
+  </overlay>
   <overlay cityName="Louisville, KY" maxZoom="16" minZoom="10" name="Louisville" opacity="16" selected="yes" source="acksoft" year="">
     <description></description>
     <bounds eastLongtude="-85.3607" northLatitude="38.5291" southLatitude="37.9291" westLongitude="-85.9607"/>
@@ -526,7 +539,7 @@ p, li { white-space: pre-wrap; }
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/public/map_tiles/</url>
   </overlay>
-  <overlay cityName="St Louis, MO" maxZoom="16" minZoom="10" name="1903_St_Louis_Mo.4326.map.geo" opacity="16" selected="no" source="acksoft" year="">
+  <overlay cityName="St Louis, MO" maxZoom="16" minZoom="10" name="1903_St_Louis_Mo.4326.map.geo" opacity="19" selected="yes" source="acksoft" year="">
     <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;meta charset="utf-8" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
@@ -538,19 +551,6 @@ li.checked::marker { content: "\2612"; }
     <bounds eastLongtude="-89.8854" northLatitude="38.9185" southLatitude="38.3185" westLongitude="-90.4854"/>
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/public/map_tiles/</url>
-  </overlay>
-  <overlay cityName="St Louis, MO" maxZoom="21" minZoom="8" name="Indianapolis." opacity="65" selected="yes" source="georeferencer" year="1903">
-    <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
-&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;meta charset="utf-8" />&lt;style type="text/css">
-p, li { white-space: pre-wrap; }
-hr { height: 1px; border-width: 0; }
-li.unchecked::marker { content: "\2610"; }
-li.checked::marker { content: "\2612"; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;">
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">Rand, McNally &amp;amp; Co.'s Indianapolis. (with) Business Portion of Indianapolis on an Enlarged Scale.&lt;/p>&lt;/body>&lt;/html></description>
-    <bounds eastLongtude="-89.8854" northLatitude="38.9185" southLatitude="38.3185" westLongitude="-90.4854"/>
-    <wmtsUrl>https://maps.georeferencer.com/georeferences/9b4ceaef-4b5e-5bb2-8ac4-c7259057165e/2018-11-30T12:08:40.876570Z/wmts?key=caj1mpUbIDuRGkUmcxkG&amp;SERVICE=WMTS&amp;REQUEST=GetCapabilities</wmtsUrl>
-    <url>https://maps.georeferencer.com/georeferences/9b4ceaef-4b5e-5bb2-8ac4-c7259057165e/2018-11-30T12:08:40.876570Z/map/{z}/{x}/{y}.png?key=caj1mpUbIDuRGkUmcxkG</url>
   </overlay>
   <overlay cityName="St Louis, MO" maxZoom="21" minZoom="8" name="Map of St. Louis Mo." opacity="65" selected="yes" source="georeferencer" year="1895">
     <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
@@ -573,12 +573,19 @@ p, li { white-space: pre-wrap; }
     <url>https://maps.georeferencer.com/georeferences/9c83ed2b-077a-5e13-867d-36962c91a9c6/2022-01-06T17:24:11.385327Z/map/{z}/{x}/{y}.png?key=caj1mpUbIDuRGkUmcxkG</url>
   </overlay>
   <overlay cityName="St Louis, MO" maxZoom="16" minZoom="10" name="St_Louis_1895" opacity="65" selected="yes" source="acksoft" year="1895">
-    <description></description>
+    <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;meta charset="utf-8" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: "\2610"; }
+li.checked::marker { content: "\2612"; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;">
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Ubuntu'; font-size:11pt;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
     <bounds eastLongtude="-89.8854" northLatitude="38.9185" southLatitude="38.3185" westLongitude="-90.4854"/>
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/public/map_tiles/</url>
   </overlay>
-  <overlay cityName="St Louis, MO" maxZoom="16" minZoom="10" name="St_Louis_1903" opacity="65" selected="yes" source="acksoft" year="1903">
+  <overlay cityName="St Louis, MO" maxZoom="16" minZoom="10" name="St_Louis_1903" opacity="57" selected="yes" source="acksoft" year="1903">
     <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;meta charset="utf-8" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }

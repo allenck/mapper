@@ -1061,6 +1061,7 @@ void MainWindow::loadOverlay(Overlay* ov)
  QVariantList objArray;
  objArray << currentOverlay<< ov->opacity << ov->minZoom << ov->maxZoom << ov->source << ov->bounds().toString()<< ov->urls;
  m_bridge->processScript("loadOverlay", objArray);
+ ui->chkShowOverlay->setChecked(true);
 }
 
 void MainWindow::fillOverlayMenu()

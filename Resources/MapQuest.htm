@@ -38,29 +38,71 @@
 
    </style>
    <style>
-           /* Style your slider container so it matches a clean map UI */
-           .slider-control-container {
-               background: white;
-               padding: 10px;
-               border-radius: 4px;
-               box-shadow: 0 1px 5px rgba(0,0,0,0.4);
-               font-family: Arial, sans-serif;
-               font-size: 12px;
-           }
-           .slider-control-container input {
-               vertical-align: middle;
-               cursor: pointer;
-           }
-       </style>
-       <title>Mapper</title>
+   /* Container box on the map */
+   .leaflet-custom-slider-container {
+       border: none;
+       background: transparent;
+       padding: 10px;
+       border-radius: 8px;
+       /*box-shadow: 0 1px 5px rgba(0,0,0,0.4);*/
+       box-shadow: none;  /* optional, to remove default Leaflet shadow */
+   }
+
+   /* 1. Base style for the slider track */
+   .my-custom-slider {
+       -webkit-appearance: none; /* Removes default browser styling */
+       appearance: none;
+       width: 75px;
+       height: 8px;
+       background: #555; /* Track color */
+       border-radius: 4px;
+       outline: none;
+       cursor: pointer;
+   }
+
+   /* 2. Custom style for the moving handle (Chrome, Safari, Opera, Edge) */
+   .my-custom-slider::-webkit-slider-thumb {
+       -webkit-appearance: none;
+       appearance: none;
+       width: 18px;
+       height: 18px;
+       background: #0078FF; /* Leaflet blue */
+       border-radius: 50%;
+       border: 1px solid white;
+       box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+       transition: background 0.1s ease;
+   }
+
+   /* Hover effect for the moving handle */
+   .my-custom-slider::-webkit-slider-thumb:hover {
+       background: #0056b3;
+   }
+
+   /* 3. Custom style for the moving handle (Firefox) */
+   .my-custom-slider::-moz-range-thumb {
+       width: 18px;
+       height: 18px;
+       background: #0078FF;
+       border-radius: 50%;
+       border: 2px solid white;
+       box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+       transition: background 0.1s ease;
+       cursor: pointer;
+   }
+
+   .my-custom-slider::-moz-range-thumb:hover {
+       background: #0056b3;
+   }       </style>
+
+<title>Mapper</title>
 
   <!--script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script-->
   <!--script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script-->
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.js?features=default"></script>
   <script type="text/javascript" src="qwebchannel.js"> </script>
   <script type="text/javascript" src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-  <script type="text/javascript" src="ExtDraggableObject.js"></script>
-  <script type="text/javascript" src="opacityControl.js"></script>
+  <!--script type="text/javascript" src="ExtDraggableObject.js"></script>
+  <script type="text/javascript" src="opacityControl.js"></script-->
   <script type="text/javascript" src="mapperLeaflet.js"> </script>
   <script type="text/javascript" src="apiKey.js"> </script>
   <script type="text/javascript" src="WebChannel.js"> </script>
