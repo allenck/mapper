@@ -2744,6 +2744,11 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
 
 }
 
+function getOpacity()
+{
+ return overlay.getOpacity();
+}
+
 function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
 {
  console.log("load overlay: " + name + " opacity =" + opacity + " minZoom =" + minZoom + " maxZoom = " + maxZoom + " source = " + source + " bounds = " + bounds + " urls = " + urls);
