@@ -1056,6 +1056,8 @@ void MainWindow::loadOverlayData()
 void MainWindow::loadOverlay(Overlay* ov)
 {
  currentOverlay = ov->name;
+ if(ov->opacity < 0 || ov->opacity > 100)
+     ov->opacity = 65;
  QVariantList objArray;
  objArray << currentOverlay<< ov->opacity << ov->minZoom << ov->maxZoom << ov->source << ov->bounds().toString()<< ov->urls;
  m_bridge->processScript("loadOverlay", objArray);
@@ -5276,7 +5278,7 @@ void MainWindow::chkShowOverlayChanged(bool bChecked)
   loadOverlay(ov);
  }
  else
-  m_bridge->processScript("loadOverlay", "null,0,0,0,''");
+  m_bridge->processScript("loadOverlay", "null,0,0,'0,0, 0,0',''");
 }
 /// <summary>
 /// setStation. Called when user doubleclicks on a line segment to add a new station
