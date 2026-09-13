@@ -1,0 +1,140 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+  <title>PostgreSQL considerations</title>
+  </head>
+<body style="background-color:#faf0e6">
+<h1><big><big><big><span style="font-weight: bold;"></span></big></big></big><big>&nbsp;
+&nbsp;&nbsp; &nbsp;&nbsp; PostgreSQL considerations &nbsp; &nbsp;&nbsp;
+&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
+&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
+</big></h1>
+Connections to a PostgreSQL server can either use the QPSQL PostgeSQL driver or an ODBC driver such as 
+<strong>psqlODBC</strong>. Unlike MySql or SqlServer, PostgreSQL does not allow a connection to be changed 
+to a different database. To connect to a different database, the current connection must be closed and a new 
+connection be opened. As a result, when using ODBC and supplying a DSN, the DSN must specify the database and
+as a practical consideration, there must be a DSN defined for each specific database that will be connected. 
+However, ODBC also allows the use of a <em>connection string</em> which specifies the particular database. 
+Therefore only one DSN ever needs to be defined for ODBC connections to PostgreSQL, and that is to establish 
+driver, e.g. <strong>{PostgreSQL Unicode(x64)} </strong> to be used. The connection string supplies the other
+parameters for a connection such as: Host, port, user ID, password and database. 
+
+<h2>Installing a SSL certificate on Windows</h2>
+Installing an SSL certificate for PostgreSQL involves configuring both the server and potentially the client to use encrypted connections.
+<p>
+<h3>Server-Side Configuration:</h3>
+<ul>
+    <li>Generate or Obtain SSL Certificates:</li
+        <dt> Self-Signed: For testing or internal use, you can generate a self-signed certificate and a private key using tools like OpenSSL.
+        Trusted CA: For production environments, obtain a certificate signed by a trusted Certificate Authority (CA). </dt>
+    <li>Place Certificate Files:</li>
+        <dt>Copy the server certificate (server.crt), private key (server.key), and optionally the CA certificate (root.crt) to a secure location accessible by the PostgreSQL user, typically within the PostgreSQL data directory.
+        Ensure the private key file has strict permissions (e.g., chmod 0400) and is owned by the PostgreSQL user. </dt>
+    <li>Configure postgresql.conf:</li>
+        <dt>Open the postgresql.conf file (located in the data directory).
+        Set ssl = on.
+        Specify the paths to your certificate, key, and CA files:</dt>
+</ul>
+<p>
+Code<br>
+<ul>
+        <li>ssl_cert_file = 'path/to/server.crt'</li>
+        <li>ssl_key_file = 'path/to/server.key'</li>
+        <li>ssl_ca_file = 'path/to/root.crt'  # Optional, if using client certificate verification</li>
+</ul>
+    Configure pg_hba.conf:
+
+    Open the pg_hba.conf file (located in the data directory).
+
+Modify or add entries to enforce SSL for specific connections. For example, to require SSL for all connections from any IP:
+
+Code<br>
+<ul>
+        <li>hostssl all all 0.0.0.0/0 md5</li>
+</ul>
+    If requiring client certificate verification, add clientcert=verify-ca:
+
+Code<br>
+<ul>
+        <li>hostssl all all 0.0.0.0/0 md5 clientcert=verify-ca</li>
+</ul>
+    Restart PostgreSQL: Restart the PostgreSQL service to apply the changes.
+
+
+Client-Side Configuration (if requiring client certificates or for secure connections):
+
+    Obtain Client Certificates:
+    . 
+
+If clientcert=verify-ca is enabled on the server, the client needs a certificate and key signed by the same CA as the server.
+Configure Client Application:
+.
+Depending on the client, you may need to specify the SSL mode (e.g., require, verify-ca), and provide paths to the client certificate, key, and CA certificate. For example, in psql:
+
+Code<br>
+<ul>
+    <li>psql "sslmode=require sslcert=client.crt sslkey=client.key sslrootcert=root.crt host=your_host user=your_user dbname=your_db"</li>
+</ul>
+Verification:
+
+    After restarting, connect to the database and execute SHOW ssl; to confirm SSL is enabled.
+    Test client connections to ensure they are using SSL as intended.
+    
+<p>
+To create a self-signed certificate for localhost on Windows, you can use the mkcert tool, which simplifies the process significantly.
+Prerequisites:
+
+    Chocolatey: If you don't have it, install <a href="https://chocolatey.org/install" name="install Chocolaty" title="Install chocolaty">Chocolatey</a>, a package manager for Windows, by following the instructions on its official website.
+<br>
+Steps:
+<ol>
+    <li>Install mkcert: Open an elevated PowerShell or Command Prompt and run the following command:</li>
+
+Code:<
+
+    <em>choco install mkcert</em>
+
+    <li>Install the local CA: Once mkcert is installed, run this command to create and install a local Certificate Authority (CA) in your trust store:
+</li>
+Code:
+
+    <em>mkcert -install</em>
+
+    <li>Generate the certificate for localhost: Navigate to the directory where you want to store the certificate files and run:</li>
+
+Code: 
+
+    <em>mkcert localhost 127.0.0.1 ::1</em>
+or 
+	 mkcert "*.example.it"
+        Generate "_wildcard.example.it.pem" and "_wildcard.example.it-key.pem".<br>
+This command generates a trusted self-signed certificate for localhost, 127.0.0.1, and ::1 (IPv6 loopback address) in the current directory. You will find files like localhost+2.pem (the certificate) and localhost+2-key.pem (the private key).
+
+    <li>Configure your application: Use the generated localhost+2.pem as your certificate and localhost+2-key.pem as your private key in your local server or application configuration. The specific method for adding these files varies depending on the server or application you are using. 
+</li></ol>
+After these steps, your local application running on localhost will be served with a trusted self-signed SSL certificate, allowing you to access it via HTTPS without browser warnings.
+
+<h2>Configuring PostgreSQL and defining users and databases</h2>
+<p>
+After initially installing PostgreSQL and configuring it for SSL, a primary mapper user must be created as a <strong>superuser</strong>. This can be done in psql while
+logged on as user <em>postgres</em> (the <strong>superuser</strong> defined during installation.)
+The following reccomendations are suggested for the use of PostgreQSL:
+<ol>
+<li>There should be a role created with the name of <em>mapper</em>. This role will be the owner of all the mapper databases.</li>
+<li>There should be at least one user logon created to access PostgreSQL. This user should have <strong>superuser</strong> privileges. All user logons that will 
+access Mapper databases should be a member of role: <em>mapper</em>.</li>
+<li>There will be needed a database for each city that Mapper uses. It is suggested that the names used be: stlouis, cincinnati, louisville, indianapolis and berlin.
+These will be the names used in the script described below.</li>
+</ol>
+<h3>Script to create user logon, databases and function </h3>
+Once the primary user has been created as <strong>superuser</strong>, a script can be run to create the databases as well as a user defined function used by SQL queries. 
+This script can be found in the <em>../Resources/sql/PostgreSQL</em> folder named <em>PostgreSQL_create_distance_function.sql</em>. Several values in the script that 
+refer to login parameters must be changed to your actual login credentials needed to login to <strong>psql</strong>. Use the following parameters for <strong>psql</strong>:
+<ul><li>psql -h localhost -U your-user-id -d postgres</li></ul>
+<br>Once logged on in <strong>psql</strong> paste the script that has been modified with your logon credentials. (Alternatively, a -f parameter an the path to the script can also be used.)
+ <p>
+ <h2>Checking configuration</h2>
+ To verify that the user defined function has been installed correctly, start Mapper and select the "Sql query dialog" from the Tools menu. Select a target connection to 
+ the PostgreSQL database and run the sql command: Select distance(1,2,3,4). The desired result should be: <strong>314.40295102362484</strong>. 
+</body></html>
