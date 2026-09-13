@@ -6,95 +6,10 @@
     html { height: 100% }
     body { height: 100%; margin: 0; padding: 0 }
     #map { height: 100%}
-
-    .menu {
-        width: 170px;
-        box-shadow: 3px 3px 5px #888888;
-        border-style: solid;
-        border-width: 1px;
-        border-color: grey;
-        border-radius: 2px;
-        background-color: #ffff;
-        position: fixed;
-        text-align: center;
-        display: none;
-    }
-
-    .menu-item {
-        height: 20px;
-        background-color: white;
-    }
-    .context_menu {
-      background-color: rgb(255, 255, 255);
-      border: 2px solid rgb(255, 255, 255);
-      border-radius: 3px;
-      box-shadow: rgba(0, 0, 0, 0.3) 0px 2px 6px;
-      cursor: pointer;
-      font-size: 1rem;
-      text-align: left;
-      color: #0d1f49;
-      margin: 2px;
-      }
-
-   </style>
-   <style>
-   /* Container box on the map */
-   .leaflet-custom-slider-container {
-       border: none;
-       background: transparent;
-       padding: 10px;
-       border-radius: 8px;
-       /*box-shadow: 0 1px 5px rgba(0,0,0,0.4);*/
-       box-shadow: none;  /* optional, to remove default Leaflet shadow */
-   }
-
-   /* 1. Base style for the slider track */
-   .my-custom-slider {
-       -webkit-appearance: none; /* Removes default browser styling */
-       appearance: none;
-       width: 75px;
-       height: 8px;
-       background: #555; /* Track color */
-       border-radius: 4px;
-       outline: none;
-       cursor: pointer;
-   }
-
-   /* 2. Custom style for the moving handle (Chrome, Safari, Opera, Edge) */
-   .my-custom-slider::-webkit-slider-thumb {
-       -webkit-appearance: none;
-       appearance: none;
-       width: 18px;
-       height: 18px;
-       background: #0078FF; /* Leaflet blue */
-       border-radius: 50%;
-       border: 1px solid white;
-       box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-       transition: background 0.1s ease;
-   }
-
-   /* Hover effect for the moving handle */
-   .my-custom-slider::-webkit-slider-thumb:hover {
-       background: #0056b3;
-   }
-
-   /* 3. Custom style for the moving handle (Firefox) */
-   .my-custom-slider::-moz-range-thumb {
-       width: 18px;
-       height: 18px;
-       background: #0078FF;
-       border-radius: 50%;
-       border: 2px solid white;
-       box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-       transition: background 0.1s ease;
-       cursor: pointer;
-   }
-
-   .my-custom-slider::-moz-range-thumb:hover {
-       background: #0056b3;
-   }       </style>
-
-<title>Mapper</title>
+  </style>
+  <link rel="stylesheet" href="mapper.css" />
+  <title>Mapper</title>
+  <script> MapQuest = true; // needed by initMap </script>
 
   <!--script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script-->
   <!--script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script-->
@@ -122,9 +37,7 @@
 <!--script src=" https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js "></script-->
 <!--script src="scripts/jsdelivr/leaflet.polylineDecorator.js "></script-->
 <script src="scripts/bbecquet/dist/leaflet.polylineDecorator.js "></script>
-<!--script  src=" https://github.com/bbecquet/Leaflet.PolylineDecorator/blob/master/dist/leaflet.polylineDecorator.js "></script-->
-<!--script type="text/javascript" src="scripts/bbecquet/L.PolylineDecorator.js"></script>
-<script type="text/javascript" src="scripts/bbecquet/L.Symbol.js"></script-->
+<script type="text/javascript" src="scripts/bbecquet/L.Symbol.js"></script>
 <script type="text/javascript" src="scripts/L.RotatedMarker.js"></script>
 <script type="text/javascript" src="scripts/leaflet.polylineoffset.js"></script>
 <script type="text/javascript" src="scripts/patternUtils.js"></script>

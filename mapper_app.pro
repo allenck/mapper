@@ -98,11 +98,13 @@ DISTFILES += \
     # Resources/copyList.txt \
     Resources/MapQuest.htm \
     Resources/MapQuest.js \
+    Resources/OpenStreetMap.htm \
     Resources/databases/.gitignore \
     Resources/dump_databases.cmd \
     Resources/dump_databases.sh \
     # Resources/initMap.js \
     Resources/go.png \
+    Resources/mapperLeaflet.css \
     Resources/restore_databases.cmd \
     Resources/restore_databases.sh \
     # Resources/scripts/createMsSqlDistance.sql \
