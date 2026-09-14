@@ -1225,11 +1225,12 @@ function initMap()
         //     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         // }).addTo(map);
 
-        // L.control.zoom({ position: 'topleft' }).addTo(map);
+        // L.control.zoom({ position: 'topleft' }).addTo(map); (by default}
         // L.control.attribution({ position: 'bottomright' }).addTo(map);
         L.control.scale({ position: 'bottomleft' }).addTo(map);
         // 6. Define the Satellite View layer (Esri World Imagery)
-        var satelliteView = L.tileLayer('https://arcgisonline.com{z}/{y}/{x}', {
+        var satelliteView = L.tileLayer('https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxNativeZoom: 18,
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
         });
         var googleSatellite = L.tileLayer('https://{s}://{x}&y={y}&z={z}', {
@@ -1246,7 +1247,7 @@ function initMap()
         var mapboxSatelliteUrl = 'https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg70?access_token=' + mapboxToken;
 
         // 7. Create and add the Mapbox Satellite tile layer
-var mapboxSatellite = L.tileLayer(mapboxSatelliteUrl, {
+        var mapboxSatellite = L.tileLayer(mapboxSatelliteUrl, {
             maxZoom: 22,
             maxNativeZoom: 18,       // ⚠️ Mapbox satellite tiles stop at zoom 18. This stretches them so it won't go gray at 19-22!
             tileSize: 512,           // Mapbox tiles are 512x512 pixels
@@ -1261,7 +1262,7 @@ var mapboxSatellite = L.tileLayer(mapboxSatelliteUrl, {
         var baseMaps = {
             "Street View": streetView,
             "Satellite View": satelliteView,
-            "Google Satellite View": googleSatellite,
+            // "Google Satellite View": googleSatellite,
             "MapBox Satellite View": mapboxSatellite
         };
 
