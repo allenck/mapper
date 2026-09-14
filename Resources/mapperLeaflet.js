@@ -1216,15 +1216,25 @@ function initMap()
         }).setView([Lat, Lon], zoom);
 
         // 6. Load and display the OpenStreetMap tile layer
-        var streetView = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-            maxZoom: 20,
-            attribution: '&copy; OpenStreetMap France | &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
-        });
-        // var streetView =L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        //     maxZoom: 19,
-        //     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        // }).addTo(map);
+        var streetView = null;
+        const userAgent = navigator.userAgent;
+        if (userAgent.includes("Firefox"))
+        {
 
+            streetView = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+                maxZoom: 20,
+                attribution: '&copy; OpenStreetMap France | &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+            });
+        }
+        else
+        {
+            // won't work with firefox
+            streetView =L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+    //            userAgent: 'MyCoolMapApp/1.0 (contact@mywebsite.com)',
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+        }
         // L.control.zoom({ position: 'topleft' }).addTo(map); (by default}
         // L.control.attribution({ position: 'bottomright' }).addTo(map);
         L.control.scale({ position: 'bottomleft' }).addTo(map);
