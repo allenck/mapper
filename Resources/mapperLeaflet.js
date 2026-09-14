@@ -1216,11 +1216,11 @@ function initMap()
         }).setView([Lat, Lon], zoom);
 
         // 6. Load and display the OpenStreetMap tile layer
+        // OpenStreetMap's 'servers don't like html files served from file:// to a Firefox browser so use one in France.
         var streetView = null;
         const userAgent = navigator.userAgent;
         if (userAgent.includes("Firefox"))
         {
-
             streetView = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
                 maxZoom: 20,
                 attribution: '&copy; OpenStreetMap France | &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
@@ -1357,7 +1357,7 @@ function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
  if ( overlay !== null)
  {
 //   map.overlayMapTypes.clear();
-   //overlay = null;
+   overlay = null;
   if(opacityControl !== null)
   {
    opacityControl.remove();
@@ -1370,20 +1370,9 @@ function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
  }
  var vals = bounds.split(",");
 
-// //     var mapBounds = new google.maps.LatLngBounds(
-// //                 new google.maps.LatLng(38.623972, -90.330807),
-// //                 new google.maps.LatLng(38.658606, -90.273631));
-// this.overlayBounds = new google.maps.LatLngBounds(new google.maps.LatLng(vals[1], vals[0]),  new google.maps.LatLng(vals[3], vals[2]));
  this.overlayBounds = L.latLngBounds([[vals.at(0),vals.at(1)],[[vals.at(2),vals.at(3)]]]);
   var mapMinZoom = minZoom;
   var mapMaxZoom = maxZoom;
-//    var opts = {
-//    streetViewControl: false,
-//    tilt: 0,
-//    mapTypeId: google.maps.MapTypeId.HYBRID,
-//    center: new google.maps.LatLng(0,0),
-//    zoom: mapMinZoom
-//    }
 
   overlay = new Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls);
   // overlayLayer = L.tileLayer(ovstr,{
@@ -2013,9 +2002,9 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
         if(singleLine)
             singleLine.setLatLngs(path);
         if(decorator)
-            decorator.setLatLngs(path);
+            decorator.setPaths(path);
         if(arrowDecorator)
-            arrowDecorator.setLatLngs(path);
+            arrowDecorator.setPaths(path);
         return path;
     }
 
@@ -2029,9 +2018,9 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
         if(singleLine)
             singleLine.setLatLngs(path);
         if(decorator)
-            decorator.setLatLngs(path);
+            decorator.setPaths(path);
         if(arrowDecorator)
-            arrowDecorator.setLatLngs(path);
+            arrowDecorator.setPaths(path);
     }
 
     // remove a point from a polyline
@@ -2045,9 +2034,9 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
         if(singleLine)
             singleLine.setLatLngs(path);
         if(decorator)
-            decorator.setLatLngs(path);
+            decorator.setPaths(path);
         if(arrowDecorator)
-            arrowDecorator.setLatLngs(path);
+            arrowDecorator.setPaths(path);
         return path;
     }
 
@@ -2069,9 +2058,9 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
             if(singleLine)
                 singleLine.setLatLngs(path);
             if(decorator)
-                decorator.setLatLngs(path);
+                decorator.setPaths(path);
             if(arrowDecorator)
-                arrowDecorator.setLatLngs(path);
+                arrowDecorator.setPaths(path);
             //getPoints();
             if(path.length > 0)
             {
@@ -2106,9 +2095,9 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
         if(singleLine)
             singleLine.setLatLngs(path);
         if(decorator)
-            decorator.setLatLngs(path);
+            decorator.setPaths(path);
         if(arrowDecorator)
-            arrowDecorator.setLatLngs(path);
+            arrowDecorator.setPaths(path);
     }
 
     // function to determine if the supplied point is on a begining or end linesegement of a segment
