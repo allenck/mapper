@@ -5758,6 +5758,9 @@ bool MainWindow::openBrowserWindow()
     case Configuration::MAPQUEST:
         fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources"  + QDir::separator() + "MapQuest.htm");
         break;
+    case Configuration::OPENSTREETMAPS:
+        fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"OpenStreetMap.htm");
+        break;
     default:
         fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources"  + QDir::separator() + "GoogleMaps2b.htm");
     }
