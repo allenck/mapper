@@ -1171,6 +1171,7 @@ function initMap()
 {
     console.log("begin mapperLeaflet.js initMap()");
     webViewBridge.debug("initMap started");
+
     connectSlots();
 
     // const osmTiles = new L.TileLayer(
@@ -1208,24 +1209,50 @@ function initMap()
     else
     {
         // OpenStreetMap
-        map = L.map('map').setView([Lat, Lon], zoom);
+        map = L.map('map', {
+                center: [0, 0],
+                zoom: 2,
+                maxZoom: 19 // Esri Imagery typically tops out around 18 or 19 globally
+        }).setView([Lat, Lon], zoom);
 
         // 6. Load and display the OpenStreetMap tile layer
         var streetView = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
             maxZoom: 20,
             attribution: '&copy; OpenStreetMap France | &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
         });
-        // L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // var streetView =L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         //     maxZoom: 19,
         //     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         // }).addTo(map);
+
         // L.control.zoom({ position: 'topleft' }).addTo(map);
         // L.control.attribution({ position: 'bottomright' }).addTo(map);
-        // L.control.scale({ position: 'bottomleft' }).addTo(map); }
+        L.control.scale({ position: 'bottomleft' }).addTo(map);
         // 6. Define the Satellite View layer (Esri World Imagery)
         var satelliteView = L.tileLayer('https://arcgisonline.com{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-        })
+        });
+        var googleSatellite = L.tileLayer('https://{s}://{x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: 'Map data &copy; Google'
+        });
+
+        // 5. Define your Mapbox Access Token
+                var mapboxToken = MapBoxKey;
+
+                // 6. Define the Mapbox Satellite URL template
+        // We use 'mapbox.satellite' as the style ID
+        var mapboxSatelliteUrl = 'https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg70?access_token=' + mapboxToken;
+
+        // 7. Create and add the Mapbox Satellite tile layer
+var mapboxSatellite = L.tileLayer(mapboxSatelliteUrl, {
+            maxZoom: 22,
+            maxNativeZoom: 18,       // ⚠️ Mapbox satellite tiles stop at zoom 18. This stretches them so it won't go gray at 19-22!
+            tileSize: 512,           // Mapbox tiles are 512x512 pixels
+            zoomOffset: -1,          // Compensates for the 512px tile size in Leaflet
+            attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://labs.mapbox.com/contribute/" target="_blank">Improve this map</a></strong>'
+        }).addTo(map);
 
         // 7. Add the default map layer to start with
         streetView.addTo(map);
@@ -1233,7 +1260,9 @@ function initMap()
         // 8. Create a Base Maps object to hold our choices
         var baseMaps = {
             "Street View": streetView,
-            "Satellite View": satelliteView
+            "Satellite View": satelliteView,
+            "Google Satellite View": googleSatellite,
+            "MapBox Satellite View": mapboxSatellite
         };
 
         // 9. Add the top-right toggle switch button to the map

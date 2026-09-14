@@ -28,6 +28,11 @@
   margin: 2px;
   }
 
+.leaflet-container img {
+      max-width: none !important;
+      max-height: none !important;
+  }
+
 .leaflet-custom-slider-container {
     border: none;
     background: transparent;
