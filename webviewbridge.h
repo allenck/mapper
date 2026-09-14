@@ -117,7 +117,7 @@ public slots:
     void setStation(double lat, double lon, qint32 SegmentId, qint32 i);
     void updateStation( qint32 stationKey, qint32 segmentId);
     void moveStationMarker(qint32 stationKey, qint32 segmentId, double lat, double lng);
-    void moveRouteComment(qint32 route, QString date, double lat, double lng, int commentKey,int companyKey);
+    void moveRouteComment(qint32 route, QString date, double lat, double lng, int commentKey, int companyKey);
     void segmentStatus(QString txt, QString color);
     void getInfoWindowComments(double lat, double lon, int route, QString date, int commentKey, int companyKey, int func);
     void mapInit();

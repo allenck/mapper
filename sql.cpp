@@ -8439,7 +8439,7 @@ bool SQL::updateComment(CommentInfo info, bool force)
             return false;
         }
 
-        if(info.jRoutesListString.isEmpty() || !info.jRoutesListString.startsWith("[") || !info.jRoutesListString.endsWith("]"))
+        if(info.jRoutesListString.isEmpty() /*|| !info.jRoutesListString.startsWith("[") || !info.jRoutesListString.endsWith("]")*/)
         {
             qDebug() << "aRoutesString invalid";
             return false;
@@ -8458,7 +8458,9 @@ bool SQL::updateComment(CommentInfo info, bool force)
             "comments = '" + info.comments.replace("'","\''") + "', "
             "routeList = '" + info.routesTableToString(info.routesUsed) + "', "
             "date = '" +info.date.toString("yyyy/MM/dd") + "', "
-            "jRouteList = '" + info.jRoutesListString + "' "
+            "jRouteList = '" + info.jRoutesListString + "',"
+            "latitude=" + QString::number(info.pos.lat()) + ","
+            "longitude=" + QString::number(info.pos.lon()) + " "
             "where commentKey = " + QString::number(info.commentKey);
     QSqlQuery query = QSqlQuery(db);
 
@@ -9400,9 +9402,15 @@ CommentInfo SQL::getComment(qint32 commentKey, int pos)
 
         QString commandText;
         if(pos >0)
-         commandText = "select commentKey, comments, tags, routeList, jRouteList, latitude, longitude from Comments where commentKey > " + QString::number(commentKey)+ " limit 1";
-           else
-         commandText = "select commentKey, comments, tags routeList, jRouteList, latitude, longitude from Comments where commentKey < " + QString::number(commentKey)+ " limit 1";
+            commandText = "select commentKey, comments, tags, routeList, jRouteList, latitude, longitude"
+                       " from Comments where commentKey > " + QString::number(commentKey)+ " limit 1";
+        else if(pos < 0)
+            commandText = "select commentKey, comments, tags, routeList, jRouteList, latitude, longitude"
+                       " from Comments where commentKey < " + QString::number(commentKey)+ " limit 1";
+        else
+            commandText = "select commentKey, comments, tags, routeList, jRouteList, latitude, longitude"
+                   " from Comments where commentKey = " + QString::number(commentKey);
+
 
 
         QSqlQuery query = QSqlQuery(db);
@@ -9435,10 +9443,9 @@ CommentInfo SQL::getComment(qint32 commentKey, int pos)
          }
          ci.tags = query.value(2).toString();
          ci.toRoutesTable(query.value(3).toString());
-         QString jRouteList = query.value(4).toString();
+         ci.jRoutesListString = query.value(4).toString();
          ci.pos = LatLng(query.value(5).toDouble(),query.value(6).toDouble());
-         ci.jRoutesListString = jRouteList.mid(1, jRouteList.length()-2);
-         ci.populateARoutes(ci.jRoutesListString);
+         ci.populateARoutes(ci.jRoutesListString); // convert JSON to list
         }
         // get usage by Station
         // commandText = "select stationKey from Stations where infoKey >= 0";

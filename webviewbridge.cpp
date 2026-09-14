@@ -376,7 +376,7 @@ void WebViewBridge::moveStationMarker(qint32 stationKey, qint32 segmentId, doubl
 void WebViewBridge::moveRouteComment(qint32 route, QString date, double lat, double lng, int commentKey, int companyKey)
 {
 
-    m_parent->moveRouteComment(route, date, lat, lng, commentKey, companyKey);
+    m_parent->moveRouteComment(route, date, commentKey, lat, lng, companyKey);
 }
 
 

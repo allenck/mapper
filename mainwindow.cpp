@@ -5429,7 +5429,7 @@ void MainWindow::moveStationMarker(qint32 stationKey, qint32 segmentId, double l
     m_bridge->processScript("addStationMarker",objArray);
 }
 
-void MainWindow::moveRouteComment(int route, QString date, int commentKey,double latitude, double longitude, int companyKey)
+void MainWindow::moveRouteComment(int route, QString date, int commentKey, double latitude, double longitude, int companyKey)
 {
  // RouteComments rc = sql->getRouteComment(route, QDate::fromString(date, "yyyy/MM/dd"), commentKey);
  // rc.pos = LatLng(latitude, longitude);
@@ -5437,13 +5437,13 @@ void MainWindow::moveRouteComment(int route, QString date, int commentKey,double
     CommentInfo ci = sql->getComment(commentKey, 0);
     if(ci.commentKey <0)
     {
-        qDebug() << tr("get commetkey %1 with LatLng failed");
+        qDebug() << tr("get commentkey %1 with LatLng failed").arg(ci.commentKey <0);
         return;
     }
     ci.pos= LatLng(latitude, longitude);
     if(!sql->updateComment(ci))
     {
-        qDebug() << tr("update of commetkey %1 with LatLng failed");
+        qDebug() << tr("update of commentkey %1 with LatLng failed").arg(commentKey);
         return;
     }
 }

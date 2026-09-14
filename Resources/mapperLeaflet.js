@@ -673,8 +673,8 @@ function clearAll()
    if(infowindow !== null)
    {
        infowindow.remove();
-       if(infowindow.marker !== null && infowindow.marker !== undefined)
-           infowindow.marker.remove();
+       // if(infowindow.marker !== null && infowindow.marker !== undefined)
+       //     infowindow.marker.remove();
        infowindow = null;
    }
    clearRectangle();
@@ -847,7 +847,7 @@ function displayRouteComment(latitude, longitude, HTMLText, commentKey, route, d
  var arrowIcon =  L.icon({iconUrl: 'https://www.google.com/mapfiles/arrow.png'});
  //infowindow = new google.maps.InfoWindow({content:HTMLText, maxWidth: 300, ariaLabel: "Comment"});
 
- infowindow = L.popup({offset: L.point(11, 6),
+ infowindow = L.popup({/*offset: L.point(11, 6),*/
                           autoClose: false,
                           closeOnClick: false})
  .setLatLng([latitude,longitude])
@@ -864,19 +864,21 @@ function displayRouteComment(latitude, longitude, HTMLText, commentKey, route, d
  //       title: "comment"
  //     });
  //    var customIcon = L.icon({iconUrl: icon});
-    infowindow.marker = L.marker([latitude, longitude], {
-                               icon: arrowIcon,
-                               draggable: true
-                           }).addTo(map).bindTooltip('drag to move');
-    // Prevent the native browser drag event on the icon
-    infowindow.marker.on('add', function() {
-    if (infowindow.marker._icon) {
-         infowindow.marker._icon.setAttribute('draggable', 'false');
-    }
- });
+    // infowindow.marker = L.marker([latitude, longitude], {
+    //                            icon: arrowIcon,
+    //                            draggable: true
+    //                        }).addTo(map).bindTooltip('drag to move');
+    // // Prevent the native browser drag event on the icon
+    // infowindow.marker.on('add', function() {
+    // if (infowindow.marker._icon) {
+    //      infowindow.marker._icon.setAttribute('draggable', 'false');
+    // }
+ // });
+ infowindow.draggable = makePopupDraggable(infowindow);
+
 infowindow.on('remove', function()
 {
-    infowindow.marker.remove();
+    //infowindow.marker.remove();
 });
  //  if(this.marker === null)
  //      alert("marker is null");
@@ -888,14 +890,18 @@ infowindow.on('remove', function()
  infowindow.lat = latitude;
  infowindow.lon = longitude;
  infowindow.companyKey = companyKey
- infowindow.marker.on("drag", function(pt)
+ infowindow.draggable.on("drag", function(pt)
  {
-     infowindow.setLatLng(pt.latlng);
+     //infowindow.setLatLng(pt.latLng);
  });
 
  //google.maps.event.addListener(this.marker, "dragend", function(pt) {
-  infowindow.marker.on('dragend', function(pt) {
-  webViewBridge.moveRouteComment(infowindow.route, infowindow.date, pt.target._latlng.lat, pt.target._latlng.lng, infowindow.companyKey);
+  infowindow.draggable.on('dragend', function() {
+    var newPos = this._newPos; // Get the pixel drop position
+    var newLatLng = map.layerPointToLatLng(newPos); // Convert pixels to Map Lat/Lng
+    //popupObject.setLatLng(newLatLng); // Lock the popup to the new spot
+
+  webViewBridge.moveRouteComment(infowindow.route, infowindow.date, newLatLng.lat, newLatLng.lng, infowindow.commentKey, infowindow.companyKey);
   });
  //google.maps.event.addListener(infowindow, "closeclick", function(){
   infowindow.on( "closeclick", function(){
@@ -1438,9 +1444,26 @@ function makePinMarker(latlLng, glyph, title)
     return marker;
 }
 
+function makePopupDraggable(popupObject) {
+  // Get the core HTML container of the popup
+  var container = popupObject._container;
+
+  // Initialize Leaflet's built-in Draggable utility on the container
+  var draggable = new L.Draggable(container);
+  draggable.enable();
+
+  // Update the popup's Map Coordinates (LatLng) when dragging stops
+  draggable.on('dragend', function() {
+    var newPos = this._newPos; // Get the pixel drop position
+    var newLatLng = map.layerPointToLatLng(newPos); // Convert pixels to Map Lat/Lng
+    popupObject.setLatLng(newLatLng); // Lock the popup to the new spot
+  });
+   return draggable;
+}
+
 function nextRouteComment()
 {
- infowindow.marker.remove();
+ //infowindow.marker.remove();
  webViewBridge.getInfoWindowComments(infowindow.lat, infowindow.lon, infowindow.route, infowindow.date, infowindow.commentKey,
                                      infowindow.companyKey, 1);
  return 0;
@@ -1621,7 +1644,7 @@ function pointRadialDistance(start, bearing, inDistance)
 
 function prevRouteComment()
 {
- infowindow.marker.remove();
+ //infowindow.marker.remove();
  webViewBridge.getInfoWindowComments(infowindow.lat, infowindow.lon, infowindow.route, infowindow.date, infowindow.commentKey,
                                      infowindow.companyKey, -1);
 } // end prevRouteComment()
@@ -2318,7 +2341,7 @@ function showRouteComment(bDisplay)
   else
   {
    infowindow.remove();
-   infowindow.marker.remove();
+   //infowindow.marker.remove();
   }
  }
  return;

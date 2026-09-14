@@ -1393,7 +1393,7 @@ void CommentInfo::populateARoutes(QString jRouteList)
 {
     if(jRouteList.isEmpty() || !(jRouteList.startsWith('[') && jRouteList.endsWith("]")))
         return;
-    QString listOfStrings = jRouteList.mid(1, jRouteList.length()-2);
+    QString listOfStrings = jRouteList.mid(1, jRouteList.length()-2); // strip off [ & ]
     QStringList sl = listOfStrings.split(",");
     foreach (QString s, sl) {
         if(s.startsWith("\"") && s.endsWith("\""))
