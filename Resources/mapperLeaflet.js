@@ -1250,7 +1250,8 @@ function initMap()
         console.error("OpenStreetMaps not loaded");
       else
         console.log("OpenStreetMaps loaded successfully");
-
+      var tileUrl;
+      var tileOptions;
         // 6. Load and display the OpenStreetMap tile layer
         // OpenStreetMap's 'servers don't like html files served from file:// to a Firefox browser so use one in France.
         var streetView = null;
@@ -1258,63 +1259,93 @@ function initMap()
         console.log("user agent: " + userAgent);
         if (userAgent.includes("Firefox" ) /*|| userAgent.includes("Chrome" )*/)
         {
-            streetView = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+            tileUrl = 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png';
+            tileOptions = {
                 maxZoom: 20,
                 attribution: '&copy; OpenStreetMap France | &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
                 name: 'Street Map'
-            });
+            }
+            streetView = L.tileLayer(tileUrl, tileOptions);
         }
         else
         {
-            // won't work with firefox
-            streetView =L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+            tileOptions = {
                 maxZoom: 19,
                 attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
                 name: 'Street View'
-            });
+            }
+            // won't work with firefox
+            streetView =L.tileLayer(tileUrl, tileOptions);
         }
         // L.control.zoom({ position: 'topleft' }).addTo(map); (by default}
         // L.control.attribution({ position: 'bottomright' }).addTo(map);
         L.control.scale({ position: 'bottomleft' }).addTo(map);
         // 6. Define the Satellite View layer (Esri World Imagery)
-        var satelliteView = L.tileLayer('https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        tileUrl = 'https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+        tileOptions = {
             maxNativeZoom: 18,
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
             name: 'Satellite View'
-        });
-        var googleSatellite = L.tileLayer('https://{s}://{x}&y={y}&z={z}', {
-            maxZoom: 20,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-            attribution: 'Map data &copy; Google'
-        });
+        };
+        var satelliteView = L.tileLayer(tileUrl,tileOptions );
+        // var googleSatellite = L.tileLayer('https://{s}://{x}&y={y}&z={z}', {
+        //     maxZoom: 20,
+        //     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        //     attribution: 'Map data &copy; Google'
+        // });
 
         // 5. Define your Mapbox Access Token
                 var mapboxToken = MapBoxKey;
 
                 // 6. Define the Mapbox Satellite URL template
         // We use 'mapbox.satellite' as the style ID
-        var mapboxSatelliteUrl = 'https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg70?access_token=' + mapboxToken;
-
-        // 7. Create and add the Mapbox Satellite tile layer
-        var mapboxSatellite = L.tileLayer(mapboxSatelliteUrl, {
+        tileUrl = 'https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg70?access_token=' + mapboxToken;
+        tileOptions = {
             maxZoom: 22,
             maxNativeZoom: 18,       // ⚠️ Mapbox satellite tiles stop at zoom 18. This stretches them so it won't go gray at 19-22!
             tileSize: 512,           // Mapbox tiles are 512x512 pixels
             zoomOffset: -1,          // Compensates for the 512px tile size in Leaflet
             attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://labs.mapbox.com/contribute/" target="_blank">Improve this map</a></strong>',
             name: 'MapBox Satellite View'
-        });
+        };
+        // 7. Create and add the Mapbox Satellite tile layer
+        var mapboxSatellite = L.tileLayer(tileUrl, tileOptions);
         var mapboxUsername = 'mapbox'; // Use 'mapbox' for official default styles
         var styleId = 'streets-v12';   // This is the specific ID for Mapbox Streets
-        var mapboxStreetsUrl = 'https://api.mapbox.com/styles/v1/' + mapboxUsername + '/' + styleId + '/tiles/512/{z}/{x}/{y}?access_token=' + mapboxToken;
-        var mapboxStreets = L.tileLayer(mapboxStreetsUrl, {
+        tileUrl = 'https://api.mapbox.com/styles/v1/' + mapboxUsername + '/' + styleId + '/tiles/512/{z}/{x}/{y}?access_token=' + mapboxToken;
+        tileOptions = {
             maxZoom: 22,
             maxNativeZoom: 18,       // ⚠️ Mapbox satellite tiles stop at zoom 18. This stretches them so it won't go gray at 19-22!
             tileSize: 512,           // Mapbox tiles are 512x512 pixels
             zoomOffset: -1,          // Compensates for the 512px tile size in Leaflet
             attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             name: 'MapBox Street View'
-        });
+        }
+        var mapboxStreets = L.tileLayer(tileUrl, tileOptions);
+
+        var magnifyingGlass = L.magnifyingGlass({
+            zoomOffset: 3,
+            layers: [
+              L.tileLayer(tileUrl, tileOptions)
+            ]
+          });
+
+          //map.addLayer(magnifyingGlass);
+
+          // make the glass disappear on click...
+          magnifyingGlass.on('click', function() {
+            map.removeLayer(magnifyingGlass);
+          })
+
+          // ...and reappear on right click
+          map.on('contextmenu', function(mouseEvt) {
+            if(map.hasLayer(magnifyingGlass)) {
+              return;
+            }
+            map.addLayer(magnifyingGlass);
+            magnifyingGlass.setLatLng(mouseEvt.latlng);
+          });
 
         // 7. Add the default map layer to start with
         if (mapType === 'Satellite View') {

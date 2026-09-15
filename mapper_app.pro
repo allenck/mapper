@@ -112,6 +112,8 @@ DISTFILES += \
     Resources/scripts/L.RotatedMarker.js \
     Resources/scripts/L.Symbol.js \
     Resources/scripts/bbecquet/L.PolylineDecorator.js \
+    Resources/scripts/bbecquet/leaflet.magnifyingglass.css \
+    Resources/scripts/bbecquet/leaflet.magnifyingglass.js \
     Resources/scripts/leaflet.polylineoffset.js \
     Resources/scripts/patternUtils.js \
     Resources/sql/CreatePostgreSQLFunction.sql \

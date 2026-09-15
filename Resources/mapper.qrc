@@ -112,5 +112,8 @@
         <file>scripts/L.Symbol.js</file>
         <file>scripts/leaflet.polylineoffset.js</file>
         <file>scripts/patternUtils.js</file>
+        <file>scripts/bbecquet/leaflet.magnifyingglass.css</file>
+        <file>scripts/bbecquet/leaflet.magnifyingglass.js</file>
+        <file>scripts/bbecquet/dist/leaflet.polylineDecorator.js</file>
     </qresource>
 </RCC>
