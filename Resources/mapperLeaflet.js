@@ -584,6 +584,7 @@ function addStationMarker(lat, lon, visible, segmentId, stationName, stationKey,
 
 function alertClose()
 {
+  if(runInBrowser)
     alert("you may now close this window");
 }
 
@@ -1195,6 +1196,12 @@ function initMap()
   var zoom = webViewBridge.zoom;
   var mapTypeId = webViewBridge.maptype;
   var mapDiv = document.getElementById("map");
+  var runInBrowser = webViewBridge.runInBrowser;
+  // if(runInBrowser)
+  //   alert("Run in browser is true" );
+  // else
+  //   alert("Run in browser is false" );
+
     if(MapQuest == true)
     {
         // MapQuest
@@ -1207,10 +1214,14 @@ function initMap()
         doubleClickZoom: false,
       });
 
+      if(map == null )
+        console.error("MapQuest not loaded");
+      else
+        console.log("MapQuest loaded successfully");
       //addSlider();
       // Keep the default MapQuest tools (Zoom, Satellite, Traffic, Locator)
       // These automatically append to the top-right corner by default
-      map.addControl(L.mapquest.control({ position: 'topright' }));
+      //map.addControl(L.mapquest.control({ position: 'topright' }));
     }
     else
     {
@@ -1218,14 +1229,19 @@ function initMap()
         map = L.map('map', {
                 center: [0, 0],
                 zoom: 2,
-                maxZoom: 19 // Esri Imagery typically tops out around 18 or 19 globally
+                maxZoom: 19, // Esri Imagery typically tops out around 18 or 19 globally
         }).setView([Lat, Lon], zoom);
+      if(map == null )
+        console.error("OpenStreetMaps not loaded");
+      else
+        console.log("OpenStreetMaps loaded successfully");
 
         // 6. Load and display the OpenStreetMap tile layer
         // OpenStreetMap's 'servers don't like html files served from file:// to a Firefox browser so use one in France.
         var streetView = null;
         const userAgent = navigator.userAgent;
-        if (userAgent.includes("Firefox"))
+        console.log("user agent: " + userAgent);
+        if (userAgent.includes("Firefox" ) /*|| userAgent.includes("Chrome" )*/)
         {
             streetView = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
                 maxZoom: 20,
@@ -1237,7 +1253,6 @@ function initMap()
             // won't work with firefox
             streetView =L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
-    //            userAgent: 'MyCoolMapApp/1.0 (contact@mywebsite.com)',
                 attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             }).addTo(map);
         }
@@ -2301,7 +2316,7 @@ function setCenter(Lat, Lon)
  // map.setOptions({disableDoubleClickZoom: true });
  return null;
 
-} // end set getCenter()
+} // end setCenter()
 
 function setMapType(mapTypeId)
 {
@@ -2323,6 +2338,11 @@ function setOverlayOpacity(Opacity) {
  }
  return;
 }// end setOverlayOpacity()
+
+function setRunInBrowser(b)
+{
+  runInBrowser = b;
+}
 
 function setZoom(zoom)
 {

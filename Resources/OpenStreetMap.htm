@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MapperOss</title>
+<title>MapperOss</title>
+<script> MapQuest = false; // needed by initMap in mapperLeaflet.js</script>
 
 <style>
     /* 2. Set the map size. Without a height, the map will be invisible! */
@@ -36,7 +37,7 @@
     <script type="text/javascript" src="qwebchannel.js"> </script>
     <script type="text/javascript" src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script type="text/javascript" src="mapperLeaflet.js"> </script>
-    <script type="text/javascript" src="apiKey.js"> </script>
+    <script type="text/javascript" src="apikey.js"> </script>
     <script type="text/javascript" src="WebChannel.js"> </script>
 
     <!-- 4. Include Leaflet JavaScript library -->
@@ -44,10 +45,12 @@
     <!--script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
         crossorigin=""></script-->
-        <script src="scripts/leaflet/dist/leaflet.js"></script>
-        <!--script src="https://api.mqcdn.com/sdk/mapquest-js/v1.3.2/mapquest.js"></script-->
+        <!--script src="scripts/leaflet/dist/leaflet.js"></script-->
+        <!-- MapQuest.js Styles and Scripts -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-        !-- font awsome & beautiful icon stuff -->
+    !-- font awsome & beautiful icon stuff -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
               rel="stylesheet">

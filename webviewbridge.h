@@ -22,8 +22,9 @@ public:
 //    Q_PROPERTY(int browseWindowWidth READ curBrowseWindowWidth NOTIFY isCurBrowseWindowWidthChanged)
 //    Q_PROPERTY(int browseWindowHeight READ curBrowseWindowHeight )
     float curLat() const;
-    float curLon();
+    float curLon() const;
     LatLng curLatLng();
+    bool runInBrowser();
     int curZoom();
     QString curMaptype();
     QString curMapId();
@@ -35,6 +36,7 @@ public:
     Q_PROPERTY(QString maptype READ curMaptype NOTIFY onMapTypeChanged)
     Q_PROPERTY(QString mapId READ curMapId WRITE setMapId NOTIFY onMapIdChanged)
     Q_PROPERTY(LatLng latlng MEMBER _latLng WRITE setLatLng NOTIFY latlngChanged)
+    Q_PROPERTY(bool runInBrowser READ runInBrowser NOTIFY onRunInBrowserChanged )
     void processScript(QString func, QString parms);
     void processScript(QString func);
     QT_DEPRECATED void processScript(QString func, QString parms, QString name, QString value);
@@ -73,6 +75,7 @@ signals:
     void onMapTypeChanged(QString);
     void onNameChanged(QString);
     void latlngChanged(LatLng latLng);
+    void onRunInBrowserChanged(bool);
     void segmentStatusSignal(QString txt, QString color);
     void queryOverlaySignal();
     void on_scriptResult(QVariant);
@@ -140,6 +143,7 @@ private:
     float _lat;
     float _lon;
     int _zoom;
+    bool _runInBrowser;
     LatLng _latLng;
     QString maptype;
     QString mapId;

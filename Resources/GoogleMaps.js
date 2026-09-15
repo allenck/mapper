@@ -960,6 +960,7 @@ async function initMap() {
      //var mapTypeId = google.maps.MapTypeId.ROADMAP;
      var mapTypeId = webViewBridge.maptype;
      var mapDiv = document.getElementById("map");
+     var runInBrowser = webViewBridge.runInBrowser;
 
 
      map = new Map(mapDiv, {
@@ -974,6 +975,11 @@ async function initMap() {
         mapTypeId: google.maps.MapTypeId.ROADMAP,
         mapId: webViewBridge.mapId
      });
+    if(map == null )
+      console.error("Google Maps not loaded");
+    else
+      console.log("Google Maps loaded successfully");
+
     google.maps.event.addListenerOnce(map, 'idle', function(){
            //this part runs when the mapobject is created and rendered
            google.maps.event.addListenerOnce(map, 'idle', function(){
@@ -3132,9 +3138,15 @@ function clearPins()
     markerPins.clear();
 }
 
+function setRunInBrowser(b)
+{
+  runInBrowser = b;
+}
+
 function alertClose()
 {
-    alert("you may now close this window");
+    if(runInBrowser)
+        alert("you may now close this window");
 }
 
 console.log("GoogleMaps.js loaded!");

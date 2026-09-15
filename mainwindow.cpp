@@ -748,16 +748,17 @@ void MainWindow::reloadMap()
         switch(config->mapSource)
         {
         case Configuration::GOOGLEMAPS:
-            fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2b.htm");
+            fileUrl = QUrl("qrc:/GoogleMaps2b.htm");
             break;
         case Configuration::MAPQUEST:
-            fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"MapQuest.htm");
+            fileUrl = QUrl("qrc:/MapQuest.htm");
             break;
         case Configuration::OPENSTREETMAPS:
-            fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"OpenStreetMap.htm");
+            fileUrl = QUrl("qrc:/OpenStreetMap.htm");
             break;
         default:
-            fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources" + QDir::separator()+"GoogleMaps2b.htm");
+            fileUrl = QUrl("qrc:/GoogleMaps2b.htm");
+            break;
         }
 //#endif
     webView->setUrl(fileUrl);
@@ -5656,6 +5657,7 @@ void MainWindow::on_showDebugMessages(bool b)
 
 void MainWindow::on_runInBrowser(bool bRunInBrowser)
 {
+    setCursor(Qt::WaitCursor);
  if(!bRunInBrowser)
  {
   m_bridge->processScript("alertClose");
@@ -5749,7 +5751,7 @@ bool MainWindow::openBrowserWindow()
 #ifdef Q_OS_WIN
     cwd.replace("/", QDir::separator());
 #endif
-    fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources"  + QDir::separator() + "GoogleMaps2b.htm");
+    //fileUrl = QUrl::fromLocalFile(cwd + QDir::separator() + "Resources"  + QDir::separator() + "GoogleMaps2b.htm");
     switch(config->mapSource)
     {
     case Configuration::GOOGLEMAPS:
@@ -5821,8 +5823,12 @@ bool MainWindow::openWebViewPanel()
      case Configuration::MAPQUEST:
          fileUrl = QUrl("qrc:/MapQuest.htm");
          break;
+     case Configuration::OPENSTREETMAPS:
+         fileUrl = QUrl("qrc:/OpenStreetMap.htm");
+         break;
      default:
          fileUrl = QUrl("qrc:/GoogleMaps2b.htm");
+         break;
      }
     webView->setUrl(fileUrl);
     m_bridge->setupbridge();
@@ -6028,7 +6034,7 @@ bool MainWindow::verifyAPIKey(QString path, QString apiKey)
 
 void MainWindow::onWebSocketClosed()
 {
-  if(!config->bRunInBrowser)
+  if(config->bRunInBrowser)
   {
      //QMessageBox::critical(this, tr("Browser closed"), tr("The browser window has closed"));
    QMessageBox *mbox = new QMessageBox;
@@ -6041,17 +6047,21 @@ void MainWindow::onWebSocketClosed()
   }
   else
   {
+      if(!config->bRunInBrowser)
+          return;
       if(bReloadInProgress)
           return;
       int rslt = QMessageBox::question(this, tr("Connection closed"),
                                        tr("The connection to the browser has closed. \n%1\n"
                                        "Click Yes to reload Map,  Close to exit").arg(m_bridge->m_server->errorString()),
-                                       QMessageBox::Yes|QMessageBox::Close);
+                                       QMessageBox::Yes|QMessageBox::Cancel|QMessageBox::Close);
       if(rslt == QMessageBox::Close)
       {
           close();
           return;
       }
+      if(rslt == QMessageBox::Cancel)
+          return;
       qInfo() << "reload map initiated!";
       enableControls(false);
 

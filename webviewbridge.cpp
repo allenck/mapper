@@ -17,7 +17,7 @@ WebViewBridge::WebViewBridge(MainWindow *parent)
  config = Configuration::instance();
 }
 
-WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString maptype, QString mapId, MainWindow *parent)
+WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString maptype, QString mapId,  MainWindow *parent)
  : QObject()
 {
  this->_latLng = latLng;
@@ -31,6 +31,7 @@ WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString maptype, QString m
 
  _instance = this;
  config = Configuration::instance();
+ this->_runInBrowser = config->bRunInBrowser;
 
  connect(m_parent, &MainWindow::windowActivated, this, [=]{
      //if(m_server && isListening())
@@ -55,8 +56,9 @@ WebViewBridge* WebViewBridge::instance()
 }
 
 float WebViewBridge::curLat() const {return _lat;}
-float WebViewBridge::curLon(){return _lon;}
+float WebViewBridge::curLon() const {return _lon;}
 LatLng WebViewBridge::curLatLng(){return _latLng;}
+bool WebViewBridge::runInBrowser()  {return _runInBrowser;}
 void WebViewBridge::setLatLng(LatLng latlng){
     this->_latLng = latlng;
     emit latlngChanged(latlng);
@@ -341,6 +343,7 @@ void WebViewBridge::queryOverlay()
 //    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
 //    m_parent->queryOverlay();
  emit queryOverlaySignal();
+m_parent->enableControls(true);
 }
 
 // void WebViewBridge::initialized()
@@ -375,14 +378,11 @@ void WebViewBridge::moveStationMarker(qint32 stationKey, qint32 segmentId, doubl
 
 void WebViewBridge::moveRouteComment(qint32 route, QString date, double lat, double lng, int commentKey, int companyKey)
 {
-
     m_parent->moveRouteComment(route, date, commentKey, lat, lng, companyKey);
 }
 
-
 void WebViewBridge::mapInit()
 {
-
     m_parent->mapInit();
     m_parent->enableControls(true);
 }
@@ -465,6 +465,7 @@ QList<LatLng> WebViewBridge::buildPoints(QVariantList array)
 
 bool WebViewBridge::setupbridge()
 {
+    _runInBrowser = config->bRunInBrowser;
     // setup the QWebSocketServer
     if(!m_server)
         m_server = new QWebSocketServer(QStringLiteral("WebViewBridge"), QWebSocketServer::NonSecureMode);

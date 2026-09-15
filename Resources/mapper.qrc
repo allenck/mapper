@@ -101,7 +101,16 @@
         <file>sql/PostgreSQL/replacePostgreSQLFunction</file>
         <file>sql/PostgreSQL/dropPostgreSQLFunction.sql</file>
         <file>sql/Sqlite3/sqlite3_recreateComments.sql</file>
-        <file>mapperLeaflet.js</file>
         <file>MapQuest.htm</file>
+        <file>OpenStreetMap.htm</file>
+        <file>mapperLeaflet.css</file>
+        <file>mapperLeaflet.js</file>
+        <file>scripts/masajid390/leaflet-beautify-marker-icon.css</file>
+        <file>scripts/masajid390/leaflet-beautify-marker-icon.js</file>
+        <file>scripts/L.RotatedMarker.js</file>
+        <file>scripts/leaflet.polylineDecorator.js</file>
+        <file>scripts/L.Symbol.js</file>
+        <file>scripts/leaflet.polylineoffset.js</file>
+        <file>scripts/patternUtils.js</file>
     </qresource>
 </RCC>
