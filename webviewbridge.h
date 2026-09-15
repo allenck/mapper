@@ -33,7 +33,7 @@ public:
     Q_PROPERTY(float lat READ curLat NOTIFY onLatChanged)
     Q_PROPERTY(float lng READ curLon NOTIFY onLngChanged)
     Q_PROPERTY(int zoom READ curZoom NOTIFY onZoomChanged)
-    Q_PROPERTY(QString maptype READ curMaptype NOTIFY onMapTypeChanged)
+    Q_PROPERTY(QString maptype READ curMaptype WRITE setMapType NOTIFY onMapTypeChanged)
     Q_PROPERTY(QString mapId READ curMapId WRITE setMapId NOTIFY onMapIdChanged)
     Q_PROPERTY(LatLng latlng MEMBER _latLng WRITE setLatLng NOTIFY latlngChanged)
     Q_PROPERTY(bool runInBrowser READ runInBrowser NOTIFY onRunInBrowserChanged )
@@ -55,7 +55,7 @@ public:
     void setMapId(QString);
     void setName(QString);
     ~WebViewBridge();
-
+    int openConnections = 0;
 signals:
     void executeScript(QString func, QString parms);
     void executeScript2(QString func, QString parms, QString name, QString value);
@@ -100,6 +100,7 @@ public slots:
     void setLon(double lon);
     void setDebug(QString str); //25
     void setLen(qint32 len);
+    void setMapType(QString maptype);
     void setCenter(double lat, double lon, int zoom, QString maptype);
     void getGeocoderResults(QString text);
     void addPoint(int pt, double lat, double lon); //29

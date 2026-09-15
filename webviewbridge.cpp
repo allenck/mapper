@@ -239,6 +239,12 @@ void WebViewBridge::setLen(qint32 len)
 
     m_parent->setLen(len);
 }
+
+void WebViewBridge::setMapType(QString mapType)
+{
+    m_parent->m_maptype = maptype;
+}
+
 void WebViewBridge::setCenter(double lat, double lon, int zoom, QString maptype)
 {
     m_parent->m_latitude = lat;
@@ -385,6 +391,8 @@ void WebViewBridge::mapInit()
 {
     m_parent->mapInit();
     m_parent->enableControls(true);
+    m_parent->bReloadInProgress=false;
+    ++openConnections;
 }
 
 void WebViewBridge::debug(QString text)

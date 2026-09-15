@@ -22,6 +22,8 @@ var newSegment, segmentId, arrow,lat=0,lon=0;
 var overlayLayer = null;
 var overlay=null;
 var opacityControl = null;
+var runInBrowser = null;
+var currMapType = 'Unknown';
 
 var image = ["https://maps.google.com/mapfiles/marker.png",
   "https://maps.google.com/mapfiles/dd-start.png",
@@ -585,7 +587,10 @@ function addStationMarker(lat, lon, visible, segmentId, stationName, stationKey,
 function alertClose()
 {
   if(runInBrowser)
+  {
     alert("you may now close this window");
+    window.close();
+  }
 }
 
 // Class to calculate distance and bearing
@@ -1083,7 +1088,15 @@ function getIcon(typeIcon)
 
 function getMapType()
 {
-    return map.getMapTypeId();
+    //return map.getMapTypeId();
+  let activeMapType = "Unknown";
+    map.eachLayer(function(layer) {
+          // Check if the layer is a TileLayer and has our custom name
+          if (layer instanceof L.TileLayer && layer.options.name) {
+              activeMapType = layer.options.name;
+          }
+    });
+  return activeMapType;
 } // end getMapType()
 
 function getOpacity()
@@ -1194,9 +1207,10 @@ function initMap()
   var Lat = webViewBridge.lat;
   var Lon = webViewBridge.lng;
   var zoom = webViewBridge.zoom;
-  var mapTypeId = webViewBridge.maptype;
+  var mapTypeId = webViewBridge.mapId;
+  var mapType = webViewBridge.maptype;
   var mapDiv = document.getElementById("map");
-  var runInBrowser = webViewBridge.runInBrowser;
+  runInBrowser = webViewBridge.runInBrowser;
   // if(runInBrowser)
   //   alert("Run in browser is true" );
   // else
@@ -1212,6 +1226,7 @@ function initMap()
         layers: L.mapquest.tileLayer('map'),
         zoom: zoom,
         doubleClickZoom: false,
+        name: "ROADMAP"
       });
 
       if(map == null )
@@ -1245,7 +1260,8 @@ function initMap()
         {
             streetView = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
                 maxZoom: 20,
-                attribution: '&copy; OpenStreetMap France | &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+                attribution: '&copy; OpenStreetMap France | &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+                name: 'Street Map'
             });
         }
         else
@@ -1253,8 +1269,9 @@ function initMap()
             // won't work with firefox
             streetView =L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
-                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            }).addTo(map);
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                name: 'Street View'
+            });
         }
         // L.control.zoom({ position: 'topleft' }).addTo(map); (by default}
         // L.control.attribution({ position: 'bottomright' }).addTo(map);
@@ -1262,7 +1279,8 @@ function initMap()
         // 6. Define the Satellite View layer (Esri World Imagery)
         var satelliteView = L.tileLayer('https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             maxNativeZoom: 18,
-            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+            name: 'Satellite View'
         });
         var googleSatellite = L.tileLayer('https://{s}://{x}&y={y}&z={z}', {
             maxZoom: 20,
@@ -1283,15 +1301,36 @@ function initMap()
             maxNativeZoom: 18,       // ⚠️ Mapbox satellite tiles stop at zoom 18. This stretches them so it won't go gray at 19-22!
             tileSize: 512,           // Mapbox tiles are 512x512 pixels
             zoomOffset: -1,          // Compensates for the 512px tile size in Leaflet
-            attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://labs.mapbox.com/contribute/" target="_blank">Improve this map</a></strong>'
-        }).addTo(map);
+            attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://labs.mapbox.com/contribute/" target="_blank">Improve this map</a></strong>',
+            name: 'MapBox Satellite View'
+        });
+        var mapboxUsername = 'mapbox'; // Use 'mapbox' for official default styles
+        var styleId = 'streets-v12';   // This is the specific ID for Mapbox Streets
+        var mapboxStreetsUrl = 'https://api.mapbox.com/styles/v1/' + mapboxUsername + '/' + styleId + '/tiles/512/{z}/{x}/{y}?access_token=' + mapboxToken;
+        var mapboxStreets = L.tileLayer(mapboxStreetsUrl, {
+            maxZoom: 22,
+            maxNativeZoom: 18,       // ⚠️ Mapbox satellite tiles stop at zoom 18. This stretches them so it won't go gray at 19-22!
+            tileSize: 512,           // Mapbox tiles are 512x512 pixels
+            zoomOffset: -1,          // Compensates for the 512px tile size in Leaflet
+            attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            name: 'MapBox Street View'
+        });
 
         // 7. Add the default map layer to start with
-        streetView.addTo(map);
+        if (mapType === 'Satellite View') {
+            satelliteView.addTo(map);    // Show the satellite view
+        } else if (mapType === 'Street View') {
+            streetView.addTo(map);
+        } else if(mapType === 'MapBox Satellite View') {
+            mapboxSatellite.addTo(map);
+        } else
+            streetView.addTo(map); // default to streetView
+
 
         // 8. Create a Base Maps object to hold our choices
         var baseMaps = {
             "Street View": streetView,
+            "MapBox Street View": mapboxStreets,
             "Satellite View": satelliteView,
             // "Google Satellite View": googleSatellite,
             "MapBox Satellite View": mapboxSatellite
@@ -1299,6 +1338,17 @@ function initMap()
 
         // 9. Add the top-right toggle switch button to the map
         L.control.layers(baseMaps).addTo(map);
+
+        // Listen for when the user changes the map type
+        map.on('baselayerchange', function(event) {
+            // event.name gives you the text string from your baseMaps object (e.g., "Satellite View")
+            console.log("The map type changed to: " + event.name);
+
+            // event.layer gives you the actual layer object
+            console.log("The new layer URL template is: " + event.layer._url);
+            currMapType = event.name;
+            webViewBridge.setMapType(currMapType);
+        });
     }
    webViewBridge.queryOverlay();
 
@@ -2318,12 +2368,18 @@ function setCenter(Lat, Lon)
 
 } // end setCenter()
 
-function setMapType(mapTypeId)
+function setMapType(newType)
 {
-    // if(mapTypeId === "")
-    //     mapTypeId = "ROADMAP";
-    // map.setMapTypeId(mapTypeId);
-    // return null;
+  if (newType === 'Satellite View') {
+          map.removeLayer(currMapType);    // Take away the street view
+          map.addLayer(satelliteView);    // Show the satellite view
+      } else if (newType === 'Street View') {
+          map.removeLayer(currMapType); // Take away the satellite view
+          map.addLayer(streetView);       // Show the street view
+      } else if(newType === 'MapBox Satellite View')   {
+          map.removeLayer(currMapType);
+          map.addLayer(mapboxSatellite);
+      }
 } // end setMapType()
 
 function setDefaultOptions()

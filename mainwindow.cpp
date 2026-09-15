@@ -6034,7 +6034,7 @@ bool MainWindow::verifyAPIKey(QString path, QString apiKey)
 
 void MainWindow::onWebSocketClosed()
 {
-  if(config->bRunInBrowser)
+  if(!config->bRunInBrowser)
   {
      //QMessageBox::critical(this, tr("Browser closed"), tr("The browser window has closed"));
    QMessageBox *mbox = new QMessageBox;
@@ -6043,13 +6043,19 @@ void MainWindow::onWebSocketClosed()
    mbox->show();
    QTimer::singleShot(2000, mbox, SLOT(hide()));
    m_bridge->channel = nullptr;
-   reloadMap();
+   // if(!bReloadInProgress)
+   //      reloadMap();
   }
   else
   {
+      // run in browser
       if(!config->bRunInBrowser)
           return;
       if(bReloadInProgress)
+          return;
+      if(m_bridge->openConnections > 0)
+        --m_bridge->openConnections;
+      if(m_bridge->openConnections > 0)
           return;
       int rslt = QMessageBox::question(this, tr("Connection closed"),
                                        tr("The connection to the browser has closed. \n%1\n"
