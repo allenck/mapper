@@ -1244,19 +1244,13 @@ function initMap()
     {
         // OpenStreetMap
 
-      var tileUrl;
-      var tileOptions;
+        var tileUrl;
+        var tileOptions;
         var mapboxUsername = 'mapbox'; // Use 'mapbox' for official default styles
         var styleId = 'streets-v12';   // This is the specific ID for Mapbox Streets
         var mapboxToken = MapBoxKey;
 
-        var tilesOsmFr = 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
-            tilesOsm = tilesOsm = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            tilesEsri = 'https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-            tilesMapboxSatellite = 'https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg70?access_token=' + mapboxToken,
-            tilesMapboxStreet = 'https://api.mapbox.com/styles/v1/' + mapboxUsername + '/' + styleId + '/tiles/512/{z}/{x}/{y}?access_token=' + mapboxToken;
-
-        // 6. Load and display the OpenStreetMap tile layer
+        // Load and display the OpenStreetMap tile layer
         // OpenStreetMap's 'servers don't like html files served from file:// to a Firefox browser so use one in France.
         var streetView = null;
         const userAgent = navigator.userAgent;
@@ -1283,7 +1277,7 @@ function initMap()
             streetView =L.tileLayer(tileUrl, tileOptions);
         }
 
-        // 6. Define the Satellite View layer (Esri World Imagery)
+        // Define the Satellite View layer (Esri World Imagery)
         tileUrl = 'https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
         tileOptions = {
             maxNativeZoom: 18,
@@ -1297,10 +1291,10 @@ function initMap()
         //     attribution: 'Map data &copy; Google'
         // });
 
-        // 5. Define your Mapbox Access Token
+        // Define your Mapbox Access Token
                 //var mapboxToken = MapBoxKey;
 
-                // 6. Define the Mapbox Satellite URL template
+        // Define the Mapbox Satellite URL template
         // We use 'mapbox.satellite' as the style ID
         tileUrl = 'https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg70?access_token=' + mapboxToken;
         tileOptions = {
@@ -1311,7 +1305,7 @@ function initMap()
             attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://labs.mapbox.com/contribute/" target="_blank">Improve this map</a></strong>',
             name: 'MapBox Satellite View'
         };
-        // 7. Create and add the Mapbox Satellite tile layer
+        // Create and add the Mapbox Satellite tile layer
         var mapboxSatellite = L.tileLayer(tileUrl, tileOptions);
         // var mapboxUsername = 'mapbox'; // Use 'mapbox' for official default styles
         // var styleId = 'streets-v12';   // This is the specific ID for Mapbox Streets
@@ -1326,19 +1320,12 @@ function initMap()
         }
         var mapboxStreets = L.tileLayer(tileUrl, tileOptions);
 
-        // var magnifyingGlass = L.magnifyingGlass({
-        //     zoomOffset: 3,
-        //     layers: [
-        //       L.tileLayer(tileUrl, tileOptions)
-        //     ]
-        //   });
-
         // Share the same tile url...
         // but use two independant TileLayer objects
         var mapTiles = L.tileLayer(tileUrl),
             magnifiedTiles = L.tileLayer(tileUrl);
 
-          //map.addLayer(magnifyingGlass);
+        //map.addLayer(magnifyingGlass);
         map = L.map('map', {
                 center: [0, 0],
                 zoom: 2,
@@ -1354,14 +1341,19 @@ function initMap()
 
         magnifyingGlass = L.magnifyingGlass({
           layers: [ magnifiedTiles ]
-        }).addTo(map);
+        });
 
         magnifyingGlassControl = L.control.magnifyingglass(magnifyingGlass, {
             forceSeparateButton: true
           }).addTo(map);
 
-        // 4. Handle the tile layer change event
+        // Handle the tile layer change event
         map.on('baselayerchange', function(e) {
+            handlebaselayerchange(e)
+        });
+
+        function handlebaselayerchange(e)
+        {
             // 1. Remove the existing magnifying glass from the map
             if (magnifyingGlass) {
                 map.removeLayer(magnifyingGlass);
@@ -1373,7 +1365,7 @@ function initMap()
             // 3. Re-create the magnifier from scratch with a fresh, independent tile instance
             magnifyingGlass = L.magnifyingGlass({
                 layers: [L.tileLayer(newUrl)]
-            }).addTo(map);
+            });
             magnifyingGlass.on('click', function() {
               map.removeLayer(magnifyingGlass);
             })
@@ -1392,22 +1384,22 @@ function initMap()
                         }).addTo(map);
             });
 
-        }); // end baselayerchange
+        }; // end baselayerchange
 
-          magnifyingGlass.on('click', function() {
-            map.removeLayer(magnifyingGlass);
-          })
+        magnifyingGlass.on('click', function() {
+        map.removeLayer(magnifyingGlass);
+        })
 
-          // ...and reappear on right click
-          map.on('contextmenu', function(mouseEvt) {
+        // ...and reappear on right click
+        map.on('contextmenu', function(mouseEvt) {
             if(map.hasLayer(magnifyingGlass)) {
               return;
             }
-            map.addLayer(magnifyingGlass);
-            magnifyingGlass.setLatLng(mouseEvt.latlng);
-          });
+        map.addLayer(magnifyingGlass);
+        magnifyingGlass.setLatLng(mouseEvt.latlng);
+        });
 
-        // 7. Add the default map layer to start with
+        // Add the default map layer to start with
         if (mapType === 'Satellite View') {
             satelliteView.addTo(map);    // Show the satellite view
         } else if (mapType === 'Street View') {
@@ -1417,8 +1409,7 @@ function initMap()
         } else
             streetView.addTo(map); // default to streetView
 
-
-        // 8. Create a Base Maps object to hold our choices
+        // Create a Base Maps object to hold our choices
         var baseMaps = {
             "Street View": streetView,
             "MapBox Street View": mapboxStreets,
@@ -1430,62 +1421,28 @@ function initMap()
         // 9. Add the top-right toggle switch button to the map
         L.control.layers(baseMaps).addTo(map);
 
-        // Listen for when the user changes the map type
-        // map.on('baselayerchange', function(event) {
-        //     // event.name gives you the text string from your baseMaps object (e.g., "Satellite View")
-        //     console.log("The map type changed to: " + event.name);
+        //handlebaselayerchange(streetView);
 
-        //     // event.layer gives you the actual layer object
-        //     console.log("The new layer URL template is: " + event.layer._url);
-        //     currMapType = event.name;
-        //     webViewBridge.setMapType(currMapType);
-        //     var url;
-        //     switch (event.name)
-        //     {
-        //      case "Street View":
-        //          if (userAgent.includes("Firefox" ) /*|| userAgent.includes("Chrome" )*/)
-        //              url = tilesOsmFr
-        //          else
-        //              url = tilesOsm;
-        //          break;
-        //      case "MapBox Street View":
-        //          url = tilesMapboxStreet;
-        //          break;
-        //      case "Satellite View":
-        //          url = tilesEsri;
-        //          break;
-        //      case "MapBox Satellite View":
-        //          url = tilesMapboxSatellite;
-        //          break;
-        //      default:
-        //          url = tilesMapboxStreet;
-        //          break;
-        //     }
-        //     // map.removeLayer(magnifyingGlass);
-        //     // magnifiedTiles = L.tileLayer(url,tileOptions).addTo(map);
-        //     // magnifyingGlass = L.magnifyingGlass({
-        //     //           layers: [ magnifiedTiles ]
-        //     //         }).addTo(map);
-        // });
-    }
-   webViewBridge.queryOverlay();
+    } // end OpenStreetMap initialization
 
-  webViewBridge.displayZoom(map.getZoom());
+    webViewBridge.queryOverlay();
 
-  map.on("zoomend", function() {
-   webViewBridge.displayZoom(map.getZoom());
-  });
+    webViewBridge.displayZoom(map.getZoom());
 
-  map.on( "contextmenu", function(event) {
-    // Prevent the browser's default right-click context menu from opening
-    L.DomEvent.preventDefault(event);
+    map.on("zoomend", function() {
+        webViewBridge.displayZoom(map.getZoom());
+    });
 
-    webViewBridge.rightClicked(event.latlng.lat, event.latlng.lng);
-  });
+    map.on( "contextmenu", function(event) {
+        // Prevent the browser's default right-click context menu from opening
+        L.DomEvent.preventDefault(event);
 
-  map.on( "click", function(event) {
-   webViewBridge.clickPoint(event.latlng.lat, event.latlng.lng);
-  });
+        webViewBridge.rightClicked(event.latlng.lat, event.latlng.lng);
+    });
+
+    map.on( "click", function(event) {
+        webViewBridge.clickPoint(event.latlng.lat, event.latlng.lng);
+    });
 
     map.on('dblclick', function(event)
     {
@@ -1495,23 +1452,6 @@ function initMap()
     siArray = [];
     markerPins = [];
 
-  var idleTimeout;
-  var idleDelay = 500; // Time in milliseconds
-  // Function that runs when the map becomes idle
-  // function onMapIdle() {
-  //     console.log('Map is idle! Current bounds:', map.getBounds());
-  //     // Add your logic here (e.g., fetch markers via AJAX)
-  //   webViewBridge.mapInit();
-  //   webViewBridge.debug("initMap complete");}
-
-  // // Listen for movement and zoom events
-  // map.on('moveend zoomend', function() {
-  //     // Clear the previous timeout if the user keeps moving
-  //     clearTimeout(idleTimeout);
-
-  //     // Set a new timeout
-  //     idleTimeout = setTimeout(onMapIdle, idleDelay);
-  // });
 
     webViewBridge.mapInit();
 
