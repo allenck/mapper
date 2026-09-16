@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MapperOss</title>
-<script> MapQuest = false; // needed by initMap in mapperLeaflet.js</script>
+<!--script> MapQuest = false; // needed by initMap in mapperLeaflet.js</script-->
 
 <style>
     /* 2. Set the map size. Without a height, the map will be invisible! */
@@ -13,12 +13,13 @@
     #map { height: 100%}
 </style>
 
-<link rel="stylesheet" href="mapperLeaflet.css" />
     <!-- 1. Include Leaflet CSS for map styling -->
     <!--link rel="stylesheet" href="https://unpkg.com" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" /-->
     <!--link rel="stylesheet" href="https://cloudflare.com" /-->
     <link rel="stylesheet" href="scripts/leaflet/dist/leaflet.css" />
     <!--link type="text/css" rel="stylesheet" href="https://api.mqcdn.com/sdk/mapquest-js/v1.3.2/mapquest.css"/-->
+    <link rel="stylesheet" href="mapperLeaflet.css" />
+    <link rel="stylesheet" href="scripts/bbecquet/LeafletMagnifyingGlass/Control.MagnifyingGlass.css" />
 
 <script type="text/javascript">
         window.onload = function() {
@@ -58,25 +59,11 @@
     <script type="text/javascript" src="scripts/leaflet.polylineoffset.js"></script>
     <link rel="stylesheet" href="scripts/bbecquet/LeafletMagnifyingGlass/leaflet.magnifyingglass.css">
     <script type="text/javascript" src="scripts/bbecquet/LeafletMagnifyingGlass/leaflet.magnifyingglass.js"></script>
+    <script type="text/javascript" src="scripts/bbecquet/LeafletMagnifyingGlass/Control.MagnifyingGlass.js"></script>
+
     <script>
-        var MapQuest = false;
-
-    /*
-     // 5. Initialize the map and point it to a specific location (Latitude, Longitude) and zoom level
-        // [51.505, -0.09] is London. Zoom level 13 shows city details.
-        var map = L.map('map').setView([51.505, -0.09], 13);
-
-        // 6. Load and display the OpenStreetMap tile layer
-        L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-            maxZoom: 20,
-            attribution: '&copy; OpenStreetMap France | &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
-        }).addTo(map);
-        // 7. Optional: Add a clickable marker to the map
-        var marker = L.marker([51.505, -0.09]).addTo(map);
-        marker.bindPopup("<b>Hello world!</b><br>I am a Leaflet map.").openPopup();
-    */
+        var MapQuest = false;   // needed by initMap in mapperLeaflet.js</script>
     </script>
 
 </body>
 </html>
-Use code with caution.Step-by-Step BreakdownThe Container: The <div id="map"></div> is the blank box where Leaflet will construct your map. You must give it a height in your CSS or it will not show up. [1] (https://www.youtube.com/watch?v=NyjMmNCtKf4&t=14)The Map Object (L.map): This initializes the code framework. .setView([latitude, longitude], zoom) tells the camera exactly where to look on Earth. [1] (https://www.youtube.com/watch?v=NyjMmNCtKf4&t=14)The Tile Layer (L.tileLayer): Leaflet itself is just an empty frame; it does not come with pictures of streets. The tile layer fetches the actual map images from OpenStreetMap's servers. The {z}/{x}/{y} part automatically changes based on where the user zooms and pans. [1] (https://www.youtube.com/watch?v=rdPNRZBSPdQ&t=242), [2] (https://www.raymondcamden.com/2024/08/23/mapping-with-leaflet), [3] (https://leafletjs.com/examples/quick-start/)Attribution: OpenStreetMap data is free, but you must give credit. The attribution line ensures you stay legal and fair by adding a small copyright link in the corner. [1] (https://leafletjs.com/examples/quick-start/)Production WarningOpenStreetMap's public servers are run entirely on volunteer donations. If you are building a website that will get a massive amount of daily traffic, you should look into a commercial tile provider like MapTiler or Mapbox, or set up your own tile server. [1] (https://docs.maptiler.com/leaflet/), [2] (https://leafletjs.com/examples/quick-start/), [3] (https://switch2osm.org/using-tiles/getting-started-with-leaflet/)Would you like to learn how to change the map's starting location to a specific city, add multiple custom markers, or draw shapes (like circles or lines) on top of the map?LeafletQuick Start Guide - Leaflet - a JavaScript library for interactive mapsNext, we'll add a tile layer to add to our map, in this case it's a OpenStreetMap tile layer. Creating a tile layer usually involv...YouTube·OpenJavaScript15mMap Live User Location using Leaflet.js and OpenStreetMapYouTube·OpenJavaScript1mMap with Markers using Leaflet | JavaScript TutorialRaymond CamdenMapping with Leaflet - Raymond CamdenAug 23, 2024 — I really dig Google Maps, both the JavaScript library and APIs, and I spent some time as a developer evangelist for HERE helping o...MapTilerLeaflet JS with MapTiler mapsLeaflet is a lightweight open-source library for online maps. It works efficiently across all major desktop and mobile platforms a...Switch2OSMGetting started with Leaflet - Switch2OSMIntroduction. Leaflet is a lightweight JavaScript library for embedding maps. It uses a permissive BSD open-source license so can ...

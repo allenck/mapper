@@ -1210,6 +1210,8 @@ function initMap()
   var mapTypeId = webViewBridge.mapId;
   var mapType = webViewBridge.maptype;
   var mapDiv = document.getElementById("map");
+  var magnifyingGlass = null;
+  var magnifyingGlassControl = null;
   runInBrowser = webViewBridge.runInBrowser;
   // if(runInBrowser)
   //   alert("Run in browser is true" );
@@ -1296,7 +1298,7 @@ function initMap()
         // });
 
         // 5. Define your Mapbox Access Token
-                var mapboxToken = MapBoxKey;
+                //var mapboxToken = MapBoxKey;
 
                 // 6. Define the Mapbox Satellite URL template
         // We use 'mapbox.satellite' as the style ID
@@ -1350,11 +1352,48 @@ function initMap()
 
         L.control.scale({ position: 'bottomleft' }).addTo(map);
 
-        var magnifyingGlass = L.magnifyingGlass({
+        magnifyingGlass = L.magnifyingGlass({
           layers: [ magnifiedTiles ]
         }).addTo(map);
 
-          // make the glass disappear on click...
+        magnifyingGlassControl = L.control.magnifyingglass(magnifyingGlass, {
+            forceSeparateButton: true
+          }).addTo(map);
+
+        // 4. Handle the tile layer change event
+        map.on('baselayerchange', function(e) {
+            // 1. Remove the existing magnifying glass from the map
+            if (magnifyingGlass) {
+                map.removeLayer(magnifyingGlass);
+            }
+
+            // 2. Grab the URL template of the newly selected base map
+            const newUrl = e.layer._url;
+
+            // 3. Re-create the magnifier from scratch with a fresh, independent tile instance
+            magnifyingGlass = L.magnifyingGlass({
+                layers: [L.tileLayer(newUrl)]
+            }).addTo(map);
+            magnifyingGlass.on('click', function() {
+              map.removeLayer(magnifyingGlass);
+            })
+
+            // ...and reappear on right click
+            map.on('contextmenu', function(mouseEvt) {
+              if(map.hasLayer(magnifyingGlass)) {
+                return;
+              }
+              map.addLayer(magnifyingGlass);
+              magnifyingGlass.setLatLng(mouseEvt.latlng);
+
+              map.removeControl(magnifyingGlassControl)
+              magnifyingGlassControl = L.control.magnifyingglass(magnifyingGlass, {
+                          forceSeparateButton: true
+                        }).addTo(map);
+            });
+
+        }); // end baselayerchange
+
           magnifyingGlass.on('click', function() {
             map.removeLayer(magnifyingGlass);
           })
@@ -1392,42 +1431,42 @@ function initMap()
         L.control.layers(baseMaps).addTo(map);
 
         // Listen for when the user changes the map type
-        map.on('baselayerchange', function(event) {
-            // event.name gives you the text string from your baseMaps object (e.g., "Satellite View")
-            console.log("The map type changed to: " + event.name);
+        // map.on('baselayerchange', function(event) {
+        //     // event.name gives you the text string from your baseMaps object (e.g., "Satellite View")
+        //     console.log("The map type changed to: " + event.name);
 
-            // event.layer gives you the actual layer object
-            console.log("The new layer URL template is: " + event.layer._url);
-            currMapType = event.name;
-            webViewBridge.setMapType(currMapType);
-            var url;
-            switch (event.name)
-            {
-             case "Street View":
-                 if (userAgent.includes("Firefox" ) /*|| userAgent.includes("Chrome" )*/)
-                     url = tilesOsmFr
-                 else
-                     url = tilesOsm;
-                 break;
-             case "MapBox Street View":
-                 url = tilesMapboxStreet;
-                 break;
-             case "Satellite View":
-                 url = tilesEsri;
-                 break;
-             case "MapBox Satellite View":
-                 url = tilesMapboxSatellite;
-                 break;
-             default:
-                 url = tilesMapboxStreet;
-                 break;
-            }
-            // map.removeLayer(magnifyingGlass);
-            // magnifiedTiles = L.tileLayer(url,tileOptions).addTo(map);
-            // magnifyingGlass = L.magnifyingGlass({
-            //           layers: [ magnifiedTiles ]
-            //         }).addTo(map);
-        });
+        //     // event.layer gives you the actual layer object
+        //     console.log("The new layer URL template is: " + event.layer._url);
+        //     currMapType = event.name;
+        //     webViewBridge.setMapType(currMapType);
+        //     var url;
+        //     switch (event.name)
+        //     {
+        //      case "Street View":
+        //          if (userAgent.includes("Firefox" ) /*|| userAgent.includes("Chrome" )*/)
+        //              url = tilesOsmFr
+        //          else
+        //              url = tilesOsm;
+        //          break;
+        //      case "MapBox Street View":
+        //          url = tilesMapboxStreet;
+        //          break;
+        //      case "Satellite View":
+        //          url = tilesEsri;
+        //          break;
+        //      case "MapBox Satellite View":
+        //          url = tilesMapboxSatellite;
+        //          break;
+        //      default:
+        //          url = tilesMapboxStreet;
+        //          break;
+        //     }
+        //     // map.removeLayer(magnifyingGlass);
+        //     // magnifiedTiles = L.tileLayer(url,tileOptions).addTo(map);
+        //     // magnifyingGlass = L.magnifyingGlass({
+        //     //           layers: [ magnifiedTiles ]
+        //     //         }).addTo(map);
+        // });
     }
    webViewBridge.queryOverlay();
 
