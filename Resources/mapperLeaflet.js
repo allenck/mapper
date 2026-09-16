@@ -1581,6 +1581,10 @@ function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
   console.log("size = " + urls.length +" url = " + urls[0] );
  }
 
+ if(urls === '')
+ {
+     console.warn("overlay: " + name +"has no url!");
+ }
  if(overlayLayer)
  {
    map.removeLayer(overlayLayer);

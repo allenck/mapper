@@ -10857,6 +10857,13 @@ void SQL::checkTables(QSqlDatabase db)
       // if(config->currConnection->servertype() == "Sqlite")
       //  executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
   }
+  if(!doesColumnExist("Segments", "StreetSeq"))
+  {
+      addColumn("Segments", "StreetSeq", "integer NOT NULL Default -1");
+      // if(config->currConnection->servertype() == "Sqlite")
+      //  executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
+  }
+
   if(!tableList.contains("StreetDef",Qt::CaseInsensitive))
   {
       if(config->currConnection->servertype() == "Sqlite")
@@ -12358,7 +12365,8 @@ QList<SegmentData*>  SQL::segmentDataListFromView(QString where)
      qDebug() << errCommand;
      QSqlError error = query.lastError();
      SQLERROR(std::move(query));
-     throw SQLException(error.text() + " " + errCommand);
+     //throw SQLException(error.text() + " " + errCommand);
+     return list;
  }
  while(query.next())
  {
@@ -12406,7 +12414,7 @@ QList<SegmentData*>  SQL::segmentDataListFromView(QString where)
   sd->_routePrefix = query.value(40).toString();
   sd->_streetId = query.value(41).toInt();
   sd->_routeId = query.value(42).toInt();
-  sd->_streetSeq = query.value("StreetSeq").toInt();
+  sd->_streetSeq = query.value(45).toInt(); // skip two rowids
   if(!sd->segmentStartDate().isValid() || !sd->segmentEndDate().isValid())
   {
       SegmentInfo si = SegmentInfo(*sd);
