@@ -1716,7 +1716,7 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
  var str;
  this.setOpacity= function(o) {
   opacity = o;
-  //imageMapType.setOpacity(opacity/100);
+    var old_opacity = overlayLayer.opacity;
      if(overlayLayer !== null)
      {
         overlayLayer.setOpacity(o/100.0);
@@ -1839,7 +1839,7 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
  };
 
  // 3. Add it to your map
- overlayLayer = L.tileLayer.custom({ maxZoom: 18, opacity: opacity/100., zIndex: map.getZoom }).addTo(map);
+ overlayLayer = L.tileLayer.custom({ maxZoom: 18, opacity: opacity/100., zIndex: map.getZoom  }).addTo(map);
  return "";
 } // end Overlay()
 

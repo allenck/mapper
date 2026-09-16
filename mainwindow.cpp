@@ -1066,7 +1066,7 @@ void MainWindow::loadOverlay(Overlay* ov)
  if(ov->opacity < 0 || ov->opacity > 100)
      ov->opacity = 65;
  QVariantList objArray;
- objArray << currentOverlay<< ov->opacity << ov->minZoom << ov->maxZoom << ov->source << ov->bounds().toString()<< ov->urls;
+ objArray << currentOverlay<< ov->opacity << ov->minZoom << ov->maxZoom << ov->source << ov->bounds().toString()<< ov->urls.at(0);
  m_bridge->processScript("loadOverlay", objArray);
  ui->chkShowOverlay->setChecked(true);
 }
