@@ -233,8 +233,9 @@ function addMarker(index, lat, lon, icon, text, segmentId)
  });
 
  //google.maps.event.addListener(marker, "rightclick", function(){
-  marker.on('contextmenu', function(){
+  marker.on('contextmenu', function(e){
 
+      L.DomEvent.stopPropagation(e);
   var pt = marker.position;
 //OK                window.external.SetDebug("right click " + pt.lat() + ", " + pt.lng());
   webViewBridge.setDebug("right click " + pt.lat() + ", " + pt.lng());
@@ -969,6 +970,25 @@ function displayTerminalMarkers(bDisplay)
     }
     return null;
 }
+
+function enumerateTileLayers()
+{
+    var tileLayers = [];
+
+    map.eachLayer(function (layer) {
+        if (layer instanceof L.TileLayer) {
+            tileLayers.push({
+                id: L.stamp(layer),
+                url: layer._url,
+                layer: layer
+            });
+        }
+    });
+
+    console.log(tileLayers);
+    return tileLayers;
+}
+
 function fitMapBounds(swLat, swLon, neLat, neLon)
 {
   const bounds = [L.latLng(swLat, swLon), L.latLng(neLat, neLon)];
@@ -1194,15 +1214,6 @@ function initMap()
 
     connectSlots();
 
-    // const osmTiles = new L.TileLayer(
-    //   "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    //   {
-    //     attribution:
-    //       '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-    //   },
-    // );
-
-
 
   var Lat = webViewBridge.lat;
   var Lon = webViewBridge.lng;
@@ -1212,7 +1223,10 @@ function initMap()
   var mapDiv = document.getElementById("map");
   var magnifyingGlass = null;
   var magnifyingGlassControl = null;
-  runInBrowser = webViewBridge.runInBrowser;
+    var tileUrl;
+    var tileOptions;
+
+    runInBrowser = webViewBridge.runInBrowser;
   // if(runInBrowser)
   //   alert("Run in browser is true" );
   // else
@@ -1223,29 +1237,117 @@ function initMap()
         // MapQuest
         L.mapquest.key = MapQuestKey;
 
-       map = L.mapquest.map('map', {
-        center: [Lat, Lon],
-        layers: L.mapquest.tileLayer('map'),
-        zoom: zoom,
-        doubleClickZoom: false,
-        name: "ROADMAP"
+      // Define the Satellite View layer (Esri World Imagery)
+      tileUrl = 'https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+      tileOptions = {
+          maxNativeZoom: 18,
+          attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+          name: 'Satellite View'
+      };
+      var satelliteView = L.tileLayer(tileUrl,tileOptions );
+
+      // Share the same tile url...
+      // but use two independant TileLayer objects
+      var mapTiles = L.tileLayer(tileUrl),
+          magnifiedTiles = L.tileLayer(tileUrl);
+
+      var mapquestTileLayer = L.mapquest.tileLayer('map');
+      map = L.mapquest.map('map', {
+          center: [Lat, Lon],
+          layers: mapquestTileLayer,
+          zoom: zoom,
+          doubleClickZoom: false,
+          name: "ROADMAP"
+      }).setView([Lat, Lon], zoom);
+      if(map == null )
+          console.error("MapQuest not loaded");
+      else
+          console.log("MapQuest loaded successfully");
+
+      //map.addControl(L.mapquest.control()); // default MapQuest controls
+
+      L.control.scale({ position: 'bottomleft' }).addTo(map);
+
+      magnifyingGlass = L.magnifyingGlass({
+        layers: [ magnifiedTiles ]
       });
 
-      if(map == null )
-        console.error("MapQuest not loaded");
-      else
-        console.log("MapQuest loaded successfully");
-      //addSlider();
-      // Keep the default MapQuest tools (Zoom, Satellite, Traffic, Locator)
-      // These automatically append to the top-right corner by default
-      //map.addControl(L.mapquest.control({ position: 'topright' }));
+      magnifyingGlassControl = L.control.magnifyingglass(magnifyingGlass, {
+          forceSeparateButton: true,
+//                position: 'topright' // enable if Mapquest controls enabled
+        }).addTo(map);
+
+      // Handle the tile layer change event
+      map.on('baselayerchange', function(e) {
+          var layers = [];
+          map.eachLayer(function(layer){
+              layers.push(layer);
+          });
+
+          handlebaselayerchange(e);
+      });
+
+      function handlebaselayerchange(e)
+      {
+          enumerateTileLayers();
+
+          // 1. Remove the existing magnifying glass from the map
+          if (magnifyingGlass) {
+              map.removeLayer(magnifyingGlass);
+          }
+
+          // 2. Grab the URL template of the newly selected base map
+          const newUrl = e.layer._url;
+
+          // 3. Re-create the magnifier from scratch with a fresh, independent tile instance
+          magnifyingGlass = L.magnifyingGlass({
+              layers: [L.tileLayer(newUrl)]
+          });
+          magnifyingGlass.on('click', function() {
+            map.removeLayer(magnifyingGlass);
+          })
+
+          // ...and reappear on right click
+          map.on('contextmenu', function(mouseEvt) {
+            if(map.hasLayer(magnifyingGlass)) {
+              return;
+            }
+            map.addLayer(magnifyingGlass);
+            magnifyingGlass.setLatLng(mouseEvt.latlng);
+
+            map.removeControl(magnifyingGlassControl)
+            magnifyingGlassControl = L.control.magnifyingglass(magnifyingGlass, {
+                        forceSeparateButton: true
+                      }).addTo(map);
+          });
+
+      }; // end baselayerchange
+
+      magnifyingGlass.on('click', function() {
+      map.removeLayer(magnifyingGlass);
+      })
+
+      // ...and reappear on right click
+      map.on('contextmenu', function(mouseEvt) {
+          if(map.hasLayer(magnifyingGlass)) {
+            return;
+          }
+      map.addLayer(magnifyingGlass);
+      magnifyingGlass.setLatLng(mouseEvt.latlng);
+      });
+
+      // Create a Base Maps object to hold our choices
+      var baseMaps = {
+          "MapQuest View": mapquestTileLayer,
+          "Satellite View": satelliteView,
+      };
+      // Add the top-right toggle switch button to the map
+      L.control.layers(baseMaps).addTo(map);
     }
     else
     {
         // OpenStreetMap
 
-        var tileUrl;
-        var tileOptions;
         var mapboxUsername = 'mapbox'; // Use 'mapbox' for official default styles
         var styleId = 'streets-v12';   // This is the specific ID for Mapbox Streets
         var mapboxToken = MapBoxKey;
@@ -1284,7 +1386,7 @@ function initMap()
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
             name: 'Satellite View'
         };
-        var satelliteView = L.tileLayer(tileUrl,tileOptions );
+        satelliteView = L.tileLayer(tileUrl,tileOptions );
         // var googleSatellite = L.tileLayer('https://{s}://{x}&y={y}&z={z}', {
         //     maxZoom: 20,
         //     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
@@ -1354,6 +1456,8 @@ function initMap()
 
         function handlebaselayerchange(e)
         {
+            enumerateTileLayers();
+
             // 1. Remove the existing magnifying glass from the map
             if (magnifyingGlass) {
                 map.removeLayer(magnifyingGlass);
@@ -1418,12 +1522,14 @@ function initMap()
             "MapBox Satellite View": mapboxSatellite
         };
 
-        // 9. Add the top-right toggle switch button to the map
+        // Add the top-right toggle switch button to the map
         L.control.layers(baseMaps).addTo(map);
 
         //handlebaselayerchange(streetView);
 
     } // end OpenStreetMap initialization
+
+    enumerateTileLayers();
 
     webViewBridge.queryOverlay();
 
@@ -1899,6 +2005,10 @@ function processScript3(func, objArray, count)
 
 function removeOverlay()
 {
+    if(opacityControl !== null) {
+     opacityControl.remove();
+     opacityControl = null;
+    }
     map.removeLayer(overlayLayer );
 } // end removeOverlay()
 
@@ -2057,6 +2167,7 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
         //google.maps.event.addListener(this.line, "rightclick", function(e)
         line.on("contextmenu", function(e)
         {
+            L.DomEvent.stopPropagation(e);
             // var si;
             // si = hiLiteLine();
             // var path = si.getPath();

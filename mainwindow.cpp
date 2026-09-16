@@ -5286,7 +5286,8 @@ void MainWindow::chkShowOverlayChanged(bool bChecked)
   loadOverlay(ov);
  }
  else
-  m_bridge->processScript("loadOverlay", "null,0,0,'0,0, 0,0',''");
+  //m_bridge->processScript("loadOverlay", "null,0,0,'0,0, 0,0',''");
+     m_bridge->processScript("removeOverlay");
 }
 /// <summary>
 /// setStation. Called when user doubleclicks on a line segment to add a new station

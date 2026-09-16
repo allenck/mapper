@@ -2837,6 +2837,15 @@ this.overlayBounds = new google.maps.LatLngBounds(new google.maps.LatLng(vals[1]
  });
 }
 
+function removeOverlay()
+{
+    if(opacityControl !== null) {
+     opacityControl.remove();
+     opacityControl = null;
+    }
+    overlay = null;
+}
+
 function setOverlayOpacity(Opacity) {
  if(overlay)
  {
