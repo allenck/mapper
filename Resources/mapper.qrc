@@ -115,5 +115,7 @@
         <file>scripts/bbecquet/leaflet.magnifyingglass.css</file>
         <file>scripts/bbecquet/leaflet.magnifyingglass.js</file>
         <file>scripts/bbecquet/dist/leaflet.polylineDecorator.js</file>
+        <file>scripts/bbecquet/LeafletMagnifyingGlass/examples/Control.MagnifyingGlass.css</file>
+        <file>scripts/bbecquet/LeafletMagnifyingGlass/examples/example_multi.html</file>
     </qresource>
 </RCC>

@@ -1241,17 +1241,19 @@ function initMap()
     else
     {
         // OpenStreetMap
-        map = L.map('map', {
-                center: [0, 0],
-                zoom: 2,
-                maxZoom: 19, // Esri Imagery typically tops out around 18 or 19 globally
-        }).setView([Lat, Lon], zoom);
-      if(map == null )
-        console.error("OpenStreetMaps not loaded");
-      else
-        console.log("OpenStreetMaps loaded successfully");
+
       var tileUrl;
       var tileOptions;
+        var mapboxUsername = 'mapbox'; // Use 'mapbox' for official default styles
+        var styleId = 'streets-v12';   // This is the specific ID for Mapbox Streets
+        var mapboxToken = MapBoxKey;
+
+        var tilesOsmFr = 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+            tilesOsm = tilesOsm = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            tilesEsri = 'https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+            tilesMapboxSatellite = 'https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg70?access_token=' + mapboxToken,
+            tilesMapboxStreet = 'https://api.mapbox.com/styles/v1/' + mapboxUsername + '/' + styleId + '/tiles/512/{z}/{x}/{y}?access_token=' + mapboxToken;
+
         // 6. Load and display the OpenStreetMap tile layer
         // OpenStreetMap's 'servers don't like html files served from file:// to a Firefox browser so use one in France.
         var streetView = null;
@@ -1278,9 +1280,7 @@ function initMap()
             // won't work with firefox
             streetView =L.tileLayer(tileUrl, tileOptions);
         }
-        // L.control.zoom({ position: 'topleft' }).addTo(map); (by default}
-        // L.control.attribution({ position: 'bottomright' }).addTo(map);
-        L.control.scale({ position: 'bottomleft' }).addTo(map);
+
         // 6. Define the Satellite View layer (Esri World Imagery)
         tileUrl = 'https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
         tileOptions = {
@@ -1311,8 +1311,8 @@ function initMap()
         };
         // 7. Create and add the Mapbox Satellite tile layer
         var mapboxSatellite = L.tileLayer(tileUrl, tileOptions);
-        var mapboxUsername = 'mapbox'; // Use 'mapbox' for official default styles
-        var styleId = 'streets-v12';   // This is the specific ID for Mapbox Streets
+        // var mapboxUsername = 'mapbox'; // Use 'mapbox' for official default styles
+        // var styleId = 'streets-v12';   // This is the specific ID for Mapbox Streets
         tileUrl = 'https://api.mapbox.com/styles/v1/' + mapboxUsername + '/' + styleId + '/tiles/512/{z}/{x}/{y}?access_token=' + mapboxToken;
         tileOptions = {
             maxZoom: 22,
@@ -1324,14 +1324,35 @@ function initMap()
         }
         var mapboxStreets = L.tileLayer(tileUrl, tileOptions);
 
-        var magnifyingGlass = L.magnifyingGlass({
-            zoomOffset: 3,
-            layers: [
-              L.tileLayer(tileUrl, tileOptions)
-            ]
-          });
+        // var magnifyingGlass = L.magnifyingGlass({
+        //     zoomOffset: 3,
+        //     layers: [
+        //       L.tileLayer(tileUrl, tileOptions)
+        //     ]
+        //   });
+
+        // Share the same tile url...
+        // but use two independant TileLayer objects
+        var mapTiles = L.tileLayer(tileUrl),
+            magnifiedTiles = L.tileLayer(tileUrl);
 
           //map.addLayer(magnifyingGlass);
+        map = L.map('map', {
+                center: [0, 0],
+                zoom: 2,
+                maxZoom: 19, // Esri Imagery typically tops out around 18 or 19 globally
+                layers: [ mapTiles ]
+        }).setView([Lat, Lon], zoom);
+        if(map == null )
+            console.error("OpenStreetMaps not loaded");
+        else
+            console.log("OpenStreetMaps loaded successfully");
+
+        L.control.scale({ position: 'bottomleft' }).addTo(map);
+
+        var magnifyingGlass = L.magnifyingGlass({
+          layers: [ magnifiedTiles ]
+        }).addTo(map);
 
           // make the glass disappear on click...
           magnifyingGlass.on('click', function() {
@@ -1379,6 +1400,33 @@ function initMap()
             console.log("The new layer URL template is: " + event.layer._url);
             currMapType = event.name;
             webViewBridge.setMapType(currMapType);
+            var url;
+            switch (event.name)
+            {
+             case "Street View":
+                 if (userAgent.includes("Firefox" ) /*|| userAgent.includes("Chrome" )*/)
+                     url = tilesOsmFr
+                 else
+                     url = tilesOsm;
+                 break;
+             case "MapBox Street View":
+                 url = tilesMapboxStreet;
+                 break;
+             case "Satellite View":
+                 url = tilesEsri;
+                 break;
+             case "MapBox Satellite View":
+                 url = tilesMapboxSatellite;
+                 break;
+             default:
+                 url = tilesMapboxStreet;
+                 break;
+            }
+            // map.removeLayer(magnifyingGlass);
+            // magnifiedTiles = L.tileLayer(url,tileOptions).addTo(map);
+            // magnifyingGlass = L.magnifyingGlass({
+            //           layers: [ magnifiedTiles ]
+            //         }).addTo(map);
         });
     }
    webViewBridge.queryOverlay();
