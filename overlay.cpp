@@ -79,8 +79,11 @@ bool Overlay::importXml(QString fileName)
      ov->urls.append("http://localhost/tileserver.php");
    }
    else
-    ov->urls = urls.text().split(",");
-
+   {
+       if(urls.text().contains(','))
+            ov->urls = urls.text().split(",");
+       ov->urls.append(urls.text());
+   }
    overlayList.append(ov);
   }
   file->close();
