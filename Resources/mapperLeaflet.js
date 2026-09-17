@@ -1801,34 +1801,13 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
      // 1. Extend L.TileLayer to create a custom class
       L.TileLayer.Custom = L.TileLayer.extend({
           getTileUrl: function (coords) {
-                     let tilesize = 256
-                     // first convert tile coordinates to pixel coordinates for NW and SE corners of tile
-                     let nwPixelX = coords.x * tilesize;
-                     let nwPixelY = coords.y * tilesize;
-                     let sePixelX = (coords.x + 1)  * tilesize - 1;
-                     let sePixelY = (coords.y + 1)  * tilesize - 1;
-
-                     // next convert pixel coordinates to world (web mercator) coodinates
-                     let nwWorldX = nwPixelX / (Math.pow(2, coords.z));
-                     let nwWorldY = nwPixelY / (Math.pow(2, coords.z));
-                     let seWorldX = sePixelX / (Math.pow(2, coords.z));
-                     let seWorldY = sePixelY / (Math.pow(2, coords.z));
-
-                     let nwWorldPoint = L.point(nwWorldX, nwWorldY);
-                     let seWorldPoint = L.point(seWorldX, seWorldY);
-
-                     // finally use Google Maps' native method to convert world coordinates to Lat/Lng coordinates, and return a bounding box
-                     let nwLatLng = map.options.crs.unproject(nwWorldPoint);
-                     let seLatLng = map.options.crs.unproject(seWorldPoint);
-                     let bbox = nwLatLng.lng + ',' + seLatLng.lat + ',' + seLatLng.lng + ',' + nwLatLng.lat;
-                     var tileBounds = L.latLngBounds(nwLatLng, seLatLng);
-
-                    // if (!overlayBounds.contains(tileBounds) || coords.z < minZoom || coords.z > maxZoom)
-                    //   return null;
-//                   return ["http://georeferencer-0.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png","http://georeferencer-1.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png","http://georeferencer-2.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png","http://georeferencer-3.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png"][(coord.x+coord.y)%4].replace('{z}',zoom).replace('{x}',coord.x).replace('{y}',coord.y);
-//                     return urls[(coord.x+coord.y)%4].replace('{z}',zoom).replace('{x}',coord.x).replace('{y}',coord.y);
-                     return urls[0].replace('{z}',coords.z).replace('{x}',coords.x).replace('{y}',coords.y);
-             // });
+              ymax = 1 <<coords.z;
+              y = ymax - coords.y -1;
+              x = coords.x;
+              z = coords.z;
+              var url = urls.replace('{z}',z).replace('{x}',x).replace('{y}',y);
+              console.debug(url);
+              return url;
           }
     });
  }

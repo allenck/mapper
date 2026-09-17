@@ -4518,7 +4518,7 @@ void MainWindow::queryOverlay()
     if(config->currCity->curOverlayId >= 0)
     {
         Overlay* ov = config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId );
-        loadOverlay(ov);
+        //loadOverlay(ov);
     }
 }
 

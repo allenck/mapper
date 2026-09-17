@@ -12414,7 +12414,7 @@ QList<SegmentData*>  SQL::segmentDataListFromView(QString where)
   sd->_routePrefix = query.value(40).toString();
   sd->_streetId = query.value(41).toInt();
   sd->_routeId = query.value(42).toInt();
-  sd->_streetSeq = query.value(45).toInt(); // skip two rowids
+  sd->_streetSeq = query.value("StreetSeq").toInt(); // skip two rowids
   if(!sd->segmentStartDate().isValid() || !sd->segmentEndDate().isValid())
   {
       SegmentInfo si = SegmentInfo(*sd);
