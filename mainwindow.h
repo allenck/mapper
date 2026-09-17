@@ -329,6 +329,8 @@ private:
     QMenu *toolsMenu;
     QMenu* optionsMenu;
     QMenu *overlayMenu = nullptr;
+    QMenu *overlaysMenu = nullptr;
+
     QMenu* cbRouteMenu = nullptr;
     QMenu tab1Menu;
     QMenu *sortMenu;

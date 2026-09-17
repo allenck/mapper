@@ -1895,7 +1895,7 @@ void MainWindow::createMenus()
     connectionsMenu->addSeparator();
     //createCityMenu();
     connectionsMenu->addAction(editConnectionsAct);
-    connectionsMenu->addAction(manageOverlaysAct);
+    //connectionsMenu->addAction(manageOverlaysAct);
     connectionsMenu->addAction(newCityAct);
     connectionsMenu->addAction(removeCityAct);
     connectionsMenu->addAction(updateParametersAct);
@@ -1936,15 +1936,17 @@ void MainWindow::createMenus()
     toolsMenu->addAction(upgradeCommentsAct);
 #endif
     optionsMenu = new Menu(tr("Options"));
-    overlayMenu = new Menu(tr("Overlays"));
+    overlayMenu = new Menu(tr("Overlay"));
+    overlaysMenu = new Menu(tr("Overlays"));
 
     // connect(optionsMenu, &Menu::aboutToShow, [=]{
     //  if(config->currConnection->servertype()== "Sqlite")
     //  {
       optionsMenu->clear();
       fillOverlayMenu();
-      optionsMenu->addMenu(overlayMenu);
+      overlaysMenu->addMenu(overlayMenu);
       connect(overlayMenu, SIGNAL(aboutToShow()), this, SLOT(fillOverlayMenu()));
+      overlaysMenu->addAction(manageOverlaysAct);
       optionsMenu->addAction(displayRouteCommentsAct);
       displayRouteCommentsAct->setChecked(config->currCity->bDisplayRouteComments);
       optionsMenu->addAction(displayStationMarkersAct);
@@ -1978,7 +1980,7 @@ void MainWindow::createMenus()
       displayRouteOnReloadAct->setChecked(config->bDisplayRouteOnReload);
     menuBar()->addMenu(optionsMenu);
     menuBar()->addMenu(toolsMenu);
-
+    menuBar()->addMenu(overlaysMenu);
     helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->setToolTipsVisible(true);
 //    helpMenu->addAction(webViewAction = new WebViewAction((QObject*)this));
