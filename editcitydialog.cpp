@@ -433,12 +433,20 @@ void EditCityDialog::tablev_customContextMenu( const QPoint& pt)
   QAction* updateProperties = new QAction(tr("Update Properties"), this);
   connect(updateProperties, SIGNAL(triggered()), this, SLOT(onUpdateProperties()));
   menu.addAction(updateProperties);
+  QAction* newLine = new QAction(tr("Add line"),this);
+  connect(newLine, SIGNAL(triggered(bool)),this, SLOT(onNewLine()));
+  menu.addAction(newLine);
   // more actions can be added here
   menu.exec(QCursor::pos());
-
-
 // }
 }//get QTableView selected item
+
+void EditCityDialog::onNewLine()
+{
+    Overlay* newOverlay = new Overlay(config->currCity->name(),"");
+
+    model->addOverlay(newOverlay);
+}
 
 bool EditCityDialog::boolGetItemTableView(QTableView *view)
 {
@@ -488,6 +496,7 @@ void EditCityDialog::onUpdateProperties()
  connect(ov, &Overlay::xmlFinished, [=]{setCursor(Qt::ArrowCursor);});
  ov->getTileMapResource();
 }
+
 void EditCityDialog::cbCity_customContextMenu(QPoint pt)
 {
     QMenu cityMenu;

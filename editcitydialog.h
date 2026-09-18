@@ -45,6 +45,7 @@ private slots:
  void on_deleteConnection();
  void on_pasteLatLng();
  void cbCity_customContextMenu(QPoint pt);
+ void onNewLine();
 
 private:
  Ui::EditCityDialog *ui;

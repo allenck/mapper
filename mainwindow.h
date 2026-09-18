@@ -523,6 +523,7 @@ private:
     void disableSegment_Route_changes(bool);
     QString getRouteMarkerImagePath(QString route, bool isStart);
     QString getMarkerImagePath(QString tmplt, QString name, QString text, double offset);
+    Overlay* currentOv = nullptr;
 
 private slots:
 //    void aCopy();

@@ -1063,6 +1063,7 @@ void MainWindow::loadOverlayData()
 void MainWindow::loadOverlay(Overlay* ov)
 {
  currentOverlay = ov->name;
+ currentOv = ov;
  if(ov->opacity < 0 || ov->opacity > 100)
      ov->opacity = 65;
  QVariantList objArray;
@@ -4513,15 +4514,17 @@ void MainWindow::movePointX(qint32 segmentId, qint32 i, LatLng newPt, QList<LatL
 // called by webBrowser map initialization to see if an overlay should be loaded
 void MainWindow::queryOverlay()
 {
-    if(!ui->chkShowOverlay->isChecked())
-        return;
-    if(config->currCity->curOverlayId >= config->currCity->city_overlayMap->count())
-     config->currCity->curOverlayId =0;
-    if(config->currCity->curOverlayId >= 0)
-    {
-        Overlay* ov = config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId );
-        //loadOverlay(ov);
-    }
+    // if(!ui->chkShowOverlay->isChecked())
+    //     return;
+    // if(config->currCity->curOverlayId >= config->currCity->city_overlayMap->count())
+    //  config->currCity->curOverlayId =0;
+    // if(config->currCity->curOverlayId >= 0)
+    // {
+    //     Overlay* ov = config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId );
+    //     //loadOverlay(ov);
+    // }
+    if(currentOv)
+        loadOverlay(currentOv);
 }
 
 void MainWindow::getGeocoderResults(QString array)
@@ -5288,8 +5291,11 @@ void MainWindow::chkShowOverlayChanged(bool bChecked)
   loadOverlay(ov);
  }
  else
+ {
   //m_bridge->processScript("loadOverlay", "null,0,0,'0,0, 0,0',''");
      m_bridge->processScript("removeOverlay");
+    currentOv = nullptr;
+ }
 }
 /// <summary>
 /// setStation. Called when user doubleclicks on a line segment to add a new station

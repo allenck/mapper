@@ -73,21 +73,15 @@ Qt::ItemFlags OverlayTableModel::flags(const QModelIndex &index) const
 //  return  0;
 // }
 
- if(index.column() == SELECTED )
+ if(index.column() == SELECTED  ||index.column() == LOCAL)
   return Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
+
  if( index.column() == NAME || index.column() == DESCRIPTION
     || index.column() == CITYNAME || index.column() == YEAR
-    || index.column() == MINZOOM || index.column() == MAXZOOM || index.column() == URLS)
+    || index.column() == MINZOOM || index.column() == MAXZOOM
+     || index.column() == URLS || index.column() == SOURCE)
  {
   return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
- }
- if(index.column() == LOCAL)
- {
-//  if(overlayList.at(index.row())->bLocal)
-//   return Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsEditable;
-//  else
-//   return Qt::NoItemFlags;
-     return Qt::ItemIsEnabled;
  }
  return Qt::ItemIsEnabled;
 }
@@ -299,6 +293,11 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
    ov->minZoom = value.toInt();
   if(index.column() == MAXZOOM)
    ov->maxZoom = value.toInt();
+  QString ns = value.toString();
+  if(index.column() == SOURCE && (ns == "acksoft" || ns == "georeferencer"))
+      ov->source = value.toString();
+  else
+      return false;
 
   emit overlayChanged(oldName, newName, ov);
   if(oldName == newName)
