@@ -20,6 +20,7 @@
 #include "mytextedit.h"
 #include "lineeditdelegate.h"
 
+
 EditCityDialog::EditCityDialog(QWidget *parent) :
   QDialog(parent),
   ui(new Ui::EditCityDialog)
@@ -31,6 +32,9 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
   cityOverlays->insert(ov->name, ov);
 
  dirty = false;
+
+ geoserver = Geoserver::instance();
+ geoserver->getCapabilities("http://localhost:8080/");
 
  model = new OverlayTableModel(config->currentCityId);
 

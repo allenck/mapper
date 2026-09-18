@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QModelIndex>
+#include "geoserver.h"
 
 namespace Ui {
 class EditCityDialog;
@@ -66,6 +67,8 @@ private:
  bool boolGetItemTableView(QTableView *view);
  QAction* pasteLatLng;
  QAction* deleteConnection;
+ Geoserver* geoserver = nullptr;
+
 };
 
 #endif // EDITCITYDIALOG_H
