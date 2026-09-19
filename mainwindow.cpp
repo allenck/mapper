@@ -3080,10 +3080,12 @@ void MainWindow::displayRouteComment(CommentInfo ciIn)
   if(ix > 0)
   {
    //rc.ci.comments.insert(ix+18, "<b>" + rc.date.toString("yyyy/MM/dd")+ "</b><p><h1>" + rc.routeAlpha + " " + rc.name + "</h1>");
-   ci.comments.insert(ix+18, "<h1>" + ci.alphaRoute + " " + ci.routeName + "</h1>" +"<b>" + ci.date.toString("yyyy/MM/dd")+ "</b><p>");
+   ci.comments.insert(ix+18, "<h1>" + ci.alphaRoute + " " + ci.routeName + "</h1>"
+                      +"<b>" + ci.date.toString("yyyy/MM/dd") + "</b><p>");
   }
   objArray.clear();
-  objArray << infoLat << infoLon << ci.comments << ci.commentKey<< ci.alphaRoute << ci.date.toString("yyyy/MM/dd") << ci.companyKey ;
+  objArray << infoLat << infoLon << ci.comments << ci.commentKey << ci.alphaRoute
+           << ci.date.toString("yyyy/MM/dd") << ci.companyKey ;
   if(bDisplayRouteComments)
   {
       m_bridge->processScript("displayRouteComment", objArray);
@@ -3148,6 +3150,7 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
  RouteData rd = ui->cbRoute->currentData().value<RouteData>();
  ci.routeId = rd.routeId();
  ci.routeName = rd.routeName();
+ ci.date = dt;
 
  displayRouteComment(ci);
 
@@ -4523,6 +4526,8 @@ void MainWindow::queryOverlay()
     //     Overlay* ov = config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId );
     //     //loadOverlay(ov);
     // }
+    disconnect(overlayActionGroup,SIGNAL(triggered(QAction*)),this, SLOT(newOverlay(QAction*)));
+
     if(currentOv)
         loadOverlay(currentOv);
 }
