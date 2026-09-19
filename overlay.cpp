@@ -40,6 +40,7 @@ bool Overlay::importXml(QString fileName)
    Overlay* ov = new Overlay();
    ov->name = elem.attribute("name");
    ov->cityName = elem.attribute("cityName");
+   ov->layerName = elem.attribute("layerName");
    //ov->description = elem.attribute("description");
    QDomElement description = elem.firstChildElement("description");
    ov->description = description.text();
@@ -124,6 +125,7 @@ bool Overlay::exportXml(QString fileName, QList<Overlay*> overlayList)
 //    continue;
    QDomElement overlay = doc.createElement("overlay");
    overlay.setAttribute("name", ov->name);
+   overlay.setAttribute("layerName", ov->layerName); // geoserver only
    overlay.setAttribute("cityName", ov->cityName);
    //overlay.setAttribute("description", ov->description);
    QDomElement description = doc.createElement("description");

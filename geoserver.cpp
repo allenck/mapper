@@ -20,19 +20,24 @@ Geoserver::Geoserver(QString url, QObject *parent)
 : QObject{parent}
 {
     this->url = url;
-    _instance = this;}
+    _instance = this;
+}
 
 void Geoserver::getCapabilities(QString url)
 {
-    QEventLoop loop;
-    m_resource = new FileDownloader(url + "geoserver/wms?service=WMS&version=1.3.0&request=GetCapabilities");
-    connect(m_resource, SIGNAL(downloaded(QString)), this, SLOT(processResource()));
-    loop.exec();
+    if(url.contains("/geoserver"))
+        url.replace("/geoserver","");
+    loop = new QEventLoop();;
 
+    m_resource = new FileDownloader(url + "/geoserver/wms?service=WMS&version=1.3.0&request=GetCapabilities");
+    connect(m_resource, SIGNAL(downloaded(QString)), this, SLOT(processResource()));
+    loop->exec();
+    return;
 }
 
 void Geoserver::processResource()
 {
+    qDebug() << "begin Geoserver::processResource";
     QString str = m_resource->downloadedData();
     if(str != "")
     {
@@ -55,6 +60,9 @@ void Geoserver::processResource()
 
                     l->name = layer.firstChildElement("Name").text();
                     l->title = layer.firstChildElement("Title").text();
+                    QDomNodeList keywords = layer.elementsByTagName("keywords");
+                    if(keywords.count()>0)
+                        l->keyword = keywords.at(0).toElement().text();
                     QDomElement bounds = layer.firstChildElement("EX_GeographicBoundingBox");
                     if(!bounds.isNull())
                     {
@@ -66,13 +74,19 @@ void Geoserver::processResource()
                         LatLng ne = LatLng(eastBoundLatitude, eastBoundLongitude);
                         l->bounds = Bounds(sw,ne);
                     }
-                    titleMap.insert(l->title, l);
-                    nameMap.insert(l->title, l);
+                    if(l->name.startsWith("my_maps:"))
+                    {
+                        titleMap.insert(l->title, l);
+                        nameMap.insert(l->title, l);
+                    }
                     continue;
                 }
             }
         }
     }
     emit xmlFinished();
+    qDebug() << "end Geoserver::processResource";
+
+    loop->quit();
 
 }

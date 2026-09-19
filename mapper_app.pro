@@ -258,4 +258,13 @@ DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3460100
 #unix|win32: LIBS += -ldl
 unix: LIBS += -ldl
 
+FORMS += \
+    dialogselectlist.ui
+
+HEADERS += \
+    dialogselectlist.h
+
+SOURCES += \
+    dialogselectlist.cpp
+
 

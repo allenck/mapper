@@ -15,6 +15,7 @@ public:
     QString name;
     Bounds bounds;
     QString abstract; // description
+    QString keyword;
 };
 
 class Geoserver : public QObject
@@ -28,6 +29,8 @@ public:
     void getCapabilities(QString url);
     QList<Layer*> getLayerByName(QString name) {return nameMap.values(name);}
     QList<Layer*> getLayerByTitle(QString name) {return titleMap.values(name);}
+    QString getHost() {return url;}
+    QStringList titles(){return titleMap.keys();}
 
 signals:
     void xmlFinished();
@@ -42,6 +45,8 @@ private :
     static Geoserver* _instance;
     QMultiMap<QString, Layer*> titleMap;
     QMultiMap<QString, Layer*> nameMap;
+    QEventLoop* loop = nullptr;;
+
 };
 
 #endif // GEOSERVER_H

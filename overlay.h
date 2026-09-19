@@ -29,6 +29,7 @@ public:
   urls = other.urls;
   wmtsUrl = other.wmtsUrl;
   _year = other._year;
+  layerName = other.layerName;
  }
 
  bool operator==(const Overlay &ov)
@@ -48,6 +49,7 @@ public:
  //qint32 id;
  QString cityName;
  QString name;
+ QString layerName;
  QString description;
  qint32 opacity;
  int minZoom;

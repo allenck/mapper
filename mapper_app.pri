@@ -4,6 +4,8 @@ SOURCES += main.cpp\
     $$PWD/clipboard.cpp \
     $$PWD/dateeditdelegate.cpp \
     $$PWD/editsegmentdescr.cpp \
+    $$PWD/geoserver.cpp \
+    $$PWD/itemdelegate.cpp \
     $$PWD/lineeditdelegate.cpp \
     $$PWD/logger.cpp \
     $$PWD/modifyroutedialog.cpp \
@@ -102,6 +104,8 @@ HEADERS  += mainwindow.h \
     $$PWD/clipboard.h \
     $$PWD/dateeditdelegate.h \
     $$PWD/editsegmentdescr.h \
+    $$PWD/geoserver.h \
+    $$PWD/itemdelegate.h \
     $$PWD/lineeditdelegate.h \
     $$PWD/logger.h \
     $$PWD/modifyroutedialog.h \

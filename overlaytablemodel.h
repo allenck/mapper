@@ -30,6 +30,7 @@ public:
   MAXZOOM,
   OPACITY,
   LOCAL,
+  LAYER,
   URLS,
   NUMCOLUMNS
  };
@@ -38,10 +39,13 @@ public:
  QMap<QString, Overlay *> *getOverlayMap();
  void deleteRow(int row);
  Overlay* selectedOverlay(int row);
+
 signals:
  void setDirty();
  void overlaySelectionChanged(Overlay* ov, bool checked);
  void overlayChanged(QString, QString, Overlay*);
+ void columnChanged(int row, int column, Overlay * ov_old, Overlay* ov_new, QVariant value);
+
 private:
  Configuration* config;
  int currCityId;

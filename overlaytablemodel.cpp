@@ -54,6 +54,8 @@ QVariant OverlayTableModel::headerData(int section, Qt::Orientation orientation,
    return tr("Default Opacity");
   case LOCAL:
    return tr("Local file");
+  case LAYER:
+      return tr("Layer");
   default:
    break;
   }
@@ -79,7 +81,8 @@ Qt::ItemFlags OverlayTableModel::flags(const QModelIndex &index) const
  if( index.column() == NAME || index.column() == DESCRIPTION
     || index.column() == CITYNAME || index.column() == YEAR
     || index.column() == MINZOOM || index.column() == MAXZOOM
-     || index.column() == URLS || index.column() == SOURCE)
+     || index.column() == URLS || index.column() == SOURCE
+     || index.column() == LAYER)
  {
   return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsEditable;
  }
@@ -145,6 +148,7 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
   }
   return background;
  }
+
  if(role == Qt::DisplayRole)
  {
   switch(index.column()) {
@@ -184,6 +188,8 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
    else return "";
   case YEAR:
    return ov->year();
+  case LAYER:
+      return ov->layerName;
   default:
    break;
   }
@@ -206,6 +212,7 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
 bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
  Overlay* ov = overlayMap->values().at(index.row());
+ Overlay* ov_old = new Overlay(*ov);
  QString oldName =ov->cityName +"." + ov->name;
  QString newName;
  if(role == Qt::CheckStateRole)
@@ -237,68 +244,80 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
   QString oldCityKey =ov->name;
   newName = ov->cityName +"." + ov->name;
   QString newCityKey = ov->name;
-  if(index.column() == NAME)
-  {
-   overlayMap->remove(oldName);
-   ov->name = newCityKey =value.toString();
-   newName = ov->cityName + "." +ov->name;
-  }
-  if(index.column() == CITYNAME)
-  {
-   newName = value.toString()+"."+ov->name;
-   newCityKey = value.toString();
-   newName = value.toString()+"." + ov->name;
-   QStringList cityList = config->cityNames();
-   if(!cityList.contains(newCityKey))
-    return false; // invalid city name
-   if(overlayMap->contains(newName))
-    return false;
-   overlayMap->remove(oldName);
-   ov->cityName = value.toString();
-   overlayMap->insert(newName,ov);
-   return true;
-  }
-  if(index.column() == DESCRIPTION)
-  {
-   ov->description = value.toString();
-  }
-  if(index.column()== YEAR)
-  {
-   ov->setYear(value.toString());
-  }
-  if(index.column() == URLS)
-  {
-   QString text = value.toString();
-   if(text.contains(","))
-   {
-    QStringList sl = text.split(",");
-    for(QString _url : sl){
-     QUrl url(_url);
-     if(!url.isValid())
-      return false;
-    }
-    ov->urls = sl;
-   }
-   else
-   {
-    QStringList sl;
-    sl.append(text);
-    QUrl url(text);
-    if(!url.isValid())
-     return false;
-    ov->urls = sl;
-   }
-  }
-  if(index.column() == MINZOOM)
-   ov->minZoom = value.toInt();
-  if(index.column() == MAXZOOM)
-   ov->maxZoom = value.toInt();
-  QString ns = value.toString();
-  if(index.column() == SOURCE && (ns == "acksoft" || ns == "georeferencer"))
-      ov->source = value.toString();
-  else
-      return false;
 
+  switch ((index.column())) {
+      case NAME:
+      {
+       overlayMap->remove(oldName);
+       ov->name = newCityKey =value.toString();
+       newName = ov->cityName + "." +ov->name;
+      }
+      break;
+      case CITYNAME:
+      {
+       newName = value.toString()+"."+ov->name;
+       newCityKey = value.toString();
+       newName = value.toString()+"." + ov->name;
+       QStringList cityList = config->cityNames();
+       if(!cityList.contains(newCityKey))
+        return false; // invalid city name
+       if(overlayMap->contains(newName))
+        return false;
+       overlayMap->remove(oldName);
+       ov->cityName = value.toString();
+       overlayMap->insert(newName,ov);
+      }
+      break;
+      case DESCRIPTION:
+      {
+       ov->description = value.toString();
+          break;
+      }
+      case YEAR:
+      {
+        ov->setYear(value.toString());
+          break;
+      }
+      case URLS:
+      {
+       QString text = value.toString();
+       if(text.contains(","))
+       {
+        QStringList sl = text.split(",");
+        for(QString _url : sl){
+         QUrl url(_url);
+         if(!url.isValid())
+          return false;
+        }
+        ov->urls = sl;
+       }
+       else
+       {
+        QStringList sl;
+        sl.append(text);
+        QUrl url(text);
+        if(!url.isValid())
+         return false;
+        ov->urls = sl;
+       }
+      }
+      break;
+      case MINZOOM:
+       ov->minZoom = value.toInt();
+          break;
+      case MAXZOOM:
+       ov->maxZoom = value.toInt();
+          break;
+      case SOURCE:
+      {
+        QString ns = value.toString();
+          if( ns == "acksoft" || ns == "georeferencer" || ns == "geoserver")
+          ov->source = value.toString();
+        else
+          return false;
+      }
+      break;
+  }
   emit overlayChanged(oldName, newName, ov);
   if(oldName == newName)
   {
@@ -318,6 +337,7 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
    }
   }
   setDirty();
+  emit columnChanged(index.row(),index.column(), ov_old, ov, value);
   return true;
  }
  return false;
