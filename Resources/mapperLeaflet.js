@@ -858,7 +858,7 @@ function displayRouteComment(latitude, longitude, HTMLText, commentKey, route, d
                           autoClose: false,
                           closeOnClick: false})
  .setLatLng([latitude,longitude])
- .setContent(HTMLText)
+ .setContent(modifyHtmlLinks(HTMLText))
  .openOn(map); // Using openOn automatically closes other open popups
 
  // this.marker = new google.maps.Marker({
@@ -1694,6 +1694,30 @@ function makePopupDraggable(popupObject) {
    return draggable;
 }
 
+// modify links so html will open in a new tab
+function modifyHtmlLinks(htmlText)
+{
+    text = htmlText
+    var ix = 0;
+    while(ix !== -1)
+    {
+        ix = text.indexOf('<a href="', ix);
+        if(ix < 0)
+            break;
+        var begin = ix + 9;
+        var end = text.indexOf('"', begin)+1;
+        if(end >= 0)
+        {
+            var text1 = text.slice(0, end);
+            var text2 = text.slice(end);
+            text = text1 + ' target="_blank "' + text2;
+        }
+        ix = end + 17;
+    }
+    return text;
+
+}
+
 function nextRouteComment()
 {
  //infowindow.marker.remove();
@@ -1749,7 +1773,7 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
      // 1. Extend L.TileLayer to create a custom class
     L.TileLayer.Custom = L.TileLayer.extend({
           getTileUrl: function (coords) {
-            ymax = 1 <<coords.z;
+            ymax = 1 << coords.z;
             y = ymax - coords.y -1;
             x = coords.x;
             z = coords.z;
@@ -1769,7 +1793,8 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
       L.TileLayer.Custom = L.TileLayer.extend({
           getTileUrl: function (coords) {
             ymax = 1 << coords.z;
-            y = ymax - coords.y -1;
+            //y = ymax - coords.y -1;
+            y = coords.y;
             x = coords.x;
             str = urls + name + "/" +coords.z+"/"+x+"/"+y+".png";
             return str;
@@ -1806,6 +1831,23 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
               x = coords.x;
               z = coords.z;
               var url = urls.replace('{z}',z).replace('{x}',x).replace('{y}',y);
+              console.debug(url);
+              return url;
+          }
+    });
+ }
+ else if(source === "geoserver")
+ {
+     // 1. Extend L.TileLayer to create a custom class
+      L.TileLayer.Custom = L.TileLayer.extend({
+          getTileUrl: function (coords) {
+              ymax = 1 << coords.z;
+              y = ymax - coords.y -1;
+              x = coords.x;
+              z = coords.z;
+              //var url = urls.replace('{z}',z).replace('{x}',x).replace('{y}',y);
+              var url = urls + "/gwc/service/tms/1.0.0/" + name + "@EPSG:900913@png/{z}/{x}/{y}.png";
+              url = url.replace('{z}',z).replace('{x}',x).replace('{y}',y);
               console.debug(url);
               return url;
           }
