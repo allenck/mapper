@@ -2670,7 +2670,7 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
    getTileUrl: function(coord, zoom)
    {
     var ymax = 1 << zoom;
-    var y = ymax - coord.y -1;
+    var y = coord.y;
     var x = coord.x;
     var str = urls + name + "/" +zoom+"/"+x+"/"+y+".png";
     return str;
@@ -2705,33 +2705,14 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
  {
      imageMapType = new google.maps.ImageMapType({
                  getTileUrl: function(coord, zoom) {
-                     let tilesize = 256
-                     // first convert tile coordinates to pixel coordinates for NW and SE corners of tile
-                     let nwPixelX = coord.x * tilesize;
-                     let nwPixelY = coord.y * tilesize;
-                     let sePixelX = (coord.x + 1)  * tilesize - 1;
-                     let sePixelY = (coord.y + 1)  * tilesize - 1;
-
-                     // next convert pixel coordinates to world (web mercator) coodinates
-                     let nwWorldX = nwPixelX / (Math.pow(2, zoom));
-                     let nwWorldY = nwPixelY / (Math.pow(2, zoom));
-                     let seWorldX = sePixelX / (Math.pow(2, zoom));
-                     let seWorldY = sePixelY / (Math.pow(2, zoom));
-
-                     let nwWorldPoint = new google.maps.Point(nwWorldX, nwWorldY);
-                     let seWorldPoint = new google.maps.Point(seWorldX, seWorldY);
-
-                     // finally use Google Maps' native method to convert world coordinates to Lat/Lng coordinates, and return a bounding box
-                     let nwLatLng = map.getProjection().fromPointToLatLng(nwWorldPoint);
-                     let seLatLng = map.getProjection().fromPointToLatLng(seWorldPoint);
-                     let bbox = nwLatLng.lng() + ',' + seLatLng.lat() + ',' + seLatLng.lng() + ',' + nwLatLng.lat();
-                     var tileBounds = new google.maps.LatLngBounds(nwLatLng, seLatLng);
-
-//                     if (!overlayBounds.intersects(tileBounds) || zoom < minZoom || zoom > maxZoom)
-//                       return null;
-//                   return ["http://georeferencer-0.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png","http://georeferencer-1.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png","http://georeferencer-2.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png","http://georeferencer-3.tileserver.com//7600abd7e81c8d7fbc5043849452e2770741fd01/map/ztaRqNjoqdA7eUNIHwtt6W/201509152031-GrcyZ5/polynomial/{z}/{x}/{y}.png"][(coord.x+coord.y)%4].replace('{z}',zoom).replace('{x}',coord.x).replace('{y}',coord.y);
-//                     return urls[(coord.x+coord.y)%4].replace('{z}',zoom).replace('{x}',coord.x).replace('{y}',coord.y);
-                     return urls[0].replace('{z}',zoom).replace('{x}',coord.x).replace('{y}',coord.y);
+                     ymax = 1 << zoom;
+                     //y = ymax - coord.y -1;
+                     y = coord.y;
+                     x = coord.x;
+                     z = zoom;
+                     var url = urls.replace('{z}',z).replace('{x}',x).replace('{y}',y);
+                     console.debug(url);
+                     return url;
                  },
                  tileSize: new google.maps.Size(256, 256),
                  minZoom: minZoom,
@@ -2741,6 +2722,27 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
 
              map.overlayMapTypes.push(imageMapType);
              map.fitBounds(overlayBounds);
+ }
+ else if(source === "geoserver")
+ {
+     // 1. Extend L.TileLayer to create a custom class
+     imageMapType = new google.maps.ImageMapType( {
+          getTileUrl: function (coords,zoom) {
+              ymax = 1 << zoom;
+              y = ymax - coords.y -1;
+              x = coords.x;
+              z = zoom;
+              //var url = urls.replace('{z}',z).replace('{x}',x).replace('{y}',y);
+              var url = urls + "/gwc/service/tms/1.0.0/" + name + "@EPSG:900913@png/{z}/{x}/{y}.png";
+              url = url.replace('{z}',zoom).replace('{x}',coords.x).replace('{y}',coords.y);
+              console.debug(url);
+              return url;
+          },
+         tileSize: new google.maps.Size(256, 256),
+         minZoom: minZoom,
+         maxZoom: maxZoom,
+         name: 'Tiles'
+    });
  }
  else
   return "";

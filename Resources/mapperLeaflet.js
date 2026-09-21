@@ -1793,7 +1793,6 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
       L.TileLayer.Custom = L.TileLayer.extend({
           getTileUrl: function (coords) {
             ymax = 1 << coords.z;
-            //y = ymax - coords.y -1;
             y = coords.y;
             x = coords.x;
             str = urls + name + "/" +coords.z+"/"+x+"/"+y+".png";
@@ -1827,7 +1826,8 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
       L.TileLayer.Custom = L.TileLayer.extend({
           getTileUrl: function (coords) {
               ymax = 1 <<coords.z;
-              y = ymax - coords.y -1;
+              //y = ymax - coords.y -1;
+              y = coords.y;
               x = coords.x;
               z = coords.z;
               var url = urls.replace('{z}',z).replace('{x}',x).replace('{y}',y);
