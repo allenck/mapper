@@ -2723,6 +2723,28 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
              map.overlayMapTypes.push(imageMapType);
              map.fitBounds(overlayBounds);
  }
+ else if(source === "georeferencer2") // alternate y format
+ {
+     imageMapType = new google.maps.ImageMapType({
+                 getTileUrl: function(coord, zoom) {
+                     ymax = 1 << zoom;
+                     y = ymax - coord.y -1;
+                     //y = coord.y;
+                     x = coord.x;
+                     z = zoom;
+                     var url = urls.replace('{z}',z).replace('{x}',x).replace('{y}',y);
+                     console.debug(url);
+                     return url;
+                 },
+                 tileSize: new google.maps.Size(256, 256),
+                 minZoom: minZoom,
+                 maxZoom: maxZoom,
+                 name: 'Tiles'
+             });
+
+             map.overlayMapTypes.push(imageMapType);
+             map.fitBounds(overlayBounds);
+ }
  else if(source === "geoserver")
  {
      // 1. Extend L.TileLayer to create a custom class

@@ -59,7 +59,7 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  ui->tableView->setItemDelegateForColumn(OverlayTableModel::URLS, new LineEditDelegate());
  ui->tableView->setItemDelegateForColumn(OverlayTableModel::CITYNAME, new ItemDelegate(config->cityNames()));
  QStringList sources;
- sources << "acksoft" << "acksoft2" << "georeferencer" << "geoserver";
+ sources << "acksoft" << "acksoft2" << "georeferencer" << "georeferencer2" << "geoserver";
 
  ui->tableView->setItemDelegateForColumn(OverlayTableModel::SOURCE, new ItemDelegate(sources));
  //connect(ui->tableView, SIGNAL(selectionChanged(QItemSelection,QItemSelection)),this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
