@@ -1,4 +1,6 @@
 ﻿#include "editcitydialog.h"
+#include "dialogselectlist.h"
+#include "mainwindow.h"
 #include "ui_editcitydialog.h"
 #include "configuration.h"
 //#include "addoverlaydialog.h"
@@ -19,7 +21,9 @@
 #include "webviewbridge.h"
 #include "mytextedit.h"
 #include "lineeditdelegate.h"
-
+#include "itemdelegate.h"
+#include <QStatusBar>
+#include "vptr.h";
 
 EditCityDialog::EditCityDialog(QWidget *parent) :
   QDialog(parent),
@@ -34,7 +38,7 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  dirty = false;
 
  geoserver = Geoserver::instance();
- geoserver->getCapabilities("http://localhost:8080/");
+ //geoserver->getCapabilities("http://localhost:8080/geoserver");
 
  model = new OverlayTableModel(config->currentCityId);
 
@@ -53,9 +57,19 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
  ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
  ui->tableView->setItemDelegateForColumn(OverlayTableModel::URLS, new LineEditDelegate());
+ ui->tableView->setItemDelegateForColumn(OverlayTableModel::CITYNAME, new ItemDelegate(config->cityNames()));
+ QStringList sources;
+ sources << "acksoft" << "acksoft2" << "georeferencer" << "geoserver";
+
+ ui->tableView->setItemDelegateForColumn(OverlayTableModel::SOURCE, new ItemDelegate(sources));
  //connect(ui->tableView, SIGNAL(selectionChanged(QItemSelection,QItemSelection)),this, SLOT(selectionChanged(QItemSelection,QItemSelection)));
  connect(ui->tableView,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(tablev_customContextMenu(QPoint)));
 
+ connect(model, &QAbstractItemModel::rowsInserted,
+         this, [this](const QModelIndex &parent, int start, int end) {
+             QModelIndex idx = model->index(end, 0);
+             ui->tableView->scrollTo(idx, QAbstractItemView::PositionAtBottom);
+         });
  bRefreshing = false;
 
  QPushButton* btnAddOverlay = new QPushButton(tr("Add Overlay"));
@@ -81,7 +95,10 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  connect(ui->tableView, SIGNAL(clicked(QModelIndex)), this, SLOT(rowSelected(QModelIndex)));
  connect(ui->edDescription, SIGNAL(dirtySet(bool)), this, SLOT(OnDescriptionChanged(bool)));
  connect(ui->cbCity, SIGNAL(currentIndexChanged(int)),this, SLOT(cbCitysSelectionChanged(int)));
-
+ //connect(model, SIGNAL(columnChanged(int,int,Overlay*,Overlay*,QVariant)), this, SLOT(onColumnChanged(int,int,Overlay*,Overlay*,QVariant)));
+ connect(model, &OverlayTableModel::columnChanged,this, [=](int row,int column,Overlay* ovOld,Overlay* ov,QVariant value){
+     onColumnChanged(row, column, ovOld,ov,value);
+ });
  for(int i=0; i < config->cityList.count(); i++)
  {
   City* city = config->cityList.at(i);
@@ -417,7 +434,11 @@ void EditCityDialog::tablev_customContextMenu( const QPoint& pt)
  QTableView *view = qobject_cast<QTableView*>(ui->tableView);
  QSortFilterProxyModel* proxy = qobject_cast<QSortFilterProxyModel*>(view->model());
 
+ QMap<QString, Overlay *>* map = model->getOverlayMap();
+
  currentIndexTableView = proxy->mapToSource(view->indexAt(pt));
+ Overlay* currOv = map->values().at(currentIndexTableView.row() );
+
 // if(boolGetItemTableView(view))
 // {
   //menu = QMenu(m_parent*);
@@ -437,9 +458,21 @@ void EditCityDialog::tablev_customContextMenu( const QPoint& pt)
   QAction* updateProperties = new QAction(tr("Update Properties"), this);
   connect(updateProperties, SIGNAL(triggered()), this, SLOT(onUpdateProperties()));
   menu.addAction(updateProperties);
-  QAction* newLine = new QAction(tr("Add line"),this);
+  QAction* newLine = new QAction(tr("Add new row"),this);
   connect(newLine, SIGNAL(triggered(bool)),this, SLOT(onNewLine()));
   menu.addAction(newLine);
+  QAction* showOverlay = new QAction(tr("Display overlay"),this);
+  QActionGroup* ag = new QActionGroup(this);
+  showOverlay->setData(VPtr<Overlay>::asQVariant(currOv));
+  ag->addAction(showOverlay);
+  //connect(ag, SIGNAL(triggered()),this, SLOT(displayOverlay(QAction*)));
+  connect(ag, &QActionGroup::triggered,[=](QAction* act){
+      displayOverlay(act);
+  });
+  QStringList cityNames = config->cityNames();
+  if(currOv && cityNames.contains(currOv->cityName))
+    menu.addAction(showOverlay);
+
   // more actions can be added here
   menu.exec(QCursor::pos());
 // }
@@ -448,8 +481,10 @@ void EditCityDialog::tablev_customContextMenu( const QPoint& pt)
 void EditCityDialog::onNewLine()
 {
     Overlay* newOverlay = new Overlay(config->currCity->name(),"");
-
     model->addOverlay(newOverlay);
+    QTimer::singleShot(0, this, [this]() {
+        ui->tableView->scrollToBottom();
+    });
 }
 
 bool EditCityDialog::boolGetItemTableView(QTableView *view)
@@ -489,16 +524,33 @@ void EditCityDialog::rowSelected(QModelIndex index)
 
 void EditCityDialog::onDeleteRow()
 {
- model->deleteRow(currentIndexTableView.row());
-
+    Overlay* ov  = model->getOverlayMap()->values().at(currentIndexTableView.row());
+    int rslt = QMessageBox::question(nullptr, tr("OK to Delete"),tr("Confirm you want to delete %1 ").arg(ov->name),
+                                     QMessageBox::Yes|QMessageBox::No);
+    if(rslt == QMessageBox::Yes)
+        model->deleteRow(currentIndexTableView.row());
 }
 
 void EditCityDialog::onUpdateProperties()
 {
  Overlay* ov = model->selectedOverlay(currentIndexTableView.row());
  setCursor(Qt::WaitCursor);
+ if(ov->source == "geoserver")
+     updateGeoserverProperties(ov);
  connect(ov, &Overlay::xmlFinished, [=]{setCursor(Qt::ArrowCursor);});
  ov->getTileMapResource();
+}
+
+void EditCityDialog::updateGeoserverProperties(Overlay *ov)
+{
+    QString url = ov->url();
+    QString host = url.mid(0, url.indexOf("/geoserver")+10);
+    geoserver->getCapabilities(host);
+    QList<Layer*> layers = geoserver->getLayerByTitle(ov->name);
+    if(layers.isEmpty())
+        return;
+    ov->layerName = layers.at(0)->name;
+    ov->setBounds(layers.at(0)->bounds);
 }
 
 void EditCityDialog::cbCity_customContextMenu(QPoint pt)
@@ -540,3 +592,150 @@ void EditCityDialog::on_pasteLatLng()
        objArray << 12;
        WebViewBridge::instance()->processScript("setZoom", objArray); }
 }
+
+
+void EditCityDialog::onColumnChanged(int row,int column , Overlay* ovOld, Overlay* ovNew, QVariant value)
+{
+    ui->lblInfo->clear();
+    switch((OverlayTableModel::COLUMNS)column)
+    {
+        case OverlayTableModel::SOURCE:
+        {
+            if(value.toString() == "geoserver")
+            {
+                if(ovOld->source == ovNew->source)
+                    return;
+                if(ovNew->url().isEmpty())
+                {
+                    ui->lblInfo->setStyleSheet(tr("color: red"));
+                    ui->lblInfo->setText(tr("host url of geoserver required"));
+                    ovNew->source = ovOld->source;
+                    return;
+                }
+                QString url = ovNew->url();
+                if( (geoserver->getHost() == url))
+                    return;
+                geoserver->getCapabilities(url);
+
+
+                if(ovOld->source == "georeferencer")
+                {
+                    QString url = ovNew->url();
+                    if(!url.contains("geoserver"))
+                    {
+                        ui->lblInfo->setStyleSheet("color: red");
+                        ui->lblInfo->setText(tr("not a geoserver url"));
+                        ov->source = ovOld->source;
+                        return;
+                    }
+                    QString host = url.mid(0, url.indexOf("/geoserver")+10);
+                    geoserver->getCapabilities(host);
+                    int begin = url.indexOf("my_maps:");
+                    int last = url.indexOf("@");
+                    QString layerName = url.mid(begin, last-begin);
+                    ovNew->layerName = layerName;
+                    // QStringList sl = QStringList();
+                    // sl.append(host);
+                    ovNew->setUrl(host);
+                }
+                if(ovNew->name.isEmpty())
+                {
+                    ui->lblInfo->setStyleSheet("color: #FFBF00");
+                    ui->lblInfo->setText(tr("select a name"));
+
+                }
+            }
+        }
+        break;
+        case OverlayTableModel::NAME:
+            if(geoserver)
+            {
+                QList<Layer*> list = geoserver->getLayerByName(value.toString());
+                if(list.count() == 1)
+                {
+                    ovNew->setBounds(list.at(0)->bounds);
+                    break;
+                }
+            }
+            break;
+        case OverlayTableModel::SELECTED:
+        case OverlayTableModel::CITYNAME:
+        case OverlayTableModel::YEAR:
+        case OverlayTableModel::DESCRIPTION:
+        case OverlayTableModel::BOUNDS:
+        case OverlayTableModel::MINZOOM:
+        case OverlayTableModel::MAXZOOM:
+        case OverlayTableModel::OPACITY:
+        case OverlayTableModel::LOCAL:
+        case OverlayTableModel::LAYER:
+            if(ovNew->source == "geoserver")
+            {
+                if(!ovNew->name.isEmpty())
+                {
+                    geoserver->getCapabilities(ovNew->url());
+                    QList<Layer*> layer = geoserver->getLayerByTitle(ovNew->name);
+                    ovNew->layerName = layer.at(0)->name;
+                    ovNew->setBounds(layer.at(0)->bounds);
+
+                }
+            }
+            break;
+        case OverlayTableModel::URLS:
+        {
+            if(ovNew->url().isEmpty())
+            {
+                return;
+            }
+            QString url = ovNew->url();
+            QString newUrl =value.toString();
+            if(newUrl.contains("geoserver"))
+            {
+                QString host = value.toString().mid(0, url.indexOf("/geoserver")+10);
+                geoserver->getCapabilities(host);
+                ovNew->source = "geoserver";
+                ui->lblInfo->setStyleSheet("color: #FFBF00");
+                ui->lblInfo->setText(tr("select a name"));
+                if(!geoserver->titles().isEmpty())
+                {
+                    DialogSelectList* dlg = new DialogSelectList();
+                    dlg->setList(geoserver->titles());
+                    int rslt = dlg->exec();
+                    if(rslt == QDialog::Accepted)
+                    {
+                        ovNew->name = dlg->getResult();
+                        QList<Layer*> layers = geoserver->getLayerByTitle(ovNew->name);
+                        ovNew->layerName = layers.at(0)->name;
+                        for(City* city : config->cityList)
+                        {
+                            if(city->bounds().contains(layers.at(0)->bounds))
+                            {
+                                ovNew->cityName = city->name();
+                                ovNew->setBounds(layers.at(0)->bounds);
+                            }
+                            break;
+                        }
+
+                        ui->lblInfo->setStyleSheet("color: #00DD00");
+                        ui->lblInfo->setText(tr("%1 selected").arg(ovNew->name));
+
+                    }
+                }
+                else
+                {
+                    ui->lblInfo->setStyleSheet("color: #FF0000");
+                    ui->lblInfo->setText(tr("url may be invalid"));
+                }
+            }
+        }
+        break;
+        case OverlayTableModel::NUMCOLUMNS:
+            break;
+    }
+}
+void EditCityDialog::displayOverlay(QAction* act)
+{
+    Overlay* ov = VPtr<Overlay>::asPtr(act->data());
+    qDebug() << "overlay "    << ov->name;
+    MainWindow::instance()->loadOverlay(ov);
+}
+/*************************************************************************************************/

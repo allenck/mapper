@@ -40,6 +40,8 @@ SegmentSelectionWidget::SegmentSelectionWidget(QWidget *parent) :
 
 void SegmentSelectionWidget::initialize()
 {
+    if(initialized)
+        return;
  refreshLocations();
 
  refreshSegmentCB();
@@ -47,6 +49,7 @@ void SegmentSelectionWidget::initialize()
  connect(SQL::instance(), &SQL::segmentChanged, [=](const SegmentInfo si){
      if(ui->cbSegments->findData(si.segmentId()) >= 0)
   {
+         initialized = false;
    //SegmentInfo si = sql->getSegmentInfo(segmentId);
          int  ix = ui->cbSegments->findData(si.segmentId());
    if(ui->cbSegments->itemText(ix) != si.toString())

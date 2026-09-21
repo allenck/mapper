@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QModelIndex>
 #include "geoserver.h"
+#include "qstyleditemdelegate.h"
 
 namespace Ui {
 class EditCityDialog;
@@ -47,6 +48,8 @@ private slots:
  void on_pasteLatLng();
  void cbCity_customContextMenu(QPoint pt);
  void onNewLine();
+ void onColumnChanged(int row , int column, Overlay* old, Overlay* newOv, QVariant value);
+ void displayOverlay(QAction* act);
 
 private:
  Ui::EditCityDialog *ui;
@@ -68,7 +71,9 @@ private:
  QAction* pasteLatLng;
  QAction* deleteConnection;
  Geoserver* geoserver = nullptr;
-
+ void updateGeoserverProperties(Overlay* ov);
 };
+
+
 
 #endif // EDITCITYDIALOG_H

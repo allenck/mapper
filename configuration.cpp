@@ -488,6 +488,7 @@ void Configuration::getSettings()
 //  else
 //   qDebug() << "invalid city " << ov->cityName << ov->name;
 // }
+#if 0
    if(Overlay::importXml("./Resources/overlays.xml"))
    {
       for(Overlay* ov : Overlay::overlayList)
@@ -503,12 +504,53 @@ void Configuration::getSettings()
         {
            if(ov->isSelected)
            {
-              city->city_overlayMap->insert(ov->name, ov);
+              //   if(ov->urls().isEmpty() && (ov->source == "acksoft" ||ov->source == "acksoft2"))
+              //      ov->urls().append("https://ubuntu-2/public/map_tiles/");
+              // Q_ASSERT(!ov->urls().isEmpty());
+              if(ov->urls().isEmpty())
+                  ov->isSelected=false;
+              //city->city_overlayMap->insert(ov->name, ov);
+              city->addOverlay(ov);
               qInfo() << "add overlay " << ov->name << " for city:" << city->name();
            }
         }
       }
    }
+#else
+    bool rslt = Overlay::importXml("./Resources/overlays.xml");
+    QList<Overlay*> overlayList;
+    if(rslt)
+    {
+        overlayList = Overlay::overlayList;
+        for(Overlay* ov : overlayList)
+        {
+            QString cityName = ov->cityName;
+            City* city = cityMap.value(ov->cityName);
+            if(city && !ov->bounds().isValid())
+            {
+                ov->setBounds(Bounds(LatLng(city->center.lat()-.3, city->center.lon()-.3), LatLng(city->center.lat()+.3, city->center.lon()+.3)));
+            }
+            overlayMap->insert(ov->cityName+"|"+ov->name, ov);
+            if(city && city->name() == ov->cityName)
+            {
+                if(ov->isSelected)
+                {
+                    //   if(ov->urls().isEmpty() && (ov->source == "acksoft" ||ov->source == "acksoft2"))
+                    //      ov->urls().append("https://ubuntu-2/public/map_tiles/");
+                    // Q_ASSERT(!ov->urls().isEmpty());
+                    if(ov->url().isEmpty())
+                        ov->isSelected=false;
+                    city->city_overlayMap->insert(ov->name, ov);
+                    qInfo() << "add overlay " << ov->name << " for city:" << city->name();
+                }
+            }
+        }
+    }
+    else {
+        throw Exception();
+    }
+
+#endif
    //settings.beginGroup("General");
    currentCityId = settings.value("currCity",0).toInt();
    if(currentCityId < 0 || currentCityId >= cityList.count())
@@ -582,7 +624,7 @@ void Configuration::getSettings()
       City* city = cityMap.value(ov->cityName);
       if(city)
       {
-         city->city_overlayMap->insert(ov->name, ov);
+         city->addOverlay(ov);
       }
    }
 }
@@ -596,7 +638,8 @@ void Configuration::setOverlay(Overlay* ov)
   {
    o->opacity = ov->opacity;
    //currCity->overlayMap->replace(i, o);
-   currCity->city_overlayMap->insert(ov->name, ov);
+   if(ov->isSelected)
+   currCity->addOverlay(ov);
   }
  }
 }
@@ -816,8 +859,8 @@ void Configuration::createDefaultSettings()
     currConnection = nc;
 
     Overlay* ov = new Overlay("St Louis, MO", "St_Louis_historical_topo");
-
-    newCity->city_overlayMap->insert(ov->name, ov);
+    Q_ASSERT(!ov->url().isEmpty());
+    newCity->addOverlay(ov);
 
     newCity->curOverlayId = 0;
     newCity->bShowOverlay =true;
@@ -834,7 +877,8 @@ void Configuration::createDefaultSettings()
       City* city = cityMap.value(ov->cityName);
       if(city)
       {
-       city->city_overlayMap->insert(ov->name, ov);
+          Q_ASSERT(!ov->url().isEmpty());
+       city->addOverlay(ov);
       }
      }
     }

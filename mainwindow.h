@@ -555,6 +555,7 @@ protected:
     friend class SegmentViewTableModel;
     friend class ExportDlg;
     friend class RouteCommentsDlg;
+    friend class EditCityDialog;
 };
 
 class Menu : public QMenu

@@ -6,7 +6,8 @@
 #include <QtXml>
 #include "data.h"
 #include "filedownloader.h"
-
+#include "qlist.h"
+#include <QUrl>
 class Overlay : public QObject
 {
   Q_OBJECT
@@ -26,11 +27,18 @@ public:
   _bounds = other._bounds; // west longitude, south Latitude, east longitude, north latitude
   sCenter = other.sCenter; // longitude, latitude, zoom level
   _center = other._center;
-  urls = other.urls;
+  //_urls = other._urls;
+  _url = other._url;
   wmtsUrl = other.wmtsUrl;
   _year = other._year;
   layerName = other.layerName;
  }
+ //  QStringList urls() {return _urls;}
+ // void setUrls(QStringList urls){
+ //     if(urls.isEmpty())
+ //         qWarning() << "urls is empty!";
+ //     _urls = urls;
+ // }
 
  bool operator==(const Overlay &ov)
  {
@@ -41,7 +49,15 @@ public:
  static bool exportXml(QString, QList<Overlay *> overlayList);
  static QList<Overlay*> getList(City* city =nullptr);
  void getTileMapResource();
-
+ QString url(){return _url;}
+ void setUrl(QString txt){
+     _url = txt;
+     // if the url contains x,y,z templates replace them in a temp string with '0' to insure that rest of url validates
+     if(txt.contains('{'))
+         txt=txt.replace("{x}", "0").replace("{y}", "0").replace("{z}", "0");
+     _qurl.setUrl(txt);
+     Q_ASSERT(_qurl.isValid());
+ }
  signals:
  void xmlFinished();
 public:
@@ -57,7 +73,7 @@ public:
  QString source;
  bool bLocal;
  QString sCenter; // longitude, latitude, zoom level
- QStringList urls;
+ //QStringList urls;
  QString wmtsUrl;
  bool isSelected = false;
 
@@ -73,7 +89,8 @@ public:
   _bounds = other._bounds; // west longitude, south Latitude, east longitude, north latitude
   sCenter = other.sCenter; // longitude, latitude, zoom level
   _center = other._center;
-  urls = other.urls;
+  //urls = other.urls;
+  _url = other._url;
   wmtsUrl = other.wmtsUrl;
   _year = other._year;
  }
@@ -91,9 +108,12 @@ public:
  LatLng _center;
  Bounds _bounds; // west longitude, south Latitude, east longitude, north latitude
  FileDownloader* m_tilemapresource;
+ //QStringList _urls;
+ QUrl _qurl;
+ QString _url;
 
  private slots:
-void processTileMapResource();
+    void processTileMapResource();
 
  friend class Configuration;
 };

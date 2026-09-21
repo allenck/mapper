@@ -44,6 +44,8 @@ void Geoserver::processResource()
         QDomDocument doc;
         QString title;
         Bounds bounds;
+        nameMap.clear();
+        titleMap.clear();
         doc.setContent(str);
         QDomElement root = doc.documentElement();
         QString rootName = root.tagName();

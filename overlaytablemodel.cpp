@@ -143,7 +143,7 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
    if(ov->maxZoom > 21 || ov->maxZoom <1) background = QVariant( QColor(Qt::red) );
    break;
   case URLS:
-   if(ov->urls.isEmpty()) background = QVariant( QColor(Qt::red) );
+   if(ov->url().isEmpty()) background = QVariant( QColor(Qt::red) );
    break;
   }
   return background;
@@ -169,9 +169,8 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
     return "";
   }
   case BOUNDS:
+      // TODO
      return ov->bounds().isValid()?"valid":"invalid";
-//  case CENTER:
-//   return ov->center().isValid()?"valid":"invalid";
   case MINZOOM:
    return ov->minZoom;
   case MAXZOOM:
@@ -183,9 +182,11 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
   case SOURCE:
       return ov->source;
   case URLS:
-   if(ov->urls.count())
-      return ov->urls.at(0);
-   else return "";
+   // if(ov->urls().count())
+   //    //return ov->urls.at(0);
+   //     return ov->urls().join(",");
+   // else return "";
+   return ov->url();
   case YEAR:
    return ov->year();
   case LAYER:
@@ -281,25 +282,28 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
       case URLS:
       {
        QString text = value.toString();
-       if(text.contains(","))
-       {
-        QStringList sl = text.split(",");
-        for(QString _url : sl){
-         QUrl url(_url);
-         if(!url.isValid())
-          return false;
-        }
-        ov->urls = sl;
-       }
-       else
-       {
-        QStringList sl;
-        sl.append(text);
-        QUrl url(text);
-        if(!url.isValid())
-         return false;
-        ov->urls = sl;
-       }
+       // if(text.contains(","))
+       // {
+       //  QStringList sl = text.split(",");
+       //  for(QString _url : sl){
+       //   QUrl url(_url);
+       //   if(!url.isValid())
+       //    return false;
+       //  }
+        ov->setUrl(text);
+       if(!(ov->url().isEmpty()))
+            return false;
+       //}
+       // else
+       // {
+       //  // QStringList sl;
+       //  // sl.append(text);
+       //  QUrl url(text);
+       //  if(!url.isValid())
+       //   return false;
+       //  ov->url = url;
+
+       // }
       }
       break;
       case MINZOOM:
@@ -333,6 +337,7 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
    else
    {
     config->currCity->city_overlayMap->remove(oldCityKey);
+       Q_ASSERT(!ov->url().isEmpty());
     config->currCity->city_overlayMap->insert(newCityKey, ov);
    }
   }

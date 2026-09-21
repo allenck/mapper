@@ -789,7 +789,7 @@ void MainWindow::reloadMap()
 
 void MainWindow::initializeGoogleMaps(QUrl url)
 {
- qDebug() << "page loaded: " << url.toString();
+ qDebug() << "page loaded: " << url.toString(QUrl::FullyDecoded);
 
  QVariantList objArray;
  objArray << "testing echo";
@@ -881,13 +881,13 @@ void MainWindow::loadData(QString data, QString source)
    overlay->sCenter = sl.at(7);
   overlay->source = source;
   if(source == "mbtiles")
-   overlay->urls.append("https://localhost/map_tiles/mbtiles.php");
+   overlay->setUrl("https://localhost/map_tiles/mbtiles.php");
   else
   if(source == "acksoft")
   {
    //overlay->urls.append("http://ubuntu-2.acksoft.dyndns.biz:1080/public/map_tiles/");
    //overlay->urls.append("https://ubuntu-2:80/public/map_tiles/");
-   overlay->urls.append(config->tileServerUrl);
+   overlay->setUrl(config->tileServerUrl);
 
    if(!overlay->bounds().isValid())
    {
@@ -900,7 +900,7 @@ void MainWindow::loadData(QString data, QString source)
         qApp->processEvents();
    }
    if(config->currCity->name() == overlay->cityName)
-    config->currCity->city_overlayMap->insert(overlay->name, overlay);
+    config->currCity->addOverlay(overlay);
   }
   QString locatedName = config->lookupCityName(overlay->bounds());
   if(!locatedName.isEmpty())
@@ -1042,7 +1042,7 @@ void MainWindow::loadOverlayData()
     {
      Overlay* ov = new Overlay(config->currCity->name(),name);
      ov->source = "mbtiles";
-     ov->urls.append("https://localhost/mbtiles.php");
+     ov->setUrl("https://localhost/mbtiles.php");
 
      ov->bLocal = true;
      config->overlayMap->insert(ov->cityName+"|"+name, ov);
@@ -1050,7 +1050,10 @@ void MainWindow::loadOverlayData()
      if(config->currCity->bounds().contains(ov->bounds()))
      {
       if(!config->currCity->city_overlayMap->contains(ov->name))
+      {
+          Q_ASSERT(!ov->url().isEmpty());
        config->currCity->city_overlayMap->insert(ov->cityName+"|"+ov->name, ov);
+      }
      }
     }
    }
@@ -1063,11 +1066,13 @@ void MainWindow::loadOverlayData()
 void MainWindow::loadOverlay(Overlay* ov)
 {
  currentOverlay = ov->name;
+ if(ov->source == "geoserver")
+     currentOverlay = ov->layerName;
  currentOv = ov;
  if(ov->opacity < 0 || ov->opacity > 100)
      ov->opacity = 65;
  QVariantList objArray;
- objArray << currentOverlay<< ov->opacity << ov->minZoom << ov->maxZoom << ov->source << ov->bounds().toString()<< ov->urls.at(0);
+ objArray << currentOverlay<< ov->opacity << ov->minZoom << ov->maxZoom << ov->source << ov->bounds().toString()<< ov->url();
  m_bridge->processScript("loadOverlay", objArray);
  ui->chkShowOverlay->setChecked(true);
 }
@@ -1086,14 +1091,12 @@ void MainWindow::fillOverlayMenu()
   iter.next();
   QString name = iter.key();
   Overlay* ov = iter.value();
-// for(Overlay* ov : oList)
-// {
-//   QString name = ov->cityName;
 
   QAction *act = new QAction(name, this);
   act->setData(VPtr<Overlay>::asQVariant(ov));
   act->setCheckable(true);
   act->setStatusTip(ov->description);
+  act->setToolTip(tr("<B>source: </B>%1 <B><BR>url: </B> %2").arg(ov->source, ov->url()));
   overlayActions.append(act);
   overlayActionGroup->addAction(act);
   overlayMenu->addAction(act);
@@ -5748,11 +5751,11 @@ void MainWindow::on_linkClicked(QUrl url)
 {
  if(QDesktopServices::openUrl(url))
  {
-  qDebug() << "browser open of URL " << url.toString() << " successful";
+  qDebug() << "browser open of URL " << url.toString(QUrl::FullyDecoded) << " successful";
  }
  else
  {
-  qDebug() << "browser open of URL " << url.toString() << " failed";
+  qDebug() << "browser open of URL " << url.toString(QUrl::FullyDecoded) << " failed";
  }
 }
 //#endif

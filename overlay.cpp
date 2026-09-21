@@ -70,22 +70,27 @@ bool Overlay::importXml(QString fileName)
 //    QDomElement url = urls.at(i).toElement();
 //    urlList.append(url.text());
 //   }
-   if(urls.text().isEmpty())
+   QString urlString = urls.text().trimmed();
+   if(urlString.isEmpty())
    {
-    if(ov->source == "acksoft" && ov->urls.isEmpty())
-     ov->urls.append("https://ubuntu-2/public/map_tiles/");
-    if(ov->source == "mbtiles"&& ov->urls.isEmpty()) // Windows
-     ov->urls.append("http://localhost/map_tiles/mbtiles.php");
-    if(ov->source == "tileserver" && ov->urls.isEmpty()) // Linux
-     ov->urls.append("http://localhost/tileserver.php");
+    if(ov->source == "acksoft" && ov->url().isEmpty())
+     ov->setUrl("https://ubuntu-2/public/map_tiles/");
+    if(ov->source == "mbtiles"&& ov->url().isEmpty()) // Windows
+     ov->setUrl("http://localhost/map_tiles/mbtiles.php");
+    if(ov->source == "tileserver" && ov->url().isEmpty()) // Linux
+     ov->setUrl("http://localhost/tileserver.php");
    }
    else
    {
-       if(urls.text().contains(','))
-            ov->urls = urls.text().split(",");
-       ov->urls.append(urls.text());
+       // if(urlString.contains(','))
+       //     ov->setUrls(urlString.split(","));
+       // else
+        ov->setUrl(urlString);
    }
-   overlayList.append(ov);
+   if(ov->url().isEmpty())
+       qDebug() << "overlay urls not present " << ov->name;
+   else
+        overlayList.append(ov);
   }
   file->close();
  }
@@ -151,7 +156,7 @@ bool Overlay::exportXml(QString fileName, QList<Overlay*> overlayList)
 //   {
 //    url.appendChild(doc.createTextNode(sUrl));
 //   }
-   url.appendChild(doc.createTextNode(ov->urls.join(",")));
+   url.appendChild(doc.createTextNode(ov->url()));
    overlay.appendChild(url);
 
    root.appendChild(overlay);
@@ -171,6 +176,7 @@ bool Overlay::exportXml(QString fileName, QList<Overlay*> overlayList)
 
 void Overlay::getTileMapResource()
 {
+
  QEventLoop loop;
  QUrl url;
  if(wmtsUrl.isEmpty())
@@ -327,7 +333,7 @@ void Overlay::processTileMapResource()
         //https://maps.georeferencer.com/georeferences/88523211-86cb-58d9-ae3a-ed9bf52a7cfe/2021-11-29T17:47:46.800140Z/map/{z}/{x}/{y}.png?key=caj1mpUbIDuRGkUmcxkG
         QString url = resourceUrl.attribute("template");
         url = url.replace("{TileMatrix}/{TileCol}/{TileRow}", "{z}/{x}/{y}");
-        urls.append(url);
+        //urls().append(url);
        }
       }
      }
@@ -350,6 +356,6 @@ bool Overlay::checkValid()
  //if(!center().isValid()) return false;
  if(minZoom < 1) return false;
  if(maxZoom > 21) return false;
- if(urls.isEmpty()) return false;
+ if(url().isEmpty()) return false;
  return true;
 }

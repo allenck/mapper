@@ -84,8 +84,8 @@ void AddGeoreferencedDialog::on_buttonBoxAccepted()
  ov->source = ui->comboBox->currentText();
  ov->description = ui->description->toHtml();
  QString s = ui->edUrl->toPlainText();
- QStringList l = s.split("\n");
- ov->urls = l;
+ //QStringList l = s.split("\n");
+ ov->setUrl(s);
  if(!wmtsUrl.isEmpty())
   ov->wmtsUrl = wmtsUrl;
  //config->currCity->overlayMap.insert(ov->name, ov);
@@ -169,11 +169,11 @@ void AddGeoreferencedDialog::xmlFinished()
  ui->comboBox->setCurrentText(ov->source);
  if(ov->source == "georeferencer")
   ui->edUrl->setEnabled(true);
- QString txt;
- foreach (QString s, ov->urls)
- {
-  txt.append(s + "\n");
- }
+ QString txt = ov->url();
+ // foreach (QString s, ov->urls())
+ // {
+ //  txt.append(s + "\n");
+ // }
  ui->edUrl->setText(txt);
  ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Update"));
  ui->description->setHtml(ov->description);
@@ -356,7 +356,7 @@ void AddGeoreferencedDialog::validateWMTS(QString err)
       //https://maps.georeferencer.com/georeferences/88523211-86cb-58d9-ae3a-ed9bf52a7cfe/2021-11-29T17:47:46.800140Z/map/{z}/{x}/{y}.png?key=caj1mpUbIDuRGkUmcxkG
       QString url = resourceUrl.attribute("template");
       url = url.replace("{TileMatrix}/{TileCol}/{TileRow}", "{z}/{x}/{y}");
-      ov->urls.append(url);
+      ov->setUrl(url);
      }
     }
    }
@@ -391,7 +391,7 @@ void AddGeoreferencedDialog::onWmtsComplete()
  ui->neLon->setText(QString::number(ov->bounds().nePt().lon(),'g', 8));
  ui->swLat->setText(QString::number(ov->bounds().swPt().lat(),'g', 8));
  ui->swLon->setText(QString::number(ov->bounds().swPt().lon(),'g', 8));
- ui->edUrl->setText(ov->urls.at(0));
+ ui->edUrl->setText(ov->url());
  ui->sbMinZoom->setValue(ov->minZoom);
  ui->sbMaxZoom->setValue(ov->maxZoom);
  ui->comboBox->setCurrentText("georeferencer");
