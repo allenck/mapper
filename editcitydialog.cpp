@@ -23,7 +23,7 @@
 #include "lineeditdelegate.h"
 #include "itemdelegate.h"
 #include <QStatusBar>
-#include "vptr.h";
+#include "vptr.h"
 
 EditCityDialog::EditCityDialog(QWidget *parent) :
   QDialog(parent),
@@ -56,6 +56,9 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
  ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
  ui->tableView->setContextMenuPolicy(Qt::CustomContextMenu);
+
+ ui->tableView->setItemDelegateForColumn(OverlayTableModel::NAME, new LineEditDelegate());
+ ui->tableView->setItemDelegateForColumn(OverlayTableModel::LAYER, new LineEditDelegate());
  ui->tableView->setItemDelegateForColumn(OverlayTableModel::URLS, new LineEditDelegate());
  ui->tableView->setItemDelegateForColumn(OverlayTableModel::CITYNAME, new ItemDelegate(config->cityNames()));
  QStringList sources;
@@ -674,9 +677,11 @@ void EditCityDialog::onColumnChanged(int row,int column , Overlay* ovOld, Overla
                 {
                     geoserver->getCapabilities(ovNew->url());
                     QList<Layer*> layer = geoserver->getLayerByTitle(ovNew->name);
-                    ovNew->layerName = layer.at(0)->name;
-                    ovNew->setBounds(layer.at(0)->bounds);
-
+                    if(layer.count()>0)
+                    {
+                        ovNew->layerName = layer.at(0)->name;
+                        ovNew->setBounds(layer.at(0)->bounds);
+                    }
                 }
             }
             break;

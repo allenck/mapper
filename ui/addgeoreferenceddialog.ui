@@ -171,6 +171,11 @@
      </item>
      <item>
       <property name="text">
+       <string>georeferencer2</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
        <string>mbtiles</string>
       </property>
      </item>

@@ -9,7 +9,6 @@
 #include "overlay.h"
 #include <QIntValidator>
 #include <QMessageBox>
-#include "webviewbridge.h"
 
 
 AddGeoreferencedDialog::AddGeoreferencedDialog(QWidget *parent) :

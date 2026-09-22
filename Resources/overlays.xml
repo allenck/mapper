@@ -594,6 +594,12 @@ li.checked::marker { content: "\2612"; }
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/public/map_tiles/</url>
   </overlay>
+  <overlay cityName="St Louis, MO" layerName="my_maps:Leffingwell's_map_of_the_city_of_St._Louis_and_vicinity_1884" maxZoom="16" minZoom="8" name="Leffingwell's map of the city of_St. Louis and vicinity 1884" opacity="65" selected="yes" source="geoserver" year="">
+    <description></description>
+    <bounds eastLongtude="-89.982" northLatitude="38.9585" southLatitude="38.3585" westLongitude="-90.582"/>
+    <wmtsUrl></wmtsUrl>
+    <url>http://localhost:8080/geoserver</url>
+  </overlay>
   <overlay cityName="St Louis, MO" layerName="my_maps:map-of-st-louis-city-1876" maxZoom="-1" minZoom="32767" name="Map of St Louis City 1876" opacity="55" selected="yes" source="geoserver" year="1876">
     <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;meta charset="utf-8" />&lt;style type="text/css">
@@ -620,11 +626,14 @@ li.checked::marker { content: "\2612"; }
     <wmtsUrl>https://maps.georeferencer.com/georeferences/3e41ed67-1c65-5e25-8b4c-99adfda9695e/2021-12-19T01:24:00.624982Z/wmts?key=caj1mpUbIDuRGkUmcxkG&amp;SERVICE=WMTS&amp;REQUEST=GetCapabilities</wmtsUrl>
     <url>http://localhost:8080/geoserver/gwc/service/tms/1.0.0/my_maps:map-of-st-louis@EPSG:900913@png/{z}/{x}/{y}.png</url>
   </overlay>
-  <overlay cityName="St Louis, MO" layerName="" maxZoom="21" minZoom="12" name="St. Louis, Missouri." opacity="55" selected="yes" source="georeferencer" year="1891">
+  <overlay cityName="St Louis, MO" layerName="" maxZoom="21" minZoom="12" name="St. Louis, Missouri." opacity="51" selected="yes" source="georeferencer" year="1891">
     <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
-&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;meta charset="utf-8" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;">
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: "\2610"; }
+li.checked::marker { content: "\2612"; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
     <bounds eastLongtude="-89.982" northLatitude="38.9585" southLatitude="38.3585" westLongitude="-90.582"/>
     <wmtsUrl>https://maps.georeferencer.com/georeferences/9c83ed2b-077a-5e13-867d-36962c91a9c6/2022-01-06T17:24:11.385327Z/wmts?key=caj1mpUbIDuRGkUmcxkG&amp;SERVICE=WMTS&amp;REQUEST=GetCapabilities</wmtsUrl>

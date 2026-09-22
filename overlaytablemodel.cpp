@@ -249,9 +249,13 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
   switch ((index.column())) {
       case NAME:
       {
-       overlayMap->remove(oldName);
-       ov->name = newCityKey =value.toString();
-       newName = ov->cityName + "." +ov->name;
+       // overlayMap->remove(oldName);
+       // ov->name = newCityKey =value.toString();
+       // newName = ov->cityName + "." +ov->name;
+       QString text = value.toString();
+       if(text.isEmpty())
+           return false;
+       ov->name = text;
       }
       break;
       case CITYNAME:
@@ -282,28 +286,9 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
       case URLS:
       {
        QString text = value.toString();
-       // if(text.contains(","))
-       // {
-       //  QStringList sl = text.split(",");
-       //  for(QString _url : sl){
-       //   QUrl url(_url);
-       //   if(!url.isValid())
-       //    return false;
-       //  }
         ov->setUrl(text);
        if(!(ov->url().isEmpty()))
             return false;
-       //}
-       // else
-       // {
-       //  // QStringList sl;
-       //  // sl.append(text);
-       //  QUrl url(text);
-       //  if(!url.isValid())
-       //   return false;
-       //  ov->url = url;
-
-       // }
       }
       break;
       case MINZOOM:
@@ -321,6 +306,10 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
           return false;
       }
       break;
+      case LAYER:
+          if(value.toString().isEmpty())
+              return false;
+          ov->layerName = value.toString();
   }
   emit overlayChanged(oldName, newName, ov);
   if(oldName == newName)
