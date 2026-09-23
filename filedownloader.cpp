@@ -9,6 +9,11 @@ FileDownloader::FileDownloader(QUrl imageUrl, QObject *parent) :
     m_WebCtrl = new QNetworkAccessManager();
  qInfo() << "FileDownloader: download " << imageUrl.toDisplayString();
     connect(m_WebCtrl, SIGNAL(finished(QNetworkReply*)), SLOT(fileDownloaded(QNetworkReply*)));
+    connect(m_WebCtrl, &QNetworkAccessManager::sslErrors,
+         [](QNetworkReply *reply, const QList<QSslError> &errors) {
+             // Inspect errors if needed, then ignore for dev/self-signed:
+             reply->ignoreSslErrors(errors);
+         });
     this->imageUrl = imageUrl;
     QNetworkRequest request(imageUrl);
     m_WebCtrl->get(request);
