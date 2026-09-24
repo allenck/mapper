@@ -211,6 +211,7 @@ public slots:
     QT_DEPRECATED void getArrayResult(QVariant);
     void selectRoute(RouteData rd);
     void displayRouteComment(CommentInfo ci);
+    void on_selectOverlaySources();
 
 signals:
     void routeListChanged(QList<RouteData>* routeList);
@@ -420,6 +421,7 @@ private:
     QAction* displayRouteOnReloadAct;
     QAction* editCommentsAct;
     QAction* upgradeCommentsAct;
+    QAction* selectOverlaysAct;
 
     QWidgetAction *sortTypeAct;
     QComboBox * cbSort;

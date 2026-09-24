@@ -64,7 +64,7 @@ private:
  QSortFilterProxyModel* sorter;
  QMap<QString, Overlay*>* cityOverlays;
  void newCity(int i);
- bool dirty;
+ bool bDirty;
  void closeEvent(QCloseEvent *event);
  QModelIndex currentIndexTableView;
  bool boolGetItemTableView(QTableView *view);
@@ -72,6 +72,8 @@ private:
  QAction* deleteConnection;
  Geoserver* geoserver = nullptr;
  void updateGeoserverProperties(Overlay* ov);
+ QList<Overlay*>* wmtsList = nullptr;
+
 };
 
 

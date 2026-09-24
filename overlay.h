@@ -31,7 +31,7 @@ public:
   _url = other._url;
   wmtsUrl = other.wmtsUrl;
   _year = other._year;
-  layerName = other.layerName;
+  _layerName = other._layerName;
  }
  //  QStringList urls() {return _urls;}
  // void setUrls(QStringList urls){
@@ -58,14 +58,18 @@ public:
      _qurl.setUrl(txt);
      Q_ASSERT(_qurl.isValid());
  }
+ bool importWmsCapabilities(QString url, QList<Overlay *> *list);
+ void getWmsCapabilties();
+
  signals:
  void xmlFinished();
+     void wmtsFinished(QList<Overlay*>*);
 public:
 
  //qint32 id;
  QString cityName;
  QString name;
- QString layerName;
+ QString _layerName;
  QString description;
  qint32 opacity;
  int minZoom;
@@ -76,6 +80,7 @@ public:
  //QStringList urls;
  QString wmtsUrl;
  bool isSelected = false;
+
 
  Overlay operator=(const Overlay& other)
  {
@@ -93,7 +98,9 @@ public:
   _url = other._url;
   wmtsUrl = other.wmtsUrl;
   _year = other._year;
+  return this;
  }
+
  QString year() {return _year;}
  void setYear(QString year){_year = year;}
 // LatLng center() {return _center;}
@@ -107,13 +114,17 @@ public:
  QString _year;
  LatLng _center;
  Bounds _bounds; // west longitude, south Latitude, east longitude, north latitude
- FileDownloader* m_tilemapresource;
+ FileDownloader* m_tilemapresource = nullptr;
  //QStringList _urls;
  QUrl _qurl;
  QString _url;
+ QString fileDownloaderHost;
+ QList<Overlay*>* wmtsList = nullptr;
 
  private slots:
     void processTileMapResource();
+     QList<Overlay *> *processWmsCapabilities();
+
 
  friend class Configuration;
 };

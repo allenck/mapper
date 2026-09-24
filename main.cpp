@@ -11,6 +11,7 @@
 #include <QFile>
 #include "configuration.h"
 
+
 #if 0
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
@@ -93,6 +94,8 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
 
 int main(int argc, char *argv[])
 {
+    // Register them once globally at runtime
+    //qRegisterMetaTypeStreamOperators<IntPair>("IntPair");
 
     QByteArray envVar = qgetenv("QTDIR");       //  check if the app is ran in Qt Creator
 

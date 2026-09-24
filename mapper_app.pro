@@ -19,6 +19,8 @@ message(WEBENGINE  " = "  $$WEBENGINE)
 
 RC_ICONS = Resources/tram-icon.ico
 
+RC_FILE = mapper.rc
+
 CONFIG += c++17
 
 DEFINES += "BUILD_DIR=\"\\\""$$OUT_PWD"\\\"\""
@@ -185,7 +187,10 @@ DEPENDPATH += $$PWD/.
 INCLUDEPATH += $$(QTDIR)/../Src/qtbase/src/3rdparty/sqlite
 
 
-VERSION=1.2.9
+VERSION=1.2.10
+QMAKE_TARGET_COMPANY = "ACK Software"
+QMAKE_TARGET_DESCRIPTION = "My Qt Mapper Application"
+QMAKE_TARGET_COPYRIGHT = "Copyright 2026"
 MY_VERSION_STR = '\\"$${VERSION}\\"'
 DEFINES += MY_VERSION=\"$${MY_VERSION_STR}\"
 macx: {
@@ -258,13 +263,5 @@ DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3460100
 #unix|win32: LIBS += -ldl
 unix: LIBS += -ldl
 
-FORMS += \
-    dialogselectlist.ui
-
-HEADERS += \
-    dialogselectlist.h
-
-SOURCES += \
-    dialogselectlist.cpp
 
 

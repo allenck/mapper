@@ -6,6 +6,17 @@
 #include <QFileDialog>
 #include <QFile>
 #include "routeviewtablemodel.h"
+
+QDataStream &operator<<(QDataStream &out, const IntPair &pair) {
+    out << pair.first << pair.second;
+    return out;
+}
+
+QDataStream &operator>>(QDataStream &in, IntPair &pair) {
+    in >> pair.first >> pair.second;
+    return in;
+}
+
 Configuration::Configuration(QObject *parent) :
     QObject(parent)
 {
@@ -206,6 +217,16 @@ void Configuration::saveSettings()
  settings->setValue("mapId", mapId);
  settings->setValue("tileServerUrl", tileServerUrl);
  settings->setValue("mapSource", mapSource);
+
+ settings->beginWriteArray("allowedSources");
+ //foreach (IntPair pair, allowedSources) {
+ for(int i= 0; i < allowedSources.count(); i++){
+     IntPair pair = allowedSources.at(i);
+     settings->setArrayIndex((i));
+    settings->setValue("allowedSource", pair.first);
+    settings->setValue("allowed",pair.second);
+ }
+ settings->endArray();
 }
 
 
@@ -480,77 +501,8 @@ void Configuration::getSettings()
 
    settings.endArray();
 
-// for(Overlay* ov : overlayMap->values())
-// {
-//  QString  n = lookupCityName(ov->bounds());
-//  if(!n.isEmpty())
-//   ov->cityName = n;
-//  else
-//   qDebug() << "invalid city " << ov->cityName << ov->name;
-// }
-#if 0
-   if(Overlay::importXml("./Resources/overlays.xml"))
-   {
-      for(Overlay* ov : Overlay::overlayList)
-      {
-        QString cityName = ov->cityName;
-        City* city = cityMap.value(ov->cityName);
-        if(city && !ov->bounds().isValid())
-        {
-          ov->setBounds(Bounds(LatLng(city->center.lat()-.3, city->center.lon()-.3), LatLng(city->center.lat()+.3, city->center.lon()+.3)));
-        }
-        overlayMap->insert(ov->cityName+"|"+ov->name, ov);
-        if(city && city->name() == ov->cityName)
-        {
-           if(ov->isSelected)
-           {
-              //   if(ov->urls().isEmpty() && (ov->source == "acksoft" ||ov->source == "acksoft2"))
-              //      ov->urls().append("https://ubuntu-2/public/map_tiles/");
-              // Q_ASSERT(!ov->urls().isEmpty());
-              if(ov->urls().isEmpty())
-                  ov->isSelected=false;
-              //city->city_overlayMap->insert(ov->name, ov);
-              city->addOverlay(ov);
-              qInfo() << "add overlay " << ov->name << " for city:" << city->name();
-           }
-        }
-      }
-   }
-#else
-    bool rslt = Overlay::importXml("./Resources/overlays.xml");
-    QList<Overlay*> overlayList;
-    if(rslt)
-    {
-        overlayList = Overlay::overlayList;
-        for(Overlay* ov : overlayList)
-        {
-            QString cityName = ov->cityName;
-            City* city = cityMap.value(ov->cityName);
-            if(city && !ov->bounds().isValid())
-            {
-                ov->setBounds(Bounds(LatLng(city->center.lat()-.3, city->center.lon()-.3), LatLng(city->center.lat()+.3, city->center.lon()+.3)));
-            }
-            overlayMap->insert(ov->cityName+"|"+ov->name, ov);
-            if(city && city->name() == ov->cityName)
-            {
-                if(ov->isSelected)
-                {
-                    //   if(ov->urls().isEmpty() && (ov->source == "acksoft" ||ov->source == "acksoft2"))
-                    //      ov->urls().append("https://ubuntu-2/public/map_tiles/");
-                    // Q_ASSERT(!ov->urls().isEmpty());
-                    if(ov->url().isEmpty())
-                        ov->isSelected=false;
-                    city->city_overlayMap->insert(ov->name, ov);
-                    qInfo() << "add overlay " << ov->name << " for city:" << city->name();
-                }
-            }
-        }
-    }
-    else {
-        throw Exception();
-    }
 
-#endif
+
    //settings.beginGroup("General");
    currentCityId = settings.value("currCity",0).toInt();
    if(currentCityId < 0 || currentCityId >= cityList.count())
@@ -617,6 +569,20 @@ void Configuration::getSettings()
    rcd.columnCount = settings.value("columnCount").toInt();
    settings.endGroup();
 
+   int sizec = settings.beginReadArray("allowedSources");
+   allowedSources.clear();
+   for(int j = 0; j < sizec; j++)
+   {
+       // QVariant var = settings.value("allowedSource");
+       // if (var.canConvert<QPair<QString,bool>>())
+       QPair<QString,bool> pair;
+       pair.first = settings.value("allowedSource").toString();
+       pair.second = settings.value("allowed").toBool();
+       allowedSources.append( pair);
+   }
+   settings.endArray();
+
+   buildOverlayLists(); // build lists for cities
 
    for(Overlay* ov : Overlay::overlayList)
    {
@@ -627,6 +593,45 @@ void Configuration::getSettings()
          city->addOverlay(ov);
       }
    }
+}
+
+bool Configuration::buildOverlayLists()
+{
+    // for each city, build the list of overlays
+    bool rslt = Overlay::importXml("./Resources/overlays.xml");
+    QList<Overlay*> overlayList;
+    if(rslt)
+    {
+        overlayList = Overlay::overlayList;
+        for(Overlay* ov : overlayList)
+        {
+            QString cityName = ov->cityName;
+            City* city = cityMap.value(ov->cityName);
+            if(city && !ov->bounds().isValid())
+            {
+                ov->setBounds(Bounds(LatLng(city->center.lat()-.3, city->center.lon()-.3), LatLng(city->center.lat()+.3, city->center.lon()+.3)));
+            }
+            overlayMap->insert(ov->cityName+"|"+ov->name, ov);
+            if(city && city->name() == ov->cityName)
+            {
+                if(ov->isSelected)
+                {
+                    if(ov->url().isEmpty())
+                        ov->isSelected=false;
+                    QUrl url = QUrl(ov->url());
+                    QString host = url.toString(QUrl::RemovePath | QUrl::RemoveQuery);
+                    QPair<QString,bool> pair =QPair<QString,bool>(host,true);
+                    ov->isSelected = allowedSources.contains(pair);
+                    city->city_overlayMap->insert(ov->name, ov);
+                    qInfo() << "add overlay " << ov->name << " for city:" << city->name();
+                }
+            }
+        }
+    }
+    else {
+        throw Exception();
+    }
+    return true;
 }
 
 void Configuration::setOverlay(Overlay* ov)

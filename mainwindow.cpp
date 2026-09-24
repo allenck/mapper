@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "dialogeditcomments.h"
+#include "dialogselectlist.h"
 #include "qcompleter.h"
+#include "qforeach.h"
 #include "removecitydialog.h"
 #include <QWebEngineHistory>
 #include "streetstablemodel.h"
@@ -1067,7 +1069,7 @@ void MainWindow::loadOverlay(Overlay* ov)
 {
  currentOverlay = ov->name;
  if(ov->source == "geoserver")
-     currentOverlay = ov->layerName;
+     currentOverlay = ov->_layerName;
  currentOv = ov;
  if(ov->opacity < 0 || ov->opacity > 100)
      ov->opacity = 65;
@@ -1091,24 +1093,26 @@ void MainWindow::fillOverlayMenu()
   iter.next();
   QString name = iter.key();
   Overlay* ov = iter.value();
-
-  QAction *act = new QAction(name, this);
-  act->setData(VPtr<Overlay>::asQVariant(ov));
-  act->setCheckable(true);
-  act->setStatusTip(ov->description);
-  act->setToolTip(tr("<B>source: </B>%1 <B><BR>url: </B> %2").arg(ov->source, ov->url()));
-  overlayActions.append(act);
-  overlayActionGroup->addAction(act);
-  overlayMenu->addAction(act);
-  if(config->currCity->curOverlayId >= config->currCity->city_overlayMap->count())
+  if(ov->isSelected)
   {
-   config->currCity->curOverlayId = 0;
-   qDebug() <<  " overlay name = " << config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId)->name;
+      QAction *act = new QAction(name, this);
+      act->setData(VPtr<Overlay>::asQVariant(ov));
+      act->setCheckable(true);
+      act->setStatusTip(ov->description);
+      act->setToolTip(tr("<B>source: </B>%1 <B><BR>url: </B> %2").arg(ov->source, ov->url()));
+      overlayActions.append(act);
+      overlayActionGroup->addAction(act);
+      overlayMenu->addAction(act);
+      if(config->currCity->curOverlayId >= config->currCity->city_overlayMap->count())
+      {
+       config->currCity->curOverlayId = 0;
+       qDebug() <<  " overlay name = " << config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId)->name;
+      }
+      if(config->currCity->curOverlayId >=0 && name == config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId)->name)
+       act->setChecked(true);
+      if(!ui->chkShowOverlay->isEnabled())
+       ui->chkShowOverlay->setEnabled(true);
   }
-  if(config->currCity->curOverlayId >=0 && name == config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId)->name)
-   act->setChecked(true);
-  if(!ui->chkShowOverlay->isEnabled())
-   ui->chkShowOverlay->setEnabled(true);
  }
  connect(overlayActionGroup,SIGNAL(triggered(QAction*)),this, SLOT(newOverlay(QAction*)));
 }
@@ -1431,6 +1435,9 @@ void MainWindow::createActions()
  manageOverlaysAct->setStatusTip(tr("Edit overlay info including selecting which available overlays can be displayed as well as defining additional overlays.."));
  connect(manageOverlaysAct, SIGNAL(triggered()), this, SLOT(On_editCityInfo()));
 
+ selectOverlaysAct = new QAction(tr("Select Overlay sources"), this);
+ selectOverlaysAct->setStatusTip(tr("Select allowed sources of overlays"));
+ connect(selectOverlaysAct, SIGNAL(triggered()), this, SLOT(on_selectOverlaySources()));
 // locateStreetAct = new QAction(tr("Locate Geodb Object"), this);
 // locateStreetAct->setStatusTip(tr("Locate, a street, bridge, park or bahanhof. For Berlin only."));
 // connect(locateStreetAct, SIGNAL(triggered()), this, SLOT(locateStreet()));
@@ -1951,6 +1958,7 @@ void MainWindow::createMenus()
       overlaysMenu->addMenu(overlayMenu);
       connect(overlayMenu, SIGNAL(aboutToShow()), this, SLOT(fillOverlayMenu()));
       overlaysMenu->addAction(manageOverlaysAct);
+      overlaysMenu->addAction(selectOverlaysAct);
       optionsMenu->addAction(displayRouteCommentsAct);
       displayRouteCommentsAct->setChecked(config->currCity->bDisplayRouteComments);
       optionsMenu->addAction(displayStationMarkersAct);
@@ -6434,3 +6442,37 @@ bool MainWindow::restoreDatabases()
 
 }
 
+void MainWindow::on_selectOverlaySources()
+{
+    config->allowedSources.clear();
+    config->allowedSources = QList<QPair<QString, bool>>();
+    QStringList sl;
+    foreach (Overlay* ov, config->overlayMap->values()) {
+        QUrl url = QUrl(ov->url());
+        QString host = url.toString(QUrl::RemovePath | QUrl::RemoveQuery);
+        QPair<QString,bool>pair = QPair<QString,bool>(host, ov->isSelected);
+        if(!sl.contains(host))
+        {
+            sl.append(host);
+            config->allowedSources.append(pair);
+        }
+    }
+    DialogSelectList dlg;
+    dlg.setCheckList(config->allowedSources);
+    dlg.setInstructions(tr("Check the allowed source urls"));
+
+    int rslt = dlg.exec();
+    if(rslt == QDialog::Accepted)
+    {
+        QList<QPair<QString,bool>> list = dlg.getCheckList();
+        config->allowedSources = list;
+        for(int i = 0; i <list.count(); i++) {
+            QPair<QString,bool> pair = list .at(i);
+            foreach (Overlay* ov, config->overlayMap->values()) {
+                if(ov->url() == pair.first)
+                    ov->isSelected = pair.second;
+            }
+        }
+        config->buildOverlayLists();
+    }
+}

@@ -3,6 +3,8 @@
 #include <QTextStream>
 #include "exceptions.h"
 #include "configuration.h"
+#include "city.h"
+#include <QMessageBox>
 
 Overlay::Overlay(QObject *parent) : QObject(parent)
 {
@@ -40,7 +42,7 @@ bool Overlay::importXml(QString fileName)
    Overlay* ov = new Overlay();
    ov->name = elem.attribute("name");
    ov->cityName = elem.attribute("cityName");
-   ov->layerName = elem.attribute("layerName");
+   ov->_layerName = elem.attribute("layerName");
    //ov->description = elem.attribute("description");
    QDomElement description = elem.firstChildElement("description");
    ov->description = description.text();
@@ -56,11 +58,15 @@ bool Overlay::importXml(QString fileName)
    eastLongitude = elem.attribute("eastLongitude").toDouble();
    northLatitude = elem.attribute("northLatitude").toDouble();
    ov->_bounds = Bounds(LatLng(southLatitude, westLongitude), LatLng(northLatitude, eastLongitude));
-//   if(ov->bounds().isValid())
-//   {
-//     ov->setCenter(ov->bounds().center());
-//     qDebug() << "center: "<< ov->center().toString();
-//   }
+  if(ov->bounds().isValid())
+  {
+    // ov->setCenter(ov->bounds().center());
+    // qDebug() << "center: "<< ov->center().toString();
+    foreach (City* c, Configuration::instance()->cityList) {
+        if(c->bounds().intersects(ov->_bounds) || c->bounds().contains(ov->_bounds))
+            ov->cityName = c->name();
+    }
+  }
    QDomElement wmtsUrl = elem.firstChildElement("wmtsUrl");
    ov->wmtsUrl = wmtsUrl.text();
    QDomElement urls = elem.firstChildElement("url");
@@ -102,6 +108,152 @@ bool Overlay::importXml(QString fileName)
  return true;
 }
 
+bool Overlay::importWmsCapabilities(QString host, QList<Overlay*>* list)
+{
+    if(!host.contains("geoserver"))
+        return false;
+    wmtsList = list;
+    QEventLoop loop;
+    fileDownloaderHost = host;
+    QString filename = host.append("/gwc/service/wmts?REQUEST=GetCapabilities");
+    QUrl url = QUrl(filename);
+    if(url.isValid())
+        m_tilemapresource = new FileDownloader(url);
+    else
+    {
+        return false;
+    }
+    m_tilemapresource->setOverlay(this);
+    connect(m_tilemapresource, SIGNAL(downloaded(QString)), this, SLOT(processWmsCapabilities()));
+    loop.exec();
+}
+
+QList<Overlay*>* Overlay::processWmsCapabilities()
+{
+    //QList<Overlay*>* olist = new QList<Overlay*>();
+    wmtsList = new QList<Overlay*>();
+    QString error = m_tilemapresource->error();
+    if(!error.isEmpty())
+    {
+        if(fileDownloaderHost.startsWith("http://"))
+            error = error.append(tr("\nPossibly host should be https://"));
+        QMessageBox::critical(nullptr, tr("Error"), error);
+        return nullptr;
+    }
+    QString str = m_tilemapresource->downloadedData();
+    if(str != "")
+    {
+        QDomDocument doc;
+        QString title;
+        Bounds bounds;
+        Overlay* ov = nullptr;
+        doc.setContent(str);
+        QDomElement root = doc.documentElement();
+        QString rootName = root.tagName();
+        if(rootName == "Capabilities")
+        {
+            QStringList points;
+            QDomElement contents = root.firstChildElement("Contents");
+            if(!contents.isNull())
+            {
+                QDomElement layer = contents.firstChildElement("Layer");
+                if(!layer.isNull())
+                {
+                    QDomNodeList nl = contents.elementsByTagName("Layer");
+                    for(int i=0; i < nl.count(); i++ )
+                    {
+                        layer = nl.at(i).toElement();
+                        ov = new Overlay();
+                        ov->opacity = 65;
+                        ov->source = "geoserver";
+                        ov->setUrl(fileDownloaderHost);
+                        QDomElement elem = layer.firstChildElement("ows:Title");
+                        if(!elem.isNull())
+                            ov->name = elem.text();
+                        elem = layer.firstChildElement("ows:Identifier");
+                        if(!elem.isNull())
+                            ov->_layerName = elem.text();
+                        qDebug() << ov->_layerName;
+                        LatLng sw;
+                        LatLng ne;
+                        QDomElement bounds = layer.firstChildElement("ows:WGS84BoundingBox");
+                        if(!bounds.isNull())
+                        {
+                            QDomElement swCorner = bounds.firstChildElement("ows:LowerCorner");
+                            QString lon_lat = swCorner.text();
+                            points = lon_lat.split(" ");
+                            sw = LatLng(points.at(1).toDouble(), points.at(0).toDouble());
+                            QDomElement neCorner = bounds.firstChildElement("ows:UpperCorner");
+                            lon_lat = neCorner.text();
+                            points = lon_lat.split(" ");
+                            ne = LatLng(points.at(1).toDouble(), points.at(0).toDouble());
+                            Bounds bounds = Bounds(sw, ne);
+                            ov->setBounds(bounds);
+                            if(bounds.isValid())
+                            {
+                                foreach (City* c, Configuration::instance()->cityList) {
+                                    if (c->bounds().intersects(bounds) || c->bounds().contains(bounds))
+                                    {
+                                        ov->cityName = c->name();
+                                        qDebug() << "  city found: " << c->name() << " "<< ov->_layerName;;
+                                        break;
+                                    }
+                                    // else {
+                                    //     qDebug() << "  invalid bounds " << ov->layerName;
+                                    // }
+                                }
+                            }
+
+                            // calculate min/max zoom
+                            ov->maxZoom = -1;
+                            ov->minZoom = 32767;
+                            QDomNodeList tMSSL_list = layer.elementsByTagName("TileMatrixSetLink");
+                            for(int i=0; i < tMSSL_list.count(); i++)
+                            {
+                                QDomElement tileMatrixSetLink = tMSSL_list.at(i).toElement();
+                                QDomElement tileMatrixSet = tileMatrixSetLink.firstChildElement("TileMatrixSet");
+                                QString coord = tileMatrixSet.text();
+                                if(coord!= "EPSG:4326")
+                                    continue;
+
+                                QDomElement tileMatrixSetLimits = tileMatrixSetLink.firstChildElement("TileMatrixSetLimits");
+                                if(!tileMatrixSetLimits.isNull())
+                                {
+                                    QDomNodeList list = tileMatrixSetLimits.elementsByTagName("TileMatrixLimits");
+                                    if(list.count() > 0)
+                                    {
+                                        int j=0;
+                                        while(j < list.count()-1)
+                                        {
+                                            QDomElement tileMatrix_first = list.at(j++).toElement();
+                                            QString min = tileMatrix_first.firstChildElement("TileMatrix").text();
+                                            ov->minZoom = min.mid(min.lastIndexOf(":")+1).toInt();
+                                            QDomElement minTileRow = tileMatrix_first.firstChildElement("MinTileRow");
+                                            QDomElement maxTileRow = tileMatrix_first.firstChildElement("MaxTileRow");
+                                            if(minTileRow.text().toInt() != maxTileRow.text().toInt())
+                                                break;
+                                        }
+
+                                        QDomElement tileMatrix_last = list.at(list.count()-1).toElement();
+
+                                        QString max = tileMatrix_last.firstChildElement("TileMatrix").text();
+                                        ov->maxZoom = max.mid(max.lastIndexOf(":")+1).toInt();
+
+                                        continue;
+                                    }
+                                }
+                            }
+                        }
+                        wmtsList->append(ov);
+                    }
+                }
+            }
+        }
+    }
+    emit wmtsFinished(wmtsList);
+    return wmtsList;
+}
+
 /*static*/ QList<Overlay*> Overlay::overlayList = QList<Overlay*>();
 /*static*/ QList<Overlay*> Overlay::getList(City *city)
 {
@@ -130,7 +282,7 @@ bool Overlay::exportXml(QString fileName, QList<Overlay*> overlayList)
 //    continue;
    QDomElement overlay = doc.createElement("overlay");
    overlay.setAttribute("name", ov->name);
-   overlay.setAttribute("layerName", ov->layerName); // geoserver only
+   overlay.setAttribute("layerName", ov->_layerName); // geoserver only
    overlay.setAttribute("cityName", ov->cityName);
    //overlay.setAttribute("description", ov->description);
    QDomElement description = doc.createElement("description");
@@ -230,14 +382,21 @@ void Overlay::processTileMapResource()
     }
     else
     {
-     // x & y might be reversed, try it that way
-     bounds = Bounds(LatLng(minx, miny), LatLng(maxx, maxy));
-     if(bounds.isValid())
-     {
-      //Overlay* ov = m_tilemapresource->overlay();
-      setBounds(bounds);
-     }
-
+         // x & y might be reversed, try it that way
+         bounds = Bounds(LatLng(minx, miny), LatLng(maxx, maxy));
+         if(bounds.isValid())
+         {
+          //Overlay* ov = m_tilemapresource->overlay();
+          setBounds(bounds);
+         }
+         if(bounds.isValid())
+         {
+             foreach(City*c, Configuration::instance()->cityList)
+             {
+                 if(c->bounds().isValid() && (c->bounds().contains(bounds)|| c->bounds().intersects(bounds)))
+                     cityName = c->name();
+             }
+         }
     }
    }
    elem = root.firstChildElement("TileSets");
@@ -359,3 +518,5 @@ bool Overlay::checkValid()
  if(url().isEmpty()) return false;
  return true;
 }
+
+

@@ -9,12 +9,22 @@
 #include "city.h"
 #include "connection.h"
 #include "qapplication.h"
+#include "qobject.h"
 #include <QFont>
+#include <QMetaType>
+#include <QPair>
+#include <QDataStream>
+#include <QString>
+
+using IntPair = QPair<QString, bool>;
+Q_DECLARE_METATYPE(IntPair)
+
+// Forward declarations (tells the compiler these exist globally)
+QDataStream &operator<<(QDataStream &out, const IntPair &pair);
+QDataStream &operator>>(QDataStream &in, IntPair &pair);
 
 class Configuration;
 class SQL;
-
-
 
 struct query
 {
@@ -74,6 +84,8 @@ public:
  void addCity(City*);
  QString listToString(QList<int>);
  QList<int> stringToList(QString);
+ bool buildOverlayLists();
+
  QList<City*> cityList;
  QMap<QString, City*> cityMap;
  QMap<QString, Overlay*>* overlayMap = new QMap<QString, Overlay*>();
@@ -118,6 +130,8 @@ public:
      MAPQUEST
  };
  int mapSource = GOOGLEMAPS;
+ QList<QPair<QString, bool>> allowedSources = QList<QPair<QString, bool>>();
+
 
 private:
  static Configuration* _instance;

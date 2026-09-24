@@ -11,9 +11,9 @@ OverlayTableModel::OverlayTableModel(int cityId, QObject *parent) : QAbstractTab
  overlayMap = new QMap<QString, Overlay*>();
  for(Overlay* ov : config->overlayMap->values())
  {
-  if(ov->opacity > 65)
-   ov->opacity = 65;
-   overlayMap->insert(ov->cityName + "|" + ov->name, ov);
+    if(ov->opacity > 65)
+        ov->opacity = 65;
+    overlayMap->insert(ov->cityName + "|" + ov->name, ov);
  }
 }
 
@@ -65,9 +65,9 @@ QVariant OverlayTableModel::headerData(int section, Qt::Orientation orientation,
 
 Qt::ItemFlags OverlayTableModel::flags(const QModelIndex &index) const
 {
- int row = index.row();
- Overlay* ov = overlayMap->values().at(row);
- City* c = config->cityList.at(currCityId);
+     int row = index.row();
+     Overlay* ov = overlayMap->values().at(row);
+     City* c = config->cityList.at(currCityId);
 // if(!ov->bounds().contains(c->center) && SQL::distance(ov->bounds().center(), c->center) > 10)
 // {
 //  qDebug() << c->name << " center: " << c->center.toString();
@@ -190,7 +190,7 @@ QVariant OverlayTableModel::data(const QModelIndex &index, int role) const
   case YEAR:
    return ov->year();
   case LAYER:
-      return ov->layerName;
+      return ov->_layerName;
   default:
    break;
   }
@@ -309,7 +309,7 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
       case LAYER:
           if(value.toString().isEmpty())
               return false;
-          ov->layerName = value.toString();
+          ov->_layerName = value.toString();
   }
   emit overlayChanged(oldName, newName, ov);
   if(oldName == newName)

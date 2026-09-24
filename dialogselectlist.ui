@@ -15,7 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="lblInstructiond">
+    <widget class="QLabel" name="lblInstruction">
      <property name="text">
       <string>Select an item from the list</string>
      </property>

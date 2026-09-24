@@ -1,3 +1,8 @@
+**Recent Changes September 2026 VERSION=1.2.10
+1. Add new OpenStreetMap and Mapquest map sources.
+2. Add support for geoserver tiles for overlays. Query WMTS capabilities from geoserver and add selected maps to overlays.
+3. Overlay management allow the user to select or ignore sources of overlays. This is stored in the settings for a PC.
+
 **Recent Changes August-September 2026 VERSION=1.2.9
 1. Move webchannel logic to WebViewBridge.
 2. Fix listing of routes where some did not show up.

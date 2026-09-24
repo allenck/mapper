@@ -35,7 +35,7 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  foreach(Overlay* ov, *config->currCity->city_overlayMap)
   cityOverlays->insert(ov->name, ov);
 
- dirty = false;
+ bDirty = false;
 
  geoserver = Geoserver::instance();
  //geoserver->getCapabilities("http://localhost:8080/geoserver");
@@ -92,7 +92,23 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  QPushButton* applyButton =new QPushButton(tr("Apply"));
  ui->buttonBox->addButton(applyButton, QDialogButtonBox::ActionRole);
  connect(applyButton, SIGNAL(clicked()), this, SLOT(apply_clicked()));
-
+ connect(ui->buttonBox, &QDialogButtonBox::clicked, this, [=](QAbstractButton *button){
+     QDialogButtonBox::ButtonRole role = ui->buttonBox->buttonRole(button);
+     if(role == QDialogButtonBox::RejectRole)
+     {
+         if(bDirty)
+         {
+             int rslt = QMessageBox::question(nullptr, tr("Cancel"), tr("Changes have been made. Are you sure you want to close and lose the changes"),
+                                                                        QMessageBox::Yes | QMessageBox::No);
+             if(rslt == QMessageBox::Yes)
+             {
+                 reject();
+                 close();
+             }
+             accept();
+         }
+     }
+ });
 
  //connect(ui->tableView, SIGNAL(activated(QModelIndex)), this, SLOT(onClicked(QModelIndex)));
  connect(ui->tableView, SIGNAL(clicked(QModelIndex)), this, SLOT(rowSelected(QModelIndex)));
@@ -133,6 +149,10 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  connect(deleteConnection, SIGNAL(triggered(bool)), this, SLOT(on_deleteConnection()));
  ui->cbCity->setContextMenuPolicy(Qt::CustomContextMenu);
  connect(ui->cbCity, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(cbCity_customContextMenu(QPoint)));
+
+ connect(qApp, &QCoreApplication::aboutToQuit, this, []() {
+     qDebug() << "Application is about to close. Perform cleanup here.";
+ });
 }
 
 EditCityDialog::~EditCityDialog()
@@ -166,7 +186,7 @@ void EditCityDialog::newCity(int i)
 
 void EditCityDialog::cbCitysSelectionChanged(int i)
 {
- if(dirty)
+ if(bDirty)
  {
   if(QMessageBox::question(this, tr("Save City?"), tr("One or more overlays have been added or modified. Do you wish to save %1").arg(city->name()), QMessageBox::Yes | QMessageBox::No)== QMessageBox::Yes)
   {
@@ -178,7 +198,7 @@ void EditCityDialog::cbCitysSelectionChanged(int i)
  cityId = i;
  newCity(i);
  model->setCity(i);
- dirty = false;
+ bDirty = false;
  ui->editLatitude->setText(QString::number(city->center.lat()));
  ui->editLongitude->setText(QString::number(city->center.lon()));
 }
@@ -252,7 +272,7 @@ void EditCityDialog::edDescriptionTextChanged()
  if(ui->edDescription->toPlainText() != "")
  {
   ov->description = ui->edDescription->toHtml();
-  dirty = true;
+  bDirty = true;
  }
 }
 
@@ -260,19 +280,19 @@ void EditCityDialog::sbOpacityValueChanged(int value)
 {
  if(ov == nullptr) return;
  ov->opacity = value;
- dirty = true;
+ bDirty = true;
 }
 void EditCityDialog::sbMinZoomValueChanged(int value)
 {
  if(ov == nullptr) return;
 
- dirty = true;
+ bDirty = true;
 }
 
 void EditCityDialog::sbMaxZoomValueChanged(int value)
 {
  if(ov == nullptr) return;
- dirty = true;
+ bDirty = true;
 }
 #if 0
 void EditCityDialog::btnAddToCityClicked()
@@ -346,8 +366,18 @@ void EditCityDialog::ok_clicked()
   QSettings settings;
   settings.setValue("EditCityDialog:size", size());
   config->saveSettings();
+
   Overlay::exportXml("./Resources/overlays.xml",config->overlayMap->values());
-  dirty = false;
+
+  // rebuild each city's overlay list
+  foreach (City* c, config->cityList) {
+      c->city_overlayMap->clear();
+      foreach (Overlay* ov, config->overlayMap->values()) {
+          if(ov->isSelected)
+              c->city_overlayMap->insert(ov->name, ov);
+      }
+  }
+  bDirty = false;
  }
 
  accept();
@@ -355,11 +385,11 @@ void EditCityDialog::ok_clicked()
 
 void EditCityDialog::apply_clicked()
 {
- if(dirty)
+ if(bDirty)
  {
   QSettings settings;
   settings.setValue("EditCityDialog:size", size());
-  dirty = false;
+  bDirty = false;
  }
 
 }
@@ -374,7 +404,7 @@ void EditCityDialog::setControls(bool enabled)
 
 void EditCityDialog::on_setDirty()
 {
- dirty = true;
+ bDirty = true;
 }
 
 void EditCityDialog::onLatitudeChanged()
@@ -382,7 +412,7 @@ void EditCityDialog::onLatitudeChanged()
  QString txt = ui->editLatitude->text();
  double val = txt.toDouble();
  city->center.setLat(val);
- dirty = true;
+ bDirty = true;
 }
 
 void EditCityDialog::onLongitudeChanged()
@@ -390,13 +420,13 @@ void EditCityDialog::onLongitudeChanged()
  QString txt = ui->editLongitude->text();
  double val = txt.toDouble();
  city->center.setLon(val);
- dirty = true;
+ bDirty = true;
 }
 
 void EditCityDialog::closeEvent(QCloseEvent * event)
 {
  QMessageBox msgBox;
- if(dirty)
+ if(bDirty)
  {
   if(QMessageBox::question(this, tr("Save City?"), tr("One or more overlays have been added or modified. Do you wish to save %1").arg(city->name()), QMessageBox::Yes | QMessageBox::No)== QMessageBox::Yes)
   {
@@ -410,7 +440,7 @@ void EditCityDialog::closeEvent(QCloseEvent * event)
 
  config->saveSettings();
 
-#if 0
+#if 1
  msgBox.setText("Are you sure you want to close?");
  msgBox.setStandardButtons(QMessageBox::Close | QMessageBox::Cancel);
  msgBox.setDefaultButton(QMessageBox::Close);
@@ -475,7 +505,89 @@ void EditCityDialog::tablev_customContextMenu( const QPoint& pt)
   QStringList cityNames = config->cityNames();
   if(currOv && cityNames.contains(currOv->cityName))
     menu.addAction(showOverlay);
-
+  if(currOv->source == "geoserver")
+  {
+      QAction* queryWmts = new QAction(tr("request Wmts capabilities"),this);
+       queryWmts->setData(VPtr<Overlay>::asQVariant(currOv));
+      ag = new QActionGroup(this);
+      ag->addAction(queryWmts);
+      connect(ag, &QActionGroup::triggered,[=](QAction* act){
+          currOv->importWmsCapabilities(currOv->url(), wmtsList);
+      });
+      connect(currOv, &Overlay::wmtsFinished,this,[=] (QList<Overlay*>* list)
+      {
+          if(list)
+              qDebug() << "wmtsList count: " << list->count();
+          QStringList workspaces;
+          foreach (Overlay* o, *list) {
+              if(o->_layerName.contains(':'))
+              {
+                  QString ws = o->_layerName.mid(0,o->_layerName.indexOf(':')+1);
+                  if(!workspaces.contains(ws))
+                    workspaces.append(ws);
+              }
+          }
+          DialogSelectList dlg = DialogSelectList();
+          dlg.setInstructions(tr("Select the workspace geoserver is using."));
+          dlg.setList(workspaces);
+          int rslt = dlg.exec();
+          if(rslt == QDialog::Accepted)
+          {
+              QString workspace = dlg.getResult();
+              QList<QPair<QString,bool>> pairs = QList<QPair<QString,bool>>();
+              QList<Overlay*> wsOverlays = QList<Overlay*>();
+              foreach (Overlay* o, *list) {
+                  if(o->_layerName.contains(workspace))
+                  {
+                    pairs.append(QPair<QString,bool>(o->_layerName,false));
+                    wsOverlays.append(o);
+                  }
+              }
+              dlg.setInstructions(tr("Check the overlays you wish to update or add"));
+              dlg.setCheckList(pairs);
+              if(dlg.exec()== QDialog::Accepted)
+              {
+                  pairs = dlg.getCheckList();
+                  for(int ii=0; ii < pairs.count(); ii)
+                  {
+                      QPair<QString,bool> pair = pairs.at(ii);
+                      Overlay* o = wsOverlays.at(ii++);
+                      if(pair.second) // is checked?
+                      {
+                          bool bExists = false;
+                          QList<Overlay*> oList = model->getOverlayMap()->values();
+                          for (int jj = 0; jj < oList.count(); ++jj)
+                          {
+                              Overlay* o2 = oList.at(jj);
+                              if(o->source == o2->source && o->_layerName == o2->_layerName &&
+                                  o->url() == o2->url() && o->cityName == o2->cityName)
+                              {
+                                  // update the current item
+                                  o2->setBounds(o->bounds());
+                                  o2->minZoom = o->minZoom;
+                                  o2->maxZoom = o->maxZoom;
+                                  o2->description = o->description;
+                                  o2->name = o->name;
+                                  bExists = true;
+                                  bDirty = true;
+                                  qDebug() << o2->_layerName << " updated";
+                              }
+                          }
+                          if(!bExists)
+                          {
+                              model->getOverlayMap()->insert(o->name,o);
+                              qDebug() << o->_layerName << " added";
+                              bDirty = true;
+                          }
+                      }
+                  }
+              }
+              else return;
+          }
+          dlg.close();
+      });
+      menu.addAction(queryWmts);
+  }
   // more actions can be added here
   menu.exec(QCursor::pos());
 // }
@@ -552,7 +664,7 @@ void EditCityDialog::updateGeoserverProperties(Overlay *ov)
     QList<Layer*> layers = geoserver->getLayerByTitle(ov->name);
     if(layers.isEmpty())
         return;
-    ov->layerName = layers.at(0)->name;
+    ov->_layerName = layers.at(0)->name;
     ov->setBounds(layers.at(0)->bounds);
 }
 
@@ -613,6 +725,7 @@ void EditCityDialog::onColumnChanged(int row,int column , Overlay* ovOld, Overla
                     ui->lblInfo->setStyleSheet(tr("color: red"));
                     ui->lblInfo->setText(tr("host url of geoserver required"));
                     ovNew->source = ovOld->source;
+                    bDirty = true;
                     return;
                 }
                 QString url = ovNew->url();
@@ -636,10 +749,11 @@ void EditCityDialog::onColumnChanged(int row,int column , Overlay* ovOld, Overla
                     int begin = url.indexOf("my_maps:");
                     int last = url.indexOf("@");
                     QString layerName = url.mid(begin, last-begin);
-                    ovNew->layerName = layerName;
+                    ovNew->_layerName = layerName;
                     // QStringList sl = QStringList();
                     // sl.append(host);
                     ovNew->setUrl(host);
+                    bDirty = true;
                 }
                 if(ovNew->name.isEmpty())
                 {
@@ -679,7 +793,7 @@ void EditCityDialog::onColumnChanged(int row,int column , Overlay* ovOld, Overla
                     QList<Layer*> layer = geoserver->getLayerByTitle(ovNew->name);
                     if(layer.count()>0)
                     {
-                        ovNew->layerName = layer.at(0)->name;
+                        ovNew->_layerName = layer.at(0)->name;
                         ovNew->setBounds(layer.at(0)->bounds);
                     }
                 }
@@ -709,7 +823,7 @@ void EditCityDialog::onColumnChanged(int row,int column , Overlay* ovOld, Overla
                     {
                         ovNew->name = dlg->getResult();
                         QList<Layer*> layers = geoserver->getLayerByTitle(ovNew->name);
-                        ovNew->layerName = layers.at(0)->name;
+                        ovNew->_layerName = layers.at(0)->name;
                         for(City* city : config->cityList)
                         {
                             if(city->bounds().contains(layers.at(0)->bounds))

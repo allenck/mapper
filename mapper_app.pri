@@ -243,7 +243,17 @@ FORMS += \
     dialogeditcomments.ui \
     dialoghtmledit.ui
 
+    FORMS += \
+        dialogselectlist.ui
+
+    HEADERS += \
+        dialogselectlist.h
+
+    SOURCES += \
+        dialogselectlist.cpp
+
 DISTFILES += \
  $$PWD/Resources/api_key.txt \
  $$PWD/html/.gitignore \
+ $$PWD/mapper.rc \
  $$PWD/sqlite.pri
