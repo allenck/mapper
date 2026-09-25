@@ -287,7 +287,7 @@ void Configuration::saveSettings2()
         //settings.setValue("connection",c->curConnectionId);
         //settings->beginWriteArray("connections");
         settings->beginGroup("connections");
-        settings->remove("");
+        //settings->remove("");
         for(int j=0; j < c->connections.count(); j++)
         {
             Connection* cn = c->connections.at(j);
@@ -296,8 +296,10 @@ void Configuration::saveSettings2()
             if(cn->cityName() != c->name())
                 qDebug() << cn->cityName() << " not = " << c->name();
             //settings->setArrayIndex(j);
+            if(cn->description().isEmpty())
+                cn->setDescription(cn->cityName() + " " + cn->connectionType() + " " + cn->servertype() +" connection");
             settings->beginGroup(cn->description());
-            settings->remove("");
+            QString currGroup = settings->group();
             settings->setValue("id", cn->id());
             settings->setValue("driver", cn->driver());
             settings->setValue("serverType", cn->servertype());
@@ -341,7 +343,7 @@ void Configuration::saveSettings2()
                 settings->setValue("defaultSqlDatabase", cn->defaultSqlDatabase());
                 //settings->setValue("useSqlDatabase", cn->database());
             }
-            settings->endGroup();
+            settings->endGroup(); // end a single connection
         }
         //settings->endArray(); // connections
         settings->endGroup(); // connections
@@ -928,8 +930,8 @@ void Configuration::getSettings2()
         nc->setConnectionUniqueId(QUuid::fromString(settings.value("currConnectionUuid").toString()));
         QString baseAddr;
         baseAddr = QDir::currentPath() +QDir::separator() + "Resources" + QDir::separator()+"databases" + QDir::separator();
-        int sizec = settings.beginReadArray("connections");
-
+        //int sizec = settings.beginReadArray("connections");
+        settings.beginGroup("connections");
         // connections
         QStringList connections = settings.childGroups();
         //for(int j = 0; j < sizec; j++)
@@ -1032,9 +1034,9 @@ void Configuration::getSettings2()
         }
 
         //qDebug() << "city bounds:" << cityBounds;
-        settings.endGroup();
+        settings.endGroup(); // end a city
     } // end cities
-    settings.endGroup();
+    settings.endGroup(); // end cities
 #if 0 // for testing purposes, create a MySql connection
   City* currCity = cityList.at(3);
 
