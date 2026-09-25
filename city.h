@@ -39,6 +39,8 @@ public:
  bool bDisplayRouteComments = false;
  bool bDisplayRoutesForSelectedCompanies = false;
  bool bShowOverlay = false;
+ bool bDisplayMapInBrowser = false;
+ int  mapSource =0;
  qint32 companyKey=-1;
  //QString selectedCompanies; // comma separated list of companies selected to show in routes
  QList<int> selectedCompaniesList;

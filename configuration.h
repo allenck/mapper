@@ -113,6 +113,7 @@ public:
  QStringList georeferencedList;
  QString path;
  QString saveImageDir;
+ QString googleMapsMapId = "99f6ba1d184ea0b6";
  QStringList cityNames();
  QString lookupCityName(Bounds b);
  int settingsVersion;

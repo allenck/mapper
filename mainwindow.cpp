@@ -1731,6 +1731,9 @@ QWidgetAction *MainWindow::createMapSourceAction()
 
  connect(cbMapSource, &QComboBox::currentIndexChanged, this, [=](int sel){
      config->mapSource = sel;
+     config->currCity->mapSource = sel;
+     config->currCity->mapId = config->mapId;
+     config->currCity->mapType = config->mapType;
      config->saveSettings();
      reloadMap();
  });
@@ -2155,6 +2158,8 @@ void MainWindow::newCity(QAction* act )
   config->currCity->center = LatLng(m_latitude, m_longitude);
   config->currCity->zoom = m_zoom;
   config->currCity->mapType = m_maptype;
+  config->currCity->mapId = m_mapid;
+  config->currCity->mapSource = config->mapSource;
   if(!config->currCity->connections.contains(config->currConnection))
   {
       //   config->currCity->connections.append(config->currConnection);
@@ -2178,6 +2183,11 @@ void MainWindow::newCity(QAction* act )
     config->currentCityId = city->id;
     config->currCity->curConnectionId =connection->id();
     config->currConnection = connection;
+    config->mapSource = config->currCity->mapSource;
+    config->mapId = config->currCity->mapId;
+    config->mapType = config->currCity->mapType;
+    config->bRunInBrowser = config->currCity->bDisplayMapInBrowser;
+    reloadMap();
     m_bridge->processScript("showRouteComment", "false");
 
     qInfo() << city->name() + "/" + connection->description();
@@ -2263,6 +2273,7 @@ void MainWindow::newCity(QAction* act )
     m_longitude = config->currCity->center.lon();
     m_zoom = config->currCity->zoom;
     m_maptype = config->currCity->mapType;
+
     QVariantList objArray;
     objArray << m_latitude << m_longitude;
     m_bridge->processScript("setCenter", objArray);

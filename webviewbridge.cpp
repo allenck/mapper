@@ -242,12 +242,18 @@ void WebViewBridge::setLen(qint32 len)
 
 void WebViewBridge::setMapId(QString mapId)
 {
-    m_parent->m_mapid  = mapId;
-    config->mapId = mapId;
-    config->currCity->mapId = mapId;
+    // m_parent->m_mapid  = mapId;
+    // config->mapId = mapId;
+    // config->currCity->mapId = mapId;
 }
 
 void WebViewBridge::setMapType(QString mapType)
+{
+    processScript("setMapType", mapType);
+}
+
+// called by js to report change of mapType
+void WebViewBridge::reportMapType(QString mapType)
 {
     m_parent->m_maptype = maptype;
     config->mapType = mapType;

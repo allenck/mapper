@@ -281,6 +281,8 @@ void Configuration::saveSettings2()
         // abbreviationsStr.chop(1);
         // settings->setValue("abbreviations", abbreviationsStr);
         settings->remove("abbreviations");
+        settings->setValue("displayMapInBrowser",c->bDisplayMapInBrowser);
+        settings->setValue("mapSource",c->mapSource);
 
         //settings.setValue("connection",c->curConnectionId);
         //settings->beginWriteArray("connections");
@@ -393,7 +395,7 @@ void Configuration::saveSettings2()
     settings->setValue("columnCount", rcd.columnCount);
     settings->endGroup();
 
-    settings->beginGroup("General");
+    //settings->beginGroup("General");
     settings->setValue("currCity", currentCityId);
     settings->setValue("showDebugMessages", bDisplayWebDebug);
     settings->setValue("runInBrowser", bRunInBrowser);
@@ -409,7 +411,8 @@ void Configuration::saveSettings2()
     settings->setValue("tileServerUrl", tileServerUrl);
     settings->setValue("mapSource", mapSource);
     settings->setValue("settingsVersion", settingsVersion);
-    settings->endGroup();
+    settings->setValue("googleMapsMapId", googleMapsMapId); // Cloud Map ID
+    //settings->endGroup();
 
     settings->beginWriteArray("allowedSources");
     //foreach (IntPair pair, allowedSources) {
@@ -907,15 +910,8 @@ void Configuration::getSettings2()
         nc->bUserMap = settings.value("userMap", false).toBool();
         if(nc->city_overlayMap->isEmpty())
             nc->bShowOverlay = false;
-        // nc->selectedCompanies = settings.value("selectedCompanies","").toString();
-        // QStringList sl = nc->selectedCompanies.split(",");
-        // nc->selectedCompaniesList.clear();
-        // for(int i=0; i < sl.count(); i++ )
-        // {
-        //     int companyKey = sl.at(i).toInt();
-        //     if(companyKey > 0)
-        //       nc->selectedCompaniesList.append(sl.at(i).toInt());
-        // }
+        nc->bDisplayMapInBrowser = settings.value("displayMapInBrowser", bRunInBrowser).toBool();
+        nc->mapSource = settings.value("mapSource", mapSource).toInt();
         remove("selectedCompanies");
         nc->bDisplayRoutesForSelectedCompanies = settings.value("displayRoutesForGroup",!nc->selectedCompaniesList.isEmpty()).toBool();
         // QString abbreviationsStr = settings.value("abbreviations").toString();
@@ -1080,7 +1076,7 @@ void Configuration::getSettings2()
 
 
 
-    settings.beginGroup("General");
+    //settings.beginGroup("General");
     qDebug() << settings.group();
     currentCityId = settings.value("currCity",0).toInt();
     if(currentCityId < 0 || currentCityId >= cityList.count())
@@ -1107,7 +1103,7 @@ void Configuration::getSettings2()
     QFont f;
     f.fromString(settings.value("font").toString());
     font =f;
-    settings.endGroup(); // general
+    //settings.endGroup(); // general
 
     // #ifdef Q_OS_MACOS
     //    macOSPublic = settings.value("macOsPublic", "").toString();

@@ -24,6 +24,8 @@ var overlay=null;
 var opacityControl = null;
 var runInBrowser = null;
 var currMapType = 'Unknown';
+var OSBaseMaps = [];
+var MQBaseMaps = [];
 
 var image = ["https://maps.google.com/mapfiles/marker.png",
   "https://maps.google.com/mapfiles/dd-start.png",
@@ -1117,6 +1119,7 @@ function getMapId()
     return activeMapType;
 }
 
+// return the active map type
 function getMapType()
 {
     //return map.getMapTypeId();
@@ -1130,8 +1133,19 @@ function getMapType()
   return activeMapType;
 } // end getMapType()
 
+function getMapTypes()
+{
+    const mapTypes;
+    if(MapQuest)
+        mapTypes = Object.keys(MQBaseMaps);
+    else
+        mapTypes = Object.keys(OSBaseMaps);
+    return mapTypes;
+}
+
 function getOpacity()
 {
+
  return overlay.getOpacity();
 }
 
@@ -1229,7 +1243,7 @@ function initMap()
   var Lat = webViewBridge.lat;
   var Lon = webViewBridge.lng;
   var zoom = webViewBridge.zoom;
-  var mapId = webViewBridge.mapId;
+  var mapId = webViewBridge.mapId;  // only relevant to GoogleMaps
   var mapType = webViewBridge.maptype;
   var mapDiv = document.getElementById("map");
   var magnifyingGlass = null;
@@ -1301,8 +1315,8 @@ function initMap()
       function handlebaselayerchange(e)
       {
           var newLayerName = e.name;
-          setMapId(newLayerName);
-          webViewBridge.setMapId(newLayerName);
+          setMapType(newLayerName);
+          webViewBridge.reportMapType(newLayerName);
 
           enumerateTileLayers();
 
@@ -1352,12 +1366,12 @@ function initMap()
       });
 
       // Create a Base Maps object to hold our choices
-      var baseMaps = {
+      MQBaseMaps = {
           "MapQuest View": mapquestTileLayer,
           "Satellite View": satelliteView,
       };
       // Add the top-right toggle switch button to the map
-      L.control.layers(baseMaps).addTo(map);
+      L.control.layers(MQBaseMaps).addTo(map);
     }
     else
     {
@@ -1492,8 +1506,8 @@ function initMap()
         function handlebaselayerchange(e)
         {
             var newLayerName = e.name;
-            setMapId(newLayerName);
-            webViewBridge.setMapId(newLayerName);
+            setMapType(newLayerName);
+            webViewBridge.reportMapType(newLayerName);
 
             enumerateTileLayers();
 
@@ -1560,7 +1574,7 @@ function initMap()
         webViewBridge.setMapId(mapId);
 
         // Create a Base Maps object to hold our choices
-        var baseMaps = {
+        OSBaseMaps = {
             "Street View": streetView,
             "MapBox Street View": mapboxStreets,
             "MapTiler Vector": mvtSource,
@@ -1570,7 +1584,7 @@ function initMap()
         };
 
         // Add the top-right toggle switch button to the map
-        L.control.layers(baseMaps).addTo(map);
+        L.control.layers(OSBaseMaps).addTo(map);
 
         //handlebaselayerchange(streetView);
 
@@ -2627,16 +2641,33 @@ function setCenter(Lat, Lon)
 
 function setMapType(newType)
 {
-  if (newType === 'Satellite View') {
-          map.removeLayer(currMapType);    // Take away the street view
-          map.addLayer(satelliteView);    // Show the satellite view
-      } else if (newType === 'Street View') {
-          map.removeLayer(currMapType); // Take away the satellite view
-          map.addLayer(streetView);       // Show the street view
-      } else if(newType === 'MapBox Satellite View')   {
-          map.removeLayer(currMapType);
-          map.addLayer(mapboxSatellite);
-      }
+    if(MapQuest === true)
+    {
+        // if (newType === 'Satellite View') {
+        //         map.removeLayer(currMapType);    // Take away the street view
+        //         map.addLayer(satelliteView);    // Show the satellite view
+        //     } else if (newType === 'MapQuest View') {
+        //         map.removeLayer(currMapType); // Take away the satellite view
+        //         map.addLayer(mapquestTileLayer);       // Show the street view
+        //     }
+        map.removeLayer(currMapType);
+        map.addLayer(MQBaseMaps[newType]);
+    }
+    else // OpenStreetMaps
+    {
+        // if (newType === 'Satellite View') {
+        //       map.removeLayer(currMapType);    // Take away the street view
+        //       map.addLayer(satelliteView);    // Show the satellite view
+        //   } else if (newType === 'Street View') {
+        //       map.removeLayer(currMapType); // Take away the satellite view
+        //       map.addLayer(streetView);       // Show the street view
+        //   } else if(newType === 'MapBox Satellite View')   {
+        //       map.removeLayer(currMapType);
+        //       map.addLayer(mapboxSatellite);
+        //   }
+        map.removeLayer(currMapType);
+        map.addLayer(OSBaseMaps[newType]);
+    }
 } // end setMapType()
 
 function setDefaultOptions()
