@@ -641,9 +641,6 @@ function bearing(startLat, startLon, endLat, endLon)
     }
 }   // end bearing
 
-
-
-
 function clearAll()
 {
    //clear all segments
@@ -806,9 +803,6 @@ function createSegment(segmentId, routeName, segmentName, oneWay, showArrow, col
     console.log(pts + " segmentId: "+ newSegment.segmentId + " name: " + newSegment.segmentName);
 
 } // end create segment
-
-
-
 
 function createSvgIcon()
 {
@@ -1117,7 +1111,7 @@ function getMapId()
             }
       });
     return activeMapType;
-}
+}  //end getMapId()
 
 // return the active map type
 function getMapType()
@@ -1135,7 +1129,7 @@ function getMapType()
 
 function getMapTypes()
 {
-    const mapTypes;
+    var mapTypes;
     if(MapQuest)
         mapTypes = Object.keys(MQBaseMaps);
     else
