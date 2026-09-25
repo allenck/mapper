@@ -1021,7 +1021,7 @@ function getAdjacentPoints(latlngs, targetLatLng) {
 function getCenter()
 {
  var latLng = map.getCenter();
- webViewBridge.setCenter(latLng.lat, latLng.lng, map.getZoom(), /*map.getMapTypeId()*/"");
+ webViewBridge.setCenter(latLng.lat, latLng.lng, map.getZoom(), getMapId());
  return latLng;
 } // end get Center
 
@@ -1105,6 +1105,17 @@ function getIcon(typeIcon)
  return markerIcon;
 }
 
+function getMapId()
+{
+    let activeMapType = "Unknown";
+      map.eachLayer(function(layer) {
+            // Check if the layer is a TileLayer and has our custom name
+            if (layer instanceof L.TileLayer && layer.options.name) {
+                activeMapType = layer.options.name;
+            }
+      });
+    return activeMapType;
+}
 
 function getMapType()
 {
@@ -1218,7 +1229,7 @@ function initMap()
   var Lat = webViewBridge.lat;
   var Lon = webViewBridge.lng;
   var zoom = webViewBridge.zoom;
-  var mapTypeId = webViewBridge.mapId;
+  var mapId = webViewBridge.mapId;
   var mapType = webViewBridge.maptype;
   var mapDiv = document.getElementById("map");
   var magnifyingGlass = null;
@@ -1289,6 +1300,10 @@ function initMap()
 
       function handlebaselayerchange(e)
       {
+          var newLayerName = e.name;
+          setMapId(newLayerName);
+          webViewBridge.setMapId(newLayerName);
+
           enumerateTileLayers();
 
           // 1. Remove the existing magnifying glass from the map
@@ -1378,6 +1393,26 @@ function initMap()
             // won't work with firefox
             streetView =L.tileLayer(tileUrl, tileOptions);
         }
+        // Load the VectorGrid protobuf plugin externally
+        var openmaptilesUrl = "https://maptiler.com{z}/{x}/{y}.pbf?key=" + MapTilerKey;
+
+        var mapboxVectorTileOptions = {
+            rendererFactory: L.canvas.tile,
+            vectorTileLayerStyles: {
+                // Explicitly define styling only for layers you WANT to show
+                water: { fill: true, fillColor: '#0000ff', fillOpacity: 0.5 },
+                roads: { weight: 1, color: '#ff0000' },
+
+                // Simply omit or explicitly hide layers you want to drop
+                building: [], // Passing an empty array hides the layer completely
+                poi: [],
+                transit: [],
+            }
+        };
+
+        var mvtSource = L.vectorGrid.protobuf(openmaptilesUrl, mapboxVectorTileOptions);
+
+
 
         // Define the Satellite View layer (Esri World Imagery)
         tileUrl = 'https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
@@ -1456,6 +1491,10 @@ function initMap()
 
         function handlebaselayerchange(e)
         {
+            var newLayerName = e.name;
+            setMapId(newLayerName);
+            webViewBridge.setMapId(newLayerName);
+
             enumerateTileLayers();
 
             // 1. Remove the existing magnifying glass from the map
@@ -1504,19 +1543,27 @@ function initMap()
         });
 
         // Add the default map layer to start with
-        if (mapType === 'Satellite View') {
+        if (mapId === 'Satellite View') {
             satelliteView.addTo(map);    // Show the satellite view
-        } else if (mapType === 'Street View') {
+        } else if (mapId === 'Street View') {
             streetView.addTo(map);
-        } else if(mapType === 'MapBox Satellite View') {
+        } else if(mapId === "MapBox Street View")  {
+            mapboxStreets.addToMap(map);
+        } else if(mapId === 'MapBox Satellite View') {
             mapboxSatellite.addTo(map);
+        } else if(mapId === 'MapTiler Vector') {
+            mvtSource.addTo(map);
         } else
-            streetView.addTo(map); // default to streetView
+            streetView.addTo(map); // default 'Street View' to streetView
+
+        //var mapId = getMapId();
+        webViewBridge.setMapId(mapId);
 
         // Create a Base Maps object to hold our choices
         var baseMaps = {
             "Street View": streetView,
             "MapBox Street View": mapboxStreets,
+            "MapTiler Vector": mvtSource,
             "Satellite View": satelliteView,
             // "Google Satellite View": googleSatellite,
             "MapBox Satellite View": mapboxSatellite

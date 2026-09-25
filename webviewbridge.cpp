@@ -67,7 +67,7 @@ int WebViewBridge::curZoom(){return _zoom;}
 QVariant WebViewBridge::getRslt(){return myRslt;}
 QString WebViewBridge::curMaptype(){return maptype;}
 QString WebViewBridge::curMapId(){return mapId;}
-void WebViewBridge::setMapId(QString mapid){this->mapId = mapid;}
+//void WebViewBridge::setMapId(QString mapid){this->mapId = mapid;}
 void WebViewBridge::setName(QString n){this->name = n;}
 QString WebViewBridge::curName(){return name;}
 
@@ -240,17 +240,27 @@ void WebViewBridge::setLen(qint32 len)
     m_parent->setLen(len);
 }
 
+void WebViewBridge::setMapId(QString mapId)
+{
+    m_parent->m_mapid  = mapId;
+    config->mapId = mapId;
+    config->currCity->mapId = mapId;
+}
+
 void WebViewBridge::setMapType(QString mapType)
 {
     m_parent->m_maptype = maptype;
+    config->mapType = mapType;
+    config->currCity->mapType = mapType;
 }
 
-void WebViewBridge::setCenter(double lat, double lon, int zoom, QString maptype)
+void WebViewBridge::setCenter(double lat, double lon, int zoom, QString mapId)
 {
     m_parent->m_latitude = lat;
     m_parent->m_longitude = lon;
     m_parent->m_zoom = zoom;
-    m_parent->m_maptype = maptype;
+    //m_parent->m_maptype = maptype;
+    m_parent->m_mapid = mapId;
     bResultReceived = true;
 }
 

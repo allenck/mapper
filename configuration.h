@@ -78,8 +78,12 @@ class Configuration : public QObject
 public:
  City* currCity = nullptr;
  Connection* currConnection = nullptr;
- void getSettings();
- void saveSettings();
+ void getSettings();    // old
+ void getSettings2();
+ //void saveOldSettings();   // old
+ void saveSettings2();
+ void saveSettings() {saveSettings2();}
+
  void setOverlay(Overlay* ov);
  void addCity(City*);
  QString listToString(QList<int>);
@@ -104,12 +108,14 @@ public:
  bool bDisplaySegmentArrows = false;
  bool bDisplayRouteOnReload = false;
  QString mapId;
+ QString mapType;
  QStringList localOverlayList;
  QStringList georeferencedList;
  QString path;
  QString saveImageDir;
  QStringList cityNames();
  QString lookupCityName(Bounds b);
+ int settingsVersion;
  QMap<QString, Bounds> cityBounds;
  bool loggingOn() {return bLoggingOn;}
  void setLoggingOn(bool b) {bLoggingOn = b;}

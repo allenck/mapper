@@ -447,7 +447,7 @@ private:
     int currIx = -1;
 
     TerminalInfo m_terminalInfo;
-    //QString m_mapid = "99f6ba1d184ea0b6"; //"DEMO_MAP_ID";
+    QString m_mapid = "DEMO_MAP_ID"; //"DEMO_MAP_ID";
     RouteData _rd;
     bool m_bAddMode;
     bool b_cbSegments_TextChanged = false;

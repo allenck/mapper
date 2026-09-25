@@ -26,6 +26,7 @@ public:
  qint32 curOverlayId =0;
  LatLng center;
  QString mapType = "roadmap";
+ QString mapId = "";
  qint32 zoom =8;
  bool bAlphaRoutes = true;
  bool bNoPanOpt = false;

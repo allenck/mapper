@@ -501,6 +501,9 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   geocoderRequestAct->setChecked(config->currCity->bGeocoderRequest);
   m_bridge->processScript("setGeocoderRequest", config->currCity->bGeocoderRequest?"true":"false");
 #endif
+  connect(m_bridge, &WebViewBridge::onMapIdChanged,this, [=](QString mapId){
+    qDebug() << "mapId: " << mapId;
+  });
   if(config->currCity->city_overlayMap->count()> 0)
   {
    //QTimer::singleShot(10000, this, SLOT(mapInit()));
@@ -1861,6 +1864,7 @@ void MainWindow::createMenus()
      config->currCity->center = LatLng(m_latitude, m_longitude);
      config->currCity->zoom = m_zoom;
      config->currCity->mapType = m_maptype;
+     config->currCity->mapId = m_mapid;
      config->currCity->bNoPanOpt = ui->chkNoPan->isChecked();
      config->currCity->lastRoute = m_routeNbr;
      config->currCity->lastRouteName = m_routeName;

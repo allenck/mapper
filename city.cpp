@@ -13,7 +13,7 @@ void City::addOverlay(Overlay* ov)
 {
  if(!ov->name.isEmpty())
  {
-  Q_ASSERT(!ov->url().isEmpty());
+  //Q_ASSERT(!ov->url().isEmpty());
   city_overlayMap->insert(ov->name, ov);
   bDirty = true;
  }
