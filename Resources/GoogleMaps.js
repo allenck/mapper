@@ -980,6 +980,30 @@ async function initMap() {
     else
       console.log("Google Maps loaded successfully");
 
+    map.addListener("maptypeid_changed", () => {
+      // Get the current active map type ID
+      const currentMapType = map.getMapTypeId();
+      console.log("Map type changed to:", currentMapType);
+
+      // Example: Perform conditional logic based on the layer type
+      if (currentMapType === "satellite" || currentMapType === "hybrid") {
+        console.log("Switched to a satellite view.");
+      } else if (currentMapType === "OSM") {
+        console.log("Switched to your custom map layer.");
+        const attributionDiv = document.createElement("div");
+        attributionDiv.className = "custom-map-attribution";
+        attributionDiv.style.backgroundColor = "rgba(255, 255, 255, 0.8)";
+        attributionDiv.style.padding = "2px 4px";
+        attributionDiv.style.fontSize = "10px";
+        attributionDiv.style.fontFamily = "Roboto, Arial, sans-serif";
+        attributionDiv.style.color = "#555";
+        attributionDiv.innerHTML = 'Layer data &copy; <a href="https://openstreetmap.org" target="_blank">OpenStreetMap</a> contributors';
+
+        // 4. Inject it into the Google Maps UI
+        map.controls[google.maps.ControlPosition.BOTTOM_RIGHT].push(attributionDiv);
+      }
+    });
+
     google.maps.event.addListenerOnce(map, 'idle', function(){
            //this part runs when the mapobject is created and rendered
            google.maps.event.addListenerOnce(map, 'idle', function(){
@@ -1015,7 +1039,7 @@ async function initMap() {
      siArray = new google.maps.MVCArray();
      map.disableDoubleClickZoom = true;
      google.maps.event.addListener(map, "dblclick", addNewPoint);
-     map.mapTypes.set('OSM', osm_MapType);
+     //map.mapTypes.set('OSM', osm_MapType);
      map.mapTypes.set('UserMap',User_MapType);
      map.setMapTypeId(mapTypeId);
 
@@ -1025,7 +1049,8 @@ async function initMap() {
      {
       mapTypeControlOptions:
       {
-         mapTypeIds: ['OSM',
+            mapTypeIds: [
+            // 'OSM',
             google.maps.MapTypeId.ROADMAP,
             google.maps.MapTypeId.SATELLITE,
             google.maps.MapTypeId.HYBRID,
@@ -1040,7 +1065,8 @@ async function initMap() {
      options = /** @type {google.maps.MapTypeControlOptions} */(
      {
       mapTypeControlOptions: {
-          mapTypeIds: ['OSM',
+             mapTypeIds: [
+            //'OSM',
              google.maps.MapTypeId.ROADMAP,
              google.maps.MapTypeId.SATELLITE,
              google.maps.MapTypeId.HYBRID,
