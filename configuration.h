@@ -116,7 +116,7 @@ public:
  QString googleMapsMapId = "99f6ba1d184ea0b6";
  QStringList cityNames();
  QString lookupCityName(Bounds b);
- int settingsVersion;
+ int settingsVersion = 0;
  QMap<QString, Bounds> cityBounds;
  bool loggingOn() {return bLoggingOn;}
  void setLoggingOn(bool b) {bLoggingOn = b;}

@@ -13,7 +13,7 @@ class WebViewBridge : public QObject
     Q_OBJECT
 public:
     WebViewBridge(MainWindow *parent = 0);
-    WebViewBridge(LatLng latLng, int zoom, QString maptype, QString mapId, MainWindow *parent = 0);
+    WebViewBridge(LatLng latLng, int zoom, QString mapType, QString mapId, MainWindow *parent = 0);
     MainWindow* m_parent = nullptr;
 //    int browseWindowWidth;
 //    int browseWindowHeight;
@@ -26,14 +26,14 @@ public:
     LatLng curLatLng();
     bool runInBrowser();
     int curZoom();
-    QString curMaptype();
+    QString curMapType();
     QString curMapId();
     QString curName();
     Q_PROPERTY(QString name READ curName WRITE setName NOTIFY onNameChanged FINAL)
     Q_PROPERTY(float lat READ curLat NOTIFY onLatChanged)
     Q_PROPERTY(float lng READ curLon NOTIFY onLngChanged)
     Q_PROPERTY(int zoom READ curZoom NOTIFY onZoomChanged)
-    Q_PROPERTY(QString maptype READ curMaptype WRITE setMapType NOTIFY onMapTypeChanged)
+    Q_PROPERTY(QString mapType READ curMapType WRITE setMapType NOTIFY onMapTypeChanged)
     Q_PROPERTY(QString mapId READ curMapId WRITE setMapId NOTIFY onMapIdChanged)
     Q_PROPERTY(LatLng latlng MEMBER _latLng WRITE setLatLng NOTIFY latlngChanged)
     Q_PROPERTY(bool runInBrowser READ runInBrowser NOTIFY onRunInBrowserChanged )
@@ -99,10 +99,10 @@ public slots:
     void setLon(double lon);
     void setDebug(QString str); //25
     void setLen(qint32 len);
-    void reportMapType(QString maptype);
+    void reportMapType(QString mapType);
     void setMapId(QString);
     void setMapType(QString);
-    void setCenter(double lat, double lon, int zoom, QString maptype);
+    void setCenter(double lat, double lon, int zoom, QString mapType);
     void getGeocoderResults(QString text);
     void addPoint(int pt, double lat, double lon); //29
     void addPointX(int pt, QVariantList array); //29
@@ -147,7 +147,7 @@ private:
     int _zoom;
     bool _runInBrowser;
     LatLng _latLng;
-    QString maptype;
+    QString mapType;
     QString mapId;
     bool bResultReceived;
     Configuration* config;

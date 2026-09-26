@@ -162,7 +162,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  m_latitude = config->currCity->center.lat();
  m_longitude = config->currCity->center.lon();
  m_zoom = config->currCity->zoom;
- m_maptype = config->currCity->mapType;
+ m_mapType = config->currCity->mapType;
  m_companyKey = config->currCity->companyKey;
 
  sql = SQL::instance();
@@ -681,7 +681,7 @@ QMenu* MainWindow::addSegmentMenu(SegmentData *sd)
 void MainWindow::createBridge()
 {
  //! The object we will expose to JavaScript engine:
- m_bridge = new WebViewBridge(LatLng(m_latitude, m_longitude), m_zoom, "roadmap", config->mapId, this);
+ m_bridge = new WebViewBridge(LatLng(m_latitude, m_longitude), m_zoom, config->mapType, config->mapId, this);
  connect( m_bridge, SIGNAL(movePointSignalX(qint32,qint32,LatLng,QList<LatLng>)), this, SLOT(movePointX(qint32,qint32,LatLng,QList<LatLng>)));
  connect(m_bridge, SIGNAL(addPointSignal(int,double,double)), this, SLOT(addPoint(int,double,double)));
  connect (m_bridge, SIGNAL(insertPointSignal(int,qint32,double,double)), this, SLOT(insertPoint(int,qint32,double,double)));
@@ -785,7 +785,7 @@ void MainWindow::reloadMap()
  else
   m_bridge->processScript("setDefaultOptions");
  objArray.clear();
- objArray << m_maptype;
+ objArray << m_mapType;
  m_bridge->processScript("setMapType", objArray);
 
  //showGoogleMapFeatures(false);
@@ -812,7 +812,7 @@ void MainWindow::initializeGoogleMaps(QUrl url)
  else
   m_bridge->processScript("setDefaultOptions");
  objArray.clear();
- objArray << m_maptype;
+ objArray << m_mapType;
  m_bridge->processScript("setMapType", objArray);
 }
 
@@ -1866,7 +1866,7 @@ void MainWindow::createMenus()
      settings.setValue("splitter", ui->splitter->saveState());
      config->currCity->center = LatLng(m_latitude, m_longitude);
      config->currCity->zoom = m_zoom;
-     config->currCity->mapType = m_maptype;
+     config->currCity->mapType = m_mapType;
      config->currCity->mapId = m_mapid;
      config->currCity->bNoPanOpt = ui->chkNoPan->isChecked();
      config->currCity->lastRoute = m_routeNbr;
@@ -2157,7 +2157,7 @@ void MainWindow::newCity(QAction* act )
   // first, save some settings for the current city
   config->currCity->center = LatLng(m_latitude, m_longitude);
   config->currCity->zoom = m_zoom;
-  config->currCity->mapType = m_maptype;
+  config->currCity->mapType = m_mapType;
   config->currCity->mapId = m_mapid;
   config->currCity->mapSource = config->mapSource;
   if(!config->currCity->connections.contains(config->currConnection))
@@ -2272,7 +2272,7 @@ void MainWindow::newCity(QAction* act )
     m_latitude = config->currCity->center.lat();
     m_longitude = config->currCity->center.lon();
     m_zoom = config->currCity->zoom;
-    m_maptype = config->currCity->mapType;
+    m_mapType = config->currCity->mapType;
 
     QVariantList objArray;
     objArray << m_latitude << m_longitude;
@@ -2286,7 +2286,7 @@ void MainWindow::newCity(QAction* act )
     else
      m_bridge->processScript("setDefaultOptions");
     objArray.clear();
-    objArray << m_maptype;
+    objArray << m_mapType;
     m_bridge->processScript("setMapType", objArray);
     bDisplayStationMarkers = config->currCity->bDisplayStationMarkers;
     displayStationMarkersAct->setChecked(bDisplayStationMarkers);
@@ -3958,7 +3958,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
  settings.setValue("splitter", ui->splitter->saveState());
  config->currCity->center = LatLng(m_latitude, m_longitude);
  config->currCity->zoom = m_zoom;
- config->currCity->mapType = m_maptype;
+ config->currCity->mapType = m_mapType;
  config->currCity->bNoPanOpt = ui->chkNoPan->isChecked();
  config->currCity->lastRoute = m_routeNbr;
  config->currCity->lastRouteName = m_routeName;

@@ -239,7 +239,6 @@ void Configuration::saveSettings2()
         settings->remove("");
 
     settings->beginGroup("Cities");
-    settings->remove("");
     for(int i=0; i< cityList.count(); i++)
     {
         City* c = cityList.at(i);
@@ -348,9 +347,9 @@ void Configuration::saveSettings2()
         //settings->endArray(); // connections
         settings->endGroup(); // connections
 
-        settings->beginGroup("overlays");
-        settings->remove("");
-        settings->endGroup();
+        // settings->beginGroup("overlays");
+        // settings->remove("");
+        // settings->endGroup();
 
         settings->setValue("currOverlay", c->curOverlayId);
         settings->endGroup(); // city
@@ -412,7 +411,7 @@ void Configuration::saveSettings2()
     settings->setValue("mapType", mapType);
     settings->setValue("tileServerUrl", tileServerUrl);
     settings->setValue("mapSource", mapSource);
-    settings->setValue("settingsVersion", settingsVersion);
+    settings->setValue("settingsVersion", 2);
     settings->setValue("googleMapsMapId", googleMapsMapId); // Cloud Map ID
     //settings->endGroup();
 
@@ -1025,9 +1024,11 @@ void Configuration::getSettings2()
 
             }
             settings.endGroup();
+            qDebug() << settings.group();
         } // end connection
         //settings.endArray();
-
+        settings.endGroup();
+        qDebug() << settings.group();
         if(currentCityId < 0)
         {
             currCity = cityList.at(0);
@@ -1035,8 +1036,10 @@ void Configuration::getSettings2()
 
         //qDebug() << "city bounds:" << cityBounds;
         settings.endGroup(); // end a city
+        qDebug() << settings.group();
     } // end cities
     settings.endGroup(); // end cities
+qDebug() << settings.group();
 #if 0 // for testing purposes, create a MySql connection
   City* currCity = cityList.at(3);
 
@@ -1080,6 +1083,7 @@ void Configuration::getSettings2()
 
     //settings.beginGroup("General");
     qDebug() << settings.group();
+
     currentCityId = settings.value("currCity",0).toInt();
     if(currentCityId < 0 || currentCityId >= cityList.count())
         currentCityId = 0;

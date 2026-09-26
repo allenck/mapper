@@ -24,6 +24,7 @@ var overlay=null;
 var opacityControl = null;
 var runInBrowser = null;
 var currMapType = 'Unknown';
+var currLayer;
 var OSBaseMaps = [];
 var MQBaseMaps = [];
 
@@ -1117,14 +1118,15 @@ function getMapId()
 function getMapType()
 {
     //return map.getMapTypeId();
-  let activeMapType = "Unknown";
+  //let activeMapType = "Unknown";
     map.eachLayer(function(layer) {
           // Check if the layer is a TileLayer and has our custom name
           if (layer instanceof L.TileLayer && layer.options.name) {
-              activeMapType = layer.options.name;
+              currMapType = layer.options.name;
+              currLayer = layer;
           }
     });
-  return activeMapType;
+  return currMapType;
 } // end getMapType()
 
 function getMapTypes()
@@ -1238,7 +1240,7 @@ function initMap()
   var Lon = webViewBridge.lng;
   var zoom = webViewBridge.zoom;
   var mapId = webViewBridge.mapId;  // only relevant to GoogleMaps
-  var mapType = webViewBridge.maptype;
+  var mapType = webViewBridge.mapType;
   var mapDiv = document.getElementById("map");
   var magnifyingGlass = null;
   var magnifyingGlassControl = null;
@@ -1309,7 +1311,7 @@ function initMap()
       function handlebaselayerchange(e)
       {
           var newLayerName = e.name;
-          setMapType(newLayerName);
+          //setMapType(newLayerName);
           webViewBridge.reportMapType(newLayerName);
 
           enumerateTileLayers();
@@ -1500,8 +1502,9 @@ function initMap()
         function handlebaselayerchange(e)
         {
             var newLayerName = e.name;
-            setMapType(newLayerName);
+            //setMapType(newLayerName);
             webViewBridge.reportMapType(newLayerName);
+            maptype = newLayerName;
 
             enumerateTileLayers();
 
@@ -1551,21 +1554,24 @@ function initMap()
         });
 
         // Add the default map layer to start with
-        if (mapId === 'Satellite View') {
+        if (mapType === 'Satellite View') {
             satelliteView.addTo(map);    // Show the satellite view
-        } else if (mapId === 'Street View') {
+        } else if (mapType === 'Street View') {
             streetView.addTo(map);
-        } else if(mapId === "MapBox Street View")  {
+        } else if(mapType === "MapBox Street View")  {
             mapboxStreets.addToMap(map);
-        } else if(mapId === 'MapBox Satellite View') {
+        } else if(mapType === 'MapBox Satellite View') {
             mapboxSatellite.addTo(map);
-        } else if(mapId === 'MapTiler Vector') {
+        } else if(mapType === 'MapTiler Vector') {
             mvtSource.addTo(map);
         } else
+        {
+            alert("MapType: " + mapType + " is invalid");
             streetView.addTo(map); // default 'Street View' to streetView
+        }
 
         //var mapId = getMapId();
-        webViewBridge.setMapId(mapId);
+        webViewBridge.reportMapType(mapType);
 
         // Create a Base Maps object to hold our choices
         OSBaseMaps = {
@@ -2635,6 +2641,7 @@ function setCenter(Lat, Lon)
 
 function setMapType(newType)
 {
+    getMapType();
     if(MapQuest === true)
     {
         // if (newType === 'Satellite View') {
@@ -2644,8 +2651,11 @@ function setMapType(newType)
         //         map.removeLayer(currMapType); // Take away the satellite view
         //         map.addLayer(mapquestTileLayer);       // Show the street view
         //     }
-        map.removeLayer(currMapType);
-        map.addLayer(MQBaseMaps[newType]);
+        map.removeLayer(currLayer);
+        var newLayer = MQBaseMaps[newType]
+        map.addLayer(newLayer);
+        currLayer = newLayer;
+        currMapType = newType;
     }
     else // OpenStreetMaps
     {
@@ -2659,8 +2669,11 @@ function setMapType(newType)
         //       map.removeLayer(currMapType);
         //       map.addLayer(mapboxSatellite);
         //   }
-        map.removeLayer(currMapType);
-        map.addLayer(OSBaseMaps[newType]);
+        map.removeLayer(currLayer);
+        var newLayer = OSBaseMaps[newType];
+        map.addLayer(newLayer);
+        currLayer = newLayer;
+        currMapType = newType;
     }
 } // end setMapType()
 

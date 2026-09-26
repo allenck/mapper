@@ -139,7 +139,7 @@ public:
     QList<RouteData> routeList;
     double m_latitude, m_longitude;
     qint32 m_zoom;
-    QString m_maptype;
+    QString m_mapType;
     QList<SegmentData> segmentDataList;
 
     qint32 m_routeNbr;

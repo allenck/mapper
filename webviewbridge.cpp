@@ -17,14 +17,14 @@ WebViewBridge::WebViewBridge(MainWindow *parent)
  config = Configuration::instance();
 }
 
-WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString maptype, QString mapId,  MainWindow *parent)
+WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString mapType, QString mapId,  MainWindow *parent)
  : QObject()
 {
  this->_latLng = latLng;
  this->_lat = latLng.lat();
  this->_lon = latLng.lon();
  this->_zoom = zoom;
- this->maptype = maptype;
+ this->mapType = mapType;
  this->mapId = mapId;
  m_parent = parent;
 
@@ -65,7 +65,7 @@ void WebViewBridge::setLatLng(LatLng latlng){
 }
 int WebViewBridge::curZoom(){return _zoom;}
 QVariant WebViewBridge::getRslt(){return myRslt;}
-QString WebViewBridge::curMaptype(){return maptype;}
+QString WebViewBridge::curMapType(){return mapType;}
 QString WebViewBridge::curMapId(){return mapId;}
 //void WebViewBridge::setMapId(QString mapid){this->mapId = mapid;}
 void WebViewBridge::setName(QString n){this->name = n;}
@@ -255,18 +255,19 @@ void WebViewBridge::setMapType(QString mapType)
 // called by js to report change of mapType
 void WebViewBridge::reportMapType(QString mapType)
 {
-    m_parent->m_maptype = maptype;
+    m_parent->m_mapType = mapType;
     config->mapType = mapType;
     config->currCity->mapType = mapType;
+    config->currCity->mapSource = config->mapSource;
 }
 
-void WebViewBridge::setCenter(double lat, double lon, int zoom, QString mapId)
+void WebViewBridge::setCenter(double lat, double lon, int zoom, QString mapType)
 {
     m_parent->m_latitude = lat;
     m_parent->m_longitude = lon;
     m_parent->m_zoom = zoom;
     //m_parent->m_maptype = maptype;
-    m_parent->m_mapid = mapId;
+    m_parent->m_mapType = mapType;
     bResultReceived = true;
 }
 
