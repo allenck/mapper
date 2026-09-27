@@ -1252,8 +1252,11 @@ function initMap()
   //   alert("Run in browser is true" );
   // else
   //   alert("Run in browser is false" );
-
-    if(MapQuest == true)
+    var MAPQUEST_URLS = {
+        'map': 'https://mapquestapi.com' + MapQuestKey + '&layer=map&size=@2x&zoom={z}&center={y},{x}',
+        'satellite': 'https://mapquestapi.com' + MapQuestKey + '&layer=sat&size=@2x&zoom={z}&center={y},{x}',
+        'hybrid': 'https://mapquestapi.com' + MapQuestKey + '&layer=hyb&size=@2x&zoom={z}&center={y},{x}'
+    };    if(MapQuest == true)
     {
         // MapQuest
         L.mapquest.key = MapQuestKey;
@@ -1270,9 +1273,12 @@ function initMap()
       // Share the same tile url...
       // but use two independant TileLayer objects
       var mapTiles = L.tileLayer(tileUrl),
-          magnifiedTiles = L.tileLayer(tileUrl);
+          magnifiedTiles = L.mapquest.tileLayer('map');
 
       var mapquestTileLayer = L.mapquest.tileLayer('map');
+      var mapquestSatelliteLayer = L.mapquest.tileLayer('satellite');
+      var mapquestHybridLayer = L.mapquest.tileLayer('hybrid');
+
       map = L.mapquest.map('map', {
           center: [Lat, Lon],
           layers: mapquestTileLayer,
@@ -1308,45 +1314,6 @@ function initMap()
           handlebaselayerchange(e);
       });
 
-      function handlebaselayerchange(e)
-      {
-          var newLayerName = e.name;
-          //setMapType(newLayerName);
-          webViewBridge.reportMapType(newLayerName);
-
-          enumerateTileLayers();
-
-          // 1. Remove the existing magnifying glass from the map
-          if (magnifyingGlass) {
-              map.removeLayer(magnifyingGlass);
-          }
-
-          // 2. Grab the URL template of the newly selected base map
-          const newUrl = e.layer._url;
-
-          // 3. Re-create the magnifier from scratch with a fresh, independent tile instance
-          magnifyingGlass = L.magnifyingGlass({
-              layers: [L.tileLayer(newUrl)]
-          });
-          magnifyingGlass.on('click', function() {
-            map.removeLayer(magnifyingGlass);
-          })
-
-          // ...and reappear on right click
-          map.on('contextmenu', function(mouseEvt) {
-            if(map.hasLayer(magnifyingGlass)) {
-              return;
-            }
-            map.addLayer(magnifyingGlass);
-            magnifyingGlass.setLatLng(mouseEvt.latlng);
-
-            map.removeControl(magnifyingGlassControl)
-            magnifyingGlassControl = L.control.magnifyingglass(magnifyingGlass, {
-                        forceSeparateButton: true
-                      }).addTo(map);
-          });
-
-      }; // end baselayerchange
 
       magnifyingGlass.on('click', function() {
       map.removeLayer(magnifyingGlass);
@@ -1363,11 +1330,24 @@ function initMap()
 
       // Create a Base Maps object to hold our choices
       MQBaseMaps = {
-          "MapQuest View": mapquestTileLayer,
+          "Roadmap": mapquestTileLayer,
           "Satellite View": satelliteView,
+          "Hybrid": mapquestHybridLayer,
       };
       // Add the top-right toggle switch button to the map
       L.control.layers(MQBaseMaps).addTo(map);
+
+      map.on('baselayerchange', function(e) {
+          var activeLayer = e.layer;
+          magnifiedTiles = activeLayer;
+          var name = activeLayer.mapType;
+          magnifyingGlass = L.magnifyingGlass({
+            layers: [ magnifiedTiles ]
+          });
+
+          handlebaselayerchange(e);
+      });
+
     }
     else
     {
@@ -1499,46 +1479,6 @@ function initMap()
             handlebaselayerchange(e)
         });
 
-        function handlebaselayerchange(e)
-        {
-            var newLayerName = e.name;
-            //setMapType(newLayerName);
-            webViewBridge.reportMapType(newLayerName);
-            maptype = newLayerName;
-
-            enumerateTileLayers();
-
-            // 1. Remove the existing magnifying glass from the map
-            if (magnifyingGlass) {
-                map.removeLayer(magnifyingGlass);
-            }
-
-            // 2. Grab the URL template of the newly selected base map
-            const newUrl = e.layer._url;
-
-            // 3. Re-create the magnifier from scratch with a fresh, independent tile instance
-            magnifyingGlass = L.magnifyingGlass({
-                layers: [L.tileLayer(newUrl)]
-            });
-            magnifyingGlass.on('click', function() {
-              map.removeLayer(magnifyingGlass);
-            })
-
-            // ...and reappear on right click
-            map.on('contextmenu', function(mouseEvt) {
-              if(map.hasLayer(magnifyingGlass)) {
-                return;
-              }
-              map.addLayer(magnifyingGlass);
-              magnifyingGlass.setLatLng(mouseEvt.latlng);
-
-              map.removeControl(magnifyingGlassControl)
-              magnifyingGlassControl = L.control.magnifyingglass(magnifyingGlass, {
-                          forceSeparateButton: true
-                        }).addTo(map);
-            });
-
-        }; // end baselayerchange
 
         magnifyingGlass.on('click', function() {
         map.removeLayer(magnifyingGlass);
@@ -1587,8 +1527,8 @@ function initMap()
         L.control.layers(OSBaseMaps).addTo(map);
 
         //handlebaselayerchange(streetView);
-
     } // end OpenStreetMap initialization
+
 
     enumerateTileLayers();
 
@@ -1622,6 +1562,70 @@ function initMap()
 
     webViewBridge.mapInit();
 
+    function handlebaselayerchange(e)
+    {
+        var newLayerName = e.name;
+        //setMapType(newLayerName);
+        webViewBridge.reportMapType(newLayerName);
+        maptype = newLayerName;
+
+        enumerateTileLayers();
+
+        // 1. Remove the existing magnifying glass from the map
+        if (magnifyingGlass) {
+            map.removeLayer(magnifyingGlass);
+        }
+
+        // 2. Grab the URL template of the newly selected base map
+        const newUrl = e.layer._url;
+
+        // 3. Re-create the magnifier from scratch with a fresh, independent tile instance
+        magnifyingGlass = L.magnifyingGlass({
+            layers: [L.tileLayer(newUrl)]
+        });
+        magnifyingGlass.on('click', function() {
+          map.removeLayer(magnifyingGlass);
+        })
+
+        // ...and reappear on right click
+        map.on('contextmenu', function(mouseEvt) {
+          if(map.hasLayer(magnifyingGlass)) {
+            return;
+          }
+          map.addLayer(magnifyingGlass);
+          magnifyingGlass.setLatLng(mouseEvt.latlng);
+
+          map.removeControl(magnifyingGlassControl)
+          magnifyingGlassControl = L.control.magnifyingglass(magnifyingGlass, {
+                      forceSeparateButton: true
+                    }).addTo(map);
+        });
+
+    }; // end baselayerchange
+
+    // 3. Robust URL lookup function
+    function getLayerUrlTemplate(layer) {
+        if (!layer) return null;
+
+        // Direct Leaflet layer (like Esri satelliteView)
+        if (layer._url) return layer._url;
+
+        // MapQuest Layer Group wrapper (Check if it has sub-layers populated)
+        if (typeof layer.eachLayer === 'function') {
+            var foundUrl = null;
+            layer.eachLayer(function(child) {
+                if (child._url) foundUrl = child._url;
+            });
+            if (foundUrl) return foundUrl;
+        }
+
+        // Fallback: If it's a MapQuest layer object, try reading its configuration id ('map', 'satellite', etc.)
+        if (layer.options && layer.options.id && MAPQUEST_URLS[layer.options.id]) {
+            return MAPQUEST_URLS[layer.options.id];
+        }
+
+        return null;
+    }
 
 } // end initMap
 
