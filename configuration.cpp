@@ -863,15 +863,21 @@ void Configuration::getSettings2()
     settings.beginGroup("cities");
     QStringList cities = settings.childGroups();
     //for(int i= 0; i < size; i++)
+    QMap<int,City*> cityListById;
     foreach (QString city, cities) {
         //settings.setArrayIndex(i);
         settings.beginGroup(city);
         City* nc = new City();
         nc->id = settings.value("id").toInt();
         nc->setName(settings.value("name").toString());
-        if(!cityList.contains(nc))
+        // if(!cityList.contains(nc))
+        // {
+        //     cityList.append(nc);
+        //     cityMap.insert(nc->name(), nc);
+        // }
+        if(!cityListById.contains(nc->id))
         {
-            cityList.append(nc);
+            cityListById.insert(nc->id, nc);
             cityMap.insert(nc->name(), nc);
         }
         LatLng pt;
@@ -933,6 +939,7 @@ void Configuration::getSettings2()
         settings.beginGroup("connections");
         // connections
         QStringList connections = settings.childGroups();
+        QMap<int, Connection*> connectionsById;
         //for(int j = 0; j < sizec; j++)
         foreach(QString connection, connections)
         {
@@ -1007,12 +1014,14 @@ void Configuration::getSettings2()
                 ncn->setDSNCanBeUsed(settings.value("dsnCanBeUsed",ncn->connectString().isEmpty()).toBool());
             }
 
-            if(!nc->connections.contains(ncn))
+            //if(!nc->connections.contains(ncn))
+            if(!connectionsById.contains(ncn->id()))
             {
                 //    nc->connections.append( ncn);
                 //    nc->connectionNames.append(ncn->description());
                 //    nc->connectionMap.insert(ncn->uniqueId().toString(), ncn);
-                nc->addConnection(ncn);
+                //nc->addConnection(ncn);
+                connectionsById.insert(ncn->id(), ncn);
                 nc->connectionMap3.insert(ncn, ncn->description());
             }
             if(!uuidConnectionMap.contains(ncn->uniqueId()))
@@ -1028,10 +1037,12 @@ void Configuration::getSettings2()
         } // end connection
         //settings.endArray();
         settings.endGroup();
+        nc->connections = connectionsById.values();
         qDebug() << settings.group();
         if(currentCityId < 0)
         {
-            currCity = cityList.at(0);
+            //currCity = cityList.at(0);
+            currCity = cityListById.values().at(0);
         }
 
         //qDebug() << "city bounds:" << cityBounds;
@@ -1039,6 +1050,7 @@ void Configuration::getSettings2()
         qDebug() << settings.group();
     } // end cities
     settings.endGroup(); // end cities
+    cityList = cityListById.values();
 qDebug() << settings.group();
 #if 0 // for testing purposes, create a MySql connection
   City* currCity = cityList.at(3);

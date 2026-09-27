@@ -1256,98 +1256,164 @@ function initMap()
         'map': 'https://mapquestapi.com' + MapQuestKey + '&layer=map&size=@2x&zoom={z}&center={y},{x}',
         'satellite': 'https://mapquestapi.com' + MapQuestKey + '&layer=sat&size=@2x&zoom={z}&center={y},{x}',
         'hybrid': 'https://mapquestapi.com' + MapQuestKey + '&layer=hyb&size=@2x&zoom={z}&center={y},{x}'
-    };    if(MapQuest == true)
+    };
+    // 3. Robust URL lookup function
+    function getLayerUrlTemplate(layer) {
+        if (!layer) return null;
+
+        // Direct Leaflet layer (like Esri satelliteView)
+        if (layer._url) return layer._url;
+
+        // MapQuest Layer Group wrapper (Check if it has sub-layers populated)
+        if (typeof layer.eachLayer === 'function') {
+            var foundUrl = null;
+            layer.eachLayer(function(child) {
+                if (child._url) foundUrl = child._url;
+            });
+            if (foundUrl) return foundUrl;
+        }
+
+        // Fallback: If it's a MapQuest layer object, try reading its configuration id ('map', 'satellite', etc.)
+        if (layer.options && layer.options.id && MAPQUEST_URLS[layer.options.id]) {
+            return MAPQUEST_URLS[layer.options.id];
+        }
+
+        return null;
+    }
+
+    if(MapQuest == true)
     {
         // MapQuest
         L.mapquest.key = MapQuestKey;
 
-      // Define the Satellite View layer (Esri World Imagery)
-      tileUrl = 'https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-      tileOptions = {
-          maxNativeZoom: 18,
-          attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-          name: 'Satellite View'
-      };
-      var satelliteView = L.tileLayer(tileUrl,tileOptions );
+        // ==========================================
+        // 1. BASE LAYER DEFINITIONS
+        // ==========================================
+        // Clean public ESRI Satellite Endpoint
+        var esriTileUrl = 'https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+        var esriTileOptions = {
+            maxNativeZoom: 18,
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS',
+            name: 'Satellite View'
+        };
 
-      // Share the same tile url...
-      // but use two independant TileLayer objects
-      var mapTiles = L.tileLayer(tileUrl),
-          magnifiedTiles = L.mapquest.tileLayer('map');
+        var mainRoadmap = L.mapquest.tileLayer('map');
+        var mainSatellite = L.tileLayer(esriTileUrl, esriTileOptions);
+        var mainHybrid = L.mapquest.tileLayer('hybrid');
 
-      var mapquestTileLayer = L.mapquest.tileLayer('map');
-      var mapquestSatelliteLayer = L.mapquest.tileLayer('satellite');
-      var mapquestHybridLayer = L.mapquest.tileLayer('hybrid');
+        // ==========================================
+        // 2. MAIN MAP INITIALIZATION
+        // ==========================================
+        map = L.mapquest.map('map', {
+            center: [Lat, Lon],
+            layers: [mainRoadmap],
+            zoom: zoom,
+            doubleClickZoom: false,
+            name: "ROADMAP"
+        }).setView([Lat, Lon], zoom);
 
-      map = L.mapquest.map('map', {
-          center: [Lat, Lon],
-          layers: mapquestTileLayer,
-          zoom: zoom,
-          doubleClickZoom: false,
-          name: "ROADMAP"
-      }).setView([Lat, Lon], zoom);
-      if(map == null )
-          console.error("MapQuest not loaded");
-      else
-          console.log("MapQuest loaded successfully");
+        L.control.scale({ position: 'bottomleft' }).addTo(map);
 
-      //map.addControl(L.mapquest.control()); // default MapQuest controls
+        var MQBaseMaps = {
+            "Roadmap": mainRoadmap,
+            "Satellite View": mainSatellite,
+            "Hybrid": mainHybrid
+        };
+        L.control.layers(MQBaseMaps).addTo(map);
 
-      L.control.scale({ position: 'bottomleft' }).addTo(map);
+        // ==========================================
+        // 3. LAZY-LOADING STATE TRACKER
+        // ==========================================
+        // We track which type we need, but we do NOT build any glass layers on boot
+        var activeLensType = 'map';
+        var magnifyingGlass = null;
 
-      magnifyingGlass = L.magnifyingGlass({
-        layers: [ magnifiedTiles ]
-      });
+        // Track basemap switches passively in the background without altering active objects
+        map.on('baselayerchange', function(e) {
+            var layerName = e.name; // Reads 'Roadmap', 'Satellite View', or 'Hybrid'
 
-      magnifyingGlassControl = L.control.magnifyingglass(magnifyingGlass, {
-          forceSeparateButton: true,
-//                position: 'topright' // enable if Mapquest controls enabled
-        }).addTo(map);
+            if (layerName === 'Satellite View') {
+                activeLensType = 'satellite';
+            } else if (layerName === 'Hybrid') {
+                activeLensType = 'hybrid';
+            } else {
+                activeLensType = 'map';
+            }
 
-      // Handle the tile layer change event
-      map.on('baselayerchange', function(e) {
-          var layers = [];
-          map.eachLayer(function(layer){
-              layers.push(layer);
-          });
+            // CRITICAL: If the glass is currently open on screen during a change, refresh it instantly
+            if (magnifyingGlass && map.hasLayer(magnifyingGlass)) {
+                var currentPos = magnifyingGlass.getLatLng();
+                map.removeLayer(magnifyingGlass);
 
-          handlebaselayerchange(e);
-      });
+                // Spawn a brand new glass layout container match
+                buildAndOpenGlass(currentPos);
+            }
 
+            if (typeof handlebaselayerchange === "function") {
+                handlebaselayerchange(e);
+            }
+        });
 
-      magnifyingGlass.on('click', function() {
-      map.removeLayer(magnifyingGlass);
-      })
+        // Helper function to build a pristine glass instance dynamically on demand
+        function buildAndOpenGlass(targetLatLng) {
+            var freshLensLayer;
 
-      // ...and reappear on right click
-      map.on('contextmenu', function(mouseEvt) {
-          if(map.hasLayer(magnifyingGlass)) {
-            return;
-          }
-      map.addLayer(magnifyingGlass);
-      magnifyingGlass.setLatLng(mouseEvt.latlng);
-      });
+            // Instantiate a isolated runtime layer object matching the tracker state
+            if (activeLensType === 'satellite') {
+                freshLensLayer = L.tileLayer(esriTileUrl, esriTileOptions);
+            } else if (activeLensType === 'hybrid') {
+                freshLensLayer = L.mapquest.tileLayer('hybrid');
+            } else {
+                freshLensLayer = L.mapquest.tileLayer('map');
+            }
 
-      // Create a Base Maps object to hold our choices
-      MQBaseMaps = {
-          "Roadmap": mapquestTileLayer,
-          "Satellite View": satelliteView,
-          "Hybrid": mapquestHybridLayer,
-      };
-      // Add the top-right toggle switch button to the map
-      L.control.layers(MQBaseMaps).addTo(map);
+            // Build the magnifier engine safely with a valid context
+            magnifyingGlass = L.magnifyingGlass({
+                layers: [freshLensLayer],
+                zoomOffset: 3
+            });
 
-      map.on('baselayerchange', function(e) {
-          var activeLayer = e.layer;
-          magnifiedTiles = activeLayer;
-          var name = activeLayer.mapType;
-          magnifyingGlass = L.magnifyingGlass({
-            layers: [ magnifiedTiles ]
-          });
+            // Close on click trigger hook
+            magnifyingGlass.on('click', function() {
+                if (map.hasLayer(magnifyingGlass)) {
+                    map.removeLayer(magnifyingGlass);
+                }
+            });
 
-          handlebaselayerchange(e);
-      });
+            // Mount to the map surface framework and position it
+            map.addLayer(magnifyingGlass);
+            magnifyingGlass.setLatLng(targetLatLng);
+        }
 
+        // ==========================================
+        // 4. BULLETPROOF HARDWARE INPUT CONTROLLER
+        // ==========================================
+        var mapContainer = map.getContainer();
+
+        mapContainer.addEventListener('mousedown', function(e) {
+            if (e.button === 2) { // Hardware Right Click Capture
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+
+                var latlng = map.mouseEventToLatLng(e);
+
+                if (magnifyingGlass && map.hasLayer(magnifyingGlass)) {
+                    // Case A: If it is already open, move it to the new cursor position
+                    magnifyingGlass.setLatLng(latlng);
+                } else {
+                    // Case B: If closed or destroyed, generate a clean, customized instance dynamically
+                    buildAndOpenGlass(latlng);
+                }
+            }
+        }, true); // Capture phase processing execution intercept
+
+        // Suppress standard system dropdown selection menus
+        mapContainer.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+        }, true);
     }
     else
     {
@@ -1603,29 +1669,7 @@ function initMap()
 
     }; // end baselayerchange
 
-    // 3. Robust URL lookup function
-    function getLayerUrlTemplate(layer) {
-        if (!layer) return null;
 
-        // Direct Leaflet layer (like Esri satelliteView)
-        if (layer._url) return layer._url;
-
-        // MapQuest Layer Group wrapper (Check if it has sub-layers populated)
-        if (typeof layer.eachLayer === 'function') {
-            var foundUrl = null;
-            layer.eachLayer(function(child) {
-                if (child._url) foundUrl = child._url;
-            });
-            if (foundUrl) return foundUrl;
-        }
-
-        // Fallback: If it's a MapQuest layer object, try reading its configuration id ('map', 'satellite', etc.)
-        if (layer.options && layer.options.id && MAPQUEST_URLS[layer.options.id]) {
-            return MAPQUEST_URLS[layer.options.id];
-        }
-
-        return null;
-    }
 
 } // end initMap
 

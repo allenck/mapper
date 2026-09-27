@@ -10663,7 +10663,8 @@ bool SQL::addColumn(QString tbName, QString name, QString type, QString after)
      qDebug() << errCommand;
      QSqlError error = query.lastError();
      SQLERROR(std::move(query));
-     throw SQLException(error.text() + " " + errCommand);
+     //throw SQLException(error.text() + " " + errCommand);
+     return false;
  }
  return true;
 }
