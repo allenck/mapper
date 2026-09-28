@@ -187,7 +187,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  else // run in browser
  {
   qInfo() << "preparing to run in browser";
-  webView = NULL;
+  webView = ui->webView;
   ui->groupBox_2->setHidden(true);
   openBrowserWindow();
   //ui->saveImage->setEnabled(false);
@@ -766,6 +766,8 @@ void MainWindow::reloadMap()
             break;
         }
 //#endif
+    if(!webView)
+        webView = ui->webView;
     webView->setUrl(fileUrl);
     if(!(m_bridge->m_server))
         m_bridge->setupbridge();
