@@ -1150,7 +1150,7 @@ void MainWindow::createActions()
      quitAct->setStatusTip(tr("Exit mapper"));
      connect(quitAct, SIGNAL(triggered()), this, SLOT(quit()));
 
-     newCityAct = new QAction(tr("New City"), this);
+     newCityAct = new QAction(tr("Create New City"), this);
      newCityAct->setStatusTip(tr("Define a new city."));
      connect(newCityAct, &QAction::triggered, [=]{
      NewCityDialog* newCityDialog = new NewCityDialog(this);
@@ -2274,7 +2274,9 @@ void MainWindow::newCity(QAction* act )
     m_latitude = config->currCity->center.lat();
     m_longitude = config->currCity->center.lon();
     m_zoom = config->currCity->zoom;
-    m_mapType = config->currCity->mapType;
+    m_mapType = config->currCity->mapType = config->currCity->mapType;
+    m_mapid = config->currCity->mapId = config->currCity->mapId;
+    config->currCity->mapSource = config->currCity->mapSource;
 
     QVariantList objArray;
     objArray << m_latitude << m_longitude;
