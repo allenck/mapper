@@ -3194,7 +3194,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                 " `Description` varchar(100) NOT NULL,"
                 " `FormatOK` int(1) NOT NULL DEFAULT FALSE"
                 " `Tracks` int(2) check(`tracks` in (1,2)) NOT NULL DEFAULT 1,"
-                " `Street` varchar(60) NOT NULL DEFAULT '',"
+                " `Street` varchar(100) NOT NULL DEFAULT '',"
                 " `StreetId` int(11) DEFAULT NULL,"
                 " `StreetSeq` integer DEFAULT 0,"
                 " `NewerName` varchar(60) NOT NULL DEFAULT '',"
@@ -3247,7 +3247,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
                    Description varchar(100) NOT NULL, \
                    FormatOK smallint NOT NULL DEFAULT 0, \
                    Tracks smallint check(tracks in (1,2)) NOT NULL DEFAULT 1, \
-                   Street  varchar(60) NOT NULL DEFAULT '', \
+                   Street  varchar(100) NOT NULL DEFAULT '', \
                    StreetId  integer DEFAULT NULL, \
                    StreetSeq integer DEFAULT 0, \
                    NewerName  varchar(60) NOT NULL DEFAULT '', \
@@ -3277,7 +3277,7 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
     "[FormatOK] int NOT NULL DEFAULT 0," \
     "[OneWay] [char](1),"\
     "[Tracks] [int] NOT NULL,"\
-    "[Street] [varchar](60) NULL,"\
+    "[Street] [varchar](100) NULL,"\
     "[StreetId] [int] DEFAULT NULL," \
     "[StreetSeq] [int] DEFAULT 0," \
     "[NewerName] [varchar](60)," \
