@@ -4185,7 +4185,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
         "[Description] [varchar](100) NOT NULL,"\
         "[info] varchar(60),"
         "[Url] varchar(150),"
-        "[routePrefix] [varchar](10) NOT NULL,"\
+        "[routePrefix] [varchar](10),"\
         "[startDate] [date] NULL,"\
         "[endDate] [date] NULL,"\
         "[firstRoute] [int] NULL,"\
@@ -4552,6 +4552,8 @@ int ExportSql::errSqlMessage(QSqlQuery* query, int line)
  int ret = QMessageBox::critical(nullptr, tr("Sql Error"), tr("An SqL error has occurred.<br>"
                                  "Sql error:%1<br><B>query:</B> %2 %3").arg(query->lastError().text(),query->lastQuery(),displayQueryValues(query)),
                                  QMessageBox::Ignore|QMessageBox::Abort);
+ if(ret == QMessageBox::Abort)
+    return ret;
  int ret2 = QMessageBox::question(nullptr, tr("Ignore"), tr("Should this error be ignored for subsequent transactions?"),
                                   QMessageBox::Yes|QMessageBox::No);
  if(ret2 == QMessageBox::Yes)
