@@ -4410,7 +4410,7 @@ bool ExportSql::createCommentsTable(QSqlDatabase db, QString dbType)
         "[tags] [varchar](1000) NOT NULL,"\
         "[routeList] [varchar](100) NOT NULL,"\
         "[date] date ,"\
-        "[jRouteList] JSON NOT NULL DEFAULT '[]',"\
+        "[jRouteList] NVARCHAR(MAX) NOT NULL DEFAULT '[]',"\
         "[comments] [varchar](max) NOT NULL,"\
         "[latitude] decimal(15,5) NOT NULL DEFAULT '0.00000',"\
         "[longitude] decimal(15,5) NOT NULL DEFAULT '0.00000',"\
