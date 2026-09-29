@@ -27,6 +27,7 @@ var currMapType = 'Unknown';
 var currLayer;
 var OSBaseMaps = [];
 var MQBaseMaps = [];
+let magnifyingGlassControl = null;
 
 var image = ["https://maps.google.com/mapfiles/marker.png",
   "https://maps.google.com/mapfiles/dd-start.png",
@@ -1326,7 +1327,7 @@ function initMap()
         // ==========================================
         // We track which type we need, but we do NOT build any glass layers on boot
         var activeLensType = 'map';
-        var magnifyingGlass = null;
+        magnifyingGlass = null;
 
         // Track basemap switches passively in the background without altering active objects
         map.on('baselayerchange', function(e) {
@@ -1372,7 +1373,12 @@ function initMap()
                 layers: [freshLensLayer],
                 zoomOffset: 3
             });
-
+            if(magnifyingGlassControl === null)
+            {
+                magnifyingGlassControl = L.control.magnifyingglass(magnifyingGlass, {
+                      forceSeparateButton: true,
+                  }).addTo(map);
+            }
             // Close on click trigger hook
             magnifyingGlass.on('click', function() {
                 if (map.hasLayer(magnifyingGlass)) {
@@ -1465,10 +1471,19 @@ function initMap()
                 transit: [],
             }
         };
-
         var mvtSource = L.vectorGrid.protobuf(openmaptilesUrl, mapboxVectorTileOptions);
 
+        var mburl = 'https://api.mapbox.com/styles/v1/allenck/cmun3djqe002c01qtf2yb394w/tiles/512/{z}/{x}/{y}@2x?access_token='+ MapBoxKey+'&fresh=true';
+        var myMapboxOverlay = L.tileLayer(mburl, {
+                    attribution: '© <a href="https://mapbox.com">Mapbox</a>',
+                        maxZoom: 22,
 
+                        // Replace tileSize and zoomOffset with these two native options:
+                        tileSize: 256,        // Keep Leaflet's standard grid size
+                        detectRetina: true,    // Automatically requests the high-res @2x tiles on retina screens natively
+                        pane: 'overlayPane', // 🌟 Forces this layer into the top overlay stack
+                        zIndex: 400          // Ensures it stays above the base satellite tiles
+                    });
 
         // Define the Satellite View layer (Esri World Imagery)
         tileUrl = 'https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
@@ -1477,7 +1492,7 @@ function initMap()
             attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
             name: 'Satellite View'
         };
-        satelliteView = L.tileLayer(tileUrl,tileOptions );
+        var satelliteView = L.tileLayer(tileUrl,tileOptions );
         // var googleSatellite = L.tileLayer('https://{s}://{x}&y={y}&z={z}', {
         //     maxZoom: 20,
         //     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
@@ -1523,7 +1538,7 @@ function initMap()
                 center: [0, 0],
                 zoom: 2,
                 maxZoom: 19, // Esri Imagery typically tops out around 18 or 19 globally
-                layers: [ mapTiles ]
+                // layers: [ mapTiles ]
         }).setView([Lat, Lon], zoom);
         if(map == null )
             console.error("OpenStreetMaps not loaded");
@@ -1532,6 +1547,16 @@ function initMap()
 
         L.control.scale({ position: 'bottomleft' }).addTo(map);
 
+        //myMapboxOverlay.addTo(map);
+        // Force Leaflet 1.9.4 to redraw your transparent style whenever it is checked back ON
+        map.on('overlayadd', function(e) {
+            if (e.layer === myMapboxOverlay) {
+                setTimeout(function() {
+                    myMapboxOverlay.redraw();
+                    map.invalidateSize({ animate: false });
+                }, 50); // A brief 50ms delay gives the UI time to toggle the layer in the DOM first
+            }
+        });
         magnifyingGlass = L.magnifyingGlass({
           layers: [ magnifiedTiles ]
         });
@@ -1559,6 +1584,10 @@ function initMap()
         magnifyingGlass.setLatLng(mouseEvt.latlng);
         });
 
+        // Remove default mapTiles layer if it was accidentally mounted
+        if (map.hasLayer(mapTiles)) {
+            map.removeLayer(mapTiles);
+        }
         // Add the default map layer to start with
         if (mapType === 'Satellite View') {
             satelliteView.addTo(map);    // Show the satellite view
@@ -1585,12 +1614,13 @@ function initMap()
             "MapBox Street View": mapboxStreets,
             "MapTiler Vector": mvtSource,
             "Satellite View": satelliteView,
-            // "Google Satellite View": googleSatellite,
+//            "pbf vector": myMapboxOverlay,
             "MapBox Satellite View": mapboxSatellite
         };
-
+        var overlayMaps = {
+        };
         // Add the top-right toggle switch button to the map
-        L.control.layers(OSBaseMaps).addTo(map);
+        L.control.layers(OSBaseMaps,overlayMaps).addTo(map);
 
         //handlebaselayerchange(streetView);
     } // end OpenStreetMap initialization
@@ -1635,6 +1665,22 @@ function initMap()
         webViewBridge.reportMapType(newLayerName);
         maptype = newLayerName;
 
+        if (e.name === 'Satellite View' || e.name === 'MapBox Satellite View') {
+            // Safe timeout prevents the base tile loading thread from blanking out the overlay
+            setTimeout(function() {
+                if (!map.hasLayer(myMapboxOverlay)) {
+                    myMapboxOverlay.addTo(map);
+                }
+                // Ensure full opacity after it is safely added to the pane
+                myMapboxOverlay.setOpacity(1.0);
+                myMapboxOverlay.redraw();
+            }, 150); // 150ms delay eliminates the race condition completely
+        } else {
+            // Cleanly remove the overlay when shifting back to regular street views
+           if (map.hasLayer(myMapboxOverlay)) {
+               map.removeLayer(myMapboxOverlay);
+           }
+        }
         enumerateTileLayers();
 
         // 1. Remove the existing magnifying glass from the map
