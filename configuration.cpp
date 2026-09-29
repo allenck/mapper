@@ -246,6 +246,7 @@ void Configuration::saveSettings2()
         settings->beginGroup(c->name());
         //currCity->setName(c->name());
         settings->setValue("id", c->id);
+        settings->setValue("curUuid",c->curUuid);
         settings->setValue("name", c->name());
         settings->setValue("lat", c->center.lat());
         settings->setValue("lon", c->center.lon());
@@ -286,7 +287,7 @@ void Configuration::saveSettings2()
         //settings.setValue("connection",c->curConnectionId);
         //settings->beginWriteArray("connections");
         settings->beginGroup("connections");
-        //settings->remove("");
+        settings->remove("");
         for(int j=0; j < c->connections.count(); j++)
         {
             Connection* cn = c->connections.at(j);
@@ -299,7 +300,7 @@ void Configuration::saveSettings2()
                 cn->setDescription(cn->cityName() + " " + cn->connectionType() + " " + cn->servertype() +" connection");
             settings->beginGroup(cn->description());
             QString currGroup = settings->group();
-            settings->setValue("id", cn->id());
+            settings->setValue("id", j);
             settings->setValue("driver", cn->driver());
             settings->setValue("serverType", cn->servertype());
             settings->setValue("cityName", cn->cityName());
@@ -564,8 +565,8 @@ void Configuration::getSettings()
       nc->setConnectionUniqueId(QUuid::fromString(settings.value("currConnectionUuid").toString()));
       QString baseAddr;
       baseAddr = QDir::currentPath() +QDir::separator() + "Resources" + QDir::separator()+"databases" + QDir::separator();
-      int sizec = settings.beginReadArray("connections");
 
+      int sizec = settings.beginReadArray("connections");
       // connections
       for(int j = 0; j < sizec; j++)
       {
@@ -645,16 +646,17 @@ void Configuration::getSettings()
 //    nc->connectionNames.append(ncn->description());
 //    nc->connectionMap.insert(ncn->uniqueId().toString(), ncn);
            nc->addConnection(ncn);
-           nc->connectionMap3.insert(ncn, ncn->description());
+           nc->descrByConnection.insert(ncn, ncn->description());
         }
         if(!uuidConnectionMap.contains(ncn->uniqueId()))
             uuidConnectionMap.insert(ncn->uniqueId(),ncn);
         else
         {
             ncn->setUniqueId(QUuid::createUuid());
-            nc->connectionMap3.insert(ncn, ncn->description());
-
+            nc->descrByConnection.insert(ncn, ncn->description());
         }
+        nc->connectionByUuid.insert(ncn->uniqueId().toString(), ncn);
+        nc->connectionByDescr.insert(ncn->description(),ncn);
       }
       settings.endArray();
 
@@ -899,6 +901,7 @@ void Configuration::getSettings2()
         nc->mapId = settings.value("mapid","??").toString();
         nc->zoom = settings.value("zoom",12).toInt();
         nc->curConnectionId = settings.value("currConnection",0).toInt();
+        nc->curUuid = settings.value("curUuid").toUuid();
         nc->curExportConnId = settings.value("currExportConnId",0).toInt();
         nc->bAlphaRoutes = settings.value("AlphaRoutes").toBool();
         nc->bNoPanOpt = settings.value("noPanOpt").toBool();
@@ -1022,14 +1025,14 @@ void Configuration::getSettings2()
                 //    nc->connectionMap.insert(ncn->uniqueId().toString(), ncn);
                 //nc->addConnection(ncn);
                 connectionsById.insert(ncn->id(), ncn);
-                nc->connectionMap3.insert(ncn, ncn->description());
+                nc->descrByConnection.insert(ncn, ncn->description());
             }
             if(!uuidConnectionMap.contains(ncn->uniqueId()))
                 uuidConnectionMap.insert(ncn->uniqueId(),ncn);
             else
             {
                 ncn->setUniqueId(QUuid::createUuid());
-                nc->connectionMap3.insert(ncn, ncn->description());
+                nc->descrByConnection.insert(ncn, ncn->description());
 
             }
             settings.endGroup();

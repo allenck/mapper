@@ -3369,8 +3369,6 @@ double SQL::Distance(double Lat1, double Lon1, double Lat2, double Lon2)
     return d; // distance in kilometers
 }
 
-
-
 bool SQL::updateSegment(SegmentInfo* si, bool bNotify)
 {
  bool ret = false;
@@ -3380,6 +3378,9 @@ bool SQL::updateSegment(SegmentInfo* si, bool bNotify)
  bool bQuery;
  si->_length = 0;
  int rows = 0;
+
+ if(!updateSegmentDates(si))    // insure start and end dates are valid
+     return false;
 
  if(si->pointList().isEmpty())
      return false;

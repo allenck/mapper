@@ -18,10 +18,11 @@ public:
     qint32 id =0;
  QList<Connection*> connections;
  QT_DEPRECATED QStringList connectionNames;
- QMap<QString, Connection*> connectionMap; // connections by Uuid
- QMap<QString, Connection*> connectionMap2; // connections by description
- QMap<Connection*, QString> connectionMap3; // descriptions by connection
+ QMap<QString, Connection*> connectionByUuid; // connections by Uuid
+ QMap<QString, Connection*> connectionByDescr; // connections by description
+ QMap<Connection*, QString> descrByConnection; // descriptions by connection
  qint32 curConnectionId = 0;
+ QUuid curUuid;
  qint32 curExportConnId =-1;
  qint32 curOverlayId =0;
  LatLng center;

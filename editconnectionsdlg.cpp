@@ -1115,8 +1115,12 @@ void EditConnectionsDlg::btnSaveClicked()
 
    if(!config->cityList.contains(currCity))
        config->addCity(currCity);
-
+   if(connection->description() != ui->cbConnections->currentText())
+   {
+       currCity->connectionByDescr.remove(connection->description());
+   }
    connection->setDescription(ui->cbConnections->currentText());
+   currCity->connectionByDescr.insert(ui->cbConnections->currentText(),connection);
    connection->setDriver(ui->cbDriverType->currentText());
    connection->setServerType(ui->cbDbType->currentText());
    connection->setConnectionType(ui->cbConnect->currentText());
@@ -1283,7 +1287,7 @@ void EditConnectionsDlg::cbConnectionsTextEditFinished()
     QString newDescr = ui->cbConnections->lineEdit()->text();
     if(newDescr == connection->description())
         return;
-    if(currCity->connectionMap3.values().contains(newDescr))
+    if(currCity->connectionByDescr.contains(newDescr))
     {
         QMessageBox::critical(this, tr("Error"),tr("connection description not unique!"));
         ui->cbConnections->setCurrentText(connection->description());

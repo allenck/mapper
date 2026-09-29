@@ -10,6 +10,12 @@
     html { height: 100% }
     body { height: 100%; margin: 0; padding: 0 }
     #map { height: 100%}
+    #map {
+        background-color: transparent !important;
+        background: transparent !important;
+    }
+
+
 </style>
 
     <!-- Include Leaflet CSS for map styling -->
@@ -57,6 +63,9 @@
     <link rel="stylesheet" href="scripts/bbecquet/LeafletMagnifyingGlass/leaflet.magnifyingglass.css">
     <script type="text/javascript" src="scripts/bbecquet/LeafletMagnifyingGlass/leaflet.magnifyingglass.js"></script>
     <script type="text/javascript" src="scripts/bbecquet/LeafletMagnifyingGlass/Control.MagnifyingGlass.js"></script>
+
+    <script src="https://unpkg.com/esri-leaflet@3.0.19/dist/esri-leaflet.js"></script>
+    <script src="https://unpkg.com/esri-leaflet-vector@4.3.2/dist/esri-leaflet-vector.js"></script>
 
     <script>
         var MapQuest = false;   // needed by initMap in mapperLeaflet.js</script>
