@@ -47,7 +47,7 @@ public:
     //bool exportIntersections();
     //bool exportTractionTypes();
     //bool exportParameters();
-    bool exportLineSegments();
+    //bool exportLineSegments();
     //bool exportSegments();
     //bool exportRoutes();
 //    bool exportStations();

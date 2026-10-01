@@ -13,7 +13,7 @@ class WebViewBridge : public QObject
     Q_OBJECT
 public:
     WebViewBridge(MainWindow *parent = 0);
-    WebViewBridge(LatLng latLng, int zoom, QString mapType, QString mapId, MainWindow *parent = 0);
+    WebViewBridge(LatLng latLng, int zoom, QString mapType, QString mapId, QString options, MainWindow *parent = 0);
     MainWindow* m_parent = nullptr;
 //    int browseWindowWidth;
 //    int browseWindowHeight;
@@ -24,19 +24,21 @@ public:
     float curLat() const;
     float curLon() const;
     LatLng curLatLng();
-    bool runInBrowser();
+    //bool runInBrowser();
     int curZoom();
     QString curMapType();
     QString curMapId();
     QString curName();
+    QString options();
     Q_PROPERTY(QString name READ curName WRITE setName NOTIFY onNameChanged FINAL)
     Q_PROPERTY(float lat READ curLat NOTIFY onLatChanged)
     Q_PROPERTY(float lng READ curLon NOTIFY onLngChanged)
-    Q_PROPERTY(int zoom READ curZoom NOTIFY onZoomChanged)
-    Q_PROPERTY(QString mapType READ curMapType WRITE setMapType NOTIFY onMapTypeChanged)
+    Q_PROPERTY(int zoom READ curZoom WRITE setZoom NOTIFY onZoomChanged FINAL)
+    Q_PROPERTY(QString mapType READ curMapType WRITE setMapType NOTIFY onMapTypeChanged FINAL)
     Q_PROPERTY(QString mapId READ curMapId WRITE setMapId NOTIFY onMapIdChanged)
     Q_PROPERTY(LatLng latlng MEMBER _latLng WRITE setLatLng NOTIFY latlngChanged)
-    Q_PROPERTY(bool runInBrowser READ runInBrowser NOTIFY onRunInBrowserChanged )
+    // Q_PROPERTY(bool runInBrowser READ runInBrowser NOTIFY onRunInBrowserChanged )
+    Q_PROPERTY(QString options READ options  NOTIFY  onOptionsChanged )
     void processScript(QString func, QString parms);
     void processScript(QString func);
     QT_DEPRECATED void processScript(QString func, QString parms, QString name, QString value);
@@ -44,7 +46,7 @@ public:
     bool isListening();
 
     //QVariant rslt;
-    QVariant myRslt;
+    QVariant _myRslt;
     QVariantList myList;
     QVariant getRslt();
     //Q_PROPERTY(QVariant rslt READ getRslt)
@@ -53,8 +55,10 @@ public:
     bool isResultReceived();
     LatLng rightClick() {return _rightClickLoc;}
     void setName(QString);
+    void setZoom(int);
     ~WebViewBridge();
     int openConnections = 0;
+
 signals:
     void executeScript(QString func, QString parms);
     void executeScript2(QString func, QString parms, QString name, QString value);
@@ -70,11 +74,10 @@ signals:
     void outputSetDebug(QString);
     void onLatChanged(QString);
     void onLngChanged(QString);
-    void onZoomChanged(QString);
-    void onMapTypeChanged(QString);
+    void onZoomChanged(int);
     void onNameChanged(QString);
     void latlngChanged(LatLng latLng);
-    void onRunInBrowserChanged(bool);
+    //void onRunInBrowserChanged(bool);
     void segmentStatusSignal(QString txt, QString color);
     void queryOverlaySignal();
     void on_scriptResult(QVariant);
@@ -87,6 +90,8 @@ signals:
     void on_pinClicked(int pinId, LatLng latLng, QString street, int streetid, QString location, int seq);
     void on_pinMarkerMoved(LatLng latLng);
     void on_connection_closed();
+    void onOptionsChanged(QString);
+    void onMapTypeChanged(QString);
 
 public slots:
     void selectSegment(qint32 i, qint32 SegmentId); //19
@@ -99,7 +104,7 @@ public slots:
     void setLon(double lon);
     void setDebug(QString str); //25
     void setLen(qint32 len);
-    void reportMapType(QString mapType);
+    QT_DEPRECATED void reportMapType(QString mapType);
     void setMapId(QString);
     void setMapType(QString);
     void setCenter(double lat, double lon, int zoom, QString mapType);
@@ -115,7 +120,7 @@ public slots:
     void insertPoint(int SegmentId, qint32 i, double newLat, double newLon);
     void insertPointX(int SegmentId, qint32 i, QVariantList array);
     void updateIntersection(qint32 i, double newLat, double newLon);
-    void displayZoom(int zoom);
+    // void displayZoom(int zoom);
     void showSegmentsAtPoint(double lat, double lon, qint32 segmentId);
     void queryOverlay();
     void opacityChanged(QString name, qint32 opacity);
@@ -136,7 +141,8 @@ public slots:
     void pinMarkerMoved(double lat, double lon);
     bool setupbridge();
     QString createIcon(QColor color);
-
+    void mapTypeChanged(QString mapType);
+    void zoomChanged(int zoom);
 private slots:
 
 private:
@@ -145,15 +151,16 @@ private:
     float _lat;
     float _lon;
     int _zoom;
-    bool _runInBrowser;
+//    bool _runInBrowser;
     LatLng _latLng;
-    QString mapType;
-    QString mapId;
+    QString _mapType;
+    QString _mapId;
     bool bResultReceived;
     Configuration* config;
     LatLng _rightClickLoc;
     QList<LatLng> buildPoints(QVariantList array);
-    QString name;
+    QString _name;
+    QString _options;
 
     QWebChannel* channel = nullptr;
     QWebSocketServer* m_server=nullptr;

@@ -161,7 +161,7 @@ public:
     void updateIntersection(qint32 i, double newLat, double newLon);
     QLabel* zoomIndicator;
     QLabel* geocoderRslt;
-    void getZoom(int zoom);
+    void setZoom(int zoom);
     void getGeocoderResults(QString array);
     void opacityChanged(QString name, qint32 opacity);
     void moveRouteStartMarker(double lat, double lon, qint32 segmentId, qint32 i);

@@ -36,6 +36,7 @@ var pinArray = null;
 var pins = null;
 var pinMarker =null;
 var markerPins = null;
+var runInBrowser = false;
 
 function echoText(text)
 {
@@ -961,7 +962,17 @@ async function initMap() {
      var mapTypeId = webViewBridge.maptype;
      var mapDiv = document.getElementById("map");
      var runInBrowser = webViewBridge.runInBrowser;
+     var optionsString = webViewBridge.options;
 
+    if(optionsString !== null)
+    {
+        console.log(optionsString);
+        const optionsArray = [optionsString];
+        const options = JSON.parse(optionsString);
+        if(options.mapSource === 1)
+            MapQuest = true;
+        runInBrowser = options.runInBrowser;
+    }
 
      map = new Map(mapDiv, {
         center: new google.maps.LatLng(Lat, Lon),
@@ -1087,10 +1098,10 @@ async function initMap() {
     webViewBridge.queryOverlay();
 
     //OK    window.external.displayZoom(map.getZoom());
-    webViewBridge.displayZoom(map.getZoom());
+    //webViewBridge.displayZoom(map.getZoom());
 
     google.maps.event.addListener(map, "zoom_changed", function() {
-     webViewBridge.displayZoom(map.getZoom());
+     webViewBridge.zoomChanged(map.getZoom());
     });
 
     google.maps.event.addListener(map, "rightclick", function(event) {
@@ -1496,7 +1507,7 @@ function addNewPoint(e)
       map.setZoom(zoom);
       return null;
   }
-  function setMapType(mapTypeId)
+  function changeMapType(mapTypeId)
   {
       if(mapTypeId === "")
           mapTypeId = "ROADMAP";
@@ -3197,10 +3208,10 @@ function clearPins()
     markerPins.clear();
 }
 
-function setRunInBrowser(b)
-{
-  runInBrowser = b;
-}
+// function setRunInBrowser(b)
+// {
+//   runInBrowser = b;
+// }
 
 function alertClose()
 {

@@ -680,8 +680,9 @@ QMenu* MainWindow::addSegmentMenu(SegmentData *sd)
 
 void MainWindow::createBridge()
 {
+    QString options = QString("{ \"mapSource\": %1, \"runInBrowser\": %2}").arg(config->mapSource).arg(config->bRunInBrowser?"true":"false");
  //! The object we will expose to JavaScript engine:
- m_bridge = new WebViewBridge(LatLng(m_latitude, m_longitude), m_zoom, config->mapType, config->mapId, this);
+ m_bridge = new WebViewBridge(LatLng(m_latitude, m_longitude), m_zoom, config->mapType, config->mapId, options, this);
  connect( m_bridge, SIGNAL(movePointSignalX(qint32,qint32,LatLng,QList<LatLng>)), this, SLOT(movePointX(qint32,qint32,LatLng,QList<LatLng>)));
  connect(m_bridge, SIGNAL(addPointSignal(int,double,double)), this, SLOT(addPoint(int,double,double)));
  connect (m_bridge, SIGNAL(insertPointSignal(int,qint32,double,double)), this, SLOT(insertPoint(int,qint32,double,double)));
@@ -788,7 +789,7 @@ void MainWindow::reloadMap()
   m_bridge->processScript("setDefaultOptions");
  objArray.clear();
  objArray << m_mapType;
- m_bridge->processScript("setMapType", objArray);
+ m_bridge->processScript("changeMapType", objArray);
 
  //showGoogleMapFeatures(false);
 
@@ -815,7 +816,7 @@ void MainWindow::initializeGoogleMaps(QUrl url)
   m_bridge->processScript("setDefaultOptions");
  objArray.clear();
  objArray << m_mapType;
- m_bridge->processScript("setMapType", objArray);
+ m_bridge->processScript("changeMapType", objArray);
 }
 
 void MainWindow::linkActivated()
@@ -2291,7 +2292,7 @@ void MainWindow::newCity(QAction* act )
      m_bridge->processScript("setDefaultOptions");
     objArray.clear();
     objArray << m_mapType;
-    m_bridge->processScript("setMapType", objArray);
+    m_bridge->processScript("changeMapType", objArray);
     bDisplayStationMarkers = config->currCity->bDisplayStationMarkers;
     displayStationMarkersAct->setChecked(bDisplayStationMarkers);
     bDisplayTerminalMarkers = config->currCity->bDisplayTerminalMarkers;
@@ -3944,7 +3945,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
      {
          m_bridge->processScript("overlay.getOpacity");
          qApp->processEvents(QEventLoop::AllEvents,50);
-         int opacity = m_bridge->myRslt.toInt();
+         int opacity = m_bridge->_myRslt.toInt();
 
          City* c = config->currCity;
          Overlay* ov = c->city_overlayMap->values().at(config->currCity->curOverlayId);
@@ -4780,7 +4781,7 @@ void MainWindow::txtStreetName_Leave()
  bStreetChanged = false;
 }
 
-void MainWindow::getZoom(int zoom)
+void MainWindow::setZoom(int zoom)
 {
     zoomIndicator->setText("Zoom: "+ QString("%1").arg(zoom));
     m_zoom = zoom;

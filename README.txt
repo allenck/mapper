@@ -2,6 +2,7 @@
 1. Add new OpenStreetMap and Mapquest map sources.
 2. Add support for geoserver tiles for overlays. Query WMTS capabilities from geoserver and add selected maps to overlays.
 3. Overlay management allow the user to select or ignore sources of overlays. This is stored in the settings for a PC.
+4. Add magnifyinglass feature to OpenStreetMap and Mapquest maps.
 
 **Recent Changes August-September 2026 VERSION=1.2.9
 1. Move webchannel logic to WebViewBridge.

@@ -17,21 +17,20 @@ WebViewBridge::WebViewBridge(MainWindow *parent)
  config = Configuration::instance();
 }
 
-WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString mapType, QString mapId,  MainWindow *parent)
+WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString mapType, QString mapId, QString options,  MainWindow *parent)
  : QObject()
 {
  this->_latLng = latLng;
  this->_lat = latLng.lat();
  this->_lon = latLng.lon();
  this->_zoom = zoom;
- this->mapType = mapType;
- this->mapId = mapId;
+ this->_mapType = mapType;
+ this->_mapId = mapId;
  m_parent = parent;
-
-
+ this->_options = options;
  _instance = this;
  config = Configuration::instance();
- this->_runInBrowser = config->bRunInBrowser;
+ //this->_runInBrowser = config->bRunInBrowser;
 
  connect(m_parent, &MainWindow::windowActivated, this, [=]{
      //if(m_server && isListening())
@@ -41,6 +40,7 @@ WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString mapType, QString m
      //     m_parent->reloadMap();
      // }
  });
+ connect(this, SIGNAL(mapTypeChanged(QString)), this, SLOT(onMapTypeChanged(QString)));
 }
 
 WebViewBridge::~WebViewBridge()
@@ -58,18 +58,23 @@ WebViewBridge* WebViewBridge::instance()
 float WebViewBridge::curLat() const {return _lat;}
 float WebViewBridge::curLon() const {return _lon;}
 LatLng WebViewBridge::curLatLng(){return _latLng;}
-bool WebViewBridge::runInBrowser()  {return _runInBrowser;}
+//bool WebViewBridge::runInBrowser()  {return _runInBrowser;}
 void WebViewBridge::setLatLng(LatLng latlng){
     this->_latLng = latlng;
     emit latlngChanged(latlng);
 }
 int WebViewBridge::curZoom(){return _zoom;}
-QVariant WebViewBridge::getRslt(){return myRslt;}
-QString WebViewBridge::curMapType(){return mapType;}
-QString WebViewBridge::curMapId(){return mapId;}
+QVariant WebViewBridge::getRslt(){return _myRslt;}
+QString WebViewBridge::curMapType(){return _mapType;}
+QString WebViewBridge::curMapId(){return _mapId;}
 //void WebViewBridge::setMapId(QString mapid){this->mapId = mapid;}
-void WebViewBridge::setName(QString n){this->name = n;}
-QString WebViewBridge::curName(){return name;}
+void WebViewBridge::setName(QString n){this->_name = n;}
+void WebViewBridge::setZoom(int zoom){
+    _zoom = zoom;
+    emit onZoomChanged(zoom);
+}
+QString WebViewBridge::curName(){return _name;}
+QString WebViewBridge::options(){ return _options;}
 
 void WebViewBridge::processScript(QString func, QString parms)
 {
@@ -148,8 +153,8 @@ void WebViewBridge::selectSegmentX(qint32 i, qint32 SegmentId, QVariantList arra
 
 QString WebViewBridge::createIcon(QColor color)
 {
-    name = m_parent->createTickIcon(color);
-    return name;
+    _name = m_parent->createTickIcon(color);
+    return _name;
 }
 
 // Display a route comment for date.
@@ -164,7 +169,7 @@ void WebViewBridge::scriptResult(QVariant value)
  try {
   // if(value != QVariant())
   //  qDebug() << "scriptResult" << value;
-  myRslt = value;
+  _myRslt = value;
   bResultReceived = true;
   emit on_scriptResult(value);
  }
@@ -181,7 +186,7 @@ void WebViewBridge::scriptFunctionResult(QVariant function, QVariant value)
         qDebug() << "scriptFunctionResult" << function << value;
         //  if(value.isNull())
         //   return;
-        myRslt = value;
+        _myRslt = value;
         bResultReceived = true;
         emit on_scriptFunctionResult(function,value);
     }
@@ -245,11 +250,19 @@ void WebViewBridge::setMapId(QString mapId)
     // m_parent->m_mapid  = mapId;
     // config->mapId = mapId;
     // config->currCity->mapId = mapId;
+    if(_mapId == mapId)
+        return;        // Prevent infinite loops if the value didn't change
+    _mapId = mapId;
+    emit onMapIdChanged(mapId);
 }
 
 void WebViewBridge::setMapType(QString mapType)
 {
-    processScript("setMapType", mapType);
+    //processScript("setMapType", mapType);
+    if(_mapType == mapType)
+        return;
+    _mapType = mapType;
+    emit onMapTypeChanged(mapType);
 }
 
 // called by js to report change of mapType
@@ -259,6 +272,13 @@ void WebViewBridge::reportMapType(QString mapType)
     config->mapType = mapType;
     config->currCity->mapType = mapType;
     config->currCity->mapSource = config->mapSource;
+}
+void WebViewBridge::mapTypeChanged(QString mapType)
+{
+    m_parent->m_mapType = mapType;
+    config->mapType = mapType;
+    config->currCity->mapType = mapType;
+    //config->currCity->mapSource = config->mapSource;
 }
 
 void WebViewBridge::setCenter(double lat, double lon, int zoom, QString mapType)
@@ -349,10 +369,9 @@ void WebViewBridge::updateIntersection(qint32 i, double newLat, double newLon)
 
     return m_parent->updateIntersection( i, newLat, newLon);
 }
-void WebViewBridge::displayZoom(int zoom)
+void WebViewBridge::zoomChanged(int zoom)
 {
-
-    m_parent->getZoom(zoom);
+    m_parent->setZoom(zoom);
 }
 
 void WebViewBridge::showSegmentsAtPoint(double lat, double lon, qint32 segmentId)
@@ -490,7 +509,7 @@ QList<LatLng> WebViewBridge::buildPoints(QVariantList array)
 
 bool WebViewBridge::setupbridge()
 {
-    _runInBrowser = config->bRunInBrowser;
+    //_runInBrowser = config->bRunInBrowser;
     // setup the QWebSocketServer
     if(!m_server)
         m_server = new QWebSocketServer(QStringLiteral("WebViewBridge"), QWebSocketServer::NonSecureMode);

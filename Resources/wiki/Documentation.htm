@@ -24,8 +24,8 @@
               <li><a href="Definitions.html">Definitions</a></li>
               <li><a href="Compiling_Mapper.html">Compiling
 Mapper from Source</a></li>
-              <li><a href="Creating_a_new_database.html">Creating a new
-database.</a></li>
+              <li><a href="Creating_a_new_database.html">Creating a new database.</a></li>
+				  <li><a href="ExportingDatabases.htm">Exporting databases</a></li>
               <li><a href="Instructions_for_compiling_SQLite.html">How to create SQLite plugin for Qt</a></li>
               <li><a href="Using_MySql_or_SQL_Server_databases.html">Using
 MySql, PostgreSQL or SQL Server</a><br>
@@ -62,16 +62,24 @@ Kentucky, Cincinnati,OH, Indianapolis, IN and Berlin, Germany.
 The default databases use Sqlite as the database engine. However, provisions
 are made to also support exporting to and from
 MySql, PostgreSQL and Sql Server databases. The routes are displayed on a Google
-Maps map or alternatively an Open Street Map map. It is also possible
-to display a user-defined map. Historical overlays like historical
+Maps map or alternatively an Open Street Map map or a MapQuest map. 
+<p> Historical maps displated as overlays like historical
 topographic maps can be tiled on a web server. There are numerous sites 
-on the web that have such '<i>georeferenced</i>' maps; <br>
-0ne such source is the <a href="https://www.davidrumsey.com/">"David Rumsey Map Collection" </a> <br>
+on the web that have such '<i>georeferenced</i>' maps; <p>
+0ne such source is the <a href="https://www.davidrumsey.com/">"David Rumsey Map Collection" </a>  
+Another possibility is using a program like <a href="https://www.qgis.org/" >"QGis"</a> to create your own overlays hosted on an 
+<a href="https://httpd.apache.org/" >"Apache HTTP server"</a>.
 </p>
 <br>
+<p>The map that you will be interacting with will be displayed as a window in the app as in the example pictured below.</p>
 <p>Main Window<br>
 <br>
 <img style="width: 60%; height: 60%;" alt="Mapper" title="Mapper main window display" src="images/Mainwindow.png"></p>
+Alternately the map can be displayed in your browser; In that case, the main window omits the map which is displayed in a tab in the browser.<br>
+<p>Main Window without map.<br>
+<img src="images/Mainwindow2.png" width="60%" alt="Main window">
+<p>Map displayed in a browser tab.<br>
+<img src="images/browserImage.png" width="60%"  alt="browser map">
 <h3>Using Mapper</h3>
 <h4>Displaying a route<br>
 </h4>
@@ -132,10 +140,7 @@ with the SQLite3 restore procedure.</dd></dl>
 <dt>Edit connections...</dt>
 <dd>Open a dialog to add, delete or modify database connections.</dd>
 </dl>
-<dl>
-<dt>Manage Overlays</dt>
-<dd>Open a dialog to define overlays to be available.</dd>
-</dl>
+
 <dl>
 <dt>New City</dt>
 <dd>Open a dialog to create a new city and its default database.</dd>
@@ -151,10 +156,7 @@ with the SQLite3 restore procedure.</dd></dl>
 <td></td>
 <td></td>
 </tr>
-<dl>
-<dt>Overlays</dt>
-<dd>Select an overlay to be displayed on the map for the current city. </dd>
-</dl>
+
 <dl>
 <dt>Display route comments</dt>
 <dd>Check to have route comments displayed along with a route on the map display.</dd>
@@ -218,7 +220,9 @@ This option is most effective when you have two or more screens attached to your
 </dl>
 <dl>
 	<dt>Export database</dt>
-	<dd>Export database contents from the current city connection to another SQlite, MySql or Sql Server database,</dd>
+	<dd>Export database contents from the current city connection to another SQlite, MySql or Sql Server database. 
+	See <a href="ExportingDatabases.htm" >Exporting databases</a>.
+	</dd>
 </dl>
 <dl>
 	<dt>Reload Google Maps</dt>
@@ -284,6 +288,20 @@ This option is most effective when you have two or more screens attached to your
 	<dd></dd>
 </dl>
 <br>
+<caption><b>Overlays menu</b></caption>
+<dl>
+<dt>Overlay -></dt>
+<dd>Select an overlay to be displayed on the map for the current city. </dd>
+</dl>
+<dl>
+<dt>Manage Overlays</dt>
+<dd>Open a dialog to define overlays to be available.</dd>
+</dl>
+<dl>
+<dt>Select Overlay sources</dt>
+<dd>Select which ovelays defined in the database that are to be offered in the menu. </dd>
+<img src="images/overlaysMenu.png" width="20%" height="20%" alt="">
+</dl>
 <caption><b>Help menu</b></caption>
 
 <dl>
@@ -310,14 +328,14 @@ for the currently selected route. <br>
   <li> Export database. This option will bring up a dialog which allows
 selected
 database tables to be exported to an<span class=""></span>other
-database. <br>
+database. br>
   </li>
   <li>SQLQuery Dialog. This dialog allows "raw" SQL queries to be made
 to the database. Don't do any "update" or "insert" type SQL queries if
 you don't want to modify the database.&nbsp;</li>
 </ol>
 <br>
-<h4>Modifying a connection</h4>
+<h4 id="connections">Creating or Modifying a connection</h4>
 <p>
 Each city Mapper has information about has at least one <i>'connection'</i> to a database. The preferred
 database type is "Sqlite" which is implemented as as a local .sqlite3 file. Other database types such as

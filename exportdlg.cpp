@@ -122,7 +122,7 @@ void ExportDlg::btnGo_clicked()
      {
       exprt->setOverride(ui->exportDate->dateTime());
      }
-     exprt->setNoDelete(ui->chkNoDelete->checkState());
+    // exprt->setNoDelete(ui->chkNoDelete->checkState());
     //timer->start();
     for(int i=0; i<config->currCity->connections.count(); i++)
     {
@@ -442,7 +442,7 @@ void ExportDlg::on_chkDrop_toggled(bool bState)
 {
  ui->chkOverride->setEnabled(!bState);
  ui->exportDate->setEnabled(!bState);
- ui->chkNoDelete->setEnabled(!bState);
+ //ui->chkNoDelete->setEnabled(!bState);
 }
 
 void ExportDlg::on_chkCompanies_toggled(bool bChecked)

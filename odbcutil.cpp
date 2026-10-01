@@ -471,6 +471,7 @@ void ODBCUtil::getWinDSNs()
                     if(info.error())
                     {
                         QMessageBox::warning(nullptr, tr("Warning"), tr("Invalid server: %1 for %2 error: %3").arg(server, iniKey3, info.errorString()));
+                        break;
                     }
 
                     dsn->server = server;

@@ -1135,7 +1135,7 @@ bool ExportSql::exportParameters()
 }
 #endif
 
-
+#if 0
 bool ExportSql::exportLineSegments()
 {
     srcDb = QSqlDatabase::database();
@@ -1337,6 +1337,7 @@ bool ExportSql::exportLineSegments()
         sendProgress();
 
     }
+
     if(!bNoDeletes)
     {
         // Process LineSegment deletes
@@ -1427,6 +1428,7 @@ bool ExportSql::exportLineSegments()
 
     return true;
 }
+#endif
 #if 0
 bool ExportSql::exportSegments()
 {

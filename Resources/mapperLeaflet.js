@@ -23,11 +23,12 @@ var overlayLayer = null;
 var overlay=null;
 var opacityControl = null;
 var runInBrowser = null;
-var currMapType = 'Unknown';
+var mapType = 'Unknown';
 var currLayer;
 var OSBaseMaps = [];
 var MQBaseMaps = [];
 let magnifyingGlassControl = null;
+var MapQuest = false;
 
 var image = ["https://maps.google.com/mapfiles/marker.png",
   "https://maps.google.com/mapfiles/dd-start.png",
@@ -643,6 +644,45 @@ function bearing(startLat, startLon, endLat, endLon)
     }
 }   // end bearing
 
+// called by the app to change the mapType
+function changeMapType(newType)
+{
+    getMapType();
+    if(MapQuest === true)
+    {
+        // if (newType === 'Satellite View') {
+        //         map.removeLayer(currMapType);    // Take away the street view
+        //         map.addLayer(satelliteView);    // Show the satellite view
+        //     } else if (newType === 'MapQuest View') {
+        //         map.removeLayer(currMapType); // Take away the satellite view
+        //         map.addLayer(mapquestTileLayer);       // Show the street view
+        //     }
+        map.removeLayer(currLayer);
+        var newLayer = MQBaseMaps[newType]
+        map.addLayer(newLayer);
+        currLayer = newLayer;
+        mapType = newType;
+    }
+    else // OpenStreetMaps
+    {
+        // if (newType === 'Satellite View') {
+        //       map.removeLayer(currMapType);    // Take away the street view
+        //       map.addLayer(satelliteView);    // Show the satellite view
+        //   } else if (newType === 'Street View') {
+        //       map.removeLayer(currMapType); // Take away the satellite view
+        //       map.addLayer(streetView);       // Show the street view
+        //   } else if(newType === 'Hybrid Satellite View')   {
+        //       map.removeLayer(currMapType);
+        //       map.addLayer(mapboxSatellite);
+        //   }
+        map.removeLayer(currLayer);
+        var newLayer = OSBaseMaps[newType];
+        map.addLayer(newLayer);
+        currLayer = newLayer;
+        mapType = newType;
+    }
+} // end changeMapType()
+
 function clearAll()
 {
    //clear all segments
@@ -1123,11 +1163,11 @@ function getMapType()
     map.eachLayer(function(layer) {
           // Check if the layer is a TileLayer and has our custom name
           if (layer instanceof L.TileLayer && layer.options.name) {
-              currMapType = layer.options.name;
+              mapType = layer.options.name;
               currLayer = layer;
           }
     });
-  return currMapType;
+  return mapType;
 } // end getMapType()
 
 function getMapTypes()
@@ -1241,14 +1281,25 @@ function initMap()
   var Lon = webViewBridge.lng;
   var zoom = webViewBridge.zoom;
   var mapId = webViewBridge.mapId;  // only relevant to GoogleMaps
-  var mapType = webViewBridge.mapType;
+  mapType = webViewBridge.mapType;
   var mapDiv = document.getElementById("map");
+  var optionsString = webViewBridge.options;
   var magnifyingGlass = null;
   var magnifyingGlassControl = null;
-    var tileUrl;
-    var tileOptions;
+  var tileUrl;
+  var tileOptions;
 
-    runInBrowser = webViewBridge.runInBrowser;
+    if(optionsString !== null)
+    {
+        console.log(optionsString);
+        const optionsArray = [optionsString];
+        const options = JSON.parse(optionsString);
+        if(options.mapSource === 2)
+            MapQuest = true;
+        runInBrowser = options.runInBrowser;
+    }
+
+    // runInBrowser = webViewBridge.runInBrowser;
   // if(runInBrowser)
   //   alert("Run in browser is true" );
   // else
@@ -1282,7 +1333,7 @@ function initMap()
         return null;
     }
 
-    if(MapQuest == true)
+    if(MapQuest === true)
     {
         // MapQuest
         L.mapquest.key = MapQuestKey;
@@ -1511,7 +1562,7 @@ function initMap()
             tileSize: 512,           // Mapbox tiles are 512x512 pixels
             zoomOffset: -1,          // Compensates for the 512px tile size in Leaflet
             attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://labs.mapbox.com/contribute/" target="_blank">Improve this map</a></strong>',
-            name: 'MapBox Satellite View'
+            name: 'Hybrid Satellite View'
         };
         // Create and add the Mapbox Satellite tile layer
         var mapboxSatellite = L.tileLayer(tileUrl, tileOptions);
@@ -1531,7 +1582,10 @@ function initMap()
         // Share the same tile url...
         // but use two independant TileLayer objects
         var mapTiles = L.tileLayer(tileUrl),
-            magnifiedTiles = L.tileLayer(tileUrl);
+            magnifiedTiles = L.tileLayer(tileUrl,{
+                                    maxZoom: 22,
+                                    maxNativeZoom: 19
+                                });
 
         //map.addLayer(magnifyingGlass);
         map = L.map('map', {
@@ -1561,9 +1615,13 @@ function initMap()
           layers: [ magnifiedTiles ]
         });
 
-        magnifyingGlassControl = L.control.magnifyingglass(magnifyingGlass, {
-            forceSeparateButton: true
-          }).addTo(map);
+        // if(typeof L.control.magnifyingglass ==='function')
+        // {
+            magnifyingGlassControl = L.control.magnifyingglass(magnifyingGlass, {
+                forceSeparateButton: true
+            }).addTo(map);
+            // break;
+        // }
 
         // Handle the tile layer change event
         map.on('baselayerchange', function(e) {
@@ -1572,8 +1630,9 @@ function initMap()
 
 
         magnifyingGlass.on('click', function() {
-        map.removeLayer(magnifyingGlass);
-        })
+            if(magnifyingGlass !== null)
+                map.removeLayer(magnifyingGlass);
+        });
 
         // ...and reappear on right click
         map.on('contextmenu', function(mouseEvt) {
@@ -1595,18 +1654,23 @@ function initMap()
             streetView.addTo(map);
         } else if(mapType === "MapBox Street View")  {
             mapboxStreets.addToMap(map);
-        } else if(mapType === 'MapBox Satellite View') {
+        } else if(mapType === 'Satellite View') {
+            mapboxSatellite.addTo(map);
+        } else if(mapType === 'Hybrid Satellite View') {
             mapboxSatellite.addTo(map);
         } else if(mapType === 'MapTiler Vector') {
             mvtSource.addTo(map);
         } else
         {
-            alert("MapType: " + mapType + " is invalid");
+            //alert("MapType: " + mapType + " is invalid");
+            console.warn("MapType: " + mapType + " is invalid!")
             streetView.addTo(map); // default 'Street View' to streetView
+            mapType = 'Street View';
+            webViewBridge.setMapType(mapType);
         }
 
         //var mapId = getMapId();
-        webViewBridge.reportMapType(mapType);
+        webViewBridge.setMapType(mapType);
 
         // Create a Base Maps object to hold our choices
         OSBaseMaps = {
@@ -1615,7 +1679,7 @@ function initMap()
             "MapTiler Vector": mvtSource,
             "Satellite View": satelliteView,
 //            "pbf vector": myMapboxOverlay,
-            "MapBox Satellite View": mapboxSatellite
+            "Hybrid Satellite View": mapboxSatellite
         };
         var overlayMaps = {
         };
@@ -1633,7 +1697,7 @@ function initMap()
     webViewBridge.displayZoom(map.getZoom());
 
     map.on("zoomend", function() {
-        webViewBridge.displayZoom(map.getZoom());
+        webViewBridge.zoomChanged(map.getZoom());
     });
 
     map.on( "contextmenu", function(event) {
@@ -1662,10 +1726,10 @@ function initMap()
     {
         var newLayerName = e.name;
         //setMapType(newLayerName);
-        webViewBridge.reportMapType(newLayerName);
+        webViewBridge.setMapType(newLayerName);
         maptype = newLayerName;
 
-        if (e.name === 'Satellite View' || e.name === 'MapBox Satellite View') {
+        if ( e.name === 'Hybrid Satellite View') {
             // Safe timeout prevents the base tile loading thread from blanking out the overlay
             setTimeout(function() {
                 if (!map.hasLayer(myMapboxOverlay)) {
@@ -1788,7 +1852,8 @@ function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
 
 //  google.maps.event.addListener(map, "zoom_changed", function() {
     map.on('zoomend', function() {
-        webViewBridge.displayZoom(map.getZoom());
+        //webViewBridge.displayZoom(map.getZoom());
+        webViewBridge.setZoom(map.getZoom());
         var newZoom = map.getZoom();
 
   if(overlay != null)
@@ -2081,21 +2146,31 @@ function processScript(func, parms)
   //alert("func: " + func + " parms: " +parms);
   var call = "var myRslt = " +func;
   call += "(";
-  call += parms;
+  if(parms !== '')
+  {
+      if(typeof parms === "string")
+      {
+        call += "'";
+        call += parms;
+        call += "'";
+      }
+      else
+        call += parms;
+  }
   call += ");";
-  call += "return myRslt;";
+  //call += "return myRslt;";
   //alert(call);
   try
   {
    //eval(call);
    var myFucn =  Function(call);
-   if(myFucn == null)
+   if(myFucn === null)
    {
-       console.error("function not found: " + call);
-       return;
+       console.error("function " + myFucn + " not found: " + call);
+       //return;
    }
    var fRslt = myFucn();
-   if(fRslt === null) return;
+   //if(fRslt === null) return;
    if( fRslt instanceof Array)
     webViewBridge.scriptArrayResult( fRslt);
    else
@@ -2111,7 +2186,7 @@ function processScript(func, parms)
    txt=err;
    //alert("Error ocurred calling " + func + " '"+ parms + "'\n" + txt);
    //console.error("Error ocurred calling " + func + " '"+ parms + "'\n" + txt);
-    webViewBridge.debug("Error ocurred calling " + func + " '"+ parms + "'\n" + txt);
+    webViewBridge.debug("Error occurred calling " + func + " '"+ parms + "'\n" + txt);
    //console.trace("trace");
   }
 } // end processScript()
@@ -2145,7 +2220,7 @@ function processScript2(func, parms, name, value)
   catch (err)
   {
       txt=err;
-      alert("Error occured calling " + func + "\n" + txt);
+      alert("Error occurred calling " + func + "\n" + txt);
   }
 } // end processScript2()
 
@@ -2733,43 +2808,6 @@ function setCenter(Lat, Lon)
 
 } // end setCenter()
 
-function setMapType(newType)
-{
-    getMapType();
-    if(MapQuest === true)
-    {
-        // if (newType === 'Satellite View') {
-        //         map.removeLayer(currMapType);    // Take away the street view
-        //         map.addLayer(satelliteView);    // Show the satellite view
-        //     } else if (newType === 'MapQuest View') {
-        //         map.removeLayer(currMapType); // Take away the satellite view
-        //         map.addLayer(mapquestTileLayer);       // Show the street view
-        //     }
-        map.removeLayer(currLayer);
-        var newLayer = MQBaseMaps[newType]
-        map.addLayer(newLayer);
-        currLayer = newLayer;
-        currMapType = newType;
-    }
-    else // OpenStreetMaps
-    {
-        // if (newType === 'Satellite View') {
-        //       map.removeLayer(currMapType);    // Take away the street view
-        //       map.addLayer(satelliteView);    // Show the satellite view
-        //   } else if (newType === 'Street View') {
-        //       map.removeLayer(currMapType); // Take away the satellite view
-        //       map.addLayer(streetView);       // Show the street view
-        //   } else if(newType === 'MapBox Satellite View')   {
-        //       map.removeLayer(currMapType);
-        //       map.addLayer(mapboxSatellite);
-        //   }
-        map.removeLayer(currLayer);
-        var newLayer = OSBaseMaps[newType];
-        map.addLayer(newLayer);
-        currLayer = newLayer;
-        currMapType = newType;
-    }
-} // end setMapType()
 
 function setDefaultOptions()
 {
@@ -2784,10 +2822,10 @@ function setOverlayOpacity(Opacity) {
  return;
 }// end setOverlayOpacity()
 
-function setRunInBrowser(b)
-{
-  runInBrowser = b;
-}
+// function setRunInBrowser(b)
+// {
+//   runInBrowser = b;
+// }
 
 function setZoom(zoom)
 {

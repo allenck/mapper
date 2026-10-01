@@ -117,5 +117,8 @@
         <file>scripts/bbecquet/LeafletMagnifyingGlass/examples/example_multi.html</file>
         <file>scripts/bbecquet/LeafletMagnifyingGlass/leaflet.magnifyingglass.css</file>
         <file>scripts/bbecquet/LeafletMagnifyingGlass/leaflet.magnifyingglass.js</file>
+        <file>scripts/bbecquet/LeafletMagnifyingGlass/Control.MagnifyingGlass.css</file>
+        <file>scripts/bbecquet/LeafletMagnifyingGlass/Control.MagnifyingGlass.js</file>
+        <file>scripts/bbecquet/LeafletMagnifyingGlass/magnifying-glass-icon.png</file>
     </qresource>
 </RCC>
