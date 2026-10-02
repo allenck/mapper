@@ -69,6 +69,12 @@ bool Overlay::importXml(QString fileName)
   }
    QDomElement wmtsUrl = elem.firstChildElement("wmtsUrl");
    ov->wmtsUrl = wmtsUrl.text();
+   QDomElement uuid = elem.firstChildElement("uuid");
+   QString strUuid = wmtsUrl.text();
+   if(strUuid.isEmpty())
+       ov->_uuid = QUuid::createUuid();
+   else
+       ov->_uuid = QUuid(strUuid);
    QDomElement urls = elem.firstChildElement("url");
 //   QStringList urlList;
 //   for(int i =0; i < urls.count(); i++)
@@ -97,6 +103,7 @@ bool Overlay::importXml(QString fileName)
        qDebug() << "overlay urls not present " << ov->name;
    else
         overlayList.append(ov);
+
   }
   file->close();
  }
@@ -304,12 +311,11 @@ bool Overlay::exportXml(QString fileName, QList<Overlay*> overlayList)
    wmtsUrl.appendChild(doc.createTextNode(ov->wmtsUrl));
    overlay.appendChild(wmtsUrl);
    QDomElement url = doc.createElement("url");
-//   foreach(QString sUrl, ov->urls)
-//   {
-//    url.appendChild(doc.createTextNode(sUrl));
-//   }
    url.appendChild(doc.createTextNode(ov->url()));
    overlay.appendChild(url);
+   QDomElement uuid = doc.createElement("uuid");
+   uuid.appendChild(doc.createTextNode(ov->uuid().toString()));
+   overlay.appendChild(uuid);
 
    root.appendChild(overlay);
   }

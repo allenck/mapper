@@ -2793,7 +2793,7 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
               z = zoom;
               //var url = urls.replace('{z}',z).replace('{x}',x).replace('{y}',y);
               var url = urls + "/gwc/service/tms/1.0.0/" + name + "@EPSG:900913@png/{z}/{x}/{y}.png";
-              url = url.replace('{z}',zoom).replace('{x}',coords.x).replace('{y}',coords.y);
+              url = url.replace('{z}',zoom).replace('{x}',coords.x).replace('{y}',y);
               console.debug(url);
               return url;
           },
@@ -2816,7 +2816,7 @@ function getOpacity()
  return overlay.getOpacity();
 }
 
-function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
+function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls, noDelete)
 {
  console.log("load overlay: " + name + " opacity =" + opacity + " minZoom =" + minZoom + " maxZoom = " + maxZoom + " source = " + source + " bounds = " + bounds + " urls = " + urls);
  console.log("urls type = " + typeof(urls));
@@ -2827,7 +2827,7 @@ function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
 
  if(minZoom < 0 || maxZoom > 20)
      console.warn("invalid min/max zoom for overlay: " + name + " opacity =" + opacity + " minZoom =" + minZoom + " maxZoom = " + maxZoom);
- if ( overlay !== null)
+ if ( map.overlayMapTypes.length > 0 && noDelete == "false")
  {
   map.overlayMapTypes.clear();
   overlay = null;
@@ -2868,7 +2868,7 @@ this.overlayBounds = new google.maps.LatLngBounds(new google.maps.LatLng(vals[1]
   });
  }
  google.maps.event.addListener(map, "zoom_changed", function() {
-  webViewBridge.displayZoom(map.getZoom());
+  webViewBridge.zoom = map.getZoom();
   var newZoom = map.getZoom();
 
   if(overlay != null)

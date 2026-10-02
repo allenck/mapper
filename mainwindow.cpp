@@ -1071,16 +1071,17 @@ void MainWindow::loadOverlayData()
 }
 //#endif
 
-void MainWindow::loadOverlay(Overlay* ov)
+void MainWindow::loadOverlay(Overlay* ov, bool add)
 {
  currentOverlay = ov->name;
+ currentOverlayUuid = ov->uuid();
  if(ov->source == "geoserver")
      currentOverlay = ov->_layerName;
  currentOv = ov;
  if(ov->opacity < 0 || ov->opacity > 100)
      ov->opacity = 65;
  QVariantList objArray;
- objArray << currentOverlay<< ov->opacity << ov->minZoom << ov->maxZoom << ov->source << ov->bounds().toString()<< ov->url();
+ objArray << currentOverlay<< ov->opacity << ov->minZoom << ov->maxZoom << ov->source << ov->bounds().toString()<< ov->url() << (add?"true":"false");
  m_bridge->processScript("loadOverlay", objArray);
  ui->chkShowOverlay->setChecked(true);
 }
@@ -1088,7 +1089,10 @@ void MainWindow::loadOverlay(Overlay* ov)
 void MainWindow::fillOverlayMenu()
 {
  overlayMenu->clear();
+ activeOverlayUuids.clear();
+
  QActionGroup *overlayActionGroup = new QActionGroup(this);
+
  qDebug() << config->currCity->city_overlayMap;
  qDebug() << "building overlayMenu for:" <<config->currCity->name() << " overlays: " << config->currCity->city_overlayMap->count();
  qDebug() << "curr Overlay id = " << config->currCity->curOverlayId;
@@ -1114,13 +1118,76 @@ void MainWindow::fillOverlayMenu()
        config->currCity->curOverlayId = 0;
        qDebug() <<  " overlay name = " << config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId)->name;
       }
-      if(config->currCity->curOverlayId >=0 && name == config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId)->name)
-       act->setChecked(true);
+      // if(config->currCity->curOverlayId >=0 && name == config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId)->name)
+      //  act->setChecked(true);
+      if(!config->currCity->curUuid.isNull() && ov->uuid() == config->currCity->curUuid)
+          act->setChecked(true);
       if(!ui->chkShowOverlay->isEnabled())
        ui->chkShowOverlay->setEnabled(true);
+
+      activeOverlayUuids.append(ov->uuid());
+
   }
  }
- connect(overlayActionGroup,SIGNAL(triggered(QAction*)),this, SLOT(newOverlay(QAction*)));
+ connect(overlayActionGroup, &QActionGroup::triggered,this, [=] (QAction* act) {
+     newOverlay(act, true);
+     fillAdditionalOverlayMenu();
+ });
+}
+
+void MainWindow::fillAdditionalOverlayMenu()
+{
+  if(additionalOverlaysMenu == nullptr)
+  {
+     additionalOverlaysMenu = new QMenu("Additional overlays");
+     overlaysMenu->addMenu(additionalOverlaysMenu);
+  }
+  else
+  {
+      additionalOverlaysMenu->clear();
+  }
+
+  QActionGroup *overlayActionGroup = new QActionGroup(this);
+
+  qDebug() << config->currCity->city_overlayMap;
+  qDebug() << "building overlayMenu for:" <<config->currCity->name() << " overlays: " << config->currCity->city_overlayMap->count();
+  qDebug() << "curr Overlay id = " << config->currCity->curOverlayId;
+  QMapIterator<QString, Overlay*> iter(*config->currCity->city_overlayMap);
+  while(iter.hasNext())
+  {
+      iter.next();
+      QString name = iter.key();
+      Overlay* ov = iter.value();
+      // if(activeOverlayUuids.contains( ov->uuid()))
+      //         continue;
+      if(ov->isSelected)
+      {
+          QAction *act = new QAction(name, this);
+          act->setData(VPtr<Overlay>::asQVariant(ov));
+          act->setCheckable(true);
+          act->setStatusTip(ov->description);
+          act->setToolTip(tr("<B>source: </B>%1 <B><BR>url: </B> %2").arg(ov->source, ov->url()));
+          additionalOverlayActions.append(act);
+          overlayActionGroup->addAction(act);
+          additionalOverlaysMenu->addAction(act);
+          if(config->currCity->curOverlayId >= config->currCity->city_overlayMap->count())
+          {
+           config->currCity->curOverlayId = 0;
+           qDebug() <<  " overlay name = " << config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId)->name;
+          }
+          // if(config->currCity->curOverlayId >=0 && name == config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId)->name)
+          //  act->setChecked(true);
+          if(!config->currCity->curUuid.isNull() && ov->uuid() == config->currCity->curUuid)
+              act->setChecked(true);
+          if(!ui->chkShowOverlay->isEnabled())
+           ui->chkShowOverlay->setEnabled(true);
+
+          activeOverlayUuids.append(ov->uuid());
+      }
+  }
+  connect(overlayActionGroup, &QActionGroup::triggered,this, [=] (QAction* act) {
+     newOverlay(act, false);
+  });
 }
 
 //MainWindow::~MainWindow()
@@ -2325,7 +2392,7 @@ void MainWindow::newCity(QAction* act )
     ui->ssw->initialize();
 }
 
-void MainWindow::newOverlay(QAction* act)
+void MainWindow::newOverlay(QAction* act, bool noDelete)
 {
  Overlay* cOv = VPtr<Overlay>::asPtr(act->data());
  cOv->isSelected = true;
@@ -2343,14 +2410,19 @@ void MainWindow::newOverlay(QAction* act)
   else cOv->source = "acksoft";
  }
 
- loadOverlay(cOv);
+ loadOverlay(cOv, noDelete);
  for(int i = 0; i < config->currCity->city_overlayMap->count(); i++)
  {
   Overlay* ov = config->currCity->city_overlayMap->values().at(i);
-  if(currentOverlay == ov->name)
+  // if(currentOverlay == ov->name)
+  // {
+  //  config->currCity->curOverlayId = i;
+  //  break;
+  // }
+  if(currentOverlayUuid == ov->uuid())
   {
-   config->currCity->curOverlayId = i;
-   break;
+      config->currCity->curUuid = ov->uuid();
+      break;
   }
  }
 }
@@ -4557,7 +4629,7 @@ void MainWindow::queryOverlay()
     //     Overlay* ov = config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId );
     //     //loadOverlay(ov);
     // }
-    disconnect(overlayActionGroup,SIGNAL(triggered(QAction*)),this, SLOT(newOverlay(QAction*)));
+    //disconnect(overlayActionGroup,SIGNAL(triggered(QAction*)),this, SLOT(newOverlay(QAction*)));
 
     if(currentOv)
         loadOverlay(currentOv);
@@ -6102,10 +6174,20 @@ void MainWindow::onWebSocketClosed()
         --m_bridge->openConnections;
       if(m_bridge->openConnections > 0)
           return;
-      int rslt = QMessageBox::question(this, tr("Connection closed"),
-                                       tr("The connection to the browser has closed. \n%1\n"
-                                       "Click Yes to reload Map,  Close to exit").arg(m_bridge->m_server->errorString()),
-                                       QMessageBox::Yes|QMessageBox::Cancel|QMessageBox::Close);
+      // int rslt = QMessageBox::question(this, tr("Connection closed"),
+      //                                  tr("The connection to the browser has closed. \n%1\n"
+      //                                  "Click Yes to reload Map,  Close to exit").arg(m_bridge->m_server->errorString()),
+      //                                  QMessageBox::Yes|QMessageBox::Cancel|QMessageBox::Close);
+      QMessageBox *mbox = new QMessageBox(this);
+      mbox->setWindowTitle(tr("Connection closed"));
+      mbox->setText(tr("The connection to the browser has closed. \n%1\n"
+                    "Click Yes to reload Map,  Close to exit").arg(m_bridge->m_server->errorString()));
+      mbox->addButton(QMessageBox::Yes);
+      mbox->addButton(QMessageBox::Close);
+      mbox->addButton(QMessageBox::Cancel);
+      //mbox->show();
+      int rslt = mbox->exec();
+      QTimer::singleShot(2000, mbox, SLOT(hide()));
       if(rslt == QMessageBox::Close)
       {
           close();
@@ -6465,16 +6547,16 @@ bool MainWindow::restoreDatabases()
 void MainWindow::on_selectOverlaySources()
 {
     config->allowedSources.clear();
-    config->allowedSources = QList<QPair<QString, bool>>();
+    config->allowedSources = QMap<QString, bool>();
     QStringList sl;
     foreach (Overlay* ov, config->overlayMap->values()) {
         QUrl url = QUrl(ov->url());
         QString host = url.toString(QUrl::RemovePath | QUrl::RemoveQuery);
-        QPair<QString,bool>pair = QPair<QString,bool>(host, ov->isSelected);
+        //QPair<QString,bool>pair = QPair<QString,bool>(host, ov->isSelected);
         if(!sl.contains(host))
         {
             sl.append(host);
-            config->allowedSources.append(pair);
+            config->allowedSources.insert(host, ov->isSelected);
         }
     }
     DialogSelectList dlg;
@@ -6484,13 +6566,18 @@ void MainWindow::on_selectOverlaySources()
     int rslt = dlg.exec();
     if(rslt == QDialog::Accepted)
     {
-        QList<QPair<QString,bool>> list = dlg.getCheckList();
+        QMap<QString,bool> list = dlg.getCheckList();
         config->allowedSources = list;
-        for(int i = 0; i <list.count(); i++) {
-            QPair<QString,bool> pair = list .at(i);
+        //for(int i = 0; i <list.count(); i++) {
+        QMapIterator<QString,bool> iter(list);
+        while(iter.hasNext()){
+            iter.next();
+            //QPair<QString,bool> pair = list .at(i);
+            QString host = iter.key();
+            bool isSelected = iter.value();
             foreach (Overlay* ov, config->overlayMap->values()) {
-                if(ov->url() == pair.first)
-                    ov->isSelected = pair.second;
+                if(ov->url() == host)
+                    ov->isSelected = isSelected;
             }
         }
         config->buildOverlayLists();

@@ -137,7 +137,8 @@ public:
      MAPQUEST
  };
  int mapSource = GOOGLEMAPS;
- QList<QPair<QString, bool>> allowedSources = QList<QPair<QString, bool>>();
+ //QList<QPair<QString, bool>> allowedSources = QList<QPair<QString, bool>>();
+ QMap<QString, bool> allowedSources  = QMap<QString, bool>();
 
 
 private:

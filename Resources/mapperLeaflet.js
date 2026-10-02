@@ -29,6 +29,7 @@ var OSBaseMaps = [];
 var MQBaseMaps = [];
 let magnifyingGlassControl = null;
 var MapQuest = false;
+var activeOverlays = [];
 
 var image = ["https://maps.google.com/mapfiles/marker.png",
   "https://maps.google.com/mapfiles/dd-start.png",
@@ -66,6 +67,7 @@ var images = {"default":0, "start":1, "end":2, "shadow":3, "arrow":4, "arrowShad
 // ****************************************************************************************
 function addCustomSlider(opacity)
 {
+
   const CustomSlider = L.Control.extend({
       options: {
           position: 'topright' // Choose map corner: topleft, topright, bottomleft, bottomright
@@ -90,15 +92,20 @@ function addCustomSlider(opacity)
           L.DomEvent.on(slider, 'input', function (e) {
               // console.log("Slider value changed to:", e.target.value);
               // Put your custom map logic here (e.g., change layer opacity, filter data by year)
-            if(overlay !== null)
-              overlay.setOpacity(e.target.value);
+            // if(overlay !== null)
+            //   overlay.setOpacity(e.target.value);
+              var overlay = null;
+              for(const [ix, overlayLayer] of activeOverlays.entries())
+              {
+                overlayLayer.setOpacity(e.target.value/ 100.);
+              }
           });
 
           return container;
       }
   });
 
-  map.addControl(opacityControl = new CustomSlider(overlay.opacity));
+  map.addControl(opacityControl = new CustomSlider(activeOverlays.at(0).options.opacity));
 
 }
 var circle;
@@ -1186,6 +1193,19 @@ function getOpacity()
  return overlay.getOpacity();
 }
 
+function getOverlayCount() {
+    var count = 0;
+
+    map.eachLayer(function (layer) {
+        // Check if the layer exists and has your custom identifier set to true
+        if (layer.options && layer.options.isOverlay) {
+            count++;
+        }
+    });
+
+    return count;
+} // getOverlayCount
+
 function getPinLocations()
 {
     const pointsArray = [];
@@ -1694,11 +1714,7 @@ function initMap()
 
     webViewBridge.queryOverlay();
 
-    webViewBridge.displayZoom(map.getZoom());
-
-    map.on("zoomend", function() {
-        webViewBridge.zoomChanged(map.getZoom());
-    });
+    webViewBridge.zoom =map.getZoom();
 
     map.on( "contextmenu", function(event) {
         // Prevent the browser's default right-click context menu from opening
@@ -1791,7 +1807,7 @@ function isAddModeOn()
   return "false";
 }// end isAddModeOn()
 
-function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
+function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls, noDelete)
 {
  console.log("load overlay: " + name + " opacity =" + opacity + " minZoom =" + minZoom + " maxZoom = " + maxZoom + " source = " + source + " bounds = " + bounds + " urls = " + urls);
  console.log("urls type = " + typeof(urls));
@@ -1804,18 +1820,24 @@ function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
  {
      console.warn("overlay: " + name +"has no url!");
  }
- if(overlayLayer)
- {
-   map.removeLayer(overlayLayer);
-   overlayLayer = null;
- }
+
+ // if(overlayLayer  && noDelete === "false")
+ // {
+ //   map.removeLayer(overlayLayer);
+ //   overlayLayer = null;
+ // }
 
  if(minZoom < 0 || maxZoom > 21)
      console.warn("invalid min/max zoom for overlay: " + name + " opacity =" + opacity + " minZoom =" + minZoom + " maxZoom = " + maxZoom);
- if ( overlay !== null)
+ if (activeOverlays.length > 0 && noDelete === false)
  {
 //   map.overlayMapTypes.clear();
-   overlay = null;
+     for (const [index, layer] of activeOverlays.entries())
+     {
+         layer.removeLayer();
+     }
+
+   //overlay = null;
   if(opacityControl !== null)
   {
    opacityControl.remove();
@@ -1832,7 +1854,9 @@ function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
   var mapMinZoom = minZoom;
   var mapMaxZoom = maxZoom;
 
-  overlay = new Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls);
+  var newOverlay = new Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls);
+  activeOverlays.push(overlayLayer);
+  overlay = newOverlay;
   // overlayLayer = L.tileLayer(ovstr,{
   //    maxZoom: maxZoom,
   //        opacity: opacity,
@@ -1842,18 +1866,25 @@ function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls)
    {
      addCustomSlider(opacity);
    }
+
  // let range = document.getElementsByClassName('slider-container');
  // let button = document.getElementById('opacity-slider');
  // // button[0].addEventListener('click', function() {
  // //   range[0].value = opacity;
  // // })
  // button.value = opacity;
- overlayLayer.setOpacity(opacity / 100.)
+
+ //overlayLayer.setOpacity(opacity / 100.)
+    for(const [ix, ov] of activeOverlays.entries())
+    {
+        overlay = ov;
+       overlay.setOpacity(opacity / 100.);
+    }
 
 //  google.maps.event.addListener(map, "zoom_changed", function() {
     map.on('zoomend', function() {
         //webViewBridge.displayZoom(map.getZoom());
-        webViewBridge.setZoom(map.getZoom());
+        webViewBridge.zoom = map.getZoom();
         var newZoom = map.getZoom();
 
   if(overlay != null)
@@ -1957,6 +1988,8 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
  this.source = source;
  this.overlayBounds = overlayBounds;
  this.urls = urls;
+ //this.overlayLayer = null;
+
  var ymax;
  var y;
  var x;
@@ -2069,25 +2102,34 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
               var url = urls.replace('{z}',z).replace('{x}',x).replace('{y}',y);
               console.debug(url);
               return url;
-          }
+          },
     });
  }
  else if(source === "geoserver")
  {
      // 1. Extend L.TileLayer to create a custom class
-      L.TileLayer.Custom = L.TileLayer.extend({
-          getTileUrl: function (coords) {
-              ymax = 1 << coords.z;
-              y = ymax - coords.y -1;
-              x = coords.x;
-              z = coords.z;
-              //var url = urls.replace('{z}',z).replace('{x}',x).replace('{y}',y);
-              var url = urls + "/gwc/service/tms/1.0.0/" + name + "@EPSG:900913@png/{z}/{x}/{y}.png";
-              url = url.replace('{z}',z).replace('{x}',x).replace('{y}',y);
-              console.debug(url);
-              return url;
-          }
-    });
+    //   L.TileLayer.Custom = L.TileLayer.extend({
+    //       getTileUrl: function (coords) {
+    //           ymax = 1 << coords.z;
+    //           y = ymax - coords.y -1;
+    //           x = coords.x;
+    //           z = coords.z;
+    //           //var url = urls.replace('{z}',z).replace('{x}',x).replace('{y}',y);
+    //           var url = urls + "/gwc/service/tms/1.0.0/" + name + "@EPSG:900913@png/{z}/{x}/{y}.png";
+    //           url = url.replace('{z}',z).replace('{x}',x).replace('{y}',y);
+    //           console.debug(url);
+    //           return url;
+    //       }
+    // });
+      overlayLayer = L.tileLayer(urls + '/gwc/service/tms/1.0.0/' + name + '@EPSG:900913@png/{z}/{x}/{y}.png', {
+         tms: true,          // <--- This automatically flips the Y axis for GeoServer TMS
+         transparent: true,
+         format: 'image/png',
+         isOverlay: true
+        }).addTo(map);
+
+
+     return;
  }
  else
   return "";
@@ -2100,7 +2142,9 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
  };
 
  // 3. Add it to your map
- overlayLayer = L.tileLayer.custom({ maxZoom: 18, opacity: opacity/100., zIndex: map.getZoom  }).addTo(map);
+ overlayLayer = L.tileLayer.custom({ maxZoom: 18, opacity: opacity/100.,
+                                       zIndex: map.getZoom, isOverlay: true  }).addTo(map);
+
  return "";
 } // end Overlay()
 
@@ -2280,7 +2324,11 @@ function removeOverlay()
      opacityControl.remove();
      opacityControl = null;
     }
-    map.removeLayer(overlayLayer );
+    for (const [index, layer] of activeOverlays.entries())
+    {
+        layer.removeLayer();
+    }
+
 } // end removeOverlay()
 
 function removeStationMarker(stationKey)

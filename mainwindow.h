@@ -247,7 +247,7 @@ private slots:
     void txtStreetName_Leave();
     void txtSegment_Leave();
     void newCity(QAction* act );
-    void newOverlay(QAction* act);
+    void newOverlay(QAction* act, bool noDelete = true);
     void splitRoute_Click();
     void combineRoutes();
     void renameRoute_Click();
@@ -274,6 +274,7 @@ private slots:
     void On_saveImage_clicked();
     void on_createKmlFile_triggered();
     void fillOverlayMenu();
+    void fillAdditionalOverlayMenu();
     void queryOverlay();
     void onCommentChange(CommentInfo ci, SQL::CHANGETYPE t);
 
@@ -331,6 +332,7 @@ private:
     QMenu* optionsMenu;
     QMenu *overlayMenu = nullptr;
     QMenu *overlaysMenu = nullptr;
+    QMenu* additionalOverlaysMenu = nullptr;
 
     QMenu* cbRouteMenu = nullptr;
     QMenu tab1Menu;
@@ -432,10 +434,13 @@ private:
 
     QList<QAction*> cityActions;
     QList<QAction*> overlayActions;
+    QList<QAction*> additionalOverlayActions;
+    QList<QUuid> activeOverlayUuids;
 
     //QSignalMapper *overlaySignalMapper;
     QActionGroup  *overlayActionGroup;
     QString  currentOverlay;
+    QUuid currentOverlayUuid;
     QMap<int,TractionTypeInfo> tractionTypeList;
     QList<CompanyData*> companyList;
     QList<CompanyData*> selectedCompanyList;
@@ -499,7 +504,7 @@ private:
     bool openBrowserWindow();
     bool openWebViewPanel();
     // bool setupbridge();
-    void loadOverlay(Overlay* ov);
+    void loadOverlay(Overlay* ov, bool add=false);
     QString wikiRoot;
     QString cwd;
     void loadData(QString data, QString source);

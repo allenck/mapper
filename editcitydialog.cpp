@@ -373,7 +373,7 @@ void EditCityDialog::ok_clicked()
   foreach (City* c, config->cityList) {
       c->city_overlayMap->clear();
       foreach (Overlay* ov, config->overlayMap->values()) {
-          if(ov->isSelected)
+          if(ov->isSelected && c->name() == ov->cityName)
               c->city_overlayMap->insert(ov->name, ov);
       }
   }
@@ -534,12 +534,13 @@ void EditCityDialog::tablev_customContextMenu( const QPoint& pt)
           if(rslt == QDialog::Accepted)
           {
               QString workspace = dlg.getResult();
-              QList<QPair<QString,bool>> pairs = QList<QPair<QString,bool>>();
+              //QList<QPair<QString,bool>> pairs = QList<QPair<QString,bool>>();
+              QMap<QString, bool> pairs = QMap<QString, bool>();
               QList<Overlay*> wsOverlays = QList<Overlay*>();
               foreach (Overlay* o, *list) {
                   if(o->_layerName.contains(workspace))
                   {
-                    pairs.append(QPair<QString,bool>(o->_layerName,false));
+                    pairs.insert(o->_layerName,false);
                     wsOverlays.append(o);
                   }
               }
@@ -548,11 +549,16 @@ void EditCityDialog::tablev_customContextMenu( const QPoint& pt)
               if(dlg.exec()== QDialog::Accepted)
               {
                   pairs = dlg.getCheckList();
-                  for(int ii=0; ii < pairs.count(); ii)
+                  // for(int ii=0; ii < pairs.count(); ii)
+                  int ii =0;
+                  QMapIterator<QString, bool> iter(pairs);
+                  while (iter.hasNext())
                   {
-                      QPair<QString,bool> pair = pairs.at(ii);
+                          iter.next();
+                      //QPair<QString,bool> pair = pairs.at(ii);
+                          QString str = iter.key();
                       Overlay* o = wsOverlays.at(ii++);
-                      if(pair.second) // is checked?
+                      if(o->isSelected) // is checked?
                       {
                           bool bExists = false;
                           QList<Overlay*> oList = model->getOverlayMap()->values();

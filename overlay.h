@@ -32,6 +32,7 @@ public:
   wmtsUrl = other.wmtsUrl;
   _year = other._year;
   _layerName = other._layerName;
+  _uuid = other._uuid;
  }
  //  QStringList urls() {return _urls;}
  // void setUrls(QStringList urls){
@@ -98,6 +99,7 @@ public:
   _url = other._url;
   wmtsUrl = other.wmtsUrl;
   _year = other._year;
+  _uuid = other._uuid;
   return this;
  }
 
@@ -108,7 +110,7 @@ public:
  Bounds bounds(){return _bounds;}
  LatLng setBounds(Bounds bounds) {_bounds = bounds; return _bounds.center();}
  bool checkValid();
-
+ QUuid uuid() {return _uuid;}
  private:
  static QList<Overlay*> overlayList;
  QString _year;
@@ -120,6 +122,7 @@ public:
  QString _url;
  QString fileDownloaderHost;
  QList<Overlay*>* wmtsList = nullptr;
+ QUuid _uuid;
 
  private slots:
     void processTileMapResource();

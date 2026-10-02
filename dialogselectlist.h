@@ -16,8 +16,8 @@ public:
     ~DialogSelectList();
     void setList(QStringList);
     QString getResult();
-    void setCheckList(QList<QPair<QString, bool> > items);
-    QList<QPair<QString, bool>> getCheckList();
+    void setCheckList(QMap<QString, bool> items);
+    QMap<QString, bool> getCheckList();
     void setInstructions(QString text);
 
 private slots:
@@ -27,7 +27,7 @@ private:
     Ui::DialogSelectList *ui;
     QStringList list;
     QString result;
-    QList<QPair<QString, bool>> checkList;
+    QMap<QString, bool> checkList;
 };
 
 #endif // DIALOGSELECTLIST_H

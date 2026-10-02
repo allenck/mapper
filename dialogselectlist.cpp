@@ -36,20 +36,23 @@ void DialogSelectList::setList(QStringList list)
 }
 
 // add list of checkable items
-void DialogSelectList::setCheckList(QList<QPair<QString, bool>> items)
+void DialogSelectList::setCheckList(QMap<QString, bool> items)
 {
     this->checkList = items;
     ui->listWidget->clear();
     this->list.clear();
     ui->listWidget->blockSignals(true);
-    for (const QPair<QString, bool> &pair : checkList) {
-        QListWidgetItem *item = new QListWidgetItem(pair.first, ui->listWidget);
-
+    //for (const QPair<QString, bool> &pair : checkList) {
+    QMapIterator<QString, bool> iter(checkList);
+    while(iter.hasNext()){
+        iter.next();
+        //QListWidgetItem *item = new QListWidgetItem(pair.first, ui->listWidget);
+        QListWidgetItem *item = new QListWidgetItem(iter.key(), ui->listWidget);
         // 1. Grant checkable flags
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
 
         // 2. Set default check state so the box displays
-        item->setCheckState(pair.second?Qt::Checked:Qt::Unchecked);
+        item->setCheckState(iter.value()?Qt::Checked:Qt::Unchecked);
 
         ui->listWidget->addItem(item);
     }
@@ -61,9 +64,12 @@ void DialogSelectList::setCheckList(QList<QPair<QString, bool>> items)
 void DialogSelectList::onItemChanged(QListWidgetItem *item)
 {
     int rowIndex = ui->listWidget->row(item);
-    QPair<QString,bool> pair = checkList.at(rowIndex);
-    pair.second = item->checkState();
-    checkList.replace(rowIndex,pair);
+    // QPair<QString,bool> pair = checkList.at(rowIndex);
+    // pair.second = item->checkState();
+    // checkList.replace(rowIndex,pair);
+    QString str = item->data(Qt::DisplayRole).toString();
+    bool b = item->data(Qt::CheckStateRole).toBool();
+    checkList.insert(str,b);
 }
 
 QString DialogSelectList::getResult()
@@ -71,7 +77,7 @@ QString DialogSelectList::getResult()
     return result;
 }
 
-QList<QPair<QString, bool>> DialogSelectList::getCheckList()
+QMap<QString, bool> DialogSelectList::getCheckList()
 {
     return checkList;
 }

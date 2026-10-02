@@ -418,11 +418,15 @@ void Configuration::saveSettings2()
 
     settings->beginWriteArray("allowedSources");
     //foreach (IntPair pair, allowedSources) {
-    for(int i= 0; i < allowedSources.count(); i++){
-        IntPair pair = allowedSources.at(i);
-        settings->setArrayIndex((i));
-        settings->setValue("allowedSource", pair.first);
-        settings->setValue("allowed",pair.second);
+    // for(int i= 0; i < allowedSources.count(); i++){
+    //     IntPair pair = allowedSources.at(i);
+    QMapIterator<QString, bool> iter(allowedSources);
+    int i=0;
+    while(iter.hasNext()) {
+        iter.next();
+        settings->setArrayIndex((i++));
+        settings->setValue("allowedSource", iter.key());
+        settings->setValue("allowed",iter.value());
     }
     settings->endArray();
 }
@@ -782,9 +786,11 @@ void Configuration::getSettings()
        // QVariant var = settings.value("allowedSource");
        // if (var.canConvert<QPair<QString,bool>>())
        QPair<QString,bool> pair;
-       pair.first = settings.value("allowedSource").toString();
-       pair.second = settings.value("allowed").toBool();
-       allowedSources.append( pair);
+       // pair.first = settings.value("allowedSource").toString();
+       // pair.second = settings.value("allowed").toBool();
+       // allowedSources.append( pair);
+       allowedSources.insert(settings.value("allowedSource").toString(), settings.value("allowed").toBool());
+
    }
    settings.endArray();
 
@@ -1174,10 +1180,11 @@ qDebug() << settings.group();
     {
         // QVariant var = settings.value("allowedSource");
         // if (var.canConvert<QPair<QString,bool>>())
-        QPair<QString,bool> pair;
-        pair.first = settings.value("allowedSource").toString();
-        pair.second = settings.value("allowed").toBool();
-        allowedSources.append( pair);
+        // QPair<QString,bool> pair;
+        // pair.first = settings.value("allowedSource").toString();
+        // pair.second = settings.value("allowed").toBool();
+        // allowedSources.append( pair);
+        allowedSources.insert(settings.value("allowedSource").toString(),settings.value("allowed").toBool());
     }
     settings.endArray();
 
@@ -1210,6 +1217,13 @@ bool Configuration::buildOverlayLists()
             {
                 ov->setBounds(Bounds(LatLng(city->center.lat()-.3, city->center.lon()-.3), LatLng(city->center.lat()+.3, city->center.lon()+.3)));
             }
+            if(!allowedSources.contains(ov->_layerName))
+            {
+                QUrl url = QUrl(ov->url());
+                QString host = url.toString(QUrl::RemovePath | QUrl::RemoveQuery);
+
+                allowedSources.insert(host,ov->isSelected);
+            }
             overlayMap->insert(ov->cityName+"|"+ov->name, ov);
             if(city && city->name() == ov->cityName)
             {
@@ -1220,7 +1234,7 @@ bool Configuration::buildOverlayLists()
                     QUrl url = QUrl(ov->url());
                     QString host = url.toString(QUrl::RemovePath | QUrl::RemoveQuery);
                     QPair<QString,bool> pair =QPair<QString,bool>(host,true);
-                    ov->isSelected = allowedSources.contains(pair);
+                    ov->isSelected = allowedSources.contains(host);
                     city->city_overlayMap->insert(ov->name, ov);
                     qInfo() << "add overlay " << ov->name << " for city:" << city->name();
                 }
