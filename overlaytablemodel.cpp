@@ -299,11 +299,11 @@ bool OverlayTableModel::setData(const QModelIndex &index, const QVariant &value,
           break;
       case SOURCE:
       {
-        QString ns = value.toString();
-          if( ns == "acksoft" || ns == "georeferencer" || ns == "geoserver")
+        // QString ns = value.toString();
+        //   if( ns == "acksoft" || ns == "acksoft2" || ns == "georeferencer" || ns == "georeferencer2"|| ns == "geoserver")
           ov->source = value.toString();
-        else
-          return false;
+        // else
+        //   return false;
       }
       break;
       case LAYER:
