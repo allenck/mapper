@@ -1130,7 +1130,7 @@ void MainWindow::fillOverlayMenu()
   }
  }
  connect(overlayActionGroup, &QActionGroup::triggered,this, [=] (QAction* act) {
-     newOverlay(act, true);
+     newOverlay(act, false);
      fillAdditionalOverlayMenu();
  });
 }
@@ -1186,7 +1186,7 @@ void MainWindow::fillAdditionalOverlayMenu()
       }
   }
   connect(overlayActionGroup, &QActionGroup::triggered,this, [=] (QAction* act) {
-     newOverlay(act, false);
+     newOverlay(act, true);
   });
 }
 
@@ -2054,7 +2054,39 @@ void MainWindow::createMenus()
       sortMenu = new Menu(tr("Route Sort option"));
       sortMenu->addAction(createWidgetAction());
       mapSourceMenu = new Menu(tr("Map Source"));
-      mapSourceMenu->addAction(createMapSourceAction());
+      //mapSourceMenu->addAction(createMapSourceAction());
+      QActionGroup* grp = new QActionGroup(this);
+      QAction* act = new QAction(tr("Google Maps"),this);
+      act->setData(0);
+      act->setCheckable(true);
+      if(config->mapSource == 0)
+          act->setChecked(true);
+      mapSourceMenu->addAction(act);
+      grp->addAction(act);
+      act = new QAction(tr("Open Street Maps"),this);
+      act->setCheckable(true);
+      act->setData(1);
+      if(config->mapSource == 1)
+          act->setChecked(true);
+      mapSourceMenu->addAction(act);
+      grp->addAction(act);
+      act = new QAction(tr("MapQuest"),this);
+      act->setCheckable(true);
+      act->setData(1);
+      if(config->mapSource == 2)
+          act->setChecked(true);
+      mapSourceMenu->addAction(act);
+      grp->addAction(act);
+      connect(grp,&QActionGroup::triggered, this, [=](QAction* act){
+          int sel = act->data().toInt();
+          act->setChecked(true);
+          config->mapSource = sel;
+          config->currCity->mapSource = sel;
+          config->currCity->mapId = config->mapId;
+          config->currCity->mapType = config->mapType;
+          config->saveSettings();
+          reloadMap();
+      });
       optionsMenu->addMenu(mapSourceMenu);
       optionsMenu->addMenu(sortMenu);
       optionsMenu->addAction(showGoogleMapFeaturesAct);
