@@ -1,5 +1,6 @@
 **Recent Changes October 2026 VERSION=1.2.11
-1. Add
+1. save and restore mapType.
+
 **Recent Changes September 2026 VERSION=1.2.10
 1. Add new OpenStreetMap and Mapquest map sources.
 2. Add support for geoserver tiles for overlays. Query WMTS capabilities from geoserver and add selected maps to overlays.

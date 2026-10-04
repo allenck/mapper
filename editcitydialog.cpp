@@ -528,7 +528,8 @@ void EditCityDialog::tablev_customContextMenu( const QPoint& pt)
               }
           }
           DialogSelectList dlg = DialogSelectList();
-          dlg.setInstructions(tr("Select the workspace geoserver is using."));
+          dlg.setWindowTitle(tr("Select Workspace"));
+          dlg.setInstructions(tr("Select the geoserver workspace."));
           dlg.setList(workspaces);
           int rslt = dlg.exec();
           if(rslt == QDialog::Accepted)
@@ -551,16 +552,15 @@ void EditCityDialog::tablev_customContextMenu( const QPoint& pt)
                   pairs = dlg.getCheckList();
                   // for(int ii=0; ii < pairs.count(); ii)
                   int ii =0;
+                  bool bExists = false;
                   QMapIterator<QString, bool> iter(pairs);
                   while (iter.hasNext())
                   {
-                          iter.next();
-                      //QPair<QString,bool> pair = pairs.at(ii);
-                          QString str = iter.key();
-                      Overlay* o = wsOverlays.at(ii++);
-                      if(o->isSelected) // is checked?
-                      {
-                          bool bExists = false;
+                        iter.next();
+                        QString str = iter.key();
+                        Overlay* o = wsOverlays.at(ii++);
+                      // if(o->isSelected) // is checked?
+                      // {
                           QList<Overlay*> oList = model->getOverlayMap()->values();
                           for (int jj = 0; jj < oList.count(); ++jj)
                           {
@@ -577,14 +577,15 @@ void EditCityDialog::tablev_customContextMenu( const QPoint& pt)
                                   bExists = true;
                                   bDirty = true;
                                   qDebug() << o2->_layerName << " updated";
+                                  break;
                               }
                           }
-                          if(!bExists)
-                          {
-                              model->getOverlayMap()->insert(o->name,o);
-                              qDebug() << o->_layerName << " added";
-                              bDirty = true;
-                          }
+                      // }
+                      if(!bExists)
+                      {
+                          model->getOverlayMap()->insert(o->name,o);
+                          qDebug() << o->_layerName << " added";
+                          bDirty = true;
                       }
                   }
               }

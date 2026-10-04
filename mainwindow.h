@@ -377,6 +377,7 @@ private:
     QAction *exportDbAct;
     QAction *editConnectionsAct;
     QAction* manageOverlaysAct;
+    QAction* removeOverlaysAct;
     QAction* testUrlAct;
     QAction* testScriptAct;
     QAction* testLoadAct;
@@ -440,6 +441,7 @@ private:
     //QSignalMapper *overlaySignalMapper;
     QActionGroup  *overlayActionGroup;
     QString  currentOverlay;
+    QList<Overlay*> currentOverlays;
     QUuid currentOverlayUuid;
     QMap<int,TractionTypeInfo> tractionTypeList;
     QList<CompanyData*> companyList;

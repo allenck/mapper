@@ -47,11 +47,11 @@ QVariant OverlayTableModel::headerData(int section, Qt::Orientation orientation,
   case YEAR:
    return tr("Year");
   case MINZOOM:
-    return tr("Min Zoom");
+    return tr("MinZ");
   case MAXZOOM:
-    return tr("Max Zoom");
+    return tr("MaxZ");
   case OPACITY:
-   return tr("Default Opacity");
+   return tr("Opacity");
   case LOCAL:
    return tr("Local file");
   case LAYER:

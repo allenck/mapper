@@ -181,6 +181,12 @@ QList<Overlay*>* Overlay::processWmsCapabilities()
                         if(!elem.isNull())
                             ov->_layerName = elem.text();
                         qDebug() << ov->_layerName;
+                        QStringList sl = ov->_layerName.split(':');
+                        if(sl.count() > 1)
+                        {
+                            if(sl.at(0) == "ne" || sl.at(0) == "nurc" || sl.at(0) == "sf" || sl.at(0) == "tiger" || sl.at(0) == "topp")
+                                continue; //ignore geocoder demo workspaces
+                        }
                         LatLng sw;
                         LatLng ne;
                         QDomElement bounds = layer.firstChildElement("ows:WGS84BoundingBox");

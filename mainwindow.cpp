@@ -501,8 +501,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   geocoderRequestAct->setChecked(config->currCity->bGeocoderRequest);
   m_bridge->processScript("setGeocoderRequest", config->currCity->bGeocoderRequest?"true":"false");
 #endif
-  connect(m_bridge, &WebViewBridge::onMapIdChanged,this, [=](QString mapId){
-    qDebug() << "mapId: " << mapId;
+  connect(m_bridge, &WebViewBridge::onMapIdChanged,this, [=](){
+    qDebug() << "mapId: " << m_bridge->_mapId;
   });
   if(config->currCity->city_overlayMap->count()> 0)
   {
@@ -1073,8 +1073,11 @@ void MainWindow::loadOverlayData()
 
 void MainWindow::loadOverlay(Overlay* ov, bool add)
 {
- currentOverlay = ov->name;
- currentOverlayUuid = ov->uuid();
+    if(!add)
+        currentOverlays.clear();
+  currentOverlay = ov->name;
+  currentOverlayUuid = ov->uuid();
+    currentOverlays.append(ov);
  if(ov->source == "geoserver")
      currentOverlay = ov->_layerName;
  currentOv = ov;
@@ -1083,6 +1086,7 @@ void MainWindow::loadOverlay(Overlay* ov, bool add)
  QVariantList objArray;
  objArray << currentOverlay<< ov->opacity << ov->minZoom << ov->maxZoom << ov->source << ov->bounds().toString()<< ov->url() << (add?"true":"false");
  m_bridge->processScript("loadOverlay", objArray);
+ ui->chkShowOverlay->setEnabled(true);
  ui->chkShowOverlay->setChecked(true);
 }
 
@@ -1133,6 +1137,7 @@ void MainWindow::fillOverlayMenu()
      newOverlay(act, false);
      fillAdditionalOverlayMenu();
  });
+ removeOverlaysAct->setEnabled(currentOverlays.count() > 0);
 }
 
 void MainWindow::fillAdditionalOverlayMenu()
@@ -1507,6 +1512,16 @@ void MainWindow::createActions()
  manageOverlaysAct = new QAction(tr("Manage Overlays"), this);
  manageOverlaysAct->setStatusTip(tr("Edit overlay info including selecting which available overlays can be displayed as well as defining additional overlays.."));
  connect(manageOverlaysAct, SIGNAL(triggered()), this, SLOT(On_editCityInfo()));
+
+ removeOverlaysAct = new QAction(tr("Remove Overlay(s)"),this);
+ removeOverlaysAct->setStatusTip(tr("Remove any currentl displayed overlays"));
+ connect(removeOverlaysAct, &QAction::triggered, this, [=]{
+     m_bridge->processScript("removeOverlay");
+     currentOv = nullptr;
+      currentOverlays.clear();
+      ui->chkShowOverlay->setEnabled(false);
+
+ });
 
  selectOverlaysAct = new QAction(tr("Select Overlay sources"), this);
  selectOverlaysAct->setStatusTip(tr("Select allowed sources of overlays"));
@@ -1983,7 +1998,6 @@ void MainWindow::createMenus()
     connectionsMenu->addSeparator();
     //createCityMenu();
     connectionsMenu->addAction(editConnectionsAct);
-    //connectionsMenu->addAction(manageOverlaysAct);
     connectionsMenu->addAction(newCityAct);
     connectionsMenu->addAction(removeCityAct);
     connectionsMenu->addAction(updateParametersAct);
@@ -2036,6 +2050,7 @@ void MainWindow::createMenus()
       connect(overlayMenu, SIGNAL(aboutToShow()), this, SLOT(fillOverlayMenu()));
       overlaysMenu->addAction(manageOverlaysAct);
       overlaysMenu->addAction(selectOverlaysAct);
+      overlaysMenu->addAction(removeOverlaysAct);
       optionsMenu->addAction(displayRouteCommentsAct);
       displayRouteCommentsAct->setChecked(config->currCity->bDisplayRouteComments);
       optionsMenu->addAction(displayStationMarkersAct);
@@ -2059,21 +2074,21 @@ void MainWindow::createMenus()
       QAction* act = new QAction(tr("Google Maps"),this);
       act->setData(0);
       act->setCheckable(true);
-      if(config->mapSource == 0)
+      if(config->mapSource == config->GOOGLEMAPS)
           act->setChecked(true);
       mapSourceMenu->addAction(act);
       grp->addAction(act);
       act = new QAction(tr("Open Street Maps"),this);
       act->setCheckable(true);
       act->setData(1);
-      if(config->mapSource == 1)
+      if(config->mapSource == config->OPENSTREETMAPS)
           act->setChecked(true);
       mapSourceMenu->addAction(act);
       grp->addAction(act);
       act = new QAction(tr("MapQuest"),this);
       act->setCheckable(true);
       act->setData(1);
-      if(config->mapSource == 2)
+      if(config->mapSource == config->MAPQUEST)
           act->setChecked(true);
       mapSourceMenu->addAction(act);
       grp->addAction(act);
@@ -2289,6 +2304,8 @@ void MainWindow::newCity(QAction* act )
     config->mapId = config->currCity->mapId;
     config->mapType = config->currCity->mapType;
     config->bRunInBrowser = config->currCity->bDisplayMapInBrowser;
+    ui->chkShowOverlay->setEnabled(false);
+
     reloadMap();
     m_bridge->processScript("showRouteComment", "false");
 
@@ -5428,7 +5445,11 @@ void MainWindow::chkShowOverlayChanged(bool bChecked)
  if(bChecked && config->currCity->curOverlayId >= 0)
  {
   Overlay* ov = config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId);
-  loadOverlay(ov);
+  bool bAdd = false;
+  foreach (Overlay* ov, currentOverlays) {
+      loadOverlay(ov, bAdd);
+      bAdd = true;
+  }
  }
  else
  {
@@ -6265,7 +6286,7 @@ void MainWindow::showGoogleMapFeatures( bool bShow)
  else
   //m_bridge->processScript("setOption", "{ styles: styles[\"default\"] }");
      config->mapId = "DEMO_MAP_ID";
- m_bridge->setMapId(config->mapId);
+ //m_bridge->changeMapId(config->mapId);
  reloadMap();
  config->bShowGMFeatures = bShow;
 }
