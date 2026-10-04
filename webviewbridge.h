@@ -11,25 +11,8 @@ class MainWindow;
 class WebViewBridge : public QObject
 {
     Q_OBJECT
-public:
-    WebViewBridge(MainWindow *parent = 0);
-    WebViewBridge(LatLng latLng, int zoom, QString mapType, QString mapId, QString options, MainWindow *parent = 0);
-    MainWindow* m_parent = nullptr;
-//    int browseWindowWidth;
-//    int browseWindowHeight;
-//    int curBrowseWindowWidth();
-//    int curBrowseWindowHeight();
-//    Q_PROPERTY(int browseWindowWidth READ curBrowseWindowWidth NOTIFY isCurBrowseWindowWidthChanged)
-//    Q_PROPERTY(int browseWindowHeight READ curBrowseWindowHeight )
-    float curLat() const;
-    float curLon() const;
-    LatLng curLatLng();
-    //bool runInBrowser();
-    int curZoom();
-    QString curMapType();
-    QString curMapId();
-    QString curName();
-    QString options();
+
+    // 1. Property Declarations
     Q_PROPERTY(QString name READ curName WRITE setName NOTIFY onNameChanged FINAL)
     Q_PROPERTY(float lat READ curLat NOTIFY onLatChanged)
     Q_PROPERTY(float lng READ curLon NOTIFY onLngChanged)
@@ -37,63 +20,67 @@ public:
     Q_PROPERTY(QString mapType READ curMapType WRITE setMapType NOTIFY onMapTypeChanged FINAL)
     Q_PROPERTY(QString mapId READ curMapId WRITE setMapId NOTIFY onMapIdChanged)
     Q_PROPERTY(LatLng latlng MEMBER _latLng WRITE setLatLng NOTIFY latlngChanged)
-    // Q_PROPERTY(bool runInBrowser READ runInBrowser NOTIFY onRunInBrowserChanged )
     Q_PROPERTY(QString options READ options  NOTIFY  onOptionsChanged )
-    void processScript(QString func, QString parms);
-    void processScript(QString func);
+    Q_PROPERTY(QVariant myRslt  WRITE setMyRslt NOTIFY myRsltChanged FINAL)
+public:
+    // 2. Constructor
+    explicit WebViewBridge(QObject *parent = nullptr);
+    WebViewBridge(LatLng latLng, int zoom, QString mapType, QString mapId, QString options, QObject *parent = 0);
+
+    // 3. Getter Functions
+    QString curName() const { return _name; }
+    float curLat() const { return _lat; }
+    float curLon() const { return _lng; } // Matches macro's READ curLon
+    int curZoom() const { return _zoom; }
+    QString curMapType() const { return _mapType; }
+    QString curMapId() const { return _mapId; }
+    QString options() const { return _options; }
+    MainWindow* m_parent = nullptr;
+    LatLng curLatLng();
+    //bool runInBrowser();
+    QT_DEPRECATED void processScript(QString func, QString parms);
+    QT_DEPRECATED void processScript(QString func);
     QT_DEPRECATED void processScript(QString func, QString parms, QString name, QString value);
     void processScript(QString func, QList<QVariant>objArray);
-    bool isListening();
+    QVariant waitForScript(QString func, QVariantList objArray);
 
+    bool isListening();
+    void setMapType(QString &newType)
+    {
+        if(_mapType != newType)
+        {
+            _mapType = newType;
+            emit onMapTypeChanged();
+        }
+    }
     //QVariant rslt;
-    QVariant _myRslt;
+    QVariant _myRslt; // can be a QvariantList
     QVariantList myList;
-    QVariant getRslt();
+    QVariant getRslt(){return _myRslt;}
+    void setMyRslt(QVariant myRslt) {
+        if(_myRslt != myRslt)
+        {
+            _myRslt = myRslt;
+            emit myRsltChanged();
+        }
+    }
     //Q_PROPERTY(QVariant rslt READ getRslt)
     static WebViewBridge* instance();
-    void setLatLng(LatLng latlng);
     bool isResultReceived();
     LatLng rightClick() {return _rightClickLoc;}
-    void setName(QString);
-    void setZoom(int);
+    //void setName(QString);
     ~WebViewBridge();
     int openConnections = 0;
 
-signals:
-    void executeScript(QString func, QString parms);
-    void executeScript2(QString func, QString parms, QString name, QString value);
-    void executeScript3(QString func, QVariantList objArray, qint32 count);
-    void movePointSignal(qint32 segmentId, qint32 i, double newLat, double newLon);
-    void movePointSignalX(qint32 segmentId, qint32 i, LatLng pt, QList<LatLng> points);
-    void addPointSignal(int pt, double lat, double lon);
-    void addPointSignalX(int pt, QList<LatLng> points);
-    void insertPointSignal(int SegmentId, qint32 i, double newLat, double newLon);
-    void insertPointSignalX(int SegmentId, qint32 i, QList<LatLng> points);
-    void segmentSelected(qint32, qint32);
-    void segmentSelectedX(qint32, qint32, QList<LatLng>);
-    void outputSetDebug(QString);
-    void onLatChanged(QString);
-    void onLngChanged(QString);
-    void onZoomChanged(int);
-    void onNameChanged(QString);
-    void latlngChanged(LatLng latLng);
-    //void onRunInBrowserChanged(bool);
-    void segmentStatusSignal(QString txt, QString color);
-    void queryOverlaySignal();
-    void on_scriptResult(QVariant);
-    void on_scriptFunctionResult(QVariant, QVariant);
-    void on_scriptArrayResult(QVariantList);
-    void on_rightClicked(LatLng);
-    void on_cityBounds(Bounds bounds);
-    void onMapIdChanged(QString mapId);
-    void clickLatLng(LatLng);
-    void on_pinClicked(int pinId, LatLng latLng, QString street, int streetid, QString location, int seq);
-    void on_pinMarkerMoved(LatLng latLng);
-    void on_connection_closed();
-    void onOptionsChanged(QString);
-    void onMapTypeChanged(QString);
 
 public slots:
+    // 4. Setter Functions (accessible to QML)
+    void setName(const QString &name);
+    void setZoom(int zoom);
+    void setMapType(const QString &mapType);
+    void setMapId(const QString &mapId);
+    void setLatLng(const LatLng &latLng);
+
     void selectSegment(qint32 i, qint32 SegmentId); //19
     void selectSegmentX(qint32 i, qint32 SegmentId, QVariantList array); //19
     void scriptResult(QVariant rtn); //20
@@ -105,8 +92,6 @@ public slots:
     void setDebug(QString str); //25
     void setLen(qint32 len);
     QT_DEPRECATED void reportMapType(QString mapType);
-    void setMapId(QString);
-    void setMapType(QString);
     void setCenter(double lat, double lon, int zoom, QString mapType);
     void getGeocoderResults(QString text);
     void addPoint(int pt, double lat, double lon); //29
@@ -141,26 +126,64 @@ public slots:
     void pinMarkerMoved(double lat, double lon);
     bool setupbridge();
     QString createIcon(QColor color);
-    void mapTypeChanged(QString mapType);
+    void mapTypeChanged();
     void zoomChanged(int zoom);
+
+signals:
+    // 5. Notification Signals
+    void onNameChanged();
+    void onLatChanged();
+    void onLngChanged();
+    void onZoomChanged();
+    void onMapTypeChanged();
+    void onMapIdChanged();
+    void latlngChanged();
+    void onOptionsChanged();
+    void myRsltChanged();
+
+    void executeScript(QString func, QString parms);
+    QT_DEPRECATED void executeScript2(QString func, QString parms, QString name, QString value);
+    QT_DEPRECATED void executeScript3(QString func, QVariantList objArray, qint32 count);
+    void movePointSignal(qint32 segmentId, qint32 i, double newLat, double newLon);
+    void movePointSignalX(qint32 segmentId, qint32 i, LatLng pt, QList<LatLng> points);
+    void addPointSignal(int pt, double lat, double lon);
+    void addPointSignalX(int pt, QList<LatLng> points);
+    void insertPointSignal(int SegmentId, qint32 i, double newLat, double newLon);
+    void insertPointSignalX(int SegmentId, qint32 i, QList<LatLng> points);
+    void segmentSelected(qint32, qint32);
+    void segmentSelectedX(qint32, qint32, QList<LatLng>);
+    void outputSetDebug(QString);
+    //void onRunInBrowserChanged(bool);
+    void segmentStatusSignal(QString txt, QString color);
+    void queryOverlaySignal();
+    void on_scriptResult(QVariant);
+    void on_scriptFunctionResult(QVariant, QVariant);
+    void on_scriptArrayResult(QVariantList);
+    void on_rightClicked(LatLng);
+    void on_cityBounds(Bounds bounds);
+    void clickLatLng(LatLng);
+    void on_pinClicked(int pinId, LatLng latLng, QString street, int streetid, QString location, int seq);
+    void on_pinMarkerMoved(LatLng latLng);
+    void on_connection_closed();
+
 private slots:
 
 private:
-
-    static WebViewBridge* _instance;
+    // 6. Private Member Variables (Backing Fields)
+    QString _name;
     float _lat;
-    float _lon;
+    float _lng;
     int _zoom;
-//    bool _runInBrowser;
-    LatLng _latLng;
     QString _mapType;
     QString _mapId;
+    LatLng _latLng; // Macro links directly to this via MEMBER
+    QString _options;
+
+    static WebViewBridge* _instance;
     bool bResultReceived;
     Configuration* config;
     LatLng _rightClickLoc;
     QList<LatLng> buildPoints(QVariantList array);
-    QString _name;
-    QString _options;
 
     QWebChannel* channel = nullptr;
     QWebSocketServer* m_server=nullptr;

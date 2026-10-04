@@ -9,25 +9,26 @@
 
 WebViewBridge* WebViewBridge::_instance = NULL;
 
-WebViewBridge::WebViewBridge(MainWindow *parent)
- : QObject()
+WebViewBridge::WebViewBridge(QObject *parent)
+ : QObject(parent)
 {
- m_parent = parent;
+ m_parent = (MainWindow*)parent;
  _instance = this;
  config = Configuration::instance();
 }
 
-WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString mapType, QString mapId, QString options,  MainWindow *parent)
+WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString mapType, QString mapId, QString options,  QObject *parent)
  : QObject()
 {
  this->_latLng = latLng;
  this->_lat = latLng.lat();
- this->_lon = latLng.lon();
+ this->_lng = latLng.lon();
  this->_zoom = zoom;
  this->_mapType = mapType;
  this->_mapId = mapId;
- m_parent = parent;
+ m_parent = (MainWindow*)parent;
  this->_options = options;
+
  _instance = this;
  config = Configuration::instance();
  //this->_runInBrowser = config->bRunInBrowser;
@@ -40,7 +41,7 @@ WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString mapType, QString m
      //     m_parent->reloadMap();
      // }
  });
- connect(this, SIGNAL(mapTypeChanged(QString)), this, SLOT(onMapTypeChanged(QString)));
+ connect(this, SIGNAL(onMapTypeChanged()), this, SLOT(mapTypeChanged()));
 }
 
 WebViewBridge::~WebViewBridge()
@@ -55,27 +56,28 @@ WebViewBridge* WebViewBridge::instance()
  return _instance;
 }
 
-float WebViewBridge::curLat() const {return _lat;}
-float WebViewBridge::curLon() const {return _lon;}
 LatLng WebViewBridge::curLatLng(){return _latLng;}
 //bool WebViewBridge::runInBrowser()  {return _runInBrowser;}
-void WebViewBridge::setLatLng(LatLng latlng){
-    this->_latLng = latlng;
-    emit latlngChanged(latlng);
+void WebViewBridge::setLatLng(const LatLng &latLng){
+    this->_latLng = latLng;
+    emit latlngChanged();
 }
-int WebViewBridge::curZoom(){return _zoom;}
-QVariant WebViewBridge::getRslt(){return _myRslt;}
-QString WebViewBridge::curMapType(){return _mapType;}
-QString WebViewBridge::curMapId(){return _mapId;}
-//void WebViewBridge::setMapId(QString mapid){this->mapId = mapid;}
-void WebViewBridge::setName(QString n){this->_name = n;}
-void WebViewBridge::setZoom(int zoom){
-    _zoom = zoom;
-    emit onZoomChanged(zoom);
+void WebViewBridge::setName(const QString &name)
+{
+    if(name != _name)
+    {
+        _name = name;
+        emit onNameChanged();
+    }
 }
-QString WebViewBridge::curName(){return _name;}
-QString WebViewBridge::options(){ return _options;}
 
+void WebViewBridge::setZoom(int zoom){
+    if(_zoom != zoom)
+    {
+        _zoom = zoom;
+        emit onZoomChanged();
+    }
+}
 void WebViewBridge::processScript(QString func, QString parms)
 {
  //qDebug() << "processScript " << func << " " << parms;
@@ -91,7 +93,39 @@ void WebViewBridge::processScript(QString func)
  bResultReceived = false;
  //myRslt = QVariant();
  myList = QVariantList();
- emit executeScript( func, "");
+ //emit executeScript( func, myList);
+ processScript(func, myList);
+}
+
+QVariant WebViewBridge::waitForScript(QString func, QVariantList objArray)
+{
+    processScript(func, objArray);
+    _myRslt = QVariantList();
+    QEventLoop loop;
+    QTimer timer;
+
+    // 1. Connect the target signal to exit the loop
+    connect(this, &WebViewBridge::on_scriptResult, &loop, &QEventLoop::quit);
+
+    // 2. Setup a safety timeout (e.g., 5000 milliseconds)
+    timer.setSingleShot(true);
+    connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+    timer.start(5000);
+
+    // 3. Block sequentially until either the signal fires or the timer times out
+    loop.exec();
+
+    if (timer.isActive()) {
+        // Success: The signal fired before the timeout occurred
+        timer.stop();
+        qDebug() << "Signal received successfully!";
+        return _myRslt;
+    } else {
+        // Failure: The loop exited due to the timeout
+        qWarning() << "Timed out waiting for the signal!";
+        return QVariantList();
+    }
+
 }
 
 bool WebViewBridge::isListening()
@@ -110,12 +144,15 @@ void WebViewBridge::processScript(QString func, QString parms, QString name, QSt
 {
  //qDebug() << "processScript " << func;
  bResultReceived = false;
+ myList.clear();
+ myList <<func<< parms<< name << value;
  if(!isListening())
  {
     // return;
      qDebug() << "web channel not listening!";
  }
- emit executeScript2( func,  parms, name, value);
+ //emit executeScript2( func,  parms, name, value);
+ processScript(func, myList);
  if(func == "loadOverlay")
   qDebug()<<func + " " + parms + "\n";
 }
@@ -245,7 +282,7 @@ void WebViewBridge::setLen(qint32 len)
     m_parent->setLen(len);
 }
 
-void WebViewBridge::setMapId(QString mapId)
+void WebViewBridge::setMapId(const QString &mapId)
 {
     // m_parent->m_mapid  = mapId;
     // config->mapId = mapId;
@@ -253,16 +290,7 @@ void WebViewBridge::setMapId(QString mapId)
     if(_mapId == mapId)
         return;        // Prevent infinite loops if the value didn't change
     _mapId = mapId;
-    emit onMapIdChanged(mapId);
-}
-
-void WebViewBridge::setMapType(QString mapType)
-{
-    //processScript("setMapType", mapType);
-    if(_mapType == mapType)
-        return;
-    _mapType = mapType;
-    emit onMapTypeChanged(mapType);
+    emit onMapIdChanged();
 }
 
 // called by js to report change of mapType
@@ -273,11 +301,12 @@ void WebViewBridge::reportMapType(QString mapType)
     config->currCity->mapType = mapType;
     config->currCity->mapSource = config->mapSource;
 }
-void WebViewBridge::mapTypeChanged(QString mapType)
+
+void WebViewBridge::mapTypeChanged()
 {
-    m_parent->m_mapType = mapType;
-    config->mapType = mapType;
-    config->currCity->mapType = mapType;
+    m_parent->m_mapType = _mapType;
+    config->mapType = _mapType;
+    config->currCity->mapType = _mapType;
     //config->currCity->mapSource = config->mapSource;
 }
 

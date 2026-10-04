@@ -3094,6 +3094,11 @@ function screenshot()
     });
 }
 
+function changeMapType(mapType)
+{
+
+}
+
 function alertClose()
 {
     alert("you may now close this window");
