@@ -187,7 +187,19 @@ DEPENDPATH += $$PWD/.
 INCLUDEPATH += $$(QTDIR)/../Src/qtbase/src/3rdparty/sqlite
 
 
-VERSION=1.2.10
+VERSION=1.2.11
+# Split the version components to use in the numeric portions of the .rc file
+VERSION_MAJOR = 1
+VERSION_MINOR = 2
+VERSION_PATCH = 3
+VERSION_BUILD = 4
+
+# Pass these variables as preprocessor definitions to the Resource Compiler
+DEFINES += VER_MAJOR=$$VERSION_MAJOR \
+           VER_MINOR=$$VERSION_MINOR \
+           VER_PATCH=$$VERSION_PATCH \
+           VER_BUILD=$$VERSION_BUILD \
+           VER_STRING=\\\"$$VERSION\\\"
 QMAKE_TARGET_COMPANY = "ACK Software"
 QMAKE_TARGET_DESCRIPTION = "My Qt Mapper Application"
 QMAKE_TARGET_COPYRIGHT = "Copyright 2026"
