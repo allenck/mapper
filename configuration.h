@@ -124,12 +124,16 @@ public:
  void setForeignKeyCheck(bool b) {bForeignKeyCheck = b;}
  QFont font = QApplication::font();
  void changeFonts(QWidget *obj, QFont f );
+ QList<Overlay*> currentOverlays;
+ int currOpacity = 65;
+
 #ifdef Q_OS_MACOS
  //bool bUseBundleResources = false;
  QString startCwd;
 #endif
  QString tileServerUrl;
  QMap<QUuid,Connection*> uuidConnectionMap;
+
  enum MAPSOURCE
  {
      GOOGLEMAPS,

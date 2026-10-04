@@ -6,6 +6,7 @@
 #include <QFileDialog>
 #include <QFile>
 #include "routeviewtablemodel.h"
+#include "webviewbridge.h"
 
 QDataStream &operator<<(QDataStream &out, const IntPair &pair) {
     out << pair.first << pair.second;
@@ -220,6 +221,7 @@ void Configuration::saveOldSettings()
  settings->setValue("mapSource", mapSource);
 
  settings->beginWriteArray("allowedSources");
+ settings.remove("");
  //foreach (IntPair pair, allowedSources) {
  for(int i= 0; i < allowedSources.count(); i++){
      IntPair pair = allowedSources.at(i);
@@ -416,12 +418,24 @@ void Configuration::saveSettings2()
     settings->setValue("googleMapsMapId", googleMapsMapId); // Cloud Map ID
     //settings->endGroup();
 
+    settings->remove("currentOverlays");
+    settings->beginWriteArray("currentOverlays");
+    int i =0;
+    foreach(Overlay* ov, currentOverlays)
+    {
+        settings->setArrayIndex(i++);
+        settings->setValue("uuid", ov->_uuid.toString());
+        settings->setValue("name",ov->name);
+        settings->setValue("opacity", WebViewBridge::instance()->_opacity);
+    }
+    settings->endArray();
+
     settings->beginWriteArray("allowedSources");
     //foreach (IntPair pair, allowedSources) {
     // for(int i= 0; i < allowedSources.count(); i++){
     //     IntPair pair = allowedSources.at(i);
     QMapIterator<QString, bool> iter(allowedSources);
-    int i=0;
+    i=0;
     while(iter.hasNext()) {
         iter.next();
         settings->setArrayIndex((i++));
@@ -1127,6 +1141,26 @@ qDebug() << settings.group();
     tileServerUrl = settings.value("tileServerUrl", "https://ubuntu-2/public/map_tiles/").toString();
     mapSource = settings.value("mapSource", MAPSOURCE::GOOGLEMAPS).toInt();
     settingsVersion = settings.value("settingsVersion").toInt();
+
+    qDebug() << "group: "  <<settings.group();
+    currentOverlays.clear();
+    int sizeo = settings.beginReadArray("currentOverlays");
+    for(int j = 0; j < sizeo; j++)
+    {
+        settings.setArrayIndex(j);
+        currOpacity = settings.value("opacity", 65).toInt();
+        QString name = settings.value("name").toString();
+        QUuid ovUuid = QUuid(settings.value("uuid").toString());
+        foreach (Overlay* ov, Overlay::overlayList) {
+
+            if(ov->uuid() == ovUuid || ov->name == name)
+            {
+                ov->opacity = currOpacity;
+                currentOverlays.append(ov);
+            }
+        }
+    }
+    settings.endArray();
     QFont f;
     f.fromString(settings.value("font").toString());
     font =f;
@@ -1178,6 +1212,7 @@ qDebug() << settings.group();
     allowedSources.clear();
     for(int j = 0; j < sizec; j++)
     {
+        settings.setArrayIndex(j);
         // QVariant var = settings.value("allowedSource");
         // if (var.canConvert<QPair<QString,bool>>())
         // QPair<QString,bool> pair;

@@ -2877,7 +2877,8 @@ this.overlayBounds = new google.maps.LatLngBounds(new google.maps.LatLng(vals[1]
   opacityControl.initialize(map);
   google.maps.event.addListener(opacityControl, "opacitychanged", function()
   {
-   webViewBridge.opacityChanged( overlay.name, overlay.getOpacity() );
+      webViewBridge.opacity = overlay.getOpacity() * 100;
+      webViewBridge.opacityChanged( overlay.name, overlay.getOpacity() );
   });
  }
  google.maps.event.addListener(map, "zoom_changed", function() {

@@ -70,7 +70,7 @@ bool Overlay::importXml(QString fileName)
    QDomElement wmtsUrl = elem.firstChildElement("wmtsUrl");
    ov->wmtsUrl = wmtsUrl.text();
    QDomElement uuid = elem.firstChildElement("uuid");
-   QString strUuid = wmtsUrl.text();
+   QString strUuid = uuid.text();
    if(strUuid.isEmpty())
        ov->_uuid = QUuid::createUuid();
    else

@@ -59,9 +59,22 @@ WebViewBridge* WebViewBridge::instance()
 LatLng WebViewBridge::curLatLng(){return _latLng;}
 //bool WebViewBridge::runInBrowser()  {return _runInBrowser;}
 void WebViewBridge::setLatLng(const LatLng &latLng){
-    this->_latLng = latLng;
-    emit latlngChanged();
+    if(this->_latLng != latLng)
+    {
+        this->_latLng = latLng;
+        emit latlngChanged();
+    }
 }
+
+void WebViewBridge::setCurOpacity(const int opacity)
+{
+    if(this->_opacity != opacity)
+    {
+        this->_opacity = opacity;
+        emit curOpacityChanged();
+    }
+}
+
 void WebViewBridge::setName(const QString &name)
 {
     if(name != _name)

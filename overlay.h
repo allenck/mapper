@@ -111,6 +111,7 @@ public:
  LatLng setBounds(Bounds bounds) {_bounds = bounds; return _bounds.center();}
  bool checkValid();
  QUuid uuid() {return _uuid;}
+
  private:
  static QList<Overlay*> overlayList;
  QString _year;

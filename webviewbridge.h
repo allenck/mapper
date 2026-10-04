@@ -22,6 +22,7 @@ class WebViewBridge : public QObject
     Q_PROPERTY(LatLng latlng MEMBER _latLng WRITE setLatLng NOTIFY latlngChanged)
     Q_PROPERTY(QString options READ options  NOTIFY  onOptionsChanged )
     Q_PROPERTY(QVariant myRslt  WRITE setMyRslt NOTIFY myRsltChanged FINAL)
+    Q_PROPERTY(int opacitycurOpacity READ curOpacity WRITE setCurOpacity NOTIFY curOpacityChanged FINAL)
 public:
     // 2. Constructor
     explicit WebViewBridge(QObject *parent = nullptr);
@@ -35,6 +36,7 @@ public:
     QString curMapType() const { return _mapType; }
     QString curMapId() const { return _mapId; }
     QString options() const { return _options; }
+    int curOpacity() const {return _opacity;}
     MainWindow* m_parent = nullptr;
     LatLng curLatLng();
     //bool runInBrowser();
@@ -80,6 +82,7 @@ public slots:
     void setMapType(const QString &mapType);
     void setMapId(const QString &mapId);
     void setLatLng(const LatLng &latLng);
+    void setCurOpacity(const int opacity);
 
     void selectSegment(qint32 i, qint32 SegmentId); //19
     void selectSegmentX(qint32 i, qint32 SegmentId, QVariantList array); //19
@@ -108,7 +111,7 @@ public slots:
     // void displayZoom(int zoom);
     void showSegmentsAtPoint(double lat, double lon, qint32 segmentId);
     void queryOverlay();
-    void opacityChanged(QString name, qint32 opacity);
+    QT_DEPRECATED void opacityChanged(QString name, qint32 opacity);
     void setStation(double lat, double lon, qint32 SegmentId, qint32 i);
     void updateStation( qint32 stationKey, qint32 segmentId);
     void moveStationMarker(qint32 stationKey, qint32 segmentId, double lat, double lng);
@@ -140,6 +143,7 @@ signals:
     void latlngChanged();
     void onOptionsChanged();
     void myRsltChanged();
+    void curOpacityChanged();
 
     void executeScript(QString func, QString parms);
     QT_DEPRECATED void executeScript2(QString func, QString parms, QString name, QString value);
@@ -178,7 +182,7 @@ private:
     QString _mapId;
     LatLng _latLng; // Macro links directly to this via MEMBER
     QString _options;
-
+    int _opacity;
     static WebViewBridge* _instance;
     bool bResultReceived;
     Configuration* config;
@@ -192,6 +196,7 @@ private:
     WebSocketClientWrapper* m_overlayWrapper= nullptr;
 
     friend class MainWindow;
+    friend class Configuration;
 };
 
 #endif // WEBVIEWBRIDGE_H

@@ -96,6 +96,7 @@ function addCustomSlider(opacity)
               {
                 overlayLayer.setOpacity(e.target.value/ 100.);
               }
+              webViewBridge.opacity = e.target.value;
           });
 
           return container;

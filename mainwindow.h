@@ -441,7 +441,7 @@ private:
     //QSignalMapper *overlaySignalMapper;
     QActionGroup  *overlayActionGroup;
     QString  currentOverlay;
-    QList<Overlay*> currentOverlays;
+
     QUuid currentOverlayUuid;
     QMap<int,TractionTypeInfo> tractionTypeList;
     QList<CompanyData*> companyList;

@@ -1074,20 +1074,21 @@ void MainWindow::loadOverlayData()
 void MainWindow::loadOverlay(Overlay* ov, bool add)
 {
     if(!add)
-        currentOverlays.clear();
-  currentOverlay = ov->name;
-  currentOverlayUuid = ov->uuid();
-    currentOverlays.append(ov);
- if(ov->source == "geoserver")
-     currentOverlay = ov->_layerName;
- currentOv = ov;
- if(ov->opacity < 0 || ov->opacity > 100)
-     ov->opacity = 65;
- QVariantList objArray;
- objArray << currentOverlay<< ov->opacity << ov->minZoom << ov->maxZoom << ov->source << ov->bounds().toString()<< ov->url() << (add?"true":"false");
- m_bridge->processScript("loadOverlay", objArray);
- ui->chkShowOverlay->setEnabled(true);
- ui->chkShowOverlay->setChecked(true);
+        config->currentOverlays.clear();
+    currentOverlay = ov->name;
+    currentOverlayUuid = ov->uuid();
+    config->currentOverlays.append(ov);
+    if(ov->source == "geoserver")
+         currentOverlay = ov->_layerName;
+    currentOv = ov;
+    if(ov->opacity < 0 || ov->opacity > 100)
+        ov->opacity = 65;
+    m_bridge->_opacity = ov->opacity;
+    QVariantList objArray;
+    objArray << currentOverlay<< ov->opacity << ov->minZoom << ov->maxZoom << ov->source << ov->bounds().toString()<< ov->url() << (add?"true":"false");
+    m_bridge->processScript("loadOverlay", objArray);
+    ui->chkShowOverlay->setEnabled(true);
+    ui->chkShowOverlay->setChecked(true);
 }
 
 void MainWindow::fillOverlayMenu()
@@ -1125,7 +1126,10 @@ void MainWindow::fillOverlayMenu()
       // if(config->currCity->curOverlayId >=0 && name == config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId)->name)
       //  act->setChecked(true);
       if(!config->currCity->curUuid.isNull() && ov->uuid() == config->currCity->curUuid)
+      {
           act->setChecked(true);
+          removeOverlaysAct->setEnabled(true);
+      }
       if(!ui->chkShowOverlay->isEnabled())
        ui->chkShowOverlay->setEnabled(true);
 
@@ -1137,7 +1141,7 @@ void MainWindow::fillOverlayMenu()
      newOverlay(act, false);
      fillAdditionalOverlayMenu();
  });
- removeOverlaysAct->setEnabled(currentOverlays.count() > 0);
+ removeOverlaysAct->setEnabled(config->currentOverlays.count() > 0);
 }
 
 void MainWindow::fillAdditionalOverlayMenu()
@@ -1518,7 +1522,7 @@ void MainWindow::createActions()
  connect(removeOverlaysAct, &QAction::triggered, this, [=]{
      m_bridge->processScript("removeOverlay");
      currentOv = nullptr;
-      currentOverlays.clear();
+      config->currentOverlays.clear();
       ui->chkShowOverlay->setEnabled(false);
 
  });
@@ -5345,12 +5349,7 @@ void MainWindow::routeChanged(RouteChangedEventArgs args)
  ui->tabWidget->setCurrentIndex(0);
 }
 
-//// Show Overview window in GoogleMaps
-//void MainWindow::chkShowWindow_CheckedChanged()
-//{
-//    //webBrowser1.Document.InvokeScript("showWindowControl", new object[] { chkShowWindow.Checked });
-//    m_bridge->processScript("showWindowControl", ui->chkShowWindow?"true":"false");
-//}
+
 void MainWindow::opacityChanged(QString name, qint32 opacity)
 {
  Overlay* ov = new Overlay(config->currCity->name(), name, opacity);
@@ -5361,6 +5360,7 @@ void MainWindow::opacityChanged(QString name, qint32 opacity)
     statusBar()->showMessage(tr("%2 opacity=%1").arg(opacity).arg(name));
     //m_bridge->processScript("setOverlayOpacity", QString::number(opacity));
 }
+
 void MainWindow::moveRouteStartMarker(double lat, double lon, qint32 segmentId, qint32 i)
 {
     Q_UNUSED(lat)
@@ -5446,7 +5446,7 @@ void MainWindow::chkShowOverlayChanged(bool bChecked)
  {
   Overlay* ov = config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId);
   bool bAdd = false;
-  foreach (Overlay* ov, currentOverlays) {
+  foreach (Overlay* ov, config->currentOverlays) {
       loadOverlay(ov, bAdd);
       bAdd = true;
   }
@@ -5942,12 +5942,13 @@ bool MainWindow::openBrowserWindow()
     m_bridge->setupbridge();
 
     // reload any overlays
-    if(!currentOverlays.empty())
+    if(!config->currentOverlays.empty())
     {
-        QList<Overlay*> saveList = currentOverlays;
-        currentOverlays.clear();
+        QList<Overlay*> saveList = config->currentOverlays;
+        config->currentOverlays.clear();
         bool bAdd = false;
         foreach (Overlay* ov, saveList) {
+            ov->opacity = config->currOpacity;
             loadOverlay(ov, bAdd);
             bAdd = true;
         }
@@ -6010,6 +6011,19 @@ bool MainWindow::openWebViewPanel()
     webView->setUrl(fileUrl);
     m_bridge->setupbridge();
     webView->page()->setWebChannel(m_bridge->channel);
+
+    // reload any overlays
+    if(!config->currentOverlays.empty())
+    {
+        QList<Overlay*> saveList = config->currentOverlays;
+        config->currentOverlays.clear();
+        bool bAdd = false;
+        foreach (Overlay* ov, saveList) {
+            ov->opacity = config->currOpacity;
+            loadOverlay(ov, bAdd);
+            bAdd = true;
+        }
+    }
     return true;
 }
 
