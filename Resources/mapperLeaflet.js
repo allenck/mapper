@@ -92,9 +92,6 @@ function addCustomSlider(opacity)
           L.DomEvent.on(slider, 'input', function (e) {
               // console.log("Slider value changed to:", e.target.value);
               // Put your custom map logic here (e.g., change layer opacity, filter data by year)
-            // if(overlay !== null)
-            //   overlay.setOpacity(e.target.value);
-              var overlay = null;
               for(const [ix, overlayLayer] of activeOverlays.entries())
               {
                 overlayLayer.setOpacity(e.target.value/ 100.);
@@ -1742,7 +1739,8 @@ function initMap()
     {
         var newLayerName = e.name;
         //setMapType(newLayerName);
-        webViewBridge.setMapType(newLayerName);
+        //webViewBridge.setMapType(newLayerName);
+        webViewBridge.mapType = newLayerName;
         maptype = newLayerName;
 
         if ( e.name === 'Hybrid Satellite View') {
@@ -1829,14 +1827,14 @@ function loadOverlay(name, opacity, minZoom, maxZoom, source, bounds, urls, noDe
 
  if(minZoom < 0 || maxZoom > 21)
      console.warn("invalid min/max zoom for overlay: " + name + " opacity =" + opacity + " minZoom =" + minZoom + " maxZoom = " + maxZoom);
- if (activeOverlays.length > 0 && noDelete === false)
+ if (activeOverlays.length > 0 && noDelete === "false")
  {
 //   map.overlayMapTypes.clear();
      for (const [index, layer] of activeOverlays.entries())
      {
-         layer.removeLayer();
+         layer.remove();
      }
-
+    activeOverlays= [];
    //overlay = null;
   if(opacityControl !== null)
   {
@@ -2024,34 +2022,47 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
  if(source === "acksoft")
  {
      // 1. Extend L.TileLayer to create a custom class
-    L.TileLayer.Custom = L.TileLayer.extend({
-          getTileUrl: function (coords) {
-            ymax = 1 << coords.z;
-            y = ymax - coords.y -1;
-            x = coords.x;
-            z = coords.z;
-            str = urls + name + "/" +z+"/"+x+"/"+x+"_"+y+"_"+z+".png";
+    // L.TileLayer.Custom = L.TileLayer.extend({
+    //       getTileUrl: function (coords) {
+    //         ymax = 1 << coords.z;
+    //         y = ymax - coords.y -1;
+    //         x = coords.x;
+    //         z = coords.z;
+    //         str = urls + name + "/" +z+"/"+x+"/"+x+"_"+y+"_"+z+".png";
 
-              console.log("tile url: " + str);
-             //overlayLayer.setUrl(str);
-            return str;
-          }
-    });
-
+    //           console.log("tile url: " + str);
+    //          //overlayLayer.setUrl(str);
+    //         return str;
+    //       }
+    // });
+     overlayLayer = L.tileLayer(urls + name + "/{z}/{x}/{x}_{y}_{z}.png", {
+     tms: true,          // <--- This automatically flips the Y axis for GeoServer TMS
+     transparent: true,
+     format: 'image/png',
+     isOverlay: true
+    }).addTo(map);
+    return;
  }
  else
  if(source === "acksoft2")
  {
      // 1. Extend L.TileLayer to create a custom class
-      L.TileLayer.Custom = L.TileLayer.extend({
-          getTileUrl: function (coords) {
-            ymax = 1 << coords.z;
-            y = coords.y;
-            x = coords.x;
-            str = urls + name + "/" +coords.z+"/"+x+"/"+y+".png";
-            return str;
-                  }
-          });
+      // L.TileLayer.Custom = L.TileLayer.extend({
+      //     getTileUrl: function (coords) {
+      //       ymax = 1 << coords.z;
+      //       y = coords.y;
+      //       x = coords.x;
+      //       str = urls + name + "/" +coords.z+"/"+x+"/"+y+".png";
+      //       return str;
+      //             }
+      //     });
+     overlayLayer = L.tileLayer(urls + name + "/{z}/{x}/{x}_{y}_{z}.png", {
+     //tms: true,          // <--- This automatically flips the Y axis for GeoServer TMS
+     transparent: true,
+     format: 'image/png',
+     isOverlay: true
+    }).addTo(map);
+    return;
  }
  else if(source === "tileserver")
  {
@@ -2076,18 +2087,25 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
  else if(source === "georeferencer")
  {
      // 1. Extend L.TileLayer to create a custom class
-      L.TileLayer.Custom = L.TileLayer.extend({
-          getTileUrl: function (coords) {
-              ymax = 1 <<coords.z;
-              //y = ymax - coords.y -1;
-              y = coords.y;
-              x = coords.x;
-              z = coords.z;
-              var url = urls.replace('{z}',z).replace('{x}',x).replace('{y}',y);
-              console.debug(url);
-              return url;
-          }
-    });
+    //   L.TileLayer.Custom = L.TileLayer.extend({
+    //       getTileUrl: function (coords) {
+    //           ymax = 1 <<coords.z;
+    //           //y = ymax - coords.y -1;
+    //           y = coords.y;
+    //           x = coords.x;
+    //           z = coords.z;
+    //           var url = urls.replace('{z}',z).replace('{x}',x).replace('{y}',y);
+    //           console.debug(url);
+    //           return url;
+    //       }
+    // });
+     overlayLayer = L.tileLayer(urls, {
+     tms: true,          // <--- This automatically flips the Y axis for GeoServer TMS
+     transparent: true,
+     format: 'image/png',
+     isOverlay: true
+    }).addTo(map);
+    return;
  }
  else if(source === "georeferencer2") // alternate y format
  {
@@ -2127,7 +2145,6 @@ function Overlay(name, opacity, minZoom, maxZoom, source, overlayBounds, urls)
          format: 'image/png',
          isOverlay: true
         }).addTo(map);
-
 
      return;
  }
@@ -2271,9 +2288,14 @@ function processScript2(func, parms, name, value)
 function processScript3(func, objArray, count)
 {
   var i = 0;
-  if(count <=0)
+  if(count <0)
   {
       alert("invalid call to processScript3");
+      return;
+  }
+  if(count === 0)
+  {
+      processScript(func, "");
       return;
   }
   var parms = "var0";
@@ -2326,7 +2348,7 @@ function removeOverlay()
     }
     for (const [index, layer] of activeOverlays.entries())
     {
-        layer.removeLayer();
+        layer.remove();
     }
 
 } // end removeOverlay()

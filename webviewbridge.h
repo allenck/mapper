@@ -91,7 +91,7 @@ public slots:
     void setLon(double lon);
     void setDebug(QString str); //25
     void setLen(qint32 len);
-    QT_DEPRECATED void reportMapType(QString mapType);
+    //void reportMapType(QString mapType);
     void setCenter(double lat, double lon, int zoom, QString mapType);
     void getGeocoderResults(QString text);
     void addPoint(int pt, double lat, double lon); //29

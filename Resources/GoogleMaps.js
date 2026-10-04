@@ -111,6 +111,7 @@ function processScript(func, parms)
    if(fRslt === null) return;
    if( fRslt instanceof Array)
     webViewBridge.scriptArrayResult( fRslt);
+
    else
    {
     if("fRslt" in window)
@@ -159,9 +160,14 @@ function processScript2(func, parms, name, value)
 function processScript3(func, objArray, count)
 {
   var i = 0;
-  if(count <=0)
+  if(count <0)
   {
       alert("invalid call to processScript3");
+      return;
+  }
+  if(count === 0)
+  {
+      processScript(func, "");
       return;
   }
   var parms = "var0";
@@ -959,7 +965,14 @@ async function initMap() {
      //var zoom = 13;
      var zoom = webViewBridge.zoom;
      //var mapTypeId = google.maps.MapTypeId.ROADMAP;
-     var mapTypeId = webViewBridge.maptype;
+     var mapTypeId = webViewBridge.mapType;
+     if(!(mapTypeId == google.maps.MapTypeId.ROADMAP || mapTypeId == google.maps.MapTypeId.TERRAIN
+            || mapTypeId == google.maps.MapTypeId.HYBRID || mapTypeId == google.maps.MapTypeId.SATELLITE))
+     {
+         console.log("changing mapType from " + mapTypeId + " to " + "roadmap");
+         mapTypeId = google.maps.MapTypeId.ROADMAP;
+         webViewBridge.maptype = google.maps.MapTypeId.ROADMAP;
+     }
      var mapDiv = document.getElementById("map");
      var runInBrowser = webViewBridge.runInBrowser;
      var optionsString = webViewBridge.options;
@@ -983,7 +996,7 @@ async function initMap() {
         overviewMapControl: true,
         scrollwheel: true,
         disableDoubleClickZoom: true,
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        mapTypeId: mapTypeId,
         mapId: webViewBridge.mapId
      });
     if(map == null )
@@ -994,7 +1007,8 @@ async function initMap() {
     map.addListener("maptypeid_changed", () => {
       // Get the current active map type ID
       const currentMapType = map.getMapTypeId();
-      console.log("Map type changed to:", currentMapType);
+      webViewBridge.mapType = currentMapType;
+      console.log("Map typeId changed to:", currentMapType);
 
       // Example: Perform conditional logic based on the layer type
       if (currentMapType === "satellite" || currentMapType === "hybrid") {
@@ -1918,12 +1932,11 @@ function addMarker(i, lat, lon, icon, text, SegmentId)
                  gmpDraggable: true,  content: pin.element});
          options = {
                      isAlphaNumericIcon: true
-                         , text: pt
-                         , iconShape: 'marker'
-                         , borderColor: '#FF0000'
-                         , textColor: '#00ABDC'
+                     , text: text
+                     , iconShape: 'marker'
+                     , borderColor: '#FF0000'
+                     , textColor: '#00ABDC'
                  };
-         var myCustomIcon2 = L.BeautifyIcon.icon(options);
      }
      else
      {

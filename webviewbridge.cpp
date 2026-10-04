@@ -294,13 +294,13 @@ void WebViewBridge::setMapId(const QString &mapId)
 }
 
 // called by js to report change of mapType
-void WebViewBridge::reportMapType(QString mapType)
-{
-    m_parent->m_mapType = mapType;
-    config->mapType = mapType;
-    config->currCity->mapType = mapType;
-    config->currCity->mapSource = config->mapSource;
-}
+// void WebViewBridge::reportMapType(QString mapType)
+// {
+//     m_parent->m_mapType = mapType;
+//     config->mapType = mapType;
+//     config->currCity->mapType = mapType;
+//     config->currCity->mapSource = config->mapSource;
+// }
 
 void WebViewBridge::mapTypeChanged()
 {
