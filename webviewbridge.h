@@ -38,9 +38,9 @@ public:
     MainWindow* m_parent = nullptr;
     LatLng curLatLng();
     //bool runInBrowser();
-    QT_DEPRECATED void processScript(QString func, QString parms);
-    QT_DEPRECATED void processScript(QString func);
-    QT_DEPRECATED void processScript(QString func, QString parms, QString name, QString value);
+    void processScript(QString func, QString parms);
+    void processScript(QString func);
+    void processScript(QString func, QString parms, QString name, QString value);
     void processScript(QString func, QList<QVariant>objArray);
     QVariant waitForScript(QString func, QVariantList objArray);
 

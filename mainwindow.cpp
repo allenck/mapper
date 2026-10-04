@@ -5442,7 +5442,7 @@ void MainWindow::geocoderRequestToggled(bool bChecked)
 void MainWindow::chkShowOverlayChanged(bool bChecked)
 {
  if(config->currCity->city_overlayMap->size() == 0) return;
- if(bChecked && config->currCity->curOverlayId >= 0)
+ if(!bChecked && config->currCity->curOverlayId >= 0)
  {
   Overlay* ov = config->currCity->city_overlayMap->values().at(config->currCity->curOverlayId);
   bool bAdd = false;
@@ -5848,11 +5848,6 @@ void MainWindow::on_runInBrowser(bool bRunInBrowser)
  config->bRunInBrowser = bRunInBrowser;
  config->saveSettings();
 
-// if(QMessageBox::information(this, tr("Restart required!"), tr("This option requires that Mapper be restarted.\nDo you wish to restart now?"),QMessageBox::Yes | QMessageBox::No)== QMessageBox::Yes)
-// {
-//  // restart:
-//  qApp->quit();
-//  QProcess::startDetached(qApp->arguments()[0], qApp->arguments());}
 }
 
 void MainWindow::updateSegmentInfoDisplay(SegmentInfo si)
@@ -5945,6 +5940,18 @@ bool MainWindow::openBrowserWindow()
     }
 
     m_bridge->setupbridge();
+
+    // reload any overlays
+    if(!currentOverlays.empty())
+    {
+        QList<Overlay*> saveList = currentOverlays;
+        currentOverlays.clear();
+        bool bAdd = false;
+        foreach (Overlay* ov, saveList) {
+            loadOverlay(ov, bAdd);
+            bAdd = true;
+        }
+    }
 
    return true;
 }
