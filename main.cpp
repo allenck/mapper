@@ -66,9 +66,6 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
     if(SystemConsole2::instance())
      SystemConsole2::instance()->message(logLevelName + ": "+ msg);
 #endif
-    if (msg.contains("directxdatabasehelper") || msg.contains("ReturnHr")) {
-        return;
-    }
     logToFile = Configuration::instance()->loggingOn();
     if (logToFile) {
         QString txt = QString("%1 %2: %3   (%4.%5)").arg(formattedTime, logLevelName, msg,  context.file).arg(context.line);
@@ -97,13 +94,23 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
 
 int main(int argc, char *argv[])
 {
-    // Register them once globally at runtime
-    //qRegisterMetaTypeStreamOperators<IntPair>("IntPair");
+#ifndef OS_LINUX
+    // 1. FORCE CHROMIUM AND QT QUICK TO USE SOFTWARE RENDERING (Do this FIRST)
+    // This turns off Chromium's GPU process entirely
+    qputenv("QT_WEBENGINE_DISABLE_GPU", "1");
 
+    // This explicitly tells Chromium's internal engine to pass the disable flags
+    qputenv("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu --disable-software-rasterizer");
+
+    // This forces Qt's internal graphics rendering (RHI) to use software loops
+    qputenv("QT_QUICK_BACKEND", "software");
+#endif
     QByteArray envVar = qgetenv("QTDIR");       //  check if the app is ran in Qt Creator
 
     if (envVar.isEmpty())
         logToFile = true;
+
+    qputenv("QT_WEBENGINE_DISABLE_GPU", "1");
 
  //QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
