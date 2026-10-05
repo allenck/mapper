@@ -882,7 +882,7 @@ void Configuration::getSettings2()
     bool ok = Overlay::importXml("./Resources/overlays.xml");
 
     // load cities
-    settings.beginGroup("cities");
+    settings.beginGroup("Cities");
     QStringList cities = settings.childGroups();
     //for(int i= 0; i < size; i++)
     QMap<int,City*> cityListById;
@@ -1112,7 +1112,7 @@ qDebug() << settings.group();
 #endif
 
     //settings.endArray();
-    settings.endGroup();
+    //settings.endGroup();
 
 
 
