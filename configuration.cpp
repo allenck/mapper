@@ -198,6 +198,12 @@ void Configuration::saveOldSettings()
  settings->setValue("date", dus.date.toString("yyyy/MM/dd"));
  settings->endGroup();
 
+ settings->beginGroup("editCityDialog");
+ settings->setValue("state", ecd.state);
+ settings->setValue("columnWidths", listToString( ecd.colWidths));
+ settings->setValue("geometry", ecd.geometry);
+ settings endGroup;
+
  settings->beginGroup("routeCommentsDlg");
  settings->setValue("state", rcd.state);
  settings->setValue("geometry", rcd.geometry);
@@ -390,6 +396,12 @@ void Configuration::saveSettings2()
     settings->setValue("text1", dus.text1);
     settings->setValue("text2", dus.text2);
     settings->setValue("date", dus.date.toString("yyyy/MM/dd"));
+    settings->endGroup();
+
+    settings->beginGroup("editCityDialog");
+    settings->setValue("state", ecd.state);
+    settings->setValue("columnWidths", listToString( ecd.colWidths));
+    settings->setValue("geometry", ecd.geometry);
     settings->endGroup();
 
     settings->beginGroup("routeCommentsDlg");
@@ -1199,6 +1211,12 @@ qDebug() << settings.group();
     dus.text1 = settings.value("text1").toString();
     dus.text2 = settings.value("text2").toString();
     dus.date = settings.value("date").toDate();
+    settings.endGroup();
+
+    settings.beginGroup("editCityDialog");
+    ecd.state = settings.value("state").toByteArray();
+    ecd.colWidths = stringToList(settings.value("columnWidths").toString());
+    ecd.geometry = settings.value("geometry").toByteArray();
     settings.endGroup();
 
     settings.beginGroup("routeCommentsDlg");

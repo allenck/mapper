@@ -79,6 +79,22 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
          });
  bRefreshing = false;
 
+ if(!config->ecd.geometry.isEmpty())
+     restoreGeometry(config->ecd.geometry);
+ connect(ui->tableView->horizontalHeader(), &QHeaderView::sectionResized, this,
+         [=](int logicalIndex, int oldSize, int newSize){
+             config->ecd.state = ui->tableView->horizontalHeader()->saveState();
+             if(!config->ecd.colWidths.isEmpty())
+                 config->ecd.colWidths.replace(logicalIndex,newSize);
+         });
+ if(!config->ecd.colWidths.isEmpty())
+ {
+     for(int i=0; i < config->ecd.colWidths.count(); i++)
+     {
+         ui->tableView->setColumnWidth(i, config->ecd.colWidths.at(i));
+     }
+ }
+
  QPushButton* btnAddOverlay = new QPushButton(tr("Add Overlay"));
  ui->buttonBox->addButton(btnAddOverlay, QDialogButtonBox::ActionRole);
  connect(btnAddOverlay, &QPushButton::clicked, [=]{
@@ -164,6 +180,13 @@ EditCityDialog::~EditCityDialog()
 {
  delete ui;
 }
+
+void EditCityDialog::resizeEvent(QResizeEvent *e)
+{
+    Q_UNUSED(e)
+    config->ecd.geometry = saveGeometry();
+}
+
 
 void EditCityDialog::newCity(int i)
 {
@@ -384,7 +407,20 @@ void EditCityDialog::ok_clicked()
   }
   bDirty = false;
  }
-
+ if(config->ecd.colWidths.isEmpty())
+ {
+     for(int i =0; i<model->columnCount(QModelIndex());i++ )
+     {
+         config->ecd.colWidths.append(ui->tableView->columnWidth(i));
+     }
+ }
+ else
+ {
+     for(int i =0; i<model->columnCount(QModelIndex());i++ )
+     {
+         ui->tableView->setColumnWidth(i,config->dus.colWidths.at(i));
+     }
+ }
  accept();
 }
 

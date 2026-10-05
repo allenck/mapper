@@ -74,6 +74,7 @@ private:
  Geoserver* geoserver = nullptr;
  void updateGeoserverProperties(Overlay* ov);
  QList<Overlay*>* wmtsList = nullptr;
+ void resizeEvent(QResizeEvent *e);
 
  private slots:
  void selectCity(QString city);

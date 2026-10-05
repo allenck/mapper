@@ -71,6 +71,12 @@ struct dlgUpdateStreets
     QDate date;
 };
 
+struct editCityDialog
+{
+    QByteArray state;
+    QList<int> colWidths;
+    QByteArray geometry;
+};
 
 class Configuration : public QObject
 {
@@ -99,6 +105,7 @@ public:
  routeView rv;
  dupSegmentView dsv;
  dlgUpdateStreets dus;
+ editCityDialog ecd;
  routeCommentsDlg rcd;
  static Configuration* instance();
  bool bDisplayWebDebug = false;
