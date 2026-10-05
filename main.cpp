@@ -66,6 +66,9 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
     if(SystemConsole2::instance())
      SystemConsole2::instance()->message(logLevelName + ": "+ msg);
 #endif
+    if (msg.contains("directxdatabasehelper") || msg.contains("ReturnHr")) {
+        return;
+    }
     logToFile = Configuration::instance()->loggingOn();
     if (logToFile) {
         QString txt = QString("%1 %2: %3   (%4.%5)").arg(formattedTime, logLevelName, msg,  context.file).arg(context.line);
