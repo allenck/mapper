@@ -42,6 +42,10 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
 
  model = new OverlayTableModel(config->currentCityId);
 
+ ui->cbCities->clear();
+ ui->cbCities->addItem(tr("All"));
+ ui->cbCities->addItems(config->cityNames());
+
  sorter = new QSortFilterProxyModel();
  sorter->setSourceModel(model = new OverlayTableModel(config->currentCityId));
  connect(model, SIGNAL(setDirty()), this, SLOT(on_setDirty()));
@@ -135,6 +139,7 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  connect(ui->sbOpacity, SIGNAL(valueChanged(int)), this,SLOT(sbOpacityValueChanged(int)));
  connect(ui->editLatitude, SIGNAL(editingFinished()), this, SLOT(onLatitudeChanged()));
  connect(ui->editLongitude, SIGNAL(editingFinished()), this, SLOT(onLongitudeChanged()));
+ connect(ui->cbCities, SIGNAL(currentTextChanged(QString)), this, SLOT(selectCity(QString)));
  setControls(false); // will be set to true when table selected.
 
  QSettings settings;
@@ -863,5 +868,25 @@ void EditCityDialog::displayOverlay(QAction* act)
     Overlay* ov = VPtr<Overlay>::asPtr(act->data());
     qDebug() << "overlay "    << ov->name;
     MainWindow::instance()->loadOverlay(ov);
+}
+
+void EditCityDialog::selectCity(QString city)
+{
+    for(int row=0; row < config->overlayMap->values().count(); row++)
+    {
+        if(city == "All")
+        {
+            ui->tableView->setRowHidden(row,false);
+        }
+        else
+        {
+            QModelIndex index = sorter->index(row, OverlayTableModel::CITYNAME);
+            QModelIndex srcIndex = sorter->mapToSource(index);
+
+            // 2. Retrieve the text value displayed in the cell
+            QVariant displayValue = srcIndex.model()->data(srcIndex, Qt::DisplayRole);
+            ui->tableView->setRowHidden(row, displayValue.toString() != city);
+        }
+    }
 }
 /*************************************************************************************************/

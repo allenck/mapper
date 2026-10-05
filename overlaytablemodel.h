@@ -39,6 +39,7 @@ public:
  QMap<QString, Overlay *> *getOverlayMap();
  void deleteRow(int row);
  Overlay* selectedOverlay(int row);
+ void selectCity(QString city);
 
 signals:
  void setDirty();

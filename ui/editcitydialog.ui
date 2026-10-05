@@ -140,6 +140,20 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QLabel" name="label_9">
+       <property name="text">
+        <string>Cities</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="cbCities">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select which cities' overlays are to be visible.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>

@@ -51,6 +51,7 @@ private slots:
  void onColumnChanged(int row , int column, Overlay* old, Overlay* newOv, QVariant value);
  void displayOverlay(QAction* act);
 
+
 private:
  Ui::EditCityDialog *ui;
  Configuration* config;
@@ -73,6 +74,9 @@ private:
  Geoserver* geoserver = nullptr;
  void updateGeoserverProperties(Overlay* ov);
  QList<Overlay*>* wmtsList = nullptr;
+
+ private slots:
+ void selectCity(QString city);
 
 };
 
