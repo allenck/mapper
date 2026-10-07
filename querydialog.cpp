@@ -1225,7 +1225,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
           db = QSqlDatabase::addDatabase(tgtConn->driver(), QString("query-%1").arg(tgtConn->description()));
           tgtConn->setConnectionName(db.connectionName());
           tgtConn->setDb(db);
-          Connection::configureDb(db, tgtConn, config);
+          Connection::configureDb(db, tgtConn);
       }
 //   if(tgtConn->servertype() == "Sqlite")
 //   {

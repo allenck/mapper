@@ -953,7 +953,7 @@ async function initMap() {
     if(bGoogleInit)
         return;
 
-     console.log("begin MapQuest.js initMap()");
+     console.log("begin GoogleMaps.js initMap()");
      webViewBridge.debug("initMap started");
      connectSlots();
      //geocoder  = new google.maps.Geocoder();

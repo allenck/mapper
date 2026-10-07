@@ -629,8 +629,22 @@ void Configuration::getSettings()
              qDebug() << fileName << " not found";
           else
           {
-           QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "city");
-           db.setDatabaseName(info.absoluteFilePath());
+           //QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "city");
+           // Reuse connection if it exists, otherwise create it fresh
+           QSqlDatabase db;
+           QString cName = "city";
+           QString driver = "QSQLITE";
+           if (QSqlDatabase::contains(cName)) {
+               db = QSqlDatabase::database(cName);
+
+               // Safety check: If the driver changed, we MUST recreate the connection handle
+               if (db.driverName() != driver) {
+                   db = QSqlDatabase::addDatabase(driver, cName);
+               }
+           } else {
+               db = QSqlDatabase::addDatabase(driver, cName);
+           }
+              db.setDatabaseName(info.absoluteFilePath());
            if(db.open())
            {
             Parameters p = SQL::instance()->getParameters(db);
@@ -1008,8 +1022,22 @@ void Configuration::getSettings2()
                     qDebug() << fileName << " not found";
                 else
                 {
-                    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "city");
-                    db.setDatabaseName(info.absoluteFilePath());
+                    //QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "city");
+                    // Reuse connection if it exists, otherwise create it fresh
+                    QSqlDatabase db;
+                    QString cName = "city";
+                    QString driver = "QSQLITE";
+                    if (QSqlDatabase::contains(cName)) {
+                        db = QSqlDatabase::database(cName);
+
+                        // Safety check: If the driver changed, we MUST recreate the connection handle
+                        if (db.driverName() != driver) {
+                            db = QSqlDatabase::addDatabase(driver, cName);
+                        }
+                    } else {
+                        db = QSqlDatabase::addDatabase(driver, cName);
+                    }
+                    db.setDatabaseName(baseAddr + fileName);
                     if(db.open())
                     {
                         Parameters p = SQL::instance()->getParameters(db);
@@ -1018,10 +1046,10 @@ void Configuration::getSettings2()
                             ncn->setCityName(p.city);
                             nc->setNameOverride(p.city);
                         }
+                        db.close();
                     }
-                    db.close();
                 }
-                ncn->setSqliteFileName(info.fileName());
+                ncn->setSqliteFileName(fileName);
             }
             else if(ncn->connectionType() == "Direct") {
                 //ncn->setDSN(settings.value("DSN").toString());  // not needed
@@ -1138,6 +1166,7 @@ qDebug() << settings.group();
     if(currCity->curConnectionId < 0 && currCity->connections.size() == 1)
         currCity->curConnectionId =0;
     currConnection =   currCity->connections.at(currCity->curConnectionId);
+    qDebug() << "curr connection " << currConnection->connectionName() << " " << currConnection->driver();
     bDisplayWebDebug = settings.value("showDebugMessages", false).toBool();
     bRunInBrowser = settings.value("runInBrowser", false).toBool();
     saveImageDir = settings.value("saveImageDir", "").toString();

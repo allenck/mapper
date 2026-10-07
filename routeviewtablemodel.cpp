@@ -659,7 +659,7 @@ void RouteViewTableModel::setList(QList< SegmentData* > segmentDataList)
         saveSegmentDataList.append(SegmentData(*sd));
     bChangesMade = false;
     _selectedSegments.clear();
-    reset();
+    //reset();
     endResetModel();
 }
 

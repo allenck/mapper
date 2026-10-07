@@ -1,5 +1,6 @@
 **Recent Changes October 2026 VERSION=1.2.11
 1. save and restore mapType.
+2. editCityDialog now has option to hide overlays for other cities.
 
 **Recent Changes September 2026 VERSION=1.2.10
 1. Add new OpenStreetMap and Mapquest map sources.

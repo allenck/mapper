@@ -118,7 +118,7 @@ li.checked::marker { content: "\2612"; }
   </overlay>
   <overlay cityName="Cincinnati, OH" layerName="my_maps:cincinnati-1890" maxZoom="21" minZoom="11" name="Cincinnati 1890" opacity="65" selected="yes" source="geoserver" year="">
     <description></description>
-    <bounds eastLongtude="-84.4616" northLatitude="39.143" southLatitude="39.0655" westLongitude="-84.5744"/>
+    <bounds eastLongtude="-84.2139" northLatitude="39.4044" southLatitude="38.8044" westLongitude="-84.8139"/>
     <wmtsUrl></wmtsUrl>
     <url>http://localhost:8080/geoserver</url>
     <uuid>{ff74d551-942c-40d8-92e2-a73930b499bb}</uuid>
@@ -139,14 +139,14 @@ li.checked::marker { content: "\2612"; }
   </overlay>
   <overlay cityName="Cincinnati, OH" layerName="my_maps:OH_East_Cincinnati_708568_1914_62500" maxZoom="21" minZoom="9" name="OH East Cincinnati 708568 1914 62500" opacity="65" selected="no" source="geoserver" year="">
     <description></description>
-    <bounds eastLongtude="-84.2494" northLatitude="39.2521" southLatitude="39.0002" westLongitude="-84.5009"/>
+    <bounds eastLongtude="-84.2139" northLatitude="39.4044" southLatitude="38.8044" westLongitude="-84.8139"/>
     <wmtsUrl></wmtsUrl>
     <url>http://localhost:8080/geoserver</url>
     <uuid>{6b8846ca-7716-44d4-bae3-313405cb7746}</uuid>
   </overlay>
   <overlay cityName="Cincinnati, OH" layerName="my_maps:OH_WestCincinnati_709982_1914_62500" maxZoom="21" minZoom="9" name="OH WestCincinnati 709982 1914 62500" opacity="65" selected="yes" source="geoserver" year="">
     <description></description>
-    <bounds eastLongtude="-84.4986" northLatitude="39.2505" southLatitude="38.9987" westLongitude="-84.75"/>
+    <bounds eastLongtude="-84.2139" northLatitude="39.4044" southLatitude="38.8044" westLongitude="-84.8139"/>
     <wmtsUrl></wmtsUrl>
     <url>http://localhost:8080/geoserver</url>
     <uuid>{37292c94-9e66-4441-b00d-926c48f96d96}</uuid>
@@ -181,7 +181,7 @@ li.checked::marker { content: "\2612"; }
   </overlay>
   <overlay cityName="Indianapolis, IN" layerName="my_maps:indianapolis-and-environs" maxZoom="21" minZoom="9" name="Rand McNally Commercial Atlas Map of Indianopolis and Environs" opacity="65" selected="no" source="geoserver" year="">
     <description></description>
-    <bounds eastLongtude="-86.0206" northLatitude="39.934" southLatitude="39.6693" westLongitude="-86.2381"/>
+    <bounds eastLongtude="-85.858" northLatitude="40.0685" southLatitude="39.4685" westLongitude="-86.458"/>
     <wmtsUrl></wmtsUrl>
     <url>http://localhost:8080/geoserver</url>
     <uuid>{625aee2d-dc70-401c-a62b-c0b04a869f7f}</uuid>
@@ -632,7 +632,7 @@ p, li { white-space: pre-wrap; }
     <url>https://ubuntu-2/public/map_tiles/</url>
     <uuid>{6ce8611c-2c7a-4baa-8793-681f6f0f6464}</uuid>
   </overlay>
-  <overlay cityName="St Louis, MO" layerName="" maxZoom="16" minZoom="10" name="1903_St_Louis_Mo.4326.map.geo" opacity="19" selected="yes" source="acksoft" year="">
+  <overlay cityName="St Louis, MO" layerName="" maxZoom="16" minZoom="10" name="1903_St_Louis_Mo.4326.map.geo" opacity="43" selected="yes" source="acksoft" year="">
     <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;meta charset="utf-8" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
@@ -648,7 +648,7 @@ li.checked::marker { content: "\2612"; }
   </overlay>
   <overlay cityName="St Louis, MO" layerName="my_maps:Guide_map_Saint_Louis_and_Vicinity_1950" maxZoom="21" minZoom="8" name="Guide map Saint Louis and Vicinity 1950" opacity="65" selected="yes" source="geoserver" year="1950">
     <description></description>
-    <bounds eastLongtude="-90.1338" northLatitude="38.7644" southLatitude="38.511" westLongitude="-90.4045"/>
+    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
     <wmtsUrl></wmtsUrl>
     <url>http://localhost:8080/geoserver</url>
     <uuid>{8c3f3c62-7beb-4062-83cd-031ac740f5a8}</uuid>
@@ -662,7 +662,7 @@ li.unchecked::marker { content: "\2610"; }
 li.checked::marker { content: "\2612"; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
-    <bounds eastLongtude="-89.4996" northLatitude="0" southLatitude="0" westLongitude="-89.7506"/>
+    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
     <wmtsUrl></wmtsUrl>
     <url>http://localhost:8080/geoserver</url>
     <uuid>{11a3812e-a535-433d-824b-89a268968ba9}</uuid>
@@ -690,14 +690,14 @@ li.checked::marker { content: "\2612"; }
   </overlay>
   <overlay cityName="St Louis, MO" layerName="my_maps:map-of-st-louis" maxZoom="21" minZoom="8" name="Map of St Louis 1895" opacity="65" selected="no" source="geoserver" year="">
     <description></description>
-    <bounds eastLongtude="-90.1247" northLatitude="38.7031" southLatitude="38.5604" westLongitude="-90.2837"/>
+    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
     <wmtsUrl></wmtsUrl>
     <url>http://localhost:8080/geoserver</url>
     <uuid>{62215d94-18c0-498a-adb8-d71293349cd2}</uuid>
   </overlay>
   <overlay cityName="St Louis, MO" layerName="my_maps:map-of-st-louis-city-1876" maxZoom="21" minZoom="8" name="Map of St Louis City 1876" opacity="55" selected="yes" source="geoserver" year="1876">
     <description></description>
-    <bounds eastLongtude="-90.1364" northLatitude="38.7062" southLatitude="38.57" westLongitude="-90.2913"/>
+    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
     <wmtsUrl>https://wmts.oldmapsonline.org/maps/7ecf03f7-1a9b-577f-b1a6-0f052d46abf3/2020-01-26T21:07:24.056886Z/WMTSCapabilities.xml?key=mpP5xNUZ8b1t9mFrcFfI</wmtsUrl>
     <url>http://localhost:8080/geoserver</url>
     <uuid>{00000000-0000-0000-0000-000000000000}</uuid>

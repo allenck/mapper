@@ -59,15 +59,19 @@ public:
  void setCityBounds(WebViewBridge *m_bridge);
  void setName(QString name){
   if(_name.isEmpty())
-  _name = name;
+     {
+         _name = name;
+        _label = createLabel(name);
+  }
   else
    throw IllegalArgumentException("city name is protected");
  }
- //QList<QPair<QString,QString>> abbreviationsList;
+ QString getLabel() {return _label;}
 
  void setNameOverride(QString name)
  {
      _name = name;
+     _label = createLabel(name);
  }
  QString name() {return _name;}
  void setCenter(LatLng center);
@@ -75,9 +79,11 @@ public:
  void setConnectionUniqueId(QUuid connectionUniqueId){_connectionUniqueId = connectionUniqueId;}
  QUuid connectionUniqueId() {return _connectionUniqueId;}
  void addConnection(Connection*connection);
+
  private:
  Bounds _bounds;
  QUuid _connectionUniqueId;
+ QString createLabel(QString name);
 
 signals:
  void connectionAdded(Connection* connection);
@@ -87,6 +93,7 @@ public slots:
 private:
  bool bDirty;
  QString _name;
+ QString _label; // name with spaces cange to _ and commas removed.
 
 };
 

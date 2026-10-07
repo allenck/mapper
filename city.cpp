@@ -61,3 +61,9 @@ void City::setCityBounds(WebViewBridge* m_bridge)
 void City::setCenter(LatLng center){this->center = center;}
 
 void City::setId(int id){this->id = id;}
+
+QString City::createLabel(QString name)
+{
+    _label = name.replace(" ","_").remove(',');
+    return _label;
+}

@@ -117,7 +117,7 @@ void ExportDlg::btnGo_clicked()
     ui->btnGo->setEnabled(false);
     ui->cbConnections->setEnabled(false);
 
-     exprt = new ExportSql(config, ui->chkDrop->isChecked(), this);
+     exprt = new ExportSql(ui->chkDrop->isChecked(), this);
      if(ui->chkOverride->isChecked())
      {
       exprt->setOverride(ui->exportDate->dateTime());

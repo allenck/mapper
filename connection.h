@@ -88,7 +88,7 @@ public:
 // void setOdbcConnectorName(QString fn){_odbc_connectorName = fn;}
  QString defaultSqlDatabase() {return _defaultSqlDatabase;}
  void setDefaultSqlDatabase(QString defaultSqlDatabase) {_defaultSqlDatabase = defaultSqlDatabase;}
- static void configureDb(QSqlDatabase db, Connection *currConnection, Configuration *config);
+ static void configureDb(QSqlDatabase db, Connection *currConnection);
  //QString mySqlDatabase(){return _mySqlDatabase;}
  //void setMySqlDatabase(QString name){_mySqlDatabase =name;}
  QString connectionType(){return _connectionType;}
@@ -112,6 +112,7 @@ public:
  void setDSNCanBeUsed(bool b){_DSNCanBeUsed = b;}
  void setVerified(bool verified){_verified = verified;}
  bool verified() {return _verified;}
+ void setOpen(bool bOpen){this->bOpen = bOpen;}
  bool operator==(const Connection& other)const{
      return other._uuid == this->_uuid;
  }

@@ -91,7 +91,7 @@ private:
     static StreetsTableModel* _instance;
     Configuration* config = nullptr;
     void processStreetUpdate(int streetId, SegmentInfo si);
-
+    QSqlDatabase db = SQL::instance()->db;
 };
 
 #endif // STREETSTABLEMODEL_H

@@ -430,6 +430,7 @@ void ODBCUtil::getWinDSNs()
         dsn->name = key;
         dsn->userDsn = true;
         iniKeys = winReg.childKeys();
+        bool bError = false;
         for(QString iniKey : iniKeys)
         {
             QStringList childKeys = winReg.childKeys();
@@ -470,7 +471,9 @@ void ODBCUtil::getWinDSNs()
                     QHostInfo info = QHostInfo::fromName(host);
                     if(info.error())
                     {
-                        QMessageBox::warning(nullptr, tr("Warning"), tr("Invalid server: %1 for %2 error: %3").arg(server, iniKey3, info.errorString()));
+                        //QMessageBox::warning(nullptr, tr("Warning"), tr("Invalid server: %1 for %2 error: %3").arg(server, iniKey3, info.errorString()));
+                        qDebug() << tr("Invalid server: %1 for %2 error: %3").arg(server, iniKey3, info.errorString());
+                        bError = true;
                         break;
                     }
 
@@ -482,6 +485,8 @@ void ODBCUtil::getWinDSNs()
                 }
 
             }
+            if(bError)
+                break;
         }
         //odbcPairMap.insert(key, list);
         odbcPairMap.insert(key,map);

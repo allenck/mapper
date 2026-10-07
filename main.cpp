@@ -10,7 +10,9 @@
 #include <QIODevice>
 #include <QFile>
 #include "configuration.h"
-
+#ifdef Q_OS_WIN
+#include <windows.h>
+#endif
 
 #if 0
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
@@ -61,6 +63,13 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
     QFileInfo info(context.file);
     QString fn = info.fileName();
     QByteArray formattedFn = fn.toLocal8Bit();
+#ifdef Q_OS_WIN
+    QString lowerMsg = msg.toLower();
+    if(lowerMsg.contains("directxdatabasehelper") || lowerMsg.contains("ReturnHr") )
+        return;
+    if(lowerMsg.contains("Exception at ") && lowerMsg.contains("(first chance)"))
+        return;
+#endif
 #ifdef HAVE_CONSOLE
     //ConsoleInterface::instance()->sendMessage(logLevelName + ": "+ msg);
     if(SystemConsole2::instance())
@@ -81,11 +90,17 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
         ts << txt << '\n';
         outFile.close();
     } else {
-       fprintf(stdout, "%s %s: %s     (%s:%u, %s)\n",
+       fprintf(stderr, "%s %s: %s   (%s:%u, %s)\n",
                formattedTimeMsg.constData(), logLevelMsg.constData(),
                localMsg.constData(), /*context.file*/formattedFn.constData(),
                context.line, context.function);
-        fflush(stdout);
+        fflush(stderr);
+#ifdef Q_OS_WIN
+       // 2. Explicitly push to the IDE Application Output console on Windows
+       QString winDebugStr = QString("MAPLOG %1 %2: %3  *   (%4:%5)\n")
+                                 .arg(formattedTime, logLevelName, msg, formattedFn).arg(context.line);
+       OutputDebugStringW(reinterpret_cast<const wchar_t*>(winDebugStr.utf16()));
+#endif
     }
 
 //    if (type == QtFatalMsg)
@@ -94,6 +109,8 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
 
 int main(int argc, char *argv[])
 {
+    qInstallMessageHandler(customMessageOutput); // custom message handler for debugging
+
 #ifndef OS_LINUX
     // 1. FORCE CHROMIUM AND QT QUICK TO USE SOFTWARE RENDERING (Do this FIRST)
     // This turns off Chromium's GPU process entirely
@@ -110,8 +127,6 @@ int main(int argc, char *argv[])
     if (envVar.isEmpty())
         logToFile = true;
 
-    qputenv("QT_WEBENGINE_DISABLE_GPU", "1");
-
  //QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
  //QApplication a(argc, argv);
@@ -121,18 +136,18 @@ int main(int argc, char *argv[])
  a.setStyle("Fusion");
  qRegisterMetaType<LatLng>("LatLng");
 
-#ifndef Q_OS_WIN
+#ifndef Q_OS_WINDOWS
      //ConsoleInterface::instance(); // create singleton class.
  // SystemConsole2::instance()->setParent(&w);
  // SystemConsole2::instance()->setVisible(false);
- qInstallMessageHandler(customMessageOutput); // custom message handler for debugging
+
 #else
-# ifndef QT_DEBUG
+//# ifndef QT_DEBUG
      //ConsoleInterface::instance(); // create singleton class.
  //SystemConsole2::instance();
- qInstallMessageHandler(customMessageOutput); // custom message handler for debugging
-# endif
 #endif
+
+
 
  w.show();
 

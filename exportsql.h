@@ -31,7 +31,7 @@ class ExportSql : public QObject
 {
     Q_OBJECT
 public:
-    ExportSql(Configuration* cfg, bool bDropTables, QObject *parent = 0);
+    ExportSql(bool bDropTables, QObject *parent = 0);
     ~ExportSql();
     void setOverride(QDateTime strOvr);
     void setNoDelete(bool bFlag);

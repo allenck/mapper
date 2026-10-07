@@ -75,6 +75,7 @@
 #include "streetview.h"
 #include "dialogupdatestreets.h"
 #include "dialogpreferences.h"
+#include <QSqlDatabase>
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -146,19 +147,21 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 //  else
    qWarning() << "cannot find wiki pages!";
 // }
-
  while(!config->currConnection->isOpen())
  {
   this->setWindowTitle("Mapper - "+ config->currCity->name() + " ("+config->currConnection->description()+")");
+  db =config->currConnection->configure(config->currCity->getLabel());
 
-  db =config->currConnection->configure();
   if(config->currConnection->isOpen())
   {
-   qInfo() << "database is open";
+   qInfo() << "database is open. " << db.connectionName() << " " << db.driverName();
    break;
   }
   editConnections();
  }
+
+ qInfo() << "database is open. " << db.connectionName() << " " << db.driverName() << " " << db.databaseName();
+
  m_latitude = config->currCity->center.lat();
  m_longitude = config->currCity->center.lon();
  m_zoom = config->currCity->zoom;
@@ -290,7 +293,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   //routeDlg->SegmentChanged += new segmentChangedEventHandler(segmentChanged);
   connect(routeDlg, SIGNAL(SegmentChangedEvent(qint32,qint32)),this, SLOT(segmentChanged(qint32,qint32)));
   //routeDlg->routeChanged += new routeChangedEventHandler(RouteChanged);
-  connect(routeDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs)), this, SLOT(RouteChanged(RouteChangedEventArgs)));
+  connect(routeDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs)), this, SLOT(routeChanged(RouteChangedEventArgs)));
   connect(ui->btnDisplayRoute, SIGNAL(clicked()), this, SLOT(btnDisplayRouteClicked()));
   connect(ui->btnFirst, SIGNAL(clicked()), this, SLOT(btnFirstClicked()));
   connect(ui->btnNext, SIGNAL(clicked()), this, SLOT(btnNextClicked()));
@@ -450,7 +453,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
       }
   });
 
-  connect(SQL::instance(), SIGNAL(commentChange(CommentInfo,CHANGETYPE)),this, SLOT(onCommentChange(CommentInfo,SQL::CHANGETYPE)));
+  connect(SQL::instance(), SIGNAL(commentChange(CommentInfo,SQL::CHANGETYPE)),this, SLOT(onCommentChange(CommentInfo,SQL::CHANGETYPE)));
 
 //  connect(ui->cbSegments, SIGNAL(signalFocusOut()), this, SLOT( cbSegments_Leave()));
   connect(ui->cbRoute, SIGNAL(signalFocusOut()), this, SLOT(cbRoutes_Leave()));
@@ -1446,7 +1449,7 @@ void MainWindow::createActions()
 //   updateRoute(&sd);
 //   return;
 //  }
-  connect(routeDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs )), this, SLOT(routeChanged(RouteChangedEventArgs )));
+  connect(routeDlg, SIGNAL(routeChangedEvent(RouteChangedEventArgs )), this, SLOT(routeChanged(RouteChangedEventArgs)));
 
   updateRoute(sd);
   ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(sd->companyKey()));
@@ -2375,7 +2378,7 @@ void MainWindow::newCity(QAction* act )
      sql->checkTables(db);
     }
 #endif
-    db = config->currConnection->configure();
+    db = config->currConnection->configure(config->currCity->getLabel());
     SQL::instance()->checkTables(db);
     emit newCitySelected();
 
@@ -6609,7 +6612,7 @@ bool MainWindow::restoreDatabases()
     {
         process->waitForFinished();
         process->close();
-        sql->dbOpen();
+        sql->dbOpen(db);
         return true;
     }
     qDebug() << "process error " << process->errorString();

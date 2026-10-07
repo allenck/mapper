@@ -66,8 +66,13 @@ QSqlDatabase Connection::configure(const QString cName)
  qDebug() << "Connection: CWD = " << QDir::currentPath();
  config = Configuration::instance();
  sql = SQL::instance();
- db = QSqlDatabase::addDatabase(config->currConnection->driver(),cName);
- configureDb(db, this, config);
+ //db = QSqlDatabase::addDatabase(config->currConnection->driver(),cName);
+ if (QSqlDatabase::contains(cName) && db.driverName() =="QSQLITE") {
+     db = QSqlDatabase::database(cName);
+ } else {
+     db = QSqlDatabase::addDatabase("QSQLITE", cName);
+ }
+ configureDb(db, this);
  // check for presence of Parameters table.
  QStringList tableList;
  QStringList sysTableList;
@@ -80,6 +85,9 @@ QSqlDatabase Connection::configure(const QString cName)
      bOpen = db.open(_userId, _PWD);
  if((bOpen))
  {
+     setOpen(true);
+     tableList = db.tables();
+     sysTableList = db.tables(QSql::SystemTables);
   if(config->currConnection->servertype() != "Sqlite")
   {
 #ifndef NO_UDF
@@ -110,7 +118,7 @@ QSqlDatabase Connection::configure(const QString cName)
     if(tableList.isEmpty())
        throw Exception(tr("No tables exist in this database"));
    sysTableList = db.tables(QSql::SystemTables);
-   ExportSql* eSql = new ExportSql(config, false);
+   ExportSql* eSql = new ExportSql(false);
    bool tableError = false;
    try {
        if(!tableList.contains("Parameters",Qt::CaseInsensitive))
@@ -173,7 +181,7 @@ QSqlDatabase Connection::configure(const QString cName)
         if(!eSql->createRouteTable(db, config->currConnection->servertype()))
           throw Exception();
        }
-       if(!SQL::instance()->doesFunctionExist("distance", config->currConnection->servertype(), db))
+       if(!SQL::instance()->doesFunctionExist("distance", config->currConnection->servertype()))
        {
         //           if(!eSql->createMsSqlFunctions(db))
         //               throw Exception("distance function error");
@@ -225,7 +233,7 @@ QSqlDatabase Connection::configure(const QString cName)
   return db;
 }
 
-void Connection::configureDb(QSqlDatabase db, Connection* currConnection, Configuration* config)
+void Connection::configureDb(QSqlDatabase db, Connection* currConnection)
 {
     QString driver = db.driverName();
     if(currConnection->connectionType() == "Local" )

@@ -6,14 +6,14 @@
 #include <QFile>
 #include <QTextStream>
 
-ExportSql::ExportSql(Configuration *cfg, bool bDropTable, QObject *parent) :
+ExportSql::ExportSql( bool bDropTable, QObject *parent) :
     QObject(parent)
 {
- config = cfg;
+ config = Configuration::instance();
  bOverride = false;
  m_parent = parent;
  this->bDropTables = bDropTable;
- srcConn = cfg->currConnection;
+ srcConn = config->currConnection;
  tgtConn = NULL;
 }
 
@@ -66,22 +66,24 @@ bool ExportSql::openDb()
   return false;
  }
  {
-  srcDb = QSqlDatabase();
+  srcDb = SQL::instance()->db;
+  qInfo() << "source database. " << srcDb.connectionName() << " " << srcDb.driverName() << " " << srcDb.databaseName();
+
   srcConn = config->currCity->connections.at(config->currCity->curConnectionId);
   tgtConn = config->currCity->connections.at(config->currCity->curExportConnId);
 
-  qDebug()<< "Export from '" +srcConn->description() + "' --> '" + tgtConn->description() + "'";
+  qDebug()<< "Export from '" +srcConn->description() + "' --> '" + tgtConn->description() + "'" ;
   if(!_targetDb.connectionName().contains("export"))
   {
 #if 1
    _targetDb = QSqlDatabase::addDatabase(tgtConn->driver(), "export");
-   tgtConn->configureDb(_targetDb, tgtConn , config);
-   tgtDbType = tgtConn->servertype();
-   if(config->currConnection->connectString().isEmpty() && tgtConn->connectionType() != "ODBC")
-   {
+   tgtConn->configureDb(_targetDb, tgtConn);
+    tgtDbType = tgtConn->servertype();
+    if(config->currConnection->connectString().isEmpty() && tgtConn->connectionType() != "ODBC")
+    {
        _targetDb.setUserName(tgtConn->userId());
        _targetDb.setPassword(tgtConn->pwd());
-   }
+    }
 
    if(! _targetDb.open())
    {
@@ -3055,7 +3057,7 @@ void ExportSql::updateTimestamp(QString table)
 {
     if(srcConn->servertype() != "MySql")
         return;
-    srcDb = QSqlDatabase::database();
+    srcDb = SQL::instance()->db;
 
     QString commandText = "update " + table + " set lastupdate = '2000-01-01 00:00:00' where lastUpdate = '0000-00-00 00:00:00'";
     QSqlQuery* query = new QSqlQuery(srcDb);
@@ -3365,7 +3367,7 @@ bool ExportSql::dropTable(QString table, QSqlDatabase db, QString dbType)
 
 bool ExportSql::dropRoutes()
 {
- srcDb = QSqlDatabase::database();
+ srcDb = SQL::instance()->db;
  if(!openDb()) return false;
 
  return dropTable("Routes", _targetDb, tgtConn->servertype());
@@ -3373,7 +3375,7 @@ bool ExportSql::dropRoutes()
 
 bool ExportSql::dropStations()
 {
- srcDb = QSqlDatabase::database();
+ srcDb = SQL::instance()->db;
  if(!openDb()) return false;
 
  return dropTable("Stations", _targetDb, tgtConn->servertype());
@@ -3381,7 +3383,7 @@ bool ExportSql::dropStations()
 
 bool ExportSql::dropRouteComments()
 {
- srcDb = QSqlDatabase::database();
+ srcDb = SQL::instance()->db;
  if(!openDb()) return false;
 
  return dropTable("RouteComments", _targetDb, tgtConn->servertype());
@@ -4593,17 +4595,17 @@ bool ExportSql::exportTable(QString inTable)
     QString table = inTable;
     if(tgtConn->servertype() == "PostgreSQL")
         table = inTable.toLower();
- bool bDropTables = this->bDropTables;
- srcDb = QSqlDatabase::database();
- QString srcServerType = srcConn->servertype();
- if(srcConn->uniqueId() == tgtConn->uniqueId())
-     throw IllegalArgumentException("source and destination the same");
- if(!openDb())
-  return false;
- ignoreList.clear();
+     bool bDropTables = this->bDropTables;
+     srcDb = SQL::instance()->db;
+     QString srcServerType = srcConn->servertype();
+     if(srcConn->uniqueId() == tgtConn->uniqueId())
+         throw IllegalArgumentException("source and destination the same");
+     if(!openDb())
+      return false;
+     ignoreList.clear();
 
- if(tgtConn->servertype() == "MySql" || tgtConn->servertype() == "MsSql")
-    SQL::instance()->useDatabase(tgtConn->database(), tgtConn->servertype(), _targetDb);
+     if(tgtConn->servertype() == "MySql" || tgtConn->servertype() == "MsSql")
+        SQL::instance()->useDatabase(tgtConn->database(), tgtConn->servertype(), _targetDb);
 
  QStringList tables = targetDb().tables();
  if(tables.contains(table,Qt::CaseInsensitive))

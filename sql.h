@@ -43,7 +43,7 @@ class SQL : public QObject
     Q_OBJECT
 public:
  static SQL* instance();
-    bool dbOpen();
+    bool dbOpen(QSqlDatabase db);
     enum CHANGETYPE {
      ADD,
      DELETE,
@@ -268,7 +268,7 @@ public:
     bool deleteRoute(SegmentData rd);
     bool deleteRoute(RouteData rd);
     QString currentTransaction;
-    bool doesFunctionExist(QString name, QString serverType, QSqlDatabase db);
+    bool doesFunctionExist(QString name, QString serverType);
     QStringList listViews();
     QList<SegmentData *> segmentDataListFromView(QString where);
     QStringList listColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase(), QStringList *types=nullptr);
@@ -313,6 +313,7 @@ signals:
 private:
     SQL();
     static SQL* _instance;
+    QSqlDatabase db;
     void myExceptionHandler(Exception e);
     Configuration *config =nullptr;
    // bool compareSegmentData(const segmentData & sd1, const segmentData &sd2);
@@ -327,6 +328,8 @@ private:
     QStack<QString> delimiters;
     int linesRead =0;
     QSqlQuery* query = nullptr;
+    friend class StreetsTableModel;
+    friend class ExportSql;
 };
 class NotifyRouteChange
 {

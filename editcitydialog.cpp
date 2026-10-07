@@ -42,9 +42,9 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
 
  model = new OverlayTableModel(config->currentCityId);
 
- ui->cbCities->clear();
- ui->cbCities->addItem(tr("All"));
- ui->cbCities->addItems(config->cityNames());
+ ui->comboBox->clear();
+ ui->comboBox->addItem(tr("All"));
+ ui->comboBox->addItems(config->cityNames());
 
  sorter = new QSortFilterProxyModel();
  sorter->setSourceModel(model = new OverlayTableModel(config->currentCityId));
@@ -155,7 +155,7 @@ EditCityDialog::EditCityDialog(QWidget *parent) :
  connect(ui->sbOpacity, SIGNAL(valueChanged(int)), this,SLOT(sbOpacityValueChanged(int)));
  connect(ui->editLatitude, SIGNAL(editingFinished()), this, SLOT(onLatitudeChanged()));
  connect(ui->editLongitude, SIGNAL(editingFinished()), this, SLOT(onLongitudeChanged()));
- connect(ui->cbCities, SIGNAL(currentTextChanged(QString)), this, SLOT(selectCity(QString)));
+ connect(ui->comboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(selectCity(QString)));
  setControls(false); // will be set to true when table selected.
 
  QSettings settings;
@@ -418,7 +418,7 @@ void EditCityDialog::ok_clicked()
  {
      for(int i =0; i<model->columnCount(QModelIndex());i++ )
      {
-         ui->tableView->setColumnWidth(i,config->dus.colWidths.at(i));
+         ui->tableView->setColumnWidth(i,config->ecd.colWidths.at(i));
      }
  }
  accept();
@@ -916,12 +916,20 @@ void EditCityDialog::selectCity(QString city)
         }
         else
         {
-            QModelIndex index = sorter->index(row, OverlayTableModel::CITYNAME);
+            QModelIndex index = ui->tableView->model()->index(row, OverlayTableModel::CITYNAME);
             QModelIndex srcIndex = sorter->mapToSource(index);
-
+            QModelIndex urlIndex = srcIndex.siblingAtColumn(OverlayTableModel::URLS);
             // 2. Retrieve the text value displayed in the cell
-            QVariant displayValue = srcIndex.model()->data(srcIndex, Qt::DisplayRole);
-            ui->tableView->setRowHidden(row, displayValue.toString() != city);
+            QVariant cityName = srcIndex.model()->data(srcIndex, Qt::DisplayRole);
+            QVariant urls = urlIndex.model()->data(urlIndex, Qt::DisplayRole);
+            QUrl url = QUrl(urls.toString());
+            QString host = url.toString(QUrl::RemovePath | QUrl::RemoveQuery);
+            ui->tableView->setRowHidden(row, cityName.toString() != city);
+            if(config->allowedSources.contains(host) && !config->allowedSources.value(host))
+            {
+                ui->tableView->setRowHidden(row,true);
+                qDebug() << "row " << row << "hidden city " <<cityName << " host " << host;
+            }
         }
     }
 }

@@ -114,7 +114,13 @@ void CreateSqliteDatabaseDialog::on_btnOk_clicked()
   newFile = ui->txtPath->text() + "/" + dbName;
  SQL* sql = SQL::instance();
 
- QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "newDb");
+ //QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "newDb");
+ QSqlDatabase db;
+ if (QSqlDatabase::contains("newDb")) {
+     db = QSqlDatabase::database("newDb");
+ } else {
+     db = QSqlDatabase::addDatabase("QSQLITE", "newDb");
+ }
  db.setDatabaseName(newFile);
  if(!db.open())
  {

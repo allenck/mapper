@@ -3,7 +3,12 @@
 GeodbSql::GeodbSql(QObject *parent) :
     QObject(parent)
 {
-    db = QSqlDatabase::addDatabase("QMYSQL", "geodb_berlin");
+    //db = QSqlDatabase::addDatabase("QMYSQL", "geodb_berlin");
+    if (QSqlDatabase::contains("geodb_berlin")) {
+        db = QSqlDatabase::database("geodb_berlin");
+    } else {
+        db = QSqlDatabase::addDatabase("QSQLITE", "geodb_berlin");
+    }
     db.setDatabaseName("geodb_berlin");
     db.setHostName("ubuntu-2");
     db.setUserName("allen");

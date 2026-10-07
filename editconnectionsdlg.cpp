@@ -1607,7 +1607,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
     if(!currDb.isEmpty() && !tableList.contains("Parameters", Qt::CaseInsensitive))
     {
         //createSqliteTables(db);
-        ExportSql* expSql = new ExportSql(Configuration::instance(), false);
+        ExportSql* expSql = new ExportSql(false);
         if(ui->cbDbType->currentText() == "Sqlite")
             expSql->createParametersTable(db, ui->cbDbType->currentText());
         else
@@ -1710,7 +1710,12 @@ bool EditConnectionsDlg::openTestDb()
     _testConnection->setConnectionType(ui->cbConnect->currentText());
     _testConnection->setDriver(ui->cbDriverType->currentText());
     _testConnection->setServerType(ui->cbDbType->currentText());
-    db = QSqlDatabase::addDatabase(ui->cbDriverType->currentText(),"testConnection");
+    //db = QSqlDatabase::addDatabase(ui->cbDriverType->currentText(),"testConnection");
+    if (QSqlDatabase::contains("testConnection")) {
+        db = QSqlDatabase::database("testConnection");
+    } else {
+        db = QSqlDatabase::addDatabase("QSQLITE", "testConnection");
+    }
     _testConnection->setDb(db);
    // if(ui->cbConnect->currentText() == "Direct")
    // {
@@ -1932,7 +1937,9 @@ bool EditConnectionsDlg::populateDatabases()
 
 QString EditConnectionsDlg::getDatabase()
 {
-    if(!db.isOpen()) return QString();
+    if(!db.isOpen())
+        return QString();
+    qInfo() << "database is open. " << db.connectionName() << " " << db.driverName() << " " << db.databaseName();
 
     QSqlQuery query = QSqlQuery(db);
     QString dbName ="";
