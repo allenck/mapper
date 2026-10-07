@@ -11736,7 +11736,10 @@ QStringList SQL::showMySqlDatabases(QSqlDatabase db)
 {
  QStringList list;
  if(!db.isOpen())
-  return QStringList();
+  return list;
+ qInfo() << "database is open. CN:" << db.connectionName() << " driver:" << db.driverName() << " DSN:"
+         << db.databaseName() << " userId: " << db.userName();
+
  QSqlQuery query = QSqlQuery(db);
  QString commandText = "show databases";
  if(!query.exec(commandText))
@@ -11746,6 +11749,7 @@ QStringList SQL::showMySqlDatabases(QSqlDatabase db)
      QSqlError error = query.lastError();
      SQLERROR(std::move(query));
      //throw SQLException(error.text() + " " + errCommand);
+     return list;
  }
  QStringList excludes = {"mysql", "information_schema", "performance_schema", "phpmyadmin", "sys"};
  while(query.next())

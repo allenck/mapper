@@ -600,8 +600,9 @@ void EditConnectionsDlg::cbODBCDsn_currentIndex_changed(int ix)
     bDSNCanBeUsed =false;
     QString drvName = db.driverName();
     if(drvName.isEmpty())
-        return;
+        db = QSqlDatabase::addDatabase("QODBC", "testConnection");
     db.setDatabaseName(ui->cbODBCDsn->currentData().toString());
+
     bDSNCanBeUsed = db.open();
     if(bDSNCanBeUsed)
     {
@@ -1710,12 +1711,12 @@ bool EditConnectionsDlg::openTestDb()
     _testConnection->setConnectionType(ui->cbConnect->currentText());
     _testConnection->setDriver(ui->cbDriverType->currentText());
     _testConnection->setServerType(ui->cbDbType->currentText());
-    //db = QSqlDatabase::addDatabase(ui->cbDriverType->currentText(),"testConnection");
-    if (QSqlDatabase::contains("testConnection")) {
-        db = QSqlDatabase::database("testConnection");
-    } else {
-        db = QSqlDatabase::addDatabase("QSQLITE", "testConnection");
-    }
+    db = QSqlDatabase::addDatabase(ui->cbDriverType->currentText(),"testConnection");
+    // if (QSqlDatabase::contains("testConnection")) {
+    //     db = QSqlDatabase::database("testConnection");
+    // } else {
+    //     db = QSqlDatabase::addDatabase("QSQLITE", "testConnection");
+    // }
     _testConnection->setDb(db);
    // if(ui->cbConnect->currentText() == "Direct")
    // {
@@ -1883,7 +1884,9 @@ bool EditConnectionsDlg::populateDatabases()
         return false;
     }
 
-    //QStringList list;
+    qInfo() << "database is open. CN:" << db.connectionName() << " driver:" << db.driverName() << " DSN:"
+            << db.databaseName() << " userId: " << db.userName();
+
     if(ui->cbDbType->currentText() == "MySql")
         availableDatabases = SQL::instance()->showMySqlDatabases(db);
     else if(ui->cbDbType->currentText() == "MsSql")
@@ -1939,7 +1942,8 @@ QString EditConnectionsDlg::getDatabase()
 {
     if(!db.isOpen())
         return QString();
-    qInfo() << "database is open. " << db.connectionName() << " " << db.driverName() << " " << db.databaseName();
+    qInfo() << "database is open. CN:" << db.connectionName() << " driver:" << db.driverName() << " DSN:"
+            << db.databaseName() << " userId: " << db.userName();
 
     QSqlQuery query = QSqlQuery(db);
     QString dbName ="";
@@ -1955,15 +1959,16 @@ QString EditConnectionsDlg::getDatabase()
     if(!query.exec(commandText))
     {
         SQLERROR(std::move(query));
+        return dbName;
     }
     else
     {
-    while(query.next())
-    {
-        if(!query.value(0).isNull())
-            dbName = query.value(0).toString();
-    }
-    ui->txtDefaultDb->setText(dbName);
+        while(query.next())
+        {
+            if(!query.value(0).isNull())
+                dbName = query.value(0).toString();
+        }
+        ui->txtDefaultDb->setText(dbName);
     }
     return dbName;
 }

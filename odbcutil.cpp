@@ -7,6 +7,9 @@
 #include <QFileSystemWatcher>
 #include <QHostInfo>
 #include <QMessageBox>
+#ifdef Q_OS_WIN
+#include <qt_windows.h> // Includes Windows.h safely in Qt environments
+#endif
 
 ODBCUtil* ODBCUtil::_instance = nullptr;
 ODBCUtil::ODBCUtil(QObject *parent)
@@ -445,8 +448,16 @@ void ODBCUtil::getWinDSNs()
                     Driver* pDriver = drvByLib.value(lib);
                     if(pDriver)
                     {
-                        dsn->lib = lib;
+                        if(lib.contains(' '))
+                            dsn->lib = getShortPath(lib);
+                        else
+                            dsn->lib = lib;
                         dsn->driverName = pDriver->name;
+                        dsn->type = pDriver->type;
+                        dsn->server = pDriver->host;
+                        dsn->port = pDriver->port;
+                        dsn->userId = pDriver->user;
+                        dsn->password = pDriver->pswd;
                     }
                 }
                 if(iniKey3.compare("Description",Qt::CaseInsensitive)==0)
@@ -598,9 +609,9 @@ void ODBCUtil::getWinDrivers()
     {
         Driver* driver = new Driver();
         driver->name = drvName;
-        if(drvName.startsWith("PostgreSQL",Qt::CaseInsensitive))
+        if(drvName.contains("PostgreSQL",Qt::CaseInsensitive))
             driver->type = "PostgreSQL";
-        else if(drvName.startsWith("MySql",Qt::CaseInsensitive))
+        else if(drvName.contains("MySql",Qt::CaseInsensitive))
             driver->type = "MySql";
         else if(drvName.contains("Sql Server",Qt::CaseInsensitive))
             driver->type = "MsSql";
@@ -622,3 +633,28 @@ void ODBCUtil::getWinDrivers()
     }
 }
 
+QString ODBCUtil::getShortPath(const QString &longPath)
+{
+#ifdef Q_OS_WIN
+    // 1. Convert Qt-style forward slashes to Windows-native backslashes
+    QString nativePath = QDir::toNativeSeparators(longPath);
+
+    // 2. Convert QString to a null-terminated wchar_t array for the Win32 API
+    const wchar_t* longPathW = reinterpret_cast<const wchar_t*>(nativePath.utf16());
+
+    // 3. Query the required buffer size first
+    unsigned long bufferSize = GetShortPathNameW(longPathW, nullptr, 0);
+    if (bufferSize == 0) {
+        return longPath; // Returns original path if the file/folder doesn't exist
+    }
+
+    // 4. Allocate buffer and perform the actual conversion
+    std::wstring shortPathBuffer(bufferSize, L'\0');
+    GetShortPathNameW(longPathW, &shortPathBuffer[0], bufferSize);
+
+    // 5. Clean up the trailing null character and return as QString
+    return QString::fromWCharArray(shortPathBuffer.c_str());
+#else
+    return longPath; // No-op on non-Windows operating systems
+#endif
+}

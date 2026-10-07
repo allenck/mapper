@@ -276,4 +276,20 @@ DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3460100
 unix: LIBS += -ldl
 
 
+# 1. Define the source paths to the MySQL ODBC driver dependencies
+MYSQL_DRIVER_DIR = "C:/Program Files/MySQL/MySQL Connector ODBC 26.7"
 
+# 2. Convert forward slashes to Windows native backslashes for command-line use
+MYSQL_DRIVER_DIR_NATIVE = $$replace(MYSQL_DRIVER_DIR, /, \\)
+DESTDIR_NATIVE = $$replace(OUT_PWD, /, \\)
+
+# 3. Determine the correct subdirectory based on your active build mode
+CONFIG(debug, debug|release) {
+    TARGET_SUBDIR = debug
+} else {
+    TARGET_SUBDIR = release
+}
+
+# 4. Inject the copy commands directly into the post-link build step
+QMAKE_POST_LINK += xcopy /y /d \"$$MYSQL_DRIVER_DIR_NATIVE\\libcrypto-3-x64.dll\" \"$$DESTDIR_NATIVE\\$$TARGET_SUBDIR\\\" $$escape_expand(\\n\\t)
+QMAKE_POST_LINK += xcopy /y /d \"$$MYSQL_DRIVER_DIR_NATIVE\\libssl-3-x64.dll\" \"$$DESTDIR_NATIVE\\$$TARGET_SUBDIR\\\" $$escape_expand(\\n\\t)
