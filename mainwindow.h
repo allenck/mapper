@@ -148,6 +148,7 @@ public:
     QString m_currRouteStartDate, m_currRouteEndDate, m_routeName;
     QString m_resourcePath;
     QString m_segmentStatus, m_segmentColor;
+    RouteData* m_currRd = nullptr;
 
     RouteDlg *routeDlg;
     RouteCommentsDlg *routeCommentsDlg = nullptr;
@@ -202,7 +203,7 @@ public slots:
     void refreshCompanies();
     void segmentStatus(QString str, QString color);
     //void saveChanges();
-    void On_displayRoute(RouteData);
+    void On_displayRoute(RouteData *);
     void addModeToggled(bool isChecked);
     void showGoogleMapFeatures(bool);
     void btnDisplayRouteClicked();

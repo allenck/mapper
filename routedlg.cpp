@@ -1906,7 +1906,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
   ui->btnAdd->setEnabled( false);
   bAddMode = false;
 
-  myParent->On_displayRoute(_rd);
+  myParent->On_displayRoute(&_rd);
   fillSegmentsComboBox();
   this->setVisible(false);
  }

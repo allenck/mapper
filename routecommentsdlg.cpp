@@ -183,7 +183,7 @@ void RouteCommentsDlg::tablev_customContextMenu( const QPoint& pt)
     QAction* displayRouteAct = new QAction(tr("display route"));
     connect(displayRouteAct, &QAction::triggered, this, [=]{
         qDebug() << "display " << routeName << " " << date.toString("yyyy/MM/dd") << " row:" << ix.row();
-        MainWindow::instance()->On_displayRoute(*rd);
+        MainWindow::instance()->On_displayRoute(rd);
     });
     menu.addAction(displayRouteAct);
     menu.exec(QCursor::pos());

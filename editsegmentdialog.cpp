@@ -563,7 +563,7 @@ void EditSegmentDialog::On_btnSave_clicked()
 //    SegmentData sd = SegmentData(si);
 //     sd.displaySegment(ui->dtEnd->date().toString("yyyy/MM/dd"),m_segmentColor, "", true);
 //   }
-   MainWindow::instance()->On_displayRoute(*rd);
+   MainWindow::instance()->On_displayRoute(rd);
 }
 
 void EditSegmentDialog::On_segmentStatusSignal(QString txt, QString color)

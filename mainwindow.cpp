@@ -787,6 +787,7 @@ void MainWindow::reloadMap()
         m_bridge->setupbridge();
     bReloadInProgress=false;
     webView->page()->setWebChannel(m_bridge->channel);
+
   }
 
  // QVariantList objArray;
@@ -810,6 +811,8 @@ void MainWindow::reloadMap()
  m_bridge->_mapType = m_mapType;
 
  //showGoogleMapFeatures(false);
+ if(m_currRd)
+     On_displayRoute(m_currRd);
 
 }
 
@@ -2830,6 +2833,7 @@ QString MainWindow::getColor(qint32 tractionType)
 void MainWindow::btnClearClicked()
 {
     m_bridge->processScript("clearAll", "");
+    m_currRd = nullptr;
 }
 
 void MainWindow::on_createKmlFile_triggered()
@@ -2851,33 +2855,35 @@ void MainWindow::btnDisplayRouteClicked()
  if(row < 0) return;
  RouteData rd = routeList.at(row);
  //rd.setEndDate(ui->dateEdit->date());
- On_displayRoute(rd);
+ On_displayRoute(&rd);
 }
 
-void MainWindow::On_displayRoute(RouteData rd)
+void MainWindow::On_displayRoute(RouteData* rd)
 {
  m_bridge->processScript("addModeOff");
 
  if(!ui->chkNoClear->isChecked())
   btnClearClicked();
 
- QList<SegmentData*> segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(),
-                                            rd.routeName(), rd.companyKey(), rd.endDate());
+ m_currRd = new RouteData(*rd);
+
+ QList<SegmentData*> segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd->route(),
+                                            rd->routeName(), rd->companyKey(), rd->endDate());
  Bounds bounds = Bounds();
  bool bBoundsValid = false;
  double infoLat=0, infoLon = 0;
  bool bFirst = true;
 
  QVariantList objArray;
- if (rd.route() < 1)
+ if (rd->route() < 1)
   return; // no data
     //string str = (m_routeNbr<10?"0":"")+ m_routeNbr;
- CompanyData* cd = sql->getCompany(rd.companyKey());
+ CompanyData* cd = sql->getCompany(rd->companyKey());
 
  m_alphaRoute = sql->getAlphaRoute(m_routeNbr, cd->routePrefix);
  if(bDisplayTerminalMarkers)
  {
-  TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, rd.endDate());
+  TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, rd->endDate());
   if (ti.route >= 1 && ti.startLatLng.lat() > 0 && ti.startLatLng.lon() )
   {
    objArray <<ti.startLatLng.lat() << ti.startLatLng.lon() << //getRouteMarkerImagePath(m_alphaRoute, true) << m_alphaRoute;
@@ -2915,7 +2921,7 @@ void MainWindow::On_displayRoute(RouteData rd)
   }
   bBoundsValid = bounds.updateBounds(sd->bounds());
   int tracks = sd->tracks();
-  if(tracks == 2 && sd->doubleDate().isValid() && rd.endDate() < sd->doubleDate())
+  if(tracks == 2 && sd->doubleDate().isValid() && rd->endDate() < sd->doubleDate())
   {
    tracks = 1;
    sd->setTrackUsage(" ");
@@ -2931,7 +2937,7 @@ void MainWindow::On_displayRoute(RouteData rd)
   if(sd->trackUsage().isEmpty()) // fix for MySql not storing field correctly
    sd->setTrackUsage(" ");
   objArray.clear();
-  objArray <<   sd->segmentId() << rd.routeName() <<  sd->description()
+  objArray <<   sd->segmentId() << rd->routeName() <<  sd->description()
              << sd->oneWay() << config->bDisplaySegmentArrows
              << color << tracks
              << dash << sd->routeType() << sd->trackUsage() << points.count();
@@ -2961,7 +2967,7 @@ void MainWindow::On_displayRoute(RouteData rd)
  foreach(TractionTypeInfo tti,tractionTypeList.values())
  {
   //tractionTypeInfo tti = (tractionTypeInfo)tractionTypeList.at(i);
-  if (tti.tractionType == rd.tractionType())
+  if (tti.tractionType == rd->tractionType())
   {
    switch (tti.routeType)
    {
@@ -3069,7 +3075,7 @@ default:
 
   QDate dt = QDate::fromString(m_currRouteStartDate, "yyyy/MM/dd");
   dt = sql->getFirstCommentDate(m_routeNbr, dt, _rd.companyKey());
-  m_alphaRoute = rd.alphaRoute();
+  m_alphaRoute = rd->alphaRoute();
 
   loadRouteComment(dt);
 
