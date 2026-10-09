@@ -1061,12 +1061,12 @@ function getAdjacentPoints(latlngs, targetLatLng) {
 } // end getAdjacentPoints()
 
 // returns map center LatLng
-function getCenter()
-{
- var latLng = map.getCenter();
- webViewBridge.setCenter(latLng.lat, latLng.lng, map.getZoom(), getMapId());
- return latLng;
-} // end get Center
+// function getCenter()
+// {
+//  var latLng = map.getCenter();
+//  webViewBridge.setCenter(latLng.lat, latLng.lng, map.getZoom(), getMapId());
+//  return latLng;
+// } // end get Center
 
 function getCurrBounds()
 {
@@ -1148,32 +1148,32 @@ function getIcon(typeIcon)
  return markerIcon;
 }
 
-function getMapId()
-{
-    let activeMapType = "Unknown";
-      map.eachLayer(function(layer) {
-            // Check if the layer is a TileLayer and has our custom name
-            if (layer instanceof L.TileLayer && layer.options.name) {
-                activeMapType = layer.options.name;
-            }
-      });
-    return activeMapType;
-}  //end getMapId()
+// function getMapId()
+// {
+//     let activeMapType = "Unknown";
+//       map.eachLayer(function(layer) {
+//             // Check if the layer is a TileLayer and has our custom name
+//             if (layer instanceof L.TileLayer && layer.options.name) {
+//                 activeMapType = layer.options.name;
+//             }
+//       });
+//     return activeMapType;
+// }  //end getMapId()
 
 // return the active map type
-function getMapType()
-{
-    //return map.getMapTypeId();
-  //let activeMapType = "Unknown";
-    map.eachLayer(function(layer) {
-          // Check if the layer is a TileLayer and has our custom name
-          if (layer instanceof L.TileLayer && layer.options.name) {
-              mapType = layer.options.name;
-              currLayer = layer;
-          }
-    });
-  return mapType;
-} // end getMapType()
+// function getMapType()
+// {
+//     //return map.getMapTypeId();
+//   //let activeMapType = "Unknown";
+//     map.eachLayer(function(layer) {
+//           // Check if the layer is a TileLayer and has our custom name
+//           if (layer instanceof L.TileLayer && layer.options.name) {
+//               mapType = layer.options.name;
+//               currLayer = layer;
+//           }
+//     });
+//   return mapType;
+// } // end getMapType()
 
 function getMapTypes()
 {
@@ -1294,12 +1294,12 @@ function initMap()
 
     connectSlots();
 
-
   var Lat = webViewBridge.lat;
   var Lon = webViewBridge.lng;
   var zoom = webViewBridge.zoom;
   var mapId = webViewBridge.mapId;  // only relevant to GoogleMaps
   mapType = webViewBridge.mapType;
+  var latLng = webViewBridge.latLng;
   var mapDiv = document.getElementById("map");
   var optionsString = webViewBridge.options;
   var magnifyingGlass = null;
@@ -1375,12 +1375,12 @@ function initMap()
         // 2. MAIN MAP INITIALIZATION
         // ==========================================
         map = L.mapquest.map('map', {
-            center: [Lat, Lon],
+            center: latLng,
             layers: [mainRoadmap],
             zoom: zoom,
             doubleClickZoom: false,
             name: "ROADMAP"
-        }).setView([Lat, Lon], zoom);
+        }).setView(latLng, zoom);
 
         L.control.scale({ position: 'bottomleft' }).addTo(map);
 
@@ -1607,11 +1607,11 @@ function initMap()
 
         //map.addLayer(magnifyingGlass);
         map = L.map('map', {
-                center: [0, 0],
+                center: latLng,
                 zoom: 2,
                 maxZoom: 19, // Esri Imagery typically tops out around 18 or 19 globally
                 // layers: [ mapTiles ]
-        }).setView([Lat, Lon], zoom);
+        }).setView(latLng, zoom);
         if(map == null )
             console.error("OpenStreetMaps not loaded");
         else
@@ -1671,7 +1671,7 @@ function initMap()
         } else if (mapType === 'Street View') {
             streetView.addTo(map);
         } else if(mapType === "MapBox Street View")  {
-            mapboxStreets.addToMap(map);
+            mapboxStreets.addTo(map);
         } else if(mapType === 'Satellite View') {
             mapboxSatellite.addTo(map);
         } else if(mapType === 'Hybrid Satellite View') {
@@ -1712,7 +1712,20 @@ function initMap()
 
     webViewBridge.queryOverlay();
 
-    webViewBridge.zoom =map.getZoom();
+    map.on('zoomend', function() {
+        webViewBridge.zoom =map.getZoom();
+    });
+
+    webViewBridge.onZoomChanged.connect(function() {
+        map.setZoom(webViewBridge.zoom);
+    });
+    webViewBridge.onMapTypeChanged.connect(function() {
+        changeMapType(webViewBridge.mapType);
+    });
+
+    webViewBridge.onLatLngChanged.connect(function() {
+      map.panTo(webViewBridge.latLng);
+    });
 
     map.on( "contextmenu", function(event) {
         // Prevent the browser's default right-click context menu from opening
@@ -1732,6 +1745,16 @@ function initMap()
 
     siArray = [];
     markerPins = [];
+    // Listen for when the user is done moving the map
+    map.on("moveend", function(e) {
+      const finalCenter = map.getCenter();
+        console.log("Map stopped moving at: " + finalCenter.lat + ", " + finalCenter.lng);
+
+      // Perfect place to trigger an API fetch for new locations
+        webViewBridge.lat = finalCenter.lat;
+        webViewBridge.lng = finalCenter.lng;
+        webViewBridge.latLng = finalCenter;
+    });
 
 
     webViewBridge.mapInit();
@@ -2870,14 +2893,14 @@ function setBounds( pt1, pt2)
     map.fitBounds(bounds);
 }// end setBounds()
 
-function setCenter(Lat, Lon)
-{
-  //map.setCenter(L.latLng(Lat, Lon));
-  map.panTo([Lat,Lon]);
- // map.setOptions({disableDoubleClickZoom: true });
- return null;
+// function setCenter(Lat, Lon)
+// {
+//   //map.setCenter(L.latLng(Lat, Lon));
+//   map.panTo([Lat,Lon]);
+//  // map.setOptions({disableDoubleClickZoom: true });
+//  return null;
 
-} // end setCenter()
+// } // end setCenter()
 
 
 function setDefaultOptions()
@@ -2898,11 +2921,11 @@ function setOverlayOpacity(Opacity) {
 //   runInBrowser = b;
 // }
 
-function setZoom(zoom)
-{
-    map.setZoom(zoom);
-    return null;
-} // end setZoom()
+// function setZoom(zoom)
+// {
+//     map.setZoom(zoom);
+//     return null;
+// } // end setZoom()
 
 function showRouteComment(bDisplay)
 {

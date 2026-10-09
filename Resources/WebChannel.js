@@ -29,17 +29,17 @@ socket.onopen = function()
   //output("WebSocket connected, setting up QWebChannel.");
   console.log("WebSocket connected, setting up QWebChannel.");
   channel = new QWebChannel(socket, function(channel)  {
-  console.log("enter QWebChannel" + channel.objects);
-  webViewBridge = channel.objects.webViewBridge;
-  if(webViewBridge === null)
-  {
-   console.error("webViewBridge is NULL!")
-  }
+    console.log("enter QWebChannel" + channel.objects);
+    webViewBridge = channel.objects.webViewBridge;
+    if(webViewBridge === null)
+    {
+     console.error("webViewBridge is NULL!")
+    }
 
-  console.log("connect to signals", webViewBridge);
-  //connect to a signal
-  webViewBridge.executeScript.connect(function(func, parms) {
-   processScript(func, parms);
+    console.log("connect to signals", webViewBridge);
+    //connect to a signal
+    webViewBridge.executeScript.connect(function(func, parms) {
+     processScript(func, parms);
   });
 
   //connect to a signal

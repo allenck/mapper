@@ -1006,8 +1006,8 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, Color, tracks, d
 
 
 
-async function initMap() {
-    const { Map } = await google.maps.importLibrary("maps");
+/*async*/ function initMap() {
+    const { Map } = /*await*/ google.maps.importLibrary("maps");
     if(bGoogleInit)
         return;
 

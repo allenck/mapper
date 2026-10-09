@@ -123,6 +123,11 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
     connect(ui->txtUserId, SIGNAL(editingFinished()),this, SLOT(txtUserIdLeave()));
     connect(ui->txtSqliteFileName, SIGNAL(textChanged(QString)), this, SLOT(txtDsnTextChanged(QString)));
     connect(ui->txtSqliteFileName, SIGNAL(editingFinished()), this, SLOT(ontxtSqliteFileName_editingFinished()));
+    ui->cbODBCDsn->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->cbODBCDsn, &QComboBox::customContextMenuRequested,this, [=](QPoint pos){
+        cbODBCDsn_contextMenuRequested(pos);
+    });
+
     ui->tbView->setIcon(QIcon(":/show-password.png"));
     ui->txtPWD->setEchoMode(QLineEdit::Password);
 
@@ -734,6 +739,26 @@ void EditConnectionsDlg::cbConnections_contextMenuRequested(QPoint pos)
     });
     menu.addAction(deleteAct);
     menu.exec(QCursor::pos());
+}
+
+void EditConnectionsDlg::cbODBCDsn_contextMenuRequested(QPoint pos)
+{
+    //QMenu *contextMenu = ui->cbODBCDsn->lineEdit()->createStandardContextMenu();
+    QLineEdit* edit = ui->cbODBCDsn->lineEdit();
+    QMenu* contextMenu = new QMenu();
+    if(edit)
+        contextMenu = edit->createStandardContextMenu();
+    // Add a visual separator if the standard menu isn't empty
+    if (!contextMenu->isEmpty()) {
+        contextMenu->addSeparator();
+    }
+    QAction* refreshAct = new QAction(tr("Refresh"),this);
+    connect(refreshAct, &QAction::triggered, [=]{
+        ODBCUtil::instance()->initialize();
+        odbcUtil->fillDSNCombo(ui->cbODBCDsn, ui->cbDbType->currentText());
+    });
+    contextMenu->addAction(refreshAct);
+    contextMenu->exec(QCursor::pos());
 }
 
 void EditConnectionsDlg::cbDriverTypeSelectionChanged(QString sel)

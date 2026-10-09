@@ -5674,12 +5674,13 @@ void MainWindow::exportDb()
 
 void MainWindow::editConnections()
 {
- //NotYetInplemented();
+ setCursor(Qt::WaitCursor);
  EditConnectionsDlg form( this);
  form.exec();
 
  createCityMenu();
  this->setWindowTitle("Mapper - "+ config->currCity->name() + " ("+config->currConnection->description()+")");
+ setCursor(Qt::ArrowCursor);
 }
 
 //void MainWindow::locateStreet()

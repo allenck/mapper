@@ -973,6 +973,8 @@ async function initMap() {
          mapTypeId = google.maps.MapTypeId.ROADMAP;
          webViewBridge.maptype = google.maps.MapTypeId.ROADMAP;
      }
+     var latLng = webViewBridge.latLng;
+
      var mapDiv = document.getElementById("map");
      var runInBrowser = webViewBridge.runInBrowser;
      var optionsString = webViewBridge.options;
@@ -1037,6 +1039,28 @@ async function initMap() {
            });
        });
 
+    // Listen for when the user is done moving the map
+    map.addListener("idle", () => {
+      const finalCenter = map.getCenter();
+      console.log(`Map stopped moving at: ${finalCenter.lat()}, ${finalCenter.lng()}`);
+
+      // Perfect place to trigger an API fetch for new locations
+        webViewBridge.lat = finalCenter.lat();
+        webViewBridge.lon = finalCenter.lng();
+        webViewBridge.latLng = finalCenter;
+    });
+
+    webViewBridge.onZoomChanged.connect(function() {
+        map.setZoom(webViewBridge.zoom);
+    });
+    webViewBridge.onMapTypeChanged.connect(function() {
+        changeMapType(webViewBridge.mapType);
+    });
+
+    webViewBridge.onLatLngChanged.connect(function() {
+      //map.panTo(webViewBridge.latLng);
+        map.setCenter(new google.maps.LatLng(webViewBridge.latLng.lat, webViewBridge.latLng.lng));
+    });
 
     osm_MapType = new google.maps.ImageMapType(
     {
@@ -1115,7 +1139,7 @@ async function initMap() {
     //webViewBridge.displayZoom(map.getZoom());
 
     google.maps.event.addListener(map, "zoom_changed", function() {
-     webViewBridge.zoomChanged(map.getZoom());
+     webViewBridge.zoom = map.getZoom();
     });
 
     google.maps.event.addListener(map, "rightclick", function(event) {
@@ -1501,26 +1525,27 @@ function addNewPoint(e)
     }
 }
 
-  function setCenter(Lat, Lon)
-  {
-   map.setCenter(new google.maps.LatLng(Lat, Lon));
-   map.setOptions({disableDoubleClickZoom: true });
-   return null;
+  // function setCenter(Lat, Lon)
+  // {
+  //  map.setCenter(new google.maps.LatLng(Lat, Lon));
+  //  map.setOptions({disableDoubleClickZoom: true });
+  //  return null;
 
-  }
+  // }
 
-  function getCenter()
-  {
-   var latLng = map.getCenter();
-   webViewBridge.setCenter(latLng.lat(), latLng.lng(), map.getZoom(), map.getMapTypeId());
-   return latLng;
-  }
+  // function getCenter()
+  // {
+  //  var latLng = map.getCenter();
+  //  webViewBridge.setCenter(latLng.lat(), latLng.lng(), map.getZoom(), map.getMapTypeId());
+  //  return latLng;
+  // }
 
   function setZoom(zoom)
   {
       map.setZoom(zoom);
       return null;
   }
+
   function changeMapType(mapTypeId)
   {
       if(mapTypeId === "")
@@ -1528,10 +1553,11 @@ function addNewPoint(e)
       map.setMapTypeId(mapTypeId);
       return null;
   }
-  function getMapType()
-  {
-      return map.getMapTypeId();
-  }
+
+  // function getMapType()
+  // {
+  //     return map.getMapTypeId();
+  // }
 
 function selectSegment(segmentId)
 {

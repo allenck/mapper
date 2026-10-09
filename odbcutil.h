@@ -56,6 +56,7 @@ public:
     QString connectString2(QString driver, QString host, int port, QString user, QString pswd, QString database);
 static bool isIp(QString txt);
     QString getShortPath(const QString &longPath);
+    void initialize();
 
 signals:
     void odbc_changed();
@@ -76,7 +77,6 @@ private:
     QMap<QString,Driver*> drvByLib;
     QFile* ini = nullptr;
     QMap<QString, DSN*> dsnByName;
-    void initialize();
     QFileSystemWatcher * odbcinstWatcher = nullptr;
     void getWinDSNs();
     void getWinDrivers();

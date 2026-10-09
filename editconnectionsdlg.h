@@ -101,6 +101,7 @@ private slots:
  void cbUseDatabase_changed();
  void printResults(const QHostInfo &info);
  void cbConnectionsTextEditFinished();
+ void cbODBCDsn_contextMenuRequested(QPoint pos);
 
  public slots:
  void cbODBCDsn_currentIndex_changed(int ix);
