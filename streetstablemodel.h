@@ -79,6 +79,7 @@ public:
     bool doesStreetExist(StreetInfo* sti);
     QList<SegmentInfo*> getStreetsSegments(StreetInfo sti);
     bool createMissingStreetDef();
+    void setDb(QSqlDatabase db);
 
 signals:
     void streetUpdated(int row, QString street);

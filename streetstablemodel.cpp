@@ -10,6 +10,7 @@ StreetsTableModel::StreetsTableModel(QObject *parent)
     : QAbstractTableModel{parent}
 {
     config = Configuration::instance();
+    db = SQL::instance()->getDb();
     //fixDates();
     //streetsList = getStreets();
     streetsList = getStreetInfoList();
@@ -1745,4 +1746,9 @@ bool StreetsTableModel::createMissingStreetDef()
         }
     }
     return true;
+}
+
+void StreetsTableModel::setDb(QSqlDatabase db)
+{
+    db = SQL::instance()->db;
 }

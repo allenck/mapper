@@ -9,7 +9,7 @@ li.unchecked::marker { content: "\2610"; }
 li.checked::marker { content: "\2612"; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-family:'MS Shell Dlg 2'; font-size:7.8pt;">The Matthews-Northrup Up-To-Date Map of St. Louis Mo. Copyright, 1895, by The Matthews-Northrup Co., Complete Engraving and Printing Works, Buffalo and New York.&lt;/span>&lt;/p>&lt;/body>&lt;/html></description>
-    <bounds eastLongtude="13.7235" northLatitude="52.8346" southLatitude="52.2346" westLongitude="13.1235"/>
+    <bounds eastLongtude="13.3017" northLatitude="52.8315" southLatitude="52.2315" westLongitude="12.7016"/>
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/public/map_tiles/</url>
     <uuid>{fd54df8a-be70-4bac-8103-935321d0b28e}</uuid>
@@ -23,14 +23,14 @@ li.unchecked::marker { content: "\2610"; }
 li.checked::marker { content: "\2612"; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
-    <bounds eastLongtude="13.7235" northLatitude="52.8346" southLatitude="52.2346" westLongitude="13.1235"/>
+    <bounds eastLongtude="13.3017" northLatitude="52.8315" southLatitude="52.2315" westLongitude="12.7016"/>
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/public/map_tiles/</url>
     <uuid>{f8c236c7-8432-445d-bb00-36e609fce128}</uuid>
   </overlay>
   <overlay cityName="Berlin, Deutschland" layerName="" maxZoom="19" minZoom="10" name="Berlin_Bauentwicklung.1940.10000.300.3068" opacity="65" selected="yes" source="acksoft" year="1940">
     <description></description>
-    <bounds eastLongtude="13.7235" northLatitude="52.8346" southLatitude="52.2346" westLongitude="13.1235"/>
+    <bounds eastLongtude="13.3017" northLatitude="52.8315" southLatitude="52.2315" westLongitude="12.7016"/>
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/public/map_tiles/</url>
     <uuid>{ccddc145-8543-44ac-8934-44cd5fe745de}</uuid>
@@ -41,7 +41,7 @@ li.checked::marker { content: "\2612"; }
 p, li { white-space: pre-wrap; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;">
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
-    <bounds eastLongtude="13.7235" northLatitude="52.8346" southLatitude="52.2346" westLongitude="13.1235"/>
+    <bounds eastLongtude="13.3017" northLatitude="52.8315" southLatitude="52.2315" westLongitude="12.7016"/>
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/public/map_tiles/</url>
     <uuid>{d09aa6a6-51c7-4d04-b043-6e00529326c4}</uuid>
@@ -55,12 +55,12 @@ li.unchecked::marker { content: "\2610"; }
 li.checked::marker { content: "\2612"; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Ubuntu'; font-size:11pt; font-weight:400; font-style:normal;">
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
-    <bounds eastLongtude="13.7235" northLatitude="52.8346" southLatitude="52.2346" westLongitude="13.1235"/>
+    <bounds eastLongtude="13.3017" northLatitude="52.8315" southLatitude="52.2315" westLongitude="12.7016"/>
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/public/map_tiles/</url>
     <uuid>{83e4ce38-ca29-4785-a6da-bc382df3a3a0}</uuid>
   </overlay>
-  <overlay cityName="Berlin, Deutschland" layerName="" maxZoom="16" minZoom="8" name="Overview plan of Berlin in 44 sheets" opacity="65" selected="no" source="georeferencer" year="1910">
+  <overlay cityName="Berlin, Deutschland" layerName="" maxZoom="16" minZoom="8" name="Overview plan of Berlin in 44 sheets" opacity="65" selected="yes" source="georeferencer" year="1910">
     <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;meta charset="utf-8" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
@@ -69,14 +69,14 @@ li.unchecked::marker { content: "\2610"; }
 li.checked::marker { content: "\2612"; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
-    <bounds eastLongtude="13.7235" northLatitude="52.8346" southLatitude="52.2346" westLongitude="13.1235"/>
+    <bounds eastLongtude="13.3017" northLatitude="52.8315" southLatitude="52.2315" westLongitude="12.7016"/>
     <wmtsUrl></wmtsUrl>
     <url>https://warper.wmflabs.org/maps/tile/1220/{z}/{x}/{y}.png</url>
     <uuid>{bd6f4e98-357f-4224-9748-34fb955cf645}</uuid>
   </overlay>
   <overlay cityName="Berlin, Deutschland" layerName="" maxZoom="19" minZoom="10" name="Schoeneberg_Verwaltungsbezirk.1931.10000.300.6881" opacity="19" selected="yes" source="acksoft" year="">
     <description></description>
-    <bounds eastLongtude="13.7235" northLatitude="52.8346" southLatitude="52.2346" westLongitude="13.1235"/>
+    <bounds eastLongtude="13.3017" northLatitude="52.8315" southLatitude="52.2315" westLongitude="12.7016"/>
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/public/map_tiles/</url>
     <uuid>{9f7f2691-b349-4780-abe6-1916e017cc97}</uuid>
@@ -90,7 +90,7 @@ li.unchecked::marker { content: "\2610"; }
 li.checked::marker { content: "\2612"; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
-    <bounds eastLongtude="13.7235" northLatitude="52.8346" southLatitude="52.2346" westLongitude="13.1235"/>
+    <bounds eastLongtude="13.3017" northLatitude="52.8315" southLatitude="52.2315" westLongitude="12.7016"/>
     <wmtsUrl></wmtsUrl>
     <url>https://warper.wmflabs.org/maps/tile/489//{z}/{x}/{y}.png</url>
     <uuid>{97fbb6e8-d00a-44bc-a094-4f392d2281f3}</uuid>
@@ -104,7 +104,7 @@ li.unchecked::marker { content: "\2610"; }
 li.checked::marker { content: "\2612"; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
-    <bounds eastLongtude="13.7235" northLatitude="52.8346" southLatitude="52.2346" westLongitude="13.1235"/>
+    <bounds eastLongtude="13.3017" northLatitude="52.8315" southLatitude="52.2315" westLongitude="12.7016"/>
     <wmtsUrl></wmtsUrl>
     <url>https://tiles.codefor.de/berlin-straubeplan/{z}/{x}/{y}.png</url>
     <uuid>{5e6cf296-971c-4e98-8def-3efc66a86e94}</uuid>
@@ -132,7 +132,7 @@ li.unchecked::marker { content: "\2610"; }
 li.checked::marker { content: "\2612"; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Ubuntu'; font-size:11pt;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
-    <bounds eastLongtude="-84.2139" northLatitude="39.4044" southLatitude="38.8044" westLongitude="-84.8139"/>
+    <bounds eastLongtude="-84.2138" northLatitude="39.4045" southLatitude="38.8045" westLongitude="-84.8138"/>
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/public/map_tiles/</url>
     <uuid>{004d3a81-d714-4888-a11b-f2e2493c760c}</uuid>
@@ -151,21 +151,21 @@ li.checked::marker { content: "\2612"; }
     <url>http://localhost:8080/geoserver</url>
     <uuid>{37292c94-9e66-4441-b00d-926c48f96d96}</uuid>
   </overlay>
-  <overlay cityName="Indianapolis, IN" layerName="" maxZoom="21" minZoom="8" name="Indianapolis and Environs." opacity="65" selected="yes" source="georeferencer" year="1912">
+  <overlay cityName="Indianapolis, IN" layerName="" maxZoom="21" minZoom="8" name="Indianapolis and Environs." opacity="53" selected="yes" source="georeferencer" year="1912">
     <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;meta charset="utf-8" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
 hr { height: 1px; border-width: 0; }
 li.unchecked::marker { content: "\2610"; }
 li.checked::marker { content: "\2612"; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;">
-&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Cantarell'; font-size:11pt; font-weight:400; font-style:normal;">
+&lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Segoe UI'; font-size:9pt;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
     <bounds eastLongtude="-85.858" northLatitude="40.0685" southLatitude="39.4685" westLongitude="-86.458"/>
     <wmtsUrl>https://maps.georeferencer.com/georeferences/a800c204-3d6e-5d26-bc15-04b816d5a8d6/2020-05-02T12:20:42.829484Z/wmts?key=mpP5xNUZ8b1t9mFrcFfI&amp;SERVICE=WMTS&amp;REQUEST=GetCapabilities</wmtsUrl>
     <url>http://localhost:8080/geoserver/gwc/service/tms/1.0.0/my_maps:indianapolis-and-environs@EPSG:900913@png/{z}/{x}/{y}.png</url>
     <uuid>{00000000-0000-0000-0000-000000000000}</uuid>
   </overlay>
-  <overlay cityName="Indianapolis, IN" layerName="" maxZoom="21" minZoom="8" name="Indianapolis." opacity="65" selected="no" source="georeferencer" year="1903">
+  <overlay cityName="Indianapolis, IN" layerName="" maxZoom="21" minZoom="8" name="Indianapolis." opacity="65" selected="yes" source="georeferencer" year="1903">
     <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;meta charset="utf-8" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
@@ -179,7 +179,7 @@ li.checked::marker { content: "\2612"; }
     <url>https://maps.georeferencer.com/georeferences/9b4ceaef-4b5e-5bb2-8ac4-c7259057165e/2018-11-30T12:08:40.876570Z/map/{z}/{x}/{y}.png?key=caj1mpUbIDuRGkUmcxkG</url>
     <uuid>{00000000-0000-0000-0000-000000000000}</uuid>
   </overlay>
-  <overlay cityName="Indianapolis, IN" layerName="my_maps:indianapolis-and-environs" maxZoom="21" minZoom="9" name="Rand McNally Commercial Atlas Map of Indianopolis and Environs" opacity="65" selected="no" source="geoserver" year="">
+  <overlay cityName="Indianapolis, IN" layerName="my_maps:indianapolis-and-environs" maxZoom="21" minZoom="9" name="Rand McNally Commercial Atlas Map of Indianopolis and Environs" opacity="65" selected="yes" source="geoserver" year="">
     <description></description>
     <bounds eastLongtude="-85.858" northLatitude="40.0685" southLatitude="39.4685" westLongitude="-86.458"/>
     <wmtsUrl></wmtsUrl>
@@ -641,7 +641,7 @@ li.unchecked::marker { content: "\2610"; }
 li.checked::marker { content: "\2612"; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
-    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <bounds eastLongtude="-90.0476" northLatitude="38.9586" southLatitude="38.3586" westLongitude="-90.6476"/>
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/public/map_tiles/</url>
     <uuid>{e401d972-0be2-403b-95dd-e542524765cc}</uuid>
@@ -676,14 +676,14 @@ li.unchecked::marker { content: "\2610"; }
 li.checked::marker { content: "\2612"; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
-    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <bounds eastLongtude="-90.0476" northLatitude="38.9586" southLatitude="38.3586" westLongitude="-90.6476"/>
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/geoserver</url>
     <uuid>{1c0e40de-2bf3-4aa3-952a-e0c7c427e430}</uuid>
   </overlay>
   <overlay cityName="St Louis, MO" layerName="my_maps:Leffingwell's_map_of_the_city_of_St._Louis_and_vicinity_1884" maxZoom="21" minZoom="8" name="Leffingwell's map of the_city of St. Louis and vicinity 1884" opacity="65" selected="no" source="geoserver" year="">
     <description></description>
-    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <bounds eastLongtude="-90.0476" northLatitude="38.9586" southLatitude="38.3586" westLongitude="-90.6476"/>
     <wmtsUrl></wmtsUrl>
     <url>http://localhost:8080/geoserver</url>
     <uuid>{af435ca9-cbc1-4694-99c0-c7fdf67a4550}</uuid>
@@ -711,7 +711,7 @@ li.unchecked::marker { content: "\2610"; }
 li.checked::marker { content: "\2612"; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
-    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <bounds eastLongtude="-90.0476" northLatitude="38.9586" southLatitude="38.3586" westLongitude="-90.6476"/>
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/geoserver</url>
     <uuid>{a844f0c9-1b3b-4ace-9650-f64fce6a9be2}</uuid>
@@ -725,12 +725,12 @@ li.unchecked::marker { content: "\2610"; }
 li.checked::marker { content: "\2612"; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
-    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <bounds eastLongtude="-90.0476" northLatitude="38.9586" southLatitude="38.3586" westLongitude="-90.6476"/>
     <wmtsUrl>https://maps.georeferencer.com/georeferences/3e41ed67-1c65-5e25-8b4c-99adfda9695e/2021-12-19T01:24:00.624982Z/wmts?key=caj1mpUbIDuRGkUmcxkG&amp;SERVICE=WMTS&amp;REQUEST=GetCapabilities</wmtsUrl>
     <url>http://localhost:8080/geoserver/gwc/service/tms/1.0.0/my_maps:map-of-st-louis@EPSG:900913@png/{z}/{x}/{y}.png</url>
     <uuid>{00000000-0000-0000-0000-000000000000}</uuid>
   </overlay>
-  <overlay cityName="St Louis, MO" layerName="" maxZoom="21" minZoom="12" name="St. Louis, Missouri." opacity="51" selected="no" source="georeferencer" year="1891">
+  <overlay cityName="St Louis, MO" layerName="" maxZoom="21" minZoom="12" name="St. Louis, Missouri." opacity="51" selected="yes" source="georeferencer" year="1891">
     <description>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
 &lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;meta charset="utf-8" />&lt;style type="text/css">
 p, li { white-space: pre-wrap; }
@@ -739,7 +739,7 @@ li.unchecked::marker { content: "\2610"; }
 li.checked::marker { content: "\2612"; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
-    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <bounds eastLongtude="-90.0476" northLatitude="38.9586" southLatitude="38.3586" westLongitude="-90.6476"/>
     <wmtsUrl>https://maps.georeferencer.com/georeferences/9c83ed2b-077a-5e13-867d-36962c91a9c6/2022-01-06T17:24:11.385327Z/wmts?key=caj1mpUbIDuRGkUmcxkG&amp;SERVICE=WMTS&amp;REQUEST=GetCapabilities</wmtsUrl>
     <url>https://maps.georeferencer.com/georeferences/9c83ed2b-077a-5e13-867d-36962c91a9c6/2022-01-06T17:24:11.385327Z/map/{z}/{x}/{y}.png?key=caj1mpUbIDuRGkUmcxkG</url>
     <uuid>{00000000-0000-0000-0000-000000000000}</uuid>
@@ -753,7 +753,7 @@ li.unchecked::marker { content: "\2610"; }
 li.checked::marker { content: "\2612"; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'Ubuntu'; font-size:11pt;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
-    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <bounds eastLongtude="-90.0476" northLatitude="38.9586" southLatitude="38.3586" westLongitude="-90.6476"/>
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/public/map_tiles/</url>
     <uuid>{25371e52-0e30-4199-b707-1b01ac6c87d4}</uuid>
@@ -767,21 +767,21 @@ li.unchecked::marker { content: "\2610"; }
 li.checked::marker { content: "\2612"; }
 &lt;/style>&lt;/head>&lt;body style=" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;">
 &lt;p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;br />&lt;/p>&lt;/body>&lt;/html></description>
-    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <bounds eastLongtude="-90.0476" northLatitude="38.9586" southLatitude="38.3586" westLongitude="-90.6476"/>
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/public/map_tiles/</url>
     <uuid>{e3c7d2cf-ebae-4005-8667-e7a4e4426121}</uuid>
   </overlay>
   <overlay cityName="St Louis, MO" layerName="" maxZoom="17" minZoom="17" name="St_Louis_historical_topo" opacity="65" selected="yes" source="acksoft" year="1927-1940">
     <description></description>
-    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <bounds eastLongtude="-90.0476" northLatitude="38.9586" southLatitude="38.3586" westLongitude="-90.6476"/>
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/public/map_tiles/</url>
     <uuid>{9519f084-d21c-4977-b129-d16d17a726d2}</uuid>
   </overlay>
   <overlay cityName="St Louis, MO" layerName="" maxZoom="16" minZoom="10" name="St_Louis_topo" opacity="64" selected="yes" source="acksoft" year="">
     <description></description>
-    <bounds eastLongtude="-90.0357" northLatitude="38.962" southLatitude="38.362" westLongitude="-90.6357"/>
+    <bounds eastLongtude="-90.0476" northLatitude="38.9586" southLatitude="38.3586" westLongitude="-90.6476"/>
     <wmtsUrl></wmtsUrl>
     <url>https://ubuntu-2/public/map_tiles/</url>
     <uuid>{3f49b561-9eef-4b6b-9ba7-c19122099432}</uuid>

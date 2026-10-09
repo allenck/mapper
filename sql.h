@@ -81,6 +81,8 @@ public:
     void beginTransaction (QString name);
     void commitTransaction (QString name);
     void rollbackTransaction (QString name);
+    QSqlDatabase getDb();
+
     Q_DECL_DEPRECATED bool updateSegment(qint32 SegmentId);
     LatLng getPointOnSegment(qint32 pt, qint32 segmentId);
     QList<StationInfo> getStationAtPoint(LatLng pt);

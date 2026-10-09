@@ -35,6 +35,7 @@ public:
     QString userId;
     QString password;
     bool userDsn =false;
+    bool bServerAccessible = true;
 };
 
 class QFile;
@@ -79,6 +80,7 @@ private:
     QFileSystemWatcher * odbcinstWatcher = nullptr;
     void getWinDSNs();
     void getWinDrivers();
+
 };
 
 #endif // ODBCUTIL_H

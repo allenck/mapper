@@ -55,11 +55,11 @@ class myWebPage : public QWebPage
 };
 #else
 class WebSocketClientWrapper;
-class MyWebEnginePage : public QWebEnginePage
+class latLngChanged : public QWebEnginePage
 {
  Q_OBJECT
 public:
- MyWebEnginePage(QObject* parent = 0);
+ latLngChanged(QObject* parent = 0);
  bool acceptNavigationRequest(const QUrl &url, NavigationType type, bool ) override
  {
   if(type == NavigationTypeLinkClicked)
@@ -138,6 +138,7 @@ public:
     QString ProcessScript(QString func, QString params);
     QList<RouteData> routeList;
     double m_latitude, m_longitude;
+    //LatLng m_center;
     qint32 m_zoom;
     QString m_mapType;
     QList<SegmentData> segmentDataList;
@@ -161,7 +162,6 @@ public:
     void updateIntersection(qint32 i, double newLat, double newLon);
     QLabel* zoomIndicator;
     QLabel* geocoderRslt;
-    void setZoom(int zoom);
     void getGeocoderResults(QString array);
     void opacityChanged(QString name, qint32 opacity);
     void moveRouteStartMarker(double lat, double lon, qint32 segmentId, qint32 i);
@@ -212,6 +212,7 @@ public slots:
     void selectRoute(RouteData rd);
     void displayRouteComment(CommentInfo ci);
     void on_selectOverlaySources();
+    void setZoom();
 
 signals:
     void routeListChanged(QList<RouteData>* routeList);
@@ -490,7 +491,7 @@ private:
     FileDownloader *m_overlays;
     FileDownloader *m_tilemapresource;
     Configuration* config;
-    MyWebEnginePage* myWebEnginePage = nullptr;
+    latLngChanged* myWebEnginePage = nullptr;
     qint32 m_segmentId =-1;
     //QT_DEPRECATED QList<SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
     QMap<int, SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
@@ -551,7 +552,7 @@ private slots:
     void changeFonts(QFont f);
     void onCbSegmentsCustomContextMenu(const QPoint &pos);
     void addSegmentToRoute(SegmentData *sd);
-    void initializeGoogleMaps(QUrl url);
+    //void initializeMap(QUrl url);
     void displayAll();
 
 protected:

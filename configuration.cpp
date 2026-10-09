@@ -280,6 +280,7 @@ void Configuration::saveSettings2()
         settings->setValue("userMap", c->bUserMap);
         settings->setValue("bounds", c->bounds().toString());
         settings->setValue("currOverlay", c->curOverlayId);
+
         //settings->setValue("selectedCompanies",SQL::instance()->list2String(c->selectedCompaniesList));
         settings->setValue("displayRoutesForGroup", c->bDisplayRoutesForSelectedCompanies);
         // QString abbreviationsStr;
@@ -539,6 +540,7 @@ void Configuration::getSettings()
       pt.setLat(settings.value("lat",35).toDouble());
       pt.setLon(settings.value("lon",-90).toDouble());
       nc->center = pt;
+
       nc->setBounds(Bounds(settings.value("bounds").toString()));
       if(!nc->bounds().isValid())
       {
@@ -546,7 +548,8 @@ void Configuration::getSettings()
       }
       if(nc->bounds().isValid()){
          cityBounds.insert(nc->name(), nc->bounds());
-         nc->center = nc->bounds().center();
+          if(!(nc->bounds().contains(pt)))
+              nc->center = nc->bounds().center();
       }
       nc->mapType = settings.value("maptype","roadmap").toString();
       nc->mapId = settings.value("mapid","??").toString();
@@ -941,8 +944,11 @@ void Configuration::getSettings2()
         }
         if(nc->bounds().isValid()){
             cityBounds.insert(nc->name(), nc->bounds());
-            nc->center = nc->bounds().center();
+            // if(!nc->bounds().contains(pt))
+            //     nc->center = nc->bounds().center();
         }
+        qInfo() << nc->name() << tr(" map center lat: %1 lng: %2 ").arg(nc->center.lat(),0,'f',8).arg(nc->center.lon(),0,'f',8);
+
         nc->mapType = settings.value("maptype","roadmap").toString();
         nc->mapId = settings.value("mapid","??").toString();
         nc->zoom = settings.value("zoom",12).toInt();

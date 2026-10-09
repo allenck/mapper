@@ -4,6 +4,7 @@
 #include "qdir.h"
 #include "qlineedit.h"
 #include "qsettings.h"
+#include "qstandarditemmodel.h"
 #include <QFileSystemWatcher>
 #include <QHostInfo>
 #include <QMessageBox>
@@ -264,10 +265,11 @@ void ODBCUtil::getDSNs(QString odbcini)
                 QList<QPair<QString, QString> > pairs = parseSection();
                 if(sectionName == "ODBC")
                     continue;
+                DSN* dsn = nullptr;
                 if(sectionName == "ODBC Data Sources")
                 {
                    for(QPair<QString, QString > p : pairs) {
-                       DSN* dsn = new DSN();
+                       dsn = new DSN();
                        if(ini->fileName() == ".odbc.ini")
                            dsn->userDsn = true;
                        dsn->name = p.first;
@@ -288,6 +290,9 @@ void ODBCUtil::getDSNs(QString odbcini)
                        }
                        dsnByName.insert(dsn->name, dsn);
                     }
+                } else if(sectionName.startsWith("Database"))
+                {
+                    dsn->database = sectionName.mid(8).trimmed();
                 }
                 else
                 {
@@ -323,6 +328,8 @@ void ODBCUtil::getDSNs(QString odbcini)
                         }
                         if(p.first.compare("description",Qt::CaseInsensitive)==0)
                             dsn->descr = p.second;
+                        if(p.first.compare("server",Qt::CaseInsensitive)==0)
+                            dsn->server=p.second;
                     }
                     dsnByName.insert(dsn->name, dsn);
                 }
@@ -351,12 +358,24 @@ void ODBCUtil::fillDSNCombo(QComboBox* box, QString type)
 
     QString currDsn = box->currentData().toString();
     box->clear();
+    int ix =0;
     foreach(DSN* dsn , dsnByName.values())
     {
         if(dsn->type == type)
         {
             box->addItem(dsn->name+" -- "+dsn->descr, dsn->name);
+            if(!dsn->bServerAccessible)
+            {
+                auto* model = qobject_cast<QStandardItemModel*>(box->model());
+                if (model) {
+                    QStandardItem* item = model->item(ix);
+                    if (item) {
+                        item->setEnabled(false);
+                    }
+                }
+            }
         }
+        ix ++;
     }
     if(box->count())
         box->setCurrentIndex(0);
@@ -394,6 +413,7 @@ QString ODBCUtil::connectString(QString connector, QString host, int port, QStri
     return connstring;
 }
 
+// used bp PostgreSQL
 QString ODBCUtil::connectString2(QString driver, QString host, int port, QString user, QString pswd, QString database)
 {
     QString connstring = QString("Driver=" + driver +";");
@@ -485,9 +505,10 @@ void ODBCUtil::getWinDSNs()
                         //QMessageBox::warning(nullptr, tr("Warning"), tr("Invalid server: %1 for %2 error: %3").arg(server, iniKey3, info.errorString()));
                         qDebug() << tr("Invalid server: %1 for %2 error: %3").arg(server, iniKey3, info.errorString());
                         bError = true;
+                        dsn->bServerAccessible=false;
                         break;
                     }
-
+                    dsn->bServerAccessible=true;
                     dsn->server = server;
                 }
                 if(iniKey3.compare("Database", Qt::CaseInsensitive)==0)
@@ -658,3 +679,4 @@ QString ODBCUtil::getShortPath(const QString &longPath)
     return longPath; // No-op on non-Windows operating systems
 #endif
 }
+

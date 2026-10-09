@@ -74,6 +74,21 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
      Connection* connection = selectedCity->connections.at(i);
      setControls(connection->connectionType());
      ui->cbConnections->addItem(connection->description(),VPtr<Connection>::asQVariant(connection));
+     if(connection->connectionType() == "ODBC")
+     {
+         QString dsnName = connection->dsn();
+         DSN* dsn = ODBCUtil::instance()->getDsn(dsnName);
+         if(!dsn->bServerAccessible)
+         {
+             auto* model = qobject_cast<QStandardItemModel*>(ui->cbConnections->model());
+             if (model) {
+                 QStandardItem* item = model->item(i);
+                 if (item) {
+                     item->setEnabled(false);
+                 }
+             }
+         }
+     }
    }
 
    cbDbType_selectionChanged(connection->servertype());
@@ -183,6 +198,10 @@ void EditConnectionsDlg::setupComboBoxes(QString dbType)
   ui->cbDriverType->setCurrentText(connection->driver());
   ui->txtDefaultDb->setText(connection->defaultSqlDatabase());
   ui->cbUseDatabase->setCurrentText(connection->database());
+ } else if(dbType=="PostgreSQL" && ui->cbDriverType->currentText()=="QODBC")
+ {
+     DSN* dsn = ODBCUtil::instance()->getDsn(connection->dsn());
+     ui->txtDefaultDb->setText(dsn->database);
  }
  else
   return;
@@ -214,6 +233,8 @@ void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
      ui->lblPwdMethod->setVisible(false);
      ui->cbPwdMethod->setVisible(false);
      ui->cbSslMode->setVisible(false);
+     ui->txtDefaultDb->setVisible(false);
+     ui->cbUseDatabase->setVisible(false);
  }
  else if(dbType == "MySql")
  {
@@ -240,7 +261,8 @@ void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
      ui->lblPwdMethod->setVisible(false);
      ui->cbPwdMethod->setVisible(false);
      ui->cbSslMode->setVisible(false);
-
+     ui->txtDefaultDb->setVisible(true);
+     ui->cbUseDatabase->setVisible(true);
  }
  else if(dbType == "MsSql")
  {
@@ -263,6 +285,8 @@ void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
      ui->lblPwdMethod->setVisible(false);
      ui->cbPwdMethod->setVisible(false);
      ui->cbSslMode->setVisible(false);
+     ui->txtDefaultDb->setVisible(true);
+     ui->cbUseDatabase->setVisible(true);
  }
  else if(dbType == "PostgreSQL")
  {
@@ -275,6 +299,8 @@ void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
      ui->cbDriverType->setCurrentText("QPSQL");
      ui->cbConnect->setCurrentText("Direct");
      ui->cbDbType->setCurrentText("PostgreSQL");
+     ui->txtDefaultDb->setVisible(true);
+     ui->cbUseDatabase->setVisible(true);
      odbcUtil->fillDSNCombo(ui->cbODBCDsn,"PostgreSQL");
      bDSNCanBeUsed=false;
      if(!ui->cbODBCDsn->currentText().isEmpty())
@@ -536,6 +562,8 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
             ui->cbSslMode->setVisible(true);
             ui->cbPwdMethod->setCurrentText(connection->getPwdMethod());
             ui->cbSslMode->setCurrentText(connection->getSslMode());
+            ui->txtDefaultDb->setVisible(true);
+            ui->cbUseDatabase->setVisible(true);
         }
         else
         {
@@ -1631,13 +1659,17 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
     {
      if(!currDb.isEmpty())
      {
-         QString host= getConnectionParameter(db,"Server");
          QString user = getConnectionParameter(db, "User Id");
-         QString currDb = SQL::instance()->getDatabase(ui->cbDbType->currentText(), db);
+         QString currDb = connection->database();
+         QString dsnName = connection->dsn();
+         QString connector = ui->cbODBCDsn->currentData().toString();
+         DSN* dsn = ODBCUtil::instance()->getDsn(connector);
+         QString server = dsn->server;
 
          ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
-         ui->lblHelp->setText(tr("Connection succeeded! Database <B><I>%1</I></B> on <B><I>%4</I></B>. user: <B><I>%5</I></B> has <B><I>%2</I></B> tables!<br> <I>%3</I>")
-                                  .arg(currDb).arg(tableList.count()).arg(tableList.join(", "),host,user));
+         ui->lblHelp->setText(tr("Connection succeeded! Database <B><I>%1</I></B> on <B><I>%4</I></B>."
+                                 " user: <B><I>%5</I></B> has <B><I>%2</I></B> tables!<br> <I>%3</I>")
+                                  .arg(currDb).arg(tableList.count()).arg(tableList.join(", "),server,user));
          ui->txtDefaultDb->setText(currDb);
          //parms = SQL::instance()->getParameters(db);
          currCity->setCenter(LatLng(parms.lat, parms.lon));
@@ -1681,15 +1713,22 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
      }
      if(ui->cbConnections->currentText().isEmpty() && !ui->cbCities->currentText().isEmpty())
      {
-         ui->cbConnections->setCurrentText(ui->cbCities->currentText() + " " + ui->cbDbType->currentText()
-                                           + " " + ui->cbConnect->currentText() + " " + ui->txtHost->text());
+         Connection* c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
+         DSN* dsn = ODBCUtil::instance()->getDsn( c->dsn());
+
+         QString cn = ui->cbCities->currentText() + " " + ui->cbDbType->currentText()
+                                           + " " + ui->cbConnect->currentText() + " " + ui->txtHost->text();
+         if(!dsn->userId.isEmpty())
+             cn.append(" usser "+ dsn->userId );
+         ui->cbConnections->setCurrentText(cn);
      }
     }
     else // direct
     {
         ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
-        ui->lblHelp->setText(tr("Connection succeeded! Database <B><I>%1</I></B> on <B><I>%4</I></B>, user <B><I>%5</I></B> Has <B><I>%2</I></B> tables!<br> <I>%3</I>").arg(currDb).arg(tableList.count())
-                               .arg(tableList.join(", "), db.hostName(), db.userName()));
+        ui->lblHelp->setText(tr("Connection succeeded! Database %6 <B><I>%1</I></B> on <B><I>%4</I></B>, user"
+                                " <B><I>%5</I></B> Has <B><I>%2</I></B> tables!<br> <I>%3</I>")
+                                 .arg(currDb).arg(tableList.count()).arg(tableList.join(", "), connection->host(), db.userName(), connection->database()));
     }
     timer->stop();
     this->setCursor(QCursor(Qt::ArrowCursor));
@@ -1749,6 +1788,8 @@ bool EditConnectionsDlg::openTestDb()
         if(ui->cbDbType->currentText() == "PostgreSQL" && ui->cbDriverType->currentText() == "QODBC")
         {
             DSN* dsn = odbcUtil->getDsn(ui->cbODBCDsn->currentData().toString());
+            if(dsn->database  != ui->cbUseDatabase->currentText())
+                bDSNCanBeUsed = false;  //use cnnect string
 
 
           // connstring = odbcUtil->connectString2("{" + dsn->driverName + "}", dsn->server, dsn->port,
@@ -2576,13 +2617,15 @@ void EditConnectionsDlg::displayODBCConnection(QSqlDatabase db)
     QStringList tableList = db.tables();
     if(!odbcDsn.isEmpty())
     {
-        QString host= getConnectionParameter(db,"Server");
         QString user = getConnectionParameter(db, "User Id");
         QString currDb = getConnectionParameter(db, "Database");
-
+        QString dsnName = connection->dsn();
+        QString connector = ui->cbODBCDsn->currentData().toString();
+        DSN* dsn = ODBCUtil::instance()->getDsn(connector);
+        QString server = dsn->server;
         ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
         ui->lblHelp->setText(tr("Connection succeeded! Database <i><B>%1</B></i> on <i><B>%4</B></i>, user: <i><B>%5</B></i> has <B><i>%2</B></i> tables!<br> <i>%3</i>")
-                                 .arg(currDb).arg(tableList.count()).arg(tableList.join(", "),host,user));
+                                 .arg(currDb).arg(tableList.count()).arg(tableList.join(", "),server,user));
         ui->txtDefaultDb->setText(currDb);
         //parms = SQL::instance()->getParameters(db);
         currCity->setCenter(LatLng(parms.lat, parms.lon));

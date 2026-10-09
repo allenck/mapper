@@ -5730,6 +5730,11 @@ Parameters SQL::getParameters(QSqlDatabase db)
     return parms;
 }
 
+QSqlDatabase SQL::getDb()
+{
+    return db;
+}
+
 bool SQL::insertParameters(Parameters parms, QSqlDatabase db)
 {
     try

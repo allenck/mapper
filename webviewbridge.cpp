@@ -57,12 +57,12 @@ WebViewBridge* WebViewBridge::instance()
 }
 
 LatLng WebViewBridge::curLatLng(){return _latLng;}
-//bool WebViewBridge::runInBrowser()  {return _runInBrowser;}
+
 void WebViewBridge::setLatLng(const LatLng &latLng){
     if(this->_latLng != latLng)
     {
         this->_latLng = latLng;
-        emit latlngChanged();
+        emit onLatLngChanged();
     }
 }
 
@@ -91,6 +91,7 @@ void WebViewBridge::setZoom(int zoom){
         emit onZoomChanged();
     }
 }
+
 void WebViewBridge::processScript(QString func, QString parms)
 {
  //qDebug() << "processScript " << func << " " << parms;
@@ -181,8 +182,8 @@ void WebViewBridge::processScript(QString func, QVariantList objArray)
     qDebug() << "web channel not listening!";
  }
  emit executeScript3(func, objArray, objArray.count() );
- if(func == "loadOverlay")
-  qDebug()<<func + " + " + QString("%1").arg(objArray.count()) + " parameters";
+ // if(func == "loadOverlay")
+ //  qDebug()<<func + " + " + QString("%1").arg(objArray.count()) + " parameters";
 }
 
 void WebViewBridge::selectSegment(qint32 i, qint32 SegmentId)
@@ -276,30 +277,35 @@ void WebViewBridge::segmentStatus(QString txt, QString color)
 
 void WebViewBridge::setLat(double lat)
 {
-//    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-//    m_parent->setLat(lat);
+    if(lat != _lat)
+    {
+        _lat = lat;
+        emit onLatChanged();
+    }
 }
 
 void WebViewBridge::setLon(double lon)
 {
-//    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-//    m_parent->setLat(lon);
+    if(lon != _lng)
+    {
+        _lng = lon;
+        emit onLngChanged();
+    }
 }
+
 void WebViewBridge::setDebug(QString str)
 {
  emit outputSetDebug(str);
 }
-void WebViewBridge::setLen(qint32 len)
-{
 
-    m_parent->setLen(len);
-}
+// void WebViewBridge::setLen(qint32 len)
+// {
+
+//     m_parent->setLen(len);
+// }
 
 void WebViewBridge::setMapId(const QString &mapId)
 {
-    // m_parent->m_mapid  = mapId;
-    // config->mapId = mapId;
-    // config->currCity->mapId = mapId;
     if(_mapId == mapId)
         return;        // Prevent infinite loops if the value didn't change
     _mapId = mapId;
@@ -323,15 +329,14 @@ void WebViewBridge::mapTypeChanged()
     //config->currCity->mapSource = config->mapSource;
 }
 
-void WebViewBridge::setCenter(double lat, double lon, int zoom, QString mapType)
-{
-    m_parent->m_latitude = lat;
-    m_parent->m_longitude = lon;
-    m_parent->m_zoom = zoom;
-    //m_parent->m_maptype = maptype;
-    m_parent->m_mapType = mapType;
-    bResultReceived = true;
-}
+// void WebViewBridge::setCenter(double lat, double lon, int zoom, QString mapType)
+// {
+//     m_parent->m_latitude = lat;
+//     m_parent->m_longitude = lon;
+//     m_parent->m_zoom = zoom;
+//     m_parent->m_mapType = mapType;
+//     bResultReceived = true;
+// }
 
 void WebViewBridge::addPoint(int pt, double lat, double lon)
 {
@@ -355,14 +360,15 @@ void WebViewBridge::addPointMode(bool bOn)
 //TODO
 void WebViewBridge::moveRouteStartMarker(double lat, double lon, qint32 segmentId, qint32 i)
 {
-
     m_parent->moveRouteStartMarker(lat, lon, segmentId, i);
 }
+
 void WebViewBridge::moveRouteEndMarker(double lat, double lon, qint32 segmentId, qint32 i)
 {
 
     m_parent->moveRouteEndMarker(lat, lon, segmentId, i);
 }
+
 QString WebViewBridge::getImagePath(qint32 i)
 {
     Q_UNUSED(i)
@@ -370,6 +376,7 @@ QString WebViewBridge::getImagePath(qint32 i)
 //TODO:    return m_parent->getImagePath(i);
     return "";  // remove when implemented.
 }
+
 void WebViewBridge::clickPoint(double lat, double lng)
 {
     LatLng latlng = LatLng(lat, lng);
@@ -411,10 +418,12 @@ void WebViewBridge::updateIntersection(qint32 i, double newLat, double newLon)
 
     return m_parent->updateIntersection( i, newLat, newLon);
 }
-void WebViewBridge::zoomChanged(int zoom)
-{
-    m_parent->setZoom(zoom);
-}
+
+// void WebViewBridge::zoomChanged(int zoom)
+// {
+//     m_parent->setZoom(zoom);
+//     config->currCity->zoom = zoom;
+// }
 
 void WebViewBridge::showSegmentsAtPoint(double lat, double lon, qint32 segmentId)
 {
@@ -426,8 +435,8 @@ void WebViewBridge::queryOverlay()
 {
 //    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
 //    m_parent->queryOverlay();
- emit queryOverlaySignal();
-m_parent->enableControls(true);
+    emit queryOverlaySignal();
+    m_parent->enableControls(true);
 }
 
 // void WebViewBridge::initialized()
@@ -449,6 +458,7 @@ void WebViewBridge::setStation(double lat, double lon, qint32 SegmentId, qint32 
 {
     m_parent->setStation(lat, lon, SegmentId, i);
 }
+
 void WebViewBridge::updateStation(qint32 stationKey, qint32 segmentId)
 {
 
@@ -480,19 +490,19 @@ void WebViewBridge::debug(QString text)
 
 void WebViewBridge::cityBounds(double neLat, double neLng, double swLat, double swLng)
 {
- Bounds bounds = Bounds(LatLng(swLat, swLng), LatLng(neLat, neLng));
- qDebug() << "city bounds" << bounds.toString() << "valid=" << bounds.isValid();
- config->currCity->setBounds(bounds);
- LatLng center = bounds.center();
- config->currCity->setCenter(center);
- config->saveSettings();
- processScript("closeCityBoundsButton");
- emit on_cityBounds(bounds);
+    Bounds bounds = Bounds(LatLng(swLat, swLng), LatLng(neLat, neLng));
+    qDebug() << "city bounds" << bounds.toString() << "valid=" << bounds.isValid();
+    config->currCity->setBounds(bounds);
+    LatLng center = bounds.center();
+    //config->currCity->setCenter(center);
+    config->saveSettings();
+    processScript("closeCityBoundsButton");
+    emit on_cityBounds(bounds);
 
- Parameters parms = SQL::instance()->getParameters();
- parms.lat = center.lat();
- parms.lon = center.lon();
- SQL::instance()->updateParameters(parms);
+    Parameters parms = SQL::instance()->getParameters();
+    parms.lat = center.lat();
+    parms.lon = center.lon();
+    SQL::instance()->updateParameters(parms);
 }
 
 void WebViewBridge::rightClicked(double lat, double lon)

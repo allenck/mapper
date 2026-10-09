@@ -138,14 +138,14 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  wikiRoot = cwd+ QDir::separator()+ "Resources/wiki";
  QIcon icon(":/tram-icon.ico");
  setWindowIcon(icon);
- QFileInfo info = QFileInfo(wikiRoot);
- if(!info.exists())
+// QFileInfo info = QFileInfo(wikiRoot);
+// if(!info.exists())
 // {
 //  QFileInfo info2 = QFileInfo(cwd+ QDir::separator()+ "../wiki");
 //  if(info2.exists())
 //      wikiRoot = info2.absoluteFilePath();
 //  else
-   qWarning() << "cannot find wiki pages!";
+//   qWarning() << "cannot find wiki pages!";
 // }
  while(!config->currConnection->isOpen())
  {
@@ -162,8 +162,9 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
  qInfo() << "database is open. " << db.connectionName() << " " << db.driverName() << " " << db.databaseName();
 
- m_latitude = config->currCity->center.lat();
- m_longitude = config->currCity->center.lon();
+ //m_latitude = config->currCity->center.lat();
+ //m_longitude = config->currCity->center.lon();
+ //m_center = config->currCity->center;
  m_zoom = config->currCity->zoom;
  m_mapType = config->currCity->mapType;
  m_companyKey = config->currCity->companyKey;
@@ -340,18 +341,14 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
           sql->updateSegment(&si);
       }
   });
-  // connect(m_bridge, &WebViewBridge::on_connection_closed,this,[=]{
-  // });
 
   connect(ui->btnSplit, SIGNAL(clicked()),this, SLOT(btnSplit_Clicked()));
   connect(ui->chkShowOverlay, SIGNAL(clicked(bool)),this, SLOT(chkShowOverlayChanged(bool)));
   if(!config->bRunInBrowser)
    connect(webView, SIGNAL(loadStarted()), this, SLOT(linkActivated()));
   connect(ui->btnBack, SIGNAL(clicked()), this, SLOT(pageBack()));
-  //connect(ui->chkOneWay, SIGNAL(clicked(bool)), this, SLOT(chkOneWay_Leave(bool)));
   connect(ui->cbCompany, SIGNAL(currentIndexChanged(int)), this, SLOT(cbCompanySelectionChanged(int)));
   connect(ui->sbRoute, SIGNAL(actionTriggered(int)), this,  SLOT(sbRouteTriggered(int)));
-  //connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbrLeave()) );
   connect(ui->sbTracks, SIGNAL(valueChanged(int)), this, SLOT(sbTracks_valueChanged(int)));
   connect(ui->ssw, SIGNAL(segmentSelected(SegmentInfo)), this, SLOT(cbSegmentsSelectedValueChanged(SegmentInfo)));
   // Context menus
@@ -507,6 +504,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   connect(m_bridge, &WebViewBridge::onMapIdChanged,this, [=](){
     qDebug() << "mapId: " << m_bridge->_mapId;
   });
+
   if(config->currCity->city_overlayMap->count()> 0)
   {
    //QTimer::singleShot(10000, this, SLOT(mapInit()));
@@ -684,15 +682,27 @@ QMenu* MainWindow::addSegmentMenu(SegmentData *sd)
 void MainWindow::createBridge()
 {
     QString options = QString("{ \"mapSource\": %1, \"runInBrowser\": %2}").arg(config->mapSource).arg(config->bRunInBrowser?"true":"false");
- //! The object we will expose to JavaScript engine:
- m_bridge = new WebViewBridge(LatLng(m_latitude, m_longitude), m_zoom, config->mapType, config->mapId, options, this);
- connect( m_bridge, SIGNAL(movePointSignalX(qint32,qint32,LatLng,QList<LatLng>)), this, SLOT(movePointX(qint32,qint32,LatLng,QList<LatLng>)));
- connect(m_bridge, SIGNAL(addPointSignal(int,double,double)), this, SLOT(addPoint(int,double,double)));
- connect (m_bridge, SIGNAL(insertPointSignal(int,qint32,double,double)), this, SLOT(insertPoint(int,qint32,double,double)));
- connect(m_bridge, SIGNAL(segmentSelectedX(qint32,qint32,QList<LatLng>)), this, SLOT(segmentSelectedX(qint32,qint32,QList<LatLng>)));
- connect(m_bridge, SIGNAL(outputSetDebug(QString)), this, SLOT(setDebug(QString)));
- connect(m_bridge, SIGNAL(segmentStatusSignal(QString,QString)), this, SLOT(segmentStatus(QString,QString)));
- connect(m_bridge, SIGNAL(queryOverlaySignal()), this, SLOT(queryOverlay()));
+    //! The object we will expose to JavaScript engine:
+    //m_bridge = new WebViewBridge(LatLng(m_latitude, m_longitude), m_zoom, config->mapType, config->mapId, options, this);
+    m_bridge = new WebViewBridge(config->currCity->center, config->currCity->zoom, config->currCity->mapType,
+                                 config->currCity->mapId, options, this);
+    LatLng latLng = config->currCity->center;
+    qInfo() << tr("map center lat: %1 lng: %2 ").arg(latLng.lat(),0,'f',8).arg(latLng.lon(),0,'f',8);
+
+    connect(m_bridge, SIGNAL(movePointSignalX(qint32,qint32,LatLng,QList<LatLng>)), this, SLOT(movePointX(qint32,qint32,LatLng,QList<LatLng>)));
+    connect(m_bridge, SIGNAL(addPointSignal(int,double,double)), this, SLOT(addPoint(int,double,double)));
+    connect(m_bridge, SIGNAL(insertPointSignal(int,qint32,double,double)), this, SLOT(insertPoint(int,qint32,double,double)));
+    connect(m_bridge, SIGNAL(segmentSelectedX(qint32,qint32,QList<LatLng>)), this, SLOT(segmentSelectedX(qint32,qint32,QList<LatLng>)));
+    connect(m_bridge, SIGNAL(outputSetDebug(QString)), this, SLOT(setDebug(QString)));
+    connect(m_bridge, SIGNAL(segmentStatusSignal(QString,QString)), this, SLOT(segmentStatus(QString,QString)));
+    connect(m_bridge, SIGNAL(queryOverlaySignal()), this, SLOT(queryOverlay()));
+    connect(m_bridge, SIGNAL(onZoomChanged()), this, SLOT(setZoom()));
+    connect(m_bridge, &WebViewBridge::onLatLngChanged, this, [=] {
+        config->currCity->setCenter(m_bridge->_latLng);
+        // m_center = m_bridge->_latLng;
+        // m_latitude = m_bridge->_latLng.lat();
+        // m_longitude = m_bridge->_latLng.lon();
+    });
 }
 
 void MainWindow::mapInit() // map initialization completed
@@ -779,48 +789,53 @@ void MainWindow::reloadMap()
     webView->page()->setWebChannel(m_bridge->channel);
   }
 
- QVariantList objArray;
- objArray << m_latitude << m_longitude;
- m_bridge->processScript("setCenter", objArray);
- //m_bridge->processScript("setCenter", QString("%1").arg(m_latitude,0,'f',8)+ "," + QString("%1").arg(m_longitude,0,'f',8));
- objArray.clear();
- objArray << m_zoom;
- m_bridge->processScript("setZoom", objArray);
+ // QVariantList objArray;
+ // objArray << m_latitude << m_longitude;
+ // m_bridge->processScript("setCenter", objArray);
+ // //m_bridge->processScript("setCenter", QString("%1").arg(m_latitude,0,'f',8)+ "," + QString("%1").arg(m_longitude,0,'f',8));
+ // objArray.clear();
+ // objArray << m_zoom;
+ // m_bridge->processScript("setZoom", objArray);
+    m_bridge->_zoom = m_zoom;
+    m_bridge->_latLng = config->currCity->center;
+
  if(config->currCity->bUserMap)
   m_bridge->processScript("setOptions");
  else
   m_bridge->processScript("setDefaultOptions");
- objArray.clear();
- objArray << m_mapType;
- m_bridge->processScript("changeMapType", objArray);
+
+ // objArray.clear();
+ // objArray << m_mapType;
+ // m_bridge->processScript("changeMapType", objArray);
+ m_bridge->_mapType = m_mapType;
 
  //showGoogleMapFeatures(false);
 
 }
 
-void MainWindow::initializeGoogleMaps(QUrl url)
-{
- qDebug() << "page loaded: " << url.toString(QUrl::FullyDecoded);
+// void MainWindow::initializeMap(QUrl url)
+// {
+//  qDebug() << "page loaded: " << url.toString(QUrl::FullyDecoded);
 
- QVariantList objArray;
- objArray << "testing echo";
- m_bridge->processScript("echoConsole", objArray);
- m_bridge->processScript("initMap");
- objArray.clear();
- objArray << m_latitude << m_longitude;
- m_bridge->processScript("setCenter", objArray);
- //m_bridge->processScript("setCenter", QString("%1").arg(m_latitude,0,'f',8)+ "," + QString("%1").arg(m_longitude,0,'f',8));
- objArray.clear();
- objArray << m_zoom;
- m_bridge->processScript("setZoom", objArray);
- if(config->currCity->bUserMap)
-  m_bridge->processScript("setOptions");
- else
-  m_bridge->processScript("setDefaultOptions");
- objArray.clear();
- objArray << m_mapType;
- m_bridge->processScript("changeMapType", objArray);
-}
+//  QVariantList objArray;
+//  objArray << "testing echo";
+//  m_bridge->processScript("echoConsole", objArray);
+//  m_bridge->processScript("initMap");
+//  objArray.clear();
+//  objArray << m_latitude << m_longitude;
+//  m_bridge->processScript("setCenter", objArray);
+//  //m_bridge->processScript("setCenter", QString("%1").arg(m_latitude,0,'f',8)+ "," + QString("%1").arg(m_longitude,0,'f',8));
+//  objArray.clear();
+//  objArray << m_zoom;
+//  m_bridge->processScript("setZoom", objArray);
+//  if(config->currCity->bUserMap)
+//   m_bridge->processScript("setOptions");
+//  else
+//   m_bridge->processScript("setDefaultOptions");
+//  objArray.clear();
+//  objArray << m_mapType;
+//  m_bridge->processScript("changeMapType", objArray);
+// }
 
 void MainWindow::linkActivated()
 {
@@ -2279,11 +2294,11 @@ void MainWindow::newCity(QAction* act )
   qApp->processEvents();
 
   // first, save some settings for the current city
-  config->currCity->center = LatLng(m_latitude, m_longitude);
-  config->currCity->zoom = m_zoom;
-  config->currCity->mapType = m_mapType;
-  config->currCity->mapId = m_mapid;
-  config->currCity->mapSource = config->mapSource;
+  //config->currCity->center = LatLng(m_latitude, m_longitude);
+  // config->currCity->zoom = m_zoom;
+  // config->currCity->mapType = m_mapType;
+  // config->currCity->mapId = m_mapid;
+  // config->currCity->mapSource = config->mapSource;
   if(!config->currCity->connections.contains(config->currConnection))
   {
       //   config->currCity->connections.append(config->currConnection);
@@ -2380,6 +2395,7 @@ void MainWindow::newCity(QAction* act )
 #endif
     db = config->currConnection->configure(config->currCity->getLabel());
     SQL::instance()->checkTables(db);
+    StreetsTableModel::instance()->setDb(db);
     emit newCitySelected();
 
     this->setWindowTitle("Mapper - "+ config->currCity->name() + " ("+config->currConnection->description()+")");
@@ -2400,22 +2416,27 @@ void MainWindow::newCity(QAction* act )
     m_zoom = config->currCity->zoom;
     m_mapType = config->currCity->mapType = config->currCity->mapType;
     m_mapid = config->currCity->mapId = config->currCity->mapId;
-    config->currCity->mapSource = config->currCity->mapSource;
+    config->mapSource = config->currCity->mapSource;
 
     QVariantList objArray;
-    objArray << m_latitude << m_longitude;
-    m_bridge->processScript("setCenter", objArray);
+    // objArray << m_latitude << m_longitude;
+    // m_bridge->processScript("setCenter", objArray);
+    m_bridge->_latLng = config->currCity->center;
     //m_bridge->processScript("setCenter", QString("%1").arg(m_latitude,0,'f',8)+ "," + QString("%1").arg(m_longitude,0,'f',8));
-    objArray.clear();
-    objArray << m_zoom;
-    m_bridge->processScript("setZoom", objArray);
+    // objArray.clear();
+    // objArray << m_zoom;
+    // m_bridge->processScript("setZoom", objArray);
+    m_bridge->_zoom = m_zoom;
+
     if(config->currCity->bUserMap)
      m_bridge->processScript("setOptions");
     else
      m_bridge->processScript("setDefaultOptions");
-    objArray.clear();
-    objArray << m_mapType;
-    m_bridge->processScript("changeMapType", objArray);
+    // objArray.clear();
+    // objArray << m_mapType;
+    // m_bridge->processScript("changeMapType", objArray);
+    m_bridge->_mapType = m_mapType;
+
     bDisplayStationMarkers = config->currCity->bDisplayStationMarkers;
     displayStationMarkersAct->setChecked(bDisplayStationMarkers);
     bDisplayTerminalMarkers = config->currCity->bDisplayTerminalMarkers;
@@ -3220,9 +3241,11 @@ void MainWindow::displayRouteComment(CommentInfo ciIn)
   infoLon = ci.pos.lon();
  }
  else {
-  m_bridge->processScript("getCenter");
-  infoLat = m_latitude;
-  infoLon = m_longitude;
+  // m_bridge->processScript("getCenter");
+  // infoLat = m_latitude;
+  // infoLon = m_longitude;
+     infoLat = m_bridge->_latLng.lat();
+     infoLon = m_bridge->_latLng.lon();
  }
  if(ci.alphaRoute >= "" && ci.comments != "")
  {
@@ -3585,7 +3608,8 @@ void MainWindow::segmentSelected(qint32 pt, qint32 segmentId)
  }
  if (!ui->chkNoPan->checkState())
  {
-  m_bridge->processScript("setCenter", QString("%1").arg(m_latitude,0,'f',8)+ "," + QString("%1").arg(m_longitude,0,'f',8));
+  //m_bridge->processScript("setCenter", QString("%1").arg(m_latitude,0,'f',8)+ "," + QString("%1").arg(m_longitude,0,'f',8));
+    m_bridge->_latLng = LatLng(m_latitude, m_longitude);
  }
 }
 
@@ -4036,27 +4060,11 @@ void MainWindow::btnPrevClicked()
     //segmentData sd = sql->getSegmentData(m_currPoint, m_SegmentId);
     SegmentInfo sd = sql->getSegmentInfo(m_segmentId) ;
     lookupStreetName(sd);
-    //if (sd != null)
-    //{
-    //    txtStreetName.Text = sd.streetName;
-    //    string street = mySql.getStreetNameBetweenTwoPoints(new LatLng(sd.startLat, sd.startLon), new LatLng(sd.endLat, sd.endLon));
-    //    if (street != "")
-    //    {
-    //        if (street != sd.streetName)
-    //        {
-    //            txtStreetName.Text = street;
-    //            txtStreetName.ForeColor = Color.DarkOrange;
-    //        }
-    //    }
-
-    //}
-
-
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
- m_bridge->processScript("getCenter");
+ //m_bridge->processScript("getCenter");
  qApp->processEvents(QEventLoop::AllEvents,50);
  if(ui->chkShowOverlay->isChecked())
  {
@@ -4082,16 +4090,16 @@ void MainWindow::closeEvent(QCloseEvent *event)
      }
  }
  m_bridge->processScript("getCurrBounds");
- m_bridge->processScript("getCenter");
+ //m_bridge->processScript("getCenter");
 
  QSettings settings;
  //settingsDb settings;
  settings.setValue("geometry", saveGeometry());
  settings.setValue("windowState", saveState());
  settings.setValue("splitter", ui->splitter->saveState());
- config->currCity->center = LatLng(m_latitude, m_longitude);
- config->currCity->zoom = m_zoom;
- config->currCity->mapType = m_mapType;
+ //config->currCity->center = LatLng(m_latitude, m_longitude);
+ //config->currCity->zoom = m_zoom;
+ //config->currCity->mapType = m_mapType;
  config->currCity->bNoPanOpt = ui->chkNoPan->isChecked();
  config->currCity->lastRoute = m_routeNbr;
  config->currCity->lastRouteName = m_routeName;
@@ -4109,7 +4117,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
  settings.setValue("companyView", ui->tblCompanyView->horizontalHeader()->saveState());
  settings.setValue("dupSegmentsView", ui->tblDupSegments->horizontalHeader()->saveState());
  settings.setValue("streetsView",ui->tblStreetView->horizontalHeader()->saveState());
-
+ LatLng latLng = config->currCity->center;
+ qInfo() << tr("map center lat: %1 lng: %2 ").arg(latLng.lat(),0,'f',8).arg(latLng.lon(),0,'f',8);
  QSqlDatabase db = QSqlDatabase::database();
  db.close();
 //#ifndef QT_DEBUG
@@ -4909,11 +4918,11 @@ void MainWindow::txtStreetName_Leave()
  bStreetChanged = false;
 }
 
-void MainWindow::setZoom(int zoom)
+void MainWindow::setZoom()
 {
-    zoomIndicator->setText("Zoom: "+ QString("%1").arg(zoom));
-    m_zoom = zoom;
-    config->currCity->zoom = zoom;
+    zoomIndicator->setText("Zoom: "+ QString("%1").arg(m_bridge->_zoom));
+    m_zoom = m_bridge->_zoom;
+    config->currCity->zoom = m_bridge->_zoom;
 }
 
 void MainWindow::copyRouteInfo_Click()
@@ -5943,6 +5952,7 @@ bool MainWindow::openBrowserWindow()
     }
 
     m_bridge->setupbridge();
+    m_bridge->_latLng = config->currCity->center;
 
     // reload any overlays
     if(!config->currentOverlays.empty())
@@ -5970,7 +5980,7 @@ bool MainWindow::openWebViewPanel()
      settings->setAttribute(QWebEngineSettings::JavascriptEnabled, true);
      //webView->setObjectName(QStringLiteral("webEngineView"));
      webView->setContextMenuPolicy(Qt::CustomContextMenu);
-     webView->setPage(myWebEnginePage = new MyWebEnginePage());
+     webView->setPage(myWebEnginePage = new latLngChanged());
      webView->setMinimumWidth(400);
      connect(myWebEnginePage, &QWebEnginePage::selectClientCertificate,
              [=](QWebEngineClientCertificateSelection selection){
@@ -6315,7 +6325,7 @@ void MainWindow::showGoogleMapFeatures( bool bShow)
  config->bShowGMFeatures = bShow;
 }
 
-MyWebEnginePage::MyWebEnginePage(QObject* parent) : QWebEnginePage(parent){
+latLngChanged::latLngChanged(QObject* parent) : QWebEnginePage(parent){
 // connect(this, SIGNAL(QWebEnginePage::loadProgress(int)), this,
 //                      SLOT(loadProgress(int)));
 

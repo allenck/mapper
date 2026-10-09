@@ -135,7 +135,19 @@ int main(int argc, char *argv[])
  MainWindow w(argc, argv);
  a.setStyle("Fusion");
  qRegisterMetaType<LatLng>("LatLng");
+ QMetaType::registerConverter<QVariantMap, LatLng>([](const QVariantMap &map) {
+     return LatLng(
+         map.value("lat").toDouble(),
+         map.value("lng").toDouble()
+         );
+ });
 
+ QMetaType::registerConverter<LatLng, QVariantMap>([](const LatLng &loc) {
+     QVariantMap map;
+     map["lat"] = loc.lat();
+     map["lng"] = loc.lon();
+     return map;
+ });
 #ifndef Q_OS_WINDOWS
      //ConsoleInterface::instance(); // create singleton class.
  // SystemConsole2::instance()->setParent(&w);

@@ -18,7 +18,7 @@ SegmentDescription::SegmentDescription(QString description, QObject *parent) : Q
 
 void SegmentDescription::common()
 {
-    Parameters parms = sql->getParameters();
+    Parameters parms = sql->getParameters(sql->getDb());
     abbreviations = parms.abbreviationsList;
     _newDescription = work;
     newReverseDescription = "";

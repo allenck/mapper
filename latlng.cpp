@@ -15,6 +15,16 @@ LatLng::LatLng(const LatLng& other) {
  bValid = other.bValid;
 }
 
+QJsonObject LatLng::latLngToJson(const LatLng &loc) {
+    QJsonObject json;
+    json["lat"] = loc.lat();
+    json["lng"] = loc.lon();
+    return json;
+}
+
+LatLng LatLng::jsonToLatLng(const QJsonObject &json) {
+    return LatLng(json["lat"].toDouble(), json["lng"].toDouble());
+}
 
 // <summary>
 // Create new LatLng

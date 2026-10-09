@@ -14,15 +14,16 @@ class WebViewBridge : public QObject
 
     // 1. Property Declarations
     Q_PROPERTY(QString name READ curName WRITE setName NOTIFY onNameChanged FINAL)
-    Q_PROPERTY(float lat READ curLat NOTIFY onLatChanged)
-    Q_PROPERTY(float lng READ curLon NOTIFY onLngChanged)
+    Q_PROPERTY(float lat READ curLat WRITE setLat NOTIFY onLatChanged)
+    Q_PROPERTY(float lng READ curLon WRITE setLon NOTIFY onLngChanged)
     Q_PROPERTY(int zoom READ curZoom WRITE setZoom NOTIFY onZoomChanged FINAL)
     Q_PROPERTY(QString mapType READ curMapType WRITE setMapType NOTIFY onMapTypeChanged FINAL)
     Q_PROPERTY(QString mapId READ curMapId WRITE setMapId NOTIFY onMapIdChanged)
-    Q_PROPERTY(LatLng latlng MEMBER _latLng WRITE setLatLng NOTIFY latlngChanged)
+    Q_PROPERTY(LatLng latLng MEMBER _latLng WRITE setLatLng NOTIFY onLatLngChanged)
     Q_PROPERTY(QString options READ options  NOTIFY  onOptionsChanged )
     Q_PROPERTY(QVariant myRslt  WRITE setMyRslt NOTIFY myRsltChanged FINAL)
     Q_PROPERTY(int opacitycurOpacity READ curOpacity WRITE setCurOpacity NOTIFY curOpacityChanged FINAL)
+
 public:
     // 2. Constructor
     explicit WebViewBridge(QObject *parent = nullptr);
@@ -93,9 +94,9 @@ public slots:
     void setLat(double lat);
     void setLon(double lon);
     void setDebug(QString str); //25
-    void setLen(qint32 len);
+    //void setLen(qint32 len);
     //void reportMapType(QString mapType);
-    void setCenter(double lat, double lon, int zoom, QString mapType);
+    //void setCenter(double lat, double lon, int zoom, QString mapType);
     void getGeocoderResults(QString text);
     void addPoint(int pt, double lat, double lon); //29
     void addPointX(int pt, QVariantList array); //29
@@ -130,7 +131,7 @@ public slots:
     bool setupbridge();
     QString createIcon(QColor color);
     void mapTypeChanged();
-    void zoomChanged(int zoom);
+    //void zoomChanged(int zoom);
 
 signals:
     // 5. Notification Signals
@@ -140,7 +141,7 @@ signals:
     void onZoomChanged();
     void onMapTypeChanged();
     void onMapIdChanged();
-    void latlngChanged();
+    void onLatLngChanged();
     void onOptionsChanged();
     void myRsltChanged();
     void curOpacityChanged();
