@@ -4828,7 +4828,15 @@ bool ExportSql::exportTable(QString inTable)
     QString col = columns.at(i);
     if(tgtConn->servertype() != "PostgreSQL")
     {
-        commandString.append( ":"+col);
+        // Check if the current column is the problematic JSON column
+             if(col.compare("jRouteList", Qt::CaseInsensitive) == 0 && tgtConn->servertype() == "MySql")
+             {
+                 commandString.append("CONVERT(:" + col + " USING utf8mb4)");
+             }
+             else
+             {
+                 commandString.append(":" + col);
+             }
     }
     else {
         if(types.at(i)== "")
