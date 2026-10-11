@@ -79,7 +79,7 @@ public:
     bool doesStreetExist(StreetInfo* sti);
     QList<SegmentInfo*> getStreetsSegments(StreetInfo sti);
     bool createMissingStreetDef();
-    void setDb(QSqlDatabase db);
+    void setDb();
 
 signals:
     void streetUpdated(int row, QString street);
@@ -92,7 +92,7 @@ private:
     static StreetsTableModel* _instance;
     Configuration* config = nullptr;
     void processStreetUpdate(int streetId, SegmentInfo si);
-    QSqlDatabase db = SQL::instance()->db;
+    QSqlDatabase db;// = SQL::instance()->db;
 };
 
 #endif // STREETSTABLEMODEL_H
