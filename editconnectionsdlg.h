@@ -86,7 +86,7 @@ private slots:
  void cbCitiesTextChanged(QString text);
  void cbCitiesLeave();
  void cbConnectionsTextChanged(QString text);
- void cbConnectionsLeave();
+ QT_DEPRECATED void cbConnectionsLeave();
  void quickProcess();
  void txtHostLeave();
  void txtPortLeave();

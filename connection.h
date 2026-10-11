@@ -81,7 +81,10 @@ public:
  void setCityName(QString name) {_cityName = name;}
  //static QString dbType(QString name);
  QString connectionName(){return _connectionName;}
- void setConnectionName(QString name) {_connectionName =name; }
+ void setConnectionName(QString name) {
+     Q_ASSERT(!name.isEmpty());
+     _connectionName =name;
+ }
  QString sqlite_fileName() {return _sqlite_fileName;}
  void setSqliteFileName(QString fn){_sqlite_fileName = fn;}
 // QString odbc_connectorName(){return _odbc_connectorName;}

@@ -131,22 +131,12 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  enableControls(false);
 
  cwd = QDir::currentPath();
-// config = Configuration::instance();
-// config->getSettings();
  changeFonts(config->font);
 
  wikiRoot = cwd+ QDir::separator()+ "Resources/wiki";
  QIcon icon(":/tram-icon.ico");
  setWindowIcon(icon);
-// QFileInfo info = QFileInfo(wikiRoot);
-// if(!info.exists())
-// {
-//  QFileInfo info2 = QFileInfo(cwd+ QDir::separator()+ "../wiki");
-//  if(info2.exists())
-//      wikiRoot = info2.absoluteFilePath();
-//  else
-//   qWarning() << "cannot find wiki pages!";
-// }
+
  while(!config->currConnection->isOpen())
  {
   this->setWindowTitle("Mapper - "+ config->currCity->name() + " ("+config->currConnection->description()+")");
@@ -177,6 +167,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  geocoderRslt= new QLabel();
  statusBar()->addPermanentWidget(geocoderRslt);
 
+ QSqlDatabase db = QSqlDatabase::database(config->currConnection->connectionName());
+ qDebug() << "database cn: " << db.connectionName() << " driver: " << db.driverName();
  ui->ssw->initialize();
 
  cwd = QDir::currentPath();
@@ -197,13 +189,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   //ui->saveImage->setEnabled(false);
  }
 
-#ifdef USE_WEBENGINE
-
-#endif
-
-// if(!config->bRunInBrowser)
-//  ui->verticalLayout_2->addWidget(webView);
-
+ Q_ASSERT(!config->currConnection->connectionName().isEmpty());
  pwd = QDir::currentPath();
  QFileInfo info3(argv[0]);
  pgmDir = info3.absolutePath();
@@ -2398,7 +2384,7 @@ void MainWindow::newCity(QAction* act )
 #endif
     db = config->currConnection->configure(config->currCity->getLabel());
     SQL::instance()->checkTables(db);
-    StreetsTableModel::instance()->setDb(db);
+    StreetsTableModel::instance()->setDb();
     emit newCitySelected();
 
     this->setWindowTitle("Mapper - "+ config->currCity->name() + " ("+config->currConnection->description()+")");

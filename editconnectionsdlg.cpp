@@ -110,7 +110,7 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
     });
     connect(ui->btnTest,SIGNAL(clicked(bool)), this, SLOT(btnTestClicked()));
     connect(ui->btnNew, &QPushButton::clicked, [=]{
-    newConnection();
+        newConnection();
     });
     connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(btnCancelClicked()));
     connect(ui->btnSave, SIGNAL(clicked()), this, SLOT(btnSaveClicked()));
@@ -216,6 +216,7 @@ void EditConnectionsDlg::setupComboBoxes(QString dbType)
 
 void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
 {
+    setCursor(Qt::WaitCursor);
  disconnect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(cbDbType_selectionChanged(QString)));
  disconnect(ui->cbDriverType, SIGNAL(currentTextChanged(QString)),this,SLOT(cbDriverTypeSelectionChanged(QString)));
  //ui->btnPgSetup->setVisible(false);
@@ -360,6 +361,7 @@ void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
  connect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(cbDbType_selectionChanged(QString)));
  connect(ui->cbDriverType, SIGNAL(currentTextChanged(QString)),this,SLOT(cbDriverTypeSelectionChanged(QString)));
  createDescription();
+ setCursor(Qt::ArrowCursor);
 }
 
 void EditConnectionsDlg::setCity(City* city)
@@ -470,6 +472,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
 {
     if(sel < 0)
         return;
+    setCursor(Qt::WaitCursor);
     disconnect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(cbDbType_selectionChanged(QString)));
     disconnect(ui->cbDriverType, SIGNAL(currentTextChanged(QString)), this, SLOT(cbDriverTypeSelectionChanged(QString)));
 
@@ -615,7 +618,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
     connectionChanging=false;
     connect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(cbDbType_selectionChanged(QString)));
     connect(ui->cbDriverType, SIGNAL(currentTextChanged(QString)), this, SLOT(cbDriverTypeSelectionChanged(QString)));
-
+    setCursor(Qt::WaitCursor);
 }
 
 void EditConnectionsDlg::cbODBCDsn_currentIndex_changed(int ix)
@@ -1118,7 +1121,8 @@ void EditConnectionsDlg::btnSaveClicked()
    if(ui->cbConnections->currentText().isEmpty())
    {
       ui->lblHelp->setStyleSheet("QLabel {  color : blue; }");
-      ui->lblHelp->setText(tr("Enter the new connection's description"));
+      ui->lblHelp->setText(tr("Edit the new connection's description"));
+      createDescription();
       ui->btnSave->setEnabled(false);
       return;
    }
@@ -1410,6 +1414,7 @@ void EditConnectionsDlg::cbConnectionsLeave()
 }
 
 void EditConnectionsDlg::newConnection(){
+    setCursor(Qt::WaitCursor);
     ui->btnNew->setEnabled(false);
     cb_enable(ui->cbDbType,true);
     ui->btnSave->setEnabled(false);
@@ -1429,19 +1434,12 @@ void EditConnectionsDlg::newConnection(){
     connection = new Connection();
     connection->cityName() = ui->cbCities->currentText();
     City* city = VPtr<City>::asPtr(ui->cbCities->currentData());
-    // connect(ui->cbCities->lineEdit(), &QLineEdit::editingFinished, [=] {
-    //     QString cityName = ui->cbCities->lineEdit()->text();
-    //     if(!config->cityMap.contains(cityName))
-    //     {
-    //       City* newCity = new City();
-    //       newCity->setName(cityName);
-    //       ui->cbCities->addItem(newCity->name(), VPtr<City>::asQVariant(newCity));
-    //       currCity = newCity;
-    //       connection->setCityName(cityName);
-    //     }
-    // });
-    populateDatabases();
-    connection->setConnectionName("");
+    if(!populateDatabases())
+    {
+        setCursor(Qt::ArrowCursor);
+        return;
+    }
+    connection->setConnectionName(city->getLabel());
     //ui->cbConnections->addItem("",VPtr<Connection>::asQVariant(connection));
     ui->cbConnections->setCurrentIndex(ui->cbConnections->findData(VPtr<Connection>::asQVariant(connection)));
     ui->cbConnections->setCurrentText("");
@@ -1452,6 +1450,7 @@ void EditConnectionsDlg::newConnection(){
     ui->cbConnect->setCurrentIndex(0); // local
     ui->btnSave->setEnabled(false);
     ui->cbDriverType->setFocus();
+    setCursor(Qt::ArrowCursor);
 }
 
 bool EditConnectionsDlg::testConnection(bool bCreate)
@@ -1684,11 +1683,13 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
     {
      if(!currDb.isEmpty())
      {
-         QString user = getConnectionParameter(db, "User Id");
+         QString user = db.userName();
          QString currDb = connection->database();
          QString dsnName = connection->dsn();
          QString connector = ui->cbODBCDsn->currentData().toString();
          DSN* dsn = ODBCUtil::instance()->getDsn(connector);
+         if(user.isEmpty())
+             user = dsn->userId;
          QString server = dsn->server;
 
          ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
@@ -1714,12 +1715,13 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
          else
          {
              ui->lblHelp->setStyleSheet("color:red");
-             ui->lblHelp->setText(tr("there is no database specified"));
+             ui->lblHelp->setText(tr("A database must be specified"));
              populateDatabases();
              return false;
          }
          ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
-         ui->lblHelp->setText(tr("Connection succeeded. No default database. <B><I>%1</I></B> has <B><I>%2</I></B> tables!<br> <I>%3</I>").arg(currDb).arg(tableList.count()).arg(tableList.join(", ")));
+         ui->lblHelp->setText(tr("Connection succeeded. No default database. <B><I>%1</I></B> has <B><I>%2</I></B>"
+                                 " tables!<br> <I>%3</I>").arg(currDb).arg(tableList.count()).arg(tableList.join(", ")));
          currCity->setCenter(LatLng(parms.lat, parms.lon));
          //parms = SQL::instance()->getParameters(db);
          if(parms.city == ui->cbCities->currentText())
@@ -1736,15 +1738,15 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
      {
         populateDatabases();
      }
-     if(ui->cbConnections->currentText().isEmpty() && !ui->cbCities->currentText().isEmpty())
+     if(!ui->cbConnections->currentText().isEmpty() && !ui->cbCities->currentText().isEmpty())
      {
-         Connection* c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
-         DSN* dsn = ODBCUtil::instance()->getDsn( c->dsn());
+         // Connection* c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
+         DSN* dsn = ODBCUtil::instance()->getDsn( ui->cbODBCDsn->currentData().toString());
 
          QString cn = ui->cbCities->currentText() + " " + ui->cbDbType->currentText()
                                            + " " + ui->cbConnect->currentText() + " " + ui->txtHost->text();
          if(!dsn->userId.isEmpty())
-             cn.append(" usser "+ dsn->userId );
+             cn.append(" user "+ dsn->userId );
          ui->cbConnections->setCurrentText(cn);
      }
     }

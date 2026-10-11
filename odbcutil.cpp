@@ -511,6 +511,10 @@ void ODBCUtil::getWinDSNs()
                     dsn->bServerAccessible=true;
                     dsn->server = server;
                 }
+                if(iniKey3.compare("UID", Qt::CaseInsensitive)==0)
+                {
+                    dsn->userId = winReg.value(iniKey3).toString();
+                }
                 if(iniKey3.compare("Database", Qt::CaseInsensitive)==0)
                 {
                     dsn->database = winReg.value(iniKey3).toString();

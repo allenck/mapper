@@ -88,6 +88,9 @@ QSqlDatabase Connection::configure(const QString cName)
      setOpen(true);
      tableList = db.tables();
      sysTableList = db.tables(QSql::SystemTables);
+     QString cn = db.connectionName();
+     Q_ASSERT(!cn.isEmpty());
+     _connectionName = cn;
   if(config->currConnection->servertype() != "Sqlite")
   {
 #ifndef NO_UDF
