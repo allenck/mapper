@@ -40,7 +40,11 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   connect(ui->chkShowOnly, &QCheckBox::checkStateChanged,this,[=]{
       fill_cbConnections();
   });
-  db = QSqlDatabase::database();
+  // db = QSqlDatabase::addDatabase(tgtConn->driver(), tgtConn->cityName());
+  // Connection::configureDb(db,tgtConn );
+  db = QSqlDatabase::database(tgtConn->connectionName());
+  qInfo() << "database is open. " << db.connectionName() << " " << db.driverName() << " " << db.databaseName();
+
   tgtConn->setConnectionName(db.connectionName());
   connect(ui->editQuery, SIGNAL(textChanged()), this, SLOT(textChanged()));
 
