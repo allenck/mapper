@@ -34,6 +34,7 @@ public:
     QString database;
     QString userId;
     QString password;
+    QString sslMode;
     bool userDsn =false;
     bool bServerAccessible = true;
 };
@@ -64,7 +65,7 @@ signals:
 private:
     explicit ODBCUtil(QObject *parent = nullptr);
     QMap<QString, QMap<QString,QString>> odbcPairMap;
-    QStringList databases;
+    QStringList dsns;
     static ODBCUtil* _instance;
     QString currLine;
     QMap<QString, QString> mapDsn;
@@ -77,9 +78,11 @@ private:
     QMap<QString,Driver*> drvByLib;
     QFile* ini = nullptr;
     QMap<QString, DSN*> dsnByName;
+    QMultiMap<QString, DSN*> dsnByType;
     QFileSystemWatcher * odbcinstWatcher = nullptr;
     void getWinDSNs();
     void getWinDrivers();
+    QStringList validTypes = {"MySql","MsSql","PostgreSQL"};
 
 };
 

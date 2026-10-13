@@ -12231,6 +12231,7 @@ QStringList SQL::listViews()
  {
      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
      qDebug() << errCommand;
+     qInfo() << "database is " << (db.isOpen()?"open":"not open")  << db.connectionName() << " " << db.driverName() << " " << db.databaseName();
      QSqlError error = query.lastError();
      SQLERROR(std::move(query));
      throw SQLException(error.text() + " " + errCommand);

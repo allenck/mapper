@@ -77,8 +77,15 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
      if(connection->connectionType() == "ODBC")
      {
          QString dsnName = connection->dsn();
-         DSN* dsn = ODBCUtil::instance()->getDsn(dsnName);
-         if(!dsn->bServerAccessible)
+         DSN* dsn = odbcUtil->getDsn(dsnName);
+         if(!dsn)
+         {
+             // ui->lblHelp->setStyleSheet("color: red");
+             // ui->lblHelp->setText(tr("DSN <b>%1</b> not found, please select another").arg(dsnName));
+             // setControls(connection->connectionType());
+             continue;
+         }
+         if(dsn && !dsn->bServerAccessible)
          {
              auto* model = qobject_cast<QStandardItemModel*>(ui->cbConnections->model());
              if (model) {
@@ -155,7 +162,7 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
           ui->lblHelp->setText(tr("not open!"));
       }
     });
-    connect(ui->cbUseDatabase, SIGNAL(currentTextChanged()), this, SLOT(cbUseDatabase_changed()));
+    //connect(ui->cbUseDatabase, SIGNAL(currentTextChanged(QString)), this, SLOT(cbUseDatabase_changed()));
     connect(ui->cbUseDatabase->lineEdit(), &QLineEdit::editingFinished, [=](){
         cbUseDatabase_changed();
     });
@@ -205,7 +212,7 @@ void EditConnectionsDlg::setupComboBoxes(QString dbType)
   ui->cbUseDatabase->setCurrentText(connection->database());
  } else if(dbType=="PostgreSQL" && ui->cbDriverType->currentText()=="QODBC")
  {
-     DSN* dsn = ODBCUtil::instance()->getDsn(connection->dsn());
+     DSN* dsn = odbcUtil->getDsn(connection->dsn());
      ui->txtDefaultDb->setText(dsn->database);
  }
  else
@@ -217,8 +224,8 @@ void EditConnectionsDlg::setupComboBoxes(QString dbType)
 void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
 {
     setCursor(Qt::WaitCursor);
- disconnect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(cbDbType_selectionChanged(QString)));
- disconnect(ui->cbDriverType, SIGNAL(currentTextChanged(QString)),this,SLOT(cbDriverTypeSelectionChanged(QString)));
+    disconnect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(cbDbType_selectionChanged(QString)));
+    disconnect(ui->cbDriverType, SIGNAL(currentTextChanged(QString)),this,SLOT(cbDriverTypeSelectionChanged(QString)));
  //ui->btnPgSetup->setVisible(false);
  if(dbType == "Sqlite")
  {
@@ -486,6 +493,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
     if(connection == nullptr)
         connection = new Connection();
     connectionChanging = true;
+    setupComboBoxes(connection->servertype());
 
     ui->btnDelete->setEnabled(true);
 
@@ -493,7 +501,8 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
     ui->cbDriverType->setCurrentIndex(ui->cbDriverType->findText(connection->driver()));
     ui->cbConnect->setCurrentIndex(ui->cbConnect->findText(connection->connectionType()));
     setControls(connection->connectionType());
-
+    setCursor(Qt::WaitCursor);
+    qApp->processEvents();
     if(ui->cbConnect->currentText()== "Local") // Local
     {
         ui->txtSqliteFileName->setText(connection->sqlite_fileName());
@@ -538,19 +547,28 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
     {
         // ODBC (MsSql, MySql/MariaDb or PostgreSQL
         ui->cbUseDatabase->setCurrentText(connection->database());
-        ui->txtDefaultDb->setText(connection->defaultSqlDatabase());
+        //ui->txtDefaultDb->setText(connection->defaultSqlDatabase());
         ui->cbODBCDsn->setVisible(true);
         odbcUtil->fillDSNCombo(ui->cbODBCDsn, ui->cbDbType->currentText());
-        ui->cbODBCDsn->setCurrentIndex(ui->cbODBCDsn->findData(connection->dsn()));
+        //ui->cbODBCDsn->setCurrentIndex(ui->cbODBCDsn->findData(connection->dsn()));
+        ui->cbODBCDsn->setCurrentText(connection->dsn());
         QString ODBCDsn = ui->cbODBCDsn->currentData().toString();
+        DSN* dsn = odbcUtil->getDsn(ODBCDsn);
+        ui->txtDefaultDb->setText(dsn->database);
+        db.close();
         db = QSqlDatabase::addDatabase(connection->driver(),"testConnection");
-        //db.setDatabaseName(ODBCDsn);
+        db.setDatabaseName(connection->dsn());
+
+        // db.setHostName(dsn->server); // ***
+        // db.setUserName(dsn->userId);
+        // db.setPassword(dsn->password);
+
         // db.setUserName(connection->userId());
         ui->txtUserId->setText(connection->userId());
-        // db.setPassword(connection->pwd());
+        //db.setPassword(connection->pwd());
         ui->txtPWD->setText(connection->pwd());
         ui->txtHost->setText(connection->host());
-        setCursor(Qt::WaitCursor);
+        //setCursor(Qt::WaitCursor);
         checkHost(connection->host());
 
         if(connection->port()>0)
@@ -584,6 +602,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
         // {
         //     db.setDatabaseName(connection->connectString());
         // }
+        setCursor(Qt::ArrowCursor);
         if(!bDSNCanBeUsed)
             return;
         ui->lblHelp->setStyleSheet("QLabel {  color : #FF8000; }");
@@ -618,7 +637,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
     connectionChanging=false;
     connect(ui->cbDbType,SIGNAL(currentTextChanged(QString)), this, SLOT(cbDbType_selectionChanged(QString)));
     connect(ui->cbDriverType, SIGNAL(currentTextChanged(QString)), this, SLOT(cbDriverTypeSelectionChanged(QString)));
-    setCursor(Qt::WaitCursor);
+    //setCursor(Qt::WaitCursor);
 }
 
 void EditConnectionsDlg::cbODBCDsn_currentIndex_changed(int ix)
@@ -757,7 +776,7 @@ void EditConnectionsDlg::cbODBCDsn_contextMenuRequested(QPoint pos)
     }
     QAction* refreshAct = new QAction(tr("Refresh"),this);
     connect(refreshAct, &QAction::triggered, [=]{
-        ODBCUtil::instance()->initialize();
+        odbcUtil->initialize();
         odbcUtil->fillDSNCombo(ui->cbODBCDsn, ui->cbDbType->currentText());
     });
     contextMenu->addAction(refreshAct);
@@ -1415,6 +1434,10 @@ void EditConnectionsDlg::cbConnectionsLeave()
 
 void EditConnectionsDlg::newConnection(){
     setCursor(Qt::WaitCursor);
+    setupComboBoxes("Sqlite");
+    ui->lblHelp->setStyleSheet("color: #FF8000;");
+    ui->lblHelp->setText(tr("Select database type and driver"));
+    qApp->processEvents();
     ui->btnNew->setEnabled(false);
     cb_enable(ui->cbDbType,true);
     ui->btnSave->setEnabled(false);
@@ -1529,7 +1552,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
     else
     { // not Sqlite
         QString defaultDb = getDatabase();
-        ui->txtDefaultDb->setText(defaultDb);
+        ui->txtDefaultDb->setText(connection->defaultSqlDatabase());
         if(!ui->cbUseDatabase->currentText().isEmpty())
         {
          setDatabase(ui->cbUseDatabase->currentText());
@@ -1653,7 +1676,11 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
 #endif
     bool bOpen = db.open(/*ui->txtUserId->text(), ui->txtPWD->text()*/);
     if(!ui->cbUseDatabase->currentText().isEmpty())
-        setDatabase(ui->cbUseDatabase->currentText());
+    {
+        QString currDatabase = ui->cbUseDatabase->currentText();
+        setDatabase(currDatabase);
+        connection->setDatabase(currDatabase);
+    }
     QStringList tableList = db.tables();
     if(tableList.contains("Parameters"))
         parms = SQL::instance()->getParameters(db);
@@ -1687,7 +1714,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
          QString currDb = connection->database();
          QString dsnName = connection->dsn();
          QString connector = ui->cbODBCDsn->currentData().toString();
-         DSN* dsn = ODBCUtil::instance()->getDsn(connector);
+         DSN* dsn = odbcUtil->getDsn(connector);
          if(user.isEmpty())
              user = dsn->userId;
          QString server = dsn->server;
@@ -1741,7 +1768,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
      if(!ui->cbConnections->currentText().isEmpty() && !ui->cbCities->currentText().isEmpty())
      {
          // Connection* c = VPtr<Connection>::asPtr(ui->cbConnections->currentData());
-         DSN* dsn = ODBCUtil::instance()->getDsn( ui->cbODBCDsn->currentData().toString());
+         DSN* dsn = odbcUtil->getDsn( ui->cbODBCDsn->currentData().toString());
 
          QString cn = ui->cbCities->currentText() + " " + ui->cbDbType->currentText()
                                            + " " + ui->cbConnect->currentText() + " " + ui->txtHost->text();
@@ -1753,9 +1780,9 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
     else // direct
     {
         ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
-        ui->lblHelp->setText(tr("Connection succeeded! Database %6 <B><I>%1</I></B> on <B><I>%4</I></B>, user"
+        ui->lblHelp->setText(tr("Connection succeeded! Database <B><I>%1</I></B> on <B><I>%4</I></B>, user"
                                 " <B><I>%5</I></B> Has <B><I>%2</I></B> tables!<br> <I>%3</I>")
-                                 .arg(currDb).arg(tableList.count()).arg(tableList.join(", "), connection->host(), db.userName(), connection->database()));
+                                 .arg(currDb).arg(tableList.count()).arg(tableList.join(", "), connection->host(), db.userName()));
     }
     timer->stop();
     this->setCursor(QCursor(Qt::ArrowCursor));
@@ -1777,12 +1804,11 @@ bool EditConnectionsDlg::openTestDb()
     _testConnection->setConnectionType(ui->cbConnect->currentText());
     _testConnection->setDriver(ui->cbDriverType->currentText());
     _testConnection->setServerType(ui->cbDbType->currentText());
-    db = QSqlDatabase::addDatabase(ui->cbDriverType->currentText(),"testConnection");
-    // if (QSqlDatabase::contains("testConnection")) {
-    //     db = QSqlDatabase::database("testConnection");
-    // } else {
-    //     db = QSqlDatabase::addDatabase("QSQLITE", "testConnection");
-    // }
+    _testConnection->setConnectionName("testConnection");
+    //db = QSqlDatabase::addDatabase(ui->cbDriverType->currentText(),"testConnection");
+    db = QSqlDatabase::database(_testConnection->connectionName());
+    if(!db.isValid() || db.driverName() !=_testConnection->driver())
+        db = QSqlDatabase::addDatabase(_testConnection->connectionName());
     _testConnection->setDb(db);
    // if(ui->cbConnect->currentText() == "Direct")
    // {
@@ -1791,7 +1817,7 @@ bool EditConnectionsDlg::openTestDb()
    //         db.setDatabaseName(ui->cbUseDatabase->currentText());
    // }
 
-    if(ui->cbDbType->currentText() == "Sqlite"  )
+    if(_testConnection->servertype() == "Sqlite"  )
     {
         QFileInfo info(ui->txtSqliteFileName->text());
         if(info.isAbsolute())
@@ -1800,36 +1826,27 @@ bool EditConnectionsDlg::openTestDb()
             db.setDatabaseName("Resources/databases/" + ui->txtSqliteFileName->text());
         _testConnection->setSqliteFileName(db.databaseName());
     }
-    else if(ui->cbConnect->currentText() == "ODBC")
+    else if(_testConnection->connectionType() == "ODBC")
     {
         QString connector = ui->cbODBCDsn->currentData().toString();
-// #ifndef Q_OS_WIN
-//         DSN* dsn = odbcUtil->getDsn(ui->cbODBCDsn->currentData().toString());
-
-
-
-//         connstring = odbcUtil->connectString2("{" + dsn->driverName + "}", ui->txtHost->text(), ui->txtPort->text().toInt(),
-//                                           ui->txtUserId->text(), (ui->cbDbType->currentText()=="PostgreSQL")?"md5"+md5String:ui->txtPWD->text(), ui->cbUseDatabase->currentText() );
-
-// #else // windows
-        if(ui->cbDbType->currentText() == "PostgreSQL" && ui->cbDriverType->currentText() == "QODBC")
+        if(_testConnection->servertype() == "PostgreSQL" && _testConnection->driver() == "QODBC")
         {
             DSN* dsn = odbcUtil->getDsn(ui->cbODBCDsn->currentData().toString());
             if(dsn->database  != ui->cbUseDatabase->currentText())
-                bDSNCanBeUsed = false;  //use cnnect string
+                bDSNCanBeUsed = false;  //use connect string
+            // Because PostgreSQL does not have a use [database] command, we will instead use a connection string.
+            // in other cases, a connection string might be necessary if there are connection options.
 
-
-          // connstring = odbcUtil->connectString2("{" + dsn->driverName + "}", dsn->server, dsn->port,
-          //                                        dsn->userId, (ui->cbDbType->currentText()=="PostgreSQL")?"md5"+md5String:dsn->password, ui->cbUseDatabase->currentText() );
-          // connstring = odbcUtil->connectString2("{" + dsn->driverName + "}", dsn->server, dsn->port,
-          //                                        dsn->userId, dsn->password, ui->cbUseDatabase->currentText() );
-          connstring = odbcUtil->connectString2("{" + dsn->driverName + "}",ui->txtHost->text(), dsn->port,
-                                                 ui->txtUserId->text(), ui->txtPWD->text(), ui->cbUseDatabase->currentText() );
-          connstring.append(QString("sslmode=%1;").arg(ui->cbSslMode->currentText()));
+            // connstring = odbcUtil->connectString2("{" + dsn->driverName + "}", dsn->server, dsn->port,
+            //                                        dsn->userId, (ui->cbDbType->currentText()=="PostgreSQL")?"md5"+md5String:dsn->password, ui->cbUseDatabase->currentText() );
+            // connstring = odbcUtil->connectString2("{" + dsn->driverName + "}", dsn->server, dsn->port,
+            //                                        dsn->userId, dsn->password, ui->cbUseDatabase->currentText() );
+            connstring = odbcUtil->connectString2("{" + dsn->driverName + "}",ui->txtHost->text(), dsn->port,
+                                                     ui->txtUserId->text(), ui->txtPWD->text(), ui->cbUseDatabase->currentText() );
+            connstring.append(QString("sslmode=%1;").arg(ui->cbSslMode->currentText()));
         }
 
-//#endif
-        if(ui->cbDbType->currentText() == "PostgreSQL" && ui->cbConnect->currentText() == "ODBC")
+        if(_testConnection->servertype() == "PostgreSQL" && ui->cbConnect->currentText() == "ODBC")
         {
             db.setDatabaseName(bDSNCanBeUsed?connector:connstring);
             _testConnection->setDSN(connstring);
@@ -1928,6 +1945,8 @@ open1:
             // if(!availableDatabases.contains( ui->cbUseDatabase->currenttext()))
             //     ui->txtUseDatabase->setText(defaultDatabase);
         }
+        //displayDbInfo(db);
+
         setCursor(Qt::ArrowCursor);
         return true;
     }
@@ -2535,7 +2554,7 @@ void EditConnectionsDlg::displayDbInfo(QSqlDatabase db)
     qDebug() << "QSqlDatabase parameters:";
     qDebug() <<(tr(" connection name: %1 ").arg(db.connectionName()));
     qDebug() <<(tr(" driverName: %1 ").arg(db.driverName()));
-    qDebug() <<(tr(" databaseName: %1 ").arg(db.databaseName()));
+    qDebug() <<(tr(" DSN: %1 ").arg(db.databaseName()));
     qDebug() <<(tr(" hostName: %1; port: %2 ").arg(db.hostName()).arg(db.port()));
     qDebug() <<(tr(" userName: %1; pwd: %2 ").arg(db.userName(),db.password()));
     qDebug() <<(tr(" isOpen: %1; isValid: %2 ").arg(db.isOpen()?"true":"false", db.isValid()?"true":"false"));
@@ -2648,7 +2667,7 @@ void EditConnectionsDlg::displayODBCConnection(QSqlDatabase db)
         QString currDb = getConnectionParameter(db, "Database");
         QString dsnName = connection->dsn();
         QString connector = ui->cbODBCDsn->currentData().toString();
-        DSN* dsn = ODBCUtil::instance()->getDsn(connector);
+        DSN* dsn = odbcUtil->getDsn(connector);
         QString server = dsn->server;
         ui->lblHelp->setStyleSheet("QLabel {  color : green; }");
         ui->lblHelp->setText(tr("Connection succeeded! Database <i><B>%1</B></i> on <i><B>%4</B></i>, user: <i><B>%5</B></i> has <B><i>%2</B></i> tables!<br> <i>%3</i>")

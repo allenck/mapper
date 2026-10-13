@@ -352,14 +352,14 @@ void ODBCUtil::fillDSNCombo(QComboBox* box, QString type)
     if(dsnByName.values().empty())
         return;
     box->setEnabled(true);
-    QStringList validTypes = {"MySql","MsSql","PostgreSQL"};
     if(!validTypes.contains(type))
         throw IllegalArgumentException("ODBCUtil::fillDSNCombo unknown dbType '" + type +"'");
 
     QString currDsn = box->currentData().toString();
     box->clear();
     int ix =0;
-    foreach(DSN* dsn , dsnByName.values())
+    QList<DSN*> dsnList = dsnByType.values(type);
+    foreach(DSN* dsn, dsnList)
     {
         if(dsn->type == type)
         {
@@ -439,13 +439,10 @@ void ODBCUtil::getWinDSNs()
     //QList<QPair<QString,QString> > list;
     QMap<QString,QString> map;
     QStringList iniKeys;
-    databases = winReg1.childKeys();
-    qDebug() << QString("%1").arg(databases.count());
-    foreach (QString key, databases) {
+    dsns = winReg1.childKeys();
+    qDebug() << QString("%1").arg(dsns.count());
+    foreach (QString key, dsns) {
         QString keyVal = winReg1.value(key).toString();
-        // if( keyVal.contains("SQL Server"))
-        // {
-        //list.clear();
         map.clear();
         QString regKey = QString("HKEY_CURRENT_USER\\Software\\ODBC\\ODBC.INI\\") + key;
         QSettings winReg(regKey,QSettings::NativeFormat);
@@ -515,11 +512,19 @@ void ODBCUtil::getWinDSNs()
                 {
                     dsn->userId = winReg.value(iniKey3).toString();
                 }
+                if(iniKey3.compare("PWD", Qt::CaseInsensitive)==0)
+                {
+                    dsn->password = winReg.value(iniKey3).toString();
+                }
+
                 if(iniKey3.compare("Database", Qt::CaseInsensitive)==0)
                 {
                     dsn->database = winReg.value(iniKey3).toString();
                 }
-
+                if(iniKey3.compare("SSLMODE", Qt::CaseInsensitive)==0)
+                {
+                    dsn->sslMode = winReg.value(iniKey3).toString();
+                }
             }
             if(bError)
                 break;
@@ -527,12 +532,14 @@ void ODBCUtil::getWinDSNs()
         //odbcPairMap.insert(key, list);
         odbcPairMap.insert(key,map);
         dsnByName.insert(key, dsn);
+        if(validTypes.contains(dsn->type))
+            dsnByType.insert(dsn->type,dsn);
     }
 
     // add also systemDsn
-    databases = winReg2.childKeys();
-    qDebug() << QString("%1").arg(databases.count());
-    foreach (QString key, databases) {
+    dsns = winReg2.childKeys();
+    qDebug() << QString("%1").arg(dsns.count());
+    foreach (QString key, dsns) {
         QString keyVal = winReg2.value(key).toString();
         DSN* dsn = new DSN();
         dsn->name = key;
@@ -556,9 +563,14 @@ void ODBCUtil::getWinDSNs()
                 {
                     QString lib = winReg.value(iniKey3).toString();
                     Driver* pDriver = drvByLib.value(lib);
-                    dsn->lib = lib;
-                    dsn->driverName = pDriver->name;
-                    dsn->type = pDriver->type;
+                    if(pDriver)
+                    {
+                        dsn->lib = lib;
+                        dsn->driverName = pDriver->name;
+                        dsn->type = pDriver->type;
+                    }
+                    else
+                        break;
                 }
                 if(iniKey3.compare("Description",Qt::CaseInsensitive)==0)
                 {
@@ -584,12 +596,17 @@ void ODBCUtil::getWinDSNs()
                 {
                     dsn->userId = winReg.value(iniKey3).toString();
                 }
-                if(iniKey3.compare("Password", Qt::CaseInsensitive)==0)
+                if(iniKey3.compare("PWD", Qt::CaseInsensitive)==0)
                 {
                     dsn->password = winReg.value(iniKey3).toString();
                 }
+                if(iniKey3.compare("SSLMODE", Qt::CaseInsensitive)==0)
+                {
+                    dsn->sslMode = winReg.value(iniKey3).toString();
+                }
             }
-
+            if(dsn->lib.isEmpty())
+                continue;   // driver not found
             if(!dsn->server.isEmpty())
             {
                 if(isIp(dsn->server))
@@ -608,6 +625,8 @@ void ODBCUtil::getWinDSNs()
         }
         odbcPairMap.insert(key, map);
         dsnByName.insert(key, dsn);
+        if(validTypes.contains(dsn->type))
+            dsnByType.insert(dsn->type,dsn);
     }
 }
 
@@ -649,8 +668,12 @@ void ODBCUtil::getWinDrivers()
             if(iniKey3 == "Driver")
             {
                 driver->lib = drvReg.value(iniKey3).toString();
+                break;
             }
         }
+        QFileInfo info = QFileInfo(driver->lib);
+        if(!info.exists())
+            continue;
         drvByName.insert(drvName, driver);
         if(driver->lib.contains("%WINDIR%"))
             driver->lib = driver->lib.replace("%WINDIR%","C:\\windows");

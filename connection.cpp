@@ -47,19 +47,12 @@ Connection::Connection(const Connection& o){
 
 QSqlDatabase Connection::getDb() { return db;}
 
-//QString Connection::dbType(QString name)
-//{
-// if(name == "QSQLITE") return "Sqlite";
-// if(name == "QMARIADB") return "MySql";
-// if(name == "QMYSQL") return "MySql";
-// if(name == "QMYSQL3") return "MySql";
-// if(name == "QODBC") return "MsSql";
-// if(name == "QODBC3") return "MsSql";
-// if(name == "QPSQL") return "PGres";
-// if(name == "QPSQL7") return "PGres";
-// if(name == "QOCI") return "Oracle";
-// return "";
-//}
+QString Connection::connectionName(){return _connectionName;}
+
+void Connection::setConnectionName(QString name) {
+    Q_ASSERT(!name.isEmpty());
+    _connectionName =name;
+}
 
 QSqlDatabase Connection::configure(const QString cName)
 {

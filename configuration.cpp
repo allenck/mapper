@@ -1081,6 +1081,7 @@ void Configuration::getSettings2()
                 ncn->setSslMode(settings.value("sslMode").toString());
                 ncn->setPwdMethod(settings.value("pwdMethod").toString());
                 ncn->setDSNCanBeUsed(settings.value("dsnCanBeUsed",ncn->connectString().isEmpty()).toBool());
+                ncn->setConnectionName(nc->getLabel());
             }
 
             //if(!nc->connections.contains(ncn))

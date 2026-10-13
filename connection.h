@@ -80,11 +80,8 @@ public:
  QString cityName() {return _cityName;}
  void setCityName(QString name) {_cityName = name;}
  //static QString dbType(QString name);
- QString connectionName(){return _connectionName;}
- void setConnectionName(QString name) {
-     Q_ASSERT(!name.isEmpty());
-     _connectionName =name;
- }
+ QString connectionName();
+ void setConnectionName(QString name);
  QString sqlite_fileName() {return _sqlite_fileName;}
  void setSqliteFileName(QString fn){_sqlite_fileName = fn;}
 // QString odbc_connectorName(){return _odbc_connectorName;}
