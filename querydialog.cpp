@@ -40,10 +40,11 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   connect(ui->chkShowOnly, &QCheckBox::checkStateChanged,this,[=]{
       fill_cbConnections();
   });
-  // db = QSqlDatabase::addDatabase(tgtConn->driver(), tgtConn->cityName());
+  // db = QSqlDatabase::addDatabase(tgtConn->driver(), tgtConn->connectionName());
   // Connection::configureDb(db,tgtConn );
   db = QSqlDatabase::database(tgtConn->connectionName());
-  qInfo() << "database is open. " << db.connectionName() << " " << db.driverName() << " " << db.databaseName();
+  db.open();
+  qInfo() << "database is " << (db.isOpen()?"open":"not open")  << db.connectionName() << " " << db.driverName() << " " << db.databaseName();
 
   tgtConn->setConnectionName(db.connectionName());
   connect(ui->editQuery, SIGNAL(textChanged()), this, SLOT(textChanged()));
@@ -1220,7 +1221,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   }
 
 #if 1
-  if(tgtConn->connectionName().isEmpty())
+  //if(tgtConn->connectionName().isEmpty())
   {
       if(tgtConn->getDb().isOpen())
           db = tgtConn->getDb();
@@ -1283,16 +1284,16 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 #endif
    setTitle();
   }
-  else
-  {
-    db = tgtConn->getDb();
-   qDebug() << "connection name:" << tgtConn->connectionName();
-   qDebug() << "driver:" << db.driverName() << " database:" << db.databaseName();
-   if(db.isOpen())
-   {
-       ui->go_QueryButton->setEnabled(true);
-   }
-  }
+  // else
+  // {
+  //   db = tgtConn->getDb();
+  //  qDebug() << "connection name:" << tgtConn->connectionName();
+  //  qDebug() << "driver:" << db.driverName() << " database:" << db.databaseName();
+  //  if(db.isOpen())
+  //  {
+  //      ui->go_QueryButton->setEnabled(true);
+  //  }
+  // }
   wAct = createWidgetAction();
   setCursor(Qt::ArrowCursor);
 }
