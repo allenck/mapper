@@ -135,11 +135,12 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  wikiRoot = cwd+ QDir::separator()+ "Resources/wiki";
  QIcon icon(":/tram-icon.ico");
  setWindowIcon(icon);
+ config->currConnection->setConnectionName(config->currCity->getLabel());
 
  while(!config->currConnection->isOpen())
  {
   this->setWindowTitle("Mapper - "+ config->currCity->name() + " ("+config->currConnection->description()+")");
-  QSqlDatabase db =config->currConnection->configure(config->currCity->getLabel());
+  QSqlDatabase db =config->currConnection->configure(config->currConnection->connectionName());
 
   if(config->currConnection->isOpen())
   {
@@ -2299,7 +2300,8 @@ void MainWindow::newCity(QAction* act )
     config->currCity->bShowOverlay = ui->chkShowOverlay->isChecked();
     config->saveSettings();
     QSqlDatabase db = QSqlDatabase::database(config->currConnection->connectionName());
-    if(db.isOpen()) db.close();
+    //if(db.isOpen()) db.close();
+    config->currConnection->close(db);
     QSqlDatabase::removeDatabase(config->currConnection->connectionName());
 
     // load the new city and configuration
@@ -2307,58 +2309,31 @@ void MainWindow::newCity(QAction* act )
     config->currentCityId = city->id;
     config->currCity->curConnectionId =connection->id();
     config->currConnection = connection;
+    config->currConnection->setOpen(false);
     config->mapSource = config->currCity->mapSource;
     config->mapId = config->currCity->mapId;
     config->mapType = config->currCity->mapType;
     config->bRunInBrowser = config->currCity->bDisplayMapInBrowser;
     ui->chkShowOverlay->setEnabled(false);
+    config->currConnection->setConnectionName(config->currCity->getLabel());
 
-    // if(connection->servertype() == "MimerSql")
-    // {
-    //     QString server = connection->host();
-    //     QMap<QString,QString> map = Connection::decodeConnectionString(connection->connectString());
-    //     server = map.value("Node");
-    //     Connection::connectToCityMimer(map.value("Database"), server,config->currCity->getLabel());
-    //     db = QSqlDatabase::database(config->currCity->getLabel());
-    //     connection->setConnectionName(db.connectionName());
-    //     //tgtConn->setDb(db);
-    // } else {
-    //     if (QSqlDatabase::contains(config->currCity->getLabel()))
-    //     {
-    //         QSqlDatabase oldDb = QSqlDatabase::database(config->currCity->getLabel());
-    //         if (oldDb.isOpen()) oldDb.close();
-    //     }
-    //     db = QSqlDatabase::addDatabase(connection->driver(), config->currCity->getLabel());
-    //     connection->setConnectionName(db.connectionName());
-    //     //tgtConn->setDb(db);
-    //     Connection::configureDb(db, connection);
-    // }
-    // connection->setConnectionName(config->currCity->getLabel());
-    // bool bOpen = db.isOpen();
-    // if(!bOpen)
-    // {
-    //     // if(connection->connectionType() == "ODBC" && !connection->connectString().isEmpty())
-    //     //     bOpen = db.open();
-    //     // else
-    //     //     bOpen = db.open(connection->userId(), connection->pwd());
-    //     sql->dbOpen(db);
-    // }
-    // if(!bOpen)
-    // {
-    //     QMessageBox::critical(this, tr("Error"), tr("The database connection could not be opened.\n"
-    //                                                 "%1").arg(db.lastError().text()));
-    //     QSqlError err = db.lastError();
-    //     qDebug() << err.text() + "\n";
-    //     qDebug() << db.driverName() + "\n";
-    //     qDebug() << "User:" + db.userName() + "\n";
-    //     qDebug() << "Host:" + db.hostName() + "\n";
-    //     qDebug() << "Connection name: " + db.connectionName() + "\n";
-    //     qDebug() << "DSN:" + db.databaseName() + "\n";
-    //     exit(EXIT_FAILURE);
-    // }
-    db =config->currConnection->configure(config->currCity->getLabel());
+    while(!config->currConnection->isOpen())
+    {
+     this->setWindowTitle("Mapper - "+ config->currCity->name() + " ("+config->currConnection->description()+")");
+     QSqlDatabase db =config->currConnection->configure(config->currConnection->connectionName());
 
-    //SQL::instance()->checkTables(db);
+     if(config->currConnection->isOpen())
+     {
+      qInfo() << "database is open. " << db.connectionName() << " " << db.driverName();
+      break;
+     }
+     editConnections();
+    }
+    db = QSqlDatabase::database(config->currConnection->connectionName());
+    qInfo() << "database is open. " << db.connectionName() << " " << db.driverName() << " " << db.databaseName();
+    Q_ASSERT(!db.connectionName().isEmpty());
+    Q_ASSERT(!db.driverName().isEmpty());
+    Q_ASSERT(!db.databaseName().isEmpty());
 
     reloadMap();
     m_bridge->processScript("showRouteComment", "false");

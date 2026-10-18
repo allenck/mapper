@@ -333,6 +333,7 @@ private:
     int linesRead =0;
     QSqlQuery* query = nullptr;
     static QString _connectionName;
+
     friend class StreetsTableModel;
     friend class ExportSql;
 };

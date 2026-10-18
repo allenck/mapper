@@ -7,6 +7,9 @@
 #include <QSqlQuery>
 #include "exportsql.h"
 #include "odbcutil.h"
+#include <QSqlDatabase>
+#include <QSqlError>
+#include <QDebug>
 
 Connection::Connection(QObject *parent) : QObject(parent)
 {
@@ -59,45 +62,45 @@ void Connection::setConnectionName(QString name) {
 
 QSqlDatabase Connection::configure(const QString cName)
 {
- qDebug() << "Connection: CWD = " << QDir::currentPath();
- _connectionName = cName;
- sql = SQL::instance();
- if(sql->connectionName().isEmpty())
-     sql->setConnectionName(cName);
- QSqlDatabase db = QSqlDatabase::addDatabase(config->currConnection->driver(),cName);
+    qDebug() << "Connection: CWD = " << QDir::currentPath();
+    Q_ASSERT(!cName.isEmpty());
+    Q_ASSERT(!config->currConnection->driver().isEmpty());
+    _connectionName = cName;
+    sql = SQL::instance();
+    sql->setConnectionName(cName);
+    QSqlDatabase db = QSqlDatabase::addDatabase(config->currConnection->driver(),cName);
  // QSqlDatabase db = QSqlDatabase::database(cName);
  // if (QSqlDatabase::contains(cName) && db.driverName() =="QSQLITE") {
  //     db = QSqlDatabase::database(cName);
  // } else {
  //     db = QSqlDatabase::addDatabase("QSQLITE", cName);
  // }
- _connectionName = cName;
- configureDb(db, this);
- // check for presence of Parameters table.
- QStringList tableList;
- QStringList sysTableList;
+    configureDb(db, this);
+    // check for presence of Parameters table.
+    QStringList tableList;
+    QStringList sysTableList;
 
 // if(ok)
 // {
- if(config->currConnection->connectionType()== "ODBC")
-     bOpen = db.open();
- else
-     bOpen = db.open(_userId, _PWD);
- if((bOpen))
- {
-     setOpen(true);
-     tableList = db.tables();
-     sysTableList = db.tables(QSql::SystemTables);
-     QString cn = db.connectionName();
-     Q_ASSERT(!cn.isEmpty());
-     _connectionName = cn;
-  if(config->currConnection->servertype() != "Sqlite")
-  {
+    if(config->currConnection->connectionType()== "ODBC" || config->currConnection->connectionType()== "Local")
+        bOpen = db.open();
+    else
+        bOpen = db.open(_userId, _PWD);
+    if((bOpen))
+    {
+        setOpen(true);
+        tableList = db.tables();
+        sysTableList = db.tables(QSql::SystemTables);
+        QString cn = db.connectionName();
+        Q_ASSERT(!cn.isEmpty());
+        _connectionName = cn;
+        if(config->currConnection->servertype() != "Sqlite")
+        {
 #ifndef NO_UDF
-   if(!config->currConnection->_sqlite_user_function_loaded)
-    config->currConnection->_sqlite_user_function_loaded =sql->loadSqlite3Functions(db);
+            if(!config->currConnection->_sqlite_user_function_loaded)
+                config->currConnection->_sqlite_user_function_loaded =sql->loadSqlite3Functions(db);
 #endif
-  }
+        }
   if(config->currConnection->database()  != "")
   {
     // PostgreSQL does not support a user to access different databases from a login. A new connection
@@ -305,10 +308,6 @@ void Connection::configureDb(QSqlDatabase db, Connection* currConnection)
     }
 }
 
-#include <QSqlDatabase>
-#include <QSqlError>
-#include <QSqlQuery>
-#include <QDebug>
 
 bool Connection::connectToCityMimer(const QString &dbName, const QString &server, const QString &connectionName,
                                     const QString userid, QString password)
@@ -369,4 +368,10 @@ QStringList Connection::tables(){
     QSqlDatabase db = QSqlDatabase::database(_connectionName);
 
     return db.tables();
+}
+
+void Connection::close(QSqlDatabase db)
+{
+    db.close();
+    bOpen = false;
 }

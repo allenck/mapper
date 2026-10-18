@@ -62,9 +62,10 @@ bool SQL::dbOpen(QSqlDatabase db)
      msg.append(info.absoluteFilePath());
     }
     QMessageBox::warning(NULL, "Warning", msg);
-    db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName("Resources/databases/StLouis.sqlite3");
-
+    // db = QSqlDatabase::addDatabase("QSQLITE");
+    // db.setDatabaseName("Resources/databases/StLouis.sqlite3");
+    db = QSqlDatabase::addDatabase("QSQLITE", config->currCity->getLabel());
+    db.setDatabaseName(config->currConnection->sqlite_fileName());
     bool ok = db.open();
     if(!ok)
     {

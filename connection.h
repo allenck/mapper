@@ -52,6 +52,7 @@ public:
 
  Connection(const Connection&);
  bool isOpen() {return bOpen;}
+ void close(QSqlDatabase db);
  void setServerType(QString s) { _servertype = s;}
  QString servertype() {return _servertype;}
  QSqlDatabase configure(const QString cName = QLatin1String(QSqlDatabase::defaultConnection));
