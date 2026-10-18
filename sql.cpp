@@ -7593,7 +7593,7 @@ bool SQL::modifyCurrentRoute(RouteData* rd, bool bStartDate, QDate dt)
 QString SQL::getPrevRouteName(QDate dt)
 {
  QString commandText;
- QSqlDatabase db = QSqlDatabase();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  QSqlQuery query = QSqlQuery(db);
  commandText = QString("select n.name from Routes r "
                        "join RouteName n on n.routeId = r.routeid "
@@ -7616,7 +7616,7 @@ QString SQL::getPrevRouteName(QDate dt)
 QString SQL::getNextRouteName(QDate dt)
 {
  QString commandText;
- QSqlDatabase db = QSqlDatabase();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  QSqlQuery query = QSqlQuery(db);
  commandText = QString("select n.name from Routes r "
                        "join RouteName n on n.routeId = r.routeid "
@@ -10745,7 +10745,7 @@ bool SQL::doesColumnExist(QString table, QString column)
 
 bool SQL::doesConstraintExist(QString tbName, QString name)
 {
- QSqlDatabase db = QSqlDatabase();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  QSqlQuery query = QSqlQuery(db);
  QString commandText;
  bool bQuery;
@@ -10780,7 +10780,7 @@ bool SQL::doesConstraintExist(QString tbName, QString name)
 
 bool SQL::addColumn(QString tbName, QString name, QString type, QString after)
 {
- QSqlDatabase db = QSqlDatabase();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  QSqlQuery query = QSqlQuery(db);
  QString commandText;
  bool bQuery;
@@ -11296,7 +11296,7 @@ bool SQL::processFile(QTextStream* in, QSqlDatabase db, bool bIsInclude)
 
 bool SQL::testAltRoute()
 {
- QSqlDatabase db = QSqlDatabase();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  QSqlQuery query = QSqlQuery(db);
  QString commandText = "select sql from sqlite_master where tbl_name = 'AltRoute'";
  if(!query.exec(commandText))
@@ -11320,7 +11320,7 @@ bool SQL::testAltRoute()
 // get count of routes using segment
 int SQL::getCountOfRoutesUsingSegment(int segmentId)
 {
- QSqlDatabase db = QSqlDatabase();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  QSqlQuery query = QSqlQuery(db);
  QString commandText = "select count(*) from Routes "
                        "where linekey =" + QString("%1").arg(segmentId) ;
@@ -11343,7 +11343,7 @@ int SQL::getCountOfRoutesUsingSegment(int segmentId)
 // get count of routes using segment
 int SQL::getCountOfStationsUsingSegment(int segmentId)
 {
- QSqlDatabase db = QSqlDatabase();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  QSqlQuery query = QSqlQuery(db);
  QString commandText = "select count(*) from Stations where segmentId =" + QString("%1").arg(segmentId) ;
  if(!query.exec(commandText))
@@ -11365,7 +11365,7 @@ int SQL::getCountOfStationsUsingSegment(int segmentId)
 
 bool SQL::deleteAndReplaceSegmentWith(int segmentId1, int segmentId2)
 {
- QSqlDatabase db = QSqlDatabase();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  QSqlQuery query = QSqlQuery(db);
  int rows =0;
  QString commandText;
@@ -11461,7 +11461,7 @@ bool SQL::deleteAndReplaceSegmentWith(int segmentId1, int segmentId2)
 
 QList<SegmentInfo> SQL::getUnusedSegments()
 {
- QSqlDatabase db = QSqlDatabase();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  QSqlQuery query = QSqlQuery(db);
  QList<SegmentInfo> list;
  QString commandText = "select  distinct s.segmentid, s.description, s.tracks, s.type"
@@ -11490,7 +11490,7 @@ QList<SegmentInfo> SQL::getUnusedSegments()
 // given a list of segments replace them with a new segment from alist.
 bool SQL::replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegments, QDate ignoreDate)
 {
- QSqlDatabase db = QSqlDatabase();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  QSqlQuery query = QSqlQuery(db);
 
  QString oldIn = "(";
@@ -11797,7 +11797,7 @@ QList<FKInfo> SQL::getForeignKeyInfo(QSqlDatabase db, Connection* c, QString tab
 QMap<int,RouteName*>* SQL::routeNameList()
 {
  QMap<int, RouteName*>* list = new QMap<int, RouteName*>();
- QSqlDatabase db = QSqlDatabase();
+QSqlDatabase::database(SQL::_connectionName)
  QSqlQuery query = QSqlQuery(db);
 
  QString commandText =  "SELECT route, routePrefix, routeAlpha, baseRoute FROM AltRoute";
@@ -11824,7 +11824,7 @@ QMap<int,RouteName*>* SQL::routeNameList()
 QMap<QString,RouteName*>* SQL::routeNameAList()
 {
  QMap<QString, RouteName*>* list = new QMap<QString, RouteName*>();
- QSqlDatabase db = QSqlDatabase();
+QSqlDatabase::database(SQL::_connectionName)
  QSqlQuery query = QSqlQuery(db);
 
  QString commandText =  "SELECT route, routePrefix, routeAlpha, baseRoute FROM AltRoute";
@@ -11850,7 +11850,7 @@ QMap<QString,RouteName*>* SQL::routeNameAList()
 #endif
 QString SQL::getDatabase(QString serverType, QSqlDatabase db)
 {
- //QSqlDatabase db = QSqlDatabase();
+ //QSqlDatabase db = QSqlDatabase(SQL::_connectionName);
 
  QSqlQuery query = QSqlQuery(db);
  QString dbName ="";
@@ -13635,7 +13635,7 @@ bool SQL::isFunctionInstalled(QString function, QString dbType,QString dbName, Q
 QList<CommentInfo*>* SQL::commentsList()
 {
  QList<CommentInfo*>* list = new QList<CommentInfo*>();
- QSqlDatabase db = QSqlDatabase();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  QSqlQuery query = QSqlQuery(db);
 
  QString commandText =  "SELECT commentKey, tags, comments, routeList from Comments";
@@ -13674,7 +13674,7 @@ QList<CommentInfo*>* SQL::commentsList()
 
 bool SQL::validateJSON(QString s)
 {
-    QSqlDatabase db = QSqlDatabase();
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
     QSqlQuery query = QSqlQuery(db);
     QString commandText = QString("select json_valid('%1')").arg(s);
     if(!query.exec(commandText))

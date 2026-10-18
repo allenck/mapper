@@ -95,7 +95,7 @@ void Configuration::saveOldSettings()
    settings->setValue("uniqueId", cn->uniqueId().toString());
    //settings->setValue("defaultSqlDatabase", cn->defaultSqlDatabase());
 
-   if(cn->connectionType()== "Local")
+   if(cn->connectionType()== "Sqlite")
    {
        settings->setValue("sqliteFileName", cn->sqlite_fileName());
    }
@@ -318,7 +318,7 @@ void Configuration::saveSettings2()
             settings->setValue("uniqueId", cn->uniqueId().toString());
             //settings->setValue("defaultSqlDatabase", cn->defaultSqlDatabase());
 
-            if(cn->connectionType()== "Local")
+            if(cn->connectionType()== "Sqlite")
             {
                 settings->setValue("sqliteFileName", cn->sqlite_fileName());
             }
@@ -621,9 +621,9 @@ void Configuration::getSettings()
         //ncn->setUniqueId(QUuid::fromString(settings.value("uniqueId", QUuid::createUuid().toString()).toString()));
         if(ncn->id() == nc->curConnectionId)
            nc->setConnectionUniqueId(uuid);
-        if(ncn->connectionType() == "Local")
+        if(ncn->connectionType() == "Sqlite")
         {
-          ncn->setConnectionType("Local");
+          ncn->setConnectionType("Sqlite");
           QString fileName;
           fileName = settings.value("sqliteFileName").toString();
           if(fileName.isEmpty())
@@ -1020,9 +1020,9 @@ void Configuration::getSettings2()
             ncn->setUniqueId(QUuid::fromString(settings.value("uniqueId", QUuid::createUuid().toString()).toString()));
             if(ncn->id() == nc->curConnectionId)
                 nc->setConnectionUniqueId(uuid);
-            if(ncn->connectionType() == "Local")
+            if(ncn->connectionType() == "Sqlite")
             {
-                ncn->setConnectionType("Local");
+                ncn->setConnectionType("Sqlite");
                 QString fileName;
                 fileName = settings.value("sqliteFileName").toString();
                 if(fileName.isEmpty())
@@ -1433,7 +1433,7 @@ void Configuration::createDefaultSettings()
     nc->setDescription ("StLouis SQLITE3 connection");
     nc->setDriver("QSQLITE");
     nc->setServerType("Sqlite");
-    nc->setConnectionType("Local");
+    nc->setConnectionType("Sqlite");
 
     nc->setCityName(newCity->name());
     if(!newCity->connections.contains(nc))
@@ -1467,7 +1467,7 @@ void Configuration::createDefaultSettings()
     nc->setDescription ("Cincinnati SQLITE3 connection");
     nc->setDriver("QSQLITE");
     nc->setServerType("Sqlite");
-    nc->setConnectionType("Local");
+    nc->setConnectionType("Sqlite");
     if(!newCity->connections.contains(nc))
     {
 //     newCity->connections.append( nc);
@@ -1500,7 +1500,7 @@ void Configuration::createDefaultSettings()
     nc->setDescription ("Louisville SQLITE3 connection");
     nc->setServerType("Sqlite");
     nc->setCityName(newCity->name());
-    nc->setConnectionType("Local");
+    nc->setConnectionType("Sqlite");
     if(!newCity->connections.contains(nc))
     {
 //     newCity->connections.append( nc);
@@ -1532,7 +1532,7 @@ void Configuration::createDefaultSettings()
     nc->setDriver("QSQLITE");
     nc->setServerType("Sqlite");
     nc->setCityName(newCity->name());
-    nc->setConnectionType("Local");
+    nc->setConnectionType("Sqlite");
     if(!newCity->connections.contains(nc))
     {
      newCity->connections.append( nc);
@@ -1566,7 +1566,7 @@ void Configuration::createDefaultSettings()
     nc->setDriver("QSQLITE");
     nc->setServerType("Sqlite");
     nc->setCityName(newCity->name());
-    nc->setConnectionType("Local");
+    nc->setConnectionType("Sqlite");
     if(!newCity->connections.contains(nc))
     {
      newCity->connections.append( nc);

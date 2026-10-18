@@ -47,7 +47,7 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
    ui->cbDriverType->clear();
    ui->cbDriverType->addItems(drivers);
    ui->cbConnect->clear();
-   ui->cbConnect->addItem("Local");
+   ui->cbConnect->addItem("Sqlite");
    ui->cbConnect->addItem("Direct");
    ui->cbConnect->addItem("ODBC");
 
@@ -248,10 +248,10 @@ void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
         setComboBoxItemEnabled(ui->cbDriverType,index, driver == "QSQLITE" || driver == "QSQLITE3");
      }
 
-     setComboBoxItemEnabled(ui->cbConnect, 0, true); // Local"
+     setComboBoxItemEnabled(ui->cbConnect, 0, true); // Sqlite"
      setComboBoxItemEnabled(ui->cbConnect, 1, false); // Direct");
      setComboBoxItemEnabled(ui->cbConnect, 2, false); // ODBC");
-     ui->cbConnect->setCurrentText("Local");
+     ui->cbConnect->setCurrentText("Sqlite");
      ui->cbDriverType->setCurrentText("QSQLITE");
      ui->lblSslMode->setVisible(false);
      ui->lblPwdMethod->setVisible(false);
@@ -276,7 +276,7 @@ void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
                           || driver == "QODBC3");
   }
 
-     setComboBoxItemEnabled(ui->cbConnect, 0, false); // Local"
+     setComboBoxItemEnabled(ui->cbConnect, 0, false); // Sqlite"
      setComboBoxItemEnabled(ui->cbConnect, 1, true); // Direct");
      setComboBoxItemEnabled(ui->cbConnect, 2, true); //ODBC
      ui->cbDriverType->setCurrentText("QODBC");
@@ -300,7 +300,7 @@ void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
    setComboBoxItemEnabled(ui->cbDriverType,index,
                          driver == "QODBC" || driver == "QODBC3" );
   }
-     setComboBoxItemEnabled(ui->cbConnect, 0, false); // Local"
+     setComboBoxItemEnabled(ui->cbConnect, 0, false); // Sqlite"
      setComboBoxItemEnabled(ui->cbConnect, 1, false); // Direct");
      setComboBoxItemEnabled(ui->cbConnect, 2, true); // ODBC");
      ui->cbDriverType->setCurrentText("QODBC");
@@ -348,7 +348,7 @@ void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
          int index = ui->cbDriverType->findText(driver);
          setComboBoxItemEnabled(ui->cbDriverType,index,driver == "QODBC" || driver == "QODBC3" || driver == "QPSQL");
      }
-     setComboBoxItemEnabled(ui->cbConnect, 0, false); // Local"
+     setComboBoxItemEnabled(ui->cbConnect, 0, false); // Sqlite"
      setComboBoxItemEnabled(ui->cbConnect, 1, true); // Direct");
      setComboBoxItemEnabled(ui->cbConnect, 2, true); // ODBC");
      ui->cbDriverType->setCurrentText("QODBC");
@@ -381,23 +381,27 @@ void EditConnectionsDlg::cbDbType_selectionChanged(QString dbType)
          //db.setDatabaseName(dsn->name);
          Connection::connectToCityMimer(dsn->database, dsn->server, "testConnection");
          db = QSqlDatabase::database("testConnection");
-         if(db.open())
+         QSqlError sqlErr = db.lastError();
+         if(sqlErr.type()== QSqlError::NoError)
          {
-             populateDatabases();
-             ui->txtHost->setText("");
-             ui->txtHost->setPlaceholderText(dsn->server);
-             ui->txtPort->setText("");
-             ui->txtPort->setPlaceholderText(dsn->port>0?QString::number(dsn->port):"");
-             ui->txtPWD->setText("");
-             ui->txtPWD->setPlaceholderText("dsn's password");
-             bDSNCanBeUsed=true;
+             if(db.open())
+             {
+                 populateDatabases();
+                 ui->txtHost->setText("");
+                 ui->txtHost->setPlaceholderText(dsn->server);
+                 ui->txtPort->setText("");
+                 ui->txtPort->setPlaceholderText(dsn->port>0?QString::number(dsn->port):"");
+                 ui->txtPWD->setText("");
+                 ui->txtPWD->setPlaceholderText("dsn's password");
+                 bDSNCanBeUsed=true;
+             }
          }
      }
      foreach (QString driver, drivers) {
          int index = ui->cbDriverType->findText(driver);
          setComboBoxItemEnabled(ui->cbDriverType,index,driver == "QODBC" || driver == "QODBC3" || driver == "QMIMER");
      }
-     setComboBoxItemEnabled(ui->cbConnect, 0, false); // Local"
+     setComboBoxItemEnabled(ui->cbConnect, 0, false); // Sqlite"
      setComboBoxItemEnabled(ui->cbConnect, 1, true); // Direct");
      setComboBoxItemEnabled(ui->cbConnect, 2, true); // ODBC");
      ui->cbDriverType->setCurrentText("QODBC");
@@ -562,7 +566,7 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
     setControls(connection->connectionType());
     setCursor(Qt::WaitCursor);
     qApp->processEvents();
-    if(ui->cbConnect->currentText()== "Local") // Local
+    if(ui->cbConnect->currentText()== "Sqlite") // Sqlite
     {
         ui->txtSqliteFileName->setText(connection->sqlite_fileName());
     }
@@ -857,8 +861,8 @@ void EditConnectionsDlg::cbDriverTypeSelectionChanged(QString sel)
  if(dbType == "Sqlite" && (driverType == "QSQLITE" || driverType == "QSQLITE3"))
  {
   ui->cbDbType->setCurrentIndex(ui->cbDbType->findText("Sqlite"));
-  if(ui->cbConnect->currentText() != "Local")
-   ui->cbConnect->setCurrentText("Local");
+  if(ui->cbConnect->currentText() != "Sqlite")
+   ui->cbConnect->setCurrentText("Sqlite");
  }
  else if(dbType == "MySql" && (driverType == "QMYSQL" || driverType == "QMYSQL3"
          || driverType == "QMARIADB" || driverType == "QMARIADB"))
@@ -872,7 +876,7 @@ void EditConnectionsDlg::cbDriverTypeSelectionChanged(QString sel)
     qDebug() << QCoreApplication::libraryPaths().join(",");
     qDebug() << QSqlDatabase::drivers().join(",");
     ui->txtPort->setText("3306");
-    setComboBoxItemEnabled(ui->cbConnect, 0, false); // Local"
+    setComboBoxItemEnabled(ui->cbConnect, 0, false); // Sqlite"
     setComboBoxItemEnabled(ui->cbConnect, 1, true); // Direct");
     setComboBoxItemEnabled(ui->cbConnect, 2, false); // ODBC");
 
@@ -906,7 +910,7 @@ void EditConnectionsDlg::cbDriverTypeSelectionChanged(QString sel)
          ui->txtPort->setText("5432");
      if(dbType == "MsSql")
          ui->txtPort->setText("1443");
-     setComboBoxItemEnabled(ui->cbConnect, 0, false); // Local"
+     setComboBoxItemEnabled(ui->cbConnect, 0, false); // Sqlite"
      setComboBoxItemEnabled(ui->cbConnect, 1, false); // Direct");
      setComboBoxItemEnabled(ui->cbConnect, 2, true); // ODBC");
      ui->cbConnect->setCurrentIndex(2);
@@ -1025,7 +1029,7 @@ void EditConnectionsDlg::setControls(QString txt)
       ui->cbSslMode->setVisible(false);
   }
  }
- else if(txt == "Local") // Local (Sqlite only)
+ else if(txt == "Sqlite") // Sqlite (Sqlite only)
  {
   ui->label_2->setText("Database:");
   //ui->cbDbType->setCurrentIndex(2);  // "Sqlite"
@@ -1166,7 +1170,7 @@ void EditConnectionsDlg::btnTestClicked()
 
 void EditConnectionsDlg::btnCancelClicked()
 {
- if(ui->cbConnect->currentText() == "Local")
+ if(ui->cbConnect->currentText() == "Sqlite")
  {
     removeEmptyFiles();
  }
@@ -1533,7 +1537,7 @@ void EditConnectionsDlg::newConnection(){
     //ui->cbConnections->lineEdit()->setPlaceholderText(tr("enter connetion description"));
     //ui->cbDriverType->setCurrentIndex(-1);
     //ui->cbDbType->setCurrentIndex(-1);
-    ui->cbConnect->setCurrentIndex(0); // local
+    ui->cbConnect->setCurrentIndex(0); // Sqlite
     ui->btnSave->setEnabled(false);
     ui->cbDriverType->setFocus();
     setCursor(Qt::ArrowCursor);
@@ -1620,7 +1624,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
         {
          setDatabase(ui->cbUseDatabase->currentText());
         }
-        if(ui->cbConnect->currentText() != "Local")
+        if(ui->cbConnect->currentText() != "Sqlite")
         {
             // either ODBC or Direct
 
@@ -1899,6 +1903,18 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
 bool EditConnectionsDlg::openTestDb()
 {
     setCursor(Qt::WaitCursor);
+    QStringList connections = QSqlDatabase::connectionNames();
+    if(connections.contains("testConnection"))
+    {
+        QSqlDatabase oldDb = QSqlDatabase::database("testConnection");
+        if(oldDb.isOpen()) oldDb.close();
+        QSqlDatabase::removeDatabase("testConnection");
+        connections = QSqlDatabase::connectionNames();
+    }
+    foreach (QString cn, connections) {
+        QSqlDatabase oldDb = QSqlDatabase::database(cn, false);
+        qDebug() << "active connection: " << (db.isOpen()?"open ":"not open ") << cn << oldDb.driverName() << " " << db.databaseName();
+    }
     QString connstring;
     if(!_testConnection)
      _testConnection = new Connection();
@@ -1964,7 +1980,7 @@ bool EditConnectionsDlg::openTestDb()
         db = QSqlDatabase::addDatabase(_testConnection->connectionName());
     }
 #endif
-    QStringList connections = QSqlDatabase::connectionNames();
+    connections = QSqlDatabase::connectionNames();
     qDebug() << "Total tracked Qt connections:" << connections.count();
     QSqlError error = db.lastError();
     if(error.type() != QSqlError::NoError)
@@ -2065,15 +2081,25 @@ bool EditConnectionsDlg::openTestDb()
             }
         }
     }
-    else if( ui->cbConnect->currentText()== "Direct")
-    { // MySql or PostgreSQL
-        db.setDatabaseName(ui->cbUseDatabase->currentText());
-        db.setHostName(ui->txtHost->text());
-        int port = ui->txtPort->text().toInt();
-        if(port > 0)
-        db.setPort(port);
-        db.setUserName(ui->txtUserId->text());
-        db.setPassword(ui->txtPWD->text());
+    else if(_testConnection->connectionType() == "Direct")
+    {
+        if (_testConnection->servertype() == "MimerSql") {
+            // Build a direct DSN-less path that works on both Windows and Linux without system .ini files
+            QString mimerStr = QString("Driver={MIMER};Protocol=tcp;Node=%1;Service=%2;Database=%3;")
+                                   .arg(ui->txtHost->text())
+                                   .arg(ui->txtPort->text().isEmpty() ? "1360" : ui->txtPort->text())
+                                   .arg(ui->cbUseDatabase->currentText().toLower());
+            db.setDatabaseName(mimerStr);
+        } else {
+            // MySql or PostgreSQL
+            db.setDatabaseName(ui->cbUseDatabase->currentText());
+            db.setHostName(ui->txtHost->text());
+            int port = ui->txtPort->text().toInt();
+            if(port > 0)
+            db.setPort(port);
+            db.setUserName(ui->txtUserId->text());
+            db.setPassword(ui->txtPWD->text());
+        }
     }
     else
     {

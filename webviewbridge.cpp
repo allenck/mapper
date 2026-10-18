@@ -46,7 +46,44 @@ WebViewBridge::WebViewBridge(LatLng latLng, int zoom, QString mapType, QString m
 
 WebViewBridge::~WebViewBridge()
 {
-    //
+    // 1. Terminate socket server listening to block new events
+    if (m_server) {
+        if (m_server->isListening()) {
+            m_server->close();
+        }
+        delete m_server;
+        m_server = nullptr;
+    }
+
+    if (m_OverlayServer) {
+        if (m_OverlayServer->isListening()) {
+            m_OverlayServer->close();
+        }
+        delete m_OverlayServer;
+        m_OverlayServer = nullptr;
+    }
+
+    // 2. Clear out transport wrapper allocations
+    if (m_clientWrapper) {
+        delete m_clientWrapper;
+        m_clientWrapper = nullptr;
+    }
+
+    if (m_overlayWrapper) {
+        delete m_overlayWrapper;
+        m_overlayWrapper = nullptr;
+    }
+
+    // 3. Clear out the main communication channel registry
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+
+    // 4. Safely clear global singleton mapping tracking
+    if (_instance == this) {
+        _instance = nullptr;
+    }
 }
 
 WebViewBridge* WebViewBridge::instance()

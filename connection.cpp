@@ -82,7 +82,7 @@ QSqlDatabase Connection::configure(const QString cName)
 
 // if(ok)
 // {
-    if(config->currConnection->connectionType()== "ODBC" || config->currConnection->connectionType()== "Local")
+    if(config->currConnection->connectionType()== "ODBC" || config->currConnection->connectionType()== "Sqlite")
         bOpen = db.open();
     else
         bOpen = db.open(_userId, _PWD);
@@ -237,12 +237,12 @@ QSqlDatabase Connection::configure(const QString cName)
    qDebug() << "file not found.";
  }
   return db;
-}
+} //end configure
 
 void Connection::configureDb(QSqlDatabase db, Connection* currConnection)
 {
     QString driver = db.driverName();
-    if(currConnection->connectionType() == "Local" )
+    if(currConnection->connectionType() == "Sqlite" )
     {
 #ifndef Q_OS_MACOS
         QString dbName = currConnection->sqlite_fileName();
@@ -293,7 +293,7 @@ void Connection::configureDb(QSqlDatabase db, Connection* currConnection)
     {
      throw IllegalArgumentException(tr("invalid driver name: '%1'").arg(driver));
     }
-    if(currConnection->connectionType() != "Local"
+    if(currConnection->connectionType() != "Sqlite"
             && currConnection->servertype() != "PostgreSQL")
     {
       if(db.open() && !currConnection->defaultSqlDatabase().isEmpty())

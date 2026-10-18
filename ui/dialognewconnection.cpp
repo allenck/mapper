@@ -143,7 +143,7 @@ void DialogNewConnection::onCbconnect_currentTextChanged(QString connect)
             return;
         }
         // MimerSql DSNs an others may be for a specific city. Remove those for some other location.
-        for(int i = dsns.count()-1; i >0; i--)
+        for(int i = dsns.count()-1; i >=0; i--)
         {
             DSN* dsn = dsns.at(i);
             if(!dsn->location.isEmpty() && dsn->location != _cityLabel)
@@ -178,6 +178,7 @@ void DialogNewConnection::onCbconnect_currentTextChanged(QString connect)
 
 void DialogNewConnection::onCbDsn_currentIndexChanged(int ix)
 {
+    ui->lblHelp->clear();
     _dsn = VPtr<DSN>::asPtr(ui->cbDsn->itemData(ix));
     _bOpen = false;
     ui->txtServer->setText(_dsn->server);
@@ -199,7 +200,11 @@ void DialogNewConnection::onCbDsn_currentIndexChanged(int ix)
         Connection::connectToCityMimer(_dsn->database, _dsn->server, "testConnection");
         db = QSqlDatabase::database("testConnection");
         if(db.isOpen())
+        {
             _connectString = db.databaseName();
+            db.close(); // Close immediately after capturing string parameter info
+        }
+        QSqlDatabase::removeDatabase("testConnection");
     } else {
         if(QSqlDatabase::contains("testConnection"));
         {

@@ -150,7 +150,8 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   editConnections();
  }
  QSqlDatabase db = QSqlDatabase::database(config->currConnection->connectionName());
- qInfo() << "database is open. " << db.connectionName() << " " << db.driverName() << " " << db.databaseName();
+ qInfo() << "database is open. " << db.connectionName() << " " << db.driverName() << " " << db.databaseName()
+         << db.tables().count() << "tables";
 
  //m_latitude = config->currCity->center.lat();
  //m_longitude = config->currCity->center.lon();
@@ -4017,31 +4018,31 @@ void MainWindow::btnPrevClicked()
 void MainWindow::closeEvent(QCloseEvent *event)
 {
  //m_bridge->processScript("getCenter");
- qApp->processEvents(QEventLoop::AllEvents,50);
- if(ui->chkShowOverlay->isChecked())
- {
-     m_bridge->processScript("isOverlayLoaded");
-     qApp->processEvents(QEventLoop::AllEvents,50);
-     QVariant rslt = m_bridge->getRslt();
-     //qDebug() << "overlay loaded " << rslt.toString();
-     if(config->currCity->city_overlayMap->isEmpty())
-         config->currCity->curOverlayId= -1;
-     else
-         if(config->currCity->curOverlayId >= config->currCity->city_overlayMap->count())
-             config->currCity->curOverlayId = 0;
-     if( config->currCity->curConnectionId >= 0 && config->currCity->curOverlayId >= 0 && rslt.toString() == "true")
-     {
-         m_bridge->processScript("overlay.getOpacity");
-         qApp->processEvents(QEventLoop::AllEvents,50);
-         int opacity = m_bridge->_myRslt.toInt();
+ //qApp->processEvents(QEventLoop::AllEvents,50);
+ // if(ui->chkShowOverlay->isChecked())
+ // {
+ //     m_bridge->processScript("isOverlayLoaded");
+ //     qApp->processEvents(QEventLoop::AllEvents,50);
+ //     QVariant rslt = m_bridge->getRslt();
+ //     //qDebug() << "overlay loaded " << rslt.toString();
+ //     if(config->currCity->city_overlayMap->isEmpty())
+ //         config->currCity->curOverlayId= -1;
+ //     else
+ //         if(config->currCity->curOverlayId >= config->currCity->city_overlayMap->count())
+ //             config->currCity->curOverlayId = 0;
+ //     if( config->currCity->curConnectionId >= 0 && config->currCity->curOverlayId >= 0 && rslt.toString() == "true")
+ //     {
+ //         m_bridge->processScript("overlay.getOpacity");
+ //         qApp->processEvents(QEventLoop::AllEvents,50);
+ //         int opacity = m_bridge->_myRslt.toInt();
 
-         City* c = config->currCity;
-         Overlay* ov = c->city_overlayMap->values().at(config->currCity->curOverlayId);
-         ov->opacity = opacity;
-         config->setOverlay(ov);
-     }
- }
- m_bridge->processScript("getCurrBounds");
+ //         City* c = config->currCity;
+ //         Overlay* ov = c->city_overlayMap->values().at(config->currCity->curOverlayId);
+ //         ov->opacity = opacity;
+ //         config->setOverlay(ov);
+ //     }
+ // }
+ //m_bridge->processScript("getCurrBounds");
  //m_bridge->processScript("getCenter");
 
  QSettings settings;
@@ -4071,16 +4072,35 @@ void MainWindow::closeEvent(QCloseEvent *event)
  settings.setValue("streetsView",ui->tblStreetView->horizontalHeader()->saveState());
  LatLng latLng = config->currCity->center;
  qInfo() << tr("map center lat: %1 lng: %2 ").arg(latLng.lat(),0,'f',8).arg(latLng.lon(),0,'f',8);
- QSqlDatabase db = QSqlDatabase::database();
- db.close();
-//#ifndef QT_DEBUG
-// //systemConsoleAction->close();
-// delete SystemConsole2::getInstance();
-//#endif
-// if(webViewAction != NULL)
-//  webViewAction->closeWebView();
- //QMainWindow::closeEvent(event);
- event->accept();
+  // === FIX FOR QSOFTWARECONTEXT CRASH ===
+  // 1. Thoroughly kill the main Web View widget.
+  if (ui->webView) { // Replace 'webView' with your actual layout pointer name if different
+    ui->webView->stop();
+    ui->webView->load(QUrl(QStringLiteral("about:blank")));
+    qApp->processEvents(QEventLoop::AllEvents, 20);
+    ui->webView->setParent(nullptr);
+    delete ui->webView;
+    ui->webView = nullptr;
+  }
+  // 2. Tear down the bridge context causing the use-after-free
+  if (m_bridge) {
+      // If m_bridge contains a hidden web page or sub-widget,
+      // disconnect it or explicitly clear its parent layout
+      m_bridge->setParent(nullptr);
+
+      // Completely destroy the bridge instance synchronously
+      delete m_bridge;
+      m_bridge = nullptr;
+  }
+  // ======================================
+  QSqlDatabase db = QSqlDatabase::database();
+  if (db.isOpen()) {
+    db.close();
+  }
+  db = QSqlDatabase(); // Reset the local variable instance
+  QSqlDatabase::removeDatabase(QSqlDatabase::defaultConnection);
+  QMainWindow::closeEvent(event);
+  event->accept();
 }
 
 void MainWindow::changeEvent(QEvent *event)  {
