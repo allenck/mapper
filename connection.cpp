@@ -6,6 +6,7 @@
 #include "sql.h"
 #include <QSqlQuery>
 #include "exportsql.h"
+#include "odbcutil.h"
 
 Connection::Connection(QObject *parent) : QObject(parent)
 {
@@ -13,25 +14,27 @@ Connection::Connection(QObject *parent) : QObject(parent)
  //_servertype = "Sqlite";
  bOpen = false;
  _uuid = QUuid::createUuid();
+ config = Configuration::instance();
 }
 
 Connection::Connection(QUuid uuid, QObject* parent) : QObject(parent)
 {
   _uuid = uuid;
+    config = Configuration::instance();
 }
 
 Connection::Connection(const Connection& o){
  this->_id = o._id;
  this->_driver = o._driver;
  this->_description =o._description;
- this->_DSN =o._DSN;
+ this->_DSName =o._DSName;
  this->_userId = o._userId;
  this->_PWD = o._PWD;
  this->_database = o._database;
  this->_hostName = o._hostName;
  this->_port = o._port;
  //this->_useDatabase = o._useDatabase;
- this->db = o.db;
+ //this->db = o.db;
  this->_servertype = o._servertype; // "MsSql (default), "MySql"
  this->bOpen = o.bOpen;
  this->_cityName = o._cityName;
@@ -45,7 +48,7 @@ Connection::Connection(const Connection& o){
 }
 
 
-QSqlDatabase Connection::getDb() { return db;}
+//QSqlDatabase Connection::getDb() { return db;}
 
 QString Connection::connectionName(){return _connectionName;}
 
@@ -57,14 +60,18 @@ void Connection::setConnectionName(QString name) {
 QSqlDatabase Connection::configure(const QString cName)
 {
  qDebug() << "Connection: CWD = " << QDir::currentPath();
- config = Configuration::instance();
+ _connectionName = cName;
  sql = SQL::instance();
- //db = QSqlDatabase::addDatabase(config->currConnection->driver(),cName);
- if (QSqlDatabase::contains(cName) && db.driverName() =="QSQLITE") {
-     db = QSqlDatabase::database(cName);
- } else {
-     db = QSqlDatabase::addDatabase("QSQLITE", cName);
- }
+ if(sql->connectionName().isEmpty())
+     sql->setConnectionName(cName);
+ QSqlDatabase db = QSqlDatabase::addDatabase(config->currConnection->driver(),cName);
+ // QSqlDatabase db = QSqlDatabase::database(cName);
+ // if (QSqlDatabase::contains(cName) && db.driverName() =="QSQLITE") {
+ //     db = QSqlDatabase::database(cName);
+ // } else {
+ //     db = QSqlDatabase::addDatabase("QSQLITE", cName);
+ // }
+ _connectionName = cName;
  configureDb(db, this);
  // check for presence of Parameters table.
  QStringList tableList;
@@ -298,3 +305,67 @@ void Connection::configureDb(QSqlDatabase db, Connection* currConnection)
     }
 }
 
+#include <QSqlDatabase>
+#include <QSqlError>
+#include <QSqlQuery>
+#include <QDebug>
+
+bool Connection::connectToCityMimer(const QString &dbName, const QString &server, const QString &connectionName)
+{
+    // Ensure we isolate the connection tracking string
+    //const QString connectionName = "MimerCityConnection";
+
+    if (QSqlDatabase::contains(connectionName)) {
+        {
+            QSqlDatabase oldDb = QSqlDatabase::database(connectionName);
+            if (oldDb.isOpen()) oldDb.close();
+        }
+        QSqlDatabase::removeDatabase(connectionName);
+    }
+
+    // Initialize the primary QODBC driver base
+    QSqlDatabase db = QSqlDatabase::addDatabase("QODBC", connectionName);
+
+    // === ADD THIS OPTION FOR MIMER SQL SYSTEM CATALOGS ===
+    // Forces the ODBC layer to build a client-side static scrollable cache
+    //db.setConnectOptions("SQL_ATTR_CURSOR_TYPE=SQL_CURSOR_STATIC");
+    db.setConnectOptions("SQL_ATTR_ANSI_APP=FALSE");
+    // Build a DSN-less connection string using the verified parameters from dbVis
+    QString connectionString = QString(
+                                   "Driver={MIMER};"
+                                   "Protocol=tcp;"
+                                   "Node=%2;"
+                                   "Service=1360;"  // Verified from your dbVis Connection URL string
+                                   "Database=%1;"
+                                   "Uid=mapperuser;"
+                                   "Pwd=iic723@knobacres;"
+                                   ).arg(dbName.toLower(), server);
+
+    db.setDatabaseName(connectionString);
+
+    if (!db.open()) {
+        qDebug() << "Mimer Error targeting" << dbName << ":" << db.lastError().text();
+        return false;
+    }
+
+    qDebug() << "Successfully attached to Mimer SQL engine for:" << dbName;
+    return true;
+}
+
+/*static*/ QMap<QString,QString> Connection::decodeConnectionString(QString cs)
+{
+    QMap<QString,QString> map = QMap<QString,QString>();
+    QStringList sl = cs.split(";");
+    foreach (QString s, sl)
+    {
+        int ix = s.indexOf("=");
+        map.insert(s.mid(0,ix).trimmed(), s.mid(ix+1).trimmed());
+    }
+    return map;
+}
+
+QStringList Connection::tables(){
+    QSqlDatabase db = QSqlDatabase::database(_connectionName);
+
+    return db.tables();
+}

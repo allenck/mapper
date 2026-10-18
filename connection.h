@@ -7,20 +7,22 @@
 
 class Configuration;
 class SQL;
+class DSN;
 class Connection : public QObject
 {
  Q_OBJECT
  qint32 _id =-1;
  QString _driver = "QSQLITE";
  QString _description;
- QString _DSN;
+ QString _DSName;
  QString _userId;
  QString _PWD;
  QString _database;
  QString _hostName;
  qint32  _port =0;
+ DSN* _dsnData = nullptr;
  //QString _useDatabase; // MySql or MsSql
- QSqlDatabase db;
+ //QSqlDatabase db;
  SQL* sql;
  QString _servertype = "Sqlite"; // "MsSql (default), "MySql, PostgreSQL"
  Configuration* config;
@@ -53,16 +55,17 @@ public:
  void setServerType(QString s) { _servertype = s;}
  QString servertype() {return _servertype;}
  QSqlDatabase configure(const QString cName = QLatin1String(QSqlDatabase::defaultConnection));
- QSqlDatabase getDb();
- void setDb(QSqlDatabase db){this->db = db;}
+ // QSqlDatabase getDb();
+ // void setDb(QSqlDatabase db){this->db = db;}
  qint32 id() {return _id;}
  void setId(qint32 i) {_id = i;}
  QString description() { return _description;}
  void setDescription(QString s) {_description = s;}
  QString driver() {return _driver;}
  void setDriver(QString d) {_driver = d;}
- QString dsn() {return _DSN;}
- void setDSN(QString d) {_DSN = d;}
+ QString dsn() {return _DSName;}
+ void setDSN(QString d) {_DSName = d;}
+ void setDsnData(DSN* dsnData){_dsnData = dsnData;}
  QString userId() {return _userId;}
  void setUserId(QString userId) {_userId = userId;}
  QString pwd() {return _PWD;}
@@ -89,6 +92,8 @@ public:
  QString defaultSqlDatabase() {return _defaultSqlDatabase;}
  void setDefaultSqlDatabase(QString defaultSqlDatabase) {_defaultSqlDatabase = defaultSqlDatabase;}
  static void configureDb(QSqlDatabase db, Connection *currConnection);
+ static bool connectToCityMimer(const QString &db_name, const QString &server, const QString &connectionName);
+ static QMap<QString,QString> decodeConnectionString(QString cs);
  //QString mySqlDatabase(){return _mySqlDatabase;}
  //void setMySqlDatabase(QString name){_mySqlDatabase =name;}
  QString connectionType(){return _connectionType;}
@@ -102,7 +107,7 @@ public:
  void setValid(bool b){_connectionValid = b;}
  bool isSqliteUserFunctionLoaded() {return _sqlite_user_function_loaded;}
  void setSqliteUserFunctionLoaded(bool b) {_sqlite_user_function_loaded = b;}
- QStringList tables(){return db.tables();}
+ QStringList tables();//{return db.tables();}
  void setTables(QStringList tables){_tables = tables;}
  QString getSslMode() {return _sslMode;}
  void setSslMode(QString sslMode){_sslMode = sslMode;}

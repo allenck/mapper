@@ -422,6 +422,7 @@ void Configuration::saveSettings2()
     settings->setValue("displayDebugMsgs", bDisplayDebugMsgs);
     settings->setValue("displayArrows", bDisplaySegmentArrows);
     settings->setValue("displayRouteOnReload",bDisplayRouteOnReload);
+    settings->setValue("displayMimerDistance", bDisplayMimerDistance);
     settings->setValue("font",font.toString());
     settings->setValue("mapId", mapId);
     settings->setValue("mapType", mapType);
@@ -650,12 +651,15 @@ void Configuration::getSettings()
               db.setDatabaseName(info.absoluteFilePath());
            if(db.open())
            {
-            Parameters p = SQL::instance()->getParameters(db);
-            if(!p.city.isEmpty())
-            {
-             ncn->setCityName(p.city);
-             nc->setNameOverride(p.city);
-            }
+                Parameters p;
+                if(SQL::instance()->getParameters(&p, db))
+                {
+                    if(!p.city.isEmpty())
+                    {
+                     ncn->setCityName(p.city);
+                     nc->setNameOverride(p.city);
+                    }
+                }
            }
            db.close();
           }
@@ -1046,11 +1050,14 @@ void Configuration::getSettings2()
                     db.setDatabaseName(baseAddr + fileName);
                     if(db.open())
                     {
-                        Parameters p = SQL::instance()->getParameters(db);
-                        if(!p.city.isEmpty())
+                        Parameters p;
+                        if(SQL::instance()->getParameters(&p,db))
                         {
-                            ncn->setCityName(p.city);
-                            nc->setNameOverride(p.city);
+                            if(!p.city.isEmpty())
+                            {
+                                ncn->setCityName(p.city);
+                                nc->setNameOverride(p.city);
+                            }
                         }
                         db.close();
                     }
@@ -1182,6 +1189,7 @@ qDebug() << settings.group();
     bDisplayDebugMsgs = settings.value("displayDebugMsgs", false).toBool();
     bDisplaySegmentArrows = settings.value("displayArrows", false).toBool();
     bDisplayRouteOnReload = settings.value("displayRouteOnReload",false).toBool();
+    bDisplayMimerDistance = settings.value("displayMimerDistance", false).toBool();
     mapId = settings.value("mapId", "DEMO_MAP_ID").toString();
     // if(mapId.isEmpty())
     //     mapId = "DEMO_MAP_ID";

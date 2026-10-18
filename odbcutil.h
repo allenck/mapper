@@ -35,6 +35,7 @@ public:
     QString userId;
     QString password;
     QString sslMode;
+    QString location;
     bool userDsn =false;
     bool bServerAccessible = true;
 };
@@ -52,7 +53,7 @@ public:
     void getDSNs(QString ini);
 #endif
     DSN* getDsn(QString dsn);
-    void fillDSNCombo(QComboBox* box, QString type);
+    void fillDSNCombo(QComboBox* box, QString type, QString city = "");
     QString connectString(QString connector, QString host, int port, QString user, QString pswd, QString database);
     QString connectString2(QString driver, QString host, int port, QString user, QString pswd, QString database);
 static bool isIp(QString txt);
@@ -74,16 +75,18 @@ private:
     QString getSection(QString str);
     void updateDriverInfo(Driver* drv, QList<QPair<QString, QString >> pairs);
 #endif
-    QMap<QString,Driver*> drvByName;
+    QMap<QString,Driver*> drvByType;
     QMap<QString,Driver*> drvByLib;
+    QMap<QString,Driver*> drvByName;
     QFile* ini = nullptr;
     QMap<QString, DSN*> dsnByName;
     QMultiMap<QString, DSN*> dsnByType;
     QFileSystemWatcher * odbcinstWatcher = nullptr;
     void getWinDSNs();
     void getWinDrivers();
-    QStringList validTypes = {"MySql","MsSql","PostgreSQL"};
+    QStringList validTypes = {"MySql","MsSql","PostgreSQL", "MimerSql"};
 
+    friend class DialogNewConnection;
 };
 
 #endif // ODBCUTIL_H

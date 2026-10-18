@@ -114,6 +114,7 @@ public:
  bool bDisplayDebugMsgs = false;
  bool bDisplaySegmentArrows = false;
  bool bDisplayRouteOnReload = false;
+ bool bDisplayMimerDistance = false;
  QString mapId;
  QString mapType;
  QStringList localOverlayList;
