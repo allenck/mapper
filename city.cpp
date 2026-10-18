@@ -23,19 +23,19 @@ void City::addConnection(Connection* connection)
 {
     if(connection->description().contains("\n"))
         connection->description().remove("\n");
-    if(!connectionByUuid.contains(connection->uniqueId().toString()))
+    if(!connectionByUuid.contains(connection->uniqueId()))
    {
-       connectionByUuid.insert(connection->uniqueId().toString(), connection);
+       connectionByUuid.insert(connection->uniqueId(), connection);
        connections.append(connection);
        connection->setId(connections.count()-1);
        //curConnectionId = connections.count()-1;
        // = connection->id();
        _connectionUniqueId = connection->uniqueId();
 
-       descrByConnection.clear();
-       foreach (Connection * connect, connections) {
-           descrByConnection.insert(connect, connect->description());
-       }
+       //descrByConnection.clear();
+       // foreach (Connection * connect, connections) {
+       //     descrByConnection.insert(connect, connect->description());
+       // }
    }
    emit connectionAdded(connection);
 }

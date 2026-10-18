@@ -203,7 +203,7 @@ void RouteNameWidget::txtRouteNbr_Leave()
         _rd = RouteData();
         ui->cbRouteName->setCurrentIndex(0);
         ui->cbRouteName->setFocus();
-        Parameters parms = sql->getParameters();
+        // Parameters parms = sql->getParameters();
 //        dateStart.MinDate = parms.minDate;
 //        dateStart.MaxDate = parms.maxDate;
 //        dateEnd.MaxDate = parms.maxDate;

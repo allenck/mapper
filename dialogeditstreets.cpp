@@ -7,7 +7,8 @@ DialogEditStreets::DialogEditStreets(QWidget *parent)
     , ui(new Ui::DialogEditStreets)
 {
     ui->setupUi(this);
-    Parameters parms = sql->getParameters();
+    Parameters parms;
+    sql->getParameters(&parms);
     abbreviations = parms.abbreviationsList;
     ui->cbAbbreviations->clear();
     for(const QPair<QString, QString> &pair : abbreviations)

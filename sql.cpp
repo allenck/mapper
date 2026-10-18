@@ -14,11 +14,16 @@
 #include "streetstablemodel.h"
 
 SQL* SQL::_instance = NULL;
+QString SQL::_connectionName = "";
 SQL::SQL()
 {
  currentTransaction = "";
  config = Configuration::instance();
  _instance = this;
+ if(config->currConnection)
+    _connectionName = config->currConnection->connectionName();
+ else
+     _connectionName = "";
 }
 
 SQL* SQL::instance()
@@ -35,8 +40,9 @@ void SQL::setConfig(Configuration *cfg)
 
 bool SQL::dbOpen(QSqlDatabase db)
 {
-    //QSqlDatabase db = QSqlDatabase::database();
-    this->db = db;
+    //QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
+    //this->db = db;
     if(db.isOpen())
         return true;
 
@@ -73,6 +79,7 @@ bool SQL::dbOpen(QSqlDatabase db)
     else
     {
 //        cout << "Logged on\n";
+     _connectionName = db.connectionName();
      if(config->currConnection->driver()=="QODBC" || config->currConnection->driver() == "QODBC3")
      {
       if(config->currConnection->database() != "default" && config->currConnection->database() != "")
@@ -96,7 +103,7 @@ bool SQL::dbOpen(QSqlDatabase db)
 
 bool SQL::isTransactionActive()
 {
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  QVariant v = db.driver()->handle();
  sqlite3 *handle = NULL;
  if (v.isValid() && strcmp(v.typeName(), "sqlite3*") == 0)
@@ -136,7 +143,7 @@ void SQL::beginTransaction (QString name)
   return;
  }
  QString commandText = "Begin Transaction " +name;
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  //bool bQuery = db.transaction();
@@ -164,7 +171,8 @@ void SQL::commitTransaction (QString name)
       return;
   }
   QString commandText = "Commit Transaction " +name;
-  //QSqlDatabase db = QSqlDatabase::database();
+  QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
   //QSqlQuery query = QSqlQuery(db);
   //bool bQuery = query.exec(commandText);
   bool bQuery = db.commit();
@@ -187,7 +195,8 @@ void SQL::commitTransaction (QString name)
 void SQL::rollbackTransaction (QString name)
 {
  QString commandText = "Rollback Transaction " +name;
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  //QSqlQuery query = QSqlQuery(db);
  //bool bQuery = query.exec(commandText);
  bool bQuery = db.rollback();
@@ -209,7 +218,8 @@ void SQL::myExceptionHandler(Exception e)
 {
     Q_UNUSED(e)
     qDebug() << "SQL exception " << e.msg;
-    //QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
     //db.close();
     exit(EXIT_FAILURE);
 }
@@ -324,9 +334,10 @@ QList<RouteData> SQL::getRoutesByEndDate(qint32 companyKey)
  RouteData rd;
  QSqlQuery query;
  QString commandText;
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  if(!dbOpen(db))
      throw Exception(tr("database not open: %1").arg(__LINE__));
- //QSqlDatabase db = QSqlDatabase::database();
+
  QString where;
  if(companyKey > 0)
   where= " where r.companyKey = " + QString("%1").arg(companyKey);
@@ -425,9 +436,10 @@ QList<RouteData> SQL::getRoutesByEndDate(QList<int> compayList)
  RouteData rd;
  QSqlQuery query;
  QString commandText;
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  if(!dbOpen(db))
      throw Exception(tr("database not open: %1").arg(__LINE__));
- //QSqlDatabase db = QSqlDatabase::database();
+
  QString where;
  //if(companyKey >0)
   where= " where r.companyKey in( " + list2String(compayList) +")";
@@ -501,9 +513,10 @@ QList<RouteData> SQL::getRoutesByStartDate(QDate date, int daysBefore)
  RouteData rd;
  QSqlQuery query;
  QString commandText;
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  if(!dbOpen(db))
      throw Exception(tr("database not open: %1").arg(__LINE__));
- //QSqlDatabase db = QSqlDatabase::database();
+
  QString  where= " where r.startDate > '" + date.addDays(-daysBefore).toString("yyyy/MM/dd") + "' ";
  if(config->currConnection->servertype() == "MySql")
     commandText = "Select distinct a.baseRoute, r.route, n.name, r.startDate, "
@@ -574,9 +587,10 @@ RouteSeq SQL::getRouteSeq(RouteData rd)
 {
  RouteSeq rs;
  QList<QPair<int, QString>> list;
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  if(!dbOpen(db))
       throw Exception(tr("database not open: %1").arg(__LINE__));
- //QSqlDatabase db = QSqlDatabase::database();
+
  QSqlQuery query;
  QString commandText = QString("select segmentList, firstSegment, whichEnd"
                        " from RouteSeq"
@@ -607,9 +621,10 @@ RouteSeq SQL::getRouteSeq(RouteData rd)
 
 bool SQL::deleteRouteSeq(RouteSeq rs)
 {
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  if(!dbOpen(db))
       throw Exception(tr("database not open: %1").arg(__LINE__));
- //QSqlDatabase db = QSqlDatabase::database();
+
  QSqlQuery query = QSqlQuery(db);
  QString commandText = QString("delete RouteSeq "
                        " where route = %1 and name = '%2' and "
@@ -638,9 +653,10 @@ TerminalInfo SQL::getTerminalInfo(qint32 route, QString name, QDate endDate)
 
  try
  {
+     QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
   if(!dbOpen(db))
       throw Exception("dataase not open");
-  //QSqlDatabase db = QSqlDatabase::database();
+
   QString strRoute = QString("%1").arg(route);
 
   // Works in MSSSQL but not my SQL.
@@ -734,7 +750,8 @@ TerminalInfo SQL::getTerminalInfo(qint32 route, QString name, QDate endDate)
 // return a list of TerminalInfo's using a segment
 QList<TerminalInfo> SQL::getTerminalInfoUsingSegment(int segmentId)
 {
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QString commandText;
 
  if(config->currConnection->servertype() != "MsSql")
@@ -797,7 +814,8 @@ QList<TerminalInfo> SQL::getTerminalInfoUsingSegment(int segmentId)
 QString SQL::getAlphaRoute(qint32 route, QString routePrefix)
 {
  QString routeAlpha = "";
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QString strRoute = QString("%1").arg(route);
  QString commandText;
  if(config->currConnection->servertype() != "MsSql")
@@ -835,9 +853,10 @@ QStringList SQL::getAlphaRoutes(QString text)
     QStringList list;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "select routeAlpha from AltRoute " \
                 "where routeAlpha like '" + text+ "%'";
@@ -872,7 +891,8 @@ QStringList SQL::getAlphaRoutes(QString text)
 
 bool SQL::deleteAlphaRoute(QString routeAlpha)
 {
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QString commandText = "delete from AltRoute where routeAlpha = '" + routeAlpha + "'";
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
@@ -893,9 +913,10 @@ QMap<int,TractionTypeInfo> SQL::getTractionTypes()
     TractionTypeInfo tti;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "select tractionType, description, displayColor,routeType, icon from TractionTypes";
         QSqlQuery query = QSqlQuery(db);
@@ -932,7 +953,8 @@ QList<SegmentInfo> SQL::getSegmentInfo()
  QList<SegmentInfo> myArray;
  SegmentInfo sI;
 
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
  QString commandText = "Select SegmentId, description, OneWay, startDate, endDate, length, points, "
 "startLat, startLon, endLat, EndLon, type, street, pointArray, tracks from Segments ";
@@ -980,7 +1002,8 @@ QList<SegmentInfo> SQL::getSegmentsForStreet(QString street, QString location)
 {
  QList< SegmentInfo> myArray;
 
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
 
  QString commandText;
@@ -1087,7 +1110,8 @@ QMap<int, SegmentInfo> SQL::getSegmentInfoList(QString location)
 {
  QMap<int, SegmentInfo> myArray;
 
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
 
  QString commandText;
@@ -1187,7 +1211,8 @@ QMap<int, SegmentInfo> SQL::getSegmentInfoList(QString location)
 
 QStringList SQL::getLocations()
 {
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QStringList list;
 
  QString commandText = "select location from Segments group by location";
@@ -1212,7 +1237,8 @@ SegmentInfo SQL::getSegmentInfo(int segmentId)
 {
  SegmentInfo sI = SegmentInfo();
 
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
  QString commandText = "Select SegmentId, description, OneWay, startDate, endDate, length, points,"
                      " startLat, startLon, endLat, endLon, type, street, pointArray, tracks"
@@ -1264,7 +1290,8 @@ SegmentInfo SQL::getSegmentInfo(int segmentId)
 // update segment begin/end dates based on route usage
 bool SQL::updateSegmentDates(SegmentInfo* si)
 {
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QString commandText;
  QSqlQuery query = QSqlQuery(db);
  bool bQuery;
@@ -1313,9 +1340,10 @@ SegmentInfo SQL::getSegmentInfo(qint32 segmentId)
      return si;
  try
  {
+  QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
   if(!dbOpen(db))
       throw Exception(tr("database not open: %1").arg(__LINE__));
-  //QSqlDatabase db = QSqlDatabase::database();
+
   QString commandText = "Select SegmentId, Description, tracks, type,"
                      " StartLat, StartLon, EndLat, EndLon, length, StartDate, EndDate, Direction,"
                      " Street, location, pointArray, DoubleDate, FormatOK, NewerName,StreetId, rowid"
@@ -1398,9 +1426,10 @@ SegmentInfo SQL::getSegmentIdForDescription(QString description)
  SegmentInfo si;
  try
  {
+     QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
   if(!dbOpen(db))
       throw Exception(tr("database not open: %1").arg(__LINE__));
-  //QSqlDatabase db = QSqlDatabase::database();
+
   QString commandText;
 
   if(config->currConnection->servertype() != "MsSql")
@@ -1597,7 +1626,8 @@ QList<SegmentData*> SQL::getRouteSegmentsForDate(QDate date, int companyKey)
 QList<RouteData> SQL::getRouteDatasForDate(qint32 route, QString name, int companyKey, QString date)
 {
  QList<RouteData> myArray;
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
  QString commandText = "SELECT r.Route,n.Name,r.StartDate,r.EndDate,LineKey,r.companyKey,"
                        " tractionType,s.direction, normalEnter, normalLeave,"
@@ -1677,7 +1707,8 @@ QList<SegmentData*> SQL::getRouteDatasForDate(int segmentId, QDate date)
 QList<SegmentData> SQL::getRouteDatasForDate(int segmentId, QString date)
 {
  QList<SegmentData> myArray;
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
  QString commandText = "SELECT a.Route,n.Name,a.StartDate,a.EndDate,LineKey,a.companyKey,"
                        " a.tractionType, a.direction, normalEnter, normalLeave,"
@@ -1748,9 +1779,10 @@ QList<RouteData> SQL::getRoutes(qint32 segmentid, QString date )
 
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "select a.route, n.name, a.startdate, a.endDate, "
             "a.companyKey, tractionType,"
@@ -1802,9 +1834,10 @@ QList<RouteData> SQL::getRoutes(qint32 segmentid, QString date )
 
 bool SQL::saveRouteSequence(RouteData rd, int firstSegment, QString whichEnd)
 {
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
   if(!dbOpen(db))
       throw Exception(tr("database not open: %1").arg(__LINE__));
-  //QSqlDatabase db = QSqlDatabase::database();
+
   QString commandText = QString("select count(*) from RouteSeq "
                         " where route = %1 and name = '%2'"
                         "  and startDate = '%3' and endDate = '%4'")
@@ -1855,9 +1888,10 @@ bool SQL::saveRouteSequence(RouteData rd, int firstSegment, QString whichEnd)
 
 bool SQL::addRouteSeq(RouteSeq rs)
 {
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  if(!dbOpen(db))
      throw Exception(tr("database not open: %1").arg(__LINE__));
- //QSqlDatabase db = QSqlDatabase::database();
+
 
  QString commandText = QString("insert into RouteSeq (route, name, startDate, endDate, segmentList,"
                        "firstSegment, whichEnd)"
@@ -1893,7 +1927,8 @@ bool SQL::addRouteSeq(RouteSeq rs)
 //    {
 //        if(!dbOpen(db))
 //            throw Exception(tr("database not open: %1").arg(__LINE__));
-//        //QSqlDatabase db = QSqlDatabase::database();
+//        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
 ////        QString commandText = "Select StartLat, StartLon, EndLat, EndLon from LineSegment where SegmentId = " + QString("%1").arg(SegmentId) + " order by sequence";
 //        QString commandText = "Select StartLat, StartLon, EndLat, EndLon, pointArray from Segments where SegmentId = "+ QString("%1").arg(SegmentId);
@@ -1950,7 +1985,8 @@ QList<segmentData> SQL::getIntersectingSegments(double lat, double lon, double r
     {
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
         QString commandText = "select a.segmentId, a.startLat, a.startLon, a.endLat, a.EndLon, a.[key], a.sequence, a.length, a.streetName from LineSegment a join Segments b on a.segmentId = b.segmentId where b.type = " + QString("%1").arg(type )+ " and (distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", a.startLat, a.startLon) < " + QString("%1").arg(radius,0,'f',8 )+ " OR distance(" + QString("%1").arg(lat,0,'f',8) + "," + QString("%1").arg(lon,0,'f',8) + ", a.endLat, a.endLon) < " + QString("%1").arg(radius,0,'f',8) + ") order by segmentId, sequence";
         QSqlQuery query = QSqlQuery(db);
@@ -2065,9 +2101,10 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
 #endif
  try
  {
+  QSqlDatabase  db = QSqlDatabase::database(SQL::_connectionName);
   if(!dbOpen(db))
       throw Exception(tr("database not open: %1").arg(__LINE__));
-  //QSqlDatabase db = QSqlDatabase::database();
+
 
   QString commandText;
 
@@ -2169,9 +2206,10 @@ QList<SegmentInfo> SQL::getIntersectingSegments(double lat, double lon, double r
  RouteType type = Other;
  try
  {
-  if(!dbOpen(db))
+     QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+     if(!dbOpen(db))
       throw Exception(tr("database not open: %1").arg(__LINE__));
-  //QSqlDatabase db = QSqlDatabase::database();
+
   QString distanceWhere;
 #ifndef NO_UDF
   distanceWhere = "(distance(" + QString("%1").arg(lat,0,'f',8) + ","
@@ -2295,7 +2333,8 @@ QList<SegmentData*> SQL::getIntersectingRouteSegmentsAtPoint(int ignoreThis, dou
  QList<SegmentData*> myArray = QList<SegmentData*>();
  double distanceToStart = 0, distanceToEnd = 0;
 
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QString commandText = "select b.segmentId, b.startLat, b.startLon, b.endLat, b.EndLon,"
                        " c.direction, b.description, c.oneWay,  c.next, c.prev,"
                        " c.normalEnter, c.normalLeave, c.reverseEnter, c.reverseLeave,"
@@ -2398,7 +2437,8 @@ QList<SegmentData*> SQL::getIntersectingRouteSegmentsAtPoint(SegmentData* sd1,
  double distanceToStart = 0, distanceToEnd = 0;
  double angle;
 
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  double lat, lon;
  if(sd1->whichEnd()=="S")
  {
@@ -2602,7 +2642,7 @@ int SQL::sequenceRouteSegments(qint32 segmentId, QList<SegmentData*> segmentList
  //double a1 = 0, a2 = 0;
  QMap<int, SegmentData*> segMap;
  QVariantList objArray;
-
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  if(!dbOpen(db))
   throw Exception(tr("database not open: %1").arg(__LINE__));
 
@@ -2937,6 +2977,7 @@ int SQL::sequenceRouteSegments(qint32 startSegment, QList<SegmentData> segmentLi
  QMap<int, SegmentData*> segmentMap;
  QString matchedto = whichEnd;
 
+ QSqlDatabase  db = QSqlDatabase::database(SQL::connectionName);
  if(!dbOpen(db))
   throw Exception(tr("database not open: %1").arg(__LINE__));
 
@@ -3374,7 +3415,8 @@ bool SQL::updateSegment(SegmentInfo* si, bool bNotify)
 {
  bool ret = false;
  QString commandText;
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QSqlQuery query = QSqlQuery(db);
  bool bQuery;
  si->_length = 0;
@@ -3465,7 +3507,8 @@ bool SQL::updateSegment(SegmentData* sd)
 {
  bool ret = false;
  QString commandText;
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QSqlQuery query = QSqlQuery(db);
  bool bQuery;
  sd->_length = 0;
@@ -3574,9 +3617,10 @@ bool SQL::updateSegment(qint32 SegmentId)
  SegmentData sd;
  sd.setSegmentId(SegmentId);
 
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  if(!dbOpen(db))
      throw Exception(tr("database not open: %1").arg(__LINE__));
- //QSqlDatabase db = QSqlDatabase::database();
+
  beginTransaction("UpdateSegment");
 
  QString commandText = "Select startLat, startLon, endLat, endLon, length, pointArray, oneWay,"
@@ -3666,10 +3710,10 @@ bool SQL::updateSegment(qint32 SegmentId)
 StationInfo SQL::getStationInfo(qint32 stationKey)
 {
  StationInfo sti = StationInfo();
-
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  if(!dbOpen(db))
      throw Exception(tr("database not open: %1").arg(__LINE__));
- //QSqlDatabase db = QSqlDatabase::database();
+
 
  QString commandText = "SELECT stationKey, a.name, latitude, longitude, "
                        " startDate, endDate, routes, markerType, segmentId,"
@@ -3737,9 +3781,10 @@ StationInfo SQL::getStationInfo(QString name)
 {
  StationInfo sti =  StationInfo();
 
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  if(!dbOpen(db))
      throw Exception(tr("database not open: %1").arg(__LINE__));
- //QSqlDatabase db = QSqlDatabase::database();
+
 
  QString commandText = "SELECT stationKey, a.name, latitude, longitude,"
                        " startDate, endDate, segmentId, MarkerType, routes,"
@@ -3783,9 +3828,10 @@ bool SQL::updateStation(qint32 stationKey, qint32 infoKey)
     int rows = 0;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         beginTransaction("updateStation");
 
         QString commandText = "update Stations set infoKey = " + QString("%1").arg(infoKey)
@@ -3822,9 +3868,10 @@ bool SQL::updateStation(StationInfo sti)
     int rows = 0;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         beginTransaction("updateStation");
 
         QString commandText = "update Stations set latitude = " + QString("%1").arg(sti.latitude,0,'f',8)
@@ -3873,9 +3920,10 @@ QList<StationInfo> SQL::getStationAtPoint(LatLng pt)
     try
     {
 
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText;
         if(config->currConnection->servertype() != "MsSql")
@@ -3936,7 +3984,8 @@ QList<StationInfo> SQL::getStationAtPoint(LatLng pt)
 QList<StationInfo> SQL::getStationsLikeName(QString name)
 {
  QList<StationInfo> list;
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QString commandText = "SELECT stationKey, a.name, latitude, longitude,"
                        " startDate, endDate, segmentId, Infokey, markerType,"
                        " routes, segments, routeType"
@@ -3981,9 +4030,10 @@ LatLng SQL::getPointOnSegment(qint32 pt, qint32 segmentId)
     int points = -1;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         QString commandText = "select endLat, endLon, points from Segments"
                               " where segmentId = " + QString("%1").arg(segmentId);
         QSqlQuery query = QSqlQuery(db);
@@ -4034,9 +4084,10 @@ QString SQL::getSegmentOneWay(qint32 SegmentId)
     QString description = "";
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "Select OneWay from Segments"
                               " where SegmentId = " + QString("%1").arg(SegmentId);
@@ -4068,9 +4119,10 @@ bool SQL::doesSegmentExist(QString descr, QString oneWay, QString location)
     int count = 0;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "select count(*) from Segments where description = '" +
             descr + "' and oneWay= '" + oneWay + "' and Location= '" + location + "'";
@@ -4107,9 +4159,10 @@ QString SQL::getSegmentDescription(qint32 SegmentId)
     QString description = "";
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "Select description from Segments where SegmentId = " + QString("%1").arg(SegmentId);
         QSqlQuery query = QSqlQuery(db);
@@ -4146,9 +4199,10 @@ bool SQL::updateRecord(SegmentInfo sd)
     //sd.distance = Distance(sd.startLat, sd.startLon, sd.endLat, sd.endLon);
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         Q_ASSERT(sd._startLat != 0);
         Q_ASSERT(sd._startLon != 0);
@@ -4239,7 +4293,8 @@ QList<CompanyData*> SQL::getCompanies()
 {
  QList<CompanyData*> myArray;
  CompanyData* cd;
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
  QString commandText;
  if(config->currConnection->servertype() == "MySql")
@@ -4295,7 +4350,8 @@ bool SQL::updateCompany(CompanyData* cd)
 {
     bool ret = false;
     QString commandText;
-    //QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
     QSqlQuery query = QSqlQuery(db);
     bool bQuery;
     int rows = 0;
@@ -4368,7 +4424,8 @@ QList<CompanyData*> SQL::getCompaniesInDateRange(QDate startDate, QDate endDate)
 {
  QList<CompanyData*> myArray;
  CompanyData* cd;
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
  QString commandText;
  if(config->currConnection->servertype() == "MySql")
@@ -4434,9 +4491,10 @@ CompanyData* SQL::getCompany(qint32 companyKey)
     CompanyData* cd = nullptr;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText;
         if(config->currConnection->servertype() == "MySql")
@@ -4500,9 +4558,10 @@ bool SQL::doesAltRouteExist(int route, QString alphaRoute)
  int count = 0;
  try
  {
+     QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
      if(!dbOpen(db))
          throw Exception(tr("database not open: %1").arg(__LINE__));
-     //QSqlDatabase db = QSqlDatabase::database();
+
 
      QString commandText = "select count(*) from AltRoute where route = " + QString::number(route)
                            + " and routeAlpha = '" + alphaRoute + "'";
@@ -4543,7 +4602,8 @@ qint32 SQL::addAltRoute(QString routeAlpha, QString routePrefix)
 {
  int route=-1, rows=0, count=0;
  QString commandText;
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QSqlQuery  query = QSqlQuery(db);
  bool bQuery;
  Q_ASSERT(!routeAlpha.isEmpty() && !routeAlpha.startsWith(" "));
@@ -4662,7 +4722,8 @@ qint32 SQL::addAltRoute(QString routeAlpha, QString routePrefix)
 }
 
 bool SQL::addAltRoute(int routeNum, QString routeAlpha, QString routePrefix){
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  bool isNumeric;
  int baseRoute =routeAlpha.toInt(&isNumeric);
  if(!isNumeric)
@@ -4695,7 +4756,8 @@ bool SQL::addAltRoute(int routeNum, QString routeAlpha, QString routePrefix){
 
 bool SQL::updateAltRoute(int route, QString routeAlpha)
 {
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  Q_ASSERT(!routeAlpha.isEmpty() && !routeAlpha.startsWith(" "));
 
  QString commandText = "update AltRoute "
@@ -4725,9 +4787,10 @@ bool SQL::deleteRouteSegment(SegmentData sd, bool bNotify)
     QString segStartDate = "", segEndDate = "";
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         QString activeTransaction = currentTransaction;
         if(!isTransactionActive())
         {
@@ -4845,9 +4908,10 @@ bool SQL::deleteRouteSegment(qint32 route, int routeId, qint32 SegmentId,
     QString segStartDate = "", segEndDate = "";
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         QString activeTransaction = currentTransaction;
         if(!isTransactionActive())
         {
@@ -4977,9 +5041,10 @@ bool SQL::addSegmentToRoute(SegmentData* sd, bool notify)
 
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         if(!isTransactionActive())
             beginTransaction("addSegmentToRoute");
@@ -5064,9 +5129,10 @@ bool SQL::addSegmentToRoute(SegmentData* sd, bool notify)
 // segment get the new segment added.
 bool SQL::addSegmentToRoutes(int _newSegmentId, int _segmentId)
 {
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  if(!dbOpen(db))
      throw Exception(tr("database not open: %1").arg(__LINE__));
- //QSqlDatabase db = QSqlDatabase::database();
+
  QString commandText;
  SegmentInfo si = getSegmentInfo(_segmentId);
  SegmentInfo siNew = getSegmentInfo(_segmentId);
@@ -5109,9 +5175,10 @@ bool SQL::updateTerminals(qint32 route, QString name, QDate startDate, QDate end
     try
     {
         int count =0;
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         if(config->currConnection->servertype() == "MsSql")
          commandText = "select count(*),startSegment, startWhichEnd, "
                        "endSegment, endWhichEnd from Terminals"
@@ -5264,7 +5331,8 @@ qint32 SQL::getNumericRoute(QString routeAlpha, QString * newAlphaRoute, bool * 
         *(newAlphaRoute) = (route < 10 ? "0" : "") + QString("%1").arg(route);
     else
         *(newAlphaRoute) = routeAlpha;
-    //QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
     QString commandText ;
     if(config->currConnection->servertype() != "MsSql")
      commandText = "select route from AltRoute a"
@@ -5335,9 +5403,10 @@ QList<RouteData> SQL::getRouteInfo(qint32 route)
     QList<RouteData>  myArray;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "Select distinct a.route, n.name, startDate, endDate, "
                               "routeAlpha, b.baseRoute, a.routeId"
@@ -5397,9 +5466,10 @@ bool SQL::updateCompany(qint32 companyKey, qint32 route)
     CompanyData* cd ;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         QString commandText;
         //beginTransaction("updateCompanies");
         if(config->currConnection->servertype() == "MySql")
@@ -5490,9 +5560,10 @@ void SQL::updateSegmentDates(int segmentId)
     QString segEndDate = "";
     int rows = 0;
 
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
     if(!dbOpen(db))
         throw Exception(tr("database not open: %1").arg(__LINE__));
-    //QSqlDatabase db = QSqlDatabase::database();
+
 
     QString commandText = "select min(startDate), max(endDate) from Routes"
                           " where linekey = " + QString("%1").arg(segmentId);
@@ -5558,9 +5629,10 @@ QPair<QDate,QDate> SQL::getStartAndEndDates(int segmentId)
 {
  QPair<QDate,QDate> pair;
 
+ QSqlDatabase  db = QSqlDatabase::database(SQL::_connectionName);
  if(!dbOpen(db))
      throw Exception(tr("database not open: %1").arg(__LINE__));
- //QSqlDatabase db = QSqlDatabase::database();
+
 
  QString commandText = "select min(startDate), max(endDate) from Routes where linekey = " + QString("%1").arg(segmentId);
  QSqlQuery query = QSqlQuery(db);
@@ -5596,9 +5668,10 @@ QList<QString> SQL::getRouteNames(qint32 route)
     QList<QString>  myArray;
     try
     {
+        QSqlDatabase  db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "Select distinct n.name "
                               "from Routes r"
@@ -5641,9 +5714,10 @@ qint32 SQL::getRouteCompany(qint32 route)
     int companyKey=-1;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "Select companyKey from Routes where route = " + QString("%1").arg(route);
         QSqlQuery query = QSqlQuery(db);
@@ -5671,13 +5745,13 @@ qint32 SQL::getRouteCompany(qint32 route)
 /// Retrieve the parameters for the web site
 /// </summary>
 /// <returns></returns>
-Parameters SQL::getParameters(QSqlDatabase db)
+bool SQL::getParameters(Parameters* parms, QSqlDatabase db)
 {
-     Parameters parms = Parameters();
+     //Parameters parms = Parameters();
     QString alphaRoutes;
     try
     {
-    //if(!dbOpen(db))
+    //QSqlDatabase  srcDb = QSqlDatabase::database(SQL::connectionName);  if(!dbOpen(db)
      //throw Exception(tr("database not open: %1").arg(__LINE__));
      // db = QSqlDatabase::database();
 
@@ -5693,47 +5767,43 @@ Parameters SQL::getParameters(QSqlDatabase db)
             QSqlError error = query.lastError();
             SQLERROR(std::move(query));
             //throw SQLException(error.text() + " " + errCommand);
-            return parms;
+            return false;
         }
         if (!query.isActive())
         {
-            return parms;
+            return false;
         }
         while (query.next())
         {
-            parms.lat = query.value(0).toDouble();
-            parms.lon = query.value(1).toDouble();
-            parms.title = query.value(2).toString();
-            parms.city = query.value(3).toString();
-            parms.minDate = query.value(4).toDate();
-            parms.maxDate = query.value(5).toDate();
+            parms->lat = query.value(0).toDouble();
+            parms->lon = query.value(1).toDouble();
+            parms->title = query.value(2).toString();
+            parms->city = query.value(3).toString();
+            parms->minDate = query.value(4).toDate();
+            parms->maxDate = query.value(5).toDate();
             alphaRoutes = query.value(6).toString();
             if (alphaRoutes == "Y")
-                parms.bAlphaRoutes = true;
+                parms->bAlphaRoutes = true;
             QString abbreviationsStr = query.value(7).toString();
 
             QStringList list =  abbreviationsStr.split(",");
-            parms.abbreviationsList.clear();
+            parms->abbreviationsList.clear();
             foreach(QString aPair, list)
             {
                 if(aPair.isEmpty())
                     continue;
                 QStringList values = aPair.split(":");
                 if(values.count()>1)
-                    parms.abbreviationsList.append(QPair<QString, QString>(values.at(0),values.at(1)));
+                    parms->abbreviationsList.append(QPair<QString, QString>(values.at(0),values.at(1)));
             }        }
     }
     catch (Exception e)
     {
         myExceptionHandler(e);
     }
-    return parms;
+    return true;
 }
 
-QSqlDatabase SQL::getDb()
-{
-    return db;
-}
 
 bool SQL::insertParameters(Parameters parms, QSqlDatabase db)
 {
@@ -5741,7 +5811,8 @@ bool SQL::insertParameters(Parameters parms, QSqlDatabase db)
     {
         if(!db.isOpen())
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
         QString commandText = QString("insert into Parameters (lat, lon, title, city, minDate, maxDate, alphaRoutes,lastupdate)"
                               " values (%1, %2, '%3', '%4', '%5', '%6', '%7',CURRENT_TIMESTAMP)")
@@ -5771,7 +5842,7 @@ bool SQL::updateParameters(Parameters parms, QSqlDatabase db)
     {
         if(!db.isOpen())
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = QString("update Parameters set lat = %1, lon=%2, title='%3', city='%4', "
                               "minDate = '%5', maxDate= '%6', alphaRoutes = '%7',"
@@ -5816,9 +5887,10 @@ QList<SegmentData> SQL::getRouteSegmentsBySegment(int route, qint32 segmentId)
     QList<SegmentData> myArray;
 //    try
 //    {
+        QSqlDatabase  db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "Select r.route, n.name, r.startDate, r.endDate, r.lineKey, r.companyKey,"
               " tractionType, r.direction, normalEnter, normalLeave, reverseEnter, reverseLeave,"
@@ -5895,9 +5967,10 @@ QList<SegmentData> SQL::getRouteSegmentsForRouteNbr(QString route)
     QList<SegmentData> myArray;
 //    try
 //    {
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "Select a.route, n.name, a.startDate, a.endDate, lineKey,"
               " companyKey, tractionType, direction, next, prev, trackUsage,"
@@ -5957,9 +6030,10 @@ QList<RouteData> SQL::getRouteDataForRouteName(qint32 route, QString name)
     RouteData rd = RouteData();
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         QString commandText;
         if(config->currConnection->servertype() == "MySql")
         {
@@ -6049,9 +6123,10 @@ QDate SQL::getRoutesEarliestDateForSegment(qint32 route, QString name, qint32 Se
     QDate dt = QDate().fromString(date, "yyyy/MM/dd");
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "Select Min(r.startDate)"
                               " from Routes r"
@@ -6095,9 +6170,10 @@ bool SQL::recalculateSegmentDates(SegmentInfo* si)
         return false;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "Select min(startDate), max(endDate) from Routes "
                               "where lineKey = " + QString::number(si->segmentId());
@@ -6143,9 +6219,10 @@ QDate SQL::getRoutesNextDateForSegment(qint32 route, QString name, qint32 Segmen
     QDate dt = QDate().fromString(date, "yyyy/MM/dd");
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "Select min(startDate) from Routes r"
                               " join RouteName on n.routeId = r.routeId"
@@ -6204,9 +6281,10 @@ bool SQL::doesRouteSegmentExist(qint32 route, QString name, qint32 segmentId, QD
     }
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "select count(*) from Routes r"
                               " join RouteName n on r.routeid = n.routeId"
@@ -6275,9 +6353,10 @@ QList<SegmentInfo> SQL::getSegmentsInSameDirection(SegmentInfo siIn, bool revers
 
   try
   {
+      QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
     if(!dbOpen(db))
         throw Exception(tr("database not open: %1").arg(__LINE__));
-    //QSqlDatabase db = QSqlDatabase::database();
+
 
     QString commandText;
 
@@ -6355,9 +6434,10 @@ bool SQL::deleteSegment(qint32 segmentId)
     SegmentInfo si = getSegmentInfo(segmentId);
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         beginTransaction("deleteSegment");
 
@@ -6428,9 +6508,10 @@ qint32 SQL::getDefaultCompany(qint32 route, QString date)
     int companyKey = -1;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText;
         if(config->currConnection->servertype() == "MySql")
@@ -6476,9 +6557,10 @@ LatLng SQL::getPointInfo(qint32 pt, qint32 SegmentId)
     try
     {
 
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         // Retrieve the current start location for pt-1 to calculate the length
         QString commandText = "Select StartLat, StartLon from [dbo].[LineSegment] where SegmentId = " +         QString("%1").arg(SegmentId) + " and sequence = " + QString("%1").arg(pt);
         QSqlQuery query = QSqlQuery(db);
@@ -6513,9 +6595,10 @@ qint32 SQL::addCompany(QString name, qint32 route, QString startDate, QString en
     int rows = 0;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText;
         if(config->currConnection->servertype() == "MySql")
@@ -6606,9 +6689,10 @@ qint32 SQL::addSegment(QString Description, QString OneWay, int tracks, RouteTyp
 
  try
  {
- if(!dbOpen(db))
-    throw Exception(tr("database not open: %1").arg(__LINE__));
- //QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+    if(!dbOpen(db))
+        throw Exception(tr("database not open: %1").arg(__LINE__));
+
  beginTransaction("addSegment");
 
  QString commandText = "Select SegmentId from Segments where Description = '" + Description
@@ -6722,9 +6806,10 @@ qint32 SQL::addSegment(SegmentInfo si, bool *bAlreadyExists, bool forceInsert)
      qDebug() << tr("warning! segment %1 invalid doubledate").arg(si.segmentId());
  try
  {
- if(!dbOpen(db))
-    throw Exception(tr("database not open: %1").arg(__LINE__));
- //QSqlDatabase db = QSqlDatabase::database();
+     QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+     if(!dbOpen(db))
+        throw Exception(tr("database not open: %1").arg(__LINE__));
+
  beginTransaction("addSegment");
 
  QString commandText = "Select SegmentId from Segments where Description = '" + si._description
@@ -6851,9 +6936,10 @@ qint32 SQL::splitSegment(qint32 pt, qint32 segmentId, QString oldDesc, QString o
 int rows = 0, newSegmentId=-1;
 try
 {
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  if(!dbOpen(db))
     throw Exception(tr("database not open: %1").arg(__LINE__));
- //QSqlDatabase db = QSqlDatabase::database();
+
  QSqlQuery query = QSqlQuery(db);
  QString commandText;
  bool bQuery;
@@ -7224,9 +7310,10 @@ RouteData SQL::getRouteDataForRouteDates(qint32 route, QString name, qint32 segm
     RouteData rd;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "SELECT a.Route,n.Name,a.StartDate,a.EndDate,LineKey,CompanyKey,tractionType,"
                               " a.direction, normalEnter, normalLeave, reverseEnter, reverseLeave, "
@@ -7297,9 +7384,10 @@ bool SQL::deleteRoute(qint32 route, int routeId, QString startDate, QString endD
     int rows = 0;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         beginTransaction("deleteRoute");
 
         QString commandText;
@@ -7347,7 +7435,8 @@ bool SQL::deleteRoute(SegmentData sd)
 {
  bool ret = true;
  int rows = 0;
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
  QString commandText;
  if(config->currConnection->servertype() != "MsSql")
@@ -7388,7 +7477,8 @@ bool SQL::deleteRoute(RouteData rd)
 {
  bool ret = true;
  int rows = 0;
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
  QString commandText;
  if(config->currConnection->servertype() != "MsSql")
@@ -7461,7 +7551,8 @@ bool SQL::modifyRouteDate(RouteData* rd, bool bStartDate, QDate dt/*, QString na
 bool SQL::modifyCurrentRoute(RouteData* rd, bool bStartDate, QDate dt)
 {
  bool ret = false;
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QList<SegmentData*> segmentlist = getSegmentDatasForDate(rd->route(), rd->routeName(),rd->companyKey(), rd->endDate());
  QString commandText;
  int rows;
@@ -7546,7 +7637,8 @@ QString SQL::getNextRouteName(QDate dt)
 
 bool SQL::insertRouteSegment(SegmentData sd, bool bNotify)
 {
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QSqlQuery query = QSqlQuery(db);
  QString commandText;
  if(!sd._dateBegin.isValid() || !sd._dateEnd.isValid() || sd._dateEnd < sd._dateBegin)
@@ -7620,7 +7712,8 @@ QList<SegmentData*> SQL::getConflictingRouteSegments(qint32 route, QString name,
     {
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
         QString commandText = "Select a.route, n.name, a.startDate, a.endDate, "
                               "lineKey, tractionType, a.companyKey, a.direction,"
@@ -7819,9 +7912,10 @@ bool SQL::isRouteUsedOnDate(qint32 route, qint32 segmentId,  QString date)
     int count = 0;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "select count(*) from Routes "
                               "where route = " + QString("%1").arg(route)
@@ -7859,9 +7953,10 @@ QList<StationInfo> SQL::getStations(QString alphaRoute, QDate date)
 {
  bool bZeroRoutes = false;
  QList<StationInfo> myArray;
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  if(!dbOpen(db))
     throw Exception(tr("database not open: %1").arg(__LINE__));
- //QSqlDatabase db = QSqlDatabase::database();
+
  QString commandText;
  QSqlQuery query = QSqlQuery(db);
  StationInfo sti;
@@ -7906,9 +8001,10 @@ QList<StationInfo> SQL::getStations(QString alphaRoute, QDate date)
 QList<StationInfo> SQL::getStations()
 {
  QList<StationInfo> myArray;
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  if(!dbOpen(db))
      throw Exception(tr("database not open: %1").arg(__LINE__));
- //QSqlDatabase db = QSqlDatabase::database();
+
 
  QString commandText;
  if(config->currConnection->servertype() != "MsSql")
@@ -7964,9 +8060,10 @@ CommentInfo SQL::getComments(qint32 infoKey)
     ci.tags = "";
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "SELECT commentKey, comments, tags, routeList, jRouteList, latitude, longitude "
                               "from Comments where commentKey = " + QString("%1").arg(infoKey);
@@ -8024,9 +8121,10 @@ QList<CommentInfo>* SQL::getOrphanComments()
                             "where jRouteList in ('','[]') ";
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
@@ -8085,9 +8183,10 @@ QList<CommentInfo>* SQL::commentByText(QString text)
                             "where comments ='" + text.replace("'","\''") + "'";
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
@@ -8144,9 +8243,10 @@ QList<CommentInfo>* SQL::getComments()
     QString commandText = "select commentKey, comments, tags, routeList, jRoutelist, date, latitude, longitude from comments ";
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
@@ -8213,9 +8313,10 @@ int SQL::addComment(QString comments, QString tags, QList<int> routesUsed)
 
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         beginTransaction("addComment");
 
         //if(config->currConnection->servertype() != "MySql")
@@ -8305,9 +8406,10 @@ bool SQL::addComment(CommentInfo* ci)
     }
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         beginTransaction("addComment");
 
         //if(config->currConnection->servertype() != "MySql")
@@ -8392,9 +8494,10 @@ bool SQL::updateComment(qint32 infoKey, QString comments, QString tags, QList<in
     bool rtn = false;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         //if(config->currConnection->servertype() != "MySql")
         {
             comments = comments.replace(up, "&up");
@@ -8458,7 +8561,8 @@ bool SQL::updateComment(CommentInfo info, bool force)
     // if(edit->toPlainText().isEmpty())
     //         return false;
 
-    //QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
     if(!dbOpen(db))
         throw Exception(tr("database not open: %1").arg(__LINE__));
     QString commandText = "update comments set tags = '"  + info.tags + "',"
@@ -8499,9 +8603,10 @@ bool SQL::deleteComment(qint32 infoKey)
 
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "delete from Comments where commentKey = " + QString("%1").arg(infoKey);
         QSqlQuery query = QSqlQuery(db);
@@ -8532,9 +8637,10 @@ bool SQL::deleteComment(qint32 infoKey)
 QDate SQL::getFirstCommentDate(qint32 route, QDate date, qint32 companyKey)
 {
  QDate result = date;
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  if(!dbOpen(db))
      throw Exception(tr("database not open: %1").arg(__LINE__));
- //QSqlDatabase db = QSqlDatabase::database();
+
 
  QString commandText = "select min(date) from RouteComments where route in(0," + QString("%1").arg(route)
    + ") and companyKey = " + QString("%1").arg(companyKey)
@@ -8582,9 +8688,10 @@ RouteComments SQL::getRouteComment(qint32 route, QDate date, qint32 commentKey)
     rc.companyKey = -1;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = QString("SELECT rc.commentKey, c.commentKey, rc.companyKey, comments, tags, rc.latitude, "
             "rc.longitude, a.routeAlpha, rc.routeId "
@@ -8655,9 +8762,10 @@ QList<RouteComments*> SQL::getRouteComments(qint32 commentKey)
     QList<RouteComments*> list;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = QString("SELECT rc.commentKey, c.commentKey, rc.companyKey, comments, tags, rc.latitude, "
             "rc.longitude, n.name, a.routeAlpha "
@@ -8724,9 +8832,10 @@ QList<RouteComments*> SQL::listRouteComments()
     QList<RouteComments*> list;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "select route, rc.date, rc.commentKey, c.tags, c.routeList, c.comments, companyKey, rc.latitude, rc.longitude, "
                               "c.date, c.jRouteList "
@@ -8781,9 +8890,10 @@ QList<RouteComments*> SQL::listInvalidRouteComments()
     QList<RouteComments*> list;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "select route, date, commentKey,  companyKey, latitude, longitude "
                               "from RouteComments where commentKey not in (select c.commentKey from comments c)";
@@ -8830,9 +8940,10 @@ bool SQL::updateRouteComment(RouteComments* rc)
     QString commandText;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         QSqlQuery query = QSqlQuery(db);
         if(!isTransactionActive())
             beginTransaction("updaterouteComment");
@@ -8937,9 +9048,10 @@ bool SQL::addRouteComment(RouteComments rc)
     QString commandText;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         QSqlQuery query = QSqlQuery(db);
         commandText = QString("insert into RouteComments (route, date, commentKey, companyKey,"
                                           " latitude, longitude, routeId) "
@@ -8977,9 +9089,10 @@ int SQL::countCommentUsers(int commentKey)
  QString commandText;
  try
  {
+     QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
      if(!dbOpen(db))
          throw Exception(tr("database not open: %1").arg(__LINE__));
-     //QSqlDatabase db = QSqlDatabase::database();
+
      QSqlQuery query = QSqlQuery(db);
      commandText = "select count(*) from Stations where infoKey = " + QString::number(commentKey);
      bQuery = query.prepare(commandText);
@@ -9045,9 +9158,10 @@ bool SQL::deleteRouteComment(RouteComments rc)
     QString commandText;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         QSqlQuery query = QSqlQuery(db);
 
         //beginTransaction("deleteRouteComment");
@@ -9095,9 +9209,10 @@ bool SQL::deleteRouteCommenUsingCommentKey(int commentKey)
     QString commandText;
     try
     {
+                                                          QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         QSqlQuery query = QSqlQuery(db);
 
         //beginTransaction("deleteRouteComment");
@@ -9157,9 +9272,10 @@ RouteComments SQL::getNextRouteComment(qint32 route, QDate date, qint32 commentK
     rc.companyKey = companyKey;
     try
     {
+        QSqlDatabase  db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         commandText = "SELECT rc.commentKey, comments, tags, date, rc.companyKey, n.name,"
                 " a.routeAlpha, rc.latitude, rc.longitude, c.routeList, n.routeId "
@@ -9244,9 +9360,10 @@ RouteComments SQL::getPrevRouteComment(qint32 route, QDate date, qint32 commentK
     rc.ci.tags = "";
     try
     {
+                                                          QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "SELECT rc.commentKey, comments, tags, date, rc.companyKey, n.name,"
                 " a.routeAlpha, rc.latitude, rc.longitude, c.routeList, n.routeId "
@@ -9403,9 +9520,10 @@ CommentInfo SQL::getComment(qint32 commentKey, int pos)
     CommentInfo ci;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText;
         if(pos >0)
@@ -9517,9 +9635,10 @@ CommentInfo SQL::getComment(QString aRoute, QDate date, int pos)
 
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText;
         // if(pos >0)
@@ -9594,9 +9713,11 @@ QList<CommentInfo>* SQL::commentsForAlphaRoute(QString alphaRoute, QDate date, i
     QList<CommentInfo>* list = new QList<CommentInfo>();
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
+
 
         QString commandText;
 
@@ -9676,7 +9797,8 @@ QList<CommentInfo>* SQL::getRouteCommentst(qint32 route, QDate date, int* currIx
     {
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
         QString commandText = "SELECT rc.commentKey, comments, tags, rc.date, rc.companyKey, n.name,"
                 " a.routeAlpha, rc.latitude, rc.longitude, c.routeList, n.routeId, c.date "
@@ -9762,7 +9884,8 @@ qint32 SQL::addStation(QString name, LatLng location, qint32 lineSegmentId, Rout
    {
        if(!dbOpen(db))
            throw Exception(tr("database not open: %1").arg(__LINE__));
-       //QSqlDatabase db = QSqlDatabase::database();
+       QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
 
        QString commandText = " insert into Stations (name, latitude, longitude, lineSegmentId, routeType) values ('" + name + "', " + QString("%1").arg(location.lat(),0,'f',8) + "," + QString("%1").arg(location.lon(),0,'f',8) + "," + QString("%1").arg(lineSegmentId) + "," + QString("%1").arg((int)type)+ ") ";
@@ -9819,7 +9942,8 @@ qint32 SQL::addStation(QString name, LatLng location, qint32 lineSegmentId, QStr
    {
        if(!dbOpen(db))
            throw Exception(tr("database not open: %1").arg(__LINE__));
-       //QSqlDatabase db = QSqlDatabase::database();
+       QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
 
        QString commandText = " insert into Stations (name, latitude, longitude, SegmentId, " \
@@ -9875,9 +9999,11 @@ qint32 SQL::addStation(StationInfo sti)
    int rows = -1;
    try
    {
+       QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
        if(!dbOpen(db))
            throw Exception(tr("database not open: %1").arg(__LINE__));
-       //QSqlDatabase db = QSqlDatabase::database();
+
+
 
        QString commandText = "select stationKey from Stations where name ='"
          + sti.stationName + "' and startDate ='" + sti.startDate.toString("yyyy/MM/dd")
@@ -9965,9 +10091,10 @@ bool SQL::deleteStation(qint32 stationKey)
     int rows = 0;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
 
         QString commandText = "delete from Stations where stationKey = " + QString("%1").arg(stationKey);
         QSqlQuery query = QSqlQuery(db);
@@ -9998,7 +10125,8 @@ bool SQL::updateRoute(qint32 route, QString name, QString endDate, qint32 segmen
   throw IllegalArgumentException(tr("invalid date '%1'").arg(endDate));
  bool ret = false;
  int rows = 0;
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 
  QString commandText = "update Routes set next = " + QString("%1").arg(next)
              + ", trackUsage  = '" + trackUsage + "'"
@@ -10027,7 +10155,8 @@ bool SQL::updateRoute(SegmentData osd, SegmentData sd, bool notify, bool ignoreE
 {
  bool ret = false;
  int rows = 0;
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  // changes to lineKey not possible!
  if(sd.route() < 1 || osd.segmentId() != sd.segmentId())
  {
@@ -10155,7 +10284,8 @@ int SQL::updateRouteDate(int segmentId, QString startDate, QString endDate)
  if(dateEnd.isNull() || !dateEnd.isValid() || dateEnd < dateStart)
     throw IllegalArgumentException(tr("invalid end date '%1'").arg(endDate));
 
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QString commandText = "Update Routes set startDate = '" + startDate
              + "', endDate='" + endDate+ "',"
              "lastUpdate=CURRENT_TIMESTAMP"
@@ -10183,7 +10313,8 @@ int SQL::updateRouteSegment(int segmentId, QString startDate, QString endDate, i
  if(!QDate::fromString(startDate, "yyyy/MM/dd").isValid() || !QDate::fromString(endDate, "yyyy/MM/dd").isValid())
      throw IllegalArgumentException("invalid dates");
 
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QString commandText = "Update Routes set startDate = '" + startDate
              + "', endDate='" + endDate+ "'"
              + ", linekey = " +QString::number(newSegmentId)
@@ -10267,7 +10398,8 @@ QStringList SQL::showPostgreSQLDatabases(QSqlDatabase db)
 bool SQL::loadSqlite3Functions(QSqlDatabase db)
 {
  bool ret=false;
-  //QSqlDatabase db = QSqlDatabase::database();
+  QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
   QVariant v = db.driver()->handle();
   sqlite3 *handle = NULL;
   if (v.isValid() && strcmp(v.typeName(), "sqlite3*") == 0)
@@ -10468,7 +10600,8 @@ bool SQL::loadSqlite3Functions(QSqlDatabase db)
 
 bool SQL::checkSegments()
 {
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QSqlQuery query = QSqlQuery(db);
  QString commandText;
  bool bQuery;
@@ -10529,7 +10662,7 @@ bool SQL::checkSegments()
 // Check table for column name
 bool SQL::doesColumnExist(QString table, QString column)
 {
- //QSqlDatabase db = QSqlDatabase();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  QSqlQuery query = QSqlQuery(db);
  QString commandText;
  bool bQuery;
@@ -10756,7 +10889,7 @@ bool SQL::updateTractionType(qint32 tractionType, QString description, QString d
 // check tables to see if alterations need to be made
 void SQL::checkTables(QSqlDatabase db)
 {
-    this->db = db;
+    //this->db = db;
  QDir rsrc(":/sql");
  QList<QFileInfo> sqlfiles = rsrc.entryInfoList();
  // check for presence of Parameters table.
@@ -10771,8 +10904,8 @@ void SQL::checkTables(QSqlDatabase db)
 
   setForeignKeyCheck(0);
   QList<FKInfo> fkList;
-  //if(config->currConnection->servertype() == "Sqlite")
-   fkList = getForeignKeyInfo(db,config->currConnection);
+   //fkList = getForeignKeyInfo(db,config->currConnection);
+
 
   //tableList = getTableList(db, config->currConnection->servertype());
   tableList = db.tables();
@@ -11482,10 +11615,11 @@ bool SQL::replaceSegmentsInRoutes(QStringList oldSegments, QStringList newSegmen
 QList<FKInfo> SQL::getForeignKeyInfo(QSqlDatabase db, Connection* c, QString table)
 {
  QList<FKInfo> list;
- //QSqlDatabase db = QSqlDatabase();
  QSqlQuery query = QSqlQuery(db);
-
  QString commandText;
+
+ QString upperTable = table.toUpper();
+
  if(c->servertype() == "Sqlite")
  {
   if(table.isEmpty())
@@ -11514,7 +11648,6 @@ QList<FKInfo> SQL::getForeignKeyInfo(QSqlDatabase db, Connection* c, QString tab
  }
  else if(c->servertype() == "MsSql")
  {
-  // MsSql
      commandText = "SELECT  obj.name AS FK_NAME, "
         "     sch.name AS [schema_name], "
         "     tab1.name AS [table], "
@@ -11535,6 +11668,35 @@ QList<FKInfo> SQL::getForeignKeyInfo(QSqlDatabase db, Connection* c, QString tab
         " INNER JOIN sys.columns col2"
         "     ON col2.column_id = referenced_column_id AND col2.object_id = tab2.object_id";
  }
+ else if(c->servertype() == "MimerSql")
+ {
+     // Standard ANSI query to resolve foreign key mappings in Mimer SQL
+     commandText = "SELECT "
+                   "  f_kcu.TABLE_NAME, "         // Index 0: Local Source Table
+                   "  f_kcu.COLUMN_NAME, "        // Index 1: Local Source Column (From)
+                   "  r_kcu.TABLE_NAME, "         // Index 2: Referenced Foreign Table (To Table)
+                   "  r_kcu.COLUMN_NAME, "        // Index 3: Referenced Foreign Column (To Column)
+                   "  f_kcu.CONSTRAINT_NAME, "    // Index 4: Constraint Identity Name
+                   "  f_kcu.ORDINAL_POSITION "    // Index 5: Key sequence position tracking
+                   "FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc "
+                   "JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc "
+                   "  ON tc.CONSTRAINT_SCHEMA = rc.CONSTRAINT_SCHEMA "
+                   "  AND tc.CONSTRAINT_NAME = rc.CONSTRAINT_NAME "
+                   "JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE f_kcu "
+                   "  ON rc.CONSTRAINT_SCHEMA = f_kcu.CONSTRAINT_SCHEMA "
+                   "  AND rc.CONSTRAINT_NAME = f_kcu.CONSTRAINT_NAME "
+                   "JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE r_kcu "
+                   "  ON rc.UNIQUE_CONSTRAINT_SCHEMA = r_kcu.CONSTRAINT_SCHEMA "
+                   "  AND rc.UNIQUE_CONSTRAINT_NAME = r_kcu.CONSTRAINT_NAME "
+                   "  AND f_kcu.ORDINAL_POSITION = r_kcu.ORDINAL_POSITION "
+                   "WHERE tc.CONSTRAINT_TYPE = 'FOREIGN KEY' "
+                   "  AND tc.TABLE_SCHEMA = CURRENT_USER ";
+
+     if (!table.isEmpty()) {
+         commandText.append(" AND f_kcu.TABLE_NAME = '" + upperTable + "'");
+     }
+     commandText.append(" ORDER BY f_kcu.TABLE_NAME, f_kcu.CONSTRAINT_NAME, f_kcu.ORDINAL_POSITION;");
+ }
  else
  {
     commandText = "SELECT\
@@ -11554,6 +11716,12 @@ QList<FKInfo> SQL::getForeignKeyInfo(QSqlDatabase db, Connection* c, QString tab
          AND tc.table_schema='public'\
          AND tc.table_name='" + table +"'";
  }
+
+ // Force forward-only for Mimer SQL to stabilize the system cursor channel
+ if (c->servertype() == "MimerSql") {
+     query.setForwardOnly(true);
+ }
+
  if(!query.exec(commandText))
  {
      QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
@@ -11562,6 +11730,7 @@ QList<FKInfo> SQL::getForeignKeyInfo(QSqlDatabase db, Connection* c, QString tab
      SQLERROR(std::move(query));
      throw SQLException(error.text() + " " + errCommand);
  }
+
  int seq = 0;
  while(query.next())
  {
@@ -11600,10 +11769,29 @@ QList<FKInfo> SQL::getForeignKeyInfo(QSqlDatabase db, Connection* c, QString tab
      continue;
    }
   }
+  else if(c->servertype() == "MimerSql")
+  {
+   // Parse structural properties strictly by positional index to keep ODBC channel clean
+   info.name = query.value(0).toString();  // Local table name context
+   info.from = query.value(1).toString();  // Origin source matching field
+   info.table = query.value(2).toString(); // Target mapping table entity
+   info.to = query.value(3).toString();    // Destination key field reference
+   info.seq = query.value(5).toInt();      // Constraint element ordering position
+
+   // Parse or isolate an index hash ID from the constraint identifier string
+   QString cn = query.value(4).toString();
+   int ibfkIdx = cn.indexOf("ibfk_");
+   if(ibfkIdx != -1) {
+       info.id = cn.mid(ibfkIdx + 5).toInt();
+   } else {
+       info.id = seq++;
+   }
+  }
   list.append(info);
  }
  return list;
 }
+
 #if 0
 QMap<int,RouteName*>* SQL::routeNameList()
 {
@@ -11798,9 +11986,11 @@ SegmentInfo SQL::convertSegment(int segmentId, int tracks)
  SegmentInfo si1;
  try
  {
+  QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
   if(!dbOpen(db))
       throw Exception(tr("database not open: %1").arg(__LINE__));
-  //QSqlDatabase db = QSqlDatabase::database();
+
   QString commandText;
   QString distanceWhere;
 #ifndef NO_UDF
@@ -11900,7 +12090,8 @@ SegmentInfo SQL::convertSegment(int segmentId, int tracks)
 }
 
 int SQL::nextRouteNumberInRange(int lowRange, int highRange){
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QString commandText = "select max(route) from AltRoute where route >= "
    + QString::number(lowRange) + " and route < " +QString::number(highRange);
  QSqlQuery query = QSqlQuery(db);
@@ -11927,7 +12118,8 @@ int SQL::nextRouteNumberInRange(int lowRange, int highRange){
 
 bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute, QString routePrefix)
 {
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QString commandText;
  QSqlQuery query = QSqlQuery(db);
  //int oldRouteNumber = -1;
@@ -12057,7 +12249,8 @@ bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute, QString routePrefix
 // QList<RouteComments> SQL::commentsForRoute(int route)
 // {
 
-//  //QSqlDatabase db = QSqlDatabase::database();
+//  QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
 //  QString commandText = "select route, date, commentKey, companyKey, latitude, longitude "
 //                        "from RouteComments where route = " +QString::number(route);
 //  QSqlQuery query = QSqlQuery(db);
@@ -12087,7 +12280,8 @@ bool SQL::renumberRoute(QString oldAlphaRoute, int newRoute, QString routePrefix
 
 QList<TerminalInfo> SQL::terminalsForRoute(int route)
 {
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QString commandText = "select route, name, startDate, endDate,startSegment, startWhichEnd,"
                        " endSegment, endWhichEnd"
                        " from Terminals where route = " + QString::number(route);
@@ -12120,7 +12314,8 @@ QList<TerminalInfo> SQL::terminalsForRoute(int route)
 
 bool SQL::updateRouteForStations(int oldRoute, int newRoute)
 {
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QString commandText = "update Stations set route = " + QString::number(newRoute)
                        +",lastUpdate=CURRENT_TIMESTAMP  "
                         "where route = "
@@ -12140,7 +12335,8 @@ bool SQL::updateRouteForStations(int oldRoute, int newRoute)
 
 bool SQL::deleteTerminalInfo(int route)
 {
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QString commandText = "delete from terminals where route = " + QString::number(route);
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
@@ -12158,7 +12354,8 @@ bool SQL::deleteTerminalInfo(int route)
 
 bool SQL::doesFunctionExist(QString name, QString serverType)
 {
-    //QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
     QString commandText;
     if(serverType == "MsSql")
     commandText = QString("SELECT name,type "
@@ -12216,7 +12413,8 @@ bool SQL::doesFunctionExist(QString name, QString serverType)
 QStringList SQL::listViews()
 {
  QStringList list;
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QString commandText;
  if(config->currConnection->servertype() == "MySql")
   commandText = QString("SHOW FULL TABLES IN %1 WHERE TABLE_TYPE LIKE 'VIEW'")
@@ -12252,7 +12450,8 @@ QStringList SQL::listColumns(QString table, QString serverType, QSqlDatabase db,
  if(types)
    types->clear();
  //Connection* c = config->currConnection;
- //QSqlDatabase db = QSqlDatabase::database();
+ //QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QString commandText;
  if(serverType == "Sqlite")
   commandText = QString("pragma table_info('%1')").arg(table);
@@ -12261,6 +12460,9 @@ QStringList SQL::listColumns(QString table, QString serverType, QSqlDatabase db,
  else if(serverType == "PostgreSQL")
   commandText = QString("select column_name, data_type, character_maximum_length, column_default, is_nullable\
                         from INFORMATION_SCHEMA.COLUMNS where table_name = '%1';").arg(table);
+  else if( serverType == "MimerSql")
+   commandText = QString("select column_name, data_type, character_maximum_length, column_default, is_nullable\
+                         from INFORMATION_SCHEMA.COLUMNS where table_name = '%1';").arg(table);
  else // SQL Server
   commandText = "EXEC sp_help " + table;
  //processALine(txt, v);
@@ -12288,13 +12490,13 @@ QStringList SQL::listColumns(QString table, QString serverType, QSqlDatabase db,
    if(types)
        types->append(query.value("Type").toString());
   }
-  else if(serverType == "PostgreSQL")
+  else if(serverType == "PostgreSQL" ||serverType == "MimerSql")
   {
    //PostgreSQL extra colums start with 'specific_catalog'
    if(query.value("column_name").toString()== "rowid")
        break;
-   if(query.value("column_name").toString()== "specific_catalog")
-       break;
+   if(query.value("column_name").toString().compare("specific_catalog",Qt::CaseInsensitive)==0)
+       break; // dont get any more
 
    columns.append(query.value("column_name").toString());
    if(types)
@@ -12313,23 +12515,47 @@ QStringList SQL::listColumns(QString table, QString serverType, QSqlDatabase db,
 QStringList SQL::listPkColumns(QString table, QString serverType, QSqlDatabase db, QStringList* types)
 {
  QStringList columns;
-// Connection* c = config->currConnection;
-// //QSqlDatabase db = QSqlDatabase::database();
  QString commandText;
+
+ // Force uppercase for system catalog compatibility
+ QString upperTable = table.toUpper();
+
  if(serverType == "Sqlite")
   commandText = QString("pragma table_info('%1')").arg(table);
  else if(serverType == "MySql")
   commandText = "describe " + table;
- else // SQL Server
+ else if(serverType == "MimerSql")
  {
-  //commandText = "EXEC sp_help " + table;
-     commandText = "select *"
-             " from INFORMATION_SCHEMA.COLUMNS"
-             " where TABLE_NAME='" + table + "'";
+  // Querying the correct constraint schema mapping tables for Mimer SQL
+  commandText = QString(
+      "SELECT k.COLUMN_NAME, c.DATA_TYPE "
+      "FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS t "
+      "JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE k "
+      "  ON t.CONSTRAINT_SCHEMA = k.CONSTRAINT_SCHEMA "
+      "  AND t.CONSTRAINT_NAME = k.CONSTRAINT_NAME "
+      "JOIN INFORMATION_SCHEMA.COLUMNS c "
+      "  ON k.TABLE_SCHEMA = c.TABLE_SCHEMA "
+      "  AND k.TABLE_NAME = c.TABLE_NAME "
+      "  AND k.COLUMN_NAME = c.COLUMN_NAME "
+      "WHERE t.CONSTRAINT_TYPE = 'PRIMARY KEY' "
+      "  AND t.TABLE_SCHEMA = CURRENT_USER "
+      "  AND t.TABLE_NAME = '%1' "
+      "ORDER BY k.ORDINAL_POSITION;").arg(upperTable);
+ }
+ else // SQL Server / PostgreSQL fallback
+ {
+  commandText = "select COLUMN_NAME, DATA_TYPE"
+                " from INFORMATION_SCHEMA.COLUMNS"
+                " where TABLE_NAME='" + table + "'";
  }
 
- //processALine(txt, v);
  QSqlQuery query = QSqlQuery(db);
+
+ // Force forward-only to guarantee Mimer's ODBC driver streams without dropping cursors
+ if (serverType == "MimerSql") {
+     query.setForwardOnly(true);
+ }
+
  bool bQuery = query.exec(commandText);
  if(!bQuery)
  {
@@ -12339,9 +12565,10 @@ QStringList SQL::listPkColumns(QString table, QString serverType, QSqlDatabase d
      SQLERROR(std::move(query));
      throw SQLException(error.text() + " " + errCommand);
  }
+
  while(query.next())
  {
-  if(serverType== "Sqlite")
+  if(serverType == "Sqlite")
   {
    if(query.value("pk").toUInt() > 0)
     columns.append(query.value("name").toString());
@@ -12350,12 +12577,20 @@ QStringList SQL::listPkColumns(QString table, QString serverType, QSqlDatabase d
   }
   else if(serverType == "MySql")
   {
-   if(query.value("Key").toString()== "PRI")
+   if(query.value("Key").toString() == "PRI")
     columns.append(query.value("Field").toString());
    if(types)
        types->append(query.value("Type").toString());
   }
-  else // SQL Server
+  else if(serverType == "MimerSql")
+  {
+   // Safe, sequential left-to-right extraction by column index (0 and 1)
+   // to eliminate ODBC duplicate or out-of-order column data extraction errors.
+   columns.append(query.value(0).toString());
+   if(types)
+       types->append(query.value(1).toString());
+  }
+  else // SQL Server, PostgreSQL
   {
    columns.append(query.value("COLUMN_NAME").toString());
    if(types)
@@ -12364,11 +12599,11 @@ QStringList SQL::listPkColumns(QString table, QString serverType, QSqlDatabase d
  }
  return columns;
 }
-
 // create SegmentData from RouteView query
 QList<SegmentData*>  SQL::segmentDataListFromView(QString where)
 {
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
  QString commandText = QString("select * from RouteView %1").arg(where);
  QSqlQuery query = QSqlQuery(db);
  QList<SegmentData*> list;
@@ -12464,9 +12699,11 @@ bool SQL::getForeignKeyCheck()
  {
   if(config->currConnection->servertype() != "Sqlite")
    return false;
+  QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
      if(!dbOpen(db))
          throw Exception(tr("database not open: %1").arg(__LINE__));
-     //QSqlDatabase db = QSqlDatabase::database();
+
 
      QString commandText = "PRAGMA foreign_keys";
      QSqlQuery query = QSqlQuery(db);
@@ -12501,12 +12738,13 @@ void SQL::setForeignKeyCheck(bool b)
 {
  try
  {
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
      if(!dbOpen(db))
          throw Exception(tr("database not open: %1").arg(__LINE__));
      if(config->currConnection->servertype() != "Sqlite")
          return;
 
-     //QSqlDatabase db = QSqlDatabase::database();
+
 
      QString commandText = "PRAGMA foreign_keys="+ QString(b?"1":"0");
      QSqlQuery query = QSqlQuery(db);
@@ -12544,6 +12782,7 @@ int SQL::displaySqlError(QSqlQuery query, QMessageBox::StandardButtons buttons, 
  if(buttons == QMessageBox::NoButton)
  {
      box.addButton(QMessageBox::Abort);
+     box.addButton(QMessageBox::Cancel);
      box.addButton(QMessageBox::Ok);
  }
  int b = box.exec();
@@ -12642,9 +12881,11 @@ QList<RouteData> SQL:: checkRouteName(QString name, QDate startDate, QDate endDa
    QString commandText;
    try
    {
+       QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
        if(!dbOpen(db))
            throw Exception(tr("database not open: %1").arg(__LINE__));
-       //QSqlDatabase db = QSqlDatabase::database();
+
            commandText = "select distinct r.startDate, r.endDate, n.name, r.route, "
                          "r.companyKey, tractionType, "
                          "a.routeAlpha, r.routeid "
@@ -12701,9 +12942,10 @@ QDate SQL::getNextStartOrEndDate(int route, QDate dt, int segmentId, bool bStart
     QDate date;
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         if(segmentId > 0)
         {
             if(bStart)
@@ -12765,9 +13007,10 @@ QList<SegmentData*> SQL::getConflictingRouteSegments(RouteData rd)
     QString endDate = rd.endDate().toString("yyyy/MM/dd");
     try
     {
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
         if(!dbOpen(db))
             throw Exception(tr("database not open: %1").arg(__LINE__));
-        //QSqlDatabase db = QSqlDatabase::database();
+
         QString commandText = "Select a.route, n.name, a.startDate, a.endDate, "
                               "lineKey, tractionType, companyKey, a.direction,"
                               " normalEnter, normalLeave, reverseEnter, reverseLeave,"
@@ -13049,7 +13292,8 @@ qint32 SQL::addRouteName(RouteInfo ri,bool *bAlreadyExists)
     int rows = 0;
     int routeId = -1;
     *(bAlreadyExists) = false;
-    //QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
     if(!dbOpen(db))
         throw Exception(tr("database not open: %1").arg(__LINE__));
     QString commandText = "Select RouteId from RouteName where name = '" + ri.routeName +"'";
@@ -13115,7 +13359,8 @@ qint32 SQL::addRouteName(RouteInfo ri,bool *bAlreadyExists)
 
 bool SQL::insertRouteName(RouteInfo ri)
 {
-    //QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
     if(!dbOpen(db))
         throw Exception(tr("database not open: %1").arg(__LINE__));
     QSqlQuery query = QSqlQuery(db);
@@ -13139,7 +13384,8 @@ bool SQL::insertRouteName(RouteInfo ri)
 RouteInfo SQL::getRouteName(int routeId)
 {
     RouteInfo ri;
-    //QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
     if(!dbOpen(db))
         throw Exception(tr("database not open: %1").arg(__LINE__));
     QString commandText = "Select name "
@@ -13166,7 +13412,8 @@ RouteInfo SQL::getRouteName(int routeId)
 int SQL::getRouteId(QString routeName)
 {
     int routeId =-1;
-    //QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
     if(!dbOpen(db))
         throw Exception(tr("database not open: %1").arg(__LINE__));
     QString commandText = "Select routeId "
@@ -13193,7 +13440,8 @@ int SQL::getRouteId(QString routeName)
 
 bool SQL::updateRouteName(RouteInfo ri)
 {
-    //QSqlDatabase db = QSqlDatabase::database();
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+
     if(!dbOpen(db))
         throw Exception(tr("database not open: %1").arg(__LINE__));
     if(ri._routeId < 0)
@@ -13340,6 +13588,18 @@ bool SQL::isFunctionInstalled(QString function, QString dbType,QString dbName, Q
                 "     on p.pronamespace = n.oid "
                "where n.nspname not in ('pg_catalog', 'information_schema');";
     }
+    else if(dbType == "MimerSql")
+    {
+            // Mimer SQL stores routines cleanly in ANSI compliant tables.
+            // Convert the input tracking function name to UPPERCASE as Mimer
+            // registers unquoted dictionary object identifiers in upper case.
+            commandText = QString("SELECT ROUTINE_NAME "
+                                  "FROM INFORMATION_SCHEMA.ROUTINES "
+                                  "WHERE ROUTINE_TYPE = 'FUNCTION' "
+                                  "  AND ROUTINE_SCHEMA = '%1' "
+                                  "  AND ROUTINE_NAME = '%2';")
+                                  .arg(dbName.toUpper(), function.toUpper());
+    }
     else if(dbType == "MsSql")
     {
         commandText = QString("SELECT '%1' FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_NAME = '%1' AND ROUTINE_TYPE = 'FUNCTION'").arg(dbName);
@@ -13357,6 +13617,8 @@ bool SQL::isFunctionInstalled(QString function, QString dbType,QString dbName, Q
         QSqlError error = query.lastError();
         SQLERROR(std::move(query));
         //throw SQLException(error.text() + " " + errCommand);
+        if(errReturn == QMessageBox::Cancel)
+            throw SQLException(tr("Sql cancelled"));
         return false;
     }
 

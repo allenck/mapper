@@ -697,16 +697,16 @@ void Configuration::getSettings()
 //    nc->connectionNames.append(ncn->description());
 //    nc->connectionMap.insert(ncn->uniqueId().toString(), ncn);
            nc->addConnection(ncn);
-           nc->descrByConnection.insert(ncn, ncn->description());
+           //nc->descrByConnection.insert(ncn, ncn->description());
         }
         if(!uuidConnectionMap.contains(ncn->uniqueId()))
             uuidConnectionMap.insert(ncn->uniqueId(),ncn);
         else
         {
             ncn->setUniqueId(QUuid::createUuid());
-            nc->descrByConnection.insert(ncn, ncn->description());
+            //nc->descrByConnection.insert(ncn, ncn->description());
         }
-        nc->connectionByUuid.insert(ncn->uniqueId().toString(), ncn);
+        nc->connectionByUuid.insert(ncn->uniqueId(), ncn);
         nc->connectionByDescr.insert(ncn->description(),ncn);
       }
       settings.endArray();
@@ -1017,7 +1017,7 @@ void Configuration::getSettings2()
             ncn->setServerType(settings.value("serverType").toString());
             ncn->setCityName(settings.value("cityName", nc->name()).toString());
             ncn->setConnectionType(settings.value("connectionType", "Direct").toString());
-            //ncn->setUniqueId(QUuid::fromString(settings.value("uniqueId", QUuid::createUuid().toString()).toString()));
+            ncn->setUniqueId(QUuid::fromString(settings.value("uniqueId", QUuid::createUuid().toString()).toString()));
             if(ncn->id() == nc->curConnectionId)
                 nc->setConnectionUniqueId(uuid);
             if(ncn->connectionType() == "Local")
@@ -1099,14 +1099,15 @@ void Configuration::getSettings2()
                 //    nc->connectionMap.insert(ncn->uniqueId().toString(), ncn);
                 //nc->addConnection(ncn);
                 connectionsById.insert(ncn->id(), ncn);
-                nc->descrByConnection.insert(ncn, ncn->description());
+                //nc->descrByConnection.insert(ncn, ncn->description());
             }
+            nc->connectionByUuid.insert(ncn->uniqueId(), ncn);
             if(!uuidConnectionMap.contains(ncn->uniqueId()))
                 uuidConnectionMap.insert(ncn->uniqueId(),ncn);
             else
             {
                 ncn->setUniqueId(QUuid::createUuid());
-                nc->descrByConnection.insert(ncn, ncn->description());
+                //nc->descrByConnection.insert(ncn, ncn->description());
 
             }
             settings.endGroup();

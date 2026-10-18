@@ -39,6 +39,9 @@ public:
     bool setIdentityInsert(QString table, bool );
     void logError(QSqlQuery* query, bool ignored, int line);
     bool dropView(QString view);
+    QString getTableSeqName(QString table, QSqlDatabase db);
+    bool dropSequence(QString table, QSqlDatabase db);
+    bool viewExists(const QString &viewName, QSqlDatabase db);
 
     //bool exportAltRoute();
     bool exportAll();

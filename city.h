@@ -18,9 +18,9 @@ public:
     qint32 id =0;
  QList<Connection*> connections;
  QT_DEPRECATED QStringList connectionNames;
- QMap<QString, Connection*> connectionByUuid; // connections by Uuid
+ QMap<QUuid, Connection*> connectionByUuid; // connections by Uuid
  QMap<QString, Connection*> connectionByDescr; // connections by description
- QMap<Connection*, QString> descrByConnection; // descriptions by connection
+ //QMap<Connection*, QString> descrByConnection; // descriptions by connection
  qint32 curConnectionId = 0;
  QUuid curUuid;
  qint32 curExportConnId =-1;

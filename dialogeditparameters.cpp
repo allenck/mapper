@@ -9,7 +9,7 @@ DialogEditParameters::DialogEditParameters(QWidget *parent) :
   ui(new Ui::DialogEditParameters)
 {
  ui->setupUi(this);
- parms = SQL::instance()->getParameters();
+     SQL::instance()->getParameters(&parms);
  ui->txtName->setText(parms.city);
  ui->txtTitle->setText(parms.title);
  ui->txtLatLng->setText(QString("%1,%2").arg(parms.lat).arg(parms.lon));

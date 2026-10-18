@@ -115,6 +115,7 @@ void DialogNewConnection::onCbDbType_currentTextChanged(QString dbType)
 void DialogNewConnection::onCbconnect_currentTextChanged(QString connect)
 {
     _dbType = ui->cbDbType->currentText();
+    _connect = connect;
     ui->cbDsn->clear();
     if(connect == "Direct")
     {
@@ -132,6 +133,7 @@ void DialogNewConnection::onCbconnect_currentTextChanged(QString connect)
 
     } else if (connect == "ODBC")
     {
+        _driver = "QODBC";
         // get a list of all DSNs for server type (MySql,MsSql, PostgreSql, MimerSql)
         QList dsns = odbcUtil->dsnByType.values(_dbType);
         if(dsns.count() < 1)
@@ -181,20 +183,23 @@ void DialogNewConnection::onCbDsn_currentIndexChanged(int ix)
     ui->txtServer->setText(_dsn->server);
     ui->txtDbName->clear();
     ui->txtDescription->setText(_dsn->descr);
+    ui->txtDbName->setText(_dsn->database);
     qApp->processEvents();
 
     _dbType = ui->cbDbType->currentText();
-    if(_dbType == "MySql")
-        _driver = "QMYSQL";
-    if(_dbType == "MimerSql")
-        _driver = "QMIMER";
-    if(_dbType == "PostgreSQL")
-        _driver = "QPSQL";
+    // if(_dbType == "MySql")
+    //     _driver = "QMYSQL";
+    // if(_dbType == "MimerSql")
+    //     _driver = "QMIMER";
+    // if(_dbType == "PostgreSQL")
+    //     _driver = "QPSQL";
 
     if(_dbType == "MimerSql")
     {
         Connection::connectToCityMimer(_dsn->database, _dsn->server, "testConnection");
         db = QSqlDatabase::database("testConnection");
+        if(db.isOpen())
+            _connectString = db.databaseName();
     } else {
         if(QSqlDatabase::contains("testConnection"));
         {

@@ -66,7 +66,8 @@ bool ExportSql::openDb()
   return false;
  }
  {
-  srcDb = SQL::instance()->db;
+  //srcDb =
+     srcDb = QSqlDatabase::database(SQL::_connectionName);
   qInfo() << "source database. " << srcDb.connectionName() << " " << srcDb.driverName() << " " << srcDb.databaseName();
 
   srcConn = config->currCity->connections.at(config->currCity->curConnectionId);
@@ -76,14 +77,36 @@ bool ExportSql::openDb()
   if(!_targetDb.connectionName().contains("export"))
   {
 #if 1
-   _targetDb = QSqlDatabase::addDatabase(tgtConn->driver(), "export");
-   tgtConn->configureDb(_targetDb, tgtConn);
+    if(tgtConn->servertype()=="MimerSql")
+    {
+        QString server = tgtConn->host();
+        QMap<QString,QString> map = Connection::decodeConnectionString(tgtConn->connectString());
+        server = map.value("Node");
+        Connection::connectToCityMimer(map.value("Database"), server,"export");
+        _targetDb = QSqlDatabase::database("export");
+        tgtConn->setConnectionName(_targetDb.connectionName());
+        //tgtConn->setDb(_targetDb);
+    }
+    else
+    {
+        if (QSqlDatabase::contains("export"))
+        {
+            QSqlDatabase oldDb = QSqlDatabase::database("export");
+            if (oldDb.isOpen()) oldDb.close();
+        }
+        QSqlDatabase::removeDatabase("export");
+
+       _targetDb = QSqlDatabase::addDatabase(tgtConn->driver(), "export");
+
+        tgtConn->configureDb(_targetDb, tgtConn);
+    }
     tgtDbType = tgtConn->servertype();
     if(config->currConnection->connectString().isEmpty() && tgtConn->connectionType() != "ODBC")
     {
        _targetDb.setUserName(tgtConn->userId());
        _targetDb.setPassword(tgtConn->pwd());
     }
+    tgtConn->setConnectionName("export");
 
    if(! _targetDb.open())
    {
@@ -2773,7 +2796,8 @@ bool ExportSql::getCount(QString table, bool bDropTable)
  emit(progressMsg("Processing "+ table + " inserts/updates"));
  lastUpdated = QDateTime::fromString("1800/01/01 00:00:01","yyyy/MM/dd hh:mm:ss");
  QString commandText;
- QSqlQuery* query2 = new QSqlQuery(_targetDb);
+ QSqlDatabase db = QSqlDatabase::database(tgtConn->connectionName());
+ QSqlQuery* query2 = new QSqlQuery(db);
 
  if(!bDropTable)
  {
@@ -2832,6 +2856,7 @@ bool ExportSql::getCount(QString table, bool bDropTable)
   commandText = "select count(*) from " + table;
  else
   commandText = "select count(*) from " + table + " where lastUpdate > :lastUpdated";
+ QSqlDatabase srcDb = QSqlDatabase::database(srcConn->connectionName());
  QSqlQuery* query = new QSqlQuery(srcDb);
  query->prepare(commandText);
  if(!bDropTable)
@@ -3059,7 +3084,7 @@ void ExportSql::updateTimestamp(QString table)
 {
     if(srcConn->servertype() != "MySql")
         return;
-    srcDb = SQL::instance()->db;
+    QSqlDatabase  srcDb = QSqlDatabase::database(SQL::_connectionName);
 
     QString commandText = "update " + table + " set lastupdate = '2000-01-01 00:00:00' where lastUpdate = '0000-00-00 00:00:00'";
     QSqlQuery* query = new QSqlQuery(srcDb);
@@ -3324,6 +3349,46 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
   commandText.append("ALTER TABLE [dbo].[Segments] ADD  CONSTRAINT [DF_Segments_Direction]  DEFAULT ('') FOR [Direction];");
   commandText.append("ALTER TABLE [dbo].[Segments] ADD  CONSTRAINT [DF_Segments_PointArray]  DEFAULT ('') FOR [pointArray];");
   commandText.append("ALTER TABLE [dbo].[Segments] ADD  CONSTRAINT [DF_Segments_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];");
+ }  else  if(dbType == "MimerSql")
+ {
+     // 1. Create a dedicated sequence for the Segments table autoincrement
+     QSqlQuery countQuery(srcDb);
+         int nextId = 1;
+         if (countQuery.exec("SELECT MAX(SegmentId) FROM Segments") && countQuery.next()) {
+             nextId = countQuery.value(0).toInt() + 1;
+             if (nextId < 1) nextId = 1;
+         }
+
+         QString createSeq = QString("CREATE SEQUENCE segments_seq START WITH %1 INCREMENT BY 1;").arg(nextId);
+         QSqlQuery seqQuery(db);
+         seqQuery.exec(createSeq);
+
+     // 2. Define the main table statement utilizing the sequence default
+     commandText = "CREATE TABLE Segments (  \
+                   SegmentId integer DEFAULT NEXT VALUE FOR segments_seq PRIMARY KEY,\
+                   Description nvarchar(100) NOT NULL, \
+                   FormatOK smallint NOT NULL DEFAULT 0, \
+                   Tracks smallint check(tracks in (1,2)) NOT NULL DEFAULT 1, \
+                   Street  nvarchar(100) NOT NULL DEFAULT '', \
+                   StreetId  integer DEFAULT NULL, \
+                   StreetSeq integer DEFAULT 0, \
+                   NewerName  nvarchar(60) NOT NULL DEFAULT '', \
+                   Location  nvarchar(30) NOT NULL DEFAULT '', \
+                   Type  integer NOT NULL DEFAULT 0, \
+                   StartLat decimal(15,13) NOT NULL DEFAULT 0.0, \
+                   StartLon decimal(15,13) NOT NULL DEFAULT 0.0, \
+                   EndLat decimal(15,13) NOT NULL DEFAULT 0.0, \
+                   EndLon decimal(15,13) NOT NULL DEFAULT 0.0, \
+                   Length decimal(15,5) NOT NULL DEFAULT 0, \
+                   StartDate date NOT NULL DEFAULT DATE'1800-01-01', \
+                   DoubleDate date , \
+                   EndDate date NOT NULL DEFAULT DATE'1800-01-01', \
+                   Direction varchar(6) , \
+                   OneWay char(1) NOT NULL DEFAULT 'N', \
+                   Points  integer NOT NULL default 0, \
+                   PointArray  nclob, \
+                   lastUpdate timestamp NOT NULL DEFAULT LOCALTIMESTAMP)";
+                   // CONSTRAINT Segments_ibfk_1 FOREIGN KEY (StreetId) REFERENCES StreetDef (StreetId))";
  }
  query->prepare(commandText);
  bQuery = query->exec();
@@ -3331,9 +3396,62 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
  {
   SQLERROR_E(std::move(query));
   throw Exception(tr("SQL Error creating Segments: %1").arg(query->lastError().text()));
-
  }
  return true;
+}
+
+QString ExportSql::getTableSeqName(QString table, QSqlDatabase db)
+{
+    QSqlQuery query(db);
+    QString commandText = QString ("SELECT "
+                                   "COLUMN_NAME,"
+                                   /* Extracts the name following 'NEXT VALUE FOR '*/
+                                   "SUBSTRING(COLUMN_DEFAULT FROM POSITION('NEXT VALUE FOR ' IN UPPER(COLUMN_DEFAULT)) + 15) AS SEQUENCE_NAME "
+                               "FROM "
+                                   "INFORMATION_SCHEMA.COLUMNS "
+                               "WHERE "
+                                   "TABLE_SCHEMA = CURRENT_USER "
+                                   "AND TABLE_NAME = %1 " /* Remember: Mimer stores unquoted names in UPPERCASE*/
+                                   "AND UPPER(COLUMN_DEFAULT) LIKE '%NEXT VALUE FOR%';").arg(table.toUpper());
+    bool  bQuery = query.exec(commandText);
+    if(!bQuery)
+    {
+     //SQLERROR_E(std::move(query));
+        qDebug() << query.lastError().text();
+     return "";
+    }
+    return query.value(0).toString();
+
+}
+
+bool ExportSql::dropSequence(QString sequence, QSqlDatabase db)
+{
+    QSqlQuery* query = new QSqlQuery(db);
+    QString commandText = QString ("DROP SEQUENCE %1 CASCADE").arg(sequence);
+    bool  bQuery = query->exec(commandText);
+    if(!bQuery)
+    {
+     SQLERROR_E(std::move(query));
+     return false;
+    }
+    return true;
+}
+
+bool ExportSql::viewExists(const QString &viewName, QSqlDatabase db)
+{
+    QSqlQuery query(db);
+    // Mimer SQL is case-insensitive for unquoted names but stores them in UPPERCASE
+    QString upperViewName = viewName.toUpper();
+
+    query.prepare("SELECT 1 FROM INFORMATION_SCHEMA.VIEWS "
+                  "WHERE VIEW_SCHEMA = CURRENT_USER "
+                  "AND VIEW_NAME = :viewName;");
+    query.bindValue(":viewName", upperViewName);
+
+    if (query.exec() && query.next()) {
+        return true; // The view exists
+    }
+    return false; // The view does not exist
 }
 
 bool ExportSql::dropTable(QString table, QSqlDatabase db, QString dbType)
@@ -3355,6 +3473,8 @@ bool ExportSql::dropTable(QString table, QSqlDatabase db, QString dbType)
   commandText = QString("drop table if exists `%1`").arg(table);
  else if(dbType == "PostgreSQL")
   commandText = QString("drop table if exists %1").arg(table.toLower());
+ else if(dbType == "MimerSql")
+     commandText = QString("drop table %1").arg(table.toLower());
  else
   commandText = QString("IF OBJECT_ID(N'dbo." + table +"', N'U') IS NOT NULL "\
                         "DROP TABLE [dbo].["+table +"];");
@@ -3369,7 +3489,7 @@ bool ExportSql::dropTable(QString table, QSqlDatabase db, QString dbType)
 
 bool ExportSql::dropRoutes()
 {
- srcDb = SQL::instance()->db;
+ QSqlDatabase  srcDb = QSqlDatabase::database(SQL::_connectionName);
  if(!openDb()) return false;
 
  return dropTable("Routes", _targetDb, tgtConn->servertype());
@@ -3377,7 +3497,7 @@ bool ExportSql::dropRoutes()
 
 bool ExportSql::dropStations()
 {
- srcDb = SQL::instance()->db;
+ QSqlDatabase  srcDb = QSqlDatabase::database(SQL::_connectionName);
  if(!openDb()) return false;
 
  return dropTable("Stations", _targetDb, tgtConn->servertype());
@@ -3385,7 +3505,7 @@ bool ExportSql::dropStations()
 
 bool ExportSql::dropRouteComments()
 {
- srcDb = SQL::instance()->db;
+ QSqlDatabase  srcDb = QSqlDatabase::database(SQL::_connectionName);
  if(!openDb()) return false;
 
  return dropTable("RouteComments", _targetDb, tgtConn->servertype());
@@ -3543,7 +3663,7 @@ bool ExportSql::createRouteNameTable(QSqlDatabase db, QString dbType)
         return SQL::instance()->executeScript(":/sql/MsSql/mssql_create_routeName.sql", db);
     if(dbType == "PostgreSQL")
     {
-        QString commandString = "CREATE TABLE if not exists RouteName  (\
+        QString commandString = "CREATE TABLE RouteName  (\
            RouteId  integer NOT NULL primary key GENERATED BY DEFAULT AS IDENTITY,\
            Name  varchar(140) NOT NULL,\
            lastUpdate  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\
@@ -3551,6 +3671,21 @@ bool ExportSql::createRouteNameTable(QSqlDatabase db, QString dbType)
 
         return SQL::instance()->executeCommand(commandString, db);
 
+    } else if(dbType == "MimerSql")
+    {
+        // 1. Create a dedicated sequence for the AltRoute table autoincrement
+        QString createSeq = "CREATE SEQUENCE routename_seq START WITH 1 INCREMENT BY 1;";
+        QSqlQuery seqQuery(db);
+        seqQuery.exec(createSeq);
+
+        // 2. Define the main table statement utilizing the sequence default
+        QString commandString = "CREATE TABLE RouteName  (\
+           RouteId  integer DEFAULT NEXT VALUE FOR routename_seq PRIMARY KEY,\
+           Name  varchar(140) NOT NULL,\
+           lastUpdate  timestamp NOT NULL DEFAULT LOCALTIMESTAMP,\
+          UNIQUE (Name ));";
+
+        return SQL::instance()->executeCommand(commandString, db);
     }
     return false;
 }
@@ -3586,6 +3721,38 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
               Sequence   integer NOT NULL DEFAULT -1,\
               ReverseSeq   integer NOT NULL DEFAULT -1,\
               LastUpdate  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\
+              constraint pk PRIMARY key ( Route , RouteId , CompanyKey , StartDate , EndDate , LineKey ),\
+              CONSTRAINT  Routes_ibfk_1  FOREIGN KEY ( LineKey ) REFERENCES  Segments  ( SegmentId ) ON UPDATE RESTRICT ON DELETE RESTRICT,\
+              CONSTRAINT  Routes_ibfk_3  FOREIGN KEY ( CompanyKey ) REFERENCES  Companies  ( key ),\
+              CONSTRAINT  Routes_ibfk_4  FOREIGN KEY ( tractionType ) REFERENCES  TractionTypes  ( tractionType ),\
+              CONSTRAINT  Routes_ibfk_5  FOREIGN KEY ( Route ) REFERENCES  AltRoute  ( route ),\
+              CONSTRAINT  Routes_ibfk_6  FOREIGN KEY ( RouteId ) REFERENCES  RouteName  ( routeId ));";
+  return SQL::instance()->executeCommand(commandString, db);
+ }
+ if(dbType == "MimerSql")
+ {
+    QString commandString = "CREATE TABLE  Routes  (\
+              Route   integer NOT NULL,\
+              RouteId    integer,\
+              StartDate date NOT NULL,\
+              EndDate  date NOT NULL,\
+              LineKey   integer NOT NULL,\
+              OneWay  char(1) check( oneWay  in ('Y','N',' '))  NOT NULL default ' ',\
+              TrackUsage  char(1) check( TrackUsage  in ('B', 'L', 'R', ' ')) NOT NULL default ' ',\
+              CompanyKey   integer NOT NULL DEFAULT 0,\
+              TractionType   integer NOT NULL DEFAULT 0,\
+              Direction  varchar(6) NOT NULL DEFAULT ' ',\
+              NextF   integer NOT NULL DEFAULT -1,\
+              PrevF   integer NOT NULL DEFAULT -1,\
+              NormalEnter   integer NOT NULL DEFAULT 0,\
+              NormalLeave   integer NOT NULL DEFAULT 0,\
+              ReverseEnter   integer NOT NULL DEFAULT 0,\
+              ReverseLeave   integer NOT NULL DEFAULT 0,\
+              NextR   integer NOT NULL DEFAULT -1,\
+              PrevR   integer NOT NULL DEFAULT -1,\
+              Sequence   integer NOT NULL DEFAULT -1,\
+              ReverseSeq   integer NOT NULL DEFAULT -1,\
+              LastUpdate  timestamp NOT NULL DEFAULT LOCALTIMESTAMP,\
               constraint pk PRIMARY key ( Route , RouteId , CompanyKey , StartDate , EndDate , LineKey ),\
               CONSTRAINT  Routes_ibfk_1  FOREIGN KEY ( LineKey ) REFERENCES  Segments  ( SegmentId ) ON UPDATE RESTRICT ON DELETE RESTRICT,\
               CONSTRAINT  Routes_ibfk_3  FOREIGN KEY ( CompanyKey ) REFERENCES  Companies  ( key ),\
@@ -3799,13 +3966,45 @@ bool ExportSql::createStationsTable(QSqlDatabase db, QString dbType)
   endDate date DEFAULT NULL,\
   segmentId integer NOT NULL,\
   segments varchar(100) NOT NULL DEFAULT '',\
-  infoKey integer NOT NULL DEFAuLT -1,\
+  infoKey integer NOT NULL DEFAULT -1,\
   markerType varchar(15) default '',\
   routeType integer NOT NULL DEFAULT -1,\
   lastUpdate timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\
   constraint main unique (name,startDate,endDate),\
   constraint stationKey UNIQUE (stationKey)\
 );";
+     return SQL::instance()->executeCommand(commandString,db);
+ } else  if(dbType == "MimerSql")
+ {
+     // 1. Create a dedicated sequence for the Stations table autoincrement
+     QSqlQuery countQuery(srcDb);
+         int nextId = 1;
+         if (countQuery.exec("SELECT MAX(stationKey) FROM Stations") && countQuery.next()) {
+             nextId = countQuery.value(0).toInt() + 1;
+             if (nextId < 1) nextId = 1;
+         }
+
+         QString createSeq = QString("CREATE SEQUENCE stationkey_stations_seq START WITH %1 INCREMENT BY 1;").arg(nextId);
+         QSqlQuery seqQuery(db);
+         seqQuery.exec(createSeq);
+
+     // 2. Define the main table statement utilizing the sequence default
+   QString commandString = "CREATE TABLE Stations (\
+      stationKey integer DEFAULT NEXT VALUE FOR stationkey_stations_seq PRIMARY KEY,\
+      routes nvarchar(250) NOT NULL DEFAULT '',\
+      name nvarchar(75) NOT NULL,\
+      latitude decimal(15,13) NOT NULL DEFAULT 0.0,\
+      longitude decimal(15,13) NOT NULL DEFAULT 0.0,\
+      startDate date DEFAULT NULL,\
+      endDate date DEFAULT NULL,\
+      segmentId integer NOT NULL,\
+      segments varchar(100) NOT NULL DEFAULT '',\
+      infoKey integer NOT NULL DEFAULT -1,\
+      markerType varchar(15) default '',\
+      routeType integer NOT NULL DEFAULT -1,\
+      lastUpdate timestamp NOT NULL DEFAULT LOCALTIMESTAMP,\
+      constraint main unique (name,startDate,endDate)\
+    );";
      return SQL::instance()->executeCommand(commandString,db);
  }
  return false;
@@ -3862,6 +4061,19 @@ bool ExportSql::createTerminalsTable(QSqlDatabase db, QString dbType)
              EndSegment integer NOT NULL,\
              EndWhichEnd char(1) NOT NULL,\
              lastUpdate timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\
+             constraint Terminals_pk PRIMARY KEY (Route,Name,StartDate,EndDate))";
+} else  if(dbType == "MimerSql")
+ {
+     commandText = "CREATE TABLE Terminals (\
+             Route integer NOT NULL,\
+             Name varchar(125) NOT NULL,\
+             StartDate date NOT NULL,\
+             EndDate date NOT NULL,\
+             StartSegment integer NOT NULL,\
+             StartWhichEnd char(1) NOT NULL,\
+             EndSegment integer NOT NULL,\
+             EndWhichEnd char(1) NOT NULL,\
+             lastUpdate timestamp NOT NULL DEFAULT LOCALTIMESTAMP,\
              constraint Terminals_pk PRIMARY KEY (Route,Name,StartDate,EndDate))";
 }
  query->prepare(commandText);
@@ -3964,6 +4176,31 @@ bool ExportSql::createAltRouteTable(QSqlDatabase db, QString dbType)
   "ALTER TABLE [dbo].[AltRoute] ADD  CONSTRAINT [DF_AltRoute_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];";
 
  }
+ else if(dbType == "MimerSql")
+  {
+      // 1. Create a dedicated sequence for the AltRoute table autoincrement
+        QSqlQuery countQuery(srcDb);
+        int nextId = 1;
+        if (countQuery.exec("SELECT MAX(route) FROM AltRoute") && countQuery.next()) {
+            nextId = countQuery.value(0).toInt() + 1;
+            if (nextId < 1) nextId = 1; // Fallback if table was empty
+        }
+
+        // Stitch the correct starting value into the sequence declaration
+        QString createSeq = QString("CREATE SEQUENCE altroute_route_seq START WITH %1 INCREMENT BY 1;").arg(nextId);
+        QSqlQuery seqQuery(db);
+        seqQuery.exec(createSeq);
+
+      // 2. Define the main table statement utilizing the sequence default
+      // Note: Removed backticks, AUTOINCREMENT, and changed reserved keyword 'index' to 'uq_route_prefix_alpha'
+      commandText = "CREATE TABLE AltRoute (" \
+          "route integer DEFAULT NEXT VALUE FOR altroute_route_seq PRIMARY KEY, "\
+          "routePrefix varchar(10) DEFAULT '' NOT NULL, " \
+          "routeAlpha varchar(10) NOT NULL, "\
+          "baseRoute integer DEFAULT 0 NOT NULL, " \
+          "lastUpdate timestamp DEFAULT LOCALTIMESTAMP NOT NULL, " \
+          "CONSTRAINT uq_route_prefix_alpha unique (routePrefix, routeAlpha) )";
+  }
  query->prepare(commandText);
  bQuery = query->exec();
  if(!bQuery)
@@ -3984,16 +4221,16 @@ bool ExportSql::createParametersTable(QSqlDatabase db, QString dbType)
 
  if(dbType == "Sqlite")
   commandText = "CREATE TABLE if not exists `Parameters` ("\
-          "`key` integer NOT NULL primary key asc AUTOINCREMENT,"\
-          "`lat` decimal(18,15) NOT NULL default (0),"\
-          "`lon` decimal(18,15) NOT NULL default (0),"\
-          "`title` varchar(50) NOT NULL,"\
-          "`city` varchar(50) NOT NULL,"\
-          "`minDate` date NOT NULL,"\
-          "`maxDate` date NOT NULL,"\
-          "`alphaRoutes` char(1) NOT NULL default ('Y'),"\
-          "`abbreviationsList` VARCHAR(200) NOT NULL DEFAULT '',"
-          "`lastUpdate` timestamp NOT NULL DEFAULT (CURRENT_TIMESTAMP));";
+                "`key` integer NOT NULL primary key asc AUTOINCREMENT,"\
+                "`lat` decimal(18,15) NOT NULL default (0),"\
+                "`lon` decimal(18,15) NOT NULL default (0),"\
+                "`title` varchar(50) NOT NULL,"\
+                "`city` varchar(50) NOT NULL,"\
+                "`minDate` date NOT NULL,"\
+                "`maxDate` date NOT NULL,"\
+                "`alphaRoutes` char(1) NOT NULL default ('Y'),"\
+                "`abbreviationsList` VARCHAR(200) NOT NULL DEFAULT '',"
+                "`lastUpdate` timestamp NOT NULL DEFAULT (CURRENT_TIMESTAMP));";
  else if(dbType == "MySql")
   commandText = "CREATE TABLE `Parameters` ("\
     "`key` int(11) NOT NULL AUTO_INCREMENT,"\
@@ -4046,6 +4283,38 @@ bool ExportSql::createParametersTable(QSqlDatabase db, QString dbType)
           alphaRoutes char(1) NOT NULL default ('Y'),\
           abbreviationsList VARCHAR(200) NOT NULL DEFAULT '',\
           lastUpdate timestamp NOT NULL DEFAULT (CURRENT_TIMESTAMP));";
+ }else if(dbType == "MimerSql")
+ {
+  /*
+    What was changed for Mimer SQL:
+
+    • Unique Constraint Name: Changed the unique constraint name from `index` to uq_route_prefix_alpha. INDEX is a strictly reserved word in Mimer SQL and will throw a syntax parser error if used as a constraint name.
+    • Autoincrement Integration: Replaced the SQLite-specific NOT NULL primary key AUTOINCREMENT with the DEFAULT NEXT VALUE FOR altroute_route_seq PRIMARY KEY sequence configuration.
+    • Identifiers & Quotes: Removed the backticks (`) entirely. Mimer SQL uses standard SQL double quotes (") for case-sensitive identifiers, but unquoted identifiers work best here to match standard case-insensitive tables.
+    • Constraint Positioning: Placed the DEFAULT definitions cleanly before the NOT NULL constraints to keep Mimer's strict parser happy.*/
+
+  // 1. Mimer SQL requires an independent sequence for autoincrement fields
+  QString createSeq = "CREATE SEQUENCE parameters_key_seq START WITH 1 INCREMENT BY 1;";
+  QSqlQuery seqQuery(db);
+
+  // We ignore errors if the sequence already exists (or handle it in dropTable)
+  if(!seqQuery.exec(createSeq))
+  {
+      QSqlError err = seqQuery.lastError();
+        //SQLERROR_E(std::move(&seqQuery));
+  }
+  // 2. Define the main table statement utilizing the sequence default
+  commandText = "CREATE TABLE parameters ("\
+        "key integer DEFAULT NEXT VALUE FOR parameters_key_seq PRIMARY KEY,"\
+        "lat decimal(18,15) DEFAULT 0 NOT NULL,"\
+        "lon decimal(18,15) DEFAULT 0 NOT NULL,"\
+        "title varchar(50) NOT NULL,"\
+        "city varchar(50) NOT NULL,"\
+        "minDate date NOT NULL,"\
+        "maxDate date NOT NULL,"\
+        "alphaRoutes char(1) DEFAULT 'Y' NOT NULL,"\
+        "abbreviationsList VARCHAR(200) DEFAULT '' NOT NULL,"\
+        "lastUpdate timestamp DEFAULT LOCALTIMESTAMP NOT NULL);";
  }
  //query->prepare(commandText);
  bQuery = query->exec(commandText);
@@ -4057,6 +4326,7 @@ bool ExportSql::createParametersTable(QSqlDatabase db, QString dbType)
   throw Exception(tr("SQL Error creating Parameters: %1").arg(query->lastError().text()));
 
  }
+    qDebug() << "Parameters table created.";
  return true;
 }
 bool ExportSql::createTractionTypesTable(QSqlDatabase db, QString dbType)
@@ -4071,7 +4341,7 @@ bool ExportSql::createTractionTypesTable(QSqlDatabase db, QString dbType)
           `tractionType` integer NOT NULL primary key AUTOINCREMENT,\
           `description` varchar(50) NOT NULL DEFAULT '',\
           `displayColor` char(7) NOT NULL DEFAULT '#000000',\
-          `routeType` int(11) NOT NULL DEFAULT '0',\
+          `routeType` int(11) NOT NULL DEFAULT 0,\
           `icon` varchar(10) NOT NULL DEFAULT '',\
           `lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP \
         );";
@@ -4080,7 +4350,7 @@ bool ExportSql::createTractionTypesTable(QSqlDatabase db, QString dbType)
     "`tractionType` int(11) NOT NULL AUTO_INCREMENT,"\
     "`description` varchar(50) NOT NULL DEFAULT '',"\
     "`displayColor` char(7) NOT NULL DEFAULT '#000000',"\
-    "`routeType` int(11) NOT NULL DEFAULT '0',"\
+    "`routeType` int(11) NOT NULL DEFAULT 0,"\
     "`icon` varchar(10) NOT NULL DEFAULT '',"\
     "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"\
     "PRIMARY KEY (`tractionType`)"\
@@ -4090,7 +4360,7 @@ bool ExportSql::createTractionTypesTable(QSqlDatabase db, QString dbType)
           tractionType integer NOT NULL primary key GENERATED BY DEFAULT AS IDENTITY,\
           description varchar(50) NOT NULL DEFAULT '',\
           displayColor char(7) NOT NULL DEFAULT '#000000',\
-          routeType INTEGER NOT NULL DEFAULT '0',\
+          routeType INTEGER NOT NULL DEFAULT 0,\
           icon varchar(10) NOT NULL DEFAULT '',\
           lastUpdate timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP \
         );";
@@ -4117,6 +4387,21 @@ bool ExportSql::createTractionTypesTable(QSqlDatabase db, QString dbType)
   "ALTER TABLE [dbo].[TractionTypes] ADD  CONSTRAINT [DF_TractionTypes_routeType]  DEFAULT ((0)) FOR [routeType];"\
   "ALTER TABLE [dbo].[TractionTypes] ADD  CONSTRAINT [DF_TractionTypes_icon]  DEFAULT ('') FOR [icon];"\
   "ALTER TABLE [dbo].[TractionTypes] ADD  CONSTRAINT [DF_TractionTypes_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate]";
+ } else  if(dbType == "MimerSql")
+ {
+     // 1. Create a dedicated sequence for the AltRoute table autoincrement
+     QString createSeq = "CREATE SEQUENCE tractiontypes_seq START WITH 1 INCREMENT BY 1;";
+     QSqlQuery seqQuery(db);
+     seqQuery.exec(createSeq);
+
+     commandText = "CREATE TABLE TractionTypes (\
+             tractionType integer DEFAULT NEXT VALUE FOR tractiontypes_seq PRIMARY KEY,\
+             description varchar(50) NOT NULL DEFAULT '',\
+             displayColor char(7) NOT NULL DEFAULT '#000000',\
+             routeType INTEGER NOT NULL DEFAULT 0,\
+             icon varchar(10) NOT NULL DEFAULT '',\
+             lastUpdate timestamp NOT NULL DEFAULT LOCALTIMESTAMP \
+           );";
  }
  query->prepare(commandText);
  bQuery = query->exec();
@@ -4139,7 +4424,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
   commandText = "CREATE TABLE if not exists `Companies` ( "\
           "`key` integer NOT NULL primary key AUTOINCREMENT,"\
           "`mnemonic` varchar(10) not null default '', "\
-          "`Description` varchar(100) NOT NULL default '', "\
+          "`Description` nvarchar(100) NOT NULL default '', "\
           "`routePrefix` varchar(10) not null default '', "\
           "`info` varchar(60) not null default '',"
           "`Url` varchar(150),"
@@ -4154,7 +4439,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
   commandText = "CREATE TABLE `Companies` ("\
     "`key` int(11) NOT NULL AUTO_INCREMENT,"\
     "`mnemonic` varchar(10) not null default '', "\
-    "`Description` varchar(100) NOT NULL,"\
+    "`Description` nvarchar(100) NOT NULL,"\
     "`routePrefix` varchar(10) DEFAULT '',"\
     "`info` varchar(60),"
     "`Url` varchar(150),"
@@ -4170,7 +4455,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
      commandText = "CREATE TABLE if not exists Companies ( "\
          "key integer NOT NULL primary key GENERATED BY DEFAULT AS IDENTITY,"\
          "mnemonic varchar(10) not null default '', "\
-         "Description varchar(100) NOT NULL default '', "\
+         "Description nvarchar(100) NOT NULL default '', "\
          "routePrefix varchar(10) not null default '', "\
          "info varchar(60) not null default '',"
          "Url varchar(150),"
@@ -4188,7 +4473,7 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
   "CREATE TABLE [dbo].[Companies]("\
         "[key] [int] IDENTITY(1,1) NOT NULL,"\
         "[mnemonic] varchar(10) not null default '', "\
-        "[Description] [varchar](100) NOT NULL,"\
+        "[Description] [nvarchar](100) NOT NULL,"\
         "[info] varchar(60),"
         "[Url] varchar(150),"
         "[routePrefix] [varchar](10),"\
@@ -4206,6 +4491,35 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
     "SET ANSI_PADDING OFF;"\
     "ALTER TABLE [dbo].[Companies] ADD  CONSTRAINT [DF_Companies_routePrefix]  DEFAULT ('') FOR [routePrefix];"\
     "ALTER TABLE [dbo].[Companies] ADD  CONSTRAINT [DF_Companies_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];";
+ } else if(dbType == "MimerSql")
+ {
+     // 1. Create a dedicated sequence for the Companies table autoincrement
+     QSqlQuery countQuery(srcDb);
+         int nextId = 1;
+         if (countQuery.exec("SELECT MAX([key]) FROM Companies") && countQuery.next()) {
+             nextId = countQuery.value(0).toInt() + 1;
+             if (nextId < 1) nextId = 1;
+         }
+
+         QString createSeq = QString("CREATE SEQUENCE companies_seq START WITH %1 INCREMENT BY 1;").arg(nextId);
+         QSqlQuery seqQuery(db);
+         seqQuery.exec(createSeq);
+
+     // 2. Define the main table statement utilizing the sequence default
+     commandText = "CREATE TABLE Companies ( "\
+         "key integer DEFAULT NEXT VALUE FOR companies_seq PRIMARY KEY," \
+         "mnemonic varchar(10) not null default '', "\
+         "Description nvarchar(100) NOT NULL default '', "\
+         "routePrefix varchar(10) not null default '', "\
+         "info varchar(60) not null default '',"
+         "Url varchar(150),"
+         "startDate date DEFAULT NULL," \
+         "endDate date DEFAULT NULL," \
+         "firstRoute integer DEFAULT NULL," \
+         "lastRoute integer DEFAULT NULL," \
+         "Selected smallint,"\
+         "lastUpdate timestamp DEFAULT LOCALTIMESTAMP" \
+         ");";
  }
  query->prepare(commandText);
  bQuery = query->exec();
@@ -4349,6 +4663,19 @@ bool ExportSql::createRouteSeqTable(QSqlDatabase db, QString dbType)
     ") ON [PRIMARY];" \
          "SET ANSI_PADDING OFF;";
     //"ALTER TABLE [dbo].[Intersections] ADD  CONSTRAINT [DF_Intersections_lastUpdate]  DEFAULT (getdate()) FOR [lastUpdate];";
+ } else if(dbType == "MimerSql") {
+
+     commandText = "CREATE TABLE RouteSeq ("\
+                   " Route integer NOT NULL,"\
+                   " Name varchar(125) NOT NULL,"
+                   " StartDate date NOT NULL, "
+                   " EndDate date NOT NULL, "
+                   " segmentList clob,"
+                   " firstSegment integer NOT NULL,"
+                   " whichEnd varchar(10),"
+                   " lastUpdate timestamp NOT NULL DEFAULT LOCALTIMESTAMP, "\
+                   " constraint RouteSeq_pk PRIMARY key (Route,Name,StartDate,EndDate)"
+           ");";
  }
  query->prepare(commandText);
  bQuery = query->exec();
@@ -4429,7 +4756,25 @@ bool ExportSql::createCommentsTable(QSqlDatabase db, QString dbType)
     "SET ANSI_PADDING OFF;"\
     "ALTER TABLE [dbo].[comments] ADD  CONSTRAINT [DF_comments_new_comments]  DEFAULT ('') FOR [comments];"\
     "ALTER TABLE [dbo].[comments] ADD  CONSTRAINT [DF_comments_lastupdate]  DEFAULT (getdate()) FOR [lastupdate];";
- }
+ } else if(dbType == "MimerSql")
+ {
+     // 1. Create a dedicated sequence for the Comments table autoincrement
+     QString createSeq = "CREATE SEQUENCE comments_seq START WITH 1 INCREMENT BY 1;";
+     QSqlQuery seqQuery(db);
+     seqQuery.exec(createSeq);
+
+     // 2. Define the main table statement utilizing the sequence default
+     commandText = "CREATE TABLE Comments (\
+             commentKey integer DEFAULT NEXT VALUE FOR comments_seq PRIMARY KEY,\
+             tags varchar(1000) NOT NULL,\
+             routeList varchar(100) NOT NULL,\
+             date date ,\
+             jRouteList varchar(100) NOT NULL DEFAULT '[]',\
+             comments clob NOT NULL,\
+             latitude decimal(15,5) NOT NULL DEFAULT 0.00000,\
+             longitude decimal(15,5) NOT NULL DEFAULT 0.00000,\
+             lastUpdate timestamp NOT NULL DEFAULT LOCALTIMESTAMP\
+           );";}
  query->prepare(commandText);
  bQuery = query->exec();
  if(!bQuery)
@@ -4476,7 +4821,35 @@ bool ExportSql::createStreetDefTable(QSqlDatabase db, QString dbType)
             );";
 
         return SQL::instance()->executeCommand(commandString,db);
+    } else if(dbType == "MimerSql")
+    {
+        // 1. Create a dedicated sequence for the AltRoute table autoincrement
+        QString createSeq = "CREATE SEQUENCE streetdef_seq START WITH 1 INCREMENT BY 1;";
+        QSqlQuery seqQuery(db);
+        seqQuery.exec(createSeq);
+
+        // 2. Define the main table statement utilizing the sequence default
+        // === FIXED: Added DATE prefix to literal default & changed text columns to NVARCHAR ===
+        QString commandString = "CREATE TABLE StreetDef ( \
+          StreetId INTEGER DEFAULT NEXT VALUE FOR streetdef_seq PRIMARY KEY,\
+          Street nvarchar(60) NOT NULL DEFAULT '' , \
+          Location nvarchar(30),\
+          StartDate date NOT NULL DEFAULT DATE'2050-01-01',\
+          EndDate date, \
+          StartLatLng varchar(30), \
+          EndLatLng varchar(30), \
+          Length decimal(15,5) NOT NULL DEFAULT 0, \
+          Bounds varchar(100), \
+          Segments varchar(200), \
+          Comment nvarchar(1000),\
+          Seq smallint NOT NULL DEFAULT 1, \
+          lastUpdate timestamp NOT NULL DEFAULT LOCALTIMESTAMP,\
+                                         UNIQUE (StreetId, Street, StartDate)\
+            );";
+
+        return SQL::instance()->executeCommand(commandString, db);
     }
+
     return false;
 
 }
@@ -4577,6 +4950,13 @@ bool ExportSql::dropView(QString view)
   if(!openDb())
     return false;
   QString commandText = QString("drop view if exists %1").arg(view);
+  if(tgtConn->servertype()=="MimerSql")
+  {
+      if(viewExists(view, _targetDb))
+        commandText = QString("drop view %1").arg(view.toUpper());
+      else
+          return true;
+  }
   QSqlQuery* query = new QSqlQuery(_targetDb);
 
   bool bQuery = query->exec(commandText);
@@ -4598,7 +4978,10 @@ bool ExportSql::exportTable(QString inTable)
     if(tgtConn->servertype() == "PostgreSQL")
         table = inTable.toLower();
      bool bDropTables = this->bDropTables;
-     srcDb = SQL::instance()->db;
+     srcDb = QSqlDatabase::database(srcConn->connectionName());
+     qInfo() << "database is" << (srcDb.isOpen()?"open":"not open") << srcDb.connectionName() << " "
+             << srcDb.driverName() << " " << srcDb.databaseName();
+
      QString srcServerType = srcConn->servertype();
      if(srcConn->uniqueId() == tgtConn->uniqueId())
          throw IllegalArgumentException("source and destination the same");
@@ -4714,24 +5097,40 @@ bool ExportSql::exportTable(QString inTable)
  QStringList keys = SQL::instance()->listPkColumns(table, tgtDbType, _targetDb);
  while(query->next())
  {
-  bool bFound = false;
+  bool bFound = false; // This is your existing local variable declaration block
   if(!bDropTables)
   {
-   commandText = selectText + " where ";
+   // Strip backticks from the selection template string shell for Mimer SQL
+   QString cleanSelect = selectText;
+   if(tgtConn->servertype() == "MimerSql") {
+       cleanSelect.replace("`", "");
+   }
+
+   commandText = cleanSelect + " where ";
    for(int i=0; i< keys.count(); i++)
    {
     QString col = keys.at(i);
-    commandText.append(QString("%1=:%1").arg(col));
+    // === MIMER COMPATIBLE LOOKUP PLACEHOLDERS ===
+    if(tgtConn->servertype() == "MimerSql")
+        commandText.append(QString("%1 = ?").arg(col));
+    else
+        commandText.append(QString("%1=:%1").arg(col));
+
      if(i < keys.count()-1)
        commandText.append(" and ");
    }
+
    query2->prepare(commandText);
    for(int i=0; i< keys.count(); i++)
    {
     QString col = keys.at(i);
-    QString type = types.at(i);
-    QVariant v = query->value(i);
-    query2->bindValue( ":"+ col, query->value(i) );
+    // Find the correct primary key index location in the main columns list array
+    QVariant pkVal = query->value(columns.indexOf(col));
+
+    if(tgtConn->servertype() == "MimerSql")
+        query2->bindValue(i, pkVal.toString()); // Force clean out-of-band wide string matching
+    else
+        query2->bindValue( ":"+ col, query->value(i) );
    }
 
    bQuery = query2->exec();
@@ -4745,6 +5144,7 @@ bool ExportSql::exportTable(QString inTable)
    }
    bFound = query2->next();
   }
+
   if(bFound)
   {
    bool bEqual = true;
@@ -4768,33 +5168,89 @@ bool ExportSql::exportTable(QString inTable)
    }
 
    QStringList pkList = SQL::instance()->listPkColumns(table, tgtDbType, _targetDb);
-
    QString commandString = "update " + table + " set ";
-   for(int i=0; i< columns.count(); i++)
+
+   // === FIX 1: STRIP BACKTICKS AND BUILD POSITIONAL TEMPLATES FOR MIMER SQL ===
+   if (tgtConn->servertype() == "MimerSql")
    {
-    QString col = columns.at(i);
-    if(!pkList.contains(col))
-    {
-     commandString.append(QString("`%1`=:%1"));
-      if(i < columns.count()-1)
-       commandString.append(",");
-    }
+       bool first = true;
+       for(int i=0; i< columns.count(); i++) {
+           QString col = columns.at(i);
+           if(!pkList.contains(col)) {
+               if(!first) commandString.append(", ");
+               commandString.append(QString("%1 = ?").arg(col));
+               first = false;
+           }
+       }
+       commandString.append(" where ");
+       first = true;
+       for(int i=0; i< pkList.count(); i++) {
+           QString col = pkList.at(i);
+           if(!first) commandString.append(" and ");
+           commandString.append(QString("%1 = ?").arg(col));
+           first = false;
+       }
    }
-   commandString.append(" where ");
-   for(int i=0; i< pkList.count(); i++)
+   else
    {
-    QString col = pkList.at(i);
-    commandString.append(QString("`%1`=:%1"));
-     if(i < pkList.count()-1)
-       commandString.append(",");
+       // Keep your original named parameter loop intact for MySQL / MS SQL:
+       for(int i=0; i< columns.count(); i++) {
+        QString col = columns.at(i);
+        if(!pkList.contains(col)) {
+         commandString.append(QString("`%1`=:%1").arg(col));
+          if(i < columns.count()-1) commandString.append(",");
+        }
+       }
+       commandString.append(" where ");
+       for(int i=0; i< pkList.count(); i++) {
+        QString col = pkList.at(i);
+        commandString.append(QString("`%1`=:%1").arg(col));
+         if(i < pkList.count()-1) commandString.append(" and ");
+       }
    }
 
    query2->prepare(commandString);
-   for(int i=0; i< columns.count(); i++)
+
+   // === FIX 2: ALIGN OUT-OF-BAND BINDINGS BY POSITION FOR MIMER SQL ===
+   if (tgtConn->servertype() == "MimerSql")
    {
-    QString col = columns.at(i);
-    query2->bindValue( ":"+ col, query->value(i) );
+       int updateSlot = 0;
+
+       // Pass 1: Bind Non-Primary Key values sequentially
+       for(int i=0; i< columns.count(); i++) {
+           if(!pkList.contains(columns.at(i))) {
+               QVariant val = query->value(i);
+
+               // Reuse our standardized data normalization pipeline
+               if (val.userType() == QMetaType::QDateTime) {
+                   query2->bindValue(updateSlot, val.toDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz"));
+               } else if (val.userType() == QMetaType::QDate) {
+                   query2->bindValue(updateSlot, val.toDate().toString("yyyy-MM-dd"));
+               } else {
+                   query2->bindValue(updateSlot, val.isNull() ? QVariant(QMetaType::fromType<QString>()) : val.toString());
+               }
+               updateSlot++;
+           }
+       }
+
+       // Pass 2: Bind Primary Key values sequentially for the WHERE clause
+       for(int i=0; i< columns.count(); i++) {
+           if(pkList.contains(columns.at(i))) {
+               QVariant val = query->value(i);
+               query2->bindValue(updateSlot, val.isNull() ? QVariant(QMetaType::fromType<QString>()) : val.toString());
+               updateSlot++;
+           }
+       }
    }
+   else
+   {
+       // Keep original named binding loop for other backends
+       for(int i=0; i< columns.count(); i++) {
+        QString col = columns.at(i);
+        query2->bindValue( ":"+ col, query->value(i) );
+       }
+   }
+
    bQuery = query2->exec();
    if(!bQuery)
    {
@@ -4809,16 +5265,18 @@ bool ExportSql::exportTable(QString inTable)
   }
   else
   {
-   QString commandString = "insert into " + table + " (";
+i0:   QString commandString = "insert into " + table + " (";
    for(int i=0; i< columns.count(); i++)
    {
     QString col = columns.at(i);
     if(tgtConn->servertype()== "MsSql")
-     commandString.append("[" + col + "]");
+        commandString.append("[" + col + "]");
     else if(tgtConn->servertype()== "PostgreSQL")
         commandString.append( col );
+    else if(tgtConn->servertype()== "MimerSql")
+        commandString.append( col );
     else
-     commandString.append("`" + col + "`");
+        commandString.append("`" + col + "`");
     if(i < columns.count()-1)
       commandString.append(",");
    }
@@ -4826,106 +5284,136 @@ bool ExportSql::exportTable(QString inTable)
    for(int i=0; i< columns.count(); i++)
    {
     QString col = columns.at(i);
-    if(tgtConn->servertype() != "PostgreSQL")
+    QString outStr;
+m0:    if(tgtConn->servertype() != "PostgreSQL" && tgtConn->servertype() != "MimerSql")
     {
         // Check if the current column is the problematic JSON column
-             if(col.compare("jRouteList", Qt::CaseInsensitive) == 0 && tgtConn->servertype() == "MySql")
-             {
-                 commandString.append("CONVERT(:" + col + " USING utf8mb4)");
-             }
-             else
-             {
-                 commandString.append(":" + col);
-             }
+         if(col.compare("jRouteList", Qt::CaseInsensitive) == 0 && tgtConn->servertype() == "MySql")
+         {
+             commandString.append("CONVERT(:" + col + " USING utf8mb4)");
+         }
+         else
+         {
+             commandString.append(":" + col);
+         }
     }
     else {
-        if(types.at(i)== "")
+        // === FIXED: OVERRIDE PLACED AT ROOT OF ELSE LAYER FOR MIMER SQL ===
+m2:        if (tgtConn->servertype() == "MimerSql")
         {
-            // for some reason, the Sqlite startDate column in Segments had a blank type,
-            // so see if it can be converted to a string and is a valid date.
-            QString str =  query->value(i).toString();
-            if(QDate::fromString(str,"yyyy/MM/dd").isValid())
-                types.replace(i,"date");
-        }
-        QString outStr;
-        if(types.at(i)== "date")
-        {
-            QDate date = query->value(i).toDate();
-            QString dateStr = date.toString("yyyy-MM-dd");
-            if(dateStr.isEmpty())
-                qDebug() << "no date";
-            if(date.isValid())
-                outStr = "'" + dateStr + "'";
-            else
-                outStr = "NULL";
+            outStr = "?";
         }
         else
-        if(types.at(i)=="timestamp")
         {
-            QDateTime dt = query->value(i).toDateTime();
-            QString dtStr = dt.toString(Qt::ISODateWithMs);
-            //outStr = QString("to_timestamp(%1,'YYYY-MM-DDHH:MI:SS.MS)").arg(dtStr);
-            outStr = "'"+dtStr + "'::timestamp";
-        }
-        else
-        if(types.at(i).startsWith("decimal",Qt::CaseInsensitive)!=0)
-        {
-            double dbl = query->value(i).toDouble();
-            outStr = QString("%1").arg(dbl,0,'f',6);
-        }
-        else
-        if(types.at(i).compare("integer",Qt::CaseInsensitive)==0 || types.at(i).startsWith("int",Qt::CaseInsensitive))
-        {
-            if(query->value(i).isNull())
-                outStr = "0";
-            else
-                outStr = query->value(i).toString();
-        }
-        else
-        if(types.at(i).startsWith("char",Qt::CaseInsensitive)!=0)
-        {
-            QString c = query->value(i).toString();
-            bool b;
-
-            int cn = c.toInt(&b);
-            if(c.length() == 1)
-                outStr = "'"+c+"'";
-            else
+            // Your exact original type evaluation block continues underneath:
+            if(types.at(i)== "")
             {
-                if(b && cn == 89)
-                    outStr = "'Y'";
-                else
-                    outStr = "'N'";
+                // for some reason, the Sqlite startDate column in Segments had a blank type,
+                // so see if it can be converted to a string and is a valid date.
+                QString str =  query->value(i).toString();
+                if(QDate::fromString(str,"yyyy/MM/dd").isValid())
+                    types.replace(i,"date");
             }
-        }
-        else
+
+            if(types.at(i)== "date")
+            {
+                QDate date = query->value(i).toDate();
+                QString dateStr = date.toString("yyyy-MM-dd");
+                if(dateStr.isEmpty())
+                    qDebug() << "no date";
+                if(date.isValid())
+                    outStr = "DATE'" + dateStr + "'";
+                else
+                    outStr = "NULL";
+            }
+            else
+            if(types.at(i)=="timestamp")
+            {
+                QDateTime dt = query->value(i).toDateTime();
+                QString dtStr = dt.toString(Qt::ISODateWithMs);
+                if(tgtConn->servertype() != "MimerSql")
+                    outStr = "'"+dtStr + "'::timestamp";
+                else
+                {
+                    dtStr.replace('T', ' ');
+                    dtStr.replace('Z',"");
+                    outStr = "TIMESTAMP'"+dtStr+"'";
+                }
+            }
+            else
+            if(types.at(i).startsWith("decimal",Qt::CaseInsensitive)!=0)
+            {
+                double dbl = query->value(i).toDouble();
+                outStr = QString("%1").arg(dbl,0,'f',6);
+            }
+            else
+            if(types.at(i).compare("integer",Qt::CaseInsensitive)==0 || types.at(i).startsWith("int",Qt::CaseInsensitive))
+            {
+                if(query->value(i).isNull())
+                    outStr = "0";
+                else
+                    outStr = query->value(i).toString();
+            }
+            else
+            if(types.at(i).startsWith("char",Qt::CaseInsensitive)!=0)
+            {
+                QString c = query->value(i).toString();
+                bool b;
+
+                int cn = c.toInt(&b);
+                if(c.length() == 1)
+                    outStr = "'"+c+"'";
+                else
+                {
+                    if(b && cn == 89)
+                        outStr = "'Y'";
+                    else
+                        outStr = "'N'";
+                }
+            }
+            else
             if(types.at(i).compare("text",Qt::CaseInsensitive)==0
-                    || types.at(i).compare("mediumtext",Qt::CaseInsensitive)==0
-                    || types.at(i).startsWith("varchar",Qt::CaseInsensitive))
-        {
-            QString str =query->value(i).toString();
-            str = str.replace("'","''");
-            outStr = "'" + str +"'";
-        }
-        else {
-            qDebug() << "not handled: " << types.at(i);
-        }
+                        || types.at(i).compare("mediumtext",Qt::CaseInsensitive)==0
+                        || types.at(i).startsWith("varchar",Qt::CaseInsensitive)
+                        || types.at(i).startsWith("nvarchar",Qt::CaseInsensitive))
+            {
+                QString str = query->value(i).toString();
+                str = str.replace("'","''");
+                outStr = "'" + str +"'";
+            }
+            else if(types.at(i).compare("JSON",Qt::CaseInsensitive)==0)
+            {
+                QString str = query->value(i).toString();
+                outStr = "'" + str +"'";
+            }
+            else {
+                qDebug() << "not handled: " << types.at(i);
+            }
+        } // End of non-Mimer else block
+
         if(outStr.isEmpty())
             qDebug() << "error: no value!";
-        commandString.append(outStr);
 
+        commandString.append(outStr);
     }
+
      if(i < columns.count()-1)
       commandString.append(",");
    }
    commandString.append(")");
 
-   if(tgtConn->servertype() != "PostgreSQL")
+p0:   if(tgtConn->servertype() != "PostgreSQL")
    {
        query2->prepare(commandString);
+
+       // === TRACK THE ACTIVE '?' POSITION FOR MIMER SQL ===
+       int mimerSlot = 0;
+
        for(int i=0; i< columns.count(); i++)
        {
         QString col = columns.at(i);
+        QVariant val;
+
         if(col.compare("lastUpdate",Qt::CaseInsensitive)==0)
         {
          QDateTime dt = query->value(i).toDateTime();
@@ -4933,32 +5421,75 @@ bool ExportSql::exportTable(QString inTable)
           qDebug() << "date is invalid '" <<query->value(i).toString() << "'";
          if(dt.date().month()==1 && dt.date().day()>28)
          {
-          //dt.date().setDate(dt.date().year(), 1, 28);
           dt = QDateTime(QDate(dt.date().year(), 1, 28), dt.time());
          }
-         query2->bindValue( ":"+ col, dt);
+         val = dt;
         }
         else
         {
-            QVariant v = query->value(i);
-
             if(types.at(i)== "date" )
             {
-                QDate dt =v.toDate();
-                if(!dt.isValid())
-                    query2->bindValue( ":"+ col, QVariant(QMetaType::fromType<QString>()) );
-                else
-                    query2->bindValue( ":"+ col, query->value(i) );
+               QDate dt = query->value(i).toDate();
+               if(!dt.isValid())
+               {
+                   // If .toDate() failed because it's a raw string with slashes, try manual parsing
+                   QString rawDateStr = query->value(i).toString();
+                   dt = QDate::fromString(rawDateStr, "yyyy/MM/dd");
+               }
 
+               if(!dt.isValid())
+               {
+                   val = QVariant(QMetaType::fromType<QString>());
+               }
+               else if (tgtConn->servertype() == "MimerSql")
+               {
+                   // === FORCE PROPER HYPHEN ALIGNMENT STRINGS ===
+                   val = dt.toString("yyyy-MM-dd");
+               }
+               else
+               {
+                   val = dt;
+               }
+            }
+            // === ADD THIS CRITICAL CHECK FOR MIMER SQL STRINGS AND PAYLOAD VARIABLES ===
+            else
+m3:         if (tgtConn->servertype() == "MimerSql")
+            {
+                if (query->value(i).isNull())
+                {
+                    val = QVariant(QMetaType::fromType<QString>());
+                }
+                else if (query->value(i).userType() == QMetaType::QDateTime)
+                {
+                    val = query->value(i).toDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz");
+                }
+                else
+                {
+                    // Forces all names, descriptions, and numbers to initialize as explicit wide string payloads
+                    val = query->value(i).toString();
+                }
             }
             else
-                query2->bindValue( ":"+ col, query->value(i) );
+                val = query->value(i);
+        }
+
+        // === TARGET CONNECTION BINDING LOGIC ===
+        if (tgtConn->servertype() == "MimerSql")
+        {
+            // Since everything has been safely homogenized to clean strings above, bind out-of-band directly
+            query2->bindValue(i, val);
+        }
+        else
+        {
+            // MySQL and MS SQL safely map out named bindings globally
+            query2->bindValue(":" + col, val);
         }
        }
-       bQuery = query2->exec();
+
    }
    else
        bQuery=query2->exec(commandString);
+
    if(!bQuery)
    {
     QSqlError err = query2->lastError();
@@ -4997,7 +5528,7 @@ bool ExportSql::areTableDefsEqual(QString table, Connection* c1, Connection* c2,
  QStringList columns2 = SQL::instance()->listColumns(table, c2->servertype(), db2);
  if(columns1.count() != columns2.count())
  {
-  qDebug() << table << " column counts differ";
+  qDebug() << table << " column counts differ! " << "src: " << columns1.count() << " dst: " << columns2.count();
   return false;
  }
  for(int i=0; i < columns1.count(); i++)
@@ -5016,8 +5547,8 @@ bool ExportSql::areTableDefsEqual(QString table, Connection* c1, Connection* c2,
   return false;
  }
 
- QList<FKInfo> info1 = SQL::instance()->getForeignKeyInfo(srcDb,config->currConnection, table);
- QList<FKInfo> info2 = SQL::instance()->getForeignKeyInfo(_targetDb,tgtConn, table);
+ QList<FKInfo> info1 = SQL::instance()->getForeignKeyInfo(db1,config->currConnection, table);
+ QList<FKInfo> info2 = SQL::instance()->getForeignKeyInfo(db2,tgtConn, table);
  if(info1.count() != info2.count())
  {
   qDebug() << table << " foreign key counts differ";

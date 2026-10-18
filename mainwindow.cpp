@@ -99,7 +99,6 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  config = Configuration::instance();
  config->getSettings();
 
-
  // see if there are any command line overrides
  if(argc >= 3)
  {
@@ -140,7 +139,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  while(!config->currConnection->isOpen())
  {
   this->setWindowTitle("Mapper - "+ config->currCity->name() + " ("+config->currConnection->description()+")");
-  db =config->currConnection->configure(config->currCity->getLabel());
+  QSqlDatabase db =config->currConnection->configure(config->currCity->getLabel());
 
   if(config->currConnection->isOpen())
   {
@@ -149,7 +148,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   }
   editConnections();
  }
-
+ QSqlDatabase db = QSqlDatabase::database(config->currConnection->connectionName());
  qInfo() << "database is open. " << db.connectionName() << " " << db.driverName() << " " << db.databaseName();
 
  //m_latitude = config->currCity->center.lat();
@@ -167,7 +166,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  geocoderRslt= new QLabel();
  statusBar()->addPermanentWidget(geocoderRslt);
 
- QSqlDatabase db = QSqlDatabase::database(config->currConnection->connectionName());
+ //QSqlDatabase db = QSqlDatabase::database(config->currConnection->connectionName());
  qDebug() << "database cn: " << db.connectionName() << " driver: " << db.driverName();
  ui->ssw->initialize();
 
@@ -2283,15 +2282,8 @@ void MainWindow::newCity(QAction* act )
   qApp->processEvents();
 
   // first, save some settings for the current city
-  //config->currCity->center = LatLng(m_latitude, m_longitude);
-  // config->currCity->zoom = m_zoom;
-  // config->currCity->mapType = m_mapType;
-  // config->currCity->mapId = m_mapid;
-  // config->currCity->mapSource = config->mapSource;
   if(!config->currCity->connections.contains(config->currConnection))
   {
-      //   config->currCity->connections.append(config->currConnection);
-      //   config->currCity->connectionNames.append(config->currConnection->description());
       config->currCity->addConnection(config->currConnection);
   }
 
@@ -2305,6 +2297,10 @@ void MainWindow::newCity(QAction* act )
     config->currCity->bDisplayStationMarkers = bDisplayStationMarkers;
     config->currCity->bDisplayRouteComments = bDisplayRouteComments;
     config->currCity->bShowOverlay = ui->chkShowOverlay->isChecked();
+    config->saveSettings();
+    QSqlDatabase db = QSqlDatabase::database(config->currConnection->connectionName());
+    if(db.isOpen()) db.close();
+    QSqlDatabase::removeDatabase(config->currConnection->connectionName());
 
     // load the new city and configuration
     config->currCity = city;
@@ -2317,73 +2313,62 @@ void MainWindow::newCity(QAction* act )
     config->bRunInBrowser = config->currCity->bDisplayMapInBrowser;
     ui->chkShowOverlay->setEnabled(false);
 
+    // if(connection->servertype() == "MimerSql")
+    // {
+    //     QString server = connection->host();
+    //     QMap<QString,QString> map = Connection::decodeConnectionString(connection->connectString());
+    //     server = map.value("Node");
+    //     Connection::connectToCityMimer(map.value("Database"), server,config->currCity->getLabel());
+    //     db = QSqlDatabase::database(config->currCity->getLabel());
+    //     connection->setConnectionName(db.connectionName());
+    //     //tgtConn->setDb(db);
+    // } else {
+    //     if (QSqlDatabase::contains(config->currCity->getLabel()))
+    //     {
+    //         QSqlDatabase oldDb = QSqlDatabase::database(config->currCity->getLabel());
+    //         if (oldDb.isOpen()) oldDb.close();
+    //     }
+    //     db = QSqlDatabase::addDatabase(connection->driver(), config->currCity->getLabel());
+    //     connection->setConnectionName(db.connectionName());
+    //     //tgtConn->setDb(db);
+    //     Connection::configureDb(db, connection);
+    // }
+    // connection->setConnectionName(config->currCity->getLabel());
+    // bool bOpen = db.isOpen();
+    // if(!bOpen)
+    // {
+    //     // if(connection->connectionType() == "ODBC" && !connection->connectString().isEmpty())
+    //     //     bOpen = db.open();
+    //     // else
+    //     //     bOpen = db.open(connection->userId(), connection->pwd());
+    //     sql->dbOpen(db);
+    // }
+    // if(!bOpen)
+    // {
+    //     QMessageBox::critical(this, tr("Error"), tr("The database connection could not be opened.\n"
+    //                                                 "%1").arg(db.lastError().text()));
+    //     QSqlError err = db.lastError();
+    //     qDebug() << err.text() + "\n";
+    //     qDebug() << db.driverName() + "\n";
+    //     qDebug() << "User:" + db.userName() + "\n";
+    //     qDebug() << "Host:" + db.hostName() + "\n";
+    //     qDebug() << "Connection name: " + db.connectionName() + "\n";
+    //     qDebug() << "DSN:" + db.databaseName() + "\n";
+    //     exit(EXIT_FAILURE);
+    // }
+    db =config->currConnection->configure(config->currCity->getLabel());
+
+    //SQL::instance()->checkTables(db);
+
     reloadMap();
     m_bridge->processScript("showRouteComment", "false");
 
     qInfo() << city->name() + "/" + connection->description();
     // close the current database and open the new one
-    db.close();
-#if 0
-    db = QSqlDatabase::addDatabase(config->currConnection->driver());
+    // db = QSqlDatabase::database(config->currConnection->connectionName());
 
-    if(config->currConnection->hostName != "")
-           db.setHostName(config->currConnection->hostName);
-    if(config->currConnection->port > 0)
-       db.setPort(config->currConnection->port);
+    // db.close();
 
-    if(config->currConnection->driver == "QODBC" || config->currConnection->driver == "QODBC3")
-        db.setDatabaseName(config->currConnection->DSN);
-    else
-    {
-     QString dbName = config->currConnection->database;
-     QFileInfo info(dbName);
-     if(!info.isAbsolute())
-     {
-      if(!dbName.startsWith("Resources/databases/"))
-      dbName = "Resources/databases/" + dbName;
-     }
-     db.setDatabaseName(dbName);
-    }
-    //db.setDatabaseName("SQLSERVER_SAMPLE");
-    db.setUserName(config->currConnection->UID);
-    db.setPassword(config->currConnection->PWD);
-    bool ok = db.open();
-    if(!ok)
-    {
-     QSqlError err = db.lastError();
-     qDebug() << err.text() + "\n";
-     qDebug() << db.driverName() + "\n";
-     qDebug() << "User:" + db.userName() + "\n";
-     qDebug() << "Host:" + db.hostName() + "\n";
-     qDebug() << "Connection name: " + db.connectionName() + "\n";
-     qDebug() << "DSN:" + db.databaseName() + "\n";
-    }
-    else
-    {
-     if(config->currConnection->driver == "QODBC" || config->currConnection->driver == "QODBC3")
-     {
-      if(config->currConnection->useDatabase != "default" && config->currConnection->useDatabase != "")
-      {
-       QSqlQuery query = QSqlQuery(db);
-       if(!query.exec(tr("use [%1]").arg(config->currConnection->useDatabase)))
-       {
-        SQLERROR(query);
-        db.close();
-        return;
-       }
-      }
-     }
-    }
-#ifndef NO_UDF
-    sql->loadSqlite3Functions();
-#endif
-    if(ok)
-    {
-     sql->checkTables(db);
-    }
-#endif
-    db = config->currConnection->configure(config->currCity->getLabel());
-    SQL::instance()->checkTables(db);
     StreetsTableModel::instance()->setDb();
     emit newCitySelected();
 
@@ -2456,7 +2441,7 @@ void MainWindow::newCity(QAction* act )
     routeView->clear();
     streetView->model()->setList(streetView->model()->getStreetInfoList());
     ui->ssw->initialize();
-}
+} // end newCity
 
 void MainWindow::newOverlay(QAction* act, bool noDelete)
 {

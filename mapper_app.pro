@@ -294,3 +294,12 @@ CONFIG(debug, debug|release) {
 QMAKE_POST_LINK += xcopy /y /d \"$$MYSQL_DRIVER_DIR_NATIVE\\libcrypto-3-x64.dll\" \"$$DESTDIR_NATIVE\\$$TARGET_SUBDIR\\\" $$escape_expand(\\n\\t)
 QMAKE_POST_LINK += xcopy /y /d \"$$MYSQL_DRIVER_DIR_NATIVE\\libssl-3-x64.dll\" \"$$DESTDIR_NATIVE\\$$TARGET_SUBDIR\\\" $$escape_expand(\\n\\t)
 }
+
+FORMS += \
+    ui/dialognewconnection.ui
+
+HEADERS += \
+    ui/dialognewconnection.h
+
+SOURCES += \
+    ui/dialognewconnection.cpp

@@ -96,7 +96,7 @@ void ExportDlg::chkAll_changed(bool isChecked)
     ui->chkStations->setChecked(isChecked);
     ui->chkTerminals->setChecked(isChecked);
     ui->chkTractionTypes->setChecked(isChecked);
-    ui->chkRouteComments->setChecked(isChecked);
+    //ui->chkRouteComments->setChecked(isChecked);
     ui->chkStreetDef->setChecked(isChecked);
     ui->chkRouteSeq->setChecked(isChecked);
     on_chkAll_toggled(isChecked);

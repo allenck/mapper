@@ -499,10 +499,13 @@ void WebViewBridge::cityBounds(double neLat, double neLng, double swLat, double 
     processScript("closeCityBoundsButton");
     emit on_cityBounds(bounds);
 
-    Parameters parms = SQL::instance()->getParameters();
-    parms.lat = center.lat();
-    parms.lon = center.lon();
-    SQL::instance()->updateParameters(parms);
+    Parameters parms;
+    if(SQL::instance()->getParameters(&parms))
+    {
+        parms.lat = center.lat();
+        parms.lon = center.lon();
+        SQL::instance()->updateParameters(parms);
+    }
 }
 
 void WebViewBridge::rightClicked(double lat, double lon)

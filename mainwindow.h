@@ -118,7 +118,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(int argc, char * argv[],QWidget *parent = 0);
     Ui::MainWindow *ui;
-    QSqlDatabase db;
+    //QSqlDatabase db;
     SQL* sql = nullptr;
     void setModel(QAbstractItemModel *model);
     //MapView *centralWidget;

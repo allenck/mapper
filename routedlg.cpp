@@ -380,7 +380,7 @@ void RouteDlg::setSegmentData(RouteData rd)
 void RouteDlg::setAddMode (bool value)
 {
     bAddMode = value;
-    Parameters parms = sql->getParameters();
+    // Parameters parms = sql->getParameters();
 //    ui->dateStart->setMinimumDate( parms.minDate);
 //    ui->dateStart->setMaximumDate( parms.maxDate);
 //    ui->dateEnd->setMaximumDate( parms.maxDate);
@@ -406,7 +406,7 @@ void RouteDlg::Form_Load()
 //    }
     formNotLoaded = false;
 
-    Parameters parms = sql->getParameters();
+    // Parameters parms = sql->getParameters();
 //    dateStart.MinDate = parms.minDate;
 //    dateStart.MaxDate = parms.maxDate;
 //    dateEnd.MinDate = parms.minDate;

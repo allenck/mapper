@@ -81,7 +81,7 @@ public:
     void beginTransaction (QString name);
     void commitTransaction (QString name);
     void rollbackTransaction (QString name);
-    QSqlDatabase getDb();
+    //QSqlDatabase getDb();
 
     Q_DECL_DEPRECATED bool updateSegment(qint32 SegmentId);
     LatLng getPointOnSegment(qint32 pt, qint32 segmentId);
@@ -134,9 +134,9 @@ public:
     Q_DECL_DEPRECATED void setConfig(Configuration *config);
     QList<QString> getRouteNames(qint32 route);
     qint32 getRouteCompany(qint32 route);
-    Parameters getParameters(QSqlDatabase db = QSqlDatabase::database());
+    bool getParameters(Parameters *parms, QSqlDatabase db = QSqlDatabase::database(_connectionName));
     bool insertParameters(Parameters, QSqlDatabase db);
-    bool updateParameters(Parameters parms, QSqlDatabase db= QSqlDatabase::database());
+    bool updateParameters(Parameters parms, QSqlDatabase db= QSqlDatabase::database(_connectionName));
     QList<SegmentData *> getRouteSegmentsBySegment(qint32 segmentId);
     QList<SegmentData> getRouteSegmentsBySegment(int route, qint32 segmentId);
     QList<SegmentData> getRouteSegmentsForRouteNbr(QString route);
@@ -233,10 +233,11 @@ public:
     bool updateSegment(SegmentInfo *sd, bool bNotify = true);
     bool updateSegment(SegmentData* sd);
     //QT_DEPRECATED bool updateSegment(SegmentInfo* );
-    bool updateTractionType(qint32 tractionType, QString description, QString displayColor, int routeType, QSqlDatabase db = QSqlDatabase());
+    bool updateTractionType(qint32 tractionType, QString description, QString displayColor, int routeType,
+                            QSqlDatabase db = QSqlDatabase::database(_connectionName));
     void checkTables(QSqlDatabase db);
-    bool executeScript(QString path, QSqlDatabase db = QSqlDatabase());
-    bool executeCommand(QString commandString, QSqlDatabase db  = QSqlDatabase(), QList<QVariant> *pList=nullptr);
+    bool executeScript(QString path, QSqlDatabase db = QSqlDatabase::database(_connectionName));
+    bool executeCommand(QString commandString, QSqlDatabase db  = QSqlDatabase::database(_connectionName), QList<QVariant> *pList=nullptr);
     QString getPrevRouteName(QDate dt);
     QString getNextRouteName(QDate dt);
     bool testAltRoute();
@@ -253,7 +254,7 @@ public:
     // QT_DEPRECATED QMap<int, RouteName*> *routeNameList();
     // QT_DEPRECATED QMap<QString,RouteName*>* routeNameAList();
     bool createSqlDatabase(QString dbName, QSqlDatabase db, QString dbType);
-    QString getDatabase(QString serverType, QSqlDatabase db = QSqlDatabase());
+    QString getDatabase(QString serverType, QSqlDatabase db = QSqlDatabase::database(_connectionName));
     bool useDatabase(QString dbName, QString serverType, QSqlDatabase db);
     QStringList showMySqlDatabases(QSqlDatabase db);
     QStringList showMsSqlDatabases(QSqlDatabase db);
@@ -273,8 +274,8 @@ public:
     bool doesFunctionExist(QString name, QString serverType);
     QStringList listViews();
     QList<SegmentData *> segmentDataListFromView(QString where);
-    QStringList listColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase(), QStringList *types=nullptr);
-    QStringList listPkColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase(), QStringList *types=nullptr);
+    QStringList listColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase::database(_connectionName), QStringList *types=nullptr);
+    QStringList listPkColumns(QString table, QString serverType, QSqlDatabase db = QSqlDatabase::database(_connectionName), QStringList *types=nullptr);
     bool getForeignKeyCheck();
     void setForeignKeyCheck(bool b);
     int displaySqlError(QSqlQuery query, QMessageBox::StandardButtons buttons, QString text, QString func, QString file, int line);
@@ -303,7 +304,8 @@ public:
     CommentInfo getPrevComment(CommentInfo ciIn);
     CommentInfo getNextComment(CommentInfo ciIn);
     bool validateJSON(QString s);
-
+    QString connectionName() {return _connectionName;}
+    void setConnectionName(QString connectionName){_connectionName = connectionName;}
 
 signals:
     void details(QString);
@@ -315,7 +317,7 @@ signals:
 private:
     SQL();
     static SQL* _instance;
-    QSqlDatabase db;
+    //QSqlDatabase db;
     void myExceptionHandler(Exception e);
     Configuration *config =nullptr;
    // bool compareSegmentData(const segmentData & sd1, const segmentData &sd2);
@@ -330,6 +332,7 @@ private:
     QStack<QString> delimiters;
     int linesRead =0;
     QSqlQuery* query = nullptr;
+    static QString _connectionName;
     friend class StreetsTableModel;
     friend class ExportSql;
 };

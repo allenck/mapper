@@ -39,7 +39,7 @@ private:
  Ui::NewQueryDialog *ui;
  Configuration* config;
  QString currQueryFilename;
- QSqlDatabase db;
+ // QSqlDatabase db;
  QTimer* timer;
  int i_Max_Tab_Results;
  bool boolGetItemTableView(QTableView *view);

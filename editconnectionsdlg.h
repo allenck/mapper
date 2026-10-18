@@ -34,6 +34,7 @@ private:
  Configuration* config;
  QStringList drivers;
  QStringList dbTypes;
+ QString _connectionString;
  bool bCbConnectionsTextChanged = false;
  bool bCbCitiesTextChanged=false;
  bool testConnection(bool bCreate = false);

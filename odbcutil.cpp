@@ -315,7 +315,7 @@ void ODBCUtil::getDSNs(QString odbcini)
                     if(dsn->name.isEmpty())
                     {
                         dsn->name = sectionName;
-                        dsnByName.insert(dsn->name, dsn);
+                        //dsnByName.insert(dsn->name, dsn);
                     }
                     if(ini->fileName() == ".odbc.ini")
                         dsn->userDsn = true;
@@ -373,14 +373,18 @@ void ODBCUtil::getDSNs(QString odbcini)
                     }
 
                     // Re-index into the specialized MultiMap so fillDSNCombo can see it
-                    if(validTypes.contains(dsn->type)) {
-                        dsnByType.insert(dsn->type, dsn);
-                    }
+                    // if(validTypes.contains(dsn->type)) {
+                    //     dsnByType.insert(dsn->type, dsn);
+                    // }
                     dsnByName.insert(dsn->name, dsn);
-
                 }
             }
         }
+        foreach(DSN*dsn, dsnByName.values())
+        {
+            if(validTypes.contains(dsn->type))
+                dsnByType.insert(dsn->type, dsn);
+        };
     }
 }
 #endif
@@ -391,11 +395,11 @@ DSN* ODBCUtil::getDsn(QString dsn)
 
 void ODBCUtil::fillDSNCombo(QComboBox* box, QString type, QString city)
 {
-    if(box->isHidden() || !box->isEnabled())
-        return;
+    // if(box->isHidden() || !box->isEnabled())
+    //     return;
     if(type.isEmpty() || type == "Sqlite")
         return;
-    if(dsnByName.values().empty())
+    if(dsnByName.values().count()==0)
         return;
     box->setEnabled(true);
     if(!validTypes.contains(type))
@@ -503,7 +507,7 @@ void ODBCUtil::getWinDSNs()
     dsnByName.clear();
     dsnByType.clear();
     dsns = winReg1.childKeys();
-    qDebug() << QString("%1").arg(dsns.count());
+    qDebug() <<"dsns.count " << QString("%1").arg(dsns.count());
     foreach (QString key, dsns) {
         QString keyVal = winReg1.value(key).toString();
         map.clear();
@@ -615,7 +619,7 @@ void ODBCUtil::getWinDSNs()
 
     // add also systemDsn
     dsns = winReg2.childKeys();
-    qDebug() << QString("%1").arg(dsns.count());
+    qDebug() <<"dsns count " << QString("%1").arg(dsns.count());
     foreach (QString key, dsns) {
         QString keyVal = winReg2.value(key).toString();
         DSN* dsn = new DSN();

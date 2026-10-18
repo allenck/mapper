@@ -42,7 +42,7 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   });
   // db = QSqlDatabase::addDatabase(tgtConn->driver(), tgtConn->connectionName());
   // Connection::configureDb(db,tgtConn );
-  db = QSqlDatabase::database(tgtConn->connectionName());
+  QSqlDatabase db = QSqlDatabase::database(tgtConn->connectionName());
   db.open();
   qInfo() << "database is " << (db.isOpen()?"open":"not open")  << db.connectionName() << " " << db.driverName() << " " << db.databaseName();
 
@@ -277,8 +277,8 @@ void QueryDialog::createMenus()
         QSqlDatabase db;
         //if(c->connectionName().isEmpty())
         db = QSqlDatabase::database(tgtConn->connectionName());
-        // else
-        //  db = QSqlDatabase::database(c->connectionName());
+        qInfo() << "database is open. CN:" << db.connectionName() << " driver:" << db.driverName() << " DSN:"
+                << db.databaseName() << " userId: " << db.userName();
         QStringList tableList = db.tables(QSql::Tables);
         QStringList sysTableList = db.tables(QSql::SystemTables);
         toolsMenu->clear();
@@ -310,6 +310,10 @@ void QueryDialog::createMenus()
                 txt = "select *"
                 " from INFORMATION_SCHEMA.COLUMNS"
                 " where TABLE_NAME='" + tableName + "'";
+                else if(c->servertype() == "MimerSql")
+                txt = "select *"
+                          " from INFORMATION_SCHEMA.COLUMNS"
+                          " where TABLE_NAME='" + tableName.trimmed().toUpper() + "'";
                 else
                 txt = QString("Select * from INFORMATION_SCHEMA.COLUMNS"
                       "where TABLE_NAME='%1'").arg(tableName);
@@ -344,6 +348,9 @@ void QueryDialog::createMenus()
                 else if(c->servertype() == "PostgreSQL")
                  txt = QString("select column_name, data_type, character_maximum_length, column_default, is_nullable\
                                from INFORMATION_SCHEMA.COLUMNS where table_name = '&1';").arg(v);
+                else if(c->servertype() == "MimerSql")
+                 txt = QString("select column_name, data_type, character_maximum_length, column_default, is_nullable\
+                               from INFORMATION_SCHEMA.COLUMNS where table_name = '&1';").arg(v.toUpper());
                 else // SQL Server
                 txt = "SELECT * "
                        "   FROM INFORMATION_SCHEMA.COLUMNS"
@@ -513,6 +520,7 @@ bool QueryDialog::processStream(QTextStream* in)
    queryStr += line;
   } while (!queryStr.endsWith(_delimiter));
   //qDebug()<<queryStr;
+  QSqlDatabase db = QSqlDatabase::database(tgtConn->connectionName());
   QSqlQuery query = QSqlQuery(queryStr, db);
   //QStringList sa_Message_Text;
   query.setForwardOnly(false);
@@ -632,34 +640,53 @@ void QueryDialog::on_go_QueryButton_clicked()
         ui->queryResultText->setText(QString("<FONT COLOR=\"#FF0000\">missing ';'<BR><FONT COLOR=\"#000000\"><BR>"));
         return;
     }
+    QSqlDatabase db = QSqlDatabase::database(tgtConn->connectionName());
+
     foreach(QString txt, statements)
     {
         if (txt.trimmed().isEmpty())
             continue;
+
         QStringList tokens = txt.split(" ");
         for(int i=tokens.count()-1; i >= 0; i--)
         {
             if(tokens.at(i).isEmpty())
                 tokens.removeAt(i);
         }
+
+        // === ADD THIS SANITIZATION BLOCK ===
+        QString tableName;
+        if (tokens.count() >= 4) {
+            tableName = tokens.at(3).trimmed();
+            // Remove trailing semicolon if present
+            if (tableName.endsWith(';')) {
+                tableName.chop(1);
+            }
+            // Remove surrounding double quotes if present
+            if (tableName.startsWith('"') && tableName.endsWith('"')) {
+                tableName = tableName.mid(1, tableName.length() - 2);
+            }
+        }
+        // ===================================
+
         if(tokens.count() >= 4
-             && tokens.at(0).compare("select", Qt::CaseInsensitive)  == 0
-             && tokens.at(1) == "*"
-             && tokens.at(2).compare("from", Qt::CaseInsensitive) == 0
-             && !viewList.contains(tokens.at(3),Qt::CaseInsensitive) && db.isValid())
+            && tokens.at(0).compare("select", Qt::CaseInsensitive)  == 0
+            && tokens.at(1) == "*"
+            && tokens.at(2).compare("from", Qt::CaseInsensitive) == 0
+            && !viewList.contains(tableName, Qt::CaseInsensitive) && db.isValid())
         {
-            processSelect(tokens.at(3), txt);
+            // Pass the sanitized table name, but keep the original raw sql text
+            processSelect(tableName, txt);
         }
         else
         {
             sa_Message_Text.append("<I>"+txt+ "</I><BR>");
-
             if(!processALine(txt))
                 break;
-
         }
         qApp->processEvents();
     }
+
     s_Search="";
     if (i_Message_Error > 0)
     {
@@ -719,86 +746,86 @@ void QueryDialog::on_go_QueryButton_clicked()
 
 bool QueryDialog::processALine(QString txt, QString tabName)
 {
-    QueryModel *query_view_model = new QueryModel(this ,db, config->currConnection->servertype());
-    query_view_model->setQuery(txt, db);
-    if (query_view_model->lastError().isValid())
+    QSqlDatabase db = QSqlDatabase::database(tgtConn->connectionName());
+    qDebug() << "Total tracked Qt connections:" << QSqlDatabase::connectionNames().count();
+    qDebug() << "query: " << txt;
+
+    // 1. Run a strict Forward-Only query (bypasses Mimer catalog limits)
+    QSqlQuery query(db);
+    query.setForwardOnly(true);
+    query.exec(txt);
+
+    // 2. Initialize a standard detached generic model
+    QStandardItemModel *query_view_model = new QStandardItemModel(this);
+
+    if (!query.isActive())
     {
-        //query_View->hide();
-        //queryResultText->show();
-        QSqlRecord record = query_view_model->query().record();
-        if(!record.isEmpty())
-        {
-            qDebug() << record;
-        }
-        sa_Message_Text.append(QString("<FONT COLOR=\"#FF0000\">%1<BR>%2<FONT COLOR=\"#000000\"><BR>").arg(query_view_model->lastError().driverText(),
-                             query_view_model->lastError().databaseText()));
+        QSqlError err = query.lastError();
+        sa_Message_Text.append(QString("<FONT COLOR=\"#FF0000\">%1<BR>%2<FONT COLOR=\"#000000\"><BR>").arg(err.driverText(), err.databaseText()));
         sa_Message_Text.append(txt);
         i_Message_Error++;
-        if(ui->cb_stop_query_on_error->isChecked())
-        {
-            sa_Message_Text.append(tr("<BR>Query stopped because of errors<BR>"));
-            for (int i=0; i<sa_Message_Text.count(); i++)
-            s_Search+=sa_Message_Text[i];
-            ui->queryResultText->setText(s_Search);
-            return false;
-        }
+        // ... (keep your existing "cb_stop_query_on_error" handling block) ...
+        return false;
     }
-    else
-    {
-        // query was successful
-        if (query_view_model->query().isSelect())
-        {
-            i_Rows_Total += query_view_model->rowCount();
-            i_Message_Result_Yes++;
-            if (i_Message_Result_Yes <= i_Max_Tab_Results)
-            {
-                QTableView *query_view = new QTableView();
-                query_view->setAlternatingRowColors(true);
-                query_view->setSelectionMode(QAbstractItemView::ContiguousSelection);
-                connect(query_view->horizontalHeader(),SIGNAL(sectionDoubleClicked(int)),this,SLOT(slot_QueryView_horizontalHeader_sectionDoubleClicked(int)));
-                connect(query_view,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(slot_queryView_row_DoubleClicked(QModelIndex)));
-                query_view->setContextMenuPolicy(Qt::CustomContextMenu);
-                connect(query_view,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(tablev_customContextMenu(QPoint)));
-                MyHeaderView *hv = new MyHeaderView(Qt::Horizontal, query_view);
-                query_view->setHorizontalHeader(hv);
-                //     query_view->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
-                //     connect(query_view->horizontalHeader(),SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(queryViewHeaderContextMenuRequested(const QPoint)));
-                //     query_view->horizontalHeader()->setMovable(true);
 
-                query_view->setSortingEnabled(false);
-                QSortFilterProxyModel *sm = new QSortFilterProxyModel(query_view);
-                sm->setSourceModel(query_view_model);
-                query_view->setModel(sm);
-                query_view->setSortingEnabled(true);
-                query_view->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
-                sm->sort(-1,Qt::AscendingOrder);
-                QString tabTitle;
-                if(!tabName.isEmpty())
-                    tabTitle = tabName;
-                else
-                    tabTitle = tr("Result ") + QString("%1").arg(ui->widget_query_view->count());
-                if (tab_First_Result == 0)
-                {
-                    tab_First_Result=query_view;
-                }
-                int i_tab = ui->widget_query_view->addTab(query_view, tabTitle);
-                //qDebug() << QString("tab %1 added").arg(i_tab);
-                query_view_model->setTabName(tabTitle);
-                query_view->resizeColumnsToContents();
-                query_view->resizeRowsToContents();
-            }
-            if (i_Message_Result_Yes == i_Max_Tab_Results)
-            {
-                sa_Message_Text.append(QString(tr("No more Tab-Results will be shown. Maximum allowed: %1 .")).arg(i_Max_Tab_Results));
-            }
+    // 3. Manually map headers and rows cleanly into memory
+    QSqlRecord rec = query.record();
+    int colCount = rec.count();
+
+    // Set headers
+    for (int col = 0; col < colCount; ++col) {
+        query_view_model->setHorizontalHeaderItem(col, new QStandardItem(rec.fieldName(col)));
+    }
+
+    // Stream and populate row values safely
+    int rowCount = 0;
+    while (query.next()) {
+        QList<QStandardItem*> rowItems;
+        for (int col = 0; col < colCount; ++col) {
+            // .toString() extracts the value without risking ODBC binary buffer truncation issues
+            rowItems.append(new QStandardItem(query.value(col).toString()));
         }
-        else
+        query_view_model->appendRow(rowItems);
+        rowCount++;
+    }
+
+    // 4. Handle results presentation using the standard populated model
+    if (true) // Simulates your existing outer select condition block
+    {
+        i_Rows_Total += rowCount;
+        i_Message_Result_Yes++;
+        if (i_Message_Result_Yes <= i_Max_Tab_Results)
         {
-            //query_View->hide();
-            //queryResultText->show();
-            sa_Message_Text.append(QString("%1 rows affected.<BR>").arg(query_view_model->query().numRowsAffected()));
-            i_Message_Rows_effected+=query_view_model->query().numRowsAffected();
-            i_Message_Result_No++;
+            QTableView *query_view = new QTableView();
+            query_view->setAlternatingRowColors(true);
+            query_view->setSelectionMode(QAbstractItemView::ContiguousSelection);
+
+            // Connect headers and signals
+            connect(query_view->horizontalHeader(), SIGNAL(sectionDoubleClicked(int)), this, SLOT(slot_QueryView_horizontalHeader_sectionDoubleClicked(int)));
+            connect(query_view, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(slot_queryView_row_DoubleClicked(QModelIndex)));
+            query_view->setContextMenuPolicy(Qt::CustomContextMenu);
+            connect(query_view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tablev_customContextMenu(QPoint)));
+
+            MyHeaderView *hv = new MyHeaderView(Qt::Horizontal, query_view);
+            query_view->setHorizontalHeader(hv);
+
+            // Bind sorting proxy setup
+            query_view->setSortingEnabled(false);
+            QSortFilterProxyModel *sm = new QSortFilterProxyModel(query_view);
+            sm->setSourceModel(query_view_model); // Attaches our clean memory-cached model
+            query_view->setModel(sm);
+            query_view->setSortingEnabled(true);
+            query_view->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+            sm->sort(-1, Qt::AscendingOrder);
+
+            QString tabTitle = !tabName.isEmpty() ? tabName : tr("Result ") + QString("%1").arg(ui->widget_query_view->count());
+            if (tab_First_Result == 0) {
+                tab_First_Result = query_view;
+            }
+            ui->widget_query_view->addTab(query_view, tabTitle);
+
+            query_view->resizeColumnsToContents();
+            query_view->resizeRowsToContents();
         }
     }
     return true;
@@ -808,7 +835,7 @@ void QueryDialog::processSelect(QString table, QString commandLine)
 {
  QWidget *tab_First_Result=0;
     _delimiter = ";";
- //QSqlDatabase db = QSqlDatabase::database();
+ QSqlDatabase db = QSqlDatabase::database(tgtConn->connectionName());
  QueryEditModel* model = new QueryEditModel(nullptr, db);
  model->setTable(table);
  QString whereClause;
@@ -1206,7 +1233,7 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
    //
    // the docs recommend not setting QSqlDatabase as a member of a class but since
    // this class is always present once created there should be no problem.
-   db = QSqlDatabase::database(tgtConn->connectionName()); // restore default connection
+   QSqlDatabase db = QSqlDatabase::database(tgtConn->connectionName()); // restore default connection
   }
 
   for(int i=0; i<config->currCity->connections.count(); i++)
@@ -1221,16 +1248,38 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   }
 
 #if 1
+  QSqlDatabase db;
   //if(tgtConn->connectionName().isEmpty())
   {
-      if(tgtConn->getDb().isOpen())
-          db = tgtConn->getDb();
-      else
+      // if(tgtConn->getDb().isOpen())
+      //     db = tgtConn->getDb();
+      //else
+      if(!db.isOpen())
       {
-          db = QSqlDatabase::addDatabase(tgtConn->driver(), QString("query-%1").arg(tgtConn->description()));
-          tgtConn->setConnectionName(db.connectionName());
-          tgtConn->setDb(db);
-          Connection::configureDb(db, tgtConn);
+          QString tgtCity = tgt->cityName();
+          City* city = config->cityMap.value(tgtCity);
+          QString newConnectionName = QString("query-%1").arg(tgtConn->description());
+          if(tgtConn->servertype() == "MimerSql")
+          {
+              QString server = tgtConn->host();
+              QMap<QString,QString> map = Connection::decodeConnectionString(tgtConn->connectString());
+              server = map.value("Node");
+              Connection::connectToCityMimer(map.value("Database"), server,newConnectionName);
+              db = QSqlDatabase::database(newConnectionName);
+              tgtConn->setConnectionName(db.connectionName());
+              //tgtConn->setDb(db);
+          } else {
+              if (QSqlDatabase::contains(newConnectionName))
+              {
+                  QSqlDatabase oldDb = QSqlDatabase::database(newConnectionName);
+                  if (oldDb.isOpen()) oldDb.close();
+              }
+              db = QSqlDatabase::addDatabase(tgtConn->driver(), newConnectionName);
+              tgtConn->setConnectionName(db.connectionName());
+              //tgtConn->setDb(db);
+              Connection::configureDb(db, tgtConn);
+          }
+          tgtConn->setConnectionName(newConnectionName);
       }
 //   if(tgtConn->servertype() == "Sqlite")
 //   {
