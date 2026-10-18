@@ -310,7 +310,8 @@ void Connection::configureDb(QSqlDatabase db, Connection* currConnection)
 #include <QSqlQuery>
 #include <QDebug>
 
-bool Connection::connectToCityMimer(const QString &dbName, const QString &server, const QString &connectionName)
+bool Connection::connectToCityMimer(const QString &dbName, const QString &server, const QString &connectionName,
+                                    const QString userid, QString password)
 {
     // Ensure we isolate the connection tracking string
     //const QString connectionName = "MimerCityConnection";
@@ -337,9 +338,9 @@ bool Connection::connectToCityMimer(const QString &dbName, const QString &server
                                    "Node=%2;"
                                    "Service=1360;"  // Verified from your dbVis Connection URL string
                                    "Database=%1;"
-                                   "Uid=mapperuser;"
-                                   "Pwd=iic723@knobacres;"
-                                   ).arg(dbName.toLower(), server);
+                                   "Uid=3;"
+                                   "Pwd=4;"
+                                   ).arg(dbName.toLower(), server,userid,password);
 
     db.setDatabaseName(connectionString);
 
