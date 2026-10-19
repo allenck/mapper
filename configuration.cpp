@@ -621,7 +621,7 @@ void Configuration::getSettings()
         //ncn->setUniqueId(QUuid::fromString(settings.value("uniqueId", QUuid::createUuid().toString()).toString()));
         if(ncn->id() == nc->curConnectionId)
            nc->setConnectionUniqueId(uuid);
-        if(ncn->connectionType() == "Sqlite")
+        if(ncn->connectionType() == "Sqlite" || ncn->connectionType() == "Local")
         {
           ncn->setConnectionType("Sqlite");
           QString fileName;
@@ -1020,7 +1020,7 @@ void Configuration::getSettings2()
             ncn->setUniqueId(QUuid::fromString(settings.value("uniqueId", QUuid::createUuid().toString()).toString()));
             if(ncn->id() == nc->curConnectionId)
                 nc->setConnectionUniqueId(uuid);
-            if(ncn->connectionType() == "Sqlite")
+            if(ncn->connectionType() == "Sqlite" || ncn->connectionType() == "Local")
             {
                 ncn->setConnectionType("Sqlite");
                 QString fileName;

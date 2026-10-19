@@ -2000,7 +2000,7 @@ bool EditConnectionsDlg::openTestDb()
     else if(_testConnection->connectionType() == "ODBC")
     {
         QString connector = ui->cbODBCDsn->currentData().toString();
-        DSN* dsn = dsn = odbcUtil->getDsn(connector);
+        DSN* dsn = odbcUtil->getDsn(connector);
         if(!dsn)
             return false;
         if(_testConnection->servertype() == "PostgreSQL" && _testConnection->driver() == "QODBC")
@@ -2010,10 +2010,6 @@ bool EditConnectionsDlg::openTestDb()
             // Because PostgreSQL does not have a use [database] command, we will instead use a connection string.
             // in other cases, a connection string might be necessary if there are connection options.
 
-            // connstring = odbcUtil->connectString2("{" + dsn->driverName + "}", dsn->server, dsn->port,
-            //                                        dsn->userId, (ui->cbDbType->currentText()=="PostgreSQL")?"md5"+md5String:dsn->password, ui->cbUseDatabase->currentText() );
-            // connstring = odbcUtil->connectString2("{" + dsn->driverName + "}", dsn->server, dsn->port,
-            //                                        dsn->userId, dsn->password, ui->cbUseDatabase->currentText() );
             connstring = odbcUtil->connectString2("{" + dsn->driverName + "}",ui->txtHost->text(), dsn->port,
                                                      ui->txtUserId->text(), ui->txtPWD->text(), ui->cbUseDatabase->currentText() );
             connstring.append(QString("sslmode=%1;").arg(ui->cbSslMode->currentText()));

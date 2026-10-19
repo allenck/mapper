@@ -3,6 +3,7 @@
 2. editCityDialog now has option to hide overlays for other cities.
 3. provide support for latest MySql ODBC driver
 4. provide support for MimerSql.
+5. add new dialog to collect information when adding a connection.
 
 **Recent Changes September 2026 VERSION=1.2.10
 1. Add new OpenStreetMap and Mapquest map sources.

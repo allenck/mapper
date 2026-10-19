@@ -310,7 +310,7 @@ void Connection::configureDb(QSqlDatabase db, Connection* currConnection)
 
 
 bool Connection::connectToCityMimer(const QString &dbName, const QString &server, const QString &connectionName,
-                                    const QString userid, QString password)
+                                    QString userid, QString password)
 {
     // Ensure we isolate the connection tracking string
     //const QString connectionName = "MimerCityConnection";
@@ -349,6 +349,35 @@ bool Connection::connectToCityMimer(const QString &dbName, const QString &server
     }
 
     qDebug() << "Successfully attached to Mimer SQL engine for:" << dbName;
+    return true;
+}
+
+bool Connection::connectToPostgreSQL(const DSN* dsn, const QString &server, const QString &connectionName,
+                                    const QString &useDatabase, const QString &userid, const QString &password)
+{
+
+    if (QSqlDatabase::contains(connectionName)) {
+        {
+            QSqlDatabase oldDb = QSqlDatabase::database(connectionName);
+            if (oldDb.isOpen()) oldDb.close();
+        }
+        QSqlDatabase::removeDatabase(connectionName);
+    }
+
+    // Initialize the primary QODBC driver base
+    QSqlDatabase db = QSqlDatabase::addDatabase("QODBC", connectionName);
+
+    QString connectionString = ODBCUtil::instance()->connectString2("{" + dsn->driverName + "}",server, dsn->port,
+                                          userid, password,useDatabase );
+
+    db.setDatabaseName(connectionString);
+
+    if (!db.open()) {
+        qDebug() << "Mimer Error targeting" << useDatabase << ":" << db.lastError().driverText();
+        return false;
+    }
+
+    qDebug() << "Successfully attached to PostgreSQL engine for:" << useDatabase;
     return true;
 }
 

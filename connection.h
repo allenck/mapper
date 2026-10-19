@@ -94,8 +94,11 @@ public:
  void setDefaultSqlDatabase(QString defaultSqlDatabase) {_defaultSqlDatabase = defaultSqlDatabase;}
  static void configureDb(QSqlDatabase db, Connection *currConnection);
  static bool connectToCityMimer(const QString &db_name, const QString &server,
-                                const QString &connectionName, const QString userid = "mapperuser",
+                                const QString &connectionName, QString userid = "mapperuser",
                                 QString password = "iic723@knobacres");
+ static bool connectToPostgreSQL(const DSN* dsn, const QString &server, const QString &connectionName,
+                                 const QString &useDatabase, const QString &userid, const QString &password);
+
  static QMap<QString,QString> decodeConnectionString(QString cs);
  //QString mySqlDatabase(){return _mySqlDatabase;}
  //void setMySqlDatabase(QString name){_mySqlDatabase =name;}
