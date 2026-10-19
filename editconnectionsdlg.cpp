@@ -107,7 +107,7 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
     connect(ui->btnTest,SIGNAL(clicked(bool)), this, SLOT(btnTestClicked()));
     connect(ui->btnNew, &QPushButton::clicked, this, [=](){
         DialogNewConnection dlg = DialogNewConnection(this);
-        dlg.setCity(config->currCity->getLabel());
+        dlg.setCity(config->currCity);
         int rslt = dlg.exec();
         if(rslt == QDialog::Accepted)
         {

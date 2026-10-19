@@ -36,6 +36,11 @@ void ODBCUtil::initialize()
     getDrivers();
     getDSNs(QDir::home().absolutePath() + QDir::separator()+ ".odbc.ini");
     getDSNs(odbcini);
+    foreach(DSN*dsn, dsnByName.values())
+    {
+        if(validTypes.contains(dsn->type))
+            dsnByType.insert(dsn->type, dsn);
+    };
 #else
     getWinDrivers();
     getWinDSNs();
@@ -380,11 +385,6 @@ void ODBCUtil::getDSNs(QString odbcini)
                 }
             }
         }
-        foreach(DSN*dsn, dsnByName.values())
-        {
-            if(validTypes.contains(dsn->type))
-                dsnByType.insert(dsn->type, dsn);
-        };
     }
 }
 #endif
