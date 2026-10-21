@@ -117,6 +117,7 @@ class MainWindow : public QMainWindow
 
 public:
     MainWindow(int argc, char * argv[],QWidget *parent = 0);
+    ~MainWindow();
     Ui::MainWindow *ui;
     //QSqlDatabase db;
     SQL* sql = nullptr;

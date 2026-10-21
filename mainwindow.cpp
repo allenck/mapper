@@ -504,6 +504,12 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   config->saveSettings();
 }
 
+MainWindow::~MainWindow()
+{
+   delete ui;
+}
+
+
 void MainWindow::disableSegment_Route_changes(bool b)
 {
     // called by dialogChangeRoute, modifyRouteDateDlg. etc
@@ -1207,10 +1213,6 @@ void MainWindow::fillAdditionalOverlayMenu()
   });
 }
 
-//MainWindow::~MainWindow()
-//{
-//    delete ui;
-//}
 void MainWindow::addJSObject() {
     // Add m_bridge to JavaScript Frame as member "webViewBridge".
 #ifndef USE_WEBENGINE

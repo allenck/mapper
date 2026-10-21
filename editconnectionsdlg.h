@@ -39,7 +39,7 @@ private:
  bool bCbCitiesTextChanged=false;
  bool testConnection(bool bCreate = false);
  bool openTestDb();
- QSqlDatabase db;
+ //QSqlDatabase db;
  QTimer *timer;
  QTcpSocket socket;
  QStringList databases;
@@ -75,6 +75,8 @@ private:
   void checkHost(QString txtHost);
   void createDescription();
   void cb_enable(QComboBox* box, bool b);
+  QString _testCN = "testConnection";
+  QString _connstring;
 
 private slots:
  void cbCitiesSelectionChanged(int sel);

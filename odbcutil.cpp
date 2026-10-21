@@ -547,6 +547,9 @@ void ODBCUtil::getWinDSNs()
                 if(iniKey3.compare("Description",Qt::CaseInsensitive)==0)
                 {
                     dsn->descr = winReg.value(iniKey3).toString();
+                    if(dsn->descr.contains("MsSql",Qt::CaseInsensitive)
+                        || dsn->descr.contains("Sql Server",Qt::CaseInsensitive))
+                        dsn->type = "MsSql";
                 }
                 if(iniKey3.compare("Server", Qt::CaseInsensitive)==0)
                 {

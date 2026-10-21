@@ -13,7 +13,7 @@ greaterThan(QT_MAJOR_VERSION, 4): {
 message(WEBENGINE  " = "  $$WEBENGINE)
 
  QT       += core gui  network sql xml widgets websockets webchannel
- greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport webenginewidgets gui
+ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport webenginewidgets gui concurrent
  DEFINES += USE_WEBENGINE
  message("using WebEngine")
 

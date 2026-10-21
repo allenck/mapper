@@ -369,11 +369,11 @@ bool Connection::connectToPostgreSQL(const DSN* dsn, const QString &server, cons
 
     QString connectionString = ODBCUtil::instance()->connectString2("{" + dsn->driverName + "}",server, dsn->port,
                                           userid, password,useDatabase );
-
+    qDebug() << "PostgreSQL connectString: " << connectionString;
     db.setDatabaseName(connectionString);
 
     if (!db.open()) {
-        qDebug() << "Mimer Error targeting" << useDatabase << ":" << db.lastError().driverText();
+        qDebug() << "PostgreSQL Error targeting" << useDatabase << ":" << db.lastError().driverText();
         return false;
     }
 

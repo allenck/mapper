@@ -4738,7 +4738,7 @@ bool ExportSql::createCommentsTable(QSqlDatabase db, QString dbType)
    "SET QUOTED_IDENTIFIER ON;"\
                 "SET ANSI_PADDING ON;" \
    "DROP TABLE IF EXISTS [Comments];" \
-   "CREATE TABLE [dbo].[comments]("\
+   "CREATE TABLE [dbo].[Comments]("\
         "[commentKey] [int] IDENTITY(1,1) NOT NULL,"\
         "[tags] [varchar](1000) NOT NULL,"\
         "[routeList] [varchar](100) NOT NULL,"\
