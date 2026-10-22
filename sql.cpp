@@ -11224,6 +11224,7 @@ bool SQL::executeCommand(QString commandString, QSqlDatabase db,  QList<QVariant
         pList->append(query.value(ix++));
      }
  }
+ //delete query;
  return true;
 }
 bool SQL::executeScript(QString path, QSqlDatabase db)

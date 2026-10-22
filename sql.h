@@ -336,6 +336,7 @@ private:
 
     friend class StreetsTableModel;
     friend class ExportSql;
+    friend class MainWindow;
 };
 class NotifyRouteChange
 {
