@@ -506,7 +506,34 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
 MainWindow::~MainWindow()
 {
-   delete ui;
+    qDebug() << "Executing MainWindow resource teardown cleanup protocol...";
+
+    // 1. Break the active channel references running on the JavaScript engine layers
+    // (This stops QWebChannel and QWebEngineView from keeping the win32 event loop alive)
+
+    if(!config->bRunInBrowser)
+    {
+        if (webView) {
+            webView->setPage(nullptr);
+        }
+    }
+    // 2. Safely close your active database connections to avoid leaking connection slots
+    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+    if (db.isOpen()) {
+        db.close();
+    }
+
+    // Clear registration tokens from the global Qt connection registry
+    QSqlDatabase::removeDatabase(SQL::_connectionName);
+    QSqlDatabase::removeDatabase("export");
+    QSqlDatabase::removeDatabase("testConnection");
+
+
+    // 3. MANDATORY: Clean up the user interface memory allocations
+    delete ui;
+
+    // 4. Command the Windows event dispatcher loop to exit permanently
+    QCoreApplication::quit();
 }
 
 
