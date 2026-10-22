@@ -772,22 +772,41 @@ bool QueryDialog::processALine(QString txt, QString tabName)
     QSqlRecord rec = query.record();
     int colCount = rec.count();
 
-    // Set headers
+    // If the driver method returns an empty record shell, fall back to testing index values
+    if (colCount == 0 && query.isSelect()) {
+        // Safe check loop to programmatically deduce layout width if metadata is blind
+        if (query.next()) {
+            while (query.value(colCount).isValid()) {
+                colCount++;
+            }
+            // Reset cursor placement back to the beginning of the stream
+            query.first();
+        }
+    }
+
+    // Set horizontal headers using field definitions
     for (int col = 0; col < colCount; ++col) {
-        query_view_model->setHorizontalHeaderItem(col, new QStandardItem(rec.fieldName(col)));
+        QString headerName = rec.fieldName(col);
+        if (headerName.isEmpty()) {
+            headerName = QString("Column %1").arg(col + 1);
+        }
+        query_view_model->setHorizontalHeaderItem(col, new QStandardItem(headerName));
     }
 
     // Stream and populate row values safely
     int rowCount = 0;
-    while (query.next()) {
+
+    // Ensure we don't skip the first row if programmatically checked above
+    do {
+        if (!query.isValid()) continue;
+
         QList<QStandardItem*> rowItems;
         for (int col = 0; col < colCount; ++col) {
-            // .toString() extracts the value without risking ODBC binary buffer truncation issues
             rowItems.append(new QStandardItem(query.value(col).toString()));
         }
         query_view_model->appendRow(rowItems);
         rowCount++;
-    }
+    } while (query.next());
 
     // 4. Handle results presentation using the standard populated model
     if (true) // Simulates your existing outer select condition block

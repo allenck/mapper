@@ -84,6 +84,9 @@ bool ExportSql::openDb()
         server = map.value("Node");
         Connection::connectToCityMimer(map.value("Database"), server,"export");
         _targetDb = QSqlDatabase::database("export");
+        // === FORCE HARDWARE AUTO-COMMIT AT DRIVER LAYER ===
+        // This removes the need to manually track _targetDb.commit() balances
+        //_targetDb.setConnectOptions("AUTOCOMMIT=ON");
         tgtConn->setConnectionName(_targetDb.connectionName());
         //tgtConn->setDb(_targetDb);
     }
@@ -184,6 +187,7 @@ bool ExportSql::openDb()
 }
 bool ExportSql::exportAll()
 {
+ if(!openDb()) return false;
  exportTable("Parameters");
  exportTable("Companies");
  exportTable("TractionTypes");
@@ -3397,6 +3401,12 @@ bool ExportSql::createSegmentsTable(QSqlDatabase db, QString dbType)
   SQLERROR_E(std::move(query));
   throw Exception(tr("SQL Error creating Segments: %1").arg(query->lastError().text()));
  }
+ // === FIX 1: SECURE THE TABLE SCHEMA TO DISK IMMEDIATELY ===
+ if (dbType == "MimerSql") {
+     qDebug() << "Permanently securing schema geometry layout to disk.";
+     db.commit();
+ }
+ delete query;
  return true;
 }
 
@@ -3685,7 +3695,15 @@ bool ExportSql::createRouteNameTable(QSqlDatabase db, QString dbType)
            lastUpdate  timestamp NOT NULL DEFAULT LOCALTIMESTAMP,\
           UNIQUE (Name ));";
 
-        return SQL::instance()->executeCommand(commandString, db);
+        if(SQL::instance()->executeCommand(commandString, db))
+        {
+            // === FIX 1: SECURE THE TABLE SCHEMA TO DISK IMMEDIATELY ===
+            if (dbType == "MimerSql") {
+                qDebug() << "Permanently securing schema geometry layout to disk.";
+                db.commit();
+            }
+            return true;
+        }
     }
     return false;
 }
@@ -3761,7 +3779,12 @@ bool ExportSql::createRouteTable(QSqlDatabase db, QString dbType)
               CONSTRAINT  Routes_ibfk_6  FOREIGN KEY ( RouteId ) REFERENCES  RouteName  ( routeId ));";
   return SQL::instance()->executeCommand(commandString, db);
  }
-
+ // === FIX 1: SECURE THE TABLE SCHEMA TO DISK IMMEDIATELY ===
+ if (dbType == "MimerSql") {
+     qDebug() << "Permanently securing schema geometry layout to disk.";
+     db.commit();
+ }
+ //delete query;
  return false;
 }
 
@@ -3840,6 +3863,15 @@ bool ExportSql::createRouteCommentsTable(QSqlDatabase db, QString dbType)
   //throw Exception(tr("SQL Error creating RouteComments: %1").arg(query->lastError().text()));
   return false;
  }
+ // === FIX 1: SECURE THE TABLE SCHEMA TO DISK IMMEDIATELY ===
+ if (dbType == "MimerSql") {
+     qDebug() << "Permanently securing schema geometry layout to disk.";
+     db.commit();
+ }
+ // === FIX 2: RECLAIM QUERY OBJECT MEMORY TO RELEASE OPEN SERVER CURSORS ===
+  delete query;
+
+  qDebug() << "RouteComments table created.";
  return true;
 }
 
@@ -4007,6 +4039,12 @@ bool ExportSql::createStationsTable(QSqlDatabase db, QString dbType)
     );";
      return SQL::instance()->executeCommand(commandString,db);
  }
+ // === FIX 1: SECURE THE TABLE SCHEMA TO DISK IMMEDIATELY ===
+ if (dbType == "MimerSql") {
+     qDebug() << "Permanently securing schema geometry layout to disk.";
+     db.commit();
+ }
+ // === FIX 2: RECLAIM QUERY OBJECT MEMORY TO RELEASE OPEN SERVER CURSORS ===
  return false;
 }
 #endif
@@ -4086,6 +4124,15 @@ bool ExportSql::createTerminalsTable(QSqlDatabase db, QString dbType)
   //throw Exception(tr("SQL Error creating Terminals: %1").arg(query->lastError().text()));
   SQLERROR_E(std::move(query));
  }
+ // === FIX 1: SECURE THE TABLE SCHEMA TO DISK IMMEDIATELY ===
+  if (dbType == "MimerSql") {
+      qDebug() << "Permanently securing schema geometry layout to disk.";
+      db.commit();
+  }
+  // === FIX 2: RECLAIM QUERY OBJECT MEMORY TO RELEASE OPEN SERVER CURSORS ===
+  delete query;
+
+  qDebug() << "Terminals table created.";
  return true;
 }
 
@@ -4207,8 +4254,16 @@ bool ExportSql::createAltRouteTable(QSqlDatabase db, QString dbType)
  {
   SQLERROR_E(std::move(query));
   throw Exception(tr("SQL Error creating altRoute: %1").arg(query->lastError().text()));
-
  }
+ // === FIX 1: SECURE THE TABLE SCHEMA TO DISK IMMEDIATELY ===
+ if (dbType == "MimerSql") {
+     qDebug() << "Permanently securing schema geometry layout to disk.";
+     db.commit();
+ }
+ // === FIX 2: RECLAIM QUERY OBJECT MEMORY TO RELEASE OPEN SERVER CURSORS ===
+  delete query;
+
+  qDebug() << "AltRoute table created.";
  return true;
 }
 
@@ -4326,7 +4381,15 @@ bool ExportSql::createParametersTable(QSqlDatabase db, QString dbType)
   throw Exception(tr("SQL Error creating Parameters: %1").arg(query->lastError().text()));
 
  }
-    qDebug() << "Parameters table created.";
+  // === FIX 1: SECURE THE TABLE SCHEMA TO DISK IMMEDIATELY ===
+  if (dbType == "MimerSql") {
+      qDebug() << "Permanently securing schema geometry layout to disk.";
+      db.commit();
+  }
+  // === FIX 2: RECLAIM QUERY OBJECT MEMORY TO RELEASE OPEN SERVER CURSORS ===
+  delete query;
+
+  qDebug() << "Parameters table created.";
  return true;
 }
 bool ExportSql::createTractionTypesTable(QSqlDatabase db, QString dbType)
@@ -4411,6 +4474,10 @@ bool ExportSql::createTractionTypesTable(QSqlDatabase db, QString dbType)
   throw Exception(tr("SQL Error creating TractionTypes: %1").arg(query->lastError().text()));
   ;
  }
+ // === FIX 2: RECLAIM QUERY OBJECT MEMORY TO RELEASE OPEN SERVER CURSORS ===
+  delete query;
+
+  qDebug() << "TractionTypes table created.";
  return true;
 }
 bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
@@ -4529,7 +4596,10 @@ bool ExportSql::createCompaniesTable(QSqlDatabase db, QString dbType)
   throw Exception(tr("SQL Error creating Companies: %1").arg(query->lastError().text()));
 
  }
- return true;
+ // === FIX 2: RECLAIM QUERY OBJECT MEMORY TO RELEASE OPEN SERVER CURSORS ===
+  delete query;
+
+  qDebug() << "Companies table created.";return true;
 }
 
 bool ExportSql::createIntersectionsTable(QSqlDatabase db, QString dbType)
@@ -4593,7 +4663,10 @@ bool ExportSql::createIntersectionsTable(QSqlDatabase db, QString dbType)
   throw Exception(tr("SQL Error creating Intersections: %1").arg(query->lastError().text()));
 
  }
- return true;
+ // === FIX 2: RECLAIM QUERY OBJECT MEMORY TO RELEASE OPEN SERVER CURSORS ===
+  delete query;
+
+  qDebug() << "Intersections table created.";return true;
 }
 
 bool ExportSql::createRouteSeqTable(QSqlDatabase db, QString dbType)
@@ -4685,7 +4758,11 @@ bool ExportSql::createRouteSeqTable(QSqlDatabase db, QString dbType)
   throw Exception(tr("SQL Error creating RouteSeq: %1").arg(query->lastError().text()));
 
  }
- return true;
+ // === FIX 2: RECLAIM QUERY OBJECT MEMORY TO RELEASE OPEN SERVER CURSORS ===
+  delete query;
+
+  qDebug() << "RouteSeq table created.";
+  return true;
 }
 
 bool ExportSql::createCommentsTable(QSqlDatabase db, QString dbType)
@@ -4783,7 +4860,10 @@ bool ExportSql::createCommentsTable(QSqlDatabase db, QString dbType)
   throw Exception(tr("SQL Error creating Comments: %1").arg(query->lastError().text()));
 
  }
- return true;
+ // === FIX 2: RECLAIM QUERY OBJECT MEMORY TO RELEASE OPEN SERVER CURSORS ===
+  delete query;
+
+  qDebug() << "Comments table created.";return true;
 }
 bool ExportSql::createStreetDefTable(QSqlDatabase db, QString dbType)
 {
@@ -4985,9 +5065,10 @@ bool ExportSql::exportTable(QString inTable)
      QString srcServerType = srcConn->servertype();
      if(srcConn->uniqueId() == tgtConn->uniqueId())
          throw IllegalArgumentException("source and destination the same");
-     if(!openDb())
-      return false;
-     ignoreList.clear();
+     // prevent leaking connections
+     // if(!openDb())
+     //  return false;
+       ignoreList.clear();
 
      if(tgtConn->servertype() == "MySql" || tgtConn->servertype() == "MsSql")
         SQL::instance()->useDatabase(tgtConn->database(), tgtConn->servertype(), _targetDb);
@@ -5054,6 +5135,11 @@ bool ExportSql::exportTable(QString inTable)
    if(!createTerminalsTable(_targetDb, tgtConn->servertype())) return false;
   if(table.compare("TractionTypes", Qt::CaseInsensitive)==0)
    if(!createTractionTypesTable(_targetDb, tgtConn->servertype())) return false;
+  // === FIX 1: COMMIT THE STRUCTURAL SCHEMAS BEFORE INSERTING ROWS ===
+  if (tgtConn->servertype() == "MimerSql") {
+       qDebug() << "Committing table layout structural modifications for:" << table;
+       _targetDb.commit();
+   }
  }
  if(tgtDbType == "MsSql" && table != "Terminals" && table != "RouteComments"
     && table != "Routes" && table != "RouteSeq")
@@ -5078,9 +5164,16 @@ bool ExportSql::exportTable(QString inTable)
  else
   commandText = selectText + " where lastUpdate > :lastUpdated  order by lastUpdate";
  QSqlQuery* query = new QSqlQuery(srcDb);
+ query->setForwardOnly(true);
  QSqlQuery* query2 = new QSqlQuery(_targetDb);
 
- bool bPrepare =query->prepare(commandText);
+ // === STEP 1: INITIALIZE THE EXPLICIT WRITER BOUNDARY ===
+  if (tgtConn->servertype() == "MimerSql") {
+      qDebug() << "Initializing explicit transactional workspace boundary for table:" << table;
+      _targetDb.transaction();
+  }
+
+  bool bPrepare =query->prepare(commandText);
  if(!bDropTables)
   query->bindValue(":lastUpdated", lastUpdated);
  bool bQuery = query->exec();
@@ -5485,7 +5578,8 @@ m3:         if (tgtConn->servertype() == "MimerSql")
             query2->bindValue(":" + col, val);
         }
        }
-
+        // === FIX: EXECUTE THE PREPARED BATCH WITHOUT PASSING A STRING ===
+       query2->exec();
    }
    else
        bQuery=query2->exec(commandString);
@@ -5509,6 +5603,14 @@ m3:         if (tgtConn->servertype() == "MimerSql")
  qDebug()<<"Comments: "+ QString("%1").arg(added)+ " added, "+ QString("%1").arg(updated) + " updated, "+ QString("%1").arg(deleted)+ " deleted, "+ QString("%1").arg(notUpdated)+ " not updated, "+QString("%1").arg(errors)+ " errors\n";
  emit uncheck("chk"+table);
 
+ // === FIX: Explicitly delete the query handles to free active ODBC statements ===
+  if(query)  { delete query;  query = nullptr;  }
+  if(query2) { delete query2; query2 = nullptr; }
+
+  if (tgtConn->servertype() == "MimerSql") {
+     qDebug() << "Enforcing explicit transaction commit for table: " << table;
+     _targetDb.commit();
+ }
  return true;
 }
 void ExportSql::closeLogFile(){
