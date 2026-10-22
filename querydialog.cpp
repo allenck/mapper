@@ -523,7 +523,7 @@ bool QueryDialog::processStream(QTextStream* in)
   QSqlDatabase db = QSqlDatabase::database(tgtConn->connectionName());
   QSqlQuery query = QSqlQuery(queryStr, db);
   //QStringList sa_Message_Text;
-  query.setForwardOnly(false);
+  query.setForwardOnly(true);
   if (query.lastError().isValid())
   {
    errors++;
@@ -884,7 +884,7 @@ void QueryDialog::processSelect(QString table, QString commandLine)
   query_view->setSortingEnabled(false);
   QSortFilterProxyModel *sm = new QSortFilterProxyModel(query_view);
   sm->setSourceModel(model);
-  model->setEditStrategy((QueryEditModel::EditStrategy)ui->cbEditStrategy->currentIndex());
+  //model->setEditStrategy((QueryEditModel::EditStrategy)ui->cbEditStrategy->currentIndex());
   query_view->setModel(sm);
   query_view->setSortingEnabled(true);
   sm->sort(-1,Qt::AscendingOrder);
@@ -1050,7 +1050,8 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
  {
   QueryEditModel * model =  qobject_cast<QueryEditModel*>(proxyModel->sourceModel());
   qDebug()<< model->tabName;
-  model->edit(proxyModel->mapToSource(index));
+  // FIXED: Removed model->edit() invocation.
+  // QTableView opens the inline delegate editor automatically on editable cells.
  }
 }
 
