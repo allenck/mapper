@@ -13357,7 +13357,11 @@ qint32 SQL::addRouteName(RouteInfo ri,bool *bAlreadyExists)
 
     if(!dbOpen(db))
         throw Exception(tr("database not open: %1").arg(__LINE__));
-    QString commandText = "Select RouteId from RouteName where name = '" + ri.routeName +"'";
+    QString canonicalName = ri.routeName.toLower();
+    canonicalName = canonicalName.replace(" ", "");
+    canonicalName = canonicalName.replace("-", "");
+
+    QString commandText = "Select RouteId from RouteName where canonicalName = '" + canonicalName +"'";
     QSqlQuery query = QSqlQuery(db);
     bool bQuery = query.exec(commandText);
     if(!bQuery)
@@ -13510,7 +13514,11 @@ bool SQL::updateRouteName(RouteInfo ri)
         qDebug() << "routeId must be > 0";
         return false;
     }
+    QString canonicalName = ri.routeName.toLower();
+    canonicalName = canonicalName.replace(" ", "");
+    canonicalName = canonicalName.replace("-", "");
     QString commandText = "Update RouteName set name ='" + ri.routeName + "',"
+                          "set canonicalName = '" + canonicalName + "',"
                           "lastUpdate =CURRENT_TIMESTAMP"
                           + " where routeId = " + QString::number(ri._routeId);
     QSqlQuery query = QSqlQuery(db);
