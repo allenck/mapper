@@ -81,6 +81,7 @@ public:
     bool createMsSqlFunctions(QSqlDatabase db);
     QSqlDatabase targetDb() {return _targetDb;}
     bool exportTable(QString table);
+    bool exportMimerTable(const QString &tableName);
     bool areTableDefsEqual(QString table, Connection* c1, Connection* c2, QSqlDatabase db1, QSqlDatabase db2);
     void closeLogFile();
 

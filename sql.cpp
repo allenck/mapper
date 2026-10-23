@@ -11045,20 +11045,79 @@ void SQL::checkTables(QSqlDatabase db)
    updateIdentitySequence("routename", "routeid");
 
   }
-  // if(doesColumnExist("routename", "startDate"))
-  // {
-  //     if(!executeScript(":/sql/create_routeView_x.sql", db))
-  //         exit(EXIT_FAILURE);
+  if(!doesColumnExist("RouteName", "canonicalName"))
+  {
+      qInfo() << "Migrating RouteName table to canonical layout for current city database...";
 
-  //     executeCommand("begin");
-  //     if(!executeScript(":/sql/create_routeName.sql", db))
-  //        exit(EXIT_FAILURE);
-  //     if(!populateRouteId())
-  //         exit(EXIT_FAILURE);
-  //     if(!executeScript(":/sql/create_routeView.sql", db))
-  //         exit(EXIT_FAILURE);
-  //   executeCommand("commit");
-  // }
+      // 1. Add the column as text to support the string hash footprint
+      addColumn("RouteName", "canonicalName", "TEXT NOT NULL DEFAULT ''");
+
+      QSqlQuery query(db);
+      db.transaction();
+
+      // 2. Populate the canonicalName field for all existing historical rows on disk
+      QString populateCanonicalSql =
+          "UPDATE RouteName SET canonicalName = REPLACE(REPLACE(LOWER(name), ' ', ''), '-', '')";
+
+      // Step 1 of Remediation: Purge the one-sided index collision rows from the Routes table
+      QString purgeConflictSql =
+          "DELETE FROM Routes WHERE rowid IN ("
+          "  SELECT r1.rowid FROM Routes r1 "
+          "  JOIN routeName rn1 ON r1.RouteId = rn1.routeId "
+          "  WHERE r1.rowid NOT IN ("
+          "    SELECT MIN(r2.rowid) FROM Routes r2 "
+          "    JOIN routeName rn2 ON r2.RouteId = rn2.routeId "
+          "    GROUP BY r2.Route, REPLACE(REPLACE(LOWER(rn2.name), ' ', ''), '-', ''), "
+          "             r2.CompanyKey, r2.StartDate, r2.EndDate, r2.LineKey"
+          "  ) "
+          "  AND r1.RouteId != ("
+          "    SELECT MIN(rn3.routeId) FROM routeName rn3 "
+          "    WHERE REPLACE(REPLACE(LOWER(rn3.name), ' ', ''), '-', '') = REPLACE(REPLACE(LOWER(rn1.name), ' ', ''), '-', '')"
+          "  )"
+          ")";
+
+      // Step 2 of Remediation: Remap all duplicate references to point to the lowest master RouteId
+      QString remapReferencesSql =
+          "UPDATE Routes SET RouteId = ("
+          "  SELECT MIN(r2.routeId) FROM routeName r2 "
+          "  WHERE REPLACE(REPLACE(LOWER(r2.name), ' ', ''), '-', '') = REPLACE(REPLACE(LOWER((SELECT r3.name FROM routeName r3 WHERE r3.routeId = Routes.RouteId)), ' ', ''), '-', '')"
+          ") WHERE RouteId IN ("
+          "  SELECT routeId FROM routeName "
+          "  WHERE REPLACE(REPLACE(LOWER(name), ' ', ''), '-', '') IN ("
+          "    SELECT REPLACE(REPLACE(LOWER(name), ' ', ''), '-', '') FROM routeName "
+          "    GROUP BY REPLACE(REPLACE(LOWER(name), ' ', ''), '-', '') HAVING COUNT(*) > 1"
+          "  )"
+          ")";
+
+      // Step 3 of Remediation: Delete the stale byte-mismatched rows from routeName
+      QString purgeLookupSql =
+          "DELETE FROM routeName WHERE routeId NOT IN ("
+          "  SELECT MIN(routeId) FROM routeName "
+          "  GROUP BY REPLACE(REPLACE(LOWER(name), ' ', ''), '-', '')"
+          ")";
+
+      // Step 4: Apply the Unique Index to lock in future string data entry channels
+      QString createIndexSql = "CREATE UNIQUE INDEX IF NOT EXISTS uq_canonical_name ON RouteName(canonicalName)";
+
+      // Sequential transaction pipeline execution pass
+      if (query.exec(populateCanonicalSql) &&
+          query.exec(purgeConflictSql) &&
+          query.exec(remapReferencesSql) &&
+          query.exec(purgeLookupSql) &&
+          query.exec(createIndexSql))
+      {
+          db.commit();
+          qInfo() << "Successfully completed canonical index migration for current city.";
+      }
+      else
+      {
+          qCritical() << "Canonical migration failed, rolling back. Error:" << query.lastError().text();
+          db.rollback();
+      }
+
+      // Run your existing script file dependency changes cleanly underneath
+      executeScript(":/sql/recreate_routeName.sql");
+  }
 
   if(!tableList.contains("RouteSeq", Qt::CaseInsensitive))
   {

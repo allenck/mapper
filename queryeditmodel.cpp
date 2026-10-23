@@ -57,6 +57,9 @@ bool QueryEditModel::select() {
     m_recordStructure = query.record();
     int colCount = m_recordStructure.count();
 
+    // FIXED: Explicitly define the column width first so headers have empty slots to latch onto
+    setColumnCount(colCount);
+
     // Map column naming fields securely to view headers
     for (int col = 0; col < colCount; ++col) {
         setHeaderData(col, Qt::Horizontal, m_recordStructure.fieldName(col));
