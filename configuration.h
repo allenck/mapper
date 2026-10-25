@@ -23,9 +23,10 @@ Q_DECLARE_METATYPE(IntPair)
 QDataStream &operator<<(QDataStream &out, const IntPair &pair);
 QDataStream &operator>>(QDataStream &in, IntPair &pair);
 
+class SecureVault;
 class Configuration;
 class SQL;
-
+class ODBCUtil;
 struct query
 {
  bool b_stop_query_on_error = false;
@@ -134,6 +135,8 @@ public:
  void changeFonts(QWidget *obj, QFont f );
  QList<Overlay*> currentOverlays;
  int currOpacity = 65;
+ QString createSecureVaultKey(Connection* connection, City *city);
+ QString createSecureVaultKey(QString connectString, City* city, QString* password);
 
 #ifdef Q_OS_MACOS
  //bool bUseBundleResources = false;
@@ -162,7 +165,8 @@ private:
  bool bForeignKeyCheck = false;
  QString cwd;
  QString devEnv;
-
+ ODBCUtil* odbcUtil = nullptr;
+ SecureVault* vault = nullptr;
 signals:
   void newCityCreated(City*);
 public slots:

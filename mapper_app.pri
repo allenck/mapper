@@ -114,6 +114,7 @@ HEADERS  += mainwindow.h \
     $$PWD/overlay.h \
     $$PWD/psql.h \
     $$PWD/queryeditmodel.h \
+    $$PWD/registrywatcher.h \
     $$PWD/replacesegmentdialog.h \
     $$PWD/routeselector.h \
     $$PWD/rtitemdelegate.h \
@@ -198,7 +199,9 @@ HEADERS  += mainwindow.h \
     dialogupdatestreets.h \
     findreplacewidget.h \
     dialogeditcomments.h \
-    dialoghtmledit.h
+    dialoghtmledit.h \
+    registrywatcher.h
+
 
 FORMS += \
     $$PWD/ui/newquerydialog.ui \
@@ -256,4 +259,5 @@ DISTFILES += \
  $$PWD/Resources/api_key.txt \
  $$PWD/html/.gitignore \
  $$PWD/mapper.rc \
- $$PWD/sqlite.pri
+ $$PWD/sqlite.pri \
+ $$PWD/keychain.pri

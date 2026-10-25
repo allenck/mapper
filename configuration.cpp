@@ -1,4 +1,5 @@
 #include "configuration.h"
+#include "odbcutil.h"
 #include "sql.h"
 #include "overlay.h"
 #include "data.h"
@@ -7,6 +8,9 @@
 #include <QFile>
 #include "routeviewtablemodel.h"
 #include "webviewbridge.h"
+#ifdef QTKEYCHAIN_VERSION_6
+#include "securevault.h"
+#endif
 
 QDataStream &operator<<(QDataStream &out, const IntPair &pair) {
     out << pair.first << pair.second;
@@ -23,6 +27,7 @@ Configuration::Configuration(QObject *parent) :
 {
  currentCityId = -1;
  qRegisterMetaType<Bounds>("Bounds");
+ vault = new SecureVault(this);
 
 }
 
@@ -352,8 +357,50 @@ void Configuration::saveSettings2()
                 settings->setValue("defaultSqlDatabase", cn->defaultSqlDatabase());
                 //settings->setValue("useSqlDatabase", cn->database());
             }
-            settings->endGroup(); // end a single connection
+#ifdef QTKEYCHAIN_VERSION_6
+            QString key;
+            QString password;
+            if(!cn->connectString().isEmpty())
+                key = createSecureVaultKey(cn->connectString(), c, &password);
+            else
+            {
+                key = createSecureVaultKey(cn, c);
+                password = cn->pwd();
+            }
+            qDebug() << "secure vault key: " << key;
+            vault = new SecureVault(this);
+            if(!key.isEmpty())
+            {
+                vault->loadPassword(key, [=](const QString &password) {
+                    if (password.isEmpty()) {
+                        // qWarning() << "Could not retrieve password or password is empty."
+                        //            << " key: "<< key;;
+                        // return;
+                        vault->savePassword(key, password);
+                    }
+
+                    // Your asynchronous callback logic continues inside this block
+                    qDebug() << "Password successfully retrieved via vault instance!";
+                    if(cn->pwd() == password)
+                        cn->setPWD("");
+
+                    // Example: Initiate your database connection
+                    // this->initializeDatabaseConnection(password);
+                });
+                settings->setValue("PWD", "");
+
+                if(!cn->connectString().isEmpty())
+                {
+                    QString cs = cn->connectString();
+                    cs.replace(password, "");
+                    cn->setConnectString(cs);
+                    settings->setValue("connectString",cs);
+                }
+            }
         }
+#endif
+        settings->endGroup(); // end a single connection
+
         //settings->endArray(); // connections
         settings->endGroup(); // connections
 
@@ -361,7 +408,7 @@ void Configuration::saveSettings2()
         // settings->remove("");
         // settings->endGroup();
 
-        settings->setValue("currOverlay", c->curOverlayId);
+        settings->setValue("currOverlay", currCity->curOverlayId);
         settings->endGroup(); // city
     }
     //settings->endArray(); // cities
@@ -858,6 +905,9 @@ void Configuration::getSettings2()
 {
     QSettings settings;
     qDebug() << settings.fileName();
+    if(!odbcUtil)
+        odbcUtil = ODBCUtil::instance();
+    odbcUtil->initialize();
 
     // int size = settings.beginReadArray("cities");
     // if( size == 0)
@@ -1110,6 +1160,39 @@ void Configuration::getSettings2()
                 //nc->descrByConnection.insert(ncn, ncn->description());
 
             }
+#ifdef QTKEYCHAIN_VERSION_6
+            QString key;
+            QString pwd;
+            if(!ncn->connectString().isEmpty())
+                key = createSecureVaultKey(ncn->connectString(), nc, &pwd);
+            else
+                key = createSecureVaultKey(ncn, nc);
+            qDebug() << "secure vault key: " << key;
+            if(!key.isEmpty())
+            {
+                if(!ncn->pwd().isEmpty())
+                {
+                    vault->savePassword(key, ncn->pwd());
+                }
+                else
+                {
+                    vault->loadPassword(key, [=](const QString &password) {
+                        if (password.isEmpty()) {
+                            qWarning() << "Could not retrieve password or password is empty."
+                                       << " key: "<< key;;
+                            return;
+                        }
+
+                        // Your asynchronous callback logic continues inside this block
+                        qDebug() << "Password successfully retrieved! " << key;
+                        ncn->setPWD(password);
+
+                        // Example: Initiate your database connection
+                        // this->initializeDatabaseConnection(password);
+                    });
+                }
+            }
+#endif
             settings.endGroup();
             qDebug() << settings.group();
         } // end connection
@@ -1644,91 +1727,61 @@ QList<int> Configuration::stringToList(QString str)
     return rslt;
 }
 
-// bool Configuration::copyFiles(QString from, QString to)
-// {
-//     QDir fromDir(from);
-//     QFileInfoList fList = fromDir.entryInfoList(QDir::NoDotAndDotDot | QDir::AllDirs | QDir::Files);
-//     QFileInfo target(to);
-//     if(!target.exists())
-//     {
-//         QDir tgt;
-//         if(!tgt.mkpath(to))
-//         {
-//             QMessageBox::critical(nullptr, tr("Error"), tr("Error creating path %1").arg(to));
-//             return false;
-//         }
-//     }
+QString Configuration::createSecureVaultKey(Connection* connection, City* city)
+{
+    QString key;
+    if(connection->userId().isEmpty())
+        return key;
+    if(connection->servertype() == "Sqlite")
+        return key;
+    key = connection->userId() + "|";
+    key.append(city->getLabel() +"|");
+    key.append(connection->servertype() + "|");
+    if(!connection->host().isEmpty())
+        key.append(connection->host());
+    else
+    {
+        if(!connection->dsn().isEmpty())
+        {
+            DSN* dsn = odbcUtil->getDsn(connection->dsn());
+            if(dsn && !dsn->server.isEmpty())
+            {
+                key.append(dsn->server);
+                return key;
+            }
+        }
+        // TODO: get values from a connection string
+    }
+    return key;
+}
 
-
-//     if(!fromDir.exists()  || fList.isEmpty())
-//     {
-//         QMessageBox::critical(nullptr, tr("invalid path"), tr("Invalid path '%1'").arg(from));
-//         return false;
-//     }
-//     foreach (QFileInfo info, fList) {
-//         if(info.isDir())
-//         {
-//             copyFiles(from + QDir::separator() + info.fileName(), to + QDir::separator() + info.fileName());
-//             continue;
-//         }
-
-//         if(!QFile::copy(info.filePath(), to + QDir::separator() + info.fileName()))
-//         {
-//             QMessageBox::critical(nullptr, tr("Copy error"), tr("Error copying %1 to %2").arg(info.filePath(), to + QDir::separator() + info.fileName()));
-//             return false;
-//         }
-//         QFile::setPermissions(to + QDir::separator() + info.fileName(),QFileDevice::ReadOwner|QFileDevice::WriteOwner);
-//     }
-//     return true;
-// }
-
-// #ifdef Q_OS_MACOS
-// bool Configuration::processCopyList()
-// {
-//  QFile fCList(":/copyList.txt");
-//  if(fCList.exists())
-//  {
-//   if(!fCList.open(QIODevice::ReadOnly))
-//   {
-//    QMessageBox::critical(nullptr, tr("Error"), tr("Error %1 opening %2").arg(fCList.errorString(), fCList.fileName()));
-//   }
-//   QTextStream in(&fCList);
-//   QDir dir;
-//   dir.mkpath(QDir::homePath() +"/Public/Mapper/Resources");
-//   dir.mkpath(QDir::homePath() +"/Public/Mapper/Resources/sql");
-//   dir.mkpath(QDir::homePath() +"/Public/Mapper/Resources/databases");
-//   dir.mkpath(QDir::homePath() +"/Public/Mapper/Resources/wiki/images");
-
-//   while (!in.atEnd()) {
-//    QString line = in.readLine();
-//    if(line.startsWith("#"))
-//     continue;
-//    QStringList sl = line.split(",");
-//    QString fn = sl.at(0);
-//    bool bCopy = false;
-//    if(sl.count() > 1)
-//     if(sl.at(1)=="yes")
-//      bCopy = true;
-//    QFile iFile(":/"+fn);
-//    QFile oFile(QDir::homePath() +"/Public/Mapper/Resources/"+fn);
-//    if(oFile.exists())
-//    {
-//        if(!bCopy)
-//         continue;
-//        if(iFile.fileTime(QFileDevice::FileModificationTime) <= oFile.fileTime(QFileDevice::FileModificationTime))
-//            continue;
-//        if(!oFile.remove())
-//        {
-//            QMessageBox::warning(nullptr, tr("Error"), tr("Error removing %1").arg(oFile.fileName()));
-//            return false;
-//        }
-//    }
-//    if(!QFile::copy(":/"+fn, QDir::homePath() +"/Public/Mapper/Resources/"+fn))
-//    {
-//     QMessageBox::warning(nullptr, tr("Error"), tr("Error copying %1").arg(QDir::homePath() +"/Public/Mapper/Resources/"+fn));
-//        //return false;
-//    }
-//   }
-//  }
-// }
-// #endif
+QString Configuration::createSecureVaultKey(QString connectString, City* city, QString *password)
+{
+    QString key;
+    QMap<QString,QString> map = Connection::decodeConnectionString(connectString);
+    // Driver={PostgreSQL ODBC Driver(UNICODE)};Server=ubuntu-2;Port=5432;User Id=allen;Password=iic723@knobacres;Database=stlouis;sslmode=prefer;
+    // Driver={MIMER};Protocol=tcp;Node=ubuntu-2;Service=1360;Database=stlouis_db;Uid=mapperuser;Pwd=iic723@knobacres;
+    QString driver = map.value("Driver");
+    if(driver == "{MIMER}")
+    {
+        key.append(map.value("Uid") + "|");
+        key.append(city->getLabel() + "|");
+        key.append("MimerSql") + "|";
+        key.append(map.value("Node"));
+        *password = map.value("Pwd");
+    }
+    else if(driver.contains("PostgreSQL") )
+    {
+        key.append(map.value("User Id") + "|");
+        key.append(city->getLabel() + "|");
+        key.append("PostgreSQL") + "|";
+        key.append(map.value("Server"));
+        *password = map.value("Password");
+    }
+    else
+    {
+        qCritical() << "unknown connection string driver: " << driver;
+        return key;
+    }
+    return key;
+}

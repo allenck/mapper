@@ -2,14 +2,14 @@
 #include "QtWidgets/qcombobox.h"
 #include "exceptions.h"
 #include "qdir.h"
-#include "qlineedit.h"
 #include "qsettings.h"
 #include "qstandarditemmodel.h"
 #include <QFileSystemWatcher>
 #include <QHostInfo>
 #include <QMessageBox>
 #ifdef Q_OS_WIN
-#include <qt_windows.h> // Includes Windows.h safely in Qt environments
+//#include <qt_windows.h> // Includes Windows.h safely in Qt environments
+#include "registrywatcher.h"
 #endif
 
 ODBCUtil* ODBCUtil::_instance = nullptr;
@@ -41,16 +41,29 @@ void ODBCUtil::initialize()
         if(validTypes.contains(dsn->type))
             dsnByType.insert(dsn->type, dsn);
     };
-#else
-    getWinDrivers();
-    getWinDSNs();
-#endif
     QStringList paths = {odbcini,odbcinst,QDir::home().absolutePath() + QDir::separator()+ ".odbc.ini"};
     odbcinstWatcher = new QFileSystemWatcher(paths);
     connect(odbcinstWatcher,&QFileSystemWatcher::fileChanged,this,[=]{
         initialize();
         emit odbc_changed();
     });
+#else
+    getWinDrivers();
+    getWinDSNs();
+
+// For HKEY_CURRENT_USER (User DSNs)
+RegistryWatcher *w1 = new RegistryWatcher(HKEY_CURRENT_USER, "Software\\ODBC\\ODBC.INI\\ODBC Data Sources", this);
+connect(w1, &RegistryWatcher::registryKeyChanged, this,&ODBCUtil::getWinDSNs);
+
+// For HKEY_LOCAL_MACHINE (System DSNs)
+RegistryWatcher *w2 = new RegistryWatcher(HKEY_LOCAL_MACHINE, "Software\\ODBC\\ODBC.INI\\ODBC Data Sources", this);
+connect(w2, &RegistryWatcher::registryKeyChanged, this, &ODBCUtil::getWinDSNs);
+RegistryWatcher *w3 = new RegistryWatcher(HKEY_LOCAL_MACHINE,"SOFTWARE\\ODBC\\ODBCINST.INI\\ODBC Drivers", this);
+connect(w3,&RegistryWatcher::registryKeyChanged, this, &ODBCUtil::getWinDrivers);
+RegistryWatcher *w4 = new RegistryWatcher(HKEY_LOCAL_MACHINE,"SOFTWARE\\ODBC\\ODBCINST.INI\\", this);
+connect(w3,&RegistryWatcher::registryKeyChanged, this, &ODBCUtil::getWinDrivers);
+
+#endif
 }
 
 ODBCUtil* ODBCUtil::instance()
@@ -271,6 +284,8 @@ void ODBCUtil::updateDriverInfo(Driver* drv, QList<QPair<QString, QString >> pai
 
 void ODBCUtil::getDSNs(QString odbcini)
 {
+    dsnByName.clear();
+    dsnByType.clear();
     ini = new QFile(odbcini);
     if(ini->open(QIODevice::ReadOnly | QIODevice::Text))
     {
@@ -727,6 +742,7 @@ void ODBCUtil::getWinDSNs()
                 dsnByType.insert(dsn->type,dsn);
         }
     }
+    emit odbc_changed();
 }
 
 bool ODBCUtil::isIp(QString txt)
@@ -785,6 +801,7 @@ void ODBCUtil::getWinDrivers()
             driver->lib = driver->lib.replace("%WINDIR%","C:\\windows");
         drvByLib.insert(driver->lib, driver);
     }
+    emit odbc_changed();
 }
 
 QString ODBCUtil::getShortPath(const QString &longPath)

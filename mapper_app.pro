@@ -36,6 +36,7 @@ debug {
 release {
   DEFINES += MYPREFIX_RELEASE
 }
+
 TARGET = mapper
 TEMPLATE = app
 
@@ -50,6 +51,7 @@ CONFIG += embed_manifest_exe
 CONFIG+=use_gold_linker
 
 include(mapper_app.pri)
+include(keychain.pri)
 
 OTHER_FILES += \
     Resources/sql/sqlite3_create_tables.sql \
@@ -137,12 +139,6 @@ DISTFILES += \
     Resources/sql/recreateRouteComments.sql \
     Resources/sql/recreateSegmentsTable.sql \
     Resources/sql/recreate_routes.sql \
-    # Resources/scripts \
-    # Resources/scripts/opacity-slider2.png \
-    # Resources/scripts/opacity-slider3d14.png \
-    # Resources/scripts/opacity-slider3d6.png \
-    # Resources/scripts/opacity-slider3d7.png \
-    # Resources/scripts/qwebchannel.js \
     Resources/GoogleMaps2b.htm \
     Resources/sql/sqlite3_recreateCompanies.sql \
     Resources/sql/sqlite3_recreate_routes.sql \
@@ -156,38 +152,21 @@ DISTFILES += \
     Resources/wiki/Credits.html \
     # compile_MySql_plugin.sh \
     html/.gitignore \
-    Resources/mapper.icns
+    Resources/mapper.icns \
+    keychain.pri
     # mysql-qt-driver.sh
 
 ICON = Resources/mapper.icns
-#CONFIG-=app_bundle
+CONFIG-=app_bundle
 
-#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../console/release/ -lConsole
-#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../console/debug/ -lConsole
-#else:unix: LIBS += -L$$PWD/../console/ -lConsole
-
-#INCLUDEPATH += $$PWD/../console/debug
-#DEPENDPATH += $$PWD/../console/debug
-
-#unix:macx: LIBS += -L$$PWD/./ -lConsole
+win32: LIBS += -ladvapi32
 
 INCLUDEPATH += $$PWD/.
 DEPENDPATH += $$PWD/.
 
-
-#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400/' -lsqlite3
-#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400/' -lsqlite3
-
-#INCLUDEPATH += $$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400'
-#DEPENDPATH += $$PWD/'../../../../Downloads/sqlite-dll-win64-x64-3390400'
-
-
-#unix:!macx: LIBS += -L$$PWD/../../../sqlite-amalgamation-3390400/ -lsqlite3
-
 INCLUDEPATH += $$(QTDIR)/../Src/qtbase/src/3rdparty/sqlite
 
-
-VERSION=1.2.11
+VERSION=1.2.12
 # Split the version components to use in the numeric portions of the .rc file
 VERSION_MAJOR = 1
 VERSION_MINOR = 2
@@ -245,19 +224,8 @@ QMAKE_BUNDLE_DATA +=APP_RESOURCES
 }
 include(sqlite.pri)
 
-#INCLUDEPATH += $$PWD/../../../sqlite-amalgamation-3390400
-#DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3390400
-
 INCLUDEPATH += $$PWD/debug
 DEPENDPATH += $$PWD/debug
-
-
-#win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../sqlite3/release/ -lsqlite3
-#else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../sqlite3/debug/ -lsqlite3
-#else:unix: LIBS += -L$$OUT_PWD/../sqlite3/ -lsqlite3
-
-#INCLUDEPATH += $$PWD/../sqlite3
-#DEPENDPATH += $$PWD/../sqlite3
 
 lessThan(QT_MAJOR_VERSION, 6): {
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lsqlite3
@@ -294,6 +262,8 @@ CONFIG(debug, debug|release) {
 QMAKE_POST_LINK += xcopy /y /d \"$$MYSQL_DRIVER_DIR_NATIVE\\libcrypto-3-x64.dll\" \"$$DESTDIR_NATIVE\\$$TARGET_SUBDIR\\\" $$escape_expand(\\n\\t)
 QMAKE_POST_LINK += xcopy /y /d \"$$MYSQL_DRIVER_DIR_NATIVE\\libssl-3-x64.dll\" \"$$DESTDIR_NATIVE\\$$TARGET_SUBDIR\\\" $$escape_expand(\\n\\t)
 }
+
+
 
 FORMS += \
     ui/dialognewconnection.ui

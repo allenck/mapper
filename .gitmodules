@@ -1,0 +1,4 @@
+[submodule "QtKeychain"]
+	path = QtKeychain
+	url = https://github.com/frankosterfeld/qtkeychain.git
+	branch = main

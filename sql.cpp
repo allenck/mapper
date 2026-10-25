@@ -11116,7 +11116,28 @@ void SQL::checkTables(QSqlDatabase db)
       }
 
       // Run your existing script file dependency changes cleanly underneath
-      executeScript(":/sql/recreate_routeName.sql");
+      executeScript(":/sql/Sqlite3/sqlite3_recreate_routeName.sql");
+  }
+
+  // check whether routeName has UNIQUE index
+  QVariantList vl;
+  if(executeCommand("SELECT sql FROM sqlite_master WHERE type='table' AND name='RouteName';", db, &vl))
+  {
+      QStringList sl;
+      if(!vl.isEmpty())
+      {
+          QString rslt = vl.at(0).toString();
+          QString items = rslt.mid(rslt.indexOf("(")+1);
+          int ix = items.lastIndexOf(")");
+          items = items.mid(0, ix);
+          sl = items.split(",");
+          foreach (QString s, sl) {
+              QString st = s.trimmed();
+              if(st.contains("UNIQUE (canonicalName)",Qt::CaseInsensitive))
+                  return;
+          }
+          executeScript(":/sql/Sqlite3/sqlite3_recreate_routeName.sql");
+      }
   }
 
   if(!tableList.contains("RouteSeq", Qt::CaseInsensitive))

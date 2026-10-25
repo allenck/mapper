@@ -1,4 +1,8 @@
+**Recent Changes October 2026 VERSION=1.2.12
+1. install QtKeychain to store passwords
+
 **Recent Changes October 2026 VERSION=1.2.11
+
 1. save and restore mapType.
 2. editCityDialog now has option to hide overlays for other cities.
 3. provide support for latest MySql ODBC driver

@@ -43,6 +43,8 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   // db = QSqlDatabase::addDatabase(tgtConn->driver(), tgtConn->connectionName());
   // Connection::configureDb(db,tgtConn );
   QSqlDatabase db = QSqlDatabase::database(tgtConn->connectionName());
+  if(db.connectionName().isEmpty())
+      db = QSqlDatabase::addDatabase(tgtConn->driver(),tgtConn->connectionName());
   db.open();
   qInfo() << "database is " << (db.isOpen()?"open":"not open")  << db.connectionName() << " " << db.driverName() << " " << db.databaseName();
 
@@ -277,6 +279,8 @@ void QueryDialog::createMenus()
         QSqlDatabase db;
         //if(c->connectionName().isEmpty())
         db = QSqlDatabase::database(tgtConn->connectionName());
+        if(db.connectionName().isEmpty())
+            db = QSqlDatabase::addDatabase(tgtConn->driver(), tgtConn->connectionName());
         qInfo() << "database is open. CN:" << db.connectionName() << " driver:" << db.driverName() << " DSN:"
                 << db.databaseName() << " userId: " << db.userName();
         QStringList tableList = db.tables(QSql::Tables);
@@ -1153,6 +1157,15 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
   view->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
   QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel *>(view->model());
+  if(qobject_cast<QStandardItemModel*>(proxyModel->sourceModel()))
+  {
+      QStandardItemModel * model = qobject_cast<QStandardItemModel*>(proxyModel->sourceModel());
+      QClipboard *clip = QApplication::clipboard();
+      QModelIndex mix = currentIndexQueryView;
+      QModelIndex myIx = model->index(mix.row(),mix.column());
+      clip->setText(model->data(myIx,Qt::DisplayRole).toString());
+  }
+  else
   if(qobject_cast<QueryModel*>(proxyModel->sourceModel()))
   {
    QueryModel * model = qobject_cast<QueryModel*>(proxyModel->sourceModel());
@@ -1161,13 +1174,6 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
 
    QClipboard *clip = QApplication::clipboard();
    clip->setText(model->data(currentIndexQueryView,Qt::DisplayRole).toString());
-  }
-  else
-  {
-   QueryEditModel * model = qobject_cast<QueryEditModel*>(proxyModel->sourceModel());
-   QClipboard *clip = QApplication::clipboard();
-   clip->setText(model->data(currentIndexQueryView,Qt::DisplayRole).toString());
-
   }
  }
 
@@ -1179,6 +1185,14 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
      QTableView *view = qobject_cast<QTableView*>(ui->widget_query_view->currentWidget());
      view->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
      QSortFilterProxyModel *proxyModel = qobject_cast<QSortFilterProxyModel *>(view->model());
+     if(qobject_cast<QStandardItemModel*>(proxyModel->sourceModel()))
+     {
+         QStandardItemModel * model = qobject_cast<QStandardItemModel*>(proxyModel->sourceModel());
+         QModelIndex mix = currentIndexQueryView;
+         QModelIndex myIx = model->index(mix.row(),mix.column());
+         return (model->data(myIx,Qt::DisplayRole).toString());
+     }
+     else
      if(qobject_cast<QueryModel*>(proxyModel->sourceModel()))
      {
          QueryModel * model = qobject_cast<QueryModel*>(proxyModel->sourceModel());
@@ -1190,11 +1204,20 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
      }
      else
      {
-         QueryEditModel * model = qobject_cast<QueryEditModel*>(proxyModel->sourceModel());
-         sv_model = model; //save for later update
-         sv_currentIndexQueryView = currentIndexQueryView;
-         QClipboard *clip = QApplication::clipboard();
-         return(model->data(currentIndexQueryView,Qt::DisplayRole).toString());
+         QAbstractItemModel* srcModel = proxyModel->sourceModel();
+         QueryEditModel * model = qobject_cast<QueryEditModel*>(srcModel);
+         if(model)
+         {
+             sv_model = model; //save for later update
+             sv_currentIndexQueryView = currentIndexQueryView;
+             QClipboard *clip = QApplication::clipboard();
+             return(model->data(currentIndexQueryView,Qt::DisplayRole).toString());
+         }
+         else
+         {
+             QClipboard *clip = QApplication::clipboard();
+             return(srcModel->data(currentIndexQueryView,Qt::DisplayRole).toString());
+         }
 
      }
  }

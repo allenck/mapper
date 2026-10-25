@@ -56,7 +56,7 @@ DialogNewConnection::DialogNewConnection(QWidget *parent)
     ui->tbView->setIcon(QIcon(":/show-password.png"));
     ui->txtPWD->setEchoMode(QLineEdit::Password);
     connect(ui->tbView, &QToolButton::toggled, [=](bool checked){
-        if(checked)
+        if(!checked)
         {
             ui->tbView->setIcon(QIcon(":/show-password.png"));
             ui->txtPWD->setEchoMode(QLineEdit::Password);
@@ -67,6 +67,7 @@ DialogNewConnection::DialogNewConnection(QWidget *parent)
             ui->txtPWD->setEchoMode(QLineEdit::Normal);
         }
     });
+    ui->tbView->setChecked(false);
     connect(ui->txtPWD, &QLineEdit::editingFinished,this,[=](){
         onPasswordEntered();
     });
@@ -543,8 +544,26 @@ void DialogNewConnection::onTestClicked()
             //return ;
             }
         }
-
-    } else {
+    }
+    // else if(_dbType == "MsSql") {
+    //     db = QSqlDatabase::addDatabase(_driver, _testCN);
+    //     db.setDatabaseName((_dsn?_dsn->name:ui->txtDbName->text()));
+    //     if(!_dsn || (ui->lblServer->text() != _dsn->server) )
+    //     {
+    //         db.setHostName(ui->lblServer->text());
+    //     }
+    //     if(_dsn)
+    //     {
+    //         db.setUserName(_dsn->userId);
+    //         db.setPassword(_dsn->password);
+    //     }
+    //     if(!ui->txtUid->text().isEmpty())
+    //         db.setUserName(ui->txtUid->text());
+    //     if(!ui->txtPWD->text().isEmpty())
+    //         db.setPassword(ui->txtPWD->text());
+    //     db.open();
+    // }
+    else {
         if(QSqlDatabase::contains(_testCN))
         {
             QSqlDatabase oldDb = QSqlDatabase::database(_testCN);
@@ -556,6 +575,26 @@ void DialogNewConnection::onTestClicked()
         if(!_dsn || (ui->lblServer->text() != _dsn->server) )
         {
             db.setHostName(ui->lblServer->text());
+        }
+        if(_dsn)
+        {
+            db.setUserName(_dsn->userId);
+            db.setPassword(_dsn->password);
+        }
+        if(!ui->txtUid->text().isEmpty())
+            db.setUserName(ui->txtUid->text());
+        if(!ui->txtPWD->text().isEmpty())
+            db.setPassword(ui->txtPWD->text());
+        db.open();
+        QString useDatabase;
+        if(_dsn)
+            useDatabase = _dsn->database;
+        if(!ui->txtDbName->text().isEmpty())
+        if(!verifyDb(useDatabase))
+        {
+            ui->lblHelp->setStyleSheet("color: red");
+            ui->lblHelp->setText(tr("Unable to open database %1").arg(useDatabase));
+            return;
         }
     }
     if(_connect != "Direct" && _dbType == "PostgreSQL")

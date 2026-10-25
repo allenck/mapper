@@ -2329,6 +2329,8 @@ void MainWindow::newCity(QAction* act )
     config->currCity->bDisplayRouteComments = bDisplayRouteComments;
     config->currCity->bShowOverlay = ui->chkShowOverlay->isChecked();
     config->saveSettings();
+    if(!config->bRunInBrowser)
+        webView->page()->setHtml(QString());
     QSqlDatabase db = QSqlDatabase::database(config->currConnection->connectionName());
     //if(db.isOpen()) db.close();
     config->currConnection->close(db);
@@ -2855,8 +2857,8 @@ void MainWindow::On_displayRoute(RouteData* rd)
   return; // no data
     //string str = (m_routeNbr<10?"0":"")+ m_routeNbr;
  CompanyData* cd = sql->getCompany(rd->companyKey());
-
- m_alphaRoute = sql->getAlphaRoute(m_routeNbr, cd->routePrefix);
+ if(cd)
+    m_alphaRoute = sql->getAlphaRoute(m_routeNbr, cd->routePrefix);
  if(bDisplayTerminalMarkers)
  {
   TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, rd->endDate());

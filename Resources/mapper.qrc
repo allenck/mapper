@@ -120,5 +120,7 @@
         <file>scripts/bbecquet/LeafletMagnifyingGlass/Control.MagnifyingGlass.css</file>
         <file>scripts/bbecquet/LeafletMagnifyingGlass/Control.MagnifyingGlass.js</file>
         <file>scripts/bbecquet/LeafletMagnifyingGlass/magnifying-glass-icon.png</file>
+        <file>sql/recreate_routeName.sql</file>
+        <file>sql/Sqlite3/sqlite3_recreate_routeName.sql</file>
     </qresource>
 </RCC>
