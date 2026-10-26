@@ -96,7 +96,9 @@ SOURCES += main.cpp\
     dialogupdatestreets.cpp \
     findreplacewidget.cpp \
     dialogeditcomments.cpp \
-    dialoghtmledit.cpp
+    dialoghtmledit.cpp \
+    dialogselectlist.cpp \
+    ui/dialognewconnection.cpp
 
 HEADERS  += mainwindow.h \
     $$PWD/browsecommentsdialog.h \
@@ -114,7 +116,6 @@ HEADERS  += mainwindow.h \
     $$PWD/overlay.h \
     $$PWD/psql.h \
     $$PWD/queryeditmodel.h \
-    $$PWD/registrywatcher.h \
     $$PWD/replacesegmentdialog.h \
     $$PWD/routeselector.h \
     $$PWD/rtitemdelegate.h \
@@ -200,8 +201,10 @@ HEADERS  += mainwindow.h \
     findreplacewidget.h \
     dialogeditcomments.h \
     dialoghtmledit.h \
-    registrywatcher.h
+    dialogselectlist.h \
+    ui/dialognewconnection.h
 
+win32: HEADERS += registrywatcher.h
 
 FORMS += \
     $$PWD/ui/newquerydialog.ui \
@@ -244,16 +247,10 @@ FORMS += \
     dialogupdatestreets.ui \
     findreplacewidget.ui \
     dialogeditcomments.ui \
-    dialoghtmledit.ui
+    dialoghtmledit.ui \
+    dialogselectlist.ui \
+    ui/dialognewconnection.ui
 
-    FORMS += \
-        dialogselectlist.ui
-
-    HEADERS += \
-        dialogselectlist.h
-
-    SOURCES += \
-        dialogselectlist.cpp
 
 DISTFILES += \
  $$PWD/Resources/api_key.txt \
@@ -261,3 +258,4 @@ DISTFILES += \
  $$PWD/mapper.rc \
  $$PWD/sqlite.pri \
  $$PWD/keychain.pri
+

@@ -1,6 +1,6 @@
 #include "securevault.h"
 //#include <qt6keychain/keychain.h> // Change to <qt5keychain/keychain.h> if targeting Qt5
-#include "keychain.h"
+#include "qtkeychain/keychain.h"
 #include <QDebug>
 
 // Define a permanent namespace for your app so the OS isolates its credentials

@@ -34,7 +34,7 @@ unix:!macx {
     QtKeychain/qtkeychain/plaintextstore.cpp
     QT += dbus
     DEFINES +=     KEYCHAIN_DBUS
-    DBUS_INTERFACES += org.kde.KWallet.xml
+    DBUS_INTERFACES += QtKeychain/qtkeychain/org.kde.KWallet.xml
 }
 
 

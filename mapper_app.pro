@@ -52,6 +52,7 @@ CONFIG+=use_gold_linker
 
 include(mapper_app.pri)
 include(keychain.pri)
+include(sqlite.pri)
 
 OTHER_FILES += \
     Resources/sql/sqlite3_create_tables.sql \
@@ -157,9 +158,8 @@ DISTFILES += \
     # mysql-qt-driver.sh
 
 ICON = Resources/mapper.icns
-CONFIG-=app_bundle
+//CONFIG-=app_bundle
 
-win32: LIBS += -ladvapi32
 
 INCLUDEPATH += $$PWD/.
 DEPENDPATH += $$PWD/.
@@ -184,6 +184,7 @@ QMAKE_TARGET_DESCRIPTION = "My Qt Mapper Application"
 QMAKE_TARGET_COPYRIGHT = "Copyright 2026"
 MY_VERSION_STR = '\\"$${VERSION}\\"'
 DEFINES += MY_VERSION=\"$${MY_VERSION_STR}\"
+
 macx: {
 # copy necessary resources to MacOS mapper.app/Contents/
 QMAKE_INFO_PLIST = $$PWD/myInfo.plist
@@ -222,25 +223,19 @@ APP_RESOURCES.files += $$PWD/Resources/GoogleMaps.js \
 APP_RESOURCES.path = Contents/Resources
 QMAKE_BUNDLE_DATA +=APP_RESOURCES
 }
-include(sqlite.pri)
-
-INCLUDEPATH += $$PWD/debug
-DEPENDPATH += $$PWD/debug
-
-lessThan(QT_MAJOR_VERSION, 6): {
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lsqlite3
-}
-
-# Please download the SQLite amalgamation corresponding to the version of QT that you are using from https://www.sqlite.org/download.html
-#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../sqlite-amalgamation-3460100/release/ -lsqlite3
-#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../sqlite-amalgamation-3460100/debug/ -lsqlite3
-#else:unix:!macx: LIBS += -L$$PWD/../../../sqlite-amalgamation-3460100/ -lsqlite3
-
-INCLUDEPATH += $$PWD/../../../sqlite-amalgamation-3460100
-DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3460100
 
 
-#unix|win32: LIBS += -ldl
+
+# INCLUDEPATH += $$PWD/debug
+# DEPENDPATH += $$PWD/debug
+
+# lessThan(QT_MAJOR_VERSION, 6): {
+# win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/release/ -lsqlite3
+# }
+
+# INCLUDEPATH += $$PWD/../../../sqlite-amalgamation-3460100
+# DEPENDPATH += $$PWD/../../../sqlite-amalgamation-3460100
+
 unix: LIBS += -ldl
 
 win32: {
@@ -261,15 +256,7 @@ CONFIG(debug, debug|release) {
 # 4. Inject the copy commands directly into the post-link build step
 QMAKE_POST_LINK += xcopy /y /d \"$$MYSQL_DRIVER_DIR_NATIVE\\libcrypto-3-x64.dll\" \"$$DESTDIR_NATIVE\\$$TARGET_SUBDIR\\\" $$escape_expand(\\n\\t)
 QMAKE_POST_LINK += xcopy /y /d \"$$MYSQL_DRIVER_DIR_NATIVE\\libssl-3-x64.dll\" \"$$DESTDIR_NATIVE\\$$TARGET_SUBDIR\\\" $$escape_expand(\\n\\t)
+
+     LIBS += -ladvapi32
+
 }
-
-
-
-FORMS += \
-    ui/dialognewconnection.ui
-
-HEADERS += \
-    ui/dialognewconnection.h
-
-SOURCES += \
-    ui/dialognewconnection.cpp
