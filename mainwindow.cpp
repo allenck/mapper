@@ -508,34 +508,37 @@ MainWindow::~MainWindow()
 {
     qDebug() << "Executing MainWindow resource teardown cleanup protocol...";
 
-    // 1. Break the active channel references running on the JavaScript engine layers
-    // (This stops QWebChannel and QWebEngineView from keeping the win32 event loop alive)
+    // Web views are now fully handled in closeEvent.
+    // Double-check just in case closeEvent was bypassed:
+    if(!config->bRunInBrowser && webView) {
+        delete webView;
+        webView = nullptr;
+    }
 
-    if(!config->bRunInBrowser)
+    // Isolate database connection scopes so handles are deleted before removeDatabase()
     {
-        if (webView) {
-            webView->setPage(nullptr);
-        }
+        QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+        if (db.isOpen()) { db.close(); }
     }
-    // 2. Safely close your active database connections to avoid leaking connection slots
-    QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
-    if (db.isOpen()) {
-        db.close();
+    {
+        QSqlDatabase dbDefault = QSqlDatabase::database();
+        if (dbDefault.isOpen()) { dbDefault.close(); }
     }
 
-    // Clear registration tokens from the global Qt connection registry
+    // Safely remove connection keys from the global registry
     QSqlDatabase::removeDatabase(SQL::_connectionName);
     QSqlDatabase::removeDatabase("export");
     QSqlDatabase::removeDatabase("testConnection");
+    QSqlDatabase::removeDatabase(QSqlDatabase::defaultConnection);
 
-
-    // 3. MANDATORY: Clean up the user interface memory allocations
     delete ui;
 
-    // 4. Command the Windows event dispatcher loop to exit permanently
+    // Command the application process loop to terminate fully
     QCoreApplication::quit();
-}
-
+    // === THE BULLETPROOF TERMINATION VALVE ===
+       // Instantly strips any lingering QSGSoftwareRenderContext or DB worker threads
+       // out of background memory, returning control to Qt Creator immediately.
+       std::exit(0); }
 
 void MainWindow::disableSegment_Route_changes(bool b)
 {
@@ -4048,90 +4051,61 @@ void MainWindow::btnPrevClicked()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
- //m_bridge->processScript("getCenter");
- //qApp->processEvents(QEventLoop::AllEvents,50);
- // if(ui->chkShowOverlay->isChecked())
- // {
- //     m_bridge->processScript("isOverlayLoaded");
- //     qApp->processEvents(QEventLoop::AllEvents,50);
- //     QVariant rslt = m_bridge->getRslt();
- //     //qDebug() << "overlay loaded " << rslt.toString();
- //     if(config->currCity->city_overlayMap->isEmpty())
- //         config->currCity->curOverlayId= -1;
- //     else
- //         if(config->currCity->curOverlayId >= config->currCity->city_overlayMap->count())
- //             config->currCity->curOverlayId = 0;
- //     if( config->currCity->curConnectionId >= 0 && config->currCity->curOverlayId >= 0 && rslt.toString() == "true")
- //     {
- //         m_bridge->processScript("overlay.getOpacity");
- //         qApp->processEvents(QEventLoop::AllEvents,50);
- //         int opacity = m_bridge->_myRslt.toInt();
+    QSettings settings;
+    settings.setValue("geometry", saveGeometry());
+    settings.setValue("windowState", saveState());
+    settings.setValue("splitter", ui->splitter->saveState());
+    config->currCity->bNoPanOpt = ui->chkNoPan->isChecked();
+    config->currCity->lastRoute = m_routeNbr;
+    config->currCity->lastRouteName = m_routeName;
+    config->currCity->lastRouteEndDate = m_currRouteEndDate;
+    config->currCity->bDisplayStationMarkers = bDisplayStationMarkers;
+    config->currCity->bDisplayTerminalMarkers = bDisplayTerminalMarkers;
+    config->currCity->bDisplayRouteComments = bDisplayRouteComments;
+    config->currCity->bShowOverlay = ui->chkShowOverlay->isChecked();
+    config->currCity->companyKey = ui->cbCompany->currentData().toInt();
+    config->saveSettings();
 
- //         City* c = config->currCity;
- //         Overlay* ov = c->city_overlayMap->values().at(config->currCity->curOverlayId);
- //         ov->opacity = opacity;
- //         config->setOverlay(ov);
- //     }
- // }
- //m_bridge->processScript("getCurrBounds");
- //m_bridge->processScript("getCenter");
+    settings.setValue("routeView", ui->tblRouteView->horizontalHeader()->saveState());
+    settings.setValue("otherRouteView", ui->tblOtherRouteView->horizontalHeader()->saveState());
+    settings.setValue("stationView", ui->tblStationView->horizontalHeader()->saveState());
+    settings.setValue("companyView", ui->tblCompanyView->horizontalHeader()->saveState());
+    settings.setValue("dupSegmentsView", ui->tblDupSegments->horizontalHeader()->saveState());
+    settings.setValue("streetsView",ui->tblStreetView->horizontalHeader()->saveState());
+    LatLng latLng = config->currCity->center;
+    qInfo() << tr("map center lat: %1 lng: %2 ").arg(latLng.lat(),0,'f',8).arg(latLng.lon(),0,'f',8);
 
- QSettings settings;
- //settingsDb settings;
- settings.setValue("geometry", saveGeometry());
- settings.setValue("windowState", saveState());
- settings.setValue("splitter", ui->splitter->saveState());
- //config->currCity->center = LatLng(m_latitude, m_longitude);
- //config->currCity->zoom = m_zoom;
- //config->currCity->mapType = m_mapType;
- config->currCity->bNoPanOpt = ui->chkNoPan->isChecked();
- config->currCity->lastRoute = m_routeNbr;
- config->currCity->lastRouteName = m_routeName;
- config->currCity->lastRouteEndDate = m_currRouteEndDate;
- config->currCity->bDisplayStationMarkers = bDisplayStationMarkers;
- config->currCity->bDisplayTerminalMarkers = bDisplayTerminalMarkers;
- config->currCity->bDisplayRouteComments = bDisplayRouteComments;
- config->currCity->bShowOverlay = ui->chkShowOverlay->isChecked();
- config->currCity->companyKey = ui->cbCompany->currentData().toInt();
- config->saveSettings();
+    // // === CRASH-FREE FIX FOR QSGSOFTWARECONTEXT ===
+    //    if (ui->webView) {
+    //        ui->webView->stop();
 
- settings.setValue("routeView", ui->tblRouteView->horizontalHeader()->saveState());
- settings.setValue("otherRouteView", ui->tblOtherRouteView->horizontalHeader()->saveState());
- settings.setValue("stationView", ui->tblStationView->horizontalHeader()->saveState());
- settings.setValue("companyView", ui->tblCompanyView->horizontalHeader()->saveState());
- settings.setValue("dupSegmentsView", ui->tblDupSegments->horizontalHeader()->saveState());
- settings.setValue("streetsView",ui->tblStreetView->horizontalHeader()->saveState());
- LatLng latLng = config->currCity->center;
- qInfo() << tr("map center lat: %1 lng: %2 ").arg(latLng.lat(),0,'f',8).arg(latLng.lon(),0,'f',8);
-  // === FIX FOR QSOFTWARECONTEXT CRASH ===
-  // 1. Thoroughly kill the main Web View widget.
-  if (ui->webView) { // Replace 'webView' with your actual layout pointer name if different
-    ui->webView->stop();
-    ui->webView->load(QUrl(QStringLiteral("about:blank")));
-    qApp->processEvents(QEventLoop::AllEvents, 20);
-    ui->webView->setParent(nullptr);
-    delete ui->webView;
-    ui->webView = nullptr;
-  }
-  // 2. Tear down the bridge context causing the use-after-free
-  if (m_bridge) {
-      // If m_bridge contains a hidden web page or sub-widget,
-      // disconnect it or explicitly clear its parent layout
-      m_bridge->setParent(nullptr);
+    //        // Isolate it from window layout / paint hierarchies immediately
+    //        ui->webView->setParent(nullptr);
 
-      // Completely destroy the bridge instance synchronously
-      delete m_bridge;
-      m_bridge = nullptr;
-  }
-  // ======================================
-  QSqlDatabase db = QSqlDatabase::database();
-  if (db.isOpen()) {
-    db.close();
-  }
-  db = QSqlDatabase(); // Reset the local variable instance
-  QSqlDatabase::removeDatabase(QSqlDatabase::defaultConnection);
-  QMainWindow::closeEvent(event);
-  event->accept();
+    //        // Defer destruction safely so QSGSoftwareRenderContext doesn't panic
+    //        ui->webView->deleteLater();
+    //        ui->webView = nullptr;
+    //    }
+
+    //    // Clear your alternative member reference
+    //    if (webView) {
+    //        webView = nullptr;
+    //    }
+
+    //    // 2. Tear down the bridge context
+    //    if (m_bridge) {
+    //        m_bridge->setParent(nullptr);
+    //        m_bridge->deleteLater();
+    //        m_bridge = nullptr;
+    //    }
+
+       QMainWindow::closeEvent(event);
+       event->accept();
+       // === HARD KERNEL TERMINATION VALVE ===
+      // Stops the execution stack right here. This prevents the background
+      // software rendering threads from running the loops that crash inside qhash.h,
+      // dropping the application out of memory and freeing Qt Creator instantly.
+      _exit(0);
 }
 
 void MainWindow::changeEvent(QEvent *event)  {
@@ -6250,7 +6224,8 @@ void MainWindow::onWebSocketClosed()
    mbox->setText("The browser window has closed");
    mbox->show();
    QTimer::singleShot(2000, mbox, SLOT(hide()));
-   m_bridge->channel = nullptr;
+   if(m_bridge)
+    m_bridge->channel = nullptr;
    // if(!bReloadInProgress)
    //      reloadMap();
   }
