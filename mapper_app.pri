@@ -27,7 +27,6 @@ SOURCES += main.cpp\
     $$PWD/turndelegate.cpp \
     $$PWD/usagedelegate.cpp \
     addgeoreferenceddialog.cpp \
-    $$PWD/exceptions.cpp \
     $$PWD/myapplication.cpp \
     mainwindow.cpp \
     webviewbridge.cpp \

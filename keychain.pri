@@ -8,9 +8,11 @@ DEFINES += QTKEYCHAIN_VERSION_6 \
 INCLUDEPATH += $$PWD/QtKeychain
 
 SOURCES += $$PWD/securevault.cpp \
+        $$PWD/dsn.cpp \
         QtKeychain/qtkeychain/keychain.cpp
 
 HEADERS += $$PWD/securevault.h \
+        $$PWD/dsn.h \
         QtKeychain/qtkeychain/keychain.h \
         QtKeychain/qtkeychain/keychain_p.h \
         QtKeychain/qtkeychain/gnomekeyring_p.h \

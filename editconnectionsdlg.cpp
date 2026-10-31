@@ -16,6 +16,7 @@
 #include <QHostInfo>
 #include "psql.h"
 #include "city.h"
+#include "dsn.h"
 
 EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
   QDialog(parent),
@@ -2057,7 +2058,7 @@ bool EditConnectionsDlg::openTestDb()
             // Because PostgreSQL does not have a use [database] command, we will instead use a connection string.
             // in other cases, a connection string might be necessary if there are connection options.
 
-            _connstring = odbcUtil->connectString2("{" + dsn->driverName + "}",ui->txtHost->text(), dsn->port,
+            _connstring = odbcUtil->connectString2("{" + dsn->driverName() + "}",ui->txtHost->text(), dsn->port,
                                                      ui->txtUserId->text(), ui->txtPWD->text(), ui->cbUseDatabase->currentText() );
             _connstring.append(QString("sslmode=%1;").arg(ui->cbSslMode->currentText()));
         }

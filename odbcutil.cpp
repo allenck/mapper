@@ -7,6 +7,7 @@
 #include <QFileSystemWatcher>
 #include <QHostInfo>
 #include <QMessageBox>
+#include "dsn.h"
 #ifdef Q_OS_WIN
 //#include <qt_windows.h> // Includes Windows.h safely in Qt environments
 #include "registrywatcher.h"
@@ -32,6 +33,8 @@ void ODBCUtil::initialize()
     odbcinst = "/etc/odbcinst.ini";
 #endif
     dsnByName.clear();
+    dsnByType.clear();
+    _dsnList.clear();
 #ifndef Q_OS_WIN
     getDrivers();
     getDSNs(QDir::home().absolutePath() + QDir::separator()+ ".odbc.ini");
@@ -51,18 +54,17 @@ void ODBCUtil::initialize()
     getWinDrivers();
     getWinDSNs();
 
-// For HKEY_CURRENT_USER (User DSNs)
-RegistryWatcher *w1 = new RegistryWatcher(HKEY_CURRENT_USER, "Software\\ODBC\\ODBC.INI\\ODBC Data Sources", this);
-connect(w1, &RegistryWatcher::registryKeyChanged, this,&ODBCUtil::getWinDSNs);
+    // For HKEY_CURRENT_USER (User DSNs)
+    RegistryWatcher *w1 = new RegistryWatcher(HKEY_CURRENT_USER, "Software\\ODBC\\ODBC.INI\\ODBC Data Sources", this);
+    connect(w1, &RegistryWatcher::registryKeyChanged, this,&ODBCUtil::getWinDSNs);
 
-// For HKEY_LOCAL_MACHINE (System DSNs)
-RegistryWatcher *w2 = new RegistryWatcher(HKEY_LOCAL_MACHINE, "Software\\ODBC\\ODBC.INI\\ODBC Data Sources", this);
-connect(w2, &RegistryWatcher::registryKeyChanged, this, &ODBCUtil::getWinDSNs);
-RegistryWatcher *w3 = new RegistryWatcher(HKEY_LOCAL_MACHINE,"SOFTWARE\\ODBC\\ODBCINST.INI\\ODBC Drivers", this);
-connect(w3,&RegistryWatcher::registryKeyChanged, this, &ODBCUtil::getWinDrivers);
-RegistryWatcher *w4 = new RegistryWatcher(HKEY_LOCAL_MACHINE,"SOFTWARE\\ODBC\\ODBCINST.INI\\", this);
-connect(w3,&RegistryWatcher::registryKeyChanged, this, &ODBCUtil::getWinDrivers);
-
+    // For HKEY_LOCAL_MACHINE (System DSNs)
+    RegistryWatcher *w2 = new RegistryWatcher(HKEY_LOCAL_MACHINE, "Software\\ODBC\\ODBC.INI\\ODBC Data Sources", this);
+    connect(w2, &RegistryWatcher::registryKeyChanged, this, &ODBCUtil::getWinDSNs);
+    RegistryWatcher *w3 = new RegistryWatcher(HKEY_LOCAL_MACHINE,"SOFTWARE\\ODBC\\ODBCINST.INI\\ODBC Drivers", this);
+    connect(w3,&RegistryWatcher::registryKeyChanged, this, &ODBCUtil::getWinDrivers);
+    RegistryWatcher *w4 = new RegistryWatcher(HKEY_LOCAL_MACHINE,"SOFTWARE\\ODBC\\ODBCINST.INI\\", this);
+    connect(w3,&RegistryWatcher::registryKeyChanged, this, &ODBCUtil::getWinDrivers);
 #endif
 }
 
@@ -100,8 +102,8 @@ void ODBCUtil::getDrivers()
                     continue;
                 if(sectionName == "ODBC Drivers")
                 {
-                    QList<QPair<QString, QString> > pairs = parseSection();
-                    for(QPair<QString, QString > p : pairs) {
+                    QList<QPair<QString, QString> > pairMap = parseSection();
+                    for(QPair<QString, QString > p : pairMap) {
                         if(p.second.compare("installed",Qt::CaseInsensitive)==0)
                         {
                             Driver* drv = new Driver();
@@ -128,10 +130,10 @@ void ODBCUtil::getDrivers()
                 }
 
                 // Section assumed to be a driver
-                QList<QPair<QString, QString> > pairs = parseSection();
+                QList<QPair<QString, QString> > pairMap = parseSection();
                 bool bUpdated = false;
                 Driver* drv = drvByName.value(sectionName);
-                for(QPair<QString, QString > p : pairs) {
+                for(QPair<QString, QString > p : pairMap) {
                     if(p.first.compare("driver", Qt::CaseInsensitive)==0)
                     {
                         if(drv)
@@ -156,7 +158,7 @@ void ODBCUtil::getDrivers()
                             drvByLib.insert(drv->lib, drv);
                             bUpdated = true;
                             continue;
-                         }
+                        }
                     }
                     if(p.first.compare("description",Qt::CaseInsensitive)==0)
                     {
@@ -232,7 +234,7 @@ void ODBCUtil::getDrivers()
                     }
                     else
                         drv->type = "MsSql";
-                    updateDriverInfo(drv,pairs);
+                    updateDriverInfo(drv,pairMap);
                     drvByName.insert(drv->name,drv);
                     drvByType.insert(drv->type, drv);
                 }
@@ -267,9 +269,9 @@ QList<QPair<QString, QString>> ODBCUtil::parseSection()
 
 
 
-void ODBCUtil::updateDriverInfo(Driver* drv, QList<QPair<QString, QString >> pairs)
+void ODBCUtil::updateDriverInfo(Driver* drv, QList<QPair<QString, QString >> pairMap)
 {
-    for(QPair<QString, QString > p : pairs) {
+    for(QPair<QString, QString > p : pairMap) {
         if(p.first.compare("driver", Qt::CaseInsensitive)==0)
         {
             drv->lib = p.second;
@@ -284,8 +286,6 @@ void ODBCUtil::updateDriverInfo(Driver* drv, QList<QPair<QString, QString >> pai
 
 void ODBCUtil::getDSNs(QString odbcini)
 {
-    dsnByName.clear();
-    dsnByType.clear();
     ini = new QFile(odbcini);
     if(ini->open(QIODevice::ReadOnly | QIODevice::Text))
     {
@@ -296,42 +296,50 @@ void ODBCUtil::getDSNs(QString odbcini)
             if(currLine.startsWith("["))
             {
                 QString sectionName = getSection(currLine.trimmed());
-                QList<QPair<QString, QString> > pairs = parseSection();
+                QList<QPair<QString, QString> > pairMap = parseSection();
                 if(sectionName == "ODBC")
                     continue;
                 DSN* dsn = nullptr;
-                if(sectionName == "ODBC Data Sources")
-                {
-                   for(QPair<QString, QString > p : pairs) {
-                       dsn = new DSN();
-                       if(ini->fileName() == ".odbc.ini")
-                           dsn->userDsn = true;
-                       dsn->name = p.first;
-                       Driver* drv;
-                       if(dsn->lib.startsWith("/"))
-                       {
-                           drv = drvByLib.value(p.second);
-                           dsn->lib =drv->lib;
-                           dsn->type = drv->type;
-                           dsn->driverName = drv->name;
-                       }
-                       else {
-                           drv = drvByName.value(p.second);
-                           dsn->lib = p.second;
-                           //dsn->lib = drv->lib;
-                           dsn->type = drv->type;
-                           dsn->driverName =drv->name;
-                       }
-                       dsnByName.insert(dsn->name, dsn);
-                    }
-                } else if(sectionName.startsWith("Database"))
+                // if(sectionName == "ODBC Data Sources")
+                // {
+                //     for(QPair<QString, QString > p : pairMap) {
+                //         dsn = new DSN();
+                //         dsn->pairMap = new QList<QPair<QString,QString>>();
+                //         dsnList.append(dsn);
+                //         if(ini->fileName() == ".odbc.ini")
+                //             dsn->userDsn = true;
+                //         dsn->name = p.first;
+                //         Driver* drv;
+                //         if(dsn->lib.startsWith("/"))
+                //         {
+                //             drv = drvByLib.value(p.second);
+                //             dsn->lib =drv->lib;
+                //             dsn->type = drv->type;
+                //             dsn->driverName = drv->name;
+                //         }
+                //         else {
+                //             drv = drvByName.value(p.second);
+                //             dsn->lib = p.second;
+                //             //dsn->lib = drv->lib;
+                //             dsn->type = drv->type;
+                //             dsn->driverName =drv->name;
+                //         }
+                //         dsnByName.insert(dsn->name, dsn);
+                //     }
+                // }
+                // else
+                if(sectionName.startsWith("Database"))
                 {
                     dsn->database = sectionName.mid(8).trimmed();
+                    dsn->addPair("database", dsn->database);
                 }
                 else
                 {
                     // dsn detail (inside the else block of sectionName parsing)
                     DSN* dsn = dsnByName.value(sectionName, new DSN());
+                    dsn = new DSN();
+                    dsn->_pairMap = new QMap<QString,QString>();
+                    _dsnList.append(dsn);
                     if(dsn->name.isEmpty())
                     {
                         dsn->name = sectionName;
@@ -341,25 +349,40 @@ void ODBCUtil::getDSNs(QString odbcini)
                         dsn->userDsn = true;
 
                     Driver* drv = nullptr;
-                    for(QPair<QString, QString > p : pairs) {
+                    for(QPair<QString, QString > p : pairMap) {
+                        // dsn->_pairMap->insert(p.first.toUpper(),p.second);
+                        // dsn->_upperToAct->insert(p.first.toUpper(), p.first);
+                        dsn->addPair(p.first.toUpper(),p.second);
                         if(p.first.compare("driver", Qt::CaseInsensitive) == 0)
                         {
                             if(p.second.startsWith("/"))
                             {
                                 drv = drvByLib.value(p.second);
                                 if(drv) {
-                                    dsn->driverName = drv->name;
+                                    dsn->driverName() = drv->name;
                                     // Only default the type if a custom type override hasn't explicitly been provided yet
-                                    if(dsn->type.isEmpty()) dsn->type = drv->type;
+                                    if(dsn->type.isEmpty())
+                                    {
+                                        dsn->type = drv->type;
+                                        dsn->addPair("Type", drv->type);
+                                    }
+                                    dsn->setDriver(p.second);
                                 }
                             }
                             else {
                                 drv = drvByName.value(p.second);
+                                dsn->addPair("Driver",p.second);
                                 if(drv)
                                 {
-                                    dsn->driverName = p.second;
-                                    dsn->lib = drv->lib;
-                                    if(dsn->type.isEmpty()) dsn->type = drv->type;
+                                    dsn->driverName() = p.second;
+                                    dsn->lib() = drv->lib;
+                                    if(dsn->type.isEmpty())
+                                    {
+                                        dsn->type = drv->type;
+                                        dsn->addPair("Type",drv->type);
+                                    }
+                                    dsn->setDriver(p.second);
+
                                 }
                             }
                         }
@@ -386,8 +409,10 @@ void ODBCUtil::getDSNs(QString odbcini)
                             // Intercept your custom Type=MimerSQL key
                             if(p.second.compare("MimerSQL", Qt::CaseInsensitive) == 0) {
                                 dsn->type = "MimerSql"; // Syncs with your validTypes restriction array
+                                dsn->addPair("Type", "MimerSql");
                             } else {
                                 dsn->type = p.second;
+                                dsn->addPair("Type", p.second);
                             }
                         }
                     }
@@ -397,9 +422,12 @@ void ODBCUtil::getDSNs(QString odbcini)
                     //     dsnByType.insert(dsn->type, dsn);
                     // }
                     dsnByName.insert(dsn->name, dsn);
+                    if(!dsn->type.isEmpty())
+                        dsnByType.insert(dsn->type, dsn);
                 }
             }
         }
+
     }
 }
 #endif
@@ -408,29 +436,55 @@ DSN* ODBCUtil::getDsn(QString dsn)
     return dsnByName.value(dsn);
 }
 
+Driver* ODBCUtil::getDriverByLib(QString filepath)
+{
+    return drvByLib.value(filepath);
+}
+
+Driver* ODBCUtil::getDriverByName(QString name)
+{
+    return drvByName.value(name);
+}
+
 void ODBCUtil::fillDSNCombo(QComboBox* box, QString type, QString city)
 {
     // if(box->isHidden() || !box->isEnabled())
     //     return;
-    if(type.isEmpty() || type == "Sqlite")
+    if( type == "Sqlite")
         return;
     if(dsnByName.values().count()==0)
         return;
     box->setEnabled(true);
-    if(!validTypes.contains(type))
+    if(!type.isEmpty() && !validTypes.contains(type))
         throw IllegalArgumentException("ODBCUtil::fillDSNCombo unknown dbType '" + type +"'");
 
     QString currDsn = box->currentData().toString();
     box->clear();
     int ix =0;
-    QList<DSN*> dsnList = dsnByType.values(type);
-    foreach(DSN* dsn, dsnList)
+    if(type.isEmpty())
+        _selectDsnList = this->_dsnList;
+    else
+        _selectDsnList = dsnByType.values(type);
+
+    foreach(DSN* dsn, _selectDsnList)
     {
-        if(dsn->type == type)
+        if(dsn->pairMap()->contains("DRIVERID") && excludedDriverIds.contains(dsn->pairMap()->value("DRIVERID").toInt()))
+        {
+            dsn->bExclude = true;
+            continue;
+        }
+        if(dsn->pairMap() == nullptr)
+            continue;
+        if(dsn->type == type || type.isEmpty())
         {
             if(!city.isEmpty() && dsn->location != city)
                 continue;
             box->addItem(dsn->name+" -- "+dsn->descr, dsn->name);
+            const QModelIndex idx = box->model()->index(ix, 0);
+
+            if(dsn->userDsn)
+                box->model()->setData(idx, QColor("#ccffe5"), Qt::BackgroundRole);
+
             if(!dsn->bServerAccessible)
             {
                 auto* model = qobject_cast<QStandardItemModel*>(box->model());
@@ -454,15 +508,37 @@ void ODBCUtil::fillDSNCombo(QComboBox* box, QString type, QString city)
         if(ix>=0)
             box->setCurrentIndex(ix);
     }
+    // Connect the signal (Qt 5 / Qt 6 syntax)
+    connect(box, &QComboBox::currentIndexChanged, this, &ODBCUtil::onComboBoxIndexChanged);
 }
 
+void ODBCUtil::onComboBoxIndexChanged(int index) {
+    QComboBox* box = qobject_cast<QComboBox*>(sender());
+    if (!box) return;
+
+    // Fetch the background role color from the model index
+    QModelIndex idx = box->model()->index(index, 0);
+    QVariant bgColorVariant = box->model()->data(idx, Qt::BackgroundRole);
+
+    if (bgColorVariant.isValid()) {
+        QColor color = bgColorVariant.value<QColor>();
+        // Apply the custom color directly to the box's background
+        box->setStyleSheet(QString(
+                               "QComboBox { background-color: %1; }"
+                               "QComboBox::drop-down { background-color: transparent; }" // Blends arrow container
+                               ).arg(color.name()));
+    } else {
+        // Reset to default styling if no BackgroundRole is set
+        box->setStyleSheet("");
+    }
+}
 // create the connect string
 QString ODBCUtil::connectString(QString connector, QString host, int port, QString user, QString pswd, QString database)
 {
     DSN* dsn = dsnByName.value(connector);
     if(!dsn)
         return "";
-    Driver* drv = drvByType.value(dsn->driverName);
+    Driver* drv = drvByType.value(dsn->_driverName);
     if(!drv)
         return "";
 
@@ -510,252 +586,207 @@ QString ODBCUtil::connectString2(QString driver, QString host, int port, QString
     return connstring;
 }
 
+#ifdef Q_OS_WINDOWS
 void ODBCUtil::getWinDSNs()
 {
-    QSettings winReg1("HKEY_CURRENT_USER\\Software\\ODBC\\ODBC.INI\\ODBC Data Sources", QSettings::NativeFormat);
-    QSettings winReg2("HKEY_LOCAL_MACHINE\\Software\\ODBC\\ODBC.INI\\ODBC Data Sources", QSettings::NativeFormat);
+    if(bUpdating)
+    {
+        bUpdateHappened = true;
+        return;
+    }
+    // QSettings winReg1("HKEY_CURRENT_USER\\Software\\ODBC\\ODBC.INI\\ODBC Data Sources", QSettings::NativeFormat);
+    // QSettings winReg2("HKEY_LOCAL_MACHINE\\Software\\ODBC\\ODBC.INI\\ODBC Data Sources", QSettings::NativeFormat);
+    QStringList hives{"HKEY_CURRENT_USER","HKEY_LOCAL_MACHINE"};
+    // QList<QSettings*> settings = QList<QSettings*>();
+    // settings << &winReg1 <<  &winReg1;
     //odbcMap.clear();
     //QList<QPair<QString,QString> > list;
-    QMap<QString,QString> map;
+    //QMap<QString,QString> map;
     QStringList iniKeys;
-    odbcPairMap.clear();
+    //odbcPairMap.clear();
     dsnByName.clear();
     dsnByType.clear();
-    dsns = winReg1.childKeys();
-    qDebug() <<"dsns.count " << QString("%1").arg(dsns.count());
-    foreach (QString key, dsns) {
-        QString keyVal = winReg1.value(key).toString();
-        map.clear();
-        QString regKey = QString("HKEY_CURRENT_USER\\Software\\ODBC\\ODBC.INI\\") + key;
-        QSettings winReg(regKey,QSettings::NativeFormat);
-        DSN* dsn = new DSN();
-        dsn->name = key;
-        dsn->userDsn = true;
-        iniKeys = winReg.childKeys();
-        bool bError = false;
-        for(QString iniKey : iniKeys)
-        {
-            QStringList childKeys = winReg.childKeys();
-            for(QString iniKey3 : childKeys)
+    _dsnList.clear();
+    bool bUserDsn = true; // first pass true, second pass false (Systen DSNs)
+    foreach (QString hive, hives) {
+        QString path = hive + "\\Software\\ODBC\\ODBC.INI\\ODBC Data Sources";
+        names = QSettings(path,QSettings::NativeFormat).childKeys();
+        qDebug() << hive << " dsns.count " << QString("%1").arg(names.count());
+        foreach (QString key, names) {
+            QString keyVal = QSettings(path).value(key).toString();
+            //map.clear();
+            QString regKey = QString(hive+"\\Software\\ODBC\\ODBC.INI\\") + key;
+            QSettings winReg(regKey,QSettings::NativeFormat);
+            _dsn = new DSN();
+            _dsnList.append(_dsn);
+            _dsn->name = key;
+            _dsn->userDsn = bUserDsn;
+            iniKeys = winReg.childKeys();
+            bool bError = false;
+            for(QString iniKey : iniKeys)
             {
-                QPair<QString,QString>  pair(iniKey3, winReg.value(iniKey3).toString());
-                //list.append(pair);
-                map.insert(iniKey3, winReg.value(iniKey3).toString());
-                if(iniKey3 == "Driver")
+                QStringList childKeys = winReg.childKeys();
+                for(QString iniKey3 : childKeys)
                 {
-                    QString lib = winReg.value(iniKey3).toString();
-                    Driver* pDriver = drvByLib.value(lib);
-                    if(pDriver)
+                    QPair<QString,QString>  pair(iniKey3, winReg.value(iniKey3).toString());
+                    _dsn->addPair(pair.first,pair.second);
+                    //map.insert(iniKey3, winReg.value(iniKey3).toString());
+                    if(iniKey3.compare("Driver", Qt::CaseInsensitive)==0)
                     {
-                        if(lib.contains(' '))
-                            dsn->lib = getShortPath(lib);
+                        QString value = winReg.value(iniKey3).toString();
+                        QString driverVal;
+                        if(value.contains("\\"))
+                        {
+                            driverVal = QDir::cleanPath(value);
+                            _dsn->_lib = driverVal;
+                            if(drvByLib.value(driverVal))
+                            {
+                                _dsn->_driverName = drvByLib.value(driverVal)->name;
+                                _dsn->type = drvByLib.value(driverVal)->type;
+                            }
+                        }
                         else
-                            dsn->lib = lib;
-                        dsn->driverName = pDriver->name;
-                        dsn->type = pDriver->type;
-                        dsn->server = pDriver->host;
-                        dsn->port = pDriver->port;
-                        dsn->userId = pDriver->user;
-                        dsn->password = pDriver->pswd;
-                    }
-                }
-                if(iniKey3.compare("Description",Qt::CaseInsensitive)==0)
-                {
-                    dsn->descr = winReg.value(iniKey3).toString();
-                    if(dsn->descr.contains("MsSql",Qt::CaseInsensitive)
-                        || dsn->descr.contains("Sql Server",Qt::CaseInsensitive))
-                        dsn->type = "MsSql";
-                }
-                if(iniKey3.compare("Server", Qt::CaseInsensitive)==0)
-                {
-                    QString server = winReg.value(iniKey3).toString();
-                    QString host;
-                    if(server.contains("\\"))
-                    {
-                        host = server.mid(0, server.indexOf("\\"));
-                    }
-                    else
-                    if(server.contains("/"))
-                    {
-                        host = server.mid(0, server.indexOf("/"));
-                    }
-                    else
-                        host = server;
-                    QHostInfo info = QHostInfo::fromName(host);
-                    if(info.error())
-                    {
-                        //QMessageBox::warning(nullptr, tr("Warning"), tr("Invalid server: %1 for %2 error: %3").arg(server, iniKey3, info.errorString()));
-                        qDebug() << tr("Invalid server: %1 for %2 error: %3").arg(server, iniKey3, info.errorString());
-                        bError = true;
-                        dsn->bServerAccessible=false;
-                        break;
-                    }
-                    dsn->bServerAccessible=true;
-                    dsn->server = server;
-                }
-                if(iniKey3.compare("UID", Qt::CaseInsensitive)==0)
-                {
-                    dsn->userId = winReg.value(iniKey3).toString();
-                }
-                if(iniKey3.compare("PWD", Qt::CaseInsensitive)==0)
-                {
-                    dsn->password = winReg.value(iniKey3).toString();
-                }
+                        {
+                            driverVal = value;
+                            _dsn->_driverName = driverVal;
+                            Driver* drv = drvByName.value(driverVal);
+                            if(drv)
+                            {
+                                _dsn->_lib = drv->lib;
+                                _dsn->type = drv->type;
+                            }
+                        }
+                        _dsn->_driver = value;
+                        if(!_dsn->type.isEmpty())
+                            _dsn->addPair("Type",_dsn->type);
+                        Driver* pDriver = drvByLib.value(_dsn->_lib);
+                        if(pDriver)
+                        {
+                            if(_dsn->_lib.contains(' '))
+                                _dsn->_lib = getShortPath(_dsn->_lib);
+                            _dsn->_driverName = pDriver->name;
+                            _dsn->type = pDriver->type;
+                            _dsn->addPair("Type", _dsn->type);
+                            if(!pDriver->host.isEmpty())
+                            {
+                                _dsn->server = pDriver->host;
+                                _dsn->addPair("Server", _dsn->server);
+                            }
+                            _dsn->port = pDriver->port;
+                            _dsn->addPair("Port", QString::number(_dsn->port));
+                            if(!pDriver->user.isEmpty())
+                            {
+                                _dsn->userId = pDriver->user;
+                                _dsn->addPair("Uid", _dsn->userId);
+                            }
+                            if(!pDriver->pswd.isEmpty())
+                            {
+                                _dsn->password = pDriver->pswd;
+                                _dsn->addPair("Pwd", _dsn->password);
+                            }
+                        }
+                        _dsn->addPair("Driver", _dsn->_driver);
 
-                if(iniKey3.compare("Database", Qt::CaseInsensitive)==0)
-                {
-                    dsn->database = winReg.value(iniKey3).toString();
-                }
-                if(iniKey3.compare("SSLMODE", Qt::CaseInsensitive)==0)
-                {
-                    dsn->sslMode = winReg.value(iniKey3).toString();
-                }
-                if(iniKey3.compare("Type", Qt::CaseInsensitive)==0)
-                {
-                    dsn->type =  winReg.value(iniKey3).toString();
-                    if(dsn->type.compare("MimerSql",Qt::CaseInsensitive)==0)
-                        dsn->type = "MimerSql";
-                }
-                if(iniKey3.compare("Location", Qt::CaseInsensitive)==0)
-                {
-                    dsn->location = winReg.value(iniKey3).toString();
-                }
+                    }
+                    if(iniKey3.compare("Description",Qt::CaseInsensitive)==0)
+                    {
+                        _dsn->descr = winReg.value(iniKey3).toString();
+                        _dsn->addPair("Description", _dsn->descr);
+                        if(_dsn->descr.contains("MsSql",Qt::CaseInsensitive)
+                            || _dsn->descr.contains("Sql Server",Qt::CaseInsensitive))
+                            _dsn->type = "MsSql";
+                        if(_dsn->descr.contains("MySql",Qt::CaseInsensitive))
+                            _dsn->type = "MySql";
+                        if(_dsn->descr.contains("PostgreSQL",Qt::CaseInsensitive))
+                            _dsn->type = "PostgreSQL";
 
+                        if(!_dsn->type.isEmpty())
+                            _dsn->addPair("Type", _dsn->type);
+                    }
+                    if(iniKey3.compare("Server", Qt::CaseInsensitive)==0)
+                    {
+                        QString server = winReg.value(iniKey3).toString();
+                        QString host;
+                        if(server.contains("\\"))
+                        {
+                            host = server.mid(0, server.indexOf("\\"));
+                        }
+                        else
+                            if(server.contains("/"))
+                            {
+                                host = server.mid(0, server.indexOf("/"));
+                            }
+                            else
+                                host = server;
+                        QHostInfo info = QHostInfo::fromName(host);
+                        if(info.error())
+                        {
+                            //QMessageBox::warning(nullptr, tr("Warning"), tr("Invalid server: %1 for %2 error: %3").arg(server, iniKey3, info.errorString()));
+                            qDebug() << tr("Invalid server: %1 for %2 error: %3").arg(server, iniKey3, info.errorString());
+                            bError = true;
+                            _dsn->bServerAccessible=false;
+                            break;
+                        }
+                        _dsn->bServerAccessible=true;
+                        _dsn->server = server;
+                        _dsn->addPair("Server", _dsn->server);
+                    }
+                    if(iniKey3.compare("UID", Qt::CaseInsensitive)==0)
+                    {
+                        _dsn->userId = winReg.value(iniKey3).toString();
+                        _dsn->addPair("Uid", _dsn->userId);
+                    }
+                    if(iniKey3.compare("PWD", Qt::CaseInsensitive)==0)
+                    {
+                        _dsn->password = winReg.value(iniKey3).toString();
+                        _dsn->addPair("Pwd", _dsn->password);
+                    }
+
+                    if(iniKey3.compare("Database", Qt::CaseInsensitive)==0)
+                    {
+                        _dsn->database = winReg.value(iniKey3).toString();
+                        _dsn->addPair("Database", _dsn->database);
+                   }
+                    if(iniKey3.compare("SSLMODE", Qt::CaseInsensitive)==0)
+                    {
+                        _dsn->sslMode = winReg.value(iniKey3).toString();
+                        _dsn->addPair("SslMode", _dsn->sslMode);
+                    }
+                    if(iniKey3.compare("Type", Qt::CaseInsensitive)==0)
+                    {
+                        _dsn->type =  winReg.value(iniKey3).toString();
+                        if(_dsn->type.compare("MimerSql",Qt::CaseInsensitive)==0)
+                            _dsn->type = "MimerSql";
+                        _dsn->addPair("Type", _dsn->type);
+                    }
+                    if(iniKey3.compare("Location", Qt::CaseInsensitive)==0)
+                    {
+                        _dsn->location = winReg.value(iniKey3).toString();
+                        _dsn->addPair("Location", _dsn->location);
+                    }
+                    if(iniKey3.compare("Setup", Qt::CaseInsensitive)==0)
+                    {
+                        _dsn->setup = winReg.value(iniKey3).toString();
+                        _dsn->addPair("Setup", _dsn->setup);
+                    }
+                }
+                if(bError)
+                    break;
             }
-            if(bError)
-                break;
-        }
-        //odbcPairMap.insert(key, list);
-        odbcPairMap.insert(key,map);
-        if(!dsnByName.contains(key))
-        {
-            dsnByName.insert(key, dsn);
-            if(validTypes.contains(dsn->type))
-                dsnByType.insert(dsn->type,dsn);
-        }
-    }
-
-    // add also systemDsn
-    dsns = winReg2.childKeys();
-    qDebug() <<"dsns count " << QString("%1").arg(dsns.count());
-    foreach (QString key, dsns) {
-        QString keyVal = winReg2.value(key).toString();
-        DSN* dsn = new DSN();
-        dsn->name = key;
-        dsn->userDsn = false;
-        map.clear();
-        QString regKey = QString("HKEY_LOCAL_MACHINE\\Software\\ODBC\\ODBC.INI\\") + key;
-        QSettings winReg(regKey,QSettings::NativeFormat);
-
-        iniKeys = winReg.childKeys();
-        for(QString iniKey : iniKeys)
-        {
-            QStringList childKeys = winReg.childKeys();
-            for(QString iniKey3 : childKeys)
+            //odbcPairMap.insert(key, list);
+            //odbcPairMap.insert(key,map);
+            if(!dsnByName.contains(key))
             {
-                if(iniKey3 == "ODBC Data Sources")
-                    continue;
-                //QPair<QString,QString>  pair(iniKey3, winReg.value(iniKey3).toString());
-                //list.append(pair);
-                map.insert(iniKey3, winReg.value(iniKey3).toString());
-                if(iniKey3 == "Driver")
-                {
-                    QString lib = winReg.value(iniKey3).toString();
-                    Driver* pDriver = drvByLib.value(lib);
-                    if(pDriver)
-                    {
-                        dsn->lib = lib;
-                        dsn->driverName = pDriver->name;
-                        dsn->type = pDriver->type;
-                    }
-                    // else
-                    //     continue;
-                }
-                if(iniKey3.compare("Description",Qt::CaseInsensitive)==0)
-                {
-                    dsn->descr = winReg.value(iniKey3).toString();
-                }
-                if(iniKey3.compare("Server", Qt::CaseInsensitive)==0)
-                {
-                    dsn->server = winReg.value(iniKey3).toString();
-                }
-                if(iniKey3.compare("Servername", Qt::CaseInsensitive)==0)
-                {
-                    dsn->server = winReg.value(iniKey3).toString();
-                }
-                if(iniKey3.compare("Port", Qt::CaseInsensitive)==0)
-                {
-                    dsn->port = winReg.value(iniKey3).toInt();
-                }
-                if(iniKey3.compare("Database", Qt::CaseInsensitive)==0)
-                {
-                    dsn->database = winReg.value(iniKey3).toString();
-                }
-                if(iniKey3.compare("Username", Qt::CaseInsensitive)==0)
-                {
-                    dsn->userId = winReg.value(iniKey3).toString();
-                }
-                if(iniKey3.compare("Uid", Qt::CaseInsensitive)==0)
-                {
-                    dsn->userId = winReg.value(iniKey3).toString();
-                }
-                if(iniKey3.compare("PWD", Qt::CaseInsensitive)==0)
-                {
-                    dsn->password = winReg.value(iniKey3).toString();
-                }
-                if(iniKey3.compare("SSLMODE", Qt::CaseInsensitive)==0)
-                {
-                    dsn->sslMode = winReg.value(iniKey3).toString();
-                }
-                if(iniKey3.compare("Location", Qt::CaseInsensitive)==0)
-                {
-                    dsn->location = winReg.value(iniKey3).toString();
-                }
-                if(iniKey3.compare("Type", Qt::CaseInsensitive)==0)
-                {
-                    dsn->type = winReg.value(iniKey3).toString();
-                }
+                dsnByName.insert(key, _dsn);
+                if(validTypes.contains(_dsn->type))
+                    dsnByType.insert(_dsn->type,_dsn);
             }
-            if(dsn->lib.isEmpty())
-                continue;   // driver not found
-            if(!dsn->server.isEmpty())
-            {
-                if(isIp(dsn->server))
-                {
-                    QHostInfo info = QHostInfo::fromName(dsn->server);
-                    if(info.hostName() == dsn->server)
-                    {
-                        QMessageBox::warning(nullptr, tr("Warning"),tr("DSN %1 uses invalid IP addr. ").arg(dsn->server));
-                    }
-                    else
-                    {
-                        QMessageBox::warning(nullptr, tr("Warning"),tr("DSN %1 uses IP addr %2. Do you want to use %2 instead?").arg(iniKey, dsn->server, info.hostName()));
-                    }
-                }
-            }
-        }
-        odbcPairMap.insert(key, map);
-        if(!dsnByName.contains(key))
-        {
-            dsnByName.insert(key, dsn);
-            if(validTypes.contains(dsn->type))
-                dsnByType.insert(dsn->type,dsn);
-        }
+        } // end of hive
+        bUserDsn = false;
     }
     emit odbc_changed();
 }
 
-bool ODBCUtil::isIp(QString txt)
-{
-    // ist txt a valid ip address exptression?
-    static QRegularExpression ipV4 ("\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b");
-    QRegularExpressionMatch match = ipV4.match(txt);
-    if(match.hasMatch())
-        return true;
-    static QRegularExpression ipV6("\\A(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}\\Z");
-    match = ipV6.match(txt.toUpper());
-    return match.hasMatch();
-}
 
 void ODBCUtil::getWinDrivers()
 {
@@ -764,6 +795,7 @@ void ODBCUtil::getWinDrivers()
 
     QSettings winReg(regKey,QSettings::NativeFormat);
     QStringList drvKeys = winReg.childKeys();
+
     drvByLib.clear();
     drvByName.clear();
     drvByType.clear();
@@ -787,10 +819,14 @@ void ODBCUtil::getWinDrivers()
         {
             if(iniKey3 == "Driver")
             {
-                driver->lib = drvReg.value(iniKey3).toString();
+                driver->lib = QDir::cleanPath(drvReg.value(iniKey3).toString());
                 if(driver->lib.contains("mimodb",Qt::CaseInsensitive))
                     driver->type = "MimerSql";
                 break;
+            }
+            if(iniKey3 == "Setup")
+            {
+                driver->setup = QDir::cleanPath(drvReg.value(iniKey3).toString());
             }
         }
         QFileInfo info = QFileInfo(driver->lib);
@@ -799,9 +835,26 @@ void ODBCUtil::getWinDrivers()
         drvByType.insert(driver->type, driver);
         if(driver->lib.contains("%WINDIR%"))
             driver->lib = driver->lib.replace("%WINDIR%","C:\\windows");
-        drvByLib.insert(driver->lib, driver);
+        drvByName.insert(driver->name, driver);
+    }
+    foreach(Driver* drv, drvByName.values())
+    {
+        drvByLib.insert(drv->lib,drv);
     }
     emit odbc_changed();
+}
+#endif
+
+bool ODBCUtil::isIp(QString txt)
+{
+    // ist txt a valid ip address exptression?
+    static QRegularExpression ipV4 ("\\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b");
+    QRegularExpressionMatch match = ipV4.match(txt);
+    if(match.hasMatch())
+        return true;
+    static QRegularExpression ipV6("\\A(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}\\Z");
+    match = ipV6.match(txt.toUpper());
+    return match.hasMatch();
 }
 
 QString ODBCUtil::getShortPath(const QString &longPath)
@@ -829,4 +882,34 @@ QString ODBCUtil::getShortPath(const QString &longPath)
     return longPath; // No-op on non-Windows operating systems
 #endif
 }
+
+void ODBCUtil::addDsn(DSN* dsn)
+{
+    if(!dsnByName.contains(dsn->name))
+    {
+        dsnByName.insert(dsn->name,dsn);
+        if(!dsn->type.isEmpty())
+            dsnByType.insert(dsn->type,dsn);
+    }
+}
+
+QList<Driver*> ODBCUtil::drivers(QString type)
+{
+    if(type.isEmpty())
+      return drvByName.values();
+    else
+      return drvByType.values(type);
+}
+
+QList<DSN*> ODBCUtil::getDsnList(bool bUserDSN)
+{
+    QList<DSN*> list;
+    foreach (DSN* dsn, _dsnList) {
+        if(dsn->userDsn == bUserDSN)
+            list.append(dsn);
+    }
+    return list;
+}
+
+// ***********************************************************************
 

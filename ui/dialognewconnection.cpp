@@ -11,6 +11,7 @@
 #include <QSqlError>
 #include "city.h"
 #include <QHostInfo>
+#include "dsn.h"
 
 DialogNewConnection::DialogNewConnection(QWidget *parent)
     : QDialog(parent)
@@ -282,7 +283,7 @@ void DialogNewConnection::onCbDsn_currentIndexChanged(int ix)
     ui->txtDbName->clear();
     ui->txtDescription->setText(_dsn->descr);
     ui->txtDbName->setText(_dsn->database);
-    ui->lblDriver->setText(_dsn->driverName);
+    ui->lblDriver->setText(_dsn->driverName());
     ui->lblDSNType->setText(_dsn->userDsn?"user DSN":"systemDSN");
     ui->txtUid->clear();
     ui->txtPWD->clear();
