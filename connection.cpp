@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QDir>
 #include "configuration.h"
+#include "dsn.h"
 #include "sql.h"
 #include <QSqlQuery>
 #include "exportsql.h"
@@ -367,7 +368,7 @@ bool Connection::connectToPostgreSQL(const DSN* dsn, const QString &server, cons
     // Initialize the primary QODBC driver base
     QSqlDatabase db = QSqlDatabase::addDatabase("QODBC", connectionName);
 
-    QString connectionString = ODBCUtil::instance()->connectString2("{" + dsn->driverName + "}",server, dsn->port,
+    QString connectionString = ODBCUtil::instance()->connectString2("{" + dsn->driverName() + "}",server, dsn->port,
                                           userid, password,useDatabase );
     qDebug() << "PostgreSQL connectString: " << connectionString;
     db.setDatabaseName(connectionString);

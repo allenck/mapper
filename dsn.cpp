@@ -39,6 +39,22 @@ void DSN::addPair(QString s1, QString s2)
     _pairMap->insert(s1.toUpper(),s2);
     _upperToAct->insert(s1.toUpper(),s1);
     Q_ASSERT(_pairMap->count() == _upperToAct->count());
+
+    if(s1.toUpper() == "TYPE") type = s2;
+    if(s1.toUpper() == "DESCRIPTION") descr = s2;
+    if(s1.toUpper() == "SERVER") server = s2;
+    if(s1.toUpper() == "DATABASE") database = s2;
+    if(s1.toUpper() == "PWD") password = s2;
+    if(s1.toUpper() == "PASSWORD") password = s2;
+    if(s1.toUpper() == "UID") userId = s2;
+    if(s1.toUpper() == "USER") userId = s2;
+    if(s1.toUpper() == "SERVER") server = s2;
+    if(s1.toUpper() == "SSLMODE") sslMode = s2;
+    if(s1.toUpper() == "LOCATION") location = s2;
+    if(s1.toUpper() == "DRIVER") _driver = s2;
+    if(s1.toUpper() == "SETUP") setup = s2;
+
+    //emit dsnChanged(this);
 }
 
 void DSN::removePair(QString oldKey)
@@ -48,6 +64,7 @@ void DSN::removePair(QString oldKey)
     Q_ASSERT(_pairMap->count() == _upperToAct->count());
 }
 
+#if 0
 bool DSN::verifyPairs()
 {
     bool rslt = true;
@@ -80,7 +97,11 @@ bool DSN::verifyPairs()
     if(_pairMap->value("SERVER") != server)
     {
         qDebug() << "Server differs in pairMap " << server << " != " << _pairMap->value("SERVER");
-
+        if(server.isEmpty())
+        {
+            server = _pairMap->value("SERVER");
+            return true;
+        }
         rslt = false;
     }
     if(_pairMap->value("UID") != userId)
@@ -102,4 +123,12 @@ bool DSN::verifyPairs()
         rslt = false;
     }
     return rslt;
+}
+#endif
+int DSN::maxKeyLen()
+{
+    int maxKeyLen =-1;
+    foreach(QString key, pairMap()->keys())
+        if(key.length()> maxKeyLen) maxKeyLen = key.length();
+    return maxKeyLen;
 }

@@ -10,16 +10,17 @@ public:
     ~DSN() {}
     DSN(const DSN& other);
     void addPair(QString s1, QString s2);
-    QMap<QString,QString>* pairMap() {return _pairMap;}
-    QString upperToAct(QString u) {return _upperToAct->value(u);}
-    QString lib() {return _lib;}
-    QString driverName() {return _driverName;}
+    QMap<QString,QString>* pairMap()const {return _pairMap;}
+    QString upperToAct(QString u) const {return _upperToAct->value(u);}
+    QString lib() const {return _lib;}
+    QString driverName() const {return _driverName;}
     void setLib(QString lib){_lib=lib;}
     void setDriverName(QString driverName){_driverName = driverName;}
-    bool verifyPairs();
+    //bool verifyPairs();
     void removePair(QString key);
-    QString driver() {return _driver;}
+    QString driver()const {return _driver;}
     void setDriver(QString driver) {_driver = driver;}
+    int maxKeyLen();
     QString name;
     QString type;
     QString descr;
@@ -30,11 +31,14 @@ public:
     QString password;
     QString sslMode;
     QString location;
+    QString setup;
     bool userDsn =false;
     bool bServerAccessible = true;
     bool bDirty = false;
     bool bExclude = false;
-    QString setup;
+
+signals:
+    void dsnChanged(DSN* dsn);
 
 private:
     QString _driverName;

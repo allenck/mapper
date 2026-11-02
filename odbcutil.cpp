@@ -155,6 +155,7 @@ void ODBCUtil::getDrivers()
                                 }
                             }
                             drv->lib = p.second;
+                            drv->name = sectionName;
                             drvByLib.insert(drv->lib, drv);
                             bUpdated = true;
                             continue;
@@ -297,7 +298,7 @@ void ODBCUtil::getDSNs(QString odbcini)
             {
                 QString sectionName = getSection(currLine.trimmed());
                 QList<QPair<QString, QString> > pairMap = parseSection();
-                if(sectionName == "ODBC")
+                if(sectionName == "ODBC" || sectionName == "ODBC Data Sources")
                     continue;
                 DSN* dsn = nullptr;
                 // if(sectionName == "ODBC Data Sources")
@@ -359,7 +360,8 @@ void ODBCUtil::getDSNs(QString odbcini)
                             {
                                 drv = drvByLib.value(p.second);
                                 if(drv) {
-                                    dsn->driverName() = drv->name;
+                                    dsn->setDriverName(drv->name);
+                                    dsn->setLib(p.second);
                                     // Only default the type if a custom type override hasn't explicitly been provided yet
                                     if(dsn->type.isEmpty())
                                     {
@@ -374,8 +376,8 @@ void ODBCUtil::getDSNs(QString odbcini)
                                 dsn->addPair("Driver",p.second);
                                 if(drv)
                                 {
-                                    dsn->driverName() = p.second;
-                                    dsn->lib() = drv->lib;
+                                    dsn->setDriverName(p.second);
+                                    dsn->setLib(drv->lib);
                                     if(dsn->type.isEmpty())
                                     {
                                         dsn->type = drv->type;
@@ -584,6 +586,26 @@ QString ODBCUtil::connectString2(QString driver, QString host, int port, QString
     if(!database.isEmpty())
         connstring.append("Database="+database+";");
     return connstring;
+}
+
+/*static*/ QString ODBCUtil::mimerConnectString(const DSN* dsn,const QString &dbName, const QString &server, QString userid, QString password)
+{
+    // === ADD THIS OPTION FOR MIMER SQL SYSTEM CATALOGS ===
+    // Forces the ODBC layer to build a client-side static scrollable cache
+    //db.setConnectOptions("SQL_ATTR_CURSOR_TYPE=SQL_CURSOR_STATIC");
+    //db.setConnectOptions("SQL_ATTR_ANSI_APP=FALSE");
+    // Build a DSN-less connection string using the verified parameters from dbVis
+
+    QString connectionString = QString(
+                                   "Driver={%5};"
+                                   "Protocol=tcp;"
+                                   "Node=%2;"
+                                   "Service=1360;"  // Verified from your dbVis Connection URL string
+                                   "Database=%1;"
+                                   "Uid=%3;"
+                                   "Pwd=%4;"
+                                   ).arg(dbName.toLower(), server,userid,password, dsn->driverName());
+   return connectionString;
 }
 
 #ifdef Q_OS_WINDOWS

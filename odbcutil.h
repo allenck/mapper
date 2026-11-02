@@ -42,6 +42,7 @@ public:
     void fillDSNCombo(QComboBox* box, QString type, QString city = "");
     QString connectString(QString connector, QString host, int port, QString user, QString pswd, QString database);
     QString connectString2(QString driver, QString host, int port, QString user, QString pswd, QString database);
+    static QString mimerConnectString(const DSN *dsn, const QString &dbName, const QString &server, QString userid, QString password);
     static bool isIp(QString txt);
     QString getShortPath(const QString &longPath);
     void initialize();

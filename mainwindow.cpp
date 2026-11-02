@@ -23,6 +23,7 @@
 #include "createsqlitedatabasedialog.h"
 #include "kml.h"
 #include <QFileDialog>
+//#include <unistd.h>
 #include "exportroutedialog.h"
 #include "editcitydialog.h"
 #ifdef HAVE_CONSOLE
