@@ -8,6 +8,7 @@
 #include <QFile>
 #include "routeviewtablemodel.h"
 #include "webviewbridge.h"
+#include "dsn.h"
 #ifdef QTKEYCHAIN_VERSION_6
 #include "securevault.h"
 #endif
@@ -397,16 +398,12 @@ void Configuration::saveSettings2()
                     settings->setValue("connectString",cs);
                 }
             }
-        }
 #endif
-        settings->endGroup(); // end a single connection
+            settings->endGroup(); // end a single connection
+        } // end for connections loop
 
         //settings->endArray(); // connections
         settings->endGroup(); // connections
-
-        // settings->beginGroup("overlays");
-        // settings->remove("");
-        // settings->endGroup();
 
         settings->setValue("currOverlay", currCity->curOverlayId);
         settings->endGroup(); // city

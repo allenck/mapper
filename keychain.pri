@@ -12,6 +12,7 @@ SOURCES += $$PWD/securevault.cpp \
         QtKeychain/qtkeychain/keychain.cpp
 
 HEADERS += $$PWD/securevault.h \
+        $$PWD/cleanerrorstring.h \
         $$PWD/dsn.h \
         QtKeychain/qtkeychain/keychain.h \
         QtKeychain/qtkeychain/keychain_p.h \

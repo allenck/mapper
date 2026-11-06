@@ -23,6 +23,9 @@
 #include "createsqlitedatabasedialog.h"
 #include "kml.h"
 #include <QFileDialog>
+#ifndef Q_OS_WINDOWS
+#include <unistd.h>
+#endif
 //#include <unistd.h>
 #include "exportroutedialog.h"
 #include "editcitydialog.h"
@@ -4106,7 +4109,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
       // Stops the execution stack right here. This prevents the background
       // software rendering threads from running the loops that crash inside qhash.h,
       // dropping the application out of memory and freeing Qt Creator instantly.
-      _exit(0);
+#ifdef Q_OS_WINDOWS
+       _exit(0);
+#else
+      exit(0);
+#endif
 }
 
 void MainWindow::changeEvent(QEvent *event)  {
@@ -4191,9 +4198,7 @@ void MainWindow::btnSplit_Clicked()    // SLOT
 /// <param name="oneWay"></param>
 /// <param name="color"></param>
 /// <param name="bClearFirst">true to clear the line first</param>
-void MainWindow::displaySegment(qint32 segmentId, QString segmentName,
-                                /*QString oneWay,*/ QString color, QString trackUsage,
-                                bool bClearFirst)
+void MainWindow::displaySegment(qint32 segmentId, QString segmentName, QString color, QString trackUsage,bool bClearFirst)
 {
     SegmentInfo si = sql->getSegmentInfo(segmentId);
     si.displaySegment(ui->dateEdit->text(),color, trackUsage, bClearFirst);

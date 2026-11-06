@@ -5,15 +5,11 @@
 #
 #-------------------------------------------------
 
-greaterThan(QT_MAJOR_VERSION, 4): {
- greaterThan(QT_MINOR_VERSION, 4): {
-  WEBENGINE = Y
- }
-}
+WEBENGINE = Y
 message(WEBENGINE  " = "  $$WEBENGINE)
 
  QT       += core gui  network sql xml widgets websockets webchannel
- greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport webenginewidgets gui concurrent
+ equals(QT_MAJOR_VERSION, 6): QT += widgets printsupport webenginewidgets gui concurrent
  DEFINES += USE_WEBENGINE
  message("using WebEngine")
 
@@ -122,6 +118,8 @@ DISTFILES += \
     Resources/scripts/leaflet.polylineoffset.js \
     Resources/scripts/patternUtils.js \
     Resources/sql/CreatePostgreSQLFunction.sql \
+    Resources/sql/MimerSql/mimer_create_database.sql \
+    Resources/sql/MimerSql/mimeradduser.sql \
     Resources/sql/PostgreSQL/.gitignore \
     Resources/sql/PostgreSQL/PostgreSQL_create_distance_function.sql \
     Resources/sql/PostgreSQL/createPostgreSQLFunction.sql \
@@ -158,7 +156,7 @@ DISTFILES += \
     # mysql-qt-driver.sh
 
 ICON = Resources/mapper.icns
-//CONFIG-=app_bundle
+#CONFIG-=app_bundle
 
 
 INCLUDEPATH += $$PWD/.
@@ -260,3 +258,7 @@ QMAKE_POST_LINK += xcopy /y /d \"$$MYSQL_DRIVER_DIR_NATIVE\\libssl-3-x64.dll\" \
      LIBS += -ladvapi32
 
 }
+
+FORMS += \
+  ui/dialogupdatestreets.ui
+

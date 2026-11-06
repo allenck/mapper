@@ -8,6 +8,7 @@
 #include <QHostInfo>
 #include <QMessageBox>
 #include "dsn.h"
+#include "qtcpsocket.h"
 #ifdef Q_OS_WIN
 //#include <qt_windows.h> // Includes Windows.h safely in Qt environments
 #include "registrywatcher.h"
@@ -479,9 +480,14 @@ void ODBCUtil::fillDSNCombo(QComboBox* box, QString type, QString city)
             continue;
         if(dsn->type == type || type.isEmpty())
         {
-            if(!city.isEmpty() && dsn->location != city)
-                continue;
-            box->addItem(dsn->name+" -- "+dsn->descr, dsn->name);
+            if(dsn->location.isEmpty())
+                box->addItem(dsn->name+" -- "+dsn->descr, dsn->name);
+            else
+            {
+                if(!city.isEmpty() && dsn->location != city)
+                    continue;
+                box->addItem(dsn->name+" -- "+dsn->descr, dsn->name);
+            }
             const QModelIndex idx = box->model()->index(ix, 0);
 
             if(dsn->userDsn)
@@ -588,23 +594,25 @@ QString ODBCUtil::connectString2(QString driver, QString host, int port, QString
     return connstring;
 }
 
-/*static*/ QString ODBCUtil::mimerConnectString(const DSN* dsn,const QString &dbName, const QString &server, QString userid, QString password)
+/*static*/ QString ODBCUtil::mimerConnectString(const QString &dbName, const QString &server, QString userid, QString password)
 {
     // === ADD THIS OPTION FOR MIMER SQL SYSTEM CATALOGS ===
     // Forces the ODBC layer to build a client-side static scrollable cache
     //db.setConnectOptions("SQL_ATTR_CURSOR_TYPE=SQL_CURSOR_STATIC");
     //db.setConnectOptions("SQL_ATTR_ANSI_APP=FALSE");
     // Build a DSN-less connection string using the verified parameters from dbVis
-
+    QList<Driver*> list = ODBCUtil::instance()->drvByType.values("MimerSql");
+    if(list.isEmpty())
+        return "";
     QString connectionString = QString(
-                                   "Driver={%5};"
-                                   "Protocol=tcp;"
-                                   "Node=%2;"
-                                   "Service=1360;"  // Verified from your dbVis Connection URL string
-                                   "Database=%1;"
-                                   "Uid=%3;"
-                                   "Pwd=%4;"
-                                   ).arg(dbName.toLower(), server,userid,password, dsn->driverName());
+                                   "DRIVER={%5};"
+                                   "PROTOCOL=tcp;"
+                                   "NODE=%2;"
+                                   "SERVICE=1360;"  // Verified from your dbVis Connection URL string
+                                   "DATABASE=%1;"
+                                   "UID=%3;"
+                                   "PWD=%4;"
+                                   ).arg(dbName.toLower(), server,userid,password, list.at(0)->name);
    return connectionString;
 }
 
@@ -740,16 +748,27 @@ void ODBCUtil::getWinDSNs()
                             }
                             else
                                 host = server;
-                        QHostInfo info = QHostInfo::fromName(host);
-                        if(info.error())
-                        {
-                            //QMessageBox::warning(nullptr, tr("Warning"), tr("Invalid server: %1 for %2 error: %3").arg(server, iniKey3, info.errorString()));
-                            qDebug() << tr("Invalid server: %1 for %2 error: %3").arg(server, iniKey3, info.errorString());
-                            bError = true;
-                            _dsn->bServerAccessible=false;
-                            break;
-                        }
-                        _dsn->bServerAccessible=true;
+                        // QHostInfo info = QHostInfo::fromName(host);
+                        // if(info.error())
+                        // {
+                        //     //QMessageBox::warning(nullptr, tr("Warning"), tr("Invalid server: %1 for %2 error: %3").arg(server, iniKey3, info.errorString()));
+                        //     qDebug() << tr("Invalid server: %1 for %2 error: %3").arg(server, iniKey3, info.errorString());
+                        //     bError = true;
+                        //     _dsn->bServerAccessible=false;
+                        //     break;
+                        // }
+                            int port =-1;
+                            if(_dsn->port >0 )
+                                port = _dsn->port;
+                            else if (_dsn->type == "MySql")
+                                    port = 3306;
+                            else if (_dsn->type == "MsSql")
+                                    port = 1433;
+                            else if (_dsn->type == "MimerSql")
+                                    port = 1360;
+                            else if (_dsn->type == "PostgreSQL")
+                                    port = 5432;
+                            _dsn->verifyServerAccessibility(host,port);
                         _dsn->server = server;
                         _dsn->addPair("Server", _dsn->server);
                     }

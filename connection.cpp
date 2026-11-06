@@ -332,15 +332,16 @@ bool Connection::connectToCityMimer(const QString &dbName, const QString &server
     //db.setConnectOptions("SQL_ATTR_CURSOR_TYPE=SQL_CURSOR_STATIC");
     //db.setConnectOptions("SQL_ATTR_ANSI_APP=FALSE");
     // Build a DSN-less connection string using the verified parameters from dbVis
-    QString connectionString = QString(
-                                   "Driver={MIMER};"
-                                   "Protocol=tcp;"
-                                   "Node=%2;"
-                                   "Service=1360;"  // Verified from your dbVis Connection URL string
-                                   "Database=%1;"
-                                   "Uid=%3;"
-                                   "Pwd=%4;"
-                                   ).arg(dbName.toLower(), server,userid,password);
+    // QString connectionString = QString(
+    //                                "Driver={MIMER};"
+    //                                "Protocol=tcp;"
+    //                                "Node=%2;"
+    //                                "Service=1360;"  // Verified from your dbVis Connection URL string
+    //                                "Database=%1;"
+    //                                "Uid=%3;"
+    //                                "Pwd=%4;"
+    //                                ).arg(dbName.toLower(), server,userid,password);
+    QString connectionString = ODBCUtil::mimerConnectString(dbName,server,userid,password);
 
     db.setDatabaseName(connectionString);
 

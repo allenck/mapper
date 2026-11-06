@@ -11932,7 +11932,10 @@ QSqlDatabase::database(SQL::_connectionName)
 QString SQL::getDatabase(QString serverType, QSqlDatabase db)
 {
  //QSqlDatabase db = QSqlDatabase(SQL::_connectionName);
-
+    if (!db.isOpen()) {
+            qWarning() << "Cannot get database name: Database is not open.";
+            return "";
+        }
  QSqlQuery query = QSqlQuery(db);
  QString dbName ="";
  QString commandText;

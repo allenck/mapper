@@ -32,7 +32,8 @@ public:
 private:
  Ui::editConnectionsDlg *ui;
  Configuration* config;
- QStringList drivers;
+ QStringList drivers;   // drivers available
+ QStringList myDrivers; // drivers I can use
  QStringList dbTypes;
  QString _connectionString;
  bool bCbConnectionsTextChanged = false;
@@ -77,6 +78,8 @@ private:
   void cb_enable(QComboBox* box, bool b);
   QString _testCN = "testConnection";
   QString _connstring;
+  void setHelp(QString text, QString style);
+
 
 private slots:
  void cbCitiesSelectionChanged(int sel);

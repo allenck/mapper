@@ -82,7 +82,7 @@ bool ExportSql::openDb()
         QString server = tgtConn->host();
         QMap<QString,QString> map = Connection::decodeConnectionString(tgtConn->connectString());
         server = map.value("Node");
-        Connection::connectToCityMimer(map.value("Database"), server,"export");
+        Connection::connectToCityMimer(nullptr, map.value("Database"), server,"export");
         _targetDb = QSqlDatabase::database("export");
         // === FORCE HARDWARE AUTO-COMMIT AT DRIVER LAYER ===
         // This removes the need to manually track _targetDb.commit() balances

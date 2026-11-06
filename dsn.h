@@ -5,6 +5,7 @@
 #include <QMap>
 class DSN : public QObject
 {
+    Q_OBJECT
 public:
     DSN(QObject *parent=0);
     ~DSN() {}
@@ -21,6 +22,7 @@ public:
     QString driver()const {return _driver;}
     void setDriver(QString driver) {_driver = driver;}
     int maxKeyLen();
+    void verifyServerAccessibility(const QString &host, quint16 port);
     QString name;
     QString type;
     QString descr;
@@ -39,6 +41,7 @@ public:
 
 signals:
     void dsnChanged(DSN* dsn);
+    void serverVerificationCompleted(const QString &host, bool isAccessible, const QString &errorMessage = QString());
 
 private:
     QString _driverName;

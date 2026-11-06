@@ -1,4 +1,5 @@
 #include "dsn.h"
+#include "qtcpsocket.h"
 #include <qdebug.h>
 
 DSN::DSN(QObject *parent)
@@ -6,7 +7,11 @@ DSN::DSN(QObject *parent)
 {
     _pairMap = new QMap<QString,QString>(); // keys are all Upper!
     _upperToAct = new QMap<QString,QString>();
+    connect(this, &DSN::serverVerificationCompleted, this, [=](const QString &host, bool isAccessible, const QString &errorMessage){
+        bServerAccessible = isAccessible;
+    });
 }
+
 DSN::DSN(const DSN& other)
 {
     name =other.name;
@@ -125,6 +130,43 @@ bool DSN::verifyPairs()
     return rslt;
 }
 #endif
+void DSN::verifyServerAccessibility(const QString &host, quint16 port)
+{
+    // Allocate the socket on the heap, parented to 'this' for safety
+    QTcpSocket *socket = new QTcpSocket(this);
+
+    // Track if a response has already been handled to prevent double-signaling
+    // (e.g., if a connection times out right as an error occurs)
+    auto hasResponded = std::make_shared<bool>(false);
+
+    // Context: Successful connection
+    connect(socket, &QTcpSocket::connected, this, [=]() {
+        if (*hasResponded) return;
+        *hasResponded = true;
+
+        emit serverVerificationCompleted(host, true);
+
+        socket->disconnect(); // Clear connections before deletion
+        socket->deleteLater();
+    });
+
+    // Context: Network/Port access failure
+    connect(socket, &QAbstractSocket::errorOccurred, this, [=](QAbstractSocket::SocketError error) {
+        Q_UNUSED(error);
+        if (*hasResponded) return;
+        *hasResponded = true;
+
+        emit serverVerificationCompleted(host, false, socket->errorString());
+
+        socket->disconnect();
+        socket->deleteLater();
+    });
+
+    // Initiate the non-blocking connection request
+    // For Mimer SQL, the default server port is 1360 (or adjust to your target port)
+    socket->connectToHost(host, port);
+}
+
 int DSN::maxKeyLen()
 {
     int maxKeyLen =-1;

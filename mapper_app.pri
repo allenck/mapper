@@ -97,7 +97,7 @@ SOURCES += main.cpp\
     dialogeditcomments.cpp \
     dialoghtmledit.cpp \
     dialogselectlist.cpp \
-    ui/dialognewconnection.cpp
+    dialognewconnection.cpp
 
 HEADERS  += mainwindow.h \
     $$PWD/browsecommentsdialog.h \
@@ -201,7 +201,7 @@ HEADERS  += mainwindow.h \
     dialogeditcomments.h \
     dialoghtmledit.h \
     dialogselectlist.h \
-    ui/dialognewconnection.h
+    dialognewconnection.h
 
 win32: HEADERS += registrywatcher.h
 
@@ -241,15 +241,21 @@ FORMS += \
     ui/browsecommentsdialog.ui \
     ui/replacesegmentdialog.ui \
     ui/segmentselectionwidget.ui \
-    dialogeditstreets.ui \
-    dialogpreferences.ui \
-    dialogupdatestreets.ui \
-    findreplacewidget.ui \
-    dialogeditcomments.ui \
-    dialoghtmledit.ui \
-    dialogselectlist.ui \
+    ui/dialogeditstreets.ui \
+    ui/dialogpreferences.ui \
+    ui/dialogupdatestreets.ui \
+    ui/findreplacewidget.ui \
+    ui/dialogeditcomments.ui \
+    ui/dialoghtmledit.ui \
+    ui/dialogselectlist.ui \
+    ui/dialognewconnection.ui \
+    ui/dialogeditstreets.ui \
+    ui/dialogpreferences.ui \
+    ui/dialogupdatestreets.ui \
+    ui/dialogeditcomments.ui \
+    ui/dialoghtmledit.ui \
+    ui/dialogselectlist.ui \
     ui/dialognewconnection.ui
-
 
 DISTFILES += \
  $$PWD/Resources/api_key.txt \
