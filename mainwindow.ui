@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1293</width>
-    <height>606</height>
+    <height>672</height>
    </rect>
   </property>
   <property name="font">
@@ -124,7 +124,7 @@
               <string/>
              </property>
              <property name="icon">
-              <iconset resource="../Resources/mapper.qrc">
+              <iconset resource="../build/Desktop_Qt_6_10_2_MSVC2022_64bit_Debug/mapper_app/.qt/rcc/mapper.qrc">
                <normaloff>:/arrow-left-double.png</normaloff>:/arrow-left-double.png</iconset>
              </property>
              <property name="iconSize">
@@ -147,7 +147,7 @@
               <string/>
              </property>
              <property name="icon">
-              <iconset resource="../Resources/mapper.qrc">
+              <iconset resource="../build/Desktop_Qt_6_10_2_MSVC2022_64bit_Debug/mapper_app/.qt/rcc/mapper.qrc">
                <normaloff>:/arrow-left.png</normaloff>:/arrow-left.png</iconset>
              </property>
              <property name="iconSize">
@@ -170,7 +170,7 @@
               <string/>
              </property>
              <property name="icon">
-              <iconset resource="../Resources/mapper.qrc">
+              <iconset resource="../build/Desktop_Qt_6_10_2_MSVC2022_64bit_Debug/mapper_app/.qt/rcc/mapper.qrc">
                <normaloff>:/arrow-right.png</normaloff>:/arrow-right.png</iconset>
              </property>
              <property name="iconSize">
@@ -193,7 +193,7 @@
               <string/>
              </property>
              <property name="icon">
-              <iconset resource="../Resources/mapper.qrc">
+              <iconset resource="../build/Desktop_Qt_6_10_2_MSVC2022_64bit_Debug/mapper_app/.qt/rcc/mapper.qrc">
                <normaloff>:/arrow-right-double.png</normaloff>:/arrow-right-double.png</iconset>
              </property>
              <property name="iconSize">
@@ -216,7 +216,7 @@
               <string/>
              </property>
              <property name="icon">
-              <iconset resource="../Resources/mapper.qrc">
+              <iconset resource="../build/Desktop_Qt_6_10_2_MSVC2022_64bit_Debug/mapper_app/.qt/rcc/mapper.qrc">
                <normaloff>:/edit-cut.png</normaloff>:/edit-cut.png</iconset>
              </property>
              <property name="iconSize">
@@ -239,7 +239,7 @@
               <string/>
              </property>
              <property name="icon">
-              <iconset resource="../Resources/mapper.qrc">
+              <iconset resource="../build/Desktop_Qt_6_10_2_MSVC2022_64bit_Debug/mapper_app/.qt/rcc/mapper.qrc">
                <normaloff>:/format-remove-node.png</normaloff>:/format-remove-node.png</iconset>
              </property>
              <property name="iconSize">
@@ -1024,7 +1024,7 @@
      <x>0</x>
      <y>0</y>
      <width>1293</width>
-     <height>27</height>
+     <height>33</height>
     </rect>
    </property>
   </widget>
@@ -1055,7 +1055,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../Resources/mapper.qrc"/>
+  <include location="../build/Desktop_Qt_6_10_2_MSVC2022_64bit_Debug/mapper_app/.qt/rcc/mapper.qrc"/>
  </resources>
  <connections/>
 </ui>

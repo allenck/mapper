@@ -5,12 +5,15 @@
 #include "configuration.h"
 #include <QTcpSocket>
 #include <QComboBox>
+#include <QtConcurrent>
+#include <QFutureWatcher>
 
 
 namespace Ui {
     class editConnectionsDlg;
 }
 
+class SQL;
 class QSqlQuery;
 class QHostInfo;
 class ODBCUtil;
@@ -36,11 +39,12 @@ private:
  QStringList myDrivers; // drivers I can use
  QStringList dbTypes;
  QString _connectionString;
+ SQL* sql = nullptr;
  bool bCbConnectionsTextChanged = false;
  bool bCbCitiesTextChanged=false;
  bool testConnection(bool bCreate = false);
  bool openTestDb();
- //QSqlDatabase db;
+ QSqlDatabase db;
  QTimer *timer;
  QTcpSocket socket;
  QStringList databases;
@@ -79,7 +83,14 @@ private:
   QString _testCN = "testConnection";
   QString _connstring;
   void setHelp(QString text, QString style);
-
+  void logonInBackground(QString database,QString driver, QString dsnName,QString dbType,
+                         QString connectType, QString server, QString uid,QString pwd, bool allowOk);
+  QString _lookupError;
+  QStringList _available;
+  QString threadConn;
+  bool verifyDb(QString database, QSqlDatabase db);
+  QString _dbType;
+  DSN* _dsn = nullptr;
 
 private slots:
  void cbCitiesSelectionChanged(int sel);
@@ -104,7 +115,7 @@ private slots:
  void setupComboBoxes(QString);
  void cbDbType_selectionChanged(QString);
  void cbConnections_contextMenuRequested(QPoint);
- void cbUseDatabase_changed();
+ void txtUseDb_changed();
  void printResults(const QHostInfo &info);
  void cbConnectionsTextEditFinished();
  void cbODBCDsn_contextMenuRequested(QPoint pos);

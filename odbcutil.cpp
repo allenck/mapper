@@ -8,7 +8,6 @@
 #include <QHostInfo>
 #include <QMessageBox>
 #include "dsn.h"
-#include "qtcpsocket.h"
 #ifdef Q_OS_WIN
 //#include <qt_windows.h> // Includes Windows.h safely in Qt environments
 #include "registrywatcher.h"
@@ -400,7 +399,10 @@ void ODBCUtil::getDSNs(QString odbcini)
                         if(p.first.compare("username", Qt::CaseInsensitive) == 0 || p.first.compare("uid", Qt::CaseInsensitive) == 0)
                             dsn->userId = p.second;
                         if(p.first.compare("password", Qt::CaseInsensitive) == 0 || p.first.compare("pwd", Qt::CaseInsensitive) == 0)
+                        {
                             dsn->password = p.second;
+                            dsn->pwdInDsn = p.second;
+                        }
                         if(p.first.compare("location", Qt::CaseInsensitive) == 0)
                             dsn->location = p.second;
                         if(p.first.compare("type", Qt::CaseInsensitive) == 0)
@@ -556,7 +558,7 @@ QString ODBCUtil::connectString(QString connector, QString host, int port, QStri
 
     int dPort = (port > 0) ? port : ((dsn->port > 0) ? dsn->port : ((drv->port > 0) ? drv->port : 1360));
     QString dUser = user.isEmpty() ? (!dsn->userId.isEmpty() ? dsn->userId : drv->user) : user;
-    QString dPswd = pswd.isEmpty() ? (!dsn->password.isEmpty() ? dsn->password : drv->pswd) : pswd;
+    QString dPswd = pswd.isEmpty() ? (!dsn->password().isEmpty() ? dsn->password() : drv->pswd) : pswd;
     QString dDatabase = database.isEmpty() ? (!dsn->database.isEmpty() ? dsn->database : connector) : database;
 
     QString connstring;
@@ -711,8 +713,8 @@ void ODBCUtil::getWinDSNs()
                             }
                             if(!pDriver->pswd.isEmpty())
                             {
-                                _dsn->password = pDriver->pswd;
-                                _dsn->addPair("Pwd", _dsn->password);
+                                _dsn->setPassword(pDriver->pswd);
+                                _dsn->addPair("Pwd", _dsn->password());
                             }
                         }
                         _dsn->addPair("Driver", _dsn->_driver);
@@ -733,7 +735,7 @@ void ODBCUtil::getWinDSNs()
                         if(!_dsn->type.isEmpty())
                             _dsn->addPair("Type", _dsn->type);
                     }
-                    if(iniKey3.compare("Server", Qt::CaseInsensitive)==0)
+                    if(iniKey3.compare("Server", Qt::CaseInsensitive)==0 || iniKey3.compare("Servername", Qt::CaseInsensitive)==0)
                     {
                         QString server = winReg.value(iniKey3).toString();
                         QString host;
@@ -772,15 +774,21 @@ void ODBCUtil::getWinDSNs()
                         _dsn->server = server;
                         _dsn->addPair("Server", _dsn->server);
                     }
-                    if(iniKey3.compare("UID", Qt::CaseInsensitive)==0)
+                    if(iniKey3.compare("Port", Qt::CaseInsensitive)==0 )
+                    {
+                        _dsn->port = winReg.value(iniKey3).toInt();
+                        _dsn->addPair("Port",winReg.value(iniKey3).toString());
+                    }
+                    if(iniKey3.compare("UID", Qt::CaseInsensitive)==0 || iniKey3.compare("Username", Qt::CaseInsensitive)==0)
                     {
                         _dsn->userId = winReg.value(iniKey3).toString();
                         _dsn->addPair("Uid", _dsn->userId);
                     }
-                    if(iniKey3.compare("PWD", Qt::CaseInsensitive)==0)
+                    if(iniKey3.compare("PWD", Qt::CaseInsensitive)==0 || iniKey3.compare("Password", Qt::CaseInsensitive)==0)
                     {
-                        _dsn->password = winReg.value(iniKey3).toString();
-                        _dsn->addPair("Pwd", _dsn->password);
+                        _dsn->setPassword(winReg.value(iniKey3).toString());
+                        _dsn->addPair("Pwd", _dsn->password());
+                        _dsn->pwdInDsn = _dsn->password();
                     }
 
                     if(iniKey3.compare("Database", Qt::CaseInsensitive)==0)
@@ -951,6 +959,7 @@ QList<DSN*> ODBCUtil::getDsnList(bool bUserDSN)
     }
     return list;
 }
+
 
 // ***********************************************************************
 

@@ -5,6 +5,8 @@
 #include <QSqlDatabase>
 #include <QUuid>
 
+class ODBCUtil;
+class SecureVault;
 class Configuration;
 class SQL;
 class DSN;
@@ -45,6 +47,10 @@ class Connection : public QObject
  QString _pwdMethod;    // for PostgreSQL connection string
  bool _DSNCanBeUsed = false;
  bool _verified = false;
+ SecureVault* vault = nullptr;
+ bool bPwdInVault = false;
+ QString _key;
+ ODBCUtil* odbcUtil = nullptr;
 
 public:
  Connection(QObject* parent = nullptr);
@@ -69,8 +75,8 @@ public:
  void setDsnData(DSN* dsnData){_dsnData = dsnData;}
  QString userId() {return _userId;}
  void setUserId(QString userId) {_userId = userId;}
- QString pwd() {return _PWD;}
- void setPWD(QString p) {_PWD = p;}
+ QString pwd();
+ void setPWD(QString p);
  QString database() {return _database;}
  void setDatabase(QString p) {_database = p;}
  QString host() {return _hostName;}
@@ -124,6 +130,9 @@ public:
  void setVerified(bool verified){_verified = verified;}
  bool verified() {return _verified;}
  void setOpen(bool bOpen){this->bOpen = bOpen;}
+ QString createSecureVaultKey();
+ QString secureVaultKey();
+
  bool operator==(const Connection& other)const{
      return other._uuid == this->_uuid;
  }

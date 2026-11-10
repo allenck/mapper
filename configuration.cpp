@@ -262,8 +262,11 @@ void Configuration::saveSettings2()
         settings->setValue("id", c->id);
         settings->setValue("curUuid",c->curUuid);
         settings->setValue("name", c->name());
-        settings->setValue("lat", c->center.lat());
-        settings->setValue("lon", c->center.lon());
+        if(c->center.isValid())
+        {
+            settings->setValue("lat", c->center.lat());
+            settings->setValue("lon", c->center.lon());
+        }
         settings->setValue("mapType", c->mapType);
         settings->setValue("mapId", c->mapId);
         settings->setValue("zoom", c->zoom);
@@ -358,47 +361,47 @@ void Configuration::saveSettings2()
                 settings->setValue("defaultSqlDatabase", cn->defaultSqlDatabase());
                 //settings->setValue("useSqlDatabase", cn->database());
             }
-#ifdef QTKEYCHAIN_VERSION_6
-            QString key;
-            QString password;
-            if(!cn->connectString().isEmpty())
-                key = createSecureVaultKey(cn->connectString(), c, &password);
-            else
-            {
-                key = createSecureVaultKey(cn, c);
-                password = cn->pwd();
-            }
-            qDebug() << "secure vault key: " << key;
-            vault = new SecureVault(this);
-            if(!key.isEmpty())
-            {
-                vault->loadPassword(key, [=](const QString &password) {
-                    if (password.isEmpty()) {
-                        // qWarning() << "Could not retrieve password or password is empty."
-                        //            << " key: "<< key;;
-                        // return;
-                        vault->savePassword(key, password);
-                    }
+// #ifdef QTKEYCHAIN_VERSION_6
+//             QString key;
+//             QString password;
+//             if(!cn->connectString().isEmpty())
+//                 key = createSecureVaultKey(cn->connectString(), c, &password);
+//             else
+//             {
+//                 key = createSecureVaultKey(cn, c);
+//                 password = cn->pwd();
+//             }
+//             qDebug() << "secure vault key: " << key;
+//             vault = new SecureVault(this);
+//             if(!key.isEmpty())
+//             {
+//                 vault->loadPassword(key, [=](const QString &password) {
+//                     if (password.isEmpty()) {
+//                         // qWarning() << "Could not retrieve password or password is empty."
+//                         //            << " key: "<< key;;
+//                         // return;
+//                         vault->savePassword(key, password);
+//                     }
 
-                    // Your asynchronous callback logic continues inside this block
-                    qDebug() << "Password successfully retrieved via vault instance!";
-                    if(cn->pwd() == password)
-                        cn->setPWD("");
+//                     // Your asynchronous callback logic continues inside this block
+//                     qDebug() << "Password successfully retrieved via vault instance!";
+//                     if(cn->pwd() == password)
+//                         cn->setPWD("");
 
-                    // Example: Initiate your database connection
-                    // this->initializeDatabaseConnection(password);
-                });
-                settings->setValue("PWD", "");
+//                     // Example: Initiate your database connection
+//                     // this->initializeDatabaseConnection(password);
+//                 });
+//                 settings->setValue("PWD", "");
 
-                if(!cn->connectString().isEmpty())
-                {
-                    QString cs = cn->connectString();
-                    cs.replace(password, "");
-                    cn->setConnectString(cs);
-                    settings->setValue("connectString",cs);
-                }
-            }
-#endif
+//                 if(!cn->connectString().isEmpty())
+//                 {
+//                     QString cs = cn->connectString();
+//                     cs.replace(password, "");
+//                     cn->setConnectString(cs);
+//                     settings->setValue("connectString",cs);
+//                 }
+//             }
+// #endif
             settings->endGroup(); // end a single connection
         } // end for connections loop
 
@@ -1157,39 +1160,39 @@ void Configuration::getSettings2()
                 //nc->descrByConnection.insert(ncn, ncn->description());
 
             }
-#ifdef QTKEYCHAIN_VERSION_6
-            QString key;
-            QString pwd;
-            if(!ncn->connectString().isEmpty())
-                key = createSecureVaultKey(ncn->connectString(), nc, &pwd);
-            else
-                key = createSecureVaultKey(ncn, nc);
-            qDebug() << "secure vault key: " << key;
-            if(!key.isEmpty())
-            {
-                if(!ncn->pwd().isEmpty())
-                {
-                    vault->savePassword(key, ncn->pwd());
-                }
-                else
-                {
-                    vault->loadPassword(key, [=](const QString &password) {
-                        if (password.isEmpty()) {
-                            qWarning() << "Could not retrieve password or password is empty."
-                                       << " key: "<< key;;
-                            return;
-                        }
+// #ifdef QTKEYCHAIN_VERSION_6
+//             QString key;
+//             QString pwd;
+//             if(!ncn->connectString().isEmpty())
+//                 key = createSecureVaultKey(ncn->connectString(), nc, &pwd);
+//             else
+//                 key = createSecureVaultKey(ncn, nc);
+//             qDebug() << "secure vault key: " << key;
+//             if(!key.isEmpty())
+//             {
+//                 if(!ncn->pwd().isEmpty())
+//                 {
+//                     vault->savePassword(key, ncn->pwd());
+//                 }
+//                 else
+//                 {
+//                     vault->loadPassword(key, [=](const QString &password) {
+//                         if (password.isEmpty()) {
+//                             qWarning() << "Could not retrieve password or password is empty."
+//                                        << " key: "<< key;;
+//                             return;
+//                         }
 
-                        // Your asynchronous callback logic continues inside this block
-                        qDebug() << "Password successfully retrieved! " << key;
-                        ncn->setPWD(password);
+//                         // Your asynchronous callback logic continues inside this block
+//                         qDebug() << "Password successfully retrieved! " << key;
+//                         ncn->setPWD(password);
 
-                        // Example: Initiate your database connection
-                        // this->initializeDatabaseConnection(password);
-                    });
-                }
-            }
-#endif
+//                         // Example: Initiate your database connection
+//                         // this->initializeDatabaseConnection(password);
+//                     });
+//                 }
+//             }
+// #endif
             settings.endGroup();
             qDebug() << settings.group();
         } // end connection
@@ -1724,61 +1727,4 @@ QList<int> Configuration::stringToList(QString str)
     return rslt;
 }
 
-QString Configuration::createSecureVaultKey(Connection* connection, City* city)
-{
-    QString key;
-    if(connection->userId().isEmpty())
-        return key;
-    if(connection->servertype() == "Sqlite")
-        return key;
-    key = connection->userId() + "|";
-    key.append(city->getLabel() +"|");
-    key.append(connection->servertype() + "|");
-    if(!connection->host().isEmpty())
-        key.append(connection->host());
-    else
-    {
-        if(!connection->dsn().isEmpty())
-        {
-            DSN* dsn = odbcUtil->getDsn(connection->dsn());
-            if(dsn && !dsn->server.isEmpty())
-            {
-                key.append(dsn->server);
-                return key;
-            }
-        }
-        // TODO: get values from a connection string
-    }
-    return key;
-}
 
-QString Configuration::createSecureVaultKey(QString connectString, City* city, QString *password)
-{
-    QString key;
-    QMap<QString,QString> map = Connection::decodeConnectionString(connectString);
-    // Driver={PostgreSQL ODBC Driver(UNICODE)};Server=ubuntu-2;Port=5432;User Id=allen;Password=iic723@knobacres;Database=stlouis;sslmode=prefer;
-    // Driver={MIMER};Protocol=tcp;Node=ubuntu-2;Service=1360;Database=stlouis_db;Uid=mapperuser;Pwd=iic723@knobacres;
-    QString driver = map.value("Driver");
-    if(driver == "{MIMER}")
-    {
-        key.append(map.value("Uid") + "|");
-        key.append(city->getLabel() + "|");
-        key.append("MimerSql") + "|";
-        key.append(map.value("Node"));
-        *password = map.value("Pwd");
-    }
-    else if(driver.contains("PostgreSQL") )
-    {
-        key.append(map.value("User Id") + "|");
-        key.append(city->getLabel() + "|");
-        key.append("PostgreSQL") + "|";
-        key.append(map.value("Server"));
-        *password = map.value("Password");
-    }
-    else
-    {
-        qCritical() << "unknown connection string driver: " << driver;
-        return key;
-    }
-    return key;
-}

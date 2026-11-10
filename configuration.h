@@ -135,8 +135,6 @@ public:
  void changeFonts(QWidget *obj, QFont f );
  QList<Overlay*> currentOverlays;
  int currOpacity = 65;
- QString createSecureVaultKey(Connection* connection, City *city);
- QString createSecureVaultKey(QString connectString, City* city, QString* password);
 
 #ifdef Q_OS_MACOS
  //bool bUseBundleResources = false;

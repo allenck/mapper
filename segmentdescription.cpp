@@ -20,7 +20,7 @@ void SegmentDescription::common()
 {
     Parameters parms;
     sql->getParameters(&parms);
-    abbreviations = parms.abbreviationsList;
+    abbreviations = parms.abbreviationsList();
     _newDescription = work;
     newReverseDescription = "";
     setText(work);
@@ -373,7 +373,7 @@ QString SegmentDescription::updateToken(QString str){
         {
             Parameters parms;
             SQL::instance()->getParameters(&parms);
-            SegmentDescription::abbreviations = parms.abbreviationsList;
+            SegmentDescription::abbreviations = parms.abbreviationsList();
         }
 
         for(const QPair<QString,QString>& pair : SegmentDescription::abbreviations)

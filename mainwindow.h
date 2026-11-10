@@ -175,7 +175,7 @@ public:
     void moveRouteComment(int route, QString date, int commentKey, double latitude, double longitude, int companyKey);
 
     RouteViewTableModel *routeViewSourceModel;
-    Q_DECL_DEPRECATED void displaySegment(qint32 segmentId, QString segmentName, QString color, QString trackUsage, bool bClearFirst);
+    void displaySegment(qint32 segmentId, QString segmentName, QString color, QString trackUsage, bool bClearFirst);
     static QString pwd;
     static QString pgmDir;
 // #ifndef USE_WEBENGINE

@@ -5786,17 +5786,8 @@ bool SQL::getParameters(Parameters* parms, QSqlDatabase db)
             if (alphaRoutes == "Y")
                 parms->bAlphaRoutes = true;
             QString abbreviationsStr = query.value(7).toString();
-
-            QStringList list =  abbreviationsStr.split(",");
-            parms->abbreviationsList.clear();
-            foreach(QString aPair, list)
-            {
-                if(aPair.isEmpty())
-                    continue;
-                QStringList values = aPair.split(":");
-                if(values.count()>1)
-                    parms->abbreviationsList.append(QPair<QString, QString>(values.at(0),values.at(1)));
-            }        }
+            parms->buildList(abbreviationsStr);
+        }
     }
     catch (Exception e)
     {
@@ -5816,9 +5807,9 @@ bool SQL::insertParameters(Parameters parms, QSqlDatabase db)
 
 
         QString commandText = QString("insert into Parameters (lat, lon, title, city, minDate, maxDate, alphaRoutes,lastupdate)"
-                              " values (%1, %2, '%3', '%4', '%5', '%6', '%7',CURRENT_TIMESTAMP)")
+                              " values (%1, %2, '%3', '%4', '%5', '%6', '%7','%8',CURRENT_TIMESTAMP)")
                 .arg(parms.lat).arg(parms.lon).arg(parms.title,parms.city,parms.minDate.toString("yyyy/MM/dd"),
-                    parms.maxDate.toString("yyyy/MM/dd"), parms.bAlphaRoutes?"Y":"N");
+                    parms.maxDate.toString("yyyy/MM/dd"), parms.bAlphaRoutes?"Y":"N",parms.createString());
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -5849,10 +5840,10 @@ bool SQL::updateParameters(Parameters parms, QSqlDatabase db)
                               "minDate = '%5', maxDate= '%6', alphaRoutes = '%7',"
                               "abbreviationsList = '%8',lastUpdate=CURRENT_TIMESTAMP")
                 .arg(parms.lat).arg(parms.lon).arg(parms.title,parms.city,parms.minDate.toString("yyyy/MM/dd"),
-                    parms.maxDate.toString("yyyy/MM/dd"), parms.bAlphaRoutes?"Y":"N");
+                    parms.maxDate.toString("yyyy/MM/dd"), parms.bAlphaRoutes?"Y":"N", parms.createString());
         QSqlQuery query = QSqlQuery(db);
         QString abbreviationsStr;
-        for (QPair<QString,QString> pair: parms.abbreviationsList) {
+        for (QPair<QString,QString> pair: parms.abbreviationsList()) {
             abbreviationsStr.append(pair.first+":"+pair.second +",");
         }
         abbreviationsStr.chop(1);
@@ -11969,6 +11960,11 @@ bool SQL::useDatabase(QString dbName, QString serverType, QSqlDatabase db)
 {
     if(serverType == "PostgreSQL")
         return true;
+    if(dbName.isEmpty())
+    {
+        qDebug() << tr("database must not be blank!");
+        return false;
+    }
     QString currentDb = getDatabase(serverType, db);
     if(currentDb == dbName)
         return true;

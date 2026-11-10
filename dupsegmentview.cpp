@@ -51,7 +51,7 @@ void DupSegmentView::showDupSegments(QList<QPair<SegmentInfo, SegmentInfo>> dupS
 {
     //SQL sql;
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
-    sql->setConfig(myParent->getConfiguration());
+    //sql->setConfig(myParent->getConfiguration());
     if(dupSegmentList.isEmpty())
         return;
     ui->setSortingEnabled(false);
@@ -95,8 +95,8 @@ void DupSegmentView::showDupSegments(QList<QPair<SegmentInfo, SegmentInfo>> dupS
       detailedText = detailedText + tr("segmentId %1 is used by routes:").arg(dupSegmentId);
       foreach(SegmentData* sd, list)
       {
-       detailedText = detailedText + tr("\n%1 %2 %3->%4").arg(sd->route()).arg(sd->routeName())
-         .arg(sd->startDate().toString("yyyy/MM/dd")).arg(sd->endDate().toString("yyyy/MM/dd"));
+       detailedText = detailedText + tr("\n%1 %2 %3->%4").arg(sd->route()).arg(sd->routeName(),
+                                    sd->startDate().toString("yyyy/MM/dd"),sd->endDate().toString("yyyy/MM/dd"));
       }
      }
      else

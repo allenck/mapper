@@ -11,6 +11,8 @@
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QDebug>
+#include "securevault.h"
+#include "odbcutil.h"
 
 Connection::Connection(QObject *parent) : QObject(parent)
 {
@@ -19,12 +21,17 @@ Connection::Connection(QObject *parent) : QObject(parent)
  bOpen = false;
  _uuid = QUuid::createUuid();
  config = Configuration::instance();
+ vault = new SecureVault(this);
+ odbcUtil = ODBCUtil::instance();
+
 }
 
 Connection::Connection(QUuid uuid, QObject* parent) : QObject(parent)
 {
   _uuid = uuid;
     config = Configuration::instance();
+  vault = new SecureVault(this);
+  odbcUtil = ODBCUtil::instance();
 }
 
 Connection::Connection(const Connection& o){
@@ -49,6 +56,7 @@ Connection::Connection(const Connection& o){
  //this->_mySqlDatabase = o._mySqlDatabase;
  this->_connectionType = o._connectionType;
  this->_uuid = o._uuid;
+ this->odbcUtil = o.odbcUtil;
 }
 
 
@@ -405,4 +413,93 @@ void Connection::close(QSqlDatabase db)
 {
     db.close();
     bOpen = false;
+}
+
+QString Connection::createSecureVaultKey()
+{
+    City* city = config->currCity;
+    _key.clear();
+    if(!_connectString.isEmpty())
+    {
+        QMap<QString,QString> map = decodeConnectionString(_connectString);
+        // Driver={PostgreSQL ODBC Driver(UNICODE)};Server=ubuntu-2;Port=5432;User Id=allen;Password=iic723@knobacres;Database=stlouis;sslmode=prefer;
+        // Driver={MIMER};Protocol=tcp;Node=ubuntu-2;Service=1360;Database=stlouis_db;Uid=mapperuser;Pwd=iic723@knobacres;
+        QString driver = map.value("Driver");
+        if(driver == "{MIMER}")
+        {
+            _key.append(map.value("Uid") + "|");
+            _key.append(city->getLabel() + "|");
+            _key.append("MimerSql") + "|";
+            _key.append(map.value("Node"));
+            //*password = map.value("Pwd");
+        }
+        else if(driver.contains("PostgreSQL") )
+        {
+            _key.append(map.value("User Id") + "|");
+            _key.append(city->getLabel() + "|");
+            _key.append("PostgreSQL") + "|";
+            _key.append(map.value("Server"));
+            //*password = map.value("Password");
+        }
+        else
+        {
+            qCritical() << "unknown connection string driver: " << driver;
+            return _key;
+        }
+    }
+    if(userId().isEmpty())
+        return _key;
+    if(servertype() == "Sqlite")
+        return _key;
+    _key = userId() + "|";
+    _key.append(city->getLabel() +"|");
+    _key.append(servertype() + "|");
+    if(!host().isEmpty())
+        _key.append(host());
+    else
+    {
+        if(!_DSName.isEmpty())
+        {
+
+            DSN* dsn = odbcUtil->getDsn(_DSName);
+            if(dsn && !dsn->server.isEmpty())
+            {
+                _key.append(dsn->server);
+                return _key;
+            }
+        }
+        // TODO: get values from a connection string
+    }
+
+    return _key;
+}
+
+QString Connection::secureVaultKey()
+{
+    if(_key.isEmpty())
+        createSecureVaultKey();
+    return _key;
+}
+
+QString Connection::pwd() {
+    if(bPwdInVault)
+        return _PWD;
+
+    vault->loadPassword(createSecureVaultKey(),[=](const QString &password){
+        if(password.isEmpty())
+            qDebug() << "no saved password for " <<_key;
+        else
+        {
+            //ui->txtPWD->setText(password);
+            //_dsn->setPassword(password);
+            _PWD = password;
+            bPwdInVault = true;
+        }
+    });
+    return _PWD;
+}
+
+void Connection::setPWD(QString p) {
+    vault->savePassword(createSecureVaultKey(),p);
+    _PWD = p;
 }

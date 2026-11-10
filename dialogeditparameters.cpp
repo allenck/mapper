@@ -14,6 +14,7 @@ DialogEditParameters::DialogEditParameters(QWidget *parent) :
  ui->txtTitle->setText(parms.title);
  ui->txtLatLng->setText(QString("%1,%2").arg(parms.lat).arg(parms.lon));
  ui->chkAlpha->setChecked(parms.bAlphaRoutes);
+ ui->txtAbbreviations->setText(parms.createString());
  connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(btnOk()));
  connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
  LatLng center(parms.lat, parms.lon);
@@ -60,6 +61,7 @@ void DialogEditParameters::btnOk()
  parms.city = ui->txtName->text();
  parms.title = ui->txtTitle->text();
  parms.bAlphaRoutes = ui->chkAlpha->isChecked()?"Y":"N";
+ parms.buildList(ui->txtAbbreviations->text());
  if(SQL::instance()->updateParameters(parms))
   accept();
 }

@@ -13,6 +13,7 @@
 #ifdef Q_OS_WIN
 #include <windows.h>
 #endif
+#include <QQuickWindow>
 
 #if 0
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
@@ -107,61 +108,35 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
 //        abort();
 }
 
+#include <QQuickWindow>
+
+// ... your other includes remain the same
+
 int main(int argc, char *argv[])
 {
     qInstallMessageHandler(customMessageOutput); // custom message handler for debugging
 
-#ifndef OS_LINUX
-    // 1. FORCE CHROMIUM AND QT QUICK TO USE SOFTWARE RENDERING (Do this FIRST)
-    // This turns off Chromium's GPU process entirely
-    qputenv("QT_WEBENGINE_DISABLE_GPU", "1");
+    MyApplication a(argc, argv);
+    a.setStyle("Fusion");
 
-    // This explicitly tells Chromium's internal engine to pass the disable flags
-    qputenv("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu --disable-software-rasterizer");
-
-    // This forces Qt's internal graphics rendering (RHI) to use software loops
-    qputenv("QT_QUICK_BACKEND", "software");
-#endif
-    QByteArray envVar = qgetenv("QTDIR");       //  check if the app is ran in Qt Creator
-
+    QByteArray envVar = qgetenv("QTDIR"); // check if the app is run in Qt Creator
     if (envVar.isEmpty())
         logToFile = true;
 
- //QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    MainWindow w(argc, argv);
 
- //QApplication a(argc, argv);
- QApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
- MyApplication a(argc, argv);
- MainWindow w(argc, argv);
- a.setStyle("Fusion");
- qRegisterMetaType<LatLng>("LatLng");
- QMetaType::registerConverter<QVariantMap, LatLng>([](const QVariantMap &map) {
-     return LatLng(
-         map.value("lat").toDouble(),
-         map.value("lng").toDouble()
-         );
- });
+    qRegisterMetaType<LatLng>("LatLng");
+    QMetaType::registerConverter<QVariantMap, LatLng>([](const QVariantMap &map) {
+        return LatLng(map.value("lat").toDouble(), map.value("lng").toDouble());
+    });
 
- QMetaType::registerConverter<LatLng, QVariantMap>([](const LatLng &loc) {
-     QVariantMap map;
-     map["lat"] = loc.lat();
-     map["lng"] = loc.lon();
-     return map;
- });
-#ifndef Q_OS_WINDOWS
-     //ConsoleInterface::instance(); // create singleton class.
- // SystemConsole2::instance()->setParent(&w);
- // SystemConsole2::instance()->setVisible(false);
+    QMetaType::registerConverter<LatLng, QVariantMap>([](const LatLng &loc) {
+        QVariantMap map;
+        map["lat"] = loc.lat();
+        map["lng"] = loc.lon();
+        return map;
+    });
 
-#else
-//# ifndef QT_DEBUG
-     //ConsoleInterface::instance(); // create singleton class.
- //SystemConsole2::instance();
-#endif
-
-
-
- w.show();
-
- return a.exec();
+    w.show();
+    return a.exec();
 }

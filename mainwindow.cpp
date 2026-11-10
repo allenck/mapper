@@ -666,7 +666,7 @@ QMenu* MainWindow::addSegmentMenu(SegmentData *sd)
    if(sd->tracks()==2)
    {
     SegmentInfo si = sql->getSegmentInfo(sd->segmentId());
-    qDebug() << tr("sd whichend %1 si whichend %2").arg(sd->whichEnd()).arg(si.whichEnd());
+    qDebug() << tr("sd whichend %1 si whichend %2").arg(sd->whichEnd(),si.whichEnd());
     sd->setDoubleDate(si.doubleDate());
 
     if(sd->startDate() < si.startDate())
@@ -725,7 +725,8 @@ void MainWindow::createBridge()
     connect(m_bridge, SIGNAL(queryOverlaySignal()), this, SLOT(queryOverlay()));
     connect(m_bridge, SIGNAL(onZoomChanged()), this, SLOT(setZoom()));
     connect(m_bridge, &WebViewBridge::onLatLngChanged, this, [=] {
-        config->currCity->setCenter(m_bridge->_latLng);
+        if(m_bridge->_latLng.isValid())
+            config->currCity->setCenter(m_bridge->_latLng);
         // m_center = m_bridge->_latLng;
         // m_latitude = m_bridge->_latLng.lat();
         // m_longitude = m_bridge->_latLng.lon();
@@ -1957,7 +1958,7 @@ void MainWindow::addSegmentToRoute(SegmentData* sd)
  m_nbrPoints = sd->pointList().size();
  m_points = sd->pointList();
  qDebug() << tr("adding segment %1 %2 to route %3 %4 connected at %5 end")
-                 .arg(sd->segmentId()).arg(sd->description()).arg(sd->route()).arg(sd->routeName()).arg(sd->whichEnd());
+                 .arg(sd->segmentId()).arg(sd->description()).arg(sd->route()).arg(sd->routeName(),sd->whichEnd());
 
     m_bridge->processScript("clearPolyline", QString("%1").arg(sd->segmentId()));
     //SegmentInfo si = sql->getSegmentInfo(segmentId);
@@ -2502,7 +2503,7 @@ void MainWindow::about()
  QMessageBox::about(this, tr("About Mapper"),
      tr("The <b>Mapper</b> version %2. Written by Allen C. Kempe. "
         "maintain database of streetcar and transit routes.\r\n"
-        "Compiled with QT version %1").arg(QT_VERSION_STR).arg(MY_VERSION));
+        "Compiled with QT version %1").arg(QT_VERSION_STR,MY_VERSION));
 }
 
 void MainWindow::btnDeleteSegment_Click()   //SLOT
@@ -2684,7 +2685,7 @@ void MainWindow::refreshRoutes()
     QMultiMap<QString, RouteData> map;
     QString rSort;
 
-    for(RouteData rd : routeList)
+    foreach(RouteData rd , routeList)
     {
         QString companyKeyStr;
         if(rd.companyKey() < 10)
@@ -3137,7 +3138,7 @@ bool MainWindow::isStationOnSegment(StationInfo* sti, QList<SegmentData*> segmen
  {
   for(SegmentData* sd1 : segmentDataList)
   {
-   for(LatLng latlng : sd1->pointList())
+   foreach(LatLng latlng , sd1->pointList())
    {
     if(sti->latitude == latlng.lat() && sti->longitude == latlng.lon())
     {
@@ -3424,7 +3425,7 @@ QList<StationInfo> MainWindow::getStations(QList<SegmentData*> rsList)
     for(SegmentData* sd : rsList)
     {
         QList<StationInfo> sList = sql->getStationsOnSegment(sd->segmentId());
-        for(StationInfo sti : sList)
+        foreach(StationInfo sti , sList)
         {
             if(sti.routeType != sd->routeType())
             {
@@ -4613,7 +4614,7 @@ void MainWindow::movePoint(qint32 segmentId, qint32 i, double newLat, double new
 
   //TODO what about multiple station records?
   QList<StationInfo> stiList = sql->getStationAtPoint(oldPoint);
-  for(StationInfo sti : stiList)
+  foreach(StationInfo sti , stiList)
   {
    if (sti.stationKey > 0)
    {
@@ -4653,7 +4654,7 @@ void MainWindow::movePointX(qint32 segmentId, qint32 i, LatLng newPt, QList<LatL
     //SQL sql;
     //TODO what about multiple station records?
     QList<StationInfo> stiList = sql->getStationAtPoint(oldPoint);
-    for(StationInfo sti : stiList)
+    foreach(StationInfo sti , stiList)
     {
         if (sti.stationKey > 0)
         {
@@ -5473,7 +5474,7 @@ void MainWindow::setStation(double lat, double lon, qint32 segmentId, qint32 ptI
   QList<SegmentInfo> sList = sql->getIntersectingSegments(lat, lon, .020, _rd.routeType());
 
   StationInfo sti;
-  for(StationInfo sti1 : stiList)
+  foreach(StationInfo sti1 , stiList)
   {
    sti1.latitude = lat;
    sti1.longitude = lon;
@@ -5483,7 +5484,7 @@ void MainWindow::setStation(double lat, double lon, qint32 segmentId, qint32 ptI
     sti1.segments.append(aSegmentId);
    if(ui->dateEdit->date()>= sti1.startDate && ui->dateEdit->date() <= sti.endDate)
     sti = StationInfo(sti1);
-   for(SegmentInfo si : sList)
+   foreach(SegmentInfo si , sList)
    {
     QString sTxt = QString::number(si.segmentId());
     if(!sti1.segments.contains(sTxt))
@@ -6076,7 +6077,7 @@ bool MainWindow::openWebViewPanel()
 
 bool MainWindow::copyAndUpdate(QString inFile, QString outDir, QString apiKey)
 {
-    qInfo() << "copyAndUpdate: " << tr(" copy %1 to %2").arg(inFile).arg( outDir);
+    qInfo() << "copyAndUpdate: " << tr(" copy %1 to %2").arg(inFile, outDir);
 //#ifdef Q_OS_WIN
 // outDir.replace("\\\\", "\\");
 //#endif
@@ -6143,7 +6144,7 @@ bool MainWindow::updateTarget(QString inDir, QString outDir)
  QFile* gFile;
  QFile* tgFile;
 
- for(QString inFile : names)
+ foreach(QString inFile , names)
  {
   QFileInfo in(inFile);
   QString baseName = inFile.mid(inFile.lastIndexOf("/")+1);
@@ -6322,7 +6323,6 @@ latLngChanged::latLngChanged(QObject* parent) : QWebEnginePage(parent){
    emit (pageLoaded(requestedUrl()));
    //runJavaScript("onLoad()");
   }
-
  });
 }
 

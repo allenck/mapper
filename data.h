@@ -790,7 +790,7 @@ class StationInfo
         QDate endDate;
         RouteType routeType;
         QString markerType;
-QT_DEPRECATED  int segmentId = -1;
+        int segmentId = -1;
         QStringList segments; // list of segments
 };
 
@@ -840,12 +840,19 @@ class Parameters
 public:
     Parameters(){
     }
-    QList<QPair<QString, QString>> abbreviationsList;
     QString title;
     QString city;
     double lat, lon;
     QDate minDate, maxDate;
     bool bAlphaRoutes= false;
+    QString abbreviationsString;
+    void buildList(QString string);
+    QString createString();
+    QList<QPair<QString, QString>> abbreviationsList(){return _abbreviationsList;}
+    void setList(QList<QPair<QString, QString>> al){_abbreviationsList = al;}
+private:
+    QList<QPair<QString, QString>> _abbreviationsList;
+    friend class SQL;
 };
 
 class CommentInfo

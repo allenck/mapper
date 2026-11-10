@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include <QMap>
+
+class SecureVault;
 class DSN : public QObject
 {
     Q_OBJECT
@@ -23,6 +25,7 @@ public:
     void setDriver(QString driver) {_driver = driver;}
     int maxKeyLen();
     void verifyServerAccessibility(const QString &host, quint16 port);
+    QString createSecureVaultKey();
     QString name;
     QString type;
     QString descr;
@@ -30,7 +33,7 @@ public:
     int port=-1;
     QString database;
     QString userId;
-    QString password;
+    QString pwdInDsn;  // password stored in the DSN
     QString sslMode;
     QString location;
     QString setup;
@@ -38,6 +41,10 @@ public:
     bool bServerAccessible = true;
     bool bDirty = false;
     bool bExclude = false;
+    bool bPwdInVault = false;
+    QString password();
+    void setPassword(QString password);
+    QString secureVaultKey();
 
 signals:
     void dsnChanged(DSN* dsn);
@@ -49,6 +56,9 @@ private:
     QMap<QString,QString>* _pairMap =nullptr; // keys are all Upper!
     QMap<QString,QString>* _upperToAct = nullptr;
     QString _driver; // either drivername or lib
+    QString _password;
+    SecureVault* vault = nullptr;
+    QString _key; // secure vault key
 
     friend class ODBCUtil;
 };

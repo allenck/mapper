@@ -1,6 +1,7 @@
 #include "dsn.h"
 #include "qtcpsocket.h"
 #include <qdebug.h>
+#include "securevault.h"
 
 DSN::DSN(QObject *parent)
     : QObject{parent}
@@ -10,6 +11,7 @@ DSN::DSN(QObject *parent)
     connect(this, &DSN::serverVerificationCompleted, this, [=](const QString &host, bool isAccessible, const QString &errorMessage){
         bServerAccessible = isAccessible;
     });
+    vault = new SecureVault(this);
 }
 
 DSN::DSN(const DSN& other)
@@ -23,7 +25,7 @@ DSN::DSN(const DSN& other)
     port = other.port;
     database = other.database;
     userId = other.userId;
-    password = other.password;
+    _password = other._password;
     sslMode = other.sslMode;
     location = other.location;
     _pairMap = new QMap<QString,QString>(*other._pairMap); // keys are all Upper!
@@ -49,8 +51,8 @@ void DSN::addPair(QString s1, QString s2)
     if(s1.toUpper() == "DESCRIPTION") descr = s2;
     if(s1.toUpper() == "SERVER") server = s2;
     if(s1.toUpper() == "DATABASE") database = s2;
-    if(s1.toUpper() == "PWD") password = s2;
-    if(s1.toUpper() == "PASSWORD") password = s2;
+    if(s1.toUpper() == "PWD") _password = s2;
+    if(s1.toUpper() == "PASSWORD") _password = s2;
     if(s1.toUpper() == "UID") userId = s2;
     if(s1.toUpper() == "USER") userId = s2;
     if(s1.toUpper() == "SERVER") server = s2;
@@ -173,4 +175,66 @@ int DSN::maxKeyLen()
     foreach(QString key, pairMap()->keys())
         if(key.length()> maxKeyLen) maxKeyLen = key.length();
     return maxKeyLen;
+}
+
+/*static*/ QString DSN::createSecureVaultKey()
+{
+    _key.clear();
+    if(userId.isEmpty())
+        return _key;
+    // key is dsn name | userDsn Y/N | user name
+    _key = name + "|";
+    _key = _key.append(userDsn?"Y":"N");
+    _key = _key.append("|");
+    _key = _key.append(userId);
+    return _key;
+}
+
+QString DSN::password()
+{
+    if(_password.isEmpty())
+    {
+        vault->loadPassword(createSecureVaultKey(),[=](const QString &password) {
+            if(password.isEmpty())
+                qDebug() << "no saved password for " <<_key;
+            else
+            {
+                //ui->txtPWD->setText(password);
+                //_dsn->setPassword(password);
+                _password = password;
+                bPwdInVault = true;
+            }
+        });
+    }
+    return _password;
+}
+
+void DSN::setPassword(QString password)
+{
+    if(password.isEmpty())
+        return;
+    if(_password != password)
+    {
+        vault->savePassword(createSecureVaultKey(),password);
+        vault->loadPassword(createSecureVaultKey(),[=](const QString &password) {
+            if(password.isEmpty())
+                qDebug() << "no saved password for " <<_key;
+            else
+            {
+                //ui->txtPWD->setText(password);
+                //_dsn->setPassword(password);
+                _password = password;
+                bPwdInVault = true;
+            }
+        });
+    }
+}
+
+QString DSN::secureVaultKey()
+{
+    if(_key.isEmpty())
+    {
+        createSecureVaultKey();
+    }
+    return _key;
 }
