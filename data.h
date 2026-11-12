@@ -846,6 +846,7 @@ public:
     QDate minDate, maxDate;
     bool bAlphaRoutes= false;
     QString abbreviationsString;
+    QString versionString;
     void buildList(QString string);
     QString createString();
     QList<QPair<QString, QString>> abbreviationsList(){return _abbreviationsList;}

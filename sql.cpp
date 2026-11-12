@@ -5750,15 +5750,22 @@ bool SQL::getParameters(Parameters* parms, QSqlDatabase db)
 {
      //Parameters parms = Parameters();
     QString alphaRoutes;
+    QString commandText;
+    bool versionStringExists = doesColumnExist("Parameters", "versionString",db);
     try
     {
     //QSqlDatabase  srcDb = QSqlDatabase::database(SQL::connectionName);  if(!dbOpen(db)
      //throw Exception(tr("database not open: %1").arg(__LINE__));
      // db = QSqlDatabase::database();
-
-        QString commandText = "select lat, lon, title, city, minDate, maxDate, "
+        if(versionStringExists)
+            commandText = "select lat, lon, title, city, minDate, maxDate, "
+                              "alphaRoutes, abbreviationsList, versionString "
+                              "from Parameters";
+        else
+            commandText = "select lat, lon, title, city, minDate, maxDate, "
                               "alphaRoutes, abbreviationsList "
                               "from Parameters";
+
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -5787,6 +5794,8 @@ bool SQL::getParameters(Parameters* parms, QSqlDatabase db)
                 parms->bAlphaRoutes = true;
             QString abbreviationsStr = query.value(7).toString();
             parms->buildList(abbreviationsStr);
+            if(versionStringExists)
+                parms->versionString = query.value(8).toString();
         }
     }
     catch (Exception e)
@@ -5830,6 +5839,13 @@ bool SQL::insertParameters(Parameters parms, QSqlDatabase db)
 
 bool SQL::updateParameters(Parameters parms, QSqlDatabase db)
 {
+    bool bVersionStringExists = doesColumnExist("Parameters", "versionString",db);
+    if(!bVersionStringExists)
+    {
+        addColumn("Parameters", "versionString", "text NOT NULL DEFAULT '' ");
+        parms.versionString = MY_VERSION;
+    }
+
     try
     {
         if(!db.isOpen())
@@ -5838,9 +5854,10 @@ bool SQL::updateParameters(Parameters parms, QSqlDatabase db)
 
         QString commandText = QString("update Parameters set lat = %1, lon=%2, title='%3', city='%4', "
                               "minDate = '%5', maxDate= '%6', alphaRoutes = '%7',"
-                              "abbreviationsList = '%8',lastUpdate=CURRENT_TIMESTAMP")
+                              "abbreviationsList = '%8', versionString='%9',lastUpdate=CURRENT_TIMESTAMP")
                 .arg(parms.lat).arg(parms.lon).arg(parms.title,parms.city,parms.minDate.toString("yyyy/MM/dd"),
-                    parms.maxDate.toString("yyyy/MM/dd"), parms.bAlphaRoutes?"Y":"N", parms.createString());
+                    parms.maxDate.toString("yyyy/MM/dd"), parms.bAlphaRoutes?"Y":"N", parms.createString(),
+                                                   parms.versionString);
         QSqlQuery query = QSqlQuery(db);
         QString abbreviationsStr;
         for (QPair<QString,QString> pair: parms.abbreviationsList()) {
@@ -10652,9 +10669,9 @@ bool SQL::checkSegments()
 }
 
 // Check table for column name
-bool SQL::doesColumnExist(QString table, QString column)
+bool SQL::doesColumnExist(QString table, QString column, QSqlDatabase db)
 {
- QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
+ //QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
  QSqlQuery query = QSqlQuery(db);
  QString commandText;
  bool bQuery;
@@ -10901,8 +10918,12 @@ void SQL::checkTables(QSqlDatabase db)
 
   //tableList = getTableList(db, config->currConnection->servertype());
   tableList = db.tables();
+  if(!doesColumnExist("Parameters", "versionString",db))
+  {
+      addColumn("Parameters", "versionString", "text NOT NULL DEFAULT '' ");
+  }
 
-  if(!doesColumnExist("Comments", "jRouteList"))
+  if(!doesColumnExist("Comments", "jRouteList",db))
   {
    addColumn("Comments", "jRouteList", "JSON NOT NULL default '[]'");
    addColumn("Comments", "date", "date ");
@@ -10915,7 +10936,7 @@ void SQL::checkTables(QSqlDatabase db)
    }
   }
 
-  if(!doesColumnExist("Comments", "latitude"))
+  if(!doesColumnExist("Comments", "latitude",db))
   {
     addColumn("Comments", "latitude", "decimal(15,5) NOT NULL DEFAULT '0.00000'");
     addColumn("Comments", "longitude", "decimal(15,5) NOT NULL DEFAULT '0.00000'");
@@ -10924,30 +10945,30 @@ void SQL::checkTables(QSqlDatabase db)
   }
 
 
-  if(!doesColumnExist("RouteComments", "routeId"))
+  if(!doesColumnExist("RouteComments", "routeId",db))
   {
       addColumn("RouteComments", "routeId", "int NOT NULL DEFAULT -1");
       executeScript(":/sql/recreateRouteComments.sql");
   }
 
-  if(!doesColumnExist("Companies", "RoutePrefix"))
+  if(!doesColumnExist("Companies", "RoutePrefix",db))
   {
    addColumn("Companies", "RoutePrefix", "varchar(10) NOT NULL default ''");
    if(config->currConnection->servertype() == "Sqlite")
     executeScript(":/sql/Sqlite3/sqlite3_recreateSegmentsTable.sql",db);
   }
 
-  if(!doesColumnExist("Companies", "info"))
+  if(!doesColumnExist("Companies", "info",db))
   {
    addColumn("Companies", "info", "varchar(50) NOT NULL default ''", "Description");
   }
-  if(!doesColumnExist("Companies", "selected"))
+  if(!doesColumnExist("Companies", "selected",db))
   {
    addColumn("Companies", "selected", "int", "Description");
   }
 
 
-  if(!doesColumnExist("Companies", "Mnemonic"))
+  if(!doesColumnExist("Companies", "Mnemonic",db))
   {
       if(config->currConnection->servertype() == "MySql")
           addColumn("Companies", "Mnemonic", "varchar(10) NOT NULL default '' ", "`key`");
@@ -10956,7 +10977,7 @@ void SQL::checkTables(QSqlDatabase db)
       // if(config->currConnection->servertype() == "Sqlite")
       //  executeScript(":/sql/sqlite3_recreateCompanies.sql",db);
   }
-  if(!doesColumnExist("Companies", "Url"))
+  if(!doesColumnExist("Companies", "Url",db))
   {
       if(config->currConnection->servertype() == "MySql")
           addColumn("Companies", "Url", "varchar(100) NOT NULL default '' ", "`key`");
@@ -10965,33 +10986,33 @@ void SQL::checkTables(QSqlDatabase db)
       // if(config->currConnection->servertype() == "Sqlite")
       //  executeScript(":/sql/sqlite3_recreateCompanies.sql",db);
   }
-  if(!doesColumnExist("Segments", "DoubleDate"))
+  if(!doesColumnExist("Segments", "DoubleDate",db))
   {
      addColumn("Segments", "DoubleDate", "date NOT NULL DEFAULT '2000-01-01'");
      // if(config->currConnection->servertype() == "Sqlite")
      //  executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
   }
 
-  if(!doesColumnExist("Segments", "FormatOK"))
+  if(!doesColumnExist("Segments", "FormatOK",db))
   {
      addColumn("Segments", "FormatOK", "int(1) NOT NULL DEFAULT FALSE");
      // if(config->currConnection->servertype() == "Sqlite")
      //  executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
   }
-  if(!doesColumnExist("Segments", "NewerName"))
+  if(!doesColumnExist("Segments", "NewerName",db))
   {
       addColumn("Segments", "NewerName", "text NOT NULL Default ''");
       // if(config->currConnection->servertype() == "Sqlite")
       //  executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
   }
 
-  if(!doesColumnExist("Segments", "StreetId"))
+  if(!doesColumnExist("Segments", "StreetId",db))
   {
       addColumn("Segments", "StreetId", "integer NOT NULL Default -1");
       // if(config->currConnection->servertype() == "Sqlite")
       //  executeScript(":/sql/sqlite3_recreateSegmentsTable.sql",db);
   }
-  if(!doesColumnExist("Segments", "StreetSeq"))
+  if(!doesColumnExist("Segments", "StreetSeq",db))
   {
       addColumn("Segments", "StreetSeq", "integer NOT NULL Default -1");
       // if(config->currConnection->servertype() == "Sqlite")
@@ -11003,7 +11024,7 @@ void SQL::checkTables(QSqlDatabase db)
       if(config->currConnection->servertype() == "Sqlite")
        executeScript(":/sql/Sqlite3/sqlite3_create_streetdef.sql",db);
   }
-  if(!doesColumnExist("Routes", "routeId"))
+  if(!doesColumnExist("Routes", "routeId",db))
   {
     addColumn("Routes", "routeId", "int(11) NOT NULL DEFAULT -1", "Name");
     //executeScript(":/sql/Sqlite3/sqlite3_recreate_routes.sql",db);
@@ -11014,15 +11035,15 @@ void SQL::checkTables(QSqlDatabase db)
    // export must not export rowids so we have to create a pseudo rowid in some tables
    // that use 'rowid' in queries. Export creates the table without a column named 'rowid'
    // so we add one here after the tables are complete.
-   if(!doesColumnExist("routes", "rowid"))
+   if(!doesColumnExist("routes", "rowid",db))
    {
        addColumn("routes", "rowid", "integer GENERATED ALWAYS AS IDENTITY");
    }
-   if(!doesColumnExist("segments", "rowid"))
+   if(!doesColumnExist("segments", "rowid",db))
    {
        addColumn("segments", "rowid", "integer GENERATED ALWAYS AS IDENTITY");
    }
-   if(!doesColumnExist("streetdef", "rowid"))
+   if(!doesColumnExist("streetdef", "rowid",db))
    {
        addColumn("streetdef", "rowid", "integer GENERATED ALWAYS AS IDENTITY");
    }
@@ -11036,7 +11057,7 @@ void SQL::checkTables(QSqlDatabase db)
    updateIdentitySequence("routename", "routeid");
 
   }
-  if(!doesColumnExist("RouteName", "canonicalName"))
+  if(!doesColumnExist("RouteName", "canonicalName",db))
   {
       qInfo() << "Migrating RouteName table to canonical layout for current city database...";
 
@@ -11136,16 +11157,16 @@ void SQL::checkTables(QSqlDatabase db)
    ExportSql* esql = new ExportSql(false);
    esql->createRouteSeqTable(db, config->currConnection->servertype());
   }
-  if(!doesColumnExist("Segments", "pointArray"))
+  if(!doesColumnExist("Segments", "pointArray",db))
   {
    addColumn("Segments", "pointArray", "text");
   }
-  if(!doesColumnExist("Segments", "street"))
+  if(!doesColumnExist("Segments", "street",db))
   {
    addColumn("Segments", "street", "text");
   }
 
-  if(!doesColumnExist("Segments", "Location"))
+  if(!doesColumnExist("Segments", "Location",db))
   {
    addColumn("Segments", "Location", "varchar(30) not null default ''", "Tracks");
    if(config->currConnection->servertype() == "Sqlite")
@@ -11159,7 +11180,7 @@ void SQL::checkTables(QSqlDatabase db)
    }
   }
 
-  if(!doesColumnExist("Stations", "routes"))
+  if(!doesColumnExist("Stations", "routes",db))
   {
    addColumn("Stations", "routes", "varchar(50)");
    addColumn("Stations", "segments", "varchar(50)");
@@ -11229,7 +11250,7 @@ void SQL::checkTables(QSqlDatabase db)
   //     }
   // }
 
-  if(!doesColumnExist("Parameters", "abbreviationsList"))
+  if(!doesColumnExist("Parameters", "abbreviationsList",db))
   {
       addColumn("Parameters", "abbreviationsList", "varchar[200] not null default ''");
       if(config->currConnection->servertype() == "Sqlite")
@@ -11248,7 +11269,7 @@ void SQL::checkTables(QSqlDatabase db)
 //   }
   }
 
-  if(!doesColumnExist("RouteComments", "latitude"))
+  if(!doesColumnExist("RouteComments", "latitude",db))
    executeScript(":/sql/recreateRouteComments.sql", db);
 
 //  QStringList views = listViews();

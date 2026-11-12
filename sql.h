@@ -226,7 +226,7 @@ public:
 
 //    QStringList getTableList(QSqlDatabase db, QString dbType);
     bool checkSegments();
-    bool doesColumnExist(QString table, QString column);
+    bool doesColumnExist(QString table, QString column, QSqlDatabase db);
     bool doesConstraintExist(QString tbName, QString name);
     bool addColumn(QString table, QString name, QString type, QString after = "");
     bool updateSegmentsTable();

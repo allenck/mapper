@@ -1097,16 +1097,23 @@ void Configuration::getSettings2()
                     } else {
                         db = QSqlDatabase::addDatabase(driver, cName);
                     }
+                    SQL::instance()->setConnectionName(cName);
                     db.setDatabaseName(baseAddr + fileName);
                     if(db.open())
                     {
                         Parameters p;
+                        currConnection = ncn;
                         if(SQL::instance()->getParameters(&p,db))
                         {
                             if(!p.city.isEmpty())
                             {
                                 ncn->setCityName(p.city);
                                 nc->setNameOverride(p.city);
+                            }
+                            if(p.versionString != MY_VERSION)
+                            {
+                                p.versionString = MY_VERSION;
+                                SQL::instance()->updateParameters(p,db);
                             }
                         }
                         db.close();

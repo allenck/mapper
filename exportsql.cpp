@@ -166,11 +166,11 @@ bool ExportSql::openDb()
     sql->setConfig(config);
 
     tableList = _targetDb.tables();
-    if(!sql->doesColumnExist("Segments", "pointArray"))
+    if(!sql->doesColumnExist("Segments", "pointArray",_targetDb))
     {
      sql->addColumn("Segments", "pointArray", "text");
     }
-    if(!sql->doesColumnExist("Segments", "street"))
+    if(!sql->doesColumnExist("Segments", "street",_targetDb))
     {
      sql->addColumn("Segments", "street", "text");
     }
@@ -1426,7 +1426,8 @@ bool ExportSql::createParametersTable(QSqlDatabase db, QString dbType)
                 "`minDate` date NOT NULL,"\
                 "`maxDate` date NOT NULL,"\
                 "`alphaRoutes` char(1) NOT NULL default ('Y'),"\
-                "`abbreviationsList` VARCHAR(200) NOT NULL DEFAULT '',"
+                "`abbreviationsList` VARCHAR(200) NOT NULL DEFAULT ''," \
+                "`versionString` TEXT NOT NULL,"\
                 "`lastUpdate` timestamp NOT NULL DEFAULT (CURRENT_TIMESTAMP));";
  else if(dbType == "MySql")
   commandText = "CREATE TABLE `Parameters` ("\
@@ -1439,6 +1440,7 @@ bool ExportSql::createParametersTable(QSqlDatabase db, QString dbType)
     "`maxDate` date NOT NULL,"\
     "`alphaRoutes` char(1) NOT NULL,"\
     "`abbreviationsList` VARCHAR(200) NOT NULL DEFAULT '',"\
+    "`versionString` TEXT NOT NULL,"\
     "`lastUpdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"\
     "UNIQUE KEY `key` (`key`)"\
   ") ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1";
@@ -1457,6 +1459,7 @@ bool ExportSql::createParametersTable(QSqlDatabase db, QString dbType)
         "[maxDate] [date] NOT NULL,"\
         "[alphaRoutes] [char](1) NOT NULL,"\
         "[abbreviationsList] VARCHAR(200) NOT NULL DEFAULT '',"
+        "[versionString] TEXT NOT NULL,"\
         "[lastUpdate] [datetime] NOT NULL"\
     ") ON [PRIMARY];"\
    "SET ANSI_PADDING OFF;"\
@@ -1479,6 +1482,7 @@ bool ExportSql::createParametersTable(QSqlDatabase db, QString dbType)
           maxDate date NOT NULL,\
           alphaRoutes char(1) NOT NULL default ('Y'),\
           abbreviationsList VARCHAR(200) NOT NULL DEFAULT '',\
+          versionString TEXT NOT NULL,\
           lastUpdate timestamp NOT NULL DEFAULT (CURRENT_TIMESTAMP));";
  }else if(dbType == "MimerSql")
  {
@@ -1511,6 +1515,7 @@ bool ExportSql::createParametersTable(QSqlDatabase db, QString dbType)
         "maxDate date NOT NULL,"\
         "alphaRoutes char(1) DEFAULT 'Y' NOT NULL,"\
         "abbreviationsList VARCHAR(200) DEFAULT '' NOT NULL,"\
+        "versionString TEXT NOT NULL,"\
         "lastUpdate timestamp DEFAULT LOCALTIMESTAMP NOT NULL);";
  }
  //query->prepare(commandText);
@@ -1932,7 +1937,7 @@ bool ExportSql::createCommentsTable(QSqlDatabase db, QString dbType)
     "`tags` varchar(1000) NOT NULL,"\
     "`routeList` varchar(100) NOT NULL," \
     "`date` date ,"\
-    "`jRouteList` JSON NOT NULL ,"\
+    "`jRouteList` text NOT NULL ,"\
     "`comments` text CHARACTER SET utf8 NOT NULL,"\
     "`latitude` decimal(15,5) NOT NULL DEFAULT '0.00000',"\
     "`longitude` decimal(15,5) NOT NULL DEFAULT '0.00000',"\
@@ -2202,594 +2207,379 @@ bool ExportSql::exportTable(QString inTable)
     QString table = inTable;
     if(tgtConn->servertype() == "PostgreSQL")
         table = inTable.toLower();
-     bool bDropTables = this->bDropTables;
-     srcDb = QSqlDatabase::database(srcConn->connectionName());
-     qInfo() << "database is" << (srcDb.isOpen()?"open":"not open") << srcDb.connectionName() << " "
-             << srcDb.driverName() << " " << srcDb.databaseName();
+    bool bDropTables = this->bDropTables;
+    srcDb = QSqlDatabase::database();
+    QString srcServerType = srcConn->servertype();
+    if(srcConn->uniqueId() == tgtConn->uniqueId())
+        throw IllegalArgumentException("source and destination the same");
+    if(!openDb())
+        return false;
+    ignoreList.clear();
 
-     QString srcServerType = srcConn->servertype();
-     if(srcConn->uniqueId() == tgtConn->uniqueId())
-         throw IllegalArgumentException("source and destination the same");
-     // prevent leaking connections
-     // if(!openDb())
-     //  return false;
-       ignoreList.clear();
-
-     if(tgtConn->servertype() == "MySql" || tgtConn->servertype() == "MsSql")
+    if(tgtConn->servertype() == "MySql" || tgtConn->servertype() == "MsSql")
         SQL::instance()->useDatabase(tgtConn->database(), tgtConn->servertype(), _targetDb);
 
- QStringList tables = targetDb().tables();
- if(tables.contains(table,Qt::CaseInsensitive))
-  updateTimestamp(table);
-
- QStringList types;
- QString resolvedSourceTable = table;
-
- // FIXED: Query the source database for its actual table name casing layout
- QStringList srcTables = srcDb.tables();
- int matchIndex = srcTables.indexOf(QRegularExpression(QString("^%1$").arg(table), QRegularExpression::CaseInsensitiveOption));
-
- if (matchIndex != -1) {
-     resolvedSourceTable = srcTables.at(matchIndex);
-     qDebug() << "Resolved source database case-sensitive table name match:" << resolvedSourceTable;
- }
-
- // Pass the correctly cased table name string straight to the schema extractor
- QStringList columns = SQL::instance()->listColumns(resolvedSourceTable, srcServerType, srcDb, &types);
- // FIXED: If case-sensitivity caused the schema dictionary to return empty,
-  // fall back to evaluating a lowercase variation to extract the true field array width
-  if (columns.isEmpty()) {
-      qWarning() << "Table schema lookup came back blind for:" << table << "- Retrying with lowercase format.";
-      columns = SQL::instance()->listColumns(table.toLower(), srcServerType, srcDb, &types);
-  }
-  if(tables.contains(table,Qt::CaseInsensitive))
- {
-     if(!areTableDefsEqual(table, config->currConnection, tgtConn, srcDb, _targetDb))
-      bDropTables = true;
- }
- else
-     bDropTables = true; // if target table does not exist, they are obviously not equal
-
- added=0;
- updated=0;
- deleted=0;
- errors=0;
- notUpdated=0;
- ignored = 0;
-
- getCount(table, bDropTables || !tables.contains(table,Qt::CaseInsensitive));
- if(tables.contains(table,Qt::CaseInsensitive) && bDropTables)
- {
-  if(!dropTable(table, targetDb(),tgtConn->servertype()))
-     return false;
- }
- tables = targetDb().tables();
- if(bDropTables || !tables.contains(table,Qt::CaseInsensitive))
- {
-  if(table.compare("altRoute", Qt::CaseInsensitive)==0)
-   if(!createAltRouteTable(_targetDb, tgtConn->servertype())) return false;
-  if(table.compare("Comments", Qt::CaseInsensitive)==0)
-   if(!createCommentsTable(_targetDb, tgtConn->servertype())) return false;
-  if(table.compare("Companies", Qt::CaseInsensitive)==0)
-   if(!createCompaniesTable(_targetDb, tgtConn->servertype())) return false;
-  // if(table.compare("Intersections", Qt::CaseInsensitive)==0)
-  //  if(!createIntersectionsTable(_targetDb, tgtConn->servertype())) return false;
-  if(table.compare("Parameters", Qt::CaseInsensitive)==0)
-   if(!createParametersTable(_targetDb, tgtConn->servertype())) return false;
-  if(table.compare("RouteComments", Qt::CaseInsensitive)==0)
-   if(!createRouteCommentsTable(_targetDb, tgtConn->servertype())) return false;
-  if(table.compare("Routes", Qt::CaseInsensitive)==0)
-   if(!createRouteTable(_targetDb, tgtConn->servertype())) return false;
-  if(table.compare("RouteName", Qt::CaseInsensitive)==0)
-    if(!createRouteNameTable(_targetDb, tgtConn->servertype())) return false;
-  if(table.compare("RouteSeq", Qt::CaseInsensitive)==0)
-   if(!createRouteSeqTable(_targetDb, tgtConn->servertype())) return false;
-  if(table.compare("StreetDef",Qt::CaseInsensitive)==0)
-   if(!createStreetDefTable(_targetDb,tgtConn->servertype()))
-       return false;
-  if(table.compare("Segments", Qt::CaseInsensitive)==0)
-   if(!createSegmentsTable(_targetDb, tgtConn->servertype())) return false;
-  if(table.compare("Stations", Qt::CaseInsensitive)==0)
-   if(!createStationsTable(_targetDb, tgtConn->servertype())) return false;
-  if(table.compare("Segments", Qt::CaseInsensitive)==0)
-   if(!createSegmentsTable(_targetDb, tgtConn->servertype())) return false;
-  if(table.compare("Terminals", Qt::CaseInsensitive)==0)
-   if(!createTerminalsTable(_targetDb, tgtConn->servertype())) return false;
-  if(table.compare("TractionTypes", Qt::CaseInsensitive)==0)
-   if(!createTractionTypesTable(_targetDb, tgtConn->servertype())) return false;
-  // === FIX 1: COMMIT THE STRUCTURAL SCHEMAS BEFORE INSERTING ROWS ===
-  if (tgtConn->servertype() == "MimerSql") {
-       qDebug() << "Committing table layout structural modifications for:" << table;
-       _targetDb.commit();
-   }
- }
-
-
- if(tgtDbType == "MsSql" && table != "Terminals" && table != "RouteComments"
-    && table != "Routes" && table != "RouteSeq")
-  setIdentityInsert(table, true);
- QString commandText;
- QString selectText = "Select ";
- for(int i=0; i< columns.count(); i++)
- {
-  QString col = columns.at(i);
-  if(tgtConn->servertype()== "MsSql")
-   selectText.append("["+col+"]");
-  else
-   selectText.append("`"+col+"`");
-  if(i < columns.count()-1)
-    selectText.append(",");
- }
- selectText.append(" from ");
- selectText.append(table);
-
- if(bDropTables)
-  commandText = selectText + " order by lastUpdate";
- else
-  commandText = selectText + " where lastUpdate > :lastUpdated  order by lastUpdate";
-
-
- QSqlQuery* query = new QSqlQuery(srcDb);
- query->setForwardOnly(true);
- QSqlQuery* query2 = new QSqlQuery(_targetDb);
-
- // === STEP 1: INITIALIZE THE EXPLICIT WRITER BOUNDARY ===
-  if (tgtConn->servertype() == "MimerSql") {
-      qDebug() << "Initializing explicit transactional workspace boundary for table:" << table;
-      _targetDb.transaction();
-  }
-
-  bool bPrepare =query->prepare(commandText);
- if(!bDropTables)
-  query->bindValue(":lastUpdated", lastUpdated);
- bool bQuery = query->exec();
- if(!bQuery)
- {
-     QSqlError err = query->lastError();
-     SQLERROR_E(std::move(query));
-     qDebug() << err.text() + "\n";
-     qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-     //db.close();
-     return false;
- }
-
- QStringList keys = SQL::instance()->listPkColumns(table, tgtDbType, _targetDb);
- while(query->next())
- {
-  bool bFound = false; // This is your existing local variable declaration block
-  if(!bDropTables)
-  {
-   // Strip backticks from the selection template string shell for Mimer SQL
-   QString cleanSelect = selectText;
-   if(tgtConn->servertype() == "MimerSql") {
-       cleanSelect.replace("`", "");
-   }
-
-   commandText = cleanSelect + " where ";
-   for(int i=0; i< keys.count(); i++)
-   {
-    QString col = keys.at(i);
-    // === MIMER COMPATIBLE LOOKUP PLACEHOLDERS ===
-    if(tgtConn->servertype() == "MimerSql")
-        commandText.append(QString("%1 = ?").arg(col));
+    QStringList tables = targetDb().tables();
+    if(tables.contains(table,Qt::CaseInsensitive))
+        updateTimestamp(table);
+    QStringList types;
+    QStringList columns = SQL::instance()->listColumns(table, srcServerType, srcDb, &types);
+    // QStringList tgtColumns = SQL::instance()->listColumns(table, tgtDbType, _targetDb);
+    // if(columns.count() != tgtColumns.count())
+    if(tables.contains(table,Qt::CaseInsensitive))
+    {
+        if(!areTableDefsEqual(table, config->currConnection, tgtConn, srcDb, _targetDb))
+            bDropTables = true;
+    }
     else
-        commandText.append(QString("%1=:%1").arg(col));
+        bDropTables = true; // if target table does not exist, they are obviously not equal
 
-     if(i < keys.count()-1)
-       commandText.append(" and ");
-   }
+    added=0;
+    updated=0;
+    deleted=0;
+    errors=0;
+    notUpdated=0;
+    ignored = 0;
 
-   query2->prepare(commandText);
-   for(int i=0; i< keys.count(); i++)
-   {
-    QString col = keys.at(i);
-    // Find the correct primary key index location in the main columns list array
-    QVariant pkVal = query->value(columns.indexOf(col));
+    getCount(table, bDropTables || !tables.contains(table,Qt::CaseInsensitive));
+    if(tables.contains(table,Qt::CaseInsensitive) && bDropTables)
+    {
+        if(!dropTable(table, targetDb(),tgtConn->servertype()))
+            return false;
+    }
+    tables = targetDb().tables();
+    if(bDropTables || !tables.contains(table,Qt::CaseInsensitive))
+    {
+        if(table.compare("altRoute", Qt::CaseInsensitive)==0)
+            if(!createAltRouteTable(_targetDb, tgtConn->servertype())) return false;
+        if(table.compare("Comments", Qt::CaseInsensitive)==0)
+            if(!createCommentsTable(_targetDb, tgtConn->servertype())) return false;
+        if(table.compare("Companies", Qt::CaseInsensitive)==0)
+            if(!createCompaniesTable(_targetDb, tgtConn->servertype())) return false;
+        // if(table.compare("Intersections", Qt::CaseInsensitive)==0)
+        //  if(!createIntersectionsTable(_targetDb, tgtConn->servertype())) return false;
+        if(table.compare("Parameters", Qt::CaseInsensitive)==0)
+            if(!createParametersTable(_targetDb, tgtConn->servertype())) return false;
+        if(table.compare("RouteComments", Qt::CaseInsensitive)==0)
+            if(!createRouteCommentsTable(_targetDb, tgtConn->servertype())) return false;
+        if(table.compare("Routes", Qt::CaseInsensitive)==0)
+            if(!createRouteTable(_targetDb, tgtConn->servertype())) return false;
+        if(table.compare("RouteName", Qt::CaseInsensitive)==0)
+            if(!createRouteNameTable(_targetDb, tgtConn->servertype())) return false;
+        if(table.compare("RouteSeq", Qt::CaseInsensitive)==0)
+            if(!createRouteSeqTable(_targetDb, tgtConn->servertype())) return false;
+        if(table.compare("StreetDef",Qt::CaseInsensitive)==0)
+            if(!createStreetDefTable(_targetDb,tgtConn->servertype())) return false;
+        if(table.compare("Segments", Qt::CaseInsensitive)==0)
+            if(!createSegmentsTable(_targetDb, tgtConn->servertype())) return false;
+        if(table.compare("Stations", Qt::CaseInsensitive)==0)
+            if(!createStationsTable(_targetDb, tgtConn->servertype())) return false;
+        if(table.compare("Segments", Qt::CaseInsensitive)==0)
+            if(!createSegmentsTable(_targetDb, tgtConn->servertype())) return false;
+        if(table.compare("Terminals", Qt::CaseInsensitive)==0)
+            if(!createTerminalsTable(_targetDb, tgtConn->servertype())) return false;
+        if(table.compare("TractionTypes", Qt::CaseInsensitive)==0)
+            if(!createTractionTypesTable(_targetDb, tgtConn->servertype())) return false;
+    }
+    if(tgtDbType == "MsSql" && table != "Terminals" && table != "RouteComments"
+        && table != "Routes" && table != "RouteSeq")
+        setIdentityInsert(table, true);
+    QString commandText;
+    QString selectText = "Select ";
+    for(int i=0; i< columns.count(); i++)
+    {
+        QString col = columns.at(i);
+        if(tgtConn->servertype()== "MsSql")
+            selectText.append("["+col+"]");
+        else
+            selectText.append("`"+col+"`");
+        if(i < columns.count()-1)
+            selectText.append(",");
+    }
+    selectText.append(" from ");
+    selectText.append(table);
 
-    if(tgtConn->servertype() == "MimerSql")
-        query2->bindValue(i, pkVal.toString()); // Force clean out-of-band wide string matching
+    if(bDropTables)
+        commandText = selectText + " order by lastUpdate";
     else
-        query2->bindValue( ":"+ col, query->value(i) );
-   }
+        commandText = selectText + " where lastUpdate > :lastUpdated  order by lastUpdate";
+    QSqlQuery* query = new QSqlQuery(srcDb);
+    QSqlQuery* query2 = new QSqlQuery(_targetDb);
 
-   bQuery = query2->exec();
-   if(!bQuery)
-   {
-       QSqlError err = query2->lastError();
-       SQLERROR_E(std::move(query2));
-       qDebug() << err.text() + "\n";
-       qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-       return false;
-   }
-   bFound = query2->next();
-  }
+    bool bPrepare =query->prepare(commandText);
+    if(!bDropTables)
+        query->bindValue(":lastUpdated", lastUpdated);
+    bool bQuery = query->exec();
+    if(!bQuery)
+    {
+        QSqlError err = query->lastError();
+        SQLERROR_E(std::move(query));
+        qDebug() << err.text() + "\n";
+        qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+        //db.close();
+        return false;
+    }
 
-  if(bFound)
-  {
-   bool bEqual = true;
-
-   // FIXED: Extract matching column fields straight from the in-memory array width,
-    // bypassing the toxic query->record() background catalog loops completely.
-   for(int i = 0; i < columns.count(); i++)
-   {
-        if(query->value(i) != query2->value(i))
+    QStringList keys = SQL::instance()->listPkColumns(table, tgtDbType, _targetDb);
+    while(query->next())
+    {
+        bool bFound = false;
+        if(!bDropTables)
         {
-            bEqual = false;
-        break;
-        }
-   }
-   if(bEqual)
-   {
-    notUpdated++;
-    sendProgress();
-    continue;
-   }
-
-   //QStringList pkList = SQL::instance()->listPkColumns(table, tgtDbType, _targetDb);
-   QStringList pkList = keys;
-   QString commandString = "update " + table + " set ";
-
-   // === FIX 1: STRIP BACKTICKS AND BUILD POSITIONAL TEMPLATES FOR MIMER SQL ===
-   if (tgtConn->servertype() == "MimerSql")
-   {
-       bool first = true;
-       for(int i=0; i< columns.count(); i++) {
-           QString col = columns.at(i);
-           if(!pkList.contains(col)) {
-               if(!first) commandString.append(", ");
-               commandString.append(QString("%1 = ?").arg(col));
-               first = false;
-           }
-       }
-       commandString.append(" where ");
-       first = true;
-       for(int i=0; i< pkList.count(); i++) {
-           QString col = pkList.at(i);
-           if(!first) commandString.append(" and ");
-           commandString.append(QString("%1 = ?").arg(col));
-           first = false;
-       }
-   }
-   else
-   {
-       // Keep your original named parameter loop intact for MySQL / MS SQL:
-       for(int i=0; i< columns.count(); i++) {
-        QString col = columns.at(i);
-        if(!pkList.contains(col)) {
-         commandString.append(QString("`%1`=:%1").arg(col));
-          if(i < columns.count()-1) commandString.append(",");
-        }
-       }
-       commandString.append(" where ");
-       for(int i=0; i< pkList.count(); i++) {
-        QString col = pkList.at(i);
-        commandString.append(QString("`%1`=:%1").arg(col));
-         if(i < pkList.count()-1) commandString.append(" and ");
-       }
-   }
-
-   query2->prepare(commandString);
-
-   // // === FIX 2: ALIGN OUT-OF-BAND BINDINGS BY POSITION FOR MIMER SQL ===
-   // if (tgtConn->servertype() == "MimerSql")
-   // {
-   //     int updateSlot = 0;
-
-   //     // Pass 1: Bind Non-Primary Key values sequentially
-   //     for(int i=0; i< columns.count(); i++) {
-   //         if(!pkList.contains(columns.at(i))) {
-   //             QVariant val = query->value(i);
-
-   //             // Reuse our standardized data normalization pipeline
-   //             if (val.userType() == QMetaType::QDateTime) {
-   //                 query2->bindValue(updateSlot, val.toDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz"));
-   //             } else if (val.userType() == QMetaType::QDate) {
-   //                 query2->bindValue(updateSlot, val.toDate().toString("yyyy-MM-dd"));
-   //             } else {
-   //                 query2->bindValue(updateSlot, val.isNull() ? QVariant(QMetaType::fromType<QString>()) : val.toString());
-   //             }
-   //             updateSlot++;
-   //         }
-   //     }
-
-   //     // Pass 2: Bind Primary Key values sequentially for the WHERE clause
-   //     for(int i=0; i< columns.count(); i++) {
-   //         if(pkList.contains(columns.at(i))) {
-   //             QVariant val = query->value(i);
-   //             query2->bindValue(updateSlot, val.isNull() ? QVariant(QMetaType::fromType<QString>()) : val.toString());
-   //             updateSlot++;
-   //         }
-   //     }
-   // }
-   // else
-   // {
-       // Keep original named binding loop for other backends
-       for(int i=0; i< columns.count(); i++) {
-        QString col = columns.at(i);
-        query2->bindValue( ":"+ col, query->value(i) );
-        // === FORCE WARNING TO BECOME FATAL ERROR ===
-           if (_targetDb.lastError().isValid())
-           {
-               qCritical() << "FATAL: ODBC Sequence Collision Caught at binding slot" << i
-                           << "-" << _targetDb.lastError().text();
-
-               // Terminate immediately so your log isn't wiped out
-               if (tgtConn->servertype() == "MimerSql") {
-                   _targetDb.rollback();
-               }
-               return false;
-           }
-       }
-   // }
-
-   bQuery = query2->exec();
-   if(!bQuery)
-   {
-    QSqlError err = query2->lastError();
-    SQLERROR_E(std::move(query2));
-    qDebug() << err.text() + "\n";
-    qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-    errors++;
-   }
-   else
-    updated++;
-  }
-  else
-  {
-i0:   QString commandString = "insert into " + table + " (";
-   for(int i=0; i< columns.count(); i++)
-   {
-    QString col = columns.at(i);
-    if(tgtConn->servertype()== "MsSql")
-        commandString.append("[" + col + "]");
-    else if(tgtConn->servertype()== "PostgreSQL")
-        commandString.append( col );
-    else if(tgtConn->servertype()== "MimerSql")
-        commandString.append( col );
-    else
-        commandString.append("`" + col + "`");
-    if(i < columns.count()-1)
-      commandString.append(",");
-   }
-   commandString.append(") values (");
-
-   for(int i=0; i< columns.count(); i++)
-   {
-    QString col = columns.at(i);
-    QString outStr;
-m0:    if (tgtConn->servertype() == "MimerSql")
-    {
-        outStr = "?";
-    }
-    else if(tgtConn->servertype() != "PostgreSQL")
-    {
-        // Check if the current column is the problematic JSON column
-         if(col.compare("jRouteList", Qt::CaseInsensitive) == 0 && tgtConn->servertype() == "MySql")
-         {
-             commandString.append("CONVERT(:" + col + " USING utf8mb4)");
-         }
-         else
-         {
-             commandString.append(":" + col);
-         }
-    }
-    else {
-            // Your exact original type evaluation block continues underneath:
-            if(types.at(i)== "")
+            commandText = selectText + " where ";
+            for(int i=0; i< keys.count(); i++)
             {
-                // for some reason, the Sqlite startDate column in Segments had a blank type,
-                // so see if it can be converted to a string and is a valid date.
-                QString str =  query->value(i).toString();
-                if(QDate::fromString(str,"yyyy/MM/dd").isValid())
-                    types.replace(i,"date");
+                QString col = keys.at(i);
+                commandText.append(QString("%1=:%1").arg(col));
+                if(i < keys.count()-1)
+                    commandText.append(" and ");
+            }
+            query2->prepare(commandText);
+            for(int i=0; i< keys.count(); i++)
+            {
+                QString col = keys.at(i);
+                QString type = types.at(i);
+                QVariant v = query->value(i);
+                query2->bindValue( ":"+ col, query->value(i) );
             }
 
-            if(types.at(i)== "date")
+            bQuery = query2->exec();
+            if(!bQuery)
             {
-                QDate date = query->value(i).toDate();
-                QString dateStr = date.toString("yyyy-MM-dd");
-                if(dateStr.isEmpty())
-                    qDebug() << "no date";
-                if(date.isValid())
-                    outStr = "DATE'" + dateStr + "'";
-                else
-                    outStr = "NULL";
+                QSqlError err = query2->lastError();
+                SQLERROR_E(std::move(query2));
+                qDebug() << err.text() + "\n";
+                qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+                return false;
             }
-            else
-            if(types.at(i)=="timestamp")
+            bFound = query2->next();
+        }
+        if(bFound)
+        {
+            bool bEqual = true;
+
+            if(query->record() == query2->record())
             {
-                QDateTime dt = query->value(i).toDateTime();
-                QString dtStr = dt.toString(Qt::ISODateWithMs);
-                if(tgtConn->servertype() != "MimerSql")
-                    outStr = "'"+dtStr + "'::timestamp";
-                else
+                for(int i=0; i < query->record().count(); i++)
                 {
-                    dtStr.replace('T', ' ');
-                    dtStr.replace('Z',"");
-                    outStr = "TIMESTAMP'"+dtStr+"'";
+                    if(query->value(i) != query2->value(i))
+                    {
+                        bEqual = false;
+                        break;
+                    }
                 }
             }
-            else
-            if(types.at(i).startsWith("decimal",Qt::CaseInsensitive)!=0)
+            if(bEqual)
             {
-                double dbl = query->value(i).toDouble();
-                outStr = QString("%1").arg(dbl,0,'f',6);
+                notUpdated++;
+                sendProgress();
+                continue;
             }
-            else
-            if(types.at(i).compare("integer",Qt::CaseInsensitive)==0 || types.at(i).startsWith("int",Qt::CaseInsensitive))
-            {
-                if(query->value(i).isNull())
-                    outStr = "0";
-                else
-                    outStr = query->value(i).toString();
-            }
-            else
-            if(types.at(i).startsWith("char",Qt::CaseInsensitive)!=0)
-            {
-                QString c = query->value(i).toString();
-                bool b;
 
-                int cn = c.toInt(&b);
-                if(c.length() == 1)
-                    outStr = "'"+c+"'";
-                else
+            QStringList pkList = SQL::instance()->listPkColumns(table, tgtDbType, _targetDb);
+
+            QString commandString = "update " + table + " set ";
+            for(int i=0; i< columns.count(); i++)
+            {
+                QString col = columns.at(i);
+                if(!pkList.contains(col))
                 {
-                    if(b && cn == 89)
-                        outStr = "'Y'";
-                    else
-                        outStr = "'N'";
+                    commandString.append(QString("`%1`=:%1"));
+                    if(i < columns.count()-1)
+                        commandString.append(",");
                 }
             }
+            commandString.append(" where ");
+            for(int i=0; i< pkList.count(); i++)
+            {
+                QString col = pkList.at(i);
+                commandString.append(QString("`%1`=:%1"));
+                if(i < pkList.count()-1)
+                    commandString.append(",");
+            }
+
+            query2->prepare(commandString);
+            for(int i=0; i< columns.count(); i++)
+            {
+                QString col = columns.at(i);
+                query2->bindValue( ":"+ col, query->value(i) );
+            }
+            bQuery = query2->exec();
+            if(!bQuery)
+            {
+                QSqlError err = query2->lastError();
+                SQLERROR_E(std::move(query2));
+                qDebug() << err.text() + "\n";
+                qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+                errors++;
+            }
             else
-            if(types.at(i).compare("text",Qt::CaseInsensitive)==0
-                        || types.at(i).compare("mediumtext",Qt::CaseInsensitive)==0
-                        || types.at(i).startsWith("varchar",Qt::CaseInsensitive)
-                        || types.at(i).startsWith("nvarchar",Qt::CaseInsensitive))
-            {
-                QString str = query->value(i).toString();
-                str = str.replace("'","''");
-                outStr = "'" + str +"'";
-            }
-            else if(types.at(i).compare("JSON",Qt::CaseInsensitive)==0)
-            {
-                QString str = query->value(i).toString();
-                outStr = "'" + str +"'";
-            }
-            else {
-                qDebug() << "not handled: " << types.at(i);
-            }
-        } // End of non-Mimer else block
-
-        // FIXED: Force outStr to contain a placeholder for Mimer SQL right before it appends
-        if (tgtConn->servertype() == "MimerSql") {
-            outStr = "?";
-        }
-
-        if(outStr.isEmpty())
-            qDebug() << "error: no value!";
-
-        commandString.append(outStr);
-
-
-     if(i < columns.count()-1)
-      commandString.append(",");
-   }
-   commandString.append(")");
-
-p0:   if(tgtConn->servertype() != "PostgreSQL")
-   {
-       query2->prepare(commandString);
-
-       for(int i=0; i< columns.count(); i++)
-       {
-        QString col = columns.at(i);
-        QVariant val;
-
-        if(col.compare("lastUpdate",Qt::CaseInsensitive)==0)
-        {
-         QDateTime dt = query->value(i).toDateTime();
-         if(!dt.isValid())
-          qDebug() << "date is invalid '" <<query->value(i).toString() << "'";
-         if(dt.date().month()==1 && dt.date().day()>28)
-         {
-          dt = QDateTime(QDate(dt.date().year(), 1, 28), dt.time());
-         }
-         val = dt;
+                updated++;
         }
         else
         {
-            if(types.at(i)== "date" )
+            QString commandString = "insert into " + table + " (";
+            for(int i=0; i< columns.count(); i++)
             {
-               QDate dt = query->value(i).toDate();
-               if(!dt.isValid())
-               {
-                   QString rawDateStr = query->value(i).toString();
-                   dt = QDate::fromString(rawDateStr, "yyyy/MM/dd");
-               }
-
-               if(!dt.isValid())
-               {
-                   val = QVariant(QMetaType::fromType<QString>());
-               }
-               else if (tgtConn->servertype() == "MimerSql")
-               {
-                   val = dt.toString("yyyy-MM-dd");
-               }
-               else
-               {
-                   val = dt;
-               }
+                QString col = columns.at(i);
+                if(tgtConn->servertype()== "MsSql")
+                    commandString.append("[" + col + "]");
+                else if(tgtConn->servertype()== "PostgreSQL")
+                    commandString.append( col );
+                else
+                    commandString.append("`" + col + "`");
+                if(i < columns.count()-1)
+                    commandString.append(",");
             }
-            else
-            if (tgtConn->servertype() == "MimerSql")
+            commandString.append(") values (");
+            for(int i=0; i< columns.count(); i++)
             {
-                QVariant rawVal = query->value(i);
-
-                if (rawVal.isNull()) {
-                    val = QVariant(QMetaType::fromType<QString>());
-                }
-                else if (rawVal.userType() == QMetaType::QDateTime) {
-                    val = rawVal.toDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz");
-                }
-                else if (rawVal.userType() == QMetaType::QDate) {
-                    val = rawVal.toDate().toString("yyyy-MM-dd");
-                }
-                else if (rawVal.userType() == QMetaType::Double) {
-                    val = QString("%1").arg(rawVal.toDouble(), 0, 'f', 6);
+                QString col = columns.at(i);
+                if(tgtConn->servertype() != "PostgreSQL")
+                {
+                    commandString.append( ":"+col);
                 }
                 else {
-                    QString cleanStr = rawVal.toString();
-                    val = QVariant(QMetaType::fromType<QString>(), &cleanStr);
+                    if(types.at(i)== "")
+                    {
+                        // for some reason, the Sqlite startDate column in Segments had a blank type,
+                        // so see if it can be converted to a string and is a valid date.
+                        QString str =  query->value(i).toString();
+                        if(QDate::fromString(str,"yyyy/MM/dd").isValid())
+                            types.replace(i,"date");
+                    }
+                    QString outStr;
+                    if(types.at(i)== "date")
+                    {
+                        QDate date = query->value(i).toDate();
+                        QString dateStr = date.toString("yyyy-MM-dd");
+                        if(dateStr.isEmpty())
+                            qDebug() << "no date";
+                        if(date.isValid())
+                            outStr = "'" + dateStr + "'";
+                        else
+                            outStr = "NULL";
+                    }
+                    else
+                        if(types.at(i)=="timestamp")
+                        {
+                            QDateTime dt = query->value(i).toDateTime();
+                            QString dtStr = dt.toString(Qt::ISODateWithMs);
+                            //outStr = QString("to_timestamp(%1,'YYYY-MM-DDHH:MI:SS.MS)").arg(dtStr);
+                            outStr = "'"+dtStr + "'::timestamp";
+                        }
+                        else
+                            if(types.at(i).startsWith("decimal",Qt::CaseInsensitive)!=0)
+                            {
+                                double dbl = query->value(i).toDouble();
+                                outStr = QString("%1").arg(dbl,0,'f',6);
+                            }
+                            else
+                                if(types.at(i).compare("integer",Qt::CaseInsensitive)==0 || types.at(i).startsWith("int",Qt::CaseInsensitive))
+                                {
+                                    if(query->value(i).isNull())
+                                        outStr = "0";
+                                    else
+                                        outStr = query->value(i).toString();
+                                }
+                                else
+                                    if(types.at(i).startsWith("char",Qt::CaseInsensitive)!=0)
+                                    {
+                                        QString c = query->value(i).toString();
+                                        bool b;
+
+                                        int cn = c.toInt(&b);
+                                        if(c.length() == 1)
+                                            outStr = "'"+c+"'";
+                                        else
+                                        {
+                                            if(b && cn == 89)
+                                                outStr = "'Y'";
+                                            else
+                                                outStr = "'N'";
+                                        }
+                                    }
+                                    else
+                                        if(types.at(i).compare("text",Qt::CaseInsensitive)==0
+                                            || types.at(i).compare("mediumtext",Qt::CaseInsensitive)==0
+                                            || types.at(i).startsWith("varchar",Qt::CaseInsensitive))
+                                        {
+                                            QString str =query->value(i).toString();
+                                            str = str.replace("'","''");
+                                            outStr = "'" + str +"'";
+                                        }
+                                        else {
+                                            qDebug() << "not handled: " << types.at(i);
+                                        }
+                    if(outStr.isEmpty())
+                        qDebug() << "error: no value!";
+                    commandString.append(outStr);
+
                 }
+                if(i < columns.count()-1)
+                    commandString.append(",");
+            }
+            commandString.append(")");
+
+            if(tgtConn->servertype() != "PostgreSQL")
+            {
+                query2->prepare(commandString);
+                for(int i=0; i< columns.count(); i++)
+                {
+                    QString col = columns.at(i);
+                    if(col.compare("lastUpdate",Qt::CaseInsensitive)==0)
+                    {
+                        QDateTime dt = query->value(i).toDateTime();
+                        if(!dt.isValid())
+                            qDebug() << "date is invalid '" <<query->value(i).toString() << "'";
+                        if(dt.date().month()==1 && dt.date().day()>28)
+                        {
+                            //dt.date().setDate(dt.date().year(), 1, 28);
+                            dt = QDateTime(QDate(dt.date().year(), 1, 28), dt.time());
+                        }
+                        query2->bindValue( ":"+ col, dt);
+                    }
+                    else
+                    {
+                        QVariant v = query->value(i);
+
+                        if(types.at(i)== "date" )
+                        {
+                            QDate dt =v.toDate();
+                            if(!dt.isValid())
+                                query2->bindValue( ":"+ col, QVariant(QMetaType::fromType<QString>()) );
+                            else
+                                query2->bindValue( ":"+ col, query->value(i) );
+
+                        }
+                        else
+                            query2->bindValue( ":"+ col, query->value(i) );
+                    }
+                }
+                bQuery = query2->exec();
             }
             else
-                val = query->value(i);
+                bQuery=query2->exec(commandString);
+            if(!bQuery)
+            {
+                QSqlError err = query2->lastError();
+                SQLERROR_E(std::move(query2));
+                qDebug() << "error code:" << err.nativeErrorCode() << " " << err.text() + "\n";
+                qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
+                qDebug() << "values: " << displayQueryValues(query);
+                errors++;
+            }
+            else
+                added++;
         }
 
-        if (tgtConn->servertype() == "MimerSql")
-        {
-            query2->bindValue(i, val);
-        }
-        else
-        {
-            query2->bindValue(":" + col, val);
-        }
-       }
-       // FIXED: Capture return status to satisfy downstream error checkers cleanly
-       bQuery = query2->exec();
-   }
-   else
-       bQuery=query2->exec(commandString); // PostgreSQL path (Line ~2746)
+        sendProgress();
+    }
 
+    qDebug()<<"Comments: "+ QString("%1").arg(added)+ " added, "+ QString("%1").arg(updated) + " updated, "+ QString("%1").arg(deleted)+ " deleted, "+ QString("%1").arg(notUpdated)+ " not updated, "+QString("%1").arg(errors)+ " errors\n";
+    emit uncheck("chk"+table);
 
-   if(!bQuery)
-   {
-    QSqlError err = query2->lastError();
-    SQLERROR_E(std::move(query2));
-    qDebug() << "error code:" << err.nativeErrorCode() << " " << err.text() + "\n";
-    qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-    qDebug() << "values: " << displayQueryValues(query);
-    errors++;
-   }
-   else
-    added++;
-  }
-
-  sendProgress();
- }
-
- qDebug()<<"Comments: "+ QString("%1").arg(added)+ " added, "+ QString("%1").arg(updated) + " updated, "+ QString("%1").arg(deleted)+ " deleted, "+ QString("%1").arg(notUpdated)+ " not updated, "+QString("%1").arg(errors)+ " errors\n";
- emit uncheck("chk"+table);
-
- // === FIX: Explicitly delete the query handles to free active ODBC statements ===
-  if(query)  { delete query;  query = nullptr;  }
-  if(query2) { delete query2; query2 = nullptr; }
-
-  if (tgtConn->servertype() == "MimerSql") {
-     qDebug() << "Enforcing explicit transaction commit for table: " << table;
-     _targetDb.commit();
- }
- return true;
+    return true;
 }
 
 bool ExportSql::exportMimerTable(const QString &inTable)
