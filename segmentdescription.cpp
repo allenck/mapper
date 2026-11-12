@@ -19,7 +19,7 @@ SegmentDescription::SegmentDescription(QString description, QObject *parent) : Q
 void SegmentDescription::common()
 {
     Parameters parms;
-    sql->getParameters(&parms);
+    sql->getParameters(&parms, config->currConnection->servertype(),QSqlDatabase::database(config->currConnection->connectionName()));
     abbreviations = parms.abbreviationsList();
     _newDescription = work;
     newReverseDescription = "";
@@ -372,7 +372,8 @@ QString SegmentDescription::updateToken(QString str){
         if(SegmentDescription::abbreviations.isEmpty())
         {
             Parameters parms;
-            SQL::instance()->getParameters(&parms);
+            SQL::instance()->getParameters(&parms, Configuration::instance()->currConnection->servertype(),
+                                           QSqlDatabase::database(Configuration::instance()->currConnection->connectionName()));
             SegmentDescription::abbreviations = parms.abbreviationsList();
         }
 

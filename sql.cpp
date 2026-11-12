@@ -5746,12 +5746,15 @@ qint32 SQL::getRouteCompany(qint32 route)
 /// Retrieve the parameters for the web site
 /// </summary>
 /// <returns></returns>
-bool SQL::getParameters(Parameters* parms, QSqlDatabase db)
+bool SQL::getParameters(Parameters* parms, QString serverType, QSqlDatabase db)
 {
      //Parameters parms = Parameters();
     QString alphaRoutes;
     QString commandText;
-    bool versionStringExists = doesColumnExist("Parameters", "versionString",db);
+
+    bool versionStringExists =false;
+    if(serverType == "Sqlite")
+        versionStringExists = doesColumnExist("Parameters", "versionString",db);
     try
     {
     //QSqlDatabase  srcDb = QSqlDatabase::database(SQL::connectionName);  if(!dbOpen(db)

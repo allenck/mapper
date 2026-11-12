@@ -125,7 +125,7 @@ SegmentDlg::SegmentDlg(QWidget *parent) :
   bNewChanged = false;
  }
  Parameters parms;
- sql->getParameters(&parms);
+ sql->getParameters(&parms, config->currConnection->servertype(),QSqlDatabase::database(config->currConnection->connectionName()));
 // ui->dateStart->setMinimumDate( parms.minDate);
 // ui->dateStart->setMaximumDate( parms.maxDate);
 // ui->dateEnd->setMinimumDate( parms.minDate);
@@ -297,7 +297,7 @@ void SegmentDlg::setRouteData(RouteData* value)
 
     _routeNameList = sql->getRouteNames(_routeNbr);
     Parameters parms;
-    sql->getParameters(&parms);
+    sql->getParameters(&parms, config->currConnection->servertype(),QSqlDatabase::database(config->currConnection->connectionName()));
 //    ui->dateStart->setMinimumDate( parms.minDate);
 //    ui->dateStart->setMaximumDate( parms.maxDate);
 //    ui->dateEnd->setMinimumDate( parms.minDate);

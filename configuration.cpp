@@ -699,7 +699,7 @@ void Configuration::getSettings()
            if(db.open())
            {
                 Parameters p;
-                if(SQL::instance()->getParameters(&p, db))
+                if(SQL::instance()->getParameters(&p,currConnection->servertype(), db))
                 {
                     if(!p.city.isEmpty())
                     {
@@ -1103,7 +1103,7 @@ void Configuration::getSettings2()
                     {
                         Parameters p;
                         currConnection = ncn;
-                        if(SQL::instance()->getParameters(&p,db))
+                        if(SQL::instance()->getParameters(&p,currConnection->servertype(), db))
                         {
                             if(!p.city.isEmpty())
                             {

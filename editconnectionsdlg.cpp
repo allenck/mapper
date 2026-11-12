@@ -1944,7 +1944,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
     }
     QStringList tableList = db.tables();
     if(tableList.contains("Parameters"))
-        SQL::instance()->getParameters(&parms, db);
+        SQL::instance()->getParameters(&parms, connection->servertype(), db);
     if(!currDb.isEmpty() && !tableList.contains("Parameters", Qt::CaseInsensitive))
     {
         //createSqliteTables(db);
@@ -2014,7 +2014,7 @@ bool EditConnectionsDlg::testConnection(bool bCreate)
          setHelp(tr("Connection succeeded. No default database. <B><I>%1</I></B> has <B><I>%2</I></B>"
                                  " tables!<br> <I>%3</I>").arg(currDb).arg(tableList.count()).arg(tableList.join(", ")),"color:green");
          if(tableList.contains("Parameters",Qt::CaseInsensitive)){
-             SQL::instance()->getParameters(&parms, db);
+             SQL::instance()->getParameters(&parms, connection->servertype(), db);
              currCity->setCenter(LatLng(parms.lat, parms.lon));
              if(parms.city == ui->cbCities->currentText())
               currCity->setCenter(LatLng(parms.lat, parms.lon));
@@ -2639,19 +2639,12 @@ void EditConnectionsDlg::txtUserIdLeave()
 
 void EditConnectionsDlg::txtPwdLeave()
 {
-    // _testConnection = nullptr;
-
-    // if(!ui->txtPWD->text().isEmpty())
-    //     bDSNCanBeUsed=false;
-    // if(!openTestDb())
-    //     return;
-    // QString saveUse = ui->txtUseDb->text();
-    // if(availableDatabases.empty())
-    //     populateDatabases();
-    // if(!saveUse.isEmpty())
-    // {
-    //     ui->txtUseDb->setText(saveUse);
-    // }
+    if(ui->txtPWD->text().isEmpty())
+        return;
+    if(_dsn==nullptr)
+        return;
+    if(connection->connectionType() != "ODBC")
+        return;
     logonInBackground(ui->txtUseDb->text().isEmpty() ? _dsn->database : ui->txtUseDb->text(),
                       connection->driver(),
                       _dsn->name,
