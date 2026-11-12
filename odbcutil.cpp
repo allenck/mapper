@@ -400,7 +400,7 @@ void ODBCUtil::getDSNs(QString odbcini)
                             dsn->userId = p.second;
                         if(p.first.compare("password", Qt::CaseInsensitive) == 0 || p.first.compare("pwd", Qt::CaseInsensitive) == 0)
                         {
-                            dsn->password = p.second;
+                            dsn->setPassword(p.second);
                             dsn->pwdInDsn = p.second;
                         }
                         if(p.first.compare("location", Qt::CaseInsensitive) == 0)

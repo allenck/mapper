@@ -1,3 +1,6 @@
+**Recent Changes November 2026 VERSION=1.3.0
+1. Save versionString in parameters.
+
 **Recent Changes October 2026 VERSION=1.2.12
 1. install QtKeychain to store passwords
 

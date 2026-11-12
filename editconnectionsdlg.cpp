@@ -715,6 +715,11 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
         //ui->cbODBCDsn->setCurrentIndex(ui->cbODBCDsn->findData(connection->dsn()));
         ui->cbODBCDsn->setCurrentIndex(ui->cbODBCDsn->findData( connection->dsn()));
         QString ODBCDsn = ui->cbODBCDsn->currentData().toString();
+        if(ODBCDsn.isEmpty())
+        {
+            setHelp(tr("Connection uses unkown DSN '%1'").arg(connection->dsn()),"color:magenta");
+            return;
+        }
         _dsn = odbcUtil->getDsn(ODBCDsn);
         ui->txtDefaultDb->setText(_dsn->database);
 
@@ -2227,29 +2232,35 @@ bool EditConnectionsDlg::openTestDb()
             if(ui->cbDbType->currentText() == "MySql" || ui->cbDbType->currentText() == "MsSql"
                 || ui->cbDbType->currentText() == "PostgreSQL")
             {
-                // userid, server, etc are not defined in the DSN override here
-                if(db.userName().isEmpty())
+                if(_dsn->userId.isEmpty())
                 {
-                    ui->txtUserId->setEnabled(true);
-                    db.setUserName(ui->txtUserId->text());
+                    // userid, server, etc are not defined in the DSN override here
+                    if(db.userName().isEmpty())
+                    {
+                        ui->txtUserId->setEnabled(true);
+                        db.setUserName(ui->txtUserId->text());
+                    }
+                    if(db.password().isEmpty())
+                    {
+                        ui->txtPWD->setEnabled(true);
+                        db.setPassword(ui->txtPWD->text());
+                    }
                 }
-                if(db.password().isEmpty())
+                if(_dsn->server.isEmpty())
                 {
-                    ui->txtPWD->setEnabled(true);
-                    db.setPassword(ui->txtPWD->text());
-                }
-                if(db.hostName().isEmpty())
-                {
-                    ui->txtHost->setEnabled(true);
-                    db.setHostName(ui->txtHost->text());
+                    if(db.hostName().isEmpty())
+                    {
+                        ui->txtHost->setEnabled(true);
+                        db.setHostName(ui->txtHost->text());
 
-                    qDebug() << db.hostName();
-                }
-                if(db.port()< 1)
-                {
-                    ui->txtPort->setEnabled(true);
-                    if(!ui->txtPort->text().isEmpty())
-                     db.setPort(ui->txtPort->text().toInt());
+                        qDebug() << db.hostName();
+                    }
+                    if(db.port()< 1)
+                    {
+                        ui->txtPort->setEnabled(true);
+                        if(!ui->txtPort->text().isEmpty())
+                         db.setPort(ui->txtPort->text().toInt());
+                    }
                 }
             }
             else
@@ -3152,12 +3163,13 @@ void EditConnectionsDlg::logonInBackground(QString database,QString driver, QStr
     ui->lblHelp->setText("Querying server for available databases...");
     //ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
     _lookupError.clear();
+    QSqlDatabase db;
 
     // 3. Fire off the network query on a parallel worker thread context
     //QString database = dsn->database;
 
     //QString server = dsn->server;
-    QFuture<QStringList> future = QtConcurrent::run([database, driver, server, dsnName, dbType, connectType,uid, pwd,this]() {
+    QFuture<QStringList> future = QtConcurrent::run([db, database, driver, server, dsnName, dbType, connectType,uid, pwd,this]() {
         QStringList databaseNames;
         _dbType = dbType;
         // Setup thread-unique name tracking to prevent cross-contamination
@@ -3269,11 +3281,12 @@ void EditConnectionsDlg::logonInBackground(QString database,QString driver, QStr
     // 4. Watch for completion of background thread task
     QFutureWatcher<QStringList>* watcher = new QFutureWatcher<QStringList>(this);
 
-    connect(watcher, &QFutureWatcher<QStringList>::finished, this, [this, watcher, database, allowOk]() {
+    connect(watcher, &QFutureWatcher<QStringList>::finished, this, [this,db, server, uid, watcher, database, allowOk]() {
         setCursor(Qt::ArrowCursor);
         QStringList results = watcher->result();
         _available = QStringList(results);
-        QSqlDatabase db = QSqlDatabase::database(threadConn,false);
+        //QSqlDatabase db = QSqlDatabase::database(threadConn,true);
+        qDebug() << "watcher entered";
         displayDbInfo(db);
 
         if (!results.isEmpty()) {
@@ -3322,9 +3335,9 @@ void EditConnectionsDlg::logonInBackground(QString database,QString driver, QStr
                 }
                 ui->lblHelp->setStyleSheet("color: green");
                 ui->lblHelp->setText(tr("The database is open on <B>%1</B> for user <B><I>%2</I></B>"
-                                        " using database <B><I>%3</I></B>")
-  //                                      "\nThere are %4 tables.")
-                                         .arg(_dsn->server, _dsn->userId, database.isEmpty()?_dsn->database:database)/*.arg(db.tables().count())*/);
+                                        " using database <B><I>%3</I></B>"
+                                        "\nThere are %4 tables.")
+                                         .arg(server, uid, database).arg(db.tables().count()));
                 // ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
                 ui->btnSave->setEnabled(true);
             }
