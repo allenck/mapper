@@ -1,7 +1,6 @@
 #include "addgeoreferenceddialog.h"
 #include "ui_addgeoreferenceddialog.h"
 #include "configuration.h"
-#include "data.h"
 #include <qcompleter.h>
 #include <QPushButton>
 #include <QUrl>

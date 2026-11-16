@@ -4,7 +4,6 @@
 #include <QObject>
 #include "configuration.h"
 #include "sql.h"
-#include "data.h"
 #include <QList>
 
 class CheckRoute : public QObject

@@ -2,7 +2,6 @@
 #define CONFIGURATION_H
 
 #include <QObject>
-#include "data.h"
 #include <QSettings>
 //#include <iostream>
 #include <QDebug>

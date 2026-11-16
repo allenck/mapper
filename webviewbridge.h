@@ -2,7 +2,6 @@
 #define WEBVIEWBRIDGE_H
 #include <QFutureWatcher>
 #include <QtGui>
-#include "data.h"
 #include "configuration.h"
 #include "qwebchannel.h"
 #include "websocketclientwrapper.h"
@@ -21,7 +20,7 @@ class WebViewBridge : public QObject
     Q_PROPERTY(QString mapId READ curMapId WRITE setMapId NOTIFY onMapIdChanged)
     Q_PROPERTY(LatLng latLng MEMBER _latLng WRITE setLatLng NOTIFY onLatLngChanged)
     Q_PROPERTY(QString options READ options  NOTIFY  onOptionsChanged )
-    Q_PROPERTY(QVariant myRslt  WRITE setMyRslt NOTIFY myRsltChanged FINAL)
+    Q_PROPERTY(QVariant myRslt MEMBER _myRslt WRITE setMyRslt NOTIFY myRsltChanged FINAL)
     Q_PROPERTY(int opacitycurOpacity READ curOpacity WRITE setCurOpacity NOTIFY curOpacityChanged FINAL)
 
 public:
@@ -86,7 +85,7 @@ public slots:
     void setCurOpacity(const int opacity);
 
     void selectSegment(qint32 i, qint32 SegmentId); //19
-    void selectSegmentX(qint32 i, qint32 SegmentId, QVariantList array); //19
+    //void selectSegmentX(qint32 i, qint32 SegmentId, QVariantList array); //19
     void scriptResult(QVariant rtn); //20
     void scriptFunctionResult(QVariant function, QVariant value);
     void scriptArrayResult(QVariantList list);
@@ -94,7 +93,7 @@ public slots:
     void setLat(double lat);
     void setLon(double lon);
     void setDebug(QString str); //25
-    //void setLen(qint32 len);
+    void setLen(qint32 len);
     //void reportMapType(QString mapType);
     //void setCenter(double lat, double lon, int zoom, QString mapType);
     void getGeocoderResults(QString text);
@@ -156,7 +155,7 @@ signals:
     void insertPointSignal(int SegmentId, qint32 i, double newLat, double newLon);
     void insertPointSignalX(int SegmentId, qint32 i, QList<LatLng> points);
     void segmentSelected(qint32, qint32);
-    void segmentSelectedX(qint32, qint32, QList<LatLng>);
+    //void segmentSelectedX(qint32, qint32, QList<LatLng>);
     void outputSetDebug(QString);
     //void onRunInBrowserChanged(bool);
     void segmentStatusSignal(QString txt, QString color);

@@ -3,12 +3,10 @@
 #include <QtSql>
 
 #include <QList>
-#include <iostream>
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QtAlgorithms>
-#include "mymessagebox.h"
 #include "data.h"
 #include "configuration.h"
 #include <QMessageBox>
@@ -16,6 +14,7 @@
 #include "routeselector.h"
 #include <QSqlQuery>
 #include "../functions/sqlite3.h"
+#include "parameters.h"
 
 class NotifyRouteChange;
 class QSqldatabase;
@@ -62,7 +61,7 @@ public:
     QString getAlphaRoute(qint32 route, QString routePrefix);
     QMap<int, TractionTypeInfo> getTractionTypes();
     //QT_DEPRECATED QList<SegmentInfo> getSegmentInfo();
-    QMap<int, SegmentInfo> getSegmentInfoList(QString locality = " ");
+    QMap<int, SegmentInfo> getSegmentInfoList(QString locality = " ", QString street = "");
     QStringList getLocations();
     //QT_DEPRECATED SegmentInfo getSegmentInfo(qint32 segmentId);
     SegmentInfo getSegmentInfo(qint32 SegmentId);
@@ -134,7 +133,7 @@ public:
     Q_DECL_DEPRECATED void setConfig(Configuration *config);
     QList<QString> getRouteNames(qint32 route);
     qint32 getRouteCompany(qint32 route);
-    bool getParameters(Parameters *parms, QSqlDatabase db = QSqlDatabase::database(_connectionName));
+    bool getParameters(Parameters *parms, QString serverType, QSqlDatabase db = QSqlDatabase::database(_connectionName));
     bool insertParameters(Parameters, QSqlDatabase db);
     bool updateParameters(Parameters parms, QSqlDatabase db= QSqlDatabase::database(_connectionName));
     QList<SegmentData *> getRouteSegmentsBySegment(qint32 segmentId);
@@ -310,6 +309,7 @@ public:
 signals:
     void details(QString);
     void segmentChanged(const SegmentInfo si, CHANGETYPE t);
+    void segmentNameChange(const SegmentInfo oldName, const SegmentInfo newName);
     void routeChange(NotifyRouteChange rc);
     void routeCommentChange(RouteComments rc, CHANGETYPE t);
     void commentChange(CommentInfo ci, CHANGETYPE t);

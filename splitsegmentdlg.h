@@ -3,7 +3,7 @@
 
 #include <QWidget>
 #include "data.h"
-#include "sql.h"
+#include <QDialog>
 
 namespace Ui {
  class SplitSegmentDlg;

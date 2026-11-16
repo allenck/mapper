@@ -164,6 +164,13 @@ qt_add_executable(mapper WIN32 MACOSX_BUNDLE
     websockettransport.cpp websockettransport.h
     webviewbridge.cpp webviewbridge.h
     mapper.qrc
+    segmentinfo.h segmentinfo.cpp
+    segmentdata.h segmentdata.cpp
+    bounds.h bounds.cpp
+    bearing.h bearing.cpp
+    routedata.h routedata.cpp
+    routetype.h
+    parameters.h parameters.cpp
 )
 # Force the executable to be built in the root build folder, matching qmake's directory depth
 set_target_properties(mapper PROPERTIES

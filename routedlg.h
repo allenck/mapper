@@ -5,7 +5,6 @@
 #include "data.h"
 #include "configuration.h"
 #include "sql.h"
-#include"ccombobox.h"
 
 
 namespace Ui {

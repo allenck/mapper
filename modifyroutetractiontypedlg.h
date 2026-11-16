@@ -3,6 +3,8 @@
 
 #include <QDialog>
 #include "configuration.h"
+#include "routedata.h"
+#include "segmentdata.h"
 
 namespace Ui {
  class ModifyRouteTractionTypeDlg;

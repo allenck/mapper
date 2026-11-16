@@ -2,10 +2,8 @@
 #define DIALOGEDITSTREETS_H
 
 #include <QDialog>
-#include "data.h"
 #include "sql.h"
 #include "configuration.h"
-#include "segmentdescription.h"
 
 namespace Ui {
 class DialogEditStreets;

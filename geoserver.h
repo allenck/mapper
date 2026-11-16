@@ -3,8 +3,8 @@
 
 #include <QObject>
 #include <QtXml>
-#include "data.h"
 #include <QMap>
+#include "bounds.h"
 
 class FileDownloader;
 class Layer : public QObject

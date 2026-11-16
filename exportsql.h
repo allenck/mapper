@@ -7,6 +7,7 @@
 //#include "exportdlg.h"
 #include <QSqlQuery>
 #include <QFile>
+#include "data.h"
 
 class QSqldatabase;
 #define SQLERROR_E(query) \

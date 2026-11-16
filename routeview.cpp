@@ -11,9 +11,13 @@
 #include "ttitemdelegate.h"
 #include "dateeditdelegate.h"
 
+RouteView* RouteView::_instance =nullptr;
+RouteView* RouteView::instance() {return _instance;}
+
 RouteView::RouteView(QObject* parent )
 {
     m_parent = parent;
+    _instance = this;
 
     config = Configuration::instance();
 
@@ -41,10 +45,13 @@ RouteView::RouteView(QObject* parent )
     connect(ui, &QTableView::activated, [=](QModelIndex index){
         ui->blockSignals(true);
     });
-    connect(WebViewBridge::instance(), &WebViewBridge::segmentSelectedX, [=] (qint32 pt, qint32 segmentId, QList<LatLng> list){
-        on_segmentSelected(pt, segmentId,list);
-    });
+    // connect(WebViewBridge::instance(), &WebViewBridge::segmentSelectedX, [=] (qint32 pt, qint32 segmentId, QList<LatLng> list){
+    //     on_segmentSelected(pt, segmentId,list);
+    // });
 
+    connect(WebViewBridge::instance(), &WebViewBridge::segmentSelected,[=](qint32 pt, qint32 segmentId){
+        on_segmentSelected(pt, segmentId,QList<LatLng>());
+    });
     // connect(SQL::instance(), &SQL::segmentChanged, this, [=](const SegmentInfo si, SQL::CHANGETYPE t){
     //     // SegmentInfo has changed, refresh the SegmentData record/
     //     SegmentData* sd = SQL::instance()->getSegmentData(rd.route(), si.segmentId(),
@@ -245,7 +252,7 @@ RouteView::RouteView(QObject* parent )
      {
       //sourceModel->listOfSegments.removeAt(ix.row());
      }
-      myParent-> ui->ssw->refresh();
+      myParent-> ui->segmentSelectionWidget->refresh();
     });
 
     proxymodel = new RouteViewSortProxyModel(this);
@@ -878,6 +885,8 @@ void RouteView::on_segmentSelected(int, int segmentId, QList<LatLng>)
  {
   QModelIndex modelIndex = proxymodel->mapFromSource(sourceModel->index(row,1));
   ui->selectRow(modelIndex.row());
+  ui->scrollTo(modelIndex);
+
  }
 }
 

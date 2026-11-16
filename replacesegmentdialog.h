@@ -3,7 +3,6 @@
 
 #include <QDialog>
 #include <QButtonGroup>
-#include "data.h"
 #include "sql.h"
 
 namespace Ui {

@@ -2,7 +2,7 @@
 #define EDITSEGMENTDIALOG_H
 
 #include <QDialog>
-#include "data.h"
+#include "segmentdata.h"
 
 namespace Ui {
 class EditSegmentDialog;

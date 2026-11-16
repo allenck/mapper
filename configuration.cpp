@@ -2,7 +2,6 @@
 #include "odbcutil.h"
 #include "sql.h"
 #include "overlay.h"
-#include "data.h"
 #include <QApplication>
 #include <QFileDialog>
 #include <QFile>

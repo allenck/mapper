@@ -1,7 +1,7 @@
 #ifndef DIALOGEDITPARAMETERS_H
 #define DIALOGEDITPARAMETERS_H
 
-#include "data.h"
+#include "parameters.h"
 #include <QDialog>
 
 namespace Ui {

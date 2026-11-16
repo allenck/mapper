@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>805</width>
+    <width>794</width>
     <height>84</height>
    </rect>
   </property>
@@ -31,7 +31,7 @@
      <item>
       <widget class="QLabel" name="label_9">
        <property name="text">
-        <string>Select Segment:</string>
+        <string>Tracks:</string>
        </property>
       </widget>
      </item>
@@ -75,7 +75,7 @@
      <item>
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Location:</string>
+        <string>Loc:</string>
        </property>
       </widget>
      </item>
@@ -94,7 +94,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specify a location name to limit search for street names. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specify a location name to limit search for street names. Use when multiple locations (cities, disticts, etc) use the same street names.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
        <property name="editable">
         <bool>true</bool>

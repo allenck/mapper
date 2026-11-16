@@ -1,7 +1,6 @@
 #include "dialogeditparameters.h"
 #include "ui_dialogeditparameters.h"
 #include "sql.h"
-#include "data.h"
 #include "configuration.h"
 
 DialogEditParameters::DialogEditParameters(QWidget *parent) :

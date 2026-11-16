@@ -231,13 +231,13 @@ void WebViewBridge::selectSegment(qint32 i, qint32 SegmentId)
  emit segmentSelected(i, SegmentId);
 }
 
-void WebViewBridge::selectSegmentX(qint32 i, qint32 SegmentId, QVariantList array)
-{
-//    //MainWindow::selectSegment(i, SegmentId);
-//    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
-    m_parent->segmentSelected(i, SegmentId);
- emit segmentSelectedX(i, SegmentId, buildPoints(array));
-}
+// void WebViewBridge::selectSegmentX(qint32 i, qint32 SegmentId, QVariantList array)
+// {
+// //    //MainWindow::selectSegment(i, SegmentId);
+// //    mainWindow * parent = qobject_cast<mainWindow*>(this->parent());
+//     m_parent->segmentSelected(i, SegmentId);
+//  emit segmentSelectedX(i, SegmentId, buildPoints(array));
+// }
 
 QString WebViewBridge::createIcon(QColor color)
 {
@@ -335,11 +335,11 @@ void WebViewBridge::setDebug(QString str)
  emit outputSetDebug(str);
 }
 
-// void WebViewBridge::setLen(qint32 len)
-// {
+void WebViewBridge::setLen(qint32 len)
+{
 
-//     m_parent->setLen(len);
-// }
+    m_parent->setLen(len);
+}
 
 void WebViewBridge::setMapId(const QString &mapId)
 {
@@ -537,7 +537,8 @@ void WebViewBridge::cityBounds(double neLat, double neLng, double swLat, double 
     emit on_cityBounds(bounds);
 
     Parameters parms;
-    if(SQL::instance()->getParameters(&parms))
+    if(SQL::instance()->getParameters(&parms, config->currConnection->servertype(),
+                                       QSqlDatabase::database(config->currConnection->connectionName())))
     {
         parms.lat = center.lat();
         parms.lon = center.lon();

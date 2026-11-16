@@ -680,10 +680,10 @@ bool StreetsTableModel::newStreetName(StreetInfo* info)
     {
         int num = info->street.toInt(&bNbr);
         if(bNbr)
-            return -1;
+            return false;
     }
     else
-        return -1;
+        return false;
     if(doesStreetDefExist(info))
     {
         qDebug() << "already exists: "<< info->toString();
@@ -865,10 +865,10 @@ bool StreetsTableModel::updateStreetName(StreetInfo si)
     {
         int num = si.street.toInt(&bNbr);
         if(bNbr)
-            return -1;
+            return false;
     }
     else
-        return -1;
+        return false;
 
     QSqlDatabase db = QSqlDatabase::database(config->currConnection->connectionName());
     QString commandText = " Update StreetDef set"
@@ -913,10 +913,10 @@ bool StreetsTableModel::updateStreetDef(StreetInfo sti)
     {
         int num = sti.street.toInt(&bNbr);
         if(bNbr)
-            return -1;
+            return false;
     }
     else
-        return -1;
+        return false;
     QSqlDatabase db = QSqlDatabase::database(config->currConnection->connectionName());
     QString commandText;
     commandText = " Update StreetDef set"

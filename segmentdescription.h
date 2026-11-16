@@ -1,12 +1,12 @@
 #ifndef SEGMENTDESCRIPTION_H
 #define SEGMENTDESCRIPTION_H
 
+#include "segmentinfo.h"
 #include <QObject>
 #include <QString>
 #include <QStringList>
 #include <QDebug>
-#include "sql.h"
-#include "configuration.h"
+#include "parameters.h"
 
 class SegmentDescription : public QObject
 {
@@ -23,8 +23,6 @@ public:
     static QList<QPair<QString,QString>> abbreviations;
     bool isValidFormat(SegmentInfo si);
     bool isValidFormat(QString str);
-    SQL* sql = SQL::instance();
-    Configuration * config = Configuration::instance();
     QStringList tokenize(QString descr);
     QString buildDescription(QStringList tokens);
     QString replaceAbbreviations(QString descr);
@@ -33,6 +31,7 @@ public:
     QStringList tokenizeAlternate(QString text, QString sep);
     void setText(QString descr);
     bool hasAbbreviations(QString descr);
+    void setParms(Parameters parms){this->parms = parms;}
 
 signals:
 
@@ -51,6 +50,7 @@ private:
     // QString strAmp = " & ";
     // QString strSlash = "/";
     QStringList tokens;
+    Parameters parms;
 };
 
 #endif // SEGMENTDESCRIPTION_H

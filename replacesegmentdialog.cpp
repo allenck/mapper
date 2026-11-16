@@ -13,7 +13,7 @@ ReplaceSegmentDialog::ReplaceSegmentDialog(QWidget *parent) :
 {
  ui->setupUi(this);
  sql = SQL::instance();
- ui->ssw->initialize();
+ ui->ssw->initialize( sql->getSegmentInfoList());
 
  connect(ui->buttonBox, SIGNAL(clicked(QAbstractButton *)), this, SLOT(Process(QAbstractButton *)));
  connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);

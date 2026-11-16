@@ -5,7 +5,6 @@
 #include "data.h"
 #include "sql.h"
 #include "configuration.h"
-#include "ccombobox.h"
 
 namespace Ui {
     class SegmentDlg;

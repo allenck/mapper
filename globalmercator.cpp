@@ -211,6 +211,7 @@ int GlobalMercator::ZoomForPixelSize(int pixelSize )
      else
        return 0;
  }
+ return 0;
 }
 
 QPoint GlobalMercator::GoogleTile(int tx, int ty, int zoom)

@@ -1,5 +1,4 @@
 #include "rtitemdelegate.h"
-#include "data.h"
 #include "qcombobox.h"
 #include <QSortFilterProxyModel>
 

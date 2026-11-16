@@ -34,6 +34,7 @@ public:
     void setList(QList<SegmentData *> segmentDataList);
     void clear();
     QList<SegmentData *> selectedSegments();
+    static RouteView* instance();
 
 signals:
     void sendRows(int, int);
@@ -48,6 +49,7 @@ public slots:
     void on_segmentSelected(int, int, QList<LatLng>);
 
 private:
+    static RouteView* _instance;
     qint32 curRow, curCol;
     qint32 route=-1;
     qint32 startSegment, endSegment;

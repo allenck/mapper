@@ -4,6 +4,7 @@
 #include <QDialog>
 #include "configuration.h"
 #include <QTableView>
+#include "data.h"
 
 namespace Ui {
 class DialogEditComments;

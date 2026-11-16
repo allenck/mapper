@@ -183,9 +183,8 @@ QDomElement Kml::createPlacemark(QString oneWay)
  * @param root The root element of the document that will be written.
  */
 /*static*/ /*public*/ void Kml::addDefaultInfo(QDomElement root) {
-    QString content = tr("Written by JMRI version ") + /*jmri.Version.name()*/ "3.11"
+    QString content = tr("Written by Mapper version ") + MY_VERSION
             + " on " + QDate::currentDate().toString();
-            + " $Id: XmlFile.java 22548 2013-01-19 20:26:03Z rhwood $";
     //Comment comment = new Comment(content);
     QDomElement comment = doc.createElement("comment");
     comment.appendChild(doc.createTextNode(content));
@@ -207,18 +206,13 @@ QDomElement Kml::createPlacemark(QString oneWay)
   return;
  // write the result to selected file
  //if(!file->isOpen())
-  file->open(QIODevice::WriteOnly);
- QTextStream stream (file);
-//    try {
-//        XMLOutputter fmt = new XMLOutputter();
-//        fmt.setFormat(Format.getPrettyFormat());
-//        fmt.output(doc, o);
-//    } finally {
-//        o.close();
-//    }
-// stream.setCodec("UTF-8");
- QString sXml = doc.toString();
- doc.save(stream,2);
+ if(file->open(QIODevice::WriteOnly))
+    {
+         QTextStream stream (file);
+         QString sXml = doc.toString();
+         doc.save(stream,2);
+         file->close();
+    }
 }
 
 QDomElement Kml::createArrow(SegmentData sd)

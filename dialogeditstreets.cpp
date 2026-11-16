@@ -15,7 +15,7 @@ DialogEditStreets::DialogEditStreets(QWidget *parent)
     {
         ui->cbAbbreviations->addItem(pair.first+":"+pair.second);
     }
-    ui->ssw->initialize();
+    ui->ssw->initialize( sql->getSegmentInfoList());
     ui->ssw->cbSegments()->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->ssw->cbSegments(), SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(on_cbSegmentsCustomContextMenuRequested(QPoint)));
 }

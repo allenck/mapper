@@ -2233,13 +2233,13 @@ function processScript(func, parms)
   call += "(";
   if(parms !== '')
   {
-      if(typeof parms === "string")
-      {
-        call += "'";
-        call += parms;
-        call += "'";
-      }
-      else
+      // if(typeof parms === "string")
+      // {
+      //   call += "'";
+      //   call += parms;
+      //   call += "'";
+      // }
+      // else
         call += parms;
   }
   call += ");";
@@ -2523,7 +2523,8 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
             {
              array.push(pt.lat);
              array.push(pt.lng);
-            };            webViewBridge.selectSegmentX(i, segmentId, array);
+            };
+            //webViewBridge.selectSegmentX(i, segmentId, array);
             webViewBridge.selectSegment(i, segmentId);
             addModeOff();
         });
@@ -2893,14 +2894,14 @@ function setBounds( pt1, pt2)
     map.fitBounds(bounds);
 }// end setBounds()
 
-// function setCenter(Lat, Lon)
-// {
-//   //map.setCenter(L.latLng(Lat, Lon));
-//   map.panTo([Lat,Lon]);
-//  // map.setOptions({disableDoubleClickZoom: true });
-//  return null;
+function setCenter(Lat, Lon)
+{
+  //map.setCenter(L.latLng(Lat, Lon));
+  map.panTo([Lat,Lon]);
+ // map.setOptions({disableDoubleClickZoom: true });
+ return null;
 
-// } // end setCenter()
+} // end setCenter()
 
 
 function setDefaultOptions()

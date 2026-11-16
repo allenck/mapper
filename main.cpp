@@ -82,14 +82,16 @@ void customMessageOutput(QtMsgType type, const QMessageLogContext &context, cons
         QFile outFile(logFilePath);
         if(firstTime)
         {
-            outFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
-            firstTime = false;
+            if(outFile.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                firstTime = false;
         }
         else
-            outFile.open(QIODevice::WriteOnly | QIODevice::Append);
-        QTextStream ts(&outFile);
-        ts << txt << '\n';
-        outFile.close();
+            if(outFile.open(QIODevice::WriteOnly | QIODevice::Append))
+        {
+            QTextStream ts(&outFile);
+            ts << txt << '\n';
+            outFile.close();
+        }
     } else {
        fprintf(stderr, "%s %s: %s   (%s:%u, %s)\n",
                formattedTimeMsg.constData(), logLevelMsg.constData(),

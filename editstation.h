@@ -5,7 +5,6 @@
 #include "configuration.h"
 #include "data.h"
 #include "sql.h"
-#include "editcomments.h"
 
 namespace Ui {
     class editStation;

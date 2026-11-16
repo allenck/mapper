@@ -10,7 +10,7 @@ EditSegmentDescr::EditSegmentDescr(QWidget *parent) : QLineEdit(parent) {
     QPalette pal = this->palette();
     defaultBgColor = pal.color(backgroundRole());
     //defaultBgColor = QColor(Qt::white);
-    sql = SQL::instance();
+    //sql = SQL::instance();
     connect(this, &QLineEdit::textEdited,[=]{
         bTextEdited = true;
     } );
@@ -46,12 +46,12 @@ void EditSegmentDescr::setText(QString txt)
 {
     sd = new SegmentDescription(txt);
     if(!sd->isValidFormat(txt))
-        QLineEdit::setStyleSheet("QLineEdit { background-color: #FFC0CB }");
+        QLineEdit::setStyleSheet(" background-color: #FFC0CB; ");
     else if(txt.contains(" to ") || txt.contains(" zur ") || sd->hasAbbreviations(txt))
-        QLineEdit::setStyleSheet("QLineEdit { background-color: #FFFF00 }");
+        QLineEdit::setStyleSheet(" background-color: #FFFF00; ");
     else
-        QLineEdit::setStyleSheet(QString("QLineEdit { background-color: rgb(%1,%2,%3) }")
-                                          .arg(defaultBgColor.red(),defaultBgColor.green(),defaultBgColor.blue()));
+        QLineEdit::setStyleSheet(QString("background-color: rgb(%1, %2, %3); ")
+                                          .arg(defaultBgColor.red()).arg(defaultBgColor.green()).arg(defaultBgColor.blue()));
     QLineEdit::setText(txt);
 }
 
@@ -67,14 +67,14 @@ void EditSegmentDescr::on_editingFinished()
         QString descr = text();
         if(!sd)
             sd = new SegmentDescription(descr);
-        auto placeholder = "QLineEdit { background-color: #FFFF00 }";
+        auto placeholder = " background-color: #FFFF00; ";
         if (!sd->isValidFormat(descr))
-            QLineEdit::setStyleSheet("QLineEdit { background-color: #FFC0CB }");
+            QLineEdit::setStyleSheet(" background-color: #FFC0CB; ");
         else if(descr.contains(" to ") || descr.contains(" zur ") || sd->hasAbbreviations(descr))
             QLineEdit::setStyleSheet(placeholder);
         else
-            QLineEdit::setStyleSheet(QString("QLineEdit { background-color: rgb(%1,%2,%3) }")
-                                              .arg(defaultBgColor.red(),defaultBgColor.green(),defaultBgColor.blue()));
+            QLineEdit::setStyleSheet(QString(" background-color: rgb(%1, %2, %3); ")
+                                              .arg(defaultBgColor.red()).arg(defaultBgColor.green()).arg(defaultBgColor.blue()));
         setText(sd->replaceAbbreviations(descr));
         bTextEdited = false;
         emit descrUpdated(descr, sd->street());

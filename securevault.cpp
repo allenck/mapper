@@ -33,7 +33,7 @@ void SecureVault::loadPassword(const QString &key, std::function<void(const QStr
     connect(job, &QKeychain::Job::finished, this, [key, job, callback]() {
         QString password = "";
         if (job->error()) {
-            qCritical() << "Vault: Failed to read password for key:" << key << "Error:" << job->errorString();
+            qWarning() << "Vault: Failed to read password for key:" << key << "Error:" << job->errorString();
         } else {
             password = job->textData();
         }

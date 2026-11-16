@@ -2,7 +2,6 @@
 #define REROUTINGDLG_H
 
 #include <QDialog>
-#include "data.h"
 #include "configuration.h"
 #include "sql.h"
 #include <QAbstractButton>

@@ -12,6 +12,7 @@
 #include <QtSql>
 #include <QUrl>
 #include "streetstablemodel.h"
+#include "mymessagebox.h"
 
 SQL* SQL::_instance = NULL;
 QString SQL::_connectionName = "";
@@ -1107,31 +1108,38 @@ QList<SegmentInfo> SQL::getSegmentsForStreet(QString street, QString location)
  return myArray;
 }
 
-QMap<int, SegmentInfo> SQL::getSegmentInfoList(QString location)
+QMap<int, SegmentInfo> SQL::getSegmentInfoList(QString location, QString street)
 {
  QMap<int, SegmentInfo> myArray;
 
  QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
 
+ QString where;
+ if(!location.trimmed().isEmpty() && !street.trimmed().isEmpty())
+     where = "where location='"+location.trimmed()+"' and street='"+street+"' ";
+ if(!location.trimmed().isEmpty() && street.trimmed().isEmpty())
+     where = "where location='"+location.trimmed()+"' ";
+ if(location.trimmed().isEmpty() && !street.trimmed().isEmpty())
+     where = "where street='"+street.trimmed()+"' ";
 
 
  QString commandText;
- if(location != " " && !location.isEmpty())
- {
-  commandText= "Select SegmentId, description, OneWay, startDate, endDate,"
-                       " length, points, startLat, startLon, endLat, EndLon, type, street,"
-                       " location, pointArray, tracks, direction, DoubleDate, newerName,"
-                       " streetid, rowid "
-                       " from Segments where location = '" + location + "' "
-                       + "order by description";
- }
- else {
+ // if(location != " " && !location.isEmpty())
+ // {
+ //  commandText= "Select SegmentId, description, OneWay, startDate, endDate,"
+ //                       " length, points, startLat, startLon, endLat, EndLon, type, street,"
+ //                       " location, pointArray, tracks, direction, DoubleDate, newerName,"
+ //                       " streetid, rowid "
+ //                       " from Segments where location = '" + location + "' "
+ //                       + "order by description";
+ // }
+ // else {
    commandText= "Select SegmentId, description, OneWay, startDate, endDate,"
                         " length, points, startLat, startLon, endLat, EndLon, type, street,"
                         " location, pointArray, tracks, direction, DoubleDate, newerName,"
                         " streetid, rowid"
-                        " from Segments order by description";
-  }
+                        " from Segments " + where +" order by description";
+//  }
  QSqlQuery query = QSqlQuery(db);
  bool bQuery = query.exec(commandText);
  if(!bQuery)
@@ -3423,6 +3431,8 @@ bool SQL::updateSegment(SegmentInfo* si, bool bNotify)
  si->_length = 0;
  int rows = 0;
 
+ SegmentInfo siOld = getSegmentInfo(si->segmentId());
+
  if(!updateSegmentDates(si))    // insure start and end dates are valid
      return false;
 
@@ -3500,6 +3510,9 @@ bool SQL::updateSegment(SegmentInfo* si, bool bNotify)
  ret = true;
  if(bNotify)
     emit segmentChanged(*si, CHANGETYPE::MODIFY);
+    if(siOld.description() != si->description() || siOld.streetName() != si->streetName()
+            ||siOld.location() != si->location())
+      emit segmentNameChange(SegmentInfo(siOld), SegmentInfo(*si));
 
  return ret;
 }
@@ -3514,6 +3527,7 @@ bool SQL::updateSegment(SegmentData* sd)
  bool bQuery;
  sd->_length = 0;
  int rows = 0;
+ SegmentInfo siOld = getSegmentInfo(sd->segmentId());
  // SegmentInfo si = getSegmentInfo(sd->segmentId());
  // if(sd->startDate()< si.startDate())
  // {
@@ -3571,7 +3585,7 @@ bool SQL::updateSegment(SegmentData* sd)
    + "description='" + sd->_description + "',"
    + "street='" + sd->_streetName + "',"
    + sStreetId
-   + "NewerName='" + sd->_newerName + "',"
+   + "NewerName='" + sd->_newerStreetName + "',"
    + "location='" + sd->_location + "',"
    + "tracks="+ QString::number(sd->_tracks) + ","
    + "startDate='" + sd->segmentStartDate().toString("yyyy/MM/dd") + "', "
@@ -3596,6 +3610,9 @@ bool SQL::updateSegment(SegmentData* sd)
  }
  ret = true;
  emit segmentChanged(*sd, CHANGETYPE::MODIFY);
+ if(siOld.description() != sd->description() || siOld.streetName() != sd->streetName()
+         ||siOld.location() != sd->location())
+   emit segmentNameChange(SegmentInfo(siOld), SegmentInfo(*sd));
 
  return ret;
 }
@@ -4886,9 +4903,9 @@ bool SQL::deleteRouteSegment(SegmentData sd, bool bNotify)
 
 bool SQL::deleteRouteSegment(qint32 route, int routeId, qint32 segmentId, QString startDate, QString endDate, QString routeStartDate, QString routeEndDate)
 {
- if(startDate == routeStartDate && endDate == routeEndDate)
-  return deleteRouteSegment(route,routeId,segmentId, startDate, endDate);
-
+    if(startDate == routeStartDate && endDate == routeEndDate)
+        return deleteRouteSegment(route,routeId,segmentId, startDate, endDate);
+    return false;
 }
 
 /// <summary>
@@ -5949,7 +5966,7 @@ QList<SegmentData> SQL::getRouteSegmentsBySegment(int route, qint32 segmentId)
             sd._streetName = query.value(18).toString();
             sd._trackUsage = query.value(19).toString();
             sd.setPoints(query.value(20).toString());
-            sd._newerName = query.value(21).toString();
+            sd._newerStreetName = query.value(21).toString();
             sd._routeId = query.value(22).toInt();
 
             if(sd._normalEnter > 2 || sd._normalEnter < 0)
@@ -8445,7 +8462,7 @@ bool SQL::addComment(CommentInfo* ci)
             QSqlError error = query.lastError();
             SQLERROR(std::move(query));
             //throw SQLException(error.text() + " " + errCommand);
-            return -1;
+            return false;
         }
 
         int rows = query.numRowsAffected();
@@ -12764,7 +12781,7 @@ QList<SegmentData*>  SQL::segmentDataListFromView(QString where)
   sd->_dateDoubled = query.value(36).toDate();
   sd->_segmentDateStart = query.value(37).toDate();
   sd->_segmentDateEnd = query.value(38).toDate();
-  sd->_newerName = query.value(39).toString();
+  sd->_newerStreetName = query.value(39).toString();
   sd->_routePrefix = query.value(40).toString();
   sd->_streetId = query.value(41).toInt();
   sd->_routeId = query.value(42).toInt();

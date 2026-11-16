@@ -7,11 +7,24 @@
 #include <QComboBox>
 #include <QtConcurrent>
 #include <QFutureWatcher>
-
+#include "parameters.h"
 
 namespace Ui {
     class editConnectionsDlg;
 }
+
+    class LRSLT
+    {
+    public:
+        LRSLT() {}
+        ~LRSLT(){}
+        LRSLT(const LRSLT& o){
+            databaseNames = o.databaseNames;
+            tables = o.tables;
+        }
+        QStringList databaseNames;
+        QStringList tables;
+    };
 
 class SQL;
 class QSqlQuery;

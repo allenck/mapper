@@ -901,8 +901,8 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, showArrow, Color
         addMarker(i, begin.lat(), begin.lng(), mIx, si.segmentName + " route:" + si.routeName, si.segmentId);
         //OK            window.external.selectSegment(i, SegmentId);
         //var objArray = getPointArray();
-        webViewBridge.selectSegmentX(i, si.segmentId, si.getPointArray());
-        //webViewBridge.selectSegment(i, si.segmentId);
+        //webViewBridge.selectSegmentX(i, si.segmentId, si.getPointArray());
+        webViewBridge.selectSegment(i, si.segmentId);
         addModeOff();
     });
 
@@ -934,7 +934,7 @@ function SegmentInfo(SegmentId, routeName, segmentName, oneWay, showArrow, Color
         webViewBridge.insertPointX(si.segmentId, i, si.getPointArray());
 
         webViewBridge.selectSegment(i+1, si.segmentId);
-        webViewBridge.selectSegmentX(i+1, si.segmentId, si.getPointArray());
+        //webViewBridge.selectSegmentX(i+1, si.segmentId, si.getPointArray());
 
         addModeOff();
         if(i>0)
@@ -1525,13 +1525,13 @@ function addNewPoint(e)
     }
 }
 
-  // function setCenter(Lat, Lon)
-  // {
-  //  map.setCenter(new google.maps.LatLng(Lat, Lon));
-  //  map.setOptions({disableDoubleClickZoom: true });
-  //  return null;
+  function setCenter(Lat, Lon)
+  {
+   map.setCenter(new google.maps.LatLng(Lat, Lon));
+   map.setOptions({disableDoubleClickZoom: true });
+   return null;
 
-  // }
+  }
 
   // function getCenter()
   // {
@@ -1577,7 +1577,7 @@ function selectSegment(segmentId)
             Arrow = si.getArrow();
             hiLiteSelectedLine(si.segmentId);
             webViewBridge.selectSegment(0, segmentId);
-            webViewBridge.selectSegmentX(0, segmentId, getPointArray());
+            //webViewBridge.selectSegmentX(0, segmentId, getPointArray());
 
             return true;
         }

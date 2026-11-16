@@ -1,5 +1,6 @@
 #include "editconnectionsdlg.h"
 #include "dialognewconnection.h"
+#include "exportsql.h"
 #include "ui_editconnectionsdlg.h"
 #include <QCompleter>
 #include <QFileDialog>
@@ -9,15 +10,14 @@
 #include <QApplication>
 //#include <unistd.h>
 #include "vptr.h"
-#include "mymessagebox.h"
 #include "exceptions.h"
-#include "exportsql.h"
 #include "odbcutil.h"
 #include <QHostInfo>
-#include "psql.h"
 #include "city.h"
 #include "dsn.h"
 #include "securevault.h"
+#include "psql.h"
+#include "mymessagebox.h"
 
 EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
   QDialog(parent),
@@ -1558,6 +1558,12 @@ void EditConnectionsDlg::btnSaveClicked()
    config->currCity->connections = currCity->connections;
 
   config->saveSettings();
+  if(ui->chkSavePwd->isChecked())
+  {
+      QString key = connection->createSecureVaultKey();
+      SecureVault* vault = new SecureVault(this);
+      vault->savePassword(key,connection->pwd());
+  }
   ui->btnNew->setEnabled(true);
 
   this->accept();
@@ -3156,14 +3162,15 @@ void EditConnectionsDlg::logonInBackground(QString database,QString driver, QStr
     ui->lblHelp->setText("Querying server for available databases...");
     //ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
     _lookupError.clear();
-    QSqlDatabase db;
 
     // 3. Fire off the network query on a parallel worker thread context
     //QString database = dsn->database;
 
     //QString server = dsn->server;
-    QFuture<QStringList> future = QtConcurrent::run([db, database, driver, server, dsnName, dbType, connectType,uid, pwd,this]() {
-        QStringList databaseNames;
+
+    QFuture<LRSLT> future = QtConcurrent::run([database, driver, server, dsnName, dbType, connectType,uid, pwd,this]() {
+        //QStringList databaseNames;
+        LRSLT lrslt;
         _dbType = dbType;
         // Setup thread-unique name tracking to prevent cross-contamination
         threadConn = QString("bg_fetch_db_%1").arg(quintptr(QThread::currentThreadId()));
@@ -3236,6 +3243,7 @@ void EditConnectionsDlg::logonInBackground(QString database,QString driver, QStr
         }
         if (bOpen)
         {
+            lrslt.tables = db.tables();
             QSqlQuery query(db);
             QString sqlString;
             // Pick query scheme matching active server environment
@@ -3247,14 +3255,14 @@ void EditConnectionsDlg::logonInBackground(QString database,QString driver, QStr
                 sqlString = "SELECT name FROM sys.databases WHERE database_id > 4;";
             } else if (dbType == "MimerSql")
             {
-                databaseNames.append(database); //mimer has no way to select name so fake it!
+                lrslt.databaseNames.append(database); //mimer has no way to select name so fake it!
             }
 
             if (!sqlString.isEmpty() && query.exec(sqlString)) {
                 while (query.next()) {
                     QString name = query.value(0).toString();
                     if (name != "postgres" && name != "information_schema" && name != "mysql") {
-                        databaseNames.append(name);
+                        lrslt.databaseNames.append(name);
                     }
                 }
             }
@@ -3267,29 +3275,29 @@ void EditConnectionsDlg::logonInBackground(QString database,QString driver, QStr
             displayDbInfo(db);
         }
         // Clean up database link definitions prior to worker closure
-        QSqlDatabase::removeDatabase(threadConn);
-        return databaseNames;
+        //QSqlDatabase::removeDatabase(threadConn);
+        return lrslt;
     });
 
     // 4. Watch for completion of background thread task
-    QFutureWatcher<QStringList>* watcher = new QFutureWatcher<QStringList>(this);
+    QFutureWatcher<LRSLT>* watcher = new QFutureWatcher<LRSLT>(this);
 
-    connect(watcher, &QFutureWatcher<QStringList>::finished, this, [this,db, server, uid, watcher, database, allowOk]() {
+    connect(watcher, &QFutureWatcher<QStringList>::finished, this, [this, server, uid, watcher, database, allowOk]() {
         setCursor(Qt::ArrowCursor);
-        QStringList results = watcher->result();
-        _available = QStringList(results);
-        //QSqlDatabase db = QSqlDatabase::database(threadConn,true);
+        LRSLT results = watcher->result();
+        _available = QStringList(results.databaseNames);
+        QSqlDatabase db = QSqlDatabase::database(threadConn,true);
         qDebug() << "watcher entered";
         displayDbInfo(db);
 
-        if (!results.isEmpty()) {
+        if (!results.databaseNames.isEmpty()) {
             ui->lblHelp->setStyleSheet("color: green;");
-            ui->lblHelp->setText(tr("Found %1 databases. Type to filter options.").arg(results.count()));
+            ui->lblHelp->setText(tr("Found %1 databases. Type to filter options.").arg(results.databaseNames.count()));
             // ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
 
             // Clean old completers and safely update UI components on the main thread
             QCompleter* oldCompleter = ui->txtUseDb->completer();
-            QCompleter* newCompleter = new QCompleter(results, this);
+            QCompleter* newCompleter = new QCompleter(results.databaseNames, this);
             newCompleter->setCaseSensitivity(Qt::CaseInsensitive);
             ui->txtUseDb->setText(database);
 
@@ -3298,10 +3306,10 @@ void EditConnectionsDlg::logonInBackground(QString database,QString driver, QStr
 
             // Automatically select the first option or drop it down for accessibility
             if(ui->txtUseDb->text().isEmpty())
-                ui->txtUseDb->setText(results.first());
+                ui->txtUseDb->setText(results.databaseNames.first());
             else
             {
-                if(!results.contains(ui->txtUseDb->text(),Qt::CaseInsensitive))
+                if(!results.databaseNames.contains(ui->txtUseDb->text(),Qt::CaseInsensitive))
                 {
                     ui->lblHelp->setStyleSheet("color:#ff8000");
                     ui->lblHelp->setText(tr("Database %1 not available").arg(ui->txtUseDb->text()));
@@ -3330,7 +3338,7 @@ void EditConnectionsDlg::logonInBackground(QString database,QString driver, QStr
                 ui->lblHelp->setText(tr("The database is open on <B>%1</B> for user <B><I>%2</I></B>"
                                         " using database <B><I>%3</I></B>"
                                         "\nThere are %4 tables.")
-                                         .arg(server, uid, database).arg(db.tables().count()));
+                                         .arg(server, uid, database).arg(results.tables.count()));
                 // ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
                 ui->btnSave->setEnabled(true);
             }

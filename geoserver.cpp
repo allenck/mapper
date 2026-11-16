@@ -1,6 +1,7 @@
 #include "geoserver.h"
 #include "filedownloader.h"
 #include "qeventloop.h"
+#include "latlng.h"
 
 Geoserver* Geoserver::_instance = nullptr;
 Geoserver* Geoserver::instance()

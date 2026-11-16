@@ -3,7 +3,6 @@
 
 #include <QDialog>
 #include "configuration.h"
-#include "data.h"
 
 namespace Ui {
 class createSqliteDatabaseDialog;

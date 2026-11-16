@@ -8,7 +8,6 @@
 #include <QSortFilterProxyModel>
 #include <QAbstractTableModel>
 #include <QList>
-#include "data.h"
 
 class otherRouteViewSortProxyModel : public QSortFilterProxyModel
 {

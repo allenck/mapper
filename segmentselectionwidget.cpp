@@ -2,23 +2,22 @@
 #include "qcompleter.h"
 #include "segmentdescription.h"
 #include "ui_segmentselectionwidget.h"
-#include "webviewbridge.h"
-#include "otherrouteview.h"
 #include "clipboard.h"
-#include "streetstablemodel.h"
+#include <qlineedit.h>
+#include <qsortfilterproxymodel.h>
+#include "exceptions.h"
 
 SegmentSelectionWidget::SegmentSelectionWidget(QWidget *parent) :
   QWidget(parent),
   ui(new Ui::SegmentSelectionWidget)
 {
  ui->setupUi(this);
-
  cbSegmentsGrp = new QButtonGroup(this);
  cbSegmentsGrp->addButton(ui->rbSingle);
  cbSegmentsGrp->addButton(ui->rbDouble);
  cbSegmentsGrp->addButton(ui->rbBoth);
  ui->rbBoth->setChecked(true);
- sql = SQL::instance();
+ //sql = SQL::instance();
  QCompleter* completer = ui->cbStreets->completer();
 
  connect(ui->cbSegments, &QComboBox::currentIndexChanged, this,[=](int index){
@@ -38,27 +37,26 @@ SegmentSelectionWidget::SegmentSelectionWidget(QWidget *parent) :
  });
 }
 
-void SegmentSelectionWidget::initialize()
+void SegmentSelectionWidget::initialize(QMap<int, SegmentInfo> cbSegmentInfoMap)
 {
+    this->cbSegmentInfoMap = cbSegmentInfoMap;
+    _locations.clear();
+    _locationMap.clear();
+    foreach (SegmentInfo si, cbSegmentInfoMap.values()) {
+        if(!_locations.contains(si.location()))
+            _locations.append(si.location());
+        _locationMap.insert(si.location(), si);
+        _segmentsByStreet.insert(si.getStreetName(),si);
+    }
     if(initialized)
         return;
  refreshLocations();
 
  refreshSegmentCB();
 
- connect(SQL::instance(), &SQL::segmentChanged, [=](const SegmentInfo si){
-     if(ui->cbSegments->findData(si.segmentId()) >= 0)
-  {
-         initialized = false;
-   //SegmentInfo si = sql->getSegmentInfo(segmentId);
-         int  ix = ui->cbSegments->findData(si.segmentId());
-   if(ui->cbSegments->itemText(ix) != si.toString())
-    ui->cbSegments->setItemText(ix, si.toString());
-  }
- });
 
  //connect(WebViewBridge::instance(), SIGNAL(segmentSelected(int,int)), this, SLOT(segmentSelected(int,int)));
- connect(WebViewBridge::instance(), SIGNAL(segmentSelectedX(int,int,QList<LatLng>)), this, SLOT(segmentSelected(int,int,QList<LatLng>)));
+ //connect(WebViewBridge::instance(), SIGNAL(segmentSelected(int,int)), this, SLOT(segmentSelected(int,int)));
  connect(ui->cbSegments, SIGNAL(editTextChanged(QString)), this, SLOT(cbSegmentsTextChanged(QString)));
  connect(ui->cbSegments->lineEdit(), SIGNAL(editingFinished()), this, SLOT(cbSegments_editingFinished()));
  connect(ui->cbStreets->lineEdit(), &QLineEdit::editingFinished, this, [=]{
@@ -84,6 +82,10 @@ void SegmentSelectionWidget::initialize()
   if(!bCbStreetsRefreshing)
    refreshStreetsCb();
  });
+
+ // connect(MainWindow::instance()->routeView, &RouteView::selectSegment,this,[=](int segmentId){
+ //     setCurrentSegment(segmentId);
+ // });
 
  QSortFilterProxyModel* proxy = new QSortFilterProxyModel(ui->cbStreets);
  proxy->setSourceModel(ui->cbStreets->model());
@@ -118,7 +120,7 @@ SegmentSelectionWidget::~SegmentSelectionWidget()
  delete ui;
 }
 
-bool compareSegmentDataByName(const SegmentData & s1, const SegmentData & s2)
+bool compareSegmentDataByName(const SegmentInfo & s1, const SegmentInfo & s2)
 {
  return s1.description() < s2.description();
 }
@@ -126,7 +128,8 @@ bool compareSegmentDataByName(const SegmentData & s1, const SegmentData & s2)
 void SegmentSelectionWidget::refreshLocations()
 {
     try {
-         _locations = sql->getLocations();
+         //_locations = sql->getLocations();
+        _locations = _locationMap.keys();
     }
     catch(SQLException ex)
     {
@@ -146,7 +149,16 @@ void SegmentSelectionWidget::refreshSegmentCB()
  QString selectedStreet =ui->cbStreets->currentText();
  QList<SegmentInfo> segList;
  try{
-  segList = sql->getSegmentsForStreet(selectedStreet,ui->cbLocation->currentText() );
+  //segList = sql->getSegmentsForStreet(selectedStreet,ui->cbLocation->currentText() );
+     segList.clear();
+  QMapIterator<QString, SegmentInfo> iter(_segmentsByStreet);
+     while(iter.hasNext())
+  {
+      iter.next();
+         if(iter.key() == selectedStreet && iter.value()._location == ui->cbLocation->currentText())
+          segList.append(iter.value());
+     }
+
  }
  catch(SQLException ex)
  {}
@@ -157,13 +169,13 @@ void SegmentSelectionWidget::refreshSegmentCB()
   refreshStreetsCb();
  ui->cbSegments->clear();
  mapDescriptions.clear();
- cbSegmentInfoMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
+ //cbSegmentInfoMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
  if(!segList.isEmpty())
  {
      setCursor(Qt::WaitCursor);
      for(int i=0; i<segList.count(); i++)
      {
-         SegmentData si=  segList.at(i);
+         SegmentInfo si=  segList.at(i);
          if(!si.toString().isEmpty())
          {
             ui->cbSegments->addItem(si.toString(), si.segmentId());
@@ -174,7 +186,7 @@ void SegmentSelectionWidget::refreshSegmentCB()
      setCursor(Qt::ArrowCursor);
      return;
  }
- foreach(SegmentData si, cbSegmentInfoMap.values())
+ foreach(SegmentInfo si, cbSegmentInfoMap.values())
  {
   description = si.description();
   if(!si.location().isEmpty())
@@ -303,9 +315,14 @@ void SegmentSelectionWidget::refreshSegmentCB()
     }
    }
    qDebug() << "bypass " << si.toString();
+   if(!mapDescriptions.contains(si.toString()))
+   {
+       mapDescriptions.insert(si.toString(), si.segmentId());
+       continue;
+   }
   }
-  if(si.needsUpdate())
-   sql->updateSegment(new SegmentData(si));
+  // if(si.needsUpdate())
+  //  sql->updateSegment(new SegmentData(si));
  }
  if(m_SegmentId >0)
   ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(m_SegmentId));
@@ -332,8 +349,9 @@ void SegmentSelectionWidget::refreshStreetsCb()
     QString selectedStreet = ui->cbStreets->currentText();
     ui->cbStreets->clear();
     QStringList streets;
-#if 1
-    streets = StreetsTableModel::instance()->getStreetnamesList(ui->cbLocation->currentText());
+
+    //streets = StreetsTableModel::instance()->getStreetnamesList(ui->cbLocation->currentText());
+    streets = _segmentsByStreet.keys();
 //#else
     QStringList tokens;
     QStringList tokens2;
@@ -341,18 +359,23 @@ void SegmentSelectionWidget::refreshStreetsCb()
     //selectedStreet = ui->cbStreets->currentText();
 
     //streets.clear();
-    cbSegmentInfoMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
-    foreach(SegmentData sd, cbSegmentInfoMap.values())
+    //cbSegmentInfoMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
+    foreach(SegmentInfo si, cbSegmentInfoMap.values())
     {
-      if(!streets.contains(sd.streetName()))
+      if(streets.contains(si.streetName()))
       {
-        if(!sd.streetName().isEmpty())
-            streets.append(sd.streetName());
+        if(!si.streetName().isEmpty())
+            streets.append(si.streetName());
       }
     } // end for
     streets.sort();
-#endif
-    ui->cbStreets->addItems(streets);
+    //ui->cbStreets->addItems(streets);
+    foreach(QString s, streets)
+    {
+        QString data = s;
+        data = data.remove(' ');
+        ui->cbStreets->addItem(s,data.toLower());
+    }
     ui->cbStreets->setCompleter(new QCompleter(streets,this));
     ui->cbStreets->completer()->setCaseSensitivity(Qt::CaseInsensitive);
     ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(selectedStreet));
@@ -365,7 +388,7 @@ void SegmentSelectionWidget::cbStreets_editingFinished()
  //ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(txt));
  if(bCbStreets_text_changed)
  {
-  ui->cbStreets->setCurrentIndex(ui->cbStreets->findText(txt));
+  ui->cbStreets->setCurrentIndex(ui->cbStreets->findData(txt.remove(' ').toLower(),Qt::MatchFlag::MatchStartsWith));
  }
  bCbStreets_text_changed = false;
 }
@@ -377,10 +400,11 @@ void SegmentSelectionWidget::cbStreets_currentIndexChanged(int)
  refreshSegmentCB();
 }
 
-void SegmentSelectionWidget::segmentSelected(int pt, int segmentId, QList<LatLng> points)
+void SegmentSelectionWidget::segmentSelected(int pt, int segmentId)
 {
  m_SegmentId = segmentId;
- SegmentInfo si = sql->getSegmentInfo(segmentId);
+ //SegmentInfo si = sql->getSegmentInfo(segmentId);
+ SegmentInfo si = cbSegmentInfoMap.value(segmentId);
  ui->cbLocation->setCurrentText(si.location());
  ui->cbStreets->setCurrentText(si.streetName());
  int ix = ui->cbSegments->findData(segmentId);
@@ -413,8 +437,8 @@ void SegmentSelectionWidget::cbSegments_currentIndexChanged(int index)
  if(initialized)
  {
   if(segmentId != m_SegmentId){
-   currSd = cbSegmentInfoMap.value(segmentId);
-   emit segmentSelected(SegmentInfo(currSd));
+   currSi = cbSegmentInfoMap.value(segmentId);
+   emit segmentSelected(SegmentInfo(currSi));
   }
   m_SegmentId = segmentId;
  }
@@ -425,12 +449,24 @@ QComboBox* SegmentSelectionWidget::cbSegments()
  return ui->cbSegments;
 }
 
-SegmentData SegmentSelectionWidget::segmentSelected()
+QComboBox* SegmentSelectionWidget::cbStreets()
+{
+    return ui->cbStreets;
+}
+
+QComboBox* SegmentSelectionWidget::cbLocation()
+{
+    return ui->cbLocation;
+}
+
+SegmentInfo SegmentSelectionWidget::segmentSelected()
 {
  int m_SegmentId = ui->cbSegments->currentData().toInt();
- OtherRouteView::instance()->showRoutesUsingSegment(m_SegmentId);
- currSd = SegmentData(sql->getSegmentInfo(m_SegmentId));
- return currSd;
+ //OtherRouteView::instance()->showRoutesUsingSegment(m_SegmentId);
+ //currSd = SegmentData(sql->getSegmentInfo(m_SegmentId));
+ currSi = cbSegmentInfoMap.value(m_SegmentId);
+ emit segmentSelected(currSi);
+ return currSi;
 }
 
 void SegmentSelectionWidget::refresh()
@@ -440,9 +476,15 @@ void SegmentSelectionWidget::refresh()
 
 void SegmentSelectionWidget::setCurrentSegment(int segmentId)
 {
- currSd = sql->getSegmentInfo(segmentId);
- ui->cbLocation->findText(currSd.location());
- ui->cbStreets->findText(currSd.description());
+ //currSi = sql->getSegmentInfo(segmentId);
+    currSi = cbSegmentInfoMap.value(segmentId);
+    int ix = ui->cbStreets->findText(currSi.streetName().mid(5),Qt::MatchStartsWith);
+ if(ix >=0)
+ ui->cbStreets->setCurrentIndex(ix);
+ cbStreets_editingFinished();
+ refreshSegmentCB();
+ ui->cbLocation->findText(currSi.location());
+ ui->cbStreets->findText(currSi.description());
  ui->cbSegments->setCurrentIndex(ui->cbSegments->findData(segmentId));
 }
 
@@ -472,13 +514,41 @@ void SegmentSelectionWidget::cbSegments_editingFinished()
   if(ui->cbSegments->currentIndex() < 0)
   {
    // is it valid?
-   SegmentInfo sd = sql->getSegmentInfo(segmentId);
-   if(sd.segmentId() >= 0)
+   //SegmentInfo sd = sql->getSegmentInfo(segmentId);
+   SegmentInfo si = cbSegmentInfoMap.value(segmentId);
+   if(si.segmentId() >= 0)
    {
-    ui->cbSegments->addItem(sd.toString(), segmentId);
+    ui->cbSegments->addItem(si.toString(), segmentId);
    }
   }
  }
  b_cbSegments_TextChanged =false;
 
+}
+
+void SegmentSelectionWidget::setCurrentStreet(QString street)
+{
+    int ix = ui->cbStreets->findText(street);
+    if(ix >= 0)
+        cbStreets_currentIndexChanged(ix);
+}
+
+//connect(SQL::instance(), &SQL::segmentChanged, [=](const SegmentInfo si){
+void SegmentSelectionWidget::segmentChanged(const SegmentInfo si, SegmentInfo::CHANGETYPE t)
+{
+    if(ui->cbSegments->findData(si.segmentId()) >= 0)
+     {
+            initialized = false;
+      //SegmentInfo si = sql->getSegmentInfo(segmentId);
+            int  ix = ui->cbSegments->findData(si.segmentId());
+      if(ui->cbSegments->itemText(ix) != si.toString())
+       ui->cbSegments->setItemText(ix, si.toString());
+     }
+}
+
+void SegmentSelectionWidget::segmentNameChange(const SegmentInfo siOld, const SegmentInfo si)
+{
+           mapDescriptions.remove(siOld.description());
+           mapDescriptions.insert(si.description(), si.segmentId());
+           ui->cbStreets->addItem(si.streetName(), si.streetName().remove(' ').toLower());
 }

@@ -738,6 +738,7 @@ void ODBCUtil::getWinDSNs()
                     if(iniKey3.compare("Server", Qt::CaseInsensitive)==0 || iniKey3.compare("Servername", Qt::CaseInsensitive)==0)
                     {
                         QString server = winReg.value(iniKey3).toString();
+#if 0
                         QString host;
                         if(server.contains("\\"))
                         {
@@ -771,6 +772,7 @@ void ODBCUtil::getWinDSNs()
                             else if (_dsn->type == "PostgreSQL")
                                     port = 5432;
                             _dsn->verifyServerAccessibility(host,port);
+#endif
                         _dsn->server = server;
                         _dsn->addPair("Server", _dsn->server);
                     }
@@ -830,6 +832,39 @@ void ODBCUtil::getWinDSNs()
                 if(validTypes.contains(_dsn->type))
                     dsnByType.insert(_dsn->type,_dsn);
             }
+            QString host;
+            if(_dsn->server.contains("\\"))
+            {
+                host = _dsn->server.mid(0, _dsn->server.indexOf("\\"));
+            }
+            else
+                if(_dsn->server.contains("/"))
+                {
+                    host = _dsn->server.mid(0, _dsn->server.indexOf("/"));
+                }
+                else
+                    host = _dsn->server;
+            // QHostInfo info = QHostInfo::fromName(host);
+            // if(info.error())
+            // {
+            //     //QMessageBox::warning(nullptr, tr("Warning"), tr("Invalid server: %1 for %2 error: %3").arg(server, iniKey3, info.errorString()));
+            //     qDebug() << tr("Invalid server: %1 for %2 error: %3").arg(server, iniKey3, info.errorString());
+            //     bError = true;
+            //     _dsn->bServerAccessible=false;
+            //     break;
+            // }
+            int port =-1;
+            if(_dsn->port >0 )
+                port = _dsn->port;
+            else if (_dsn->type == "MySql")
+                port = 3306;
+            else if (_dsn->type == "MsSql")
+                port = 1433;
+            else if (_dsn->type == "MimerSql")
+                port = 1360;
+            else if (_dsn->type == "PostgreSQL")
+                port = 5432;
+            _dsn->verifyServerAccessibility(host,port);
         } // end of hive
         bUserDsn = false;
     }

@@ -80,6 +80,7 @@
 #include "dialogupdatestreets.h"
 #include "dialogpreferences.h"
 #include <QSqlDatabase>
+#include "segmentdescription.h"
 
 QString MainWindow::pwd = "";
 QString MainWindow::pgmDir = "";
@@ -174,8 +175,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
 
  //QSqlDatabase db = QSqlDatabase::database(config->currConnection->connectionName());
  qDebug() << "database cn: " << db.connectionName() << " driver: " << db.driverName();
- ui->ssw->initialize();
-
+ ui->segmentSelectionWidget->initialize( sql->getSegmentInfoList());
  cwd = QDir::currentPath();
  qDebug() << "starting with CWD = '" << cwd;
 
@@ -341,7 +341,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   connect(ui->cbCompany, SIGNAL(currentIndexChanged(int)), this, SLOT(cbCompanySelectionChanged(int)));
   connect(ui->sbRoute, SIGNAL(actionTriggered(int)), this,  SLOT(sbRouteTriggered(int)));
   connect(ui->sbTracks, SIGNAL(valueChanged(int)), this, SLOT(sbTracks_valueChanged(int)));
-  connect(ui->ssw, SIGNAL(segmentSelected(SegmentInfo)), this, SLOT(cbSegmentsSelectedValueChanged(SegmentInfo)));
+  connect(ui->segmentSelectionWidget, SIGNAL(segmentSelected(SegmentInfo)), this, SLOT(cbSegmentsSelectedValueChanged(SegmentInfo)));
   // Context menus
   ui->cbRoute->lineEdit()->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(ui->cbRoute->lineEdit(), SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(cbRoute_customContextMenu( const QPoint& )));
@@ -392,10 +392,10 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   ui->cbRoute->addAction(describeRouteAct);
   ui->cbCompany->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(ui->cbCompany, SIGNAL(customContextMenuRequested( const QPoint& )), this, SLOT(cbCompany_customContextMenu( const QPoint& )));
-  ui->ssw->cbSegments()->setContextMenuPolicy(Qt::CustomContextMenu);
-  connect(ui->ssw->cbSegments(), SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(onCbSegmentsCustomContextMenu(QPoint)));
-  connect(ui->ssw->cbSegments()->lineEdit(), &QLineEdit::textEdited, this, [=](QString txt){
-      ui->ssw->cbSegments()->lineEdit()->setText(SegmentDescription::updateToken(txt));
+  ui->segmentSelectionWidget->cbSegments()->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(ui->segmentSelectionWidget->cbSegments(), SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(onCbSegmentsCustomContextMenu(QPoint)));
+  connect(ui->segmentSelectionWidget->cbSegments()->lineEdit(), &QLineEdit::textEdited, this, [=](QString txt){
+      ui->segmentSelectionWidget->cbSegments()->lineEdit()->setText(SegmentDescription::updateToken(txt));
 
   });
 
@@ -581,8 +581,8 @@ void MainWindow::onCommentChange(CommentInfo ci, SQL::CHANGETYPE t)
 
 void MainWindow::onCbSegmentsCustomContextMenu(const QPoint &pos)
 {
- //ui->ssw->cbSegments()->addAction(addSegmentToRouteAct);
- SegmentInfo si = sql->getSegmentInfo(ui->ssw->cbSegments()->currentData().toInt());
+ //ui->segmentSelectionWidget->cbSegments()->addAction(addSegmentToRouteAct);
+ SegmentInfo si = sql->getSegmentInfo(ui->segmentSelectionWidget->cbSegments()->currentData().toInt());
  if(si.segmentId()< 1)
      return;
  SegmentData* sd = new SegmentData(si);
@@ -596,7 +596,7 @@ void MainWindow::onCbSegmentsCustomContextMenu(const QPoint &pos)
  if(sd->startDate() > sd->endDate()) // new route?
   sd->setEndDate(sd->startDate().addDays(1));
 
- QMenu* menu = ui->ssw->cbSegments()->lineEdit()->createStandardContextMenu();
+ QMenu* menu = ui->segmentSelectionWidget->cbSegments()->lineEdit()->createStandardContextMenu();
  if(!SQL::instance()->doesRouteSegmentExist(*sd))
  {
   QMenu* actMenu = addSegmentMenu(sd);
@@ -621,7 +621,7 @@ QMenu* MainWindow::addSegmentMenu(SegmentData *sd)
  QMenu* actMenu = new QMenu(tr("Add segment to route"));
  //menu->addMenu(actMenu);
  QActionGroup* ag = new QActionGroup(this);
- //ui->ssw->cbSegments()->addAction(addSegmentToNewRouteAct);
+ //ui->segmentSelectionWidget->cbSegments()->addAction(addSegmentToNewRouteAct);
  if(sd->tracks()== 1)
  {
   QAction* act = new QAction(tr("OneWay"),this);
@@ -719,7 +719,9 @@ void MainWindow::createBridge()
     connect(m_bridge, SIGNAL(movePointSignalX(qint32,qint32,LatLng,QList<LatLng>)), this, SLOT(movePointX(qint32,qint32,LatLng,QList<LatLng>)));
     connect(m_bridge, SIGNAL(addPointSignal(int,double,double)), this, SLOT(addPoint(int,double,double)));
     connect(m_bridge, SIGNAL(insertPointSignal(int,qint32,double,double)), this, SLOT(insertPoint(int,qint32,double,double)));
-    connect(m_bridge, SIGNAL(segmentSelectedX(qint32,qint32,QList<LatLng>)), this, SLOT(segmentSelectedX(qint32,qint32,QList<LatLng>)));
+    //connect(m_bridge, SIGNAL(segmentSelectedX(qint32,qint32,QList<LatLng>)), this, SLOT(segmentSelectedX(qint32,qint32,QList<LatLng>)));
+    connect(m_bridge, SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(segmentSelected(qint32,qint32)));
+
     connect(m_bridge, SIGNAL(outputSetDebug(QString)), this, SLOT(setDebug(QString)));
     connect(m_bridge, SIGNAL(segmentStatusSignal(QString,QString)), this, SLOT(segmentStatus(QString,QString)));
     connect(m_bridge, SIGNAL(queryOverlaySignal()), this, SLOT(queryOverlay()));
@@ -730,6 +732,13 @@ void MainWindow::createBridge()
         // m_center = m_bridge->_latLng;
         // m_latitude = m_bridge->_latLng.lat();
         // m_longitude = m_bridge->_latLng.lon();
+    });
+
+    connect(sql, &SQL::segmentChanged, this, [=](const SegmentInfo si, SQL::CHANGETYPE t){
+        ui->segmentSelectionWidget->segmentChanged(si,(SegmentInfo::CHANGETYPE)t);
+    });
+    connect(sql, &SQL::segmentNameChange, this, [=](const SegmentInfo oldName, const SegmentInfo newName){
+        ui->segmentSelectionWidget->segmentNameChange(oldName, newName);
     });
 }
 
@@ -1374,7 +1383,7 @@ void MainWindow::createActions()
  selectSegmentAct->setStatusTip(tr("Select and display segment"));
  //connect(selectSegmentAct,SIGNAL(triggered()), this, SLOT(selectSegment()));
  connect(selectSegmentAct, &QAction::triggered, [=]{
-  int segmentId = ui->ssw->cbSegments()->currentData().toInt();
+  int segmentId = ui->segmentSelectionWidget->cbSegments()->currentData().toInt();
   cbSegmentsSelectedValueChanged(sql->getSegmentInfo(segmentId));
 });
  editSegmentAct = new QAction("Edit Segment", this);
@@ -1384,7 +1393,7 @@ void MainWindow::createActions()
  sswEditSegmentAct = new QAction("Edit Segment", this);
  sswEditSegmentAct->setStatusTip(tr("Edit asegment's properties"));
  connect(sswEditSegmentAct, &QAction::triggered, [=]{
-  m_segmentId = ui->ssw->cbSegments()->currentData().toInt();
+  m_segmentId = ui->segmentSelectionWidget->cbSegments()->currentData().toInt();
      Q_ASSERT(m_segmentId > 0);
   On_editSegment_triggered();
  });
@@ -1405,7 +1414,7 @@ void MainWindow::createActions()
   {
    queryDlg = new QueryDialog(config, this);
   }
-  queryDlg->executeQuery(tr("select * from Routes where lineKey = %1").arg(ui->ssw->segmentSelected().segmentId()));
+  queryDlg->executeQuery(tr("select * from Routes where lineKey = %1").arg(ui->segmentSelectionWidget->segmentSelected().segmentId()));
   queryDlg->show();
  });
 
@@ -1422,7 +1431,7 @@ void MainWindow::createActions()
  addSegmentToRouteAct->setStatusTip(tr("Add segment to current route"));
  connect(addSegmentToRouteAct, &QAction::triggered, [=]{
 //     int ix = ui->cbSegments->currentIndex();
-     SegmentData *sd = new SegmentData(ui->ssw->segmentSelected());
+     SegmentData *sd = new SegmentData(ui->segmentSelectionWidget->segmentSelected());
      sd->setRoute(_rd.route());
      sd->setAlphaRoute(_rd.alphaRoute());
      sd->setRouteName(_rd.routeName());
@@ -1442,9 +1451,10 @@ void MainWindow::createActions()
          sd->setSegmentId(si.segmentId());
          if(sql->doesRouteSegmentExist(*sd))
          {
-            QMessageBox::critical(this, tr("Conflict"), tr("The segment is already present"
-                               " or conflicts with the start or end date of an"
-                               " existing segment. The segment will not be added!"));
+             if(QMessageBox::critical(this, tr("Conflict"), tr("The segment is already present"
+                         " or conflicts with the start or end date of an"
+                         " existing segment %1. Click Ok, the segment will not be added!").arg(si.toString()),
+                                      QMessageBox::Ok | QMessageBox::Ignore) == QMessageBox::Ok)
             return;
          }
      }
@@ -1465,7 +1475,7 @@ void MainWindow::createActions()
  addSegmentViaUpdateRouteAct = new QAction(tr("Add segment via UpdateRoute"),this);
  addSegmentViaUpdateRouteAct->setStatusTip(tr("Add via UpdateRoute possibly creating new route."));
  connect(addSegmentViaUpdateRouteAct, &QAction::triggered, [=]{
-  SegmentData* sd = new SegmentData(ui->ssw->segmentSelected());
+  SegmentData* sd = new SegmentData(ui->segmentSelectionWidget->segmentSelected());
   sd->setRoute(m_routeNbr);
   sd->setAlphaRoute((_rd.alphaRoute()));
   sd->setRouteName(_rd.routeName());
@@ -1512,7 +1522,7 @@ void MainWindow::createActions()
   int ret = splitSegment->exec();
   if(ret == QDialog::Accepted)
    //refreshSegmentCB();
-   ui->ssw->refresh();
+   ui->segmentSelectionWidget->refresh();
  });
 
 
@@ -1910,9 +1920,10 @@ void MainWindow::addSegmentToRoute(SegmentData* sd)
         sd->setSegmentId(si.segmentId());
         if(sql->doesRouteSegmentExist(*sd))
         {
-            QMessageBox::critical(this, tr("Conflict"), tr("The segment is already present"
+            if(QMessageBox::critical(this, tr("Conflict"), tr("The segment is already present"
                         " or conflicts with the start or end date of an"
-                        " existing segment %1. The segment will not be added!").arg(si.toString()));
+                        " existing segment %1. Click Ok, the segment will not be added!").arg(si.toString()),
+                                     QMessageBox::Ok | QMessageBox::Ignore) == QMessageBox::Ok)
             return;
         }
     }
@@ -2274,6 +2285,7 @@ QList<QAction *> MainWindow::txtSegment_customContextMenu()
      list.append(edit);
      connect(edit, SIGNAL(triggered(bool)), this, SLOT(On_editSegment_triggered()));
      list.append(splitSegmentAct);
+     list.append(selectSegmentAct);
    return list;
 }
 #if 0
@@ -2394,7 +2406,7 @@ void MainWindow::newCity(QAction* act )
     tractionTypeView = new TractionTypeView(this);
 
     //refreshSegmentCB();
-    ui->ssw->refresh();
+    ui->segmentSelectionWidget->refresh();
     refreshCompanies();
     ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(config->currCity->companyKey));
     refreshRoutes();
@@ -2455,7 +2467,7 @@ void MainWindow::newCity(QAction* act )
     enableControls(true);
     routeView->clear();
     streetView->model()->setList(streetView->model()->getStreetInfoList());
-    ui->ssw->initialize();
+    ui->segmentSelectionWidget->initialize( sql->getSegmentInfoList());
 } // end newCity
 
 void MainWindow::newOverlay(QAction* act, bool noDelete)
@@ -2513,7 +2525,7 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
 //    int ix = ui->cbSegments->currentIndex();
     //            sI = (segmentInfo)segmentInfoList[ix];
     //sI = (SegmentInfo)cbSegmentInfoList.at(ix);
-    sd =  ui->ssw->segmentSelected();
+    sd =  ui->segmentSelectionWidget->segmentSelected();
     if (sd.segmentId() < 1)
     {
         //System.Media.SystemSounds.Beep.Play();
@@ -2622,7 +2634,7 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
         if (sql->deleteSegment(sd.segmentId()))
         {
             //refreshSegmentCB();
-         ui->ssw->refresh();
+         ui->segmentSelectionWidget->refresh();
             // Display the new segment in Google Maps
             QVariantList objArray;
             objArray<<sd.segmentId();
@@ -3490,16 +3502,12 @@ void MainWindow::cbCompanySelectionChanged(int sel)
 }
 
 /// <summary>
-/// Called by Google Maps when selecting a segment
+/// Called by Maps when selecting a segment
 /// </summary>
 /// <param name="SegmentId"></param>
 void MainWindow::segmentSelected(qint32 pt, qint32 segmentId)
 {
- //SQL sql;
- //webBrowser1.Document.InvokeScript("addModeOff");
- //m_bridge->processScript("addModeOff");
- //m_bAddMode = false;
- //addPointModeAct->setChecked(false);
+    ui->segmentSelectionWidget->segmentSelected(pt,segmentId);
     if((m_segmentId == segmentId && m_currPoint == pt) || segmentId<1)
   return;
  m_segmentId = segmentId;
@@ -4148,7 +4156,7 @@ void MainWindow::btnSplit_Clicked()    // SLOT
 
   // Refresh the Segments combobox
   //refreshSegmentCB();
-  ui->ssw->refresh();
+  ui->segmentSelectionWidget->refresh();
   refreshRoutes();
 
   // Display the new segment in Google Maps
@@ -4234,7 +4242,7 @@ void MainWindow::cbSegmentsSelectedValueChanged(SegmentInfo si)
     //Q_ASSERT(m_points.count() !=1);
 
     //routeDlg->setSegmentId( m_segmentId);
-    SegmentData* sd = new SegmentData(ui->ssw->segmentSelected());
+    SegmentData* sd = new SegmentData(ui->segmentSelectionWidget->segmentSelected());
     sd->setRoute(_rd.route());
     sd->setAlphaRoute(_rd.alphaRoute());
     sd->setRouteName(_rd.routeName());
@@ -4809,7 +4817,7 @@ void MainWindow::btnDeletePtClicked()
     }
     sd.deletePoint(m_currPoint);
     m_points = sd.pointList();
-    m_nbrPoints - m_points.count();
+    m_nbrPoints = m_points.count();
 
     QVariantList objArray;
     objArray << m_currPoint << m_segmentId;
@@ -4896,7 +4904,7 @@ void MainWindow::txtStreetName_Leave()
    //SQL mySql;
    sql->updateRecord(si);
    //refreshSegmentCB();
-   ui->ssw->refresh();
+   ui->segmentSelectionWidget->refresh();
   }
  }
  bStreetChanged = false;
@@ -5099,7 +5107,7 @@ void MainWindow::addSegment()
     if (segmentDlg->exec() == QDialog::Accepted)
     {
         //refreshSegmentCB();
-       ui->ssw->refresh();
+       ui->segmentSelectionWidget->refresh();
        m_segmentId = segmentDlg->newSegmentId();
        Q_ASSERT(m_segmentId > 0);
         m_nbrPoints = 0;
@@ -5244,7 +5252,7 @@ void MainWindow::selectSegment(int seg)
 {
     if(seg < 1)
         return;
- ui->ssw->setCurrentSegment(seg);
+ ui->segmentSelectionWidget->setCurrentSegment(seg);
  m_segmentId = seg;
  Q_ASSERT(m_segmentId > 0);
  SegmentInfo si = sql->getSegmentInfo(seg);
@@ -5254,6 +5262,13 @@ void MainWindow::selectSegment(int seg)
  ui->txtNewerName->setText(si.newerName());
  ui->txtSegment->setText(si.description());
  ui->txtStreet->setText(ui->txtSegment->streetName());
+ ui->segmentSelectionWidget->cbStreets()->setCurrentText(si.streetName());
+ int ix = ui->segmentSelectionWidget->cbStreets()->findText(si.streetName());
+ if(ix)
+ {
+     ui->segmentSelectionWidget->cbStreets_currentIndexChanged(ix);
+     ui->segmentSelectionWidget->cbSegments()->setCurrentText(si.description());
+ }
 }
 
 void MainWindow::segmentChanged(qint32 changedSegment, qint32 newSegment)
@@ -5380,14 +5395,14 @@ void MainWindow::addRoute()
 {
     if(routeDlg == 0)
         routeDlg = new RouteDlg(this);
-    if(ui->ssw->cbSegments()->currentIndex()>0)
+    if(ui->segmentSelectionWidget->cbSegments()->currentIndex()>0)
     {
      QMessageBox::warning(this, tr("No Segment"), tr("In order to create a newRoute, an existing segment must be selected."));
      return;
     }
     else
     {
-     SegmentData* sd = new SegmentData(ui->ssw->segmentSelected());
+     SegmentData* sd = new SegmentData(ui->segmentSelectionWidget->segmentSelected());
      routeDlg->setSegmentData(sd);
     }
     routeDlg->setupToAdd(); // want to create a new route
@@ -5878,7 +5893,7 @@ void MainWindow::On_editSegment_triggered()
  if(ret == QDialog::Accepted)
  {
   //refreshSegmentCB();
-  ui->ssw->refresh();
+  ui->segmentSelectionWidget->refresh();
   refreshRoutes();
  }
 }
@@ -5888,7 +5903,7 @@ void MainWindow::onNewSegment_triggered()
     EditSegmentDialog* dlg = new EditSegmentDialog(this);
     int ret = dlg->exec();
     if(ret == QDialog::Accepted)
-      ui->ssw->refresh();
+      ui->segmentSelectionWidget->refresh();
 }
 
 //#ifdef USE_WEBENGINE
@@ -6329,7 +6344,7 @@ latLngChanged::latLngChanged(QObject* parent) : QWebEnginePage(parent){
 void MainWindow::enableControls( bool b)
 {
     ui->tabWidget->setEnabled(b);
-    ui->ssw->setEnabled(b);
+    ui->segmentSelectionWidget->setEnabled(b);
     ui->cbRoute->setEnabled(b);
     ui->cbCompany->setEnabled(b);
     ui->btnClear->setEnabled(b);

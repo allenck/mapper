@@ -4,7 +4,6 @@
 #include <QObject>
 #include "configuration.h"
 #include <QtXml>
-#include "data.h"
 #include "filedownloader.h"
 #include "qlist.h"
 #include <QUrl>

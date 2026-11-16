@@ -3,9 +3,9 @@
 
 #include <QObject>
 #include "latlng.h"
-#include "data.h"
 #include "exceptions.h"
 #include <QUuid>
+#include "bounds.h"
 
 class Overlay;
 class Connection;

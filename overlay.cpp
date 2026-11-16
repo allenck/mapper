@@ -133,6 +133,7 @@ bool Overlay::importWmsCapabilities(QString host, QList<Overlay*>* list)
     m_tilemapresource->setOverlay(this);
     connect(m_tilemapresource, SIGNAL(downloaded(QString)), this, SLOT(processWmsCapabilities()));
     loop.exec();
+    return true;
 }
 
 QList<Overlay*>* Overlay::processWmsCapabilities()

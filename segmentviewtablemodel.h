@@ -3,7 +3,7 @@
 
 #include <QAbstractTableModel>
 #include <QList>
-#include "data.h"
+#include "segmentinfo.h"
 
 class SegmentDescription;
 class SegmentViewTableModel : public QAbstractTableModel
