@@ -1,22 +1,28 @@
 #include "routenamewidget.h"
 #include "ui_routenamewidget.h"
-#include "mainwindow.h"
 #include "clipboard.h"
-
+#ifndef ROUTENAMEWIDGETPLUGIN
+#include "mainwindow.h"
+#include "sql.h"
+#endif
 RouteNameWidget::RouteNameWidget(QWidget *parent) :
+
   QWidget(parent),
   ui(new Ui::RouteNameWidget)
 {
  ui->setupUi(this);
+#ifndef ROUTENAMEWIDGETPLUGIN
  sql = SQL::instance();
  config = Configuration::instance();
+#endif
  Clipboard::instance()->setContextMenu( ui->cbRouteName->lineEdit());
  connect(ui->txtRouteNbr, SIGNAL(editingFinished()), this, SLOT(txtRouteNbr_Leave()));
+#ifndef ROUTENAMEWIDGETPLUGIN
  connect(ui->txtRouteNbr, &QLineEdit::textEdited, config,[=](QString text){
      if(!text.isEmpty())
          bNbrEdited = true;
  });
-
+#endif
  connect(ui->cbRouteName->lineEdit(), SIGNAL(editingFinished()),this, SLOT(txtRouteName_Leave()));
  connect(ui->cbRouteName, SIGNAL(currentTextChanged(QString)), this, SLOT(txtRouteName_Leave()));
  connect(ui->cbRouteName, SIGNAL(currentIndexChanged(int)), this, SLOT(routeChange(int)));
@@ -107,6 +113,8 @@ void RouteNameWidget::txtRouteNbr_Leave()
         return;
     bool isNumeric = false;
     QString ar = ui->txtRouteNbr->text();
+#ifndef ROUTENAMEWIDGETPLUGIN
+
     if(ui->txtRouteNbr->text().contains(","))
     {
      int nxt = sql->findNextRouteInRange(ui->txtRouteNbr->text());
@@ -154,6 +162,7 @@ void RouteNameWidget::txtRouteNbr_Leave()
                 return;
         }
     }
+#endif
 //    else
 //     _routeNbr = newRoute;
     emit routeNumberChange(_routeNbr);
@@ -178,8 +187,10 @@ void RouteNameWidget::txtRouteNbr_Leave()
     }
 //    else
 //     throw IllegalArgumentException("configure error");
-
-    QList<QString> _routeNamesList = sql->getRouteNames(_routeNbr);
+    QList<QString> _routeNamesList;
+#ifndef ROUTENAMEWIDGETPLUGIN
+     _routeNamesList = sql->getRouteNames(_routeNbr);
+#endif
     ui->cbRouteName->clear();
     ui->cbRouteName->addItem("");
     ui->cbRouteName->lineEdit()->setPlaceholderText(tr("new route name"));
@@ -231,10 +242,13 @@ void RouteNameWidget::txtRouteName_Leave()
     if(lblHelpText == nullptr)
         return;
     lblHelpText->clear();
+#ifndef ROUTENAMEWIDGETPLUGIN
+
     if(!sql->checkRouteName(ui->cbRouteName->currentText(), rd->startDate(), rd->endDate()).isEmpty())
     {
         lblHelpText->setText(tr("possible duplicate routes exist!"));
     }
+#endif
 //    if(ui->cbRouteName->currentIndex() == 0)
 //        ui->btnAdd->setText(tr("Add"));
     if (ui->cbRouteName->currentText().length() == 0)
@@ -257,6 +271,8 @@ void RouteNameWidget::txtRouteName_Leave()
 
     if(sd == nullptr)
      return;
+#ifndef ROUTENAMEWIDGETPLUGIN
+
     QList<RouteData> rdList = sql->getRouteDataForRouteName(sd->route(), ui->cbRouteName->currentText());
     if (rdList.count()>0)
     {
@@ -313,14 +329,16 @@ void RouteNameWidget::txtRouteName_Leave()
 //        _rd.route = _routeNbr;
 //        _rd.name = ui->cbRouteName->currentText();
     }
-
+#endif
     //checkUpdate(__FUNCTION__);
     emit routeNameChanged(ui->cbRouteName->currentText());
 }
 
 void RouteNameWidget::companyChange(int index)
 {
+#ifndef ROUTENAMEWIDGETPLUGIN
   companyKey = MainWindow::instance()->ui->cbCompany->currentData().toInt();
+#endif
 }
 
 void RouteNameWidget::clear()

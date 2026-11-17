@@ -40,19 +40,23 @@ SegmentSelectionWidget::SegmentSelectionWidget(QWidget *parent) :
 void SegmentSelectionWidget::initialize(QMap<int, SegmentInfo> cbSegmentInfoMap)
 {
     this->cbSegmentInfoMap = cbSegmentInfoMap;
-    _locations.clear();
+    //_locations.clear();
     _locationMap.clear();
     foreach (SegmentInfo si, cbSegmentInfoMap.values()) {
         if(!_locations.contains(si.location()))
-            _locations.append(si.location());
         _locationMap.insert(si.location(), si);
         _segmentsByStreet.insert(si.getStreetName(),si);
+        if(!si.newerName().isEmpty())
+            _segmentsByStreet.insert(si.newerName(),si);
+
     }
     if(initialized)
         return;
- refreshLocations();
+    refreshLocations();
 
- refreshSegmentCB();
+    refreshStreetsCb();
+
+    refreshSegmentCB();
 
 
  //connect(WebViewBridge::instance(), SIGNAL(segmentSelected(int,int)), this, SLOT(segmentSelected(int,int)));
@@ -87,12 +91,12 @@ void SegmentSelectionWidget::initialize(QMap<int, SegmentInfo> cbSegmentInfoMap)
  //     setCurrentSegment(segmentId);
  // });
 
- QSortFilterProxyModel* proxy = new QSortFilterProxyModel(ui->cbStreets);
- proxy->setSourceModel(ui->cbStreets->model());
- // combo's current model must be reparented,
- // otherwise QComboBox::setModel() will delete it
- ui->cbStreets->model()->setParent(proxy);
- ui->cbStreets->setModel(proxy);
+ // QSortFilterProxyModel* proxy = new QSortFilterProxyModel(ui->cbStreets);
+ // proxy->setSourceModel(ui->cbStreets->model());
+ // // combo's current model must be reparented,
+ // // otherwise QComboBox::setModel() will delete it
+ // ui->cbStreets->model()->setParent(proxy);
+ // ui->cbStreets->setModel(proxy);
 
  Clipboard::instance()->setContextMenu(ui->cbStreets);
 
@@ -140,6 +144,7 @@ void SegmentSelectionWidget::refreshLocations()
  ui->cbLocation->addItems(_locations);
 }
 
+#if 0
 void SegmentSelectionWidget::refreshSegmentCB()
 {
  QStringList streets;
@@ -151,7 +156,7 @@ void SegmentSelectionWidget::refreshSegmentCB()
  try{
   //segList = sql->getSegmentsForStreet(selectedStreet,ui->cbLocation->currentText() );
      segList.clear();
-  QMapIterator<QString, SegmentInfo> iter(_segmentsByStreet);
+  QMultiMapIterator<QString, SegmentInfo> iter(_segmentsByStreet);
      while(iter.hasNext())
   {
       iter.next();
@@ -342,6 +347,21 @@ void SegmentSelectionWidget::refreshSegmentCB()
 // ui->cbLocation->addItems(_locations);
  bRefreshingSegments = false;
 }
+#else
+void SegmentSelectionWidget::refreshSegmentCB()
+{
+    bRefreshingSegments = true; QString selectedStreet =ui->cbStreets->currentText();
+
+    ui->cbSegments->clear();
+    foreach (SegmentInfo si, _segmentsByStreet.values(selectedStreet)) {
+        if(ui->rbBoth->isChecked() || (ui->rbSingle->isChecked()&& si.tracks()==1) ||
+            ui->rbDouble->isChecked() && si.tracks()==2)
+        ui->cbSegments->addItem(si.toString(), si.segmentId());
+    }
+    bRefreshingSegments = false;
+
+}
+#endif
 
 void SegmentSelectionWidget::refreshStreetsCb()
 {
@@ -353,22 +373,25 @@ void SegmentSelectionWidget::refreshStreetsCb()
     //streets = StreetsTableModel::instance()->getStreetnamesList(ui->cbLocation->currentText());
     streets = _segmentsByStreet.keys();
 //#else
-    QStringList tokens;
-    QStringList tokens2;
-    QString description;
-    //selectedStreet = ui->cbStreets->currentText();
+    //QStringList tokens;
+   // QStringList tokens2;
+    //QString description;
+    selectedStreet = ui->cbStreets->currentText();
 
-    //streets.clear();
+    streets.clear();
     //cbSegmentInfoMap = sql->getSegmentInfoList(ui->cbLocation->currentText());
-    foreach(SegmentInfo si, cbSegmentInfoMap.values())
+    QMultiMapIterator<QString, SegmentInfo> iter(_segmentsByStreet);
+    //foreach(QString street, _segmentsByStreet.keys())
+    while(iter.hasNext())
     {
-      if(streets.contains(si.streetName()))
+        iter.next();
+        if(!streets.contains(iter.key()) &&
+            (ui->cbLocation->currentText().isEmpty()||iter.value()._location == ui->cbLocation->currentText()))
       {
-        if(!si.streetName().isEmpty())
-            streets.append(si.streetName());
+            streets.append(iter.key());
       }
     } // end for
-    streets.sort();
+    //streets.sort();
     //ui->cbStreets->addItems(streets);
     foreach(QString s, streets)
     {

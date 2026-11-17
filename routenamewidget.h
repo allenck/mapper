@@ -1,13 +1,17 @@
 #ifndef ROUTENAMEWIDGET_H
 #define ROUTENAMEWIDGET_H
 
+#include "routedata.h"
+#include "segmentdata.h"
 #include <QWidget>
-#include "sql.h"
+//#include "sql.h"
 
 namespace Ui {
  class RouteNameWidget;
 }
 
+ class Configuration;
+ class SQL;
 class RouteNameWidget : public QWidget
 {
   Q_OBJECT
@@ -55,7 +59,7 @@ class RouteNameWidget : public QWidget
   int _routeNbr;
   SegmentData* sd = nullptr;
   RouteData* rd = nullptr;
-  Configuration* config;
+  Configuration* config = nullptr;
   QLabel* lblHelpText = nullptr;
   QString strNoRoute = tr("New Route Name");
   RouteData _rd;

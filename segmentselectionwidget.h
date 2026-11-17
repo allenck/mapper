@@ -50,9 +50,9 @@ class SegmentSelectionWidget : public QWidget
   bool bRefreshingSegments = false;
   bool bCbStreetsRefreshing = false;
   //QList<SegmentInfo> cbSegmentInfoList;  // list of segmentInfo items in cbSegments
-  QMap<int, SegmentInfo> cbSegmentInfoMap;
+  QMap<int, SegmentInfo> cbSegmentInfoMap;  // segmentid key
   QMultiMap<QString, SegmentInfo> _locationMap;
-  QMap<QString,SegmentInfo> _segmentsByStreet;
+  QMultiMap<QString,SegmentInfo> _segmentsByStreet;
   qint32 m_SegmentId;
   bool bCbStreets_text_changed=false;
   QString saveStreet;

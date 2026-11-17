@@ -8,6 +8,8 @@ cmake_path(CONVERT "${RAW_QT_DIR}" TO_CMAKE_PATH_LIST CLEAN_QT_DIR)
 set(SQLITE3_SOURCE "${CLEAN_QT_DIR}/../Src/qtbase/src/3rdparty/sqlite/sqlite3.c")
 set(SQLITE3_INCLUDE "${CLEAN_QT_DIR}/../Src/qtbase/src/3rdparty/sqlite")
 
+set(CMAKE_AUTOUIC ON)
+
 # 4. Declare the target and inject the sanitized paths
 qt_add_executable(mapper WIN32 MACOSX_BUNDLE
 #    $ENV{QTDIR}/../Src/qtbase/src/3rdparty/sqlite/sqlite3.c $ENV{QTDIR}/../Src/qtbase/src/3rdparty/sqlite/sqlite3.h
