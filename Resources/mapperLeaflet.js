@@ -836,7 +836,8 @@ function connectSlots()
   return;
 }
 
-function createSegment(segmentId, routeName, segmentName, oneWay, showArrow, color, tracks, dash, routeType, trackUsage, points )
+function createSegment(segmentId, routeName, segmentName, oneWay, showArrow, color, tracks,
+                       dash, routeType, trackUsage, points )
 {
     var linePath = [];
     //var newSegment = null;
@@ -845,10 +846,10 @@ function createSegment(segmentId, routeName, segmentName, oneWay, showArrow, col
     {
         linePath.push( L.latLng(arguments[i+11], arguments[i+12]));
     }
-    const newSegment = new SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color, tracks, dash, routeType, trackUsage, linePath );
+    const newSegment = new SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color, tracks,
+                                       dash, routeType, trackUsage, linePath );
     var pts = siArray.push(newSegment);
     console.log(pts + " segmentId: "+ newSegment.segmentId + " name: " + newSegment.segmentName);
-
 } // end create segment
 
 function createSvgIcon()
@@ -2417,7 +2418,8 @@ function removeStationMarkers()
     return null;
 } // end removeStationMarkers()
 
-function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color, tracks, dash, routeType, trackUsage, path )
+function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color, tracks, dash, routeType,
+                     trackUsage, path )
 {
   this.type = "SegmentInfo";
   this.line = null;
@@ -2602,16 +2604,12 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
 
     }   // end SegmentInfo.restoreLine()
 
-
-
-
     // insert new point after pt
     insertPoint = function(pt, pos)
     {
         path.splice(pt, 0, pos);
         remove();
         createLines();
-
     }
 
     // move polyline's point at pt
@@ -2744,8 +2742,6 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
         return -1;
     }
 
-
-
     // create the polylines, arrows. etc
     this.remove = function()
     {
@@ -2780,16 +2776,16 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
         var curLine;
         if(tracks === 2)
         {
-          leftLine = L.polyline(path, {color: color, weight: 2, offset: -2}).addTo(map);
-          curLine = leftLine;
           leftLineColor = color;
           if(trackUsage !== "L" && trackUsage !== " ")
             leftLineColor = "#A9A9A9";
+          leftLine = L.polyline(path, {color: leftLineColor, weight: 2, offset: -2}).addTo(map);
+          curLine = leftLine;
           setEvents(leftLine, this);
-          rightLine = L.polyline(path, {color: color, weight: 2, offset: +2}).addTo(map);
           rightLineColor = color;
           if(trackUsage !== "R" && trackUsage !== " ")
           rightLineColor = "#A9A9A9";
+          rightLine = L.polyline(path, {color: rightLineColor, weight: 2, offset: +2}).addTo(map);
           setEvents(rightLine, this);
         }
         else
@@ -2801,14 +2797,14 @@ function SegmentInfo(segmentId, routeName, segmentName, oneWay, showArrow, color
         }
         // now add decorator and arrow
         if(showArrow)
-              arrowDecorator = L.polylineDecorator(curLine,{
-                  patterns: [
-                    {
-                        offset: '100%',
-                        repeat: 0,
-                        symbol: L.Symbol.arrowHead({pixelSize: 5, pathOptions:{color: color} })
-                    }
-                      ]
+            arrowDecorator = L.polylineDecorator(curLine,{
+              patterns: [
+                {
+                    offset: '100%',
+                    repeat: 0,
+                    symbol: L.Symbol.arrowHead({pixelSize: 5, pathOptions:{color: color} })
+                }
+                  ]
             }).addTo(map);
         if(dash ===2)
         {
