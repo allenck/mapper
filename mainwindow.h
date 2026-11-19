@@ -537,6 +537,7 @@ private:
     QString getRouteMarkerImagePath(QString route, bool isStart);
     QString getMarkerImagePath(QString tmplt, QString name, QString text, double offset);
     Overlay* currentOv = nullptr;
+    QString _dtFormat = "yyyy/MM/dd";
 
 private slots:
 //    void aCopy();

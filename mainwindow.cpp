@@ -166,6 +166,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  m_companyKey = config->currCity->companyKey;
 
  sql = SQL::instance();
+ _dtFormat = sql->dateFormat();
 
  createBridge();  // create the webViewBridge
  zoomIndicator = new QLabel();
@@ -461,7 +462,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
   {
    RouteInfo rd = routeList.at(i);
    if(rd.route() ==config->currCity->lastRoute && rd.routeName() == config->currCity->lastRouteName
-      && rd.endDate().toString("yyyy/MM/dd") == config->currCity->lastRouteEndDate)
+      && rd.endDate().toString(_dtFormat) == config->currCity->lastRouteEndDate)
    {
     bCbRouteRefreshing = true;
     bNoDisplay = true;
@@ -1333,7 +1334,7 @@ void MainWindow::createActions()
      queryDlg->show();
 
      queryDlg->processSelect("Routes", tr("select * from Routes where route=%1"
-                                          " and startdate = '%2'").arg(_ri.route()).arg(_ri.startDate().toString("yyyy/MM/dd")));
+                                          " and startdate = '%2'").arg(_ri.route()).arg(_ri.startDate().toString(_dtFormat)));
  });
 
  routeCommentsAct = new QAction(tr("Route Comment"), this);
@@ -1468,7 +1469,7 @@ void MainWindow::createActions()
 //     displaySegment(sd->segmentId(), sd->description(),
 //                       getColor(sd->tractionType()),
 //                       sd->trackUsage(), true);
-     sd->displaySegment(sd->startDate().toString("yyyy/MM/dd"),getColor(sd->tractionType()),sd->trackUsage(),true);
+     sd->displaySegment(sd->startDate().toString(_dtFormat),getColor(sd->tractionType()),sd->trackUsage(),true);
      //selectSegment(sd->segmentId());
  });
 
@@ -2461,7 +2462,7 @@ void MainWindow::newCity(QAction* act )
     {
      RouteInfo rd = routeList.at(i);
      if(rd.route() ==config->currCity->lastRoute && rd.routeName() == config->currCity->lastRouteName
-        && rd.endDate().toString("yyyy/MM/dd") == config->currCity->lastRouteEndDate)
+        && rd.endDate().toString(_dtFormat) == config->currCity->lastRouteEndDate)
      {
       ui->cbRoute->setCurrentIndex(i);
       break;
@@ -2714,28 +2715,28 @@ void MainWindow::refreshRoutes()
      switch(config->currCity->routeSortType)
      {
       case 0:
-      map.insert(rSort+rd.endDate().toString("yyyy/MM/dd"),rd);
+      map.insert(rSort+rd.endDate().toString(_dtFormat),rd);
       break;
      case 1:
-      map.insert(rSort+rd.startDate().toString("yyyy/MM/dd"),rd);
+      map.insert(rSort+rd.startDate().toString(_dtFormat),rd);
       break;
      case 2:
-      map.insert(rSort+rd.routeName()+rd.endDate().toString("yyyy/MM/dd"),rd);
+      map.insert(rSort+rd.routeName()+rd.endDate().toString(_dtFormat),rd);
       break;
      case 3:
-      map.insert(rSort+rd.routeName()+rd.startDate().toString("yyyy/MM/dd"),rd);
+      map.insert(rSort+rd.routeName()+rd.startDate().toString(_dtFormat),rd);
       break;
      case 4:
-      map.insert(rd.routeName()+rSort+rd.endDate().toString("yyyy/MM/dd"),rd);
+      map.insert(rd.routeName()+rSort+rd.endDate().toString(_dtFormat),rd);
       break;
      case 5:
-      map.insert(rd.startDate().toString("yyyy/MM/dd") + rd.routeName()+rSort,rd);
+      map.insert(rd.startDate().toString(_dtFormat) + rd.routeName()+rSort,rd);
       break;
      case 6: // base route, start date
-      map.insert(QStringLiteral("%1").arg(rd.baseRoute(),3,10,QLatin1Char('0'))+rd.startDate().toString("yyyy/MM/dd"),rd);
+      map.insert(QStringLiteral("%1").arg(rd.baseRoute(),3,10,QLatin1Char('0'))+rd.startDate().toString(_dtFormat),rd);
       break;
      case 7: // companykey, route, startdate
-      map.insert(companyKeyStr+rSort+rd.startDate().toString("yyyy/MM/dd"),rd);
+      map.insert(companyKeyStr+rSort+rd.startDate().toString(_dtFormat),rd);
      break;
      }
     }
@@ -2747,7 +2748,7 @@ void MainWindow::refreshRoutes()
          RouteInfo rd = routeList.at(i);
         CompanyData* rcd = sql->getCompany(rd.companyKey());
 
-         QString rdStartDate = rd.startDate().toString("yyyy/MM/dd");
+         QString rdStartDate = rd.startDate().toString(_dtFormat);
          ui->cbRoute->addItem(rd.toString(),QVariant::fromValue(rd));
          if(!(rd.startDate()>=rcd->startDate && rd.endDate()<= rcd->endDate))
          {
@@ -2808,7 +2809,7 @@ void MainWindow::txtRouteNbrLeave()
     for(int i=0; i<len; i++)
     {
          RouteData rd = (RouteData)routeList.at(i);
-         QString rdStartDate = rd.startDate().toString("yyyy/MM/dd");
+         QString rdStartDate = rd.startDate().toString(_dtFormat);
          ui->cbRoute->addItem(rd.toString(), QVariant::fromValue(rd));
     }
     ui->sbRoute->setRange(0, routeList.count());
@@ -2959,7 +2960,7 @@ void MainWindow::On_displayRoute(RouteInfo* rd)
   else
    length += sd->length();
 #else
-  sd->displaySegment(ui->dateEdit->date().toString("yyyy/MM/dd"),getColor(sd->tractionType()), sd->trackUsage(),true);
+  sd->displaySegment(ui->dateEdit->date().toString(_dtFormat),getColor(sd->tractionType()), sd->trackUsage(),true);
   bBoundsValid = bounds.updateBounds(sd->bounds());
 #endif
  }
@@ -3010,7 +3011,7 @@ default:
  QList<StationInfo> stationList;
  if(bDisplayStationMarkers)
  {
-  //QList<StationInfo> stationList = sql->getStations(m_alphaRoute, QDate::fromString(m_currRouteEndDate, "yyyy/MM/dd"));
+  //QList<StationInfo> stationList = sql->getStations(m_alphaRoute, QDate::fromString(m_currRouteEndDate, _dtFormat));
   // QMap<int,StationInfo> stationMap;
   // for(SegmentData* sd : segmentDataList)
   // {
@@ -3077,7 +3078,7 @@ default:
    m_bridge->processScript("fitMapBounds", objArray);
   }
 
-  QDate dt = QDate::fromString(m_currRouteStartDate, "yyyy/MM/dd");
+  QDate dt = QDate::fromString(m_currRouteStartDate, _dtFormat);
   dt = sql->getFirstCommentDate(m_routeNbr, dt, _ri.companyKey());
   m_alphaRoute = rd->alphaRoute();
 
@@ -3186,7 +3187,7 @@ void MainWindow::loadRouteComment(QDate dtIn)
     QDate dt;
     if(dtIn.isNull())
     {
-        QDate dt = QDate::fromString(m_currRouteStartDate, "yyyy/MM/dd");
+        QDate dt = QDate::fromString(m_currRouteStartDate, _dtFormat);
         dt = sql->getFirstCommentDate(m_routeNbr, dt, _ri.companyKey());
     }
     else
@@ -3271,13 +3272,13 @@ void MainWindow::displayRouteComment(CommentInfo ciIn)
   // add Route name and date
   if(ix > 0)
   {
-   //rc.ci.comments.insert(ix+18, "<b>" + rc.date.toString("yyyy/MM/dd")+ "</b><p><h1>" + rc.routeAlpha + " " + rc.name + "</h1>");
+   //rc.ci.comments.insert(ix+18, "<b>" + rc.date.toString(_dtFormat)+ "</b><p><h1>" + rc.routeAlpha + " " + rc.name + "</h1>");
    ci.comments.insert(ix+18, "<h1>" + ci.alphaRoute + " " + ci.routeName + "</h1>"
-                      +"<b>" + ci.date.toString("yyyy/MM/dd") + "</b><p>");
+                      +"<b>" + ci.date.toString(_dtFormat) + "</b><p>");
   }
   objArray.clear();
   objArray << infoLat << infoLon << ci.comments << ci.commentKey << ci.alphaRoute
-           << ci.date.toString("yyyy/MM/dd") << ci.companyKey ;
+           << ci.date.toString(_dtFormat) << ci.companyKey ;
   if(bDisplayRouteComments)
   {
       m_bridge->processScript("displayRouteComment", objArray);
@@ -3289,7 +3290,7 @@ void MainWindow::displayRouteComment(CommentInfo ciIn)
 // web page is requesting next or previous route comment
 void MainWindow::getInfoWindowComments(double lat, double lon, int route, QString date, int commentKey, int companyKey, int func)
 {
- QDate dt = QDate::fromString(date, "yyyy/MM/dd");
+ QDate dt = QDate::fromString(date, _dtFormat);
  // RouteComments rc;
  // RouteComments rcPrev;
  // RouteComments rcNext;
@@ -3376,9 +3377,9 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
   int ix = rc.ci.comments.indexOf("text-indent:0px;\">");
   if(ix > 0)
   {
-   rc.ci.comments.insert(ix+18, "<b>" + rc.date.toString("yyyy/MM/dd")+ "</b><p><h1>" + rc.routeAlpha + " " + rc.routeName + "</h1>");
+   rc.ci.comments.insert(ix+18, "<b>" + rc.date.toString(_dtFormat)+ "</b><p><h1>" + rc.routeAlpha + " " + rc.routeName + "</h1>");
   }
-  objArray << latitude << longitude << rc.ci.comments<< rc.commentKey << rc.route << rc.date.toString("yyyy/MM/dd");
+  objArray << latitude << longitude << rc.ci.comments<< rc.commentKey << rc.route << rc.date.toString(_dtFormat);
   m_bridge->processScript("displayRouteComment", objArray);
   m_bridge->processScript("showRouteComment", bDisplayRouteComments?"true": "false");
  }
@@ -3411,8 +3412,8 @@ void MainWindow::onCbRouteIndexChanged(int row)
 
  //ui->txtRouteNbr->setText(sql->getAlphaRoute(_rd.route(),cd->routePrefix));
  ui->dateEdit->setDate( _ri.endDate());
- m_currRouteStartDate = _ri.startDate().toString("yyyy/MM/dd");
- m_currRouteEndDate = _ri.endDate().toString("yyyy/MM/dd");
+ m_currRouteStartDate = _ri.startDate().toString(_dtFormat);
+ m_currRouteEndDate = _ri.endDate().toString(_dtFormat);
  ui->dateEdit->setMinimumDate(_ri.startDate());
  ui->dateEdit->setMaximumDate(_ri.endDate());
  m_routeNbr = _ri.route();
@@ -3424,7 +3425,7 @@ void MainWindow::onCbRouteIndexChanged(int row)
 
  routeView->updateRouteView();
 
- //stationView->model()->setStationList(sql->getStations(m_alphaRoute, QDate::fromString(m_currRouteEndDate, "yyyy/MM/dd")));
+ //stationView->model()->setStationList(sql->getStations(m_alphaRoute, QDate::fromString(m_currRouteEndDate, _dtFormat)));
   QList<SegmentData*> rsList = sql->getRouteSegmentsInOrder(_ri.route(), _ri.routeName(),_ri.companyKey(),ui->dateEdit->date());
  // QMap<int, StationInfo> stationMap;
  // for(SegmentData* sd : rsList)
@@ -4541,7 +4542,7 @@ void MainWindow::addPoint(int pt, double lat, double lon)
         }
     #endif
         // if(m_nbrPoints > 1)
-        //     si.displaySegment(si.startDate().toString("yyyy/MM/dd"), getColor(_rd.tractionType()), " ",false);
+        //     si.displaySegment(si.startDate().toString(_dtFormat), getColor(_rd.tractionType()), " ",false);
 
         ui->lblSegment->setText(tr("Segment %1: (points: %2)").arg(m_segmentId).arg(si.pointList().count()));
 }
@@ -5159,7 +5160,7 @@ bool MainWindow::deleteRoute()
     if(reply== QMessageBox::Yes)
     {
         sql->beginTransaction("deleteRoute");
-        if(sql->deleteRoute(rd.route(), rd.routeId(), rd.startDate().toString("yyyy/MM/dd"), rd.endDate().toString("yyyy/MM/dd")))
+        if(sql->deleteRoute(rd.route(), rd.routeId(), rd.startDate().toString(_dtFormat), rd.endDate().toString(_dtFormat)))
         {
             if(!sql->executeCommand(QString("delete from RouteName where routeId = %1").arg(rd.routeId())))
             {
@@ -5175,8 +5176,8 @@ bool MainWindow::deleteRoute()
 
 void MainWindow::on_updateRoute()
 {
-  SegmentData* sd = sql->getSegmentData(m_routeNbr, m_segmentId, _ri.startDate().toString("yyyy/MM/dd"),
-                                       _ri.endDate().toString("yyyy/MM/dd"));
+  SegmentData* sd = sql->getSegmentData(m_routeNbr, m_segmentId, _ri.startDate().toString(_dtFormat),
+                                       _ri.endDate().toString(_dtFormat));
   if(!sd)
    return;
   sd->setRouteName(_ri.routeName());
@@ -5292,7 +5293,7 @@ void MainWindow::segmentChanged(qint32 changedSegment, qint32 newSegment)
      // displaySegment(newSegment, si.description(), /*sd.oneWay(),*/
      //                m_segmentColor, " ", true);
      if(!segments.isEmpty())
-         si.displaySegment(segments.at(0).startDate().toString("yyyy/MM/dd"),m_segmentColor,segments.at(0).trackUsage(),true);
+         si.displaySegment(segments.at(0).startDate().toString(_dtFormat),m_segmentColor,segments.at(0).trackUsage(),true);
     }
 }
 
@@ -5385,7 +5386,7 @@ void MainWindow::moveRouteStartMarker(double lat, double lon, qint32 segmentId, 
     Q_UNUSED(lat)
     Q_UNUSED(lon)
     //SQL sql;
-    TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, QDate::fromString(m_currRouteEndDate,"yyyy/MM/dd"));
+    TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, QDate::fromString(m_currRouteEndDate,_dtFormat));
     sql->updateTerminals(m_routeNbr, m_routeName, ti.startDate, ti.endDate, segmentId,
                          i == 0 ? "S" : "E", ti.endSegment, ti.endWhichEnd);
 }
@@ -5394,7 +5395,7 @@ void MainWindow::moveRouteEndMarker(double lat, double lon, qint32 segmentId, qi
     Q_UNUSED(lat)
     Q_UNUSED(lon)
     //SQL sql;
-    TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, QDate::fromString(m_currRouteEndDate,"yyyy/MM/dd"));
+    TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, QDate::fromString(m_currRouteEndDate,_dtFormat));
     sql->updateTerminals(m_routeNbr, m_routeName, ti.startDate, ti.endDate, ti.startSegment,
                          ti.startWhichEnd, segmentId, i == 0 ? "S" : "E");
 }
@@ -5445,7 +5446,7 @@ void MainWindow::displayTerminalMarkersToggeled(bool bChecked)
 void MainWindow::displayRouteCommentsToggled(bool bChecked)
 {
     bDisplayRouteComments = bChecked;
-    QDate dt = QDate::fromString(m_currRouteStartDate, "yyyy/MM/dd");
+    QDate dt = QDate::fromString(m_currRouteStartDate, _dtFormat);
     dt = sql->getFirstCommentDate(m_routeNbr, dt, _ri.companyKey());
 
     loadRouteComment(dt);
@@ -5574,8 +5575,8 @@ void MainWindow::moveStationMarker(qint32 stationKey, qint32 segmentId, double l
  if(sti.segmentId != -1 && sti.segmentId != segmentId)
  {
   // add another station with the same name but different segment.
-//  int stationKey = sql->addStation(sti.stationName,LatLng(sti.latitude, sti.longitude),segmentId,sd.startDate().toString("yyyy/MM/dd"),
-//                                   sd.endDate().toString("yyyy/MM/dd"),sti.geodb_loc_id, sti.infoKey,sd.routeType(),sti.markerType,sti.point);
+//  int stationKey = sql->addStation(sti.stationName,LatLng(sti.latitude, sti.longitude),segmentId,sd.startDate().toString(_dtFormat),
+//                                   sd.endDate().toString(_dtFormat),sti.geodb_loc_id, sti.infoKey,sd.routeType(),sti.markerType,sti.point);
   CommentInfo ci = sql->getComments(sti.infoKey);
 
   QVariantList objArray;
@@ -5621,7 +5622,7 @@ void MainWindow::moveStationMarker(qint32 stationKey, qint32 segmentId, double l
 
 void MainWindow::moveRouteComment(int route, QString date, int commentKey, double latitude, double longitude, int companyKey)
 {
- // RouteComments rc = sql->getRouteComment(route, QDate::fromString(date, "yyyy/MM/dd"), commentKey);
+ // RouteComments rc = sql->getRouteComment(route, QDate::fromString(date, _dtFormat), commentKey);
  // rc.pos = LatLng(latitude, longitude);
  // sql->updateRouteComment(&rc);
     CommentInfo ci = sql->getComment(commentKey, 0);
@@ -6439,7 +6440,7 @@ void MainWindow::describeRoute()
  }
  QMessageBox box(QMessageBox::Information,tr("Route description"),
                                tr(" %1-%2 from %3 to %4").arg(rd.alphaRoute(), rd.routeName(),
-                                  rd.startDate().toString("yyyy/MM/dd"), rd.endDate().toString("yyyy/MM/dd")));
+                                  rd.startDate().toString(_dtFormat), rd.endDate().toString(_dtFormat)));
  box.setInformativeText(text);
  box.exec();
 
