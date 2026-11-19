@@ -18,15 +18,15 @@ class SplitRoute : public QDialog
 public:
     explicit SplitRoute(QWidget *parent = 0);
     ~SplitRoute();
-    bool setRouteData(RouteData rd);
-    RouteData getRoute();
-    RouteData getNewRoute();
+    bool setRouteData(RouteInfo rd);
+    RouteInfo getRoute();
+    RouteInfo getNewRoute();
 
 private:
     Ui::SplitRoute *ui;
     Configuration *config;
-    RouteData _rd, _newRoute;
-    QList<RouteData> routeDataList;
+    RouteInfo _rd, _newRoute;
+    QList<RouteInfo> routeDataList;
     QList<CompanyData*> _companyList;
     qint32 _routeNbr1, _routeNbr2;
     QString _alphaRoute1, _alphaRoute2;

@@ -1,5 +1,6 @@
 #include "modifyroutedialog.h"
 #include "ui_modifyroutedialog.h"
+#include "htmltextedit.h"
 #include "routenamewidget.h"
 
 ModifyRouteDialog::ModifyRouteDialog(QWidget *parent) :
@@ -11,6 +12,7 @@ ModifyRouteDialog::ModifyRouteDialog(QWidget *parent) :
     //sql->setConfig(config);
     sql = SQL::instance();
     ui->lblHelp->setText("");
+    ui->routeDescription->setReadOnly(false);
     refreshRoutes();
     connect(ui->btnSave, SIGNAL(clicked()), this, SLOT(btnOK_Click()));
     connect(ui->btnCancel,SIGNAL(clicked()),this, SLOT(reject()));
@@ -37,13 +39,14 @@ ModifyRouteDialog::~ModifyRouteDialog()
 /// <summary>
 /// Sets a reference to the current configuration
 /// </summary>
-//public configuration Configuration { set { config = value; } }
+//public configuration Configuration { set { config = ri; } }
 
-void ModifyRouteDialog::routeData(RouteData value)
+void ModifyRouteDialog::routeData(RouteInfo ri)
 {
 //    if (value == null)
 //        return;
-    _rd = value;
+    _rd = ri;
+    ui->routeDescription->setHtml(ri.description());
     cd = sql->getCompany(_rd.companyKey());
     if(cd==NULL)
         ui->lblHelp->setText(tr("companyKey '%1' is invalis!").arg(_rd.companyKey()));
@@ -62,7 +65,7 @@ void ModifyRouteDialog::routeData(RouteData value)
     //foreach (routeData rd in routeDataList)
     for(int i=0; i<routeDataList.count(); i++)
     {
-        RouteData rd = (RouteData)routeDataList.at(i);
+        RouteInfo rd = (RouteInfo)routeDataList.at(i);
         if (rd.route() == _rd.route() && rd.routeName() == _rd.routeName() && rd.endDate() == _rd.endDate())
         {
             //cbRoutes.SelectedItem = rd;
@@ -72,7 +75,7 @@ void ModifyRouteDialog::routeData(RouteData value)
         }
     }
 }
-RouteData ModifyRouteDialog::getRouteData()
+RouteInfo ModifyRouteDialog::getRouteData()
 {
     return _rd;
 }
@@ -87,7 +90,7 @@ QString ModifyRouteDialog::newName (){ return ui->rnw->newRouteName(); }
 void ModifyRouteDialog::btnOK_Click()
 {
     ui->lblHelp->setText("");
-    RouteData rd = (RouteData)routeDataList.at(ui->cbRoutes->currentIndex());
+    RouteInfo ri = routeDataList.at(ui->cbRoutes->currentIndex());
     if(ui->rnw->newRoute()<=0)
     {
      ui->lblHelp->setText(tr("route number invalid"));
@@ -100,13 +103,13 @@ void ModifyRouteDialog::btnOK_Click()
      return;
     }
 
-    if(rd.route() == _routeNbr)
+    if(ri.route() == _routeNbr)
     {
         // name change only!
-        if(ui->rnw->newRouteName() != rd.routeName())
+        if(ui->rnw->newRouteName() != ri.routeName())
         {
-            rd.setRouteName(ui->rnw->newRouteName());
-            if(!sql->updateRouteName(rd))
+            ri.setRouteName(ui->rnw->newRouteName());
+            if(!sql->updateRouteName(ri))
                 return;
             // this->setResult(QDialog::Accepted);
             // setCursor(Qt::ArrowCursor);
@@ -118,28 +121,28 @@ void ModifyRouteDialog::btnOK_Click()
     int routeId = sql->getRouteId(ui->rnw->newRouteName());
 
     //QList<RouteData> myArray = sql->getRouteDatasForDate(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
-    QList<SegmentData*> myArray = sql->getSegmentDataList(rd);
+    QList<SegmentData*> myArray = sql->getSegmentDataList(ri);
     if (myArray.count()==0)
     {
-        ui->lblHelp->setText(tr("No data: %1 %2 %3 %4").arg(rd.route()).arg(rd.routeName(),
-                                                            rd.startDate().toString("yyyy/MM/dd"),
-                                                            rd.endDate().toString("yyyy/MM/dd")));
+        ui->lblHelp->setText(tr("No data: %1 %2 %3 %4").arg(ri.route()).arg(ri.routeName(),
+                                                            ri.startDate().toString("yyyy/MM/dd"),
+                                                            ri.endDate().toString("yyyy/MM/dd")));
         //System.Media.SystemSounds.Asterisk.Play();
         return;
     }
     sql->beginTransaction("RenameRoute");
     //sql->executeCommand("PRAGMA defer_foreign_keys = 1");
 
-    CompanyData* cd = sql->getCompany(rd.companyKey());
+    CompanyData* cd = sql->getCompany(ri.companyKey());
 
     if(ui->rnw->routeNbrMustBeAdded())
     {
       //sql->addAltRoute(ui->rnw->alphaRoute().toInt(), ui->rnw->alphaRoute());
      _routeNbr = sql->addAltRoute(ui->rnw->newRoute(),ui->rnw->alphaRoute(),cd->routePrefix);
     }
-    RouteInfo ri = RouteInfo(_routeNbr, ui->rnw->newRouteName(),rd.startDate(), rd.endDate(),
-                             rd.companyKey(),rd.alphaRoute(), rd.routeId() );
-    if(!sql->executeCommand(QString("delete from routes where routeid = %1").arg(ri.routeId())))
+    RouteInfo ri2 = RouteInfo(_routeNbr, ui->rnw->newRouteName(),ri.startDate(), ri.endDate(),
+                             ri.companyKey(),ri.alphaRoute(), ri.routeId() );
+    if(!sql->executeCommand(QString("delete from routes where routeid = %1").arg(ri2.routeId())))
     {
         qDebug() << "delete failed";
         {
@@ -148,6 +151,7 @@ void ModifyRouteDialog::btnOK_Click()
             return;
         }
     }
+    ri.setDescription(ui->routeDescription->toHtml());
     if(!sql->updateRouteName(ri))
     {
         ui->lblHelp->setText(tr("updateRouteName failed"));
@@ -190,7 +194,7 @@ void ModifyRouteDialog::btnOK_Click()
       setCursor(Qt::ArrowCursor);
      }
 
-     TerminalInfo ti = sql->getTerminalInfo(rd.route(), rd.routeName(), rd.endDate());
+     TerminalInfo ti = sql->getTerminalInfo(ri.route(), ri.routeName(), ri.endDate());
      if(ti.route == -1)
      {
          //if(!sql->deleteTerminalInfo(rd.route, rd.name, sql->formatDate(rd.endDate)))
@@ -201,7 +205,7 @@ void ModifyRouteDialog::btnOK_Click()
              //throw (new ApplicationException("update terminal failed!"));
              ui->lblHelp->setText(tr("Update terminal failed"));
      }
-     RouteSeq routeSeq = sql->getRouteSeq(rd);
+     RouteSeq routeSeq = sql->getRouteSeq(ri);
      if(routeSeq.route()> 0)
      {
       if(sql->deleteRouteSeq(routeSeq))
@@ -252,14 +256,14 @@ void ModifyRouteDialog::refreshRoutes()
     //foreach (routeData rd in routeDataList)
     for(int i=0; i< routeDataList.count(); i++)
     {
-        RouteData rd = (RouteData)routeDataList.at(i);
+        RouteInfo rd = routeDataList.at(i);
         ui->cbRoutes->addItem(rd.toString());
     }
     //ui->cbRoutes->setCurrentIndex();t = text;
     int count = 0;
     for(int i=0; i< routeDataList.count(); i++)
     {
-        RouteData rd = (RouteData)routeDataList.at(i);
+        RouteInfo rd = routeDataList.at(i);
         if (text == rd.toString())
         {
             //cbRoutes.SelectedIndex = count;

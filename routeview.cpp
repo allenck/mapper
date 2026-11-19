@@ -179,10 +179,10 @@ RouteView::RouteView(QObject* parent )
     addToAnotherRouteAct = new QAction(tr("Add selected segments to Another Route"));
     connect(addToAnotherRouteAct, &QAction::triggered, myParent,[=]{
      QComboBox* cbCombo = new QComboBox();
-     QList<RouteData> routeList = myParent->routeList;
+     QList<RouteInfo> routeList = myParent->routeList;
      for(int i=0; i<routeList.count(); i++)
      {
-       RouteData rd = (RouteData)routeList.at(i);
+       RouteInfo rd = routeList.at(i);
        QString rdStartDate = rd.startDate().toString("yyyy/MM/dd");
        cbCombo->addItem(rd.toString(),QVariant::fromValue(rd));
 //          if( rd.toString() == currText)
@@ -473,7 +473,7 @@ void RouteView::updateRouteView()
 //    checkChanges();
     route = myParent->m_routeNbr;
     name = myParent->m_routeName;
-    companyKey = myParent->_rd.companyKey();
+    companyKey = myParent->_ri.companyKey();
     startDate = QDate::fromString(myParent->m_currRouteStartDate, "yyyy/MM/dd");
     endDate = QDate::fromString(myParent->m_currRouteEndDate, "yyyy/MM/dd");
     alphaRoute = myParent->m_alphaRoute;
@@ -862,7 +862,11 @@ void RouteView::on_selectSegment_triggered()
  QModelIndex Index = indexes.at(RouteViewTableModel::SEGMENTID);
  qint32 segmentId = Index.data().toInt();
  MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
- //myParent->segmentSelected(0,segmentId);
+ myParent->segmentSelected(0,segmentId);
+ int row = sourceModel->getRow(segmentId);
+ SegmentData* sd = sourceModel->segmentData(row);
+ sd->displaySegment("darkMagenta",true);
+
  emit selectSegment(segmentId);
 }
 

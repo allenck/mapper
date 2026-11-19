@@ -12,7 +12,8 @@ class HtmlTextEdit : public QTextBrowser
 public:
  explicit HtmlTextEdit(QWidget *parent = 0);
     static bool isHtmlFragment(QString text);
- static bool isLink(QString text);
+    static bool isLink(QString text);
+    bool dirty();
 
 signals:
  void dirtySet(bool dirty);

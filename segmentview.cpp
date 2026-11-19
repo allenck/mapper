@@ -34,7 +34,7 @@ SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
          int row = selectedRow();
          SegmentInfo si = sourceModel->selectedSegment(row);
          SegmentData sd = SegmentData(si);
-         sd.updateRouteInfo(MainWindow::instance()->_rd);
+         sd.updateRouteInfo(MainWindow::instance()->_ri);
          SQL::instance()->deleteRoute(sd);
     });
     //connect(WebViewBridge::instance(), SIGNAL(segmentSelected(qint32,qint32)), this, SLOT(on_segmentSelected(int,int)));
@@ -91,7 +91,7 @@ void SegmentView::tablev_customContextMenu( const QPoint& pt)
           SegmentInfo si = sourceModel->selectedSegment(ix.row());
           SegmentData* sd = new SegmentData(si);
           MainWindow* p = MainWindow::instance();
-          RouteData rd = p->_rd;
+          RouteInfo rd = p->_ri;
           sd->setRoute(p->m_routeNbr);
           sd->setRouteName(p->m_routeName);
           sd->setCompanyKey(p->m_companyKey);
@@ -264,14 +264,14 @@ void SegmentView::addToRoute()
  int ix = parent->ui->cbRoute->currentIndex();
  if(ix >= 0)
  {
-  RouteData rd = parent->routeList.at(ix);
-  sd->setRoute(rd.route());
-  sd->setAlphaRoute(rd.alphaRoute());
-  sd->setRouteName(rd.routeName());
-  sd->setStartDate(rd.startDate());
-  sd->setEndDate(rd.endDate());
-  sd->setTractionType(rd.tractionType());
-  sd->setCompanyKey(rd.companyKey());
+  RouteInfo ri = parent->routeList.at(ix);
+  sd->setRoute(ri.route());
+  sd->setAlphaRoute(ri.alphaRoute());
+  sd->setRouteName(ri.routeName());
+  sd->setStartDate(ri.startDate());
+  sd->setEndDate(ri.endDate());
+  sd->setTractionType(ri.tractionType());
+  sd->setCompanyKey(ri.companyKey());
 
   parent->routeDlg->setSegmentData(sd);
  }

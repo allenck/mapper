@@ -23,11 +23,11 @@ class RouteSeq
   ~RouteSeq() {}
   RouteSeq(const RouteSeq&);
   QList<QPair<int, QString>> seqList() {return _seqList;}
-  QString routeName() {return _rd.routeName();}
-  void setRouteName(QString name) {_rd.setRouteName(name);}
-  int route() {return _rd.route();}
-  QDate startDate() {return _rd.startDate();}
-  QDate endDate() {return _rd.endDate();}
+  QString routeName() {return _ri.routeName();}
+  void setRouteName(QString name) {_ri.setRouteName(name);}
+  int route() {return _ri.route();}
+  QDate startDate() {return _ri.startDate();}
+  QDate endDate() {return _ri.endDate();}
   QString whichEnd() {return _whichEnd;}
   int firstSegment() {return _firstSegment;}
   QString listString();
@@ -36,7 +36,7 @@ class RouteSeq
   QList<QPair<int, QString>> _seqList;
   int _firstSegment;
   QString _whichEnd;
-  RouteData _rd =RouteData();
+  RouteInfo _ri =RouteInfo();
   QDateTime _lastUpdate;
   friend class SQL;
 };
@@ -62,40 +62,6 @@ class segmentGroup
         ~segmentGroup();
 };
 
-class RouteInfo
-{
-	public:
-        explicit RouteInfo(QObject *parent = 0);
-        RouteInfo(qint32 route, QString name, QDate startDate, QDate endDate, int companyKey,
-                  QString alphaRoute, int routeId = -1);
-        ~RouteInfo() {}
-        RouteInfo(RouteData rd);
-        RouteInfo(RouteInfo& o);
-        RouteInfo(const SegmentData &o);
-
-        //QList<segmentGroup> segments;  // array of segmentGroup objects
-        void setRouteId(int routeId){_routeId = routeId;}
-        int routeId()const {return _routeId;}
-        void setRouteName(QString name) {routeName = name;}
-
- private:
-        qint32	route=-1;
-        QString routeName;
-        QString _companyName;
-        qint32	tractionType;
-        QList<SegmentData*> segmentDataList;
-        double length;
-        RouteData rd;
-        QDate startDate;
-        QDate endDate;
-        int companyKey=0;
-        QString alphaRoute;
-        int baseRoute=0;
-        QString routePrefix;
-        QString companyMnemonic;
-        int _routeId = -1;
-        friend class SQL;
-};
 
 class TerminalInfo
 {
@@ -301,16 +267,16 @@ public:
 
     }
 
-    RouteChangedEventArgs(RouteData rd, int segmentId, QString type)
+    RouteChangedEventArgs(RouteInfo ri, int segmentId, QString type)
     {
      typeOfChange = type;
-     this->rd = rd;
-     routeNbr = rd.route();
-     this->routeName = rd.routeName();
+     this->ri = ri;
+     routeNbr = ri.route();
+     this->routeName = ri.routeName();
      this->routeSegment = segmentId;
-     tractionType = rd.tractionType();
-     companyKey =rd.companyKey();
-     dateEnd = rd.endDate();
+     tractionType = ri.tractionType();
+     companyKey =ri.companyKey();
+     dateEnd = ri.endDate();
     }
 
     RouteChangedEventArgs(QString type, qint32 s, qint32 tt)
@@ -338,7 +304,7 @@ public:
     qint32 companyKey;
     QDate dateEnd;
     QString typeOfChange;
-    RouteData rd;
+    RouteInfo ri;
 };
 
 struct FKInfo

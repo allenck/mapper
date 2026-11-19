@@ -206,7 +206,7 @@ bool ExportSql::exportAll()
  exportTable("RouteSeq");
  return true;
 }
- bool ExportSql::exportRoutes(RouteData rd)
+ bool ExportSql::exportRoutes(RouteInfo rd)
  {
   SQL* sql = SQL::instance();
       if(!openDb()) return false;

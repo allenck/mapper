@@ -15,7 +15,7 @@ class ExportRouteDialog : public QDialog
  Q_OBJECT
 
 public:
- explicit ExportRouteDialog(RouteData rd, Configuration *cfg, QWidget *parent = 0);
+ explicit ExportRouteDialog(RouteInfo rd, Configuration *cfg, QWidget *parent = 0);
  ~ExportRouteDialog();
 
 public slots:
@@ -29,7 +29,7 @@ private:
  Ui::ExportRouteDialog *ui;
  Configuration * config;
  QTimer *timer;
- RouteData rd;
+ RouteInfo ri;
 };
 
 #endif // EXPORTROUTEDIALOG_H

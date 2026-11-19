@@ -33,7 +33,7 @@ SegmentDlg::SegmentDlg(QWidget *parent) :
 // infoLat = m_latitude;
 // infoLon = m_longitude;
  ui->gbUsage->setVisible(false);
- ui->rnw->configure(new RouteData(), ui->lblErrorText);
+ ui->rnw->configure(new RouteInfo(), ui->lblErrorText);
  //Clipboard::instance()->setContextMenu(ui->txtOriginalName);
  //Clipboard::instance()->setContextMenu(ui->txtNewName);
  QPalette pal = ui->txtOriginalName->palette();
@@ -166,7 +166,7 @@ SegmentDlg::~SegmentDlg()
     delete ui;
 }
 
-void SegmentDlg::configure(RouteData* rd, int segmentId, int point)
+void SegmentDlg::configure(RouteInfo* rd, int segmentId, int point)
 {
  setRouteData(rd);
  setSegmentId(segmentId);
@@ -282,7 +282,7 @@ qint32 SegmentDlg::tractionType()
 bool SegmentDlg::oneWay() { return ui->chkOriginalOneWay->isChecked(); }
 int SegmentDlg::tracks() { return si.tracks(); }
 
-void SegmentDlg::setRouteData(RouteData* value)
+void SegmentDlg::setRouteData(RouteInfo* value)
 {
     int i = 0;
     //bRouteChanging = true;

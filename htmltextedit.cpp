@@ -55,6 +55,7 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
  h1Act = new QAction(tr("H1"), this);
  h1Act->setCheckable(true);
  setPlaceholderText("Enter text");
+ setContextMenuPolicy(Qt::CustomContextMenu);
 
  connect(boldAction, SIGNAL(triggered(bool)), this, SLOT(OnBoldAction(bool)));
  connect(italicAction, SIGNAL(triggered(bool)), this, SLOT(OnItalicAction(bool)));
@@ -86,6 +87,7 @@ HtmlTextEdit::HtmlTextEdit(QWidget *parent) :
      onPasteLink();
  });
  connect(h1Act, SIGNAL(triggered(bool)),this, SLOT(OnH1Act()));
+ connect(this, SIGNAL(customContextMenuRequested(QPoint)),this, SLOT(showContextMenu(QPoint)));
 
  setFontPointSize(9);
  setDirty(false);
@@ -318,6 +320,8 @@ void HtmlTextEdit::setDirty(bool dirty)
  bIsDirty = dirty;
  emit dirtySet(dirty);
 }
+
+bool HtmlTextEdit::dirty() {return bIsDirty;}
 
 void HtmlTextEdit::OnTextChanged()
 {

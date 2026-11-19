@@ -2,7 +2,7 @@
 #include "ui_dialogcopyroute.h"
 #include "clipboard.h"
 
-DialogCopyRoute::DialogCopyRoute(RouteData rd,QWidget *parent) :
+DialogCopyRoute::DialogCopyRoute(RouteInfo rd, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::DialogCopyRoute)
 {
@@ -13,29 +13,29 @@ DialogCopyRoute::DialogCopyRoute(RouteData rd,QWidget *parent) :
     ui->setupUi(this);
     bRouteChanged = false;
     fillCompanies();
-    _rd = rd;
+    _rd = &rd;
     ui->cbCompany->setCurrentIndex(ui->cbCompany->findData(rd.companyKey()));
     cd = sql->getCompany(ui->cbCompany->currentData().toInt());
     if(cd->companyKey > 0)
     {
         ui->dateEnd->setDate(cd->endDate);
     }
-    ui->dateStart->setDate(_rd.endDate().addDays(1));
-    QDate nextEndDate = sql->getNextStartOrEndDate(_rd.route(), ui->dateStart->date(), _rd.segmentId(),true);
+    ui->dateStart->setDate(_rd->endDate().addDays(1));
+    QDate nextEndDate = sql->getNextStartOrEndDate(_rd->route(), ui->dateStart->date(), 0,true);
 
     if(nextEndDate < cd->endDate)
     {
         maxEndDate = nextEndDate.addDays(-1);
         ui->dateEnd->setDate(maxEndDate);
     }
-    _rd2 = new RouteData(_rd);
+    _rd2 = new RouteInfo(*_rd);
     _rd2->setCompanyKey(cd->companyKey);
     ui->rnw->configure(_rd2, ui->lblHelp);
-    ui->rnw->setRouteName(_rd.routeName());
+    ui->rnw->setRouteName(_rd->routeName());
     refreshRoutes();
     // int ix = ui->cbRoutes->findData(QVariant::fromValue(_rd));
     // ui->cbRoutes->setCurrentIndex(ix);
-    ui->txtRouteName->setText(_rd.toString());
+    ui->txtRouteName->setText(_rd->toString());
     fillTractionTypes();
     ui->lblHelp->setText("");
 
@@ -78,10 +78,10 @@ void DialogCopyRoute::refreshRoutes()
     ui->rnw->clear();
     for(int i=0; i<routeDataList.count(); i++)
     {
-        RouteData rd = routeDataList.at(i);
-        if(rd.companyKey() == companyKey)
+        RouteInfo ri = routeDataList.at(i);
+        if(ri.companyKey() == companyKey)
             //ui->cbRoutes->addItem(rd.toString(),QVariant::fromValue(rd));
-            ui->rnw->setRouteName(rd);
+            ui->rnw->setRouteName(ri);
     }
     //ui->cbRoutes->currentText() = "";
 
@@ -130,9 +130,9 @@ void DialogCopyRoute::fillTractionTypes()
 }
 
 //routeData RouteData
-void DialogCopyRoute::setRouteData(RouteData rd)
+void DialogCopyRoute::setRouteData(RouteInfo rd)
 {
-    _rd = rd;
+    _rd = &rd;
 //    ui->txtRouteNbr->setText(_rd.alphaRoute());
 //    ui->txtRouteName->setText(_rd.routeName());
     ui->rnw->configure(&rd, ui->lblHelp);
@@ -145,8 +145,8 @@ void DialogCopyRoute::setRouteData(RouteData rd)
     //foreach (routeData rd in routeDataList)
     for(int i=0; i < routeDataList.count(); i++)
     {
-        RouteData rd = (RouteData)routeDataList.at(i);
-        if (rd.route() == _rd.route() && rd.routeName() == _rd.routeName() && rd.endDate() == _rd.endDate())
+        RouteInfo rd = routeDataList.at(i);
+        if (rd.route() == _rd->route() && rd.routeName() == _rd->routeName() && rd.endDate() == _rd->endDate())
         {
             //ui->cbRoutes->setCurrentIndex(i);
             //ui->txtRouteName->setFocus();
@@ -168,9 +168,9 @@ void DialogCopyRoute::setRouteData(RouteData rd)
     }
 }
 
-RouteData DialogCopyRoute::getRouteData()
+RouteInfo DialogCopyRoute::getRouteData()
 {
-    return _rd;
+    return *_rd;
 }
 #if 0
 void DialogCopyRoute::txtRouteNbr_TextChanged(QString text)      // SLOT
@@ -343,7 +343,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     else
      _routeNbr = ui->rnw->newRoute();
 
-    RouteData rd;
+    RouteInfo rd;
     rd.setRoute(_routeNbr);
     rd.setRouteName(ui->rnw->newRouteName());
     rd.setStartDate(ui->dateStart->date());
@@ -369,12 +369,12 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     //rd = routeDataList.at(ix);
 
     //myArray = sql->getRouteDatasForDate(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
-    segmentDataList = sql->getSegmentDataList(_rd);
+    segmentDataList = sql->getSegmentDataList(*_rd);
 
     int rslt = QMessageBox::question(nullptr, tr("Confirm copy"),
                                      tr("Click on Ok to copy %1 segments from:\n%2 to \n%3 %4-%5")
                                          .arg(segmentDataList.count())
-                                         .arg(_rd.toString(),ui->rnw->newRouteName(),ui->dateStart->date().toString("yyyy/MM/dd"),
+                                         .arg(_rd->toString(),ui->rnw->newRouteName(),ui->dateStart->date().toString("yyyy/MM/dd"),
                                              ui->dateEnd->date().toString("yyyy/MM/dd") ),
                                      QMessageBox::Ok |QMessageBox::Cancel);
     if(rslt == QMessageBox::Cancel)
@@ -384,7 +384,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     setCursor(Qt::WaitCursor);
     qint32  tractionType = (tractionList.values().at(ui->cbTractionType->currentIndex())).tractionType;
 
-    if(ui->dateStart->date() > _rd.endDate() || ui->dateEnd->date() < _rd.startDate())
+    if(ui->dateStart->date() > _rd->endDate() || ui->dateEnd->date() < _rd->startDate())
     {
         setCursor(Qt::WaitCursor);
         //for (int i =0; i < myArray.count(); i++)
@@ -513,12 +513,12 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     //sql->CommitTransaction("CopyRoute");
     //sql->myConnection.Close();
 
-    _rd.setRoute(_routeNbr);
-    _rd.setRouteName(ui->rnw->newRouteName());
-    _rd.setStartDate(ui->dateStart->date());
-    _rd.setEndDate(ui->dateEnd->date());
-    _rd.setCompanyKey( ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey);
-    _rd.setTractionType( ((TractionTypeInfo)tractionList.values().at(ui->cbTractionType->currentIndex())).tractionType);
+    _rd->setRoute(_routeNbr);
+    _rd->setRouteName(ui->rnw->newRouteName());
+    _rd->setStartDate(ui->dateStart->date());
+    _rd->setEndDate(ui->dateEnd->date());
+    _rd->setCompanyKey( ((CompanyData*)_companyList.at(ui->cbCompany->currentIndex()))->companyKey);
+    _rd->setTractionType( ((TractionTypeInfo)tractionList.values().at(ui->cbTractionType->currentIndex())).tractionType);
 
     this->accept();
     this->close();

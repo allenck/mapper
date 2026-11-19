@@ -9,13 +9,13 @@ ModifyRouteTractionTypeDlg::ModifyRouteTractionTypeDlg(QWidget *parent) :
   common();
 }
 
-ModifyRouteTractionTypeDlg::ModifyRouteTractionTypeDlg(RouteData rd,QWidget *parent) :
+ModifyRouteTractionTypeDlg::ModifyRouteTractionTypeDlg(RouteInfo rd, QWidget *parent) :
   QDialog(parent),
   ui(new Ui::ModifyRouteTractionTypeDlg)
 {
  common();
-  _rd = rd;
-  ui->dateEdit->setDate(_rd.startDate());
+  _ri = rd;
+  ui->dateEdit->setDate(_ri.startDate());
   ui->lblRoute->setText(rd.toString());
 }
 
@@ -45,11 +45,11 @@ ModifyRouteTractionTypeDlg::~ModifyRouteTractionTypeDlg()
 // this->config = config;
 //}
 
-void ModifyRouteTractionTypeDlg::setRouteData(QList<RouteData> routeList, int currentIx)
+void ModifyRouteTractionTypeDlg::setRouteData(QList<RouteInfo> routeList, int currentIx)
 {
  this->routeList = routeList;
  _currentIx = currentIx;
- _rd = routeList.at(currentIx);
+ _ri = routeList.at(currentIx);
  _sd = &sd;
 
  ui->lblError->setText("");
@@ -59,9 +59,9 @@ void ModifyRouteTractionTypeDlg::setRouteData(QList<RouteData> routeList, int cu
  ui->comboBox->findData(sd.tractionType());
 }
 
-RouteData ModifyRouteTractionTypeDlg::getRouteData()
+RouteInfo ModifyRouteTractionTypeDlg::getRouteData()
 {
- return _rd;
+ return _ri;
 }
 
 void ModifyRouteTractionTypeDlg::dateChanged(QDate date)
@@ -81,27 +81,27 @@ void ModifyRouteTractionTypeDlg::btnOK_Click()      //SLOT
 {
   bool bResult = true;
   ui->lblError->setText("");
-  if(ui->dateEdit->date() < _rd.startDate())
+  if(ui->dateEdit->date() < _ri.startDate())
   {
      ui->lblError->setText(tr("New start date < route start date!"));
      QApplication::beep();
      return;
   }
-  if(ui->dateEdit->date() >= _rd.endDate())
+  if(ui->dateEdit->date() >= _ri.endDate())
   {
      ui->lblError->setText(tr("New end date > route end date!"));
      QApplication::beep();
      return;
   }
 
-  if(ui->comboBox->currentData().toInt()== _rd.tractionType())
+  if(ui->comboBox->currentData().toInt()== _ri.tractionType())
   {
      ui->lblError->setText(tr("traction type must be changed!"));
      QApplication::beep();
      return;
   }
 
-  QList<SegmentData*> sdList = sql->getSegmentDataList(_rd);
+  QList<SegmentData*> sdList = sql->getSegmentDataList(_ri);
   if(sdList.count())
   {
     sql->beginTransaction("ModifyRouteTractionType");

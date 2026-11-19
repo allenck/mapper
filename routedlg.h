@@ -25,14 +25,14 @@ public:
     void setSegmentId(qint32 segmentid);
     qint32 SegmentId();
     //enum TypeOfChange{Add,Delete,Update};
-    void setSegmentData(RouteData value);
+    void setSegmentData(RouteInfo ri);
     void setSegmentData(SegmentData *sd);
     void setupToAdd();
 
 
 public slots:
     void SegmentChanged(qint32 segmentId);
-    void routeChanged(RouteData rd);
+    void routeChanged(RouteInfo ri);
     void setAddMode(bool value);
     void OnNewCity();
     void setCompany(qint32 companyKey);
@@ -64,7 +64,7 @@ private:
     SegmentData* sd = nullptr;
     SegmentData* oldSd = nullptr;
     SegmentInfo si;
-    RouteData _rd;
+    RouteInfo _ri;
     //bool bIgnoreDirection = false;
     //public event segmentChangedEventHandler SegmentChanged;
     bool formNotLoaded;

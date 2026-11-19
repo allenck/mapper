@@ -3,7 +3,7 @@
 
 #include <QDialog>
 #include "configuration.h"
-#include "routedata.h"
+#include "routeinfo.h"
 #include "segmentdata.h"
 
 namespace Ui {
@@ -17,21 +17,21 @@ class ModifyRouteTractionTypeDlg : public QDialog
 
  public:
   explicit ModifyRouteTractionTypeDlg(QWidget *parent = nullptr);
-  ModifyRouteTractionTypeDlg(RouteData rd, QWidget *parent = nullptr);
+  ModifyRouteTractionTypeDlg(RouteInfo rd, QWidget *parent = nullptr);
   ~ModifyRouteTractionTypeDlg();
   //void setConfiguration(Configuration* config);
-  void setRouteData(QList<RouteData> routeList, int currentIx);
-  RouteData getRouteData();
+  void setRouteData(QList<RouteInfo> routeList, int currentIx);
+  RouteInfo getRouteData();
 
  private:
   Ui::ModifyRouteTractionTypeDlg *ui;
   Configuration* config;
   SQL* sql;
   int _currentIx;
-  QList<RouteData> routeList;
+  QList<RouteInfo> routeList;
   SegmentData sd;
   SegmentData* _sd;
-  RouteData _rd;
+  RouteInfo _ri;
   void common();
 
  private slots:

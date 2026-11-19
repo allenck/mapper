@@ -73,7 +73,7 @@ qt_add_executable(mapper WIN32 MACOSX_BUNDLE
     mainwindow.cpp mainwindow.h
     mapview.cpp mapview.h
     modifyroutedatedlg.cpp modifyroutedatedlg.h
-    modifyroutedialog.cpp modifyroutedialog.h
+    modifyroutedialog.cpp modifyroutedialog.h modifyroutedialog.ui
     modifyroutetractiontypedlg.cpp modifyroutetractiontypedlg.h
     myapplication.cpp myapplication.h
     mymessagebox.cpp mymessagebox.h
@@ -173,6 +173,7 @@ qt_add_executable(mapper WIN32 MACOSX_BUNDLE
     routedata.h routedata.cpp
     routetype.h
     parameters.h parameters.cpp
+    routeinfo.h routeinfo.cpp
 )
 # Force the executable to be built in the root build folder, matching qmake's directory depth
 set_target_properties(mapper PROPERTIES

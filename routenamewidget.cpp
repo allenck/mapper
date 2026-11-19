@@ -50,7 +50,7 @@ void RouteNameWidget::setSegmentData(SegmentData* sd)
  setRouteName(sd->routeName());
 }
 
-void RouteNameWidget::setRouteData(RouteData* rd)
+void RouteNameWidget::setRouteData(RouteInfo* rd)
 {
  this->rd = rd;
  ui->txtRouteNbr->setText(rd->alphaRoute());
@@ -66,7 +66,7 @@ void RouteNameWidget::setRouteName(QString name)
  ui->cbRouteName->setCurrentText(name);
 }
 
-void RouteNameWidget::setRouteName(RouteData rd)
+void RouteNameWidget::setRouteName(RouteInfo rd)
 {
 
     if(ui->cbRouteName->findText(rd.routeName())==-1)
@@ -84,15 +84,15 @@ void RouteNameWidget::configure(SegmentData* sd, QLabel *lblHelpText)
  setRouteName(sd->routeName());
 }
 
-void RouteNameWidget::configure(RouteData* rd, QLabel *lblHelpText)
+void RouteNameWidget::configure(RouteInfo *ri, QLabel *lblHelpText)
 {
- this->companyKey = rd->companyKey();
- this->rd = rd;
- _routeNbr = rd->route();
- _alphaRoute = rd->alphaRoute();
+ this->companyKey = ri->companyKey();
+ this->rd = ri;
+ _routeNbr = ri->route();
+ _alphaRoute = ri->alphaRoute();
  this->lblHelpText = lblHelpText;
- ui->txtRouteNbr->setText(rd->alphaRoute());
- setRouteName(rd->routeName());
+ ui->txtRouteNbr->setText(ri->alphaRoute());
+ setRouteName(ri->routeName());
 }
 
 int RouteNameWidget::newRoute()
@@ -204,14 +204,14 @@ void RouteNameWidget::txtRouteNbr_Leave()
         }
         //ui->cbRouteName->setCurrentIndex(1);
 
-            if((ar = ui->txtRouteNbr->text().trimmed()) == _rd.alphaRoute())
+            if((ar = ui->txtRouteNbr->text().trimmed()) == _rd->alphaRoute())
         {
-            ui->cbRouteName->setCurrentText(_rd.routeName());
+            ui->cbRouteName->setCurrentText(_rd->routeName());
         }
     }
     else
     {
-        _rd = RouteData();
+        _rd = new RouteInfo();
         ui->cbRouteName->setCurrentIndex(0);
         ui->cbRouteName->setFocus();
         // Parameters parms = sql->getParameters();
@@ -220,12 +220,12 @@ void RouteNameWidget::txtRouteNbr_Leave()
 //        dateEnd.MaxDate = parms.maxDate;
 //        dateEnd.MinDate = parms.minDate;
     }
-    if (_rd.route() > 0 && _routeNbr == _rd.route())
+    if (_rd->route() > 0 && _routeNbr == _rd->route())
     {
         //ui->cbRouteName->setCurrentIndex(0);
         for(int i=0; i < _routeNamesList.count(); i++)
         {
-            if(_rd.route() > 0 && _rd.routeName() == _routeNamesList.at(i))
+            if(_rd->route() > 0 && _rd->routeName() == _routeNamesList.at(i))
             {
                 ui->cbRouteName->setCurrentIndex(i+1);
                 break;
@@ -273,14 +273,14 @@ void RouteNameWidget::txtRouteName_Leave()
      return;
 #ifndef ROUTENAMEWIDGETPLUGIN
 
-    QList<RouteData> rdList = sql->getRouteDataForRouteName(sd->route(), ui->cbRouteName->currentText());
+    QList<RouteInfo> rdList = sql->getRouteInfoForRouteName(sd->route(), ui->cbRouteName->currentText());
     if (rdList.count()>0)
     {
         //foreach (routeData rd in rdList)
         for(int i = 0; i < rdList.count(); i++)
         {
-            RouteData rd = rdList.at(i);
-            if (rd.route() > 0)
+            RouteInfo ri = rdList.at(i);
+            if (ri.route() > 0)
             {
 //             ui->dateStart->setDate( rd.startDate());
 //             ui->dateEnd->setDate(rd.endDate());

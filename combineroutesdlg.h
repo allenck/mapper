@@ -25,11 +25,11 @@ private:
     QWidget* myParent;
     void refreshRoutes();
     SQL* sql;
-    QList<RouteData> routeDataList;
+    QList<RouteInfo> routeDataList;
     qint32 _routeNbr;
     QString _alphaRoute;
-    RouteData _rd1;
-    RouteData _rd2;
+    RouteInfo _rd1;
+    RouteInfo _rd2;
     CompanyData* companyData;
 
 private slots:

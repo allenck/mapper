@@ -32,7 +32,7 @@ void CombineRoutesDlg::refreshRoutes()
     routeDataList = sql->getRoutesByEndDate();
     if (routeDataList.count()== 0)
         return;
-    foreach (RouteData rd, routeDataList)
+    foreach (RouteInfo rd, routeDataList)
     {
         ui->cbRoute1->addItem(rd.toString());
         ui->cbRoute2->addItem(rd.toString());

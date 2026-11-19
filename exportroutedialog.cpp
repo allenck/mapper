@@ -2,15 +2,15 @@
 #include "ui_exportroutedialog.h"
 #include <QPushButton>
 
-ExportRouteDialog::ExportRouteDialog(RouteData rd, Configuration *cfg, QWidget *parent) :
+ExportRouteDialog::ExportRouteDialog(RouteInfo ri, Configuration *cfg, QWidget *parent) :
   QDialog(parent),
   ui(new Ui::ExportRouteDialog)
 {
  ui->setupUi(this);
  this->setWindowTitle(tr("Export Route"));
  config = cfg;
- this->rd = rd;
- ui->lblRoute->setText(rd.toString());
+ this->ri = ri;
+ ui->lblRoute->setText(ri.toString());
  timer = new QTimer(this);
  timer->setInterval(1000);
  connect(timer, SIGNAL(timeout()), this, SLOT(quickProcess()));
@@ -81,7 +81,7 @@ void ExportRouteDialog::btnOK_clicked()
  ui->lblHelp->setText(tr("Routes"));
  qApp->processEvents();
  ui->progressBar->setValue(0);
- exprt.exportRoutes( rd);
+ exprt.exportRoutes( ri);
  //ui->chkRoutes->setChecked(false);
  qApp->processEvents();
 

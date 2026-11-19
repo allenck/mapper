@@ -62,7 +62,7 @@ SegmentViewTableModel::SegmentViewTableModel(QList<SegmentInfo> segmentDataList,
          {
              SegmentInfo si = listOfSegments.at(index.row());
              SegmentData sd = SegmentData(si);
-             sd.updateRouteInfo(MainWindow::instance()->_rd);
+             sd.updateRouteInfo(MainWindow::instance()->_ri);
              //segmentInfo si = sql->getSegmentInfo(sd.SegmentId);
             //if (sql->isRouteUsedOnDate(m_routeNbr, si.segmentId(), m_date))
              if(sql->doesRouteSegmentExist(sd))

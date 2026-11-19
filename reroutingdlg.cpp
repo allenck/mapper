@@ -1,7 +1,7 @@
 #include "reroutingdlg.h"
 #include "ui_reroutingdlg.h"
 
-ReroutingDlg::ReroutingDlg(RouteData rd, Configuration *cfg, QWidget *parent) :
+ReroutingDlg::ReroutingDlg(RouteInfo rd, Configuration *cfg, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ReroutingDlg)
 {

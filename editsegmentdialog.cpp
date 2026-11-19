@@ -60,8 +60,8 @@ void EditSegmentDialog::common()
  ui->setupUi(this);
  sql = SQL::instance();
 
- RouteData rd = MainWindow::instance()->routeList.at(MainWindow::instance()->ui->cbRoute->currentIndex());
- this->rd = new RouteData(rd);
+ RouteInfo rd = MainWindow::instance()->routeList.at(MainWindow::instance()->ui->cbRoute->currentIndex());
+ this->rd = new RouteInfo(rd);
 
  ui->lblHelp->setText("");
  _locations = sql->getLocations();

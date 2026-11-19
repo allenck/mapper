@@ -59,7 +59,7 @@ public:
 //    bool exportRouteComments();
     //bool export_geodb_geometry();
 
-    bool exportRoutes(RouteData rd);
+    bool exportRoutes(RouteInfo rd);
     bool createSegmentsTable(QSqlDatabase db, QString dbType);
     bool dropTable(QString table, QSqlDatabase db, QString dbType);
     bool createRouteNameTable(QSqlDatabase db, QString dbType);

@@ -28,68 +28,6 @@ segmentGroup::~segmentGroup()
 
 
 
-RouteInfo::RouteInfo(QObject *parent)
-{
- route= -1;
- length = 0;
- segmentDataList = QList<SegmentData*>();
-
-}
-
-RouteInfo::RouteInfo(RouteData rd)
-{
- this->rd = rd;
- this->route = rd.route();
- this->routeName = rd.routeName();
- this->_routeId = rd.routeId();
- length = 0;
- segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(),
-                                                            rd.companyKey(), rd.endDate());
-}
-RouteInfo::RouteInfo(const SegmentData& sd)
-{
-    //this->rd = rd;
-    this->route = sd.route();
-    this->routeName = sd.routeName();
-    this->startDate = sd.startDate();
-    this->endDate = sd.endDate();
-    this->alphaRoute = sd.alphaRoute();
-    this->companyKey = sd.companyKey();
-    this->_routeId = sd.routeId();
-    length = 0;
-    // segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(),
-    //                                                            rd.companyKey(), rd.endDate());
-}
-
-RouteInfo::RouteInfo(qint32 route, QString name, QDate startDate, QDate endDate, int companyKey, QString alphaRoute, int routeId)
-{
- length = 0;
- this->route = route;
- this->routeName = name;
- this->startDate = startDate;
- this->endDate = endDate;
- this->companyKey = companyKey;
- this->alphaRoute = alphaRoute;
- this->_routeId = routeId;
- //segmentDataList = SQL::instance()->getRouteSegmentsInOrder(route, name, 0, endDate);
-}
-
-
-RouteInfo::RouteInfo(RouteInfo& o)
-{
- route=o.route;
- routeName= o.routeName;
- tractionType=o.tractionType;
- length = o.length;
- startDate = o.startDate;
- endDate = o.endDate;
- companyKey=o.companyKey;
- alphaRoute = o.alphaRoute;
- baseRoute= o.baseRoute;
- routePrefix = o.routePrefix;
- companyMnemonic = o.companyMnemonic;
- _routeId = o._routeId;
-}
 
 
 
@@ -100,7 +38,7 @@ RouteSeq::RouteSeq(const RouteSeq& o){
  _seqList= o._seqList;
  _firstSegment = o._firstSegment;
  _whichEnd = o._whichEnd;
- _rd = o._rd;
+ _ri = o._ri;
  _lastUpdate = o._lastUpdate;
 }
 StationInfo::StationInfo(const StationInfo& o)

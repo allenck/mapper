@@ -137,7 +137,7 @@ public:
     QT_DEPRECATED void getArray();
     void setLen(qint32 len);
     QString ProcessScript(QString func, QString params);
-    QList<RouteData> routeList;
+    QList<RouteInfo> routeList;
     double m_latitude, m_longitude;
     //LatLng m_center;
     qint32 m_zoom;
@@ -149,7 +149,7 @@ public:
     QString m_currRouteStartDate, m_currRouteEndDate, m_routeName;
     QString m_resourcePath;
     QString m_segmentStatus, m_segmentColor;
-    RouteData* m_currRd = nullptr;
+    RouteInfo* m_currRi = nullptr;
 
     RouteDlg *routeDlg;
     RouteCommentsDlg *routeCommentsDlg = nullptr;
@@ -204,7 +204,7 @@ public slots:
     void refreshCompanies();
     void segmentStatus(QString str, QString color);
     //void saveChanges();
-    void On_displayRoute(RouteData *);
+    void On_displayRoute(RouteInfo *);
     void addModeToggled(bool isChecked);
     void showGoogleMapFeatures(bool);
     void btnDisplayRouteClicked();
@@ -217,7 +217,7 @@ public slots:
     void setZoom();
 
 signals:
-    void routeListChanged(QList<RouteData>* routeList);
+    void routeListChanged(QList<RouteInfo>* routeList);
     void windowActivated();
     void newCitySelected();
 
@@ -288,8 +288,8 @@ private slots:
     void movePointX(qint32 segmentId, qint32 i, LatLng newPt, QList<LatLng> pointlist);
     QT_DEPRECATED void insertPoint(int SegmentId, qint32 i, double newLat, double newLon);
     void insertPointX(int segmentId, qint32 i, QList<LatLng>);
-    QT_DEPRECATED void segmentSelected(qint32 pt, qint32 SegmentId);
-    void segmentSelectedX(qint32 pt, qint32 segmentId, QList<LatLng> objArray);
+    void segmentSelected(qint32 pt, qint32 SegmentId);
+    QT_DEPRECATED void segmentSelectedX(qint32 pt, qint32 segmentId, QList<LatLng> objArray);
 
     void addJSObject();
     void NotYetInplemented();
@@ -428,6 +428,7 @@ private:
     QAction* editCommentsAct;
     QAction* upgradeCommentsAct;
     QAction* selectOverlaysAct;
+    QAction* expandRouteNameAct;
 
     QWidgetAction *sortTypeAct;
     QComboBox * cbSort;
@@ -458,7 +459,7 @@ private:
 
     TerminalInfo m_terminalInfo;
     QString m_mapid = "DEMO_MAP_ID"; //"DEMO_MAP_ID";
-    RouteData _rd;
+    RouteInfo _ri;
     bool m_bAddMode;
     bool b_cbSegments_TextChanged = false;
     bool b_cbRoutes_TextChanged = false;

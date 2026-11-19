@@ -1,7 +1,7 @@
 #ifndef ROUTENAMEWIDGET_H
 #define ROUTENAMEWIDGET_H
 
-#include "routedata.h"
+#include "routeinfo.h"
 #include "segmentdata.h"
 #include <QWidget>
 //#include "sql.h"
@@ -21,16 +21,16 @@ class RouteNameWidget : public QWidget
   ~RouteNameWidget();
   void setCompanyKey(int companyKey);
   void setSegmentData(SegmentData* sd);
-  void setRouteData(RouteData* rd);
+  void setRouteData(RouteInfo *rd);
   int newRoute();
   QString newRouteName();
   bool routeNbrMustBeAdded() {return bNewRouteNbr;} // true if entry to altRoute must be added
   void setHelpLabel(QLabel *lblHelpText ) {this->lblHelpText = lblHelpText;}
   void configure(SegmentData* sd,QLabel *lblHelpText);
-  void configure(RouteData *rd, QLabel *lblHelpText);
+  void configure(RouteInfo *rd, QLabel *lblHelpText);
   QString alphaRoute() {return _alphaRoute;}
   void setRouteName(QString name);
-  void setRouteName(RouteData rd);
+  void setRouteName(RouteInfo rd);
   void setAlphaRoute(QString);
   void clear();
   int getRouteId();
@@ -58,11 +58,11 @@ class RouteNameWidget : public QWidget
   bool bRouteChanging;
   int _routeNbr;
   SegmentData* sd = nullptr;
-  RouteData* rd = nullptr;
+  RouteInfo* rd = nullptr;
   Configuration* config = nullptr;
   QLabel* lblHelpText = nullptr;
   QString strNoRoute = tr("New Route Name");
-  RouteData _rd;
+  RouteInfo* _rd = nullptr;
 };
 
 #endif // ROUTENAMEWIDGET_H

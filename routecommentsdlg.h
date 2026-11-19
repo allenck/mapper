@@ -16,7 +16,7 @@ class RouteCommentsDlg : public QDialog
     Q_OBJECT
     
 public:
-    explicit RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, QWidget *parent = 0);
+    explicit RouteCommentsDlg(QList<RouteInfo> *routeList, int companyKey, QWidget *parent = 0);
     ~RouteCommentsDlg();
     //void setRoute(qint32);
     //void setDate(QDate);
@@ -25,7 +25,7 @@ public:
     void setDirty(bool = true);
     void displayComment(CommentInfo newCi);
     static bool upgrade();
-    void setRouteData(RouteData rd);
+    void setRouteData(RouteInfo rd);
     void onRouteSelected(int route, QString alphaRoute, QDate date, int row);
     //QMap<QString, RouteData *> *createList(QList<RouteData>* rdList, QDate dt);
 
@@ -36,11 +36,11 @@ private:
     // QDate _date;
     SQL* sql;
     //RouteComments _rc;
-    RouteData _rd;
+    RouteInfo _ri;
     CommentInfo _ci;
     RouteComments _rc;
     Configuration *config;
-    QList<RouteData>* routeList = nullptr;
+    QList<RouteInfo>* routeList = nullptr;
     QSortFilterProxyModel* proxyModel = nullptr;
     RouteSelectorTableModel* _sourceModel = nullptr;
     QList<int>* routes = nullptr;

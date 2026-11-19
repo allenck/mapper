@@ -15,13 +15,13 @@ class ReroutingDlg : public QDialog
     Q_OBJECT
     
 public:
-    explicit ReroutingDlg(RouteData rd, Configuration * cfg, QWidget *parent = 0);
+    explicit ReroutingDlg(RouteInfo rd, Configuration * cfg, QWidget *parent = 0);
     ~ReroutingDlg();
     
 private:
     Ui::ReroutingDlg *ui;
     Configuration *config;
-    RouteData _rd;
+    RouteInfo _rd;
     QWidget * myParent;
     SQL* sql;
 

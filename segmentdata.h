@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include "segmentinfo.h"
-//#include "routedata.h"
+#include "routeinfo.h"
 
 class RouteData;
 class SegmentData : public SegmentInfo
@@ -152,7 +152,7 @@ public:
     void markForDelete(bool b) {_markedForDelete = b;}
     bool markedForDelete() {return _markedForDelete;}
     QString reverseDescription();
-    void updateRouteInfo(RouteData rd);
+    void updateRouteInfo(RouteInfo rd);
     quint32 baseRoute() const {return _baseRoute;}
     void update(const SegmentInfo& si);
     QDate doubleDate() const {return _dateDoubled;}

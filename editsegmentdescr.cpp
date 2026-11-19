@@ -50,8 +50,9 @@ void EditSegmentDescr::setText(QString txt)
     else if(txt.contains(" to ") || txt.contains(" zur ") || sd->hasAbbreviations(txt))
         QLineEdit::setStyleSheet(" background-color: #FFFF00; ");
     else
-        QLineEdit::setStyleSheet(QString("background-color: rgb(%1, %2, %3); ")
-                                          .arg(defaultBgColor.red()).arg(defaultBgColor.green()).arg(defaultBgColor.blue()));
+        // QLineEdit::setStyleSheet(QString("background-color: rgb(%1, %2, %3); ")
+        //                                   .arg(defaultBgColor.red()).arg(defaultBgColor.green()).arg(defaultBgColor.blue()));
+        QLineEdit::setStyleSheet(QString());
     QLineEdit::setText(txt);
 }
 

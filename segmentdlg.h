@@ -2,7 +2,7 @@
 #define SEGMENTDLG_H
 
 #include <QDialog>
-#include "data.h"
+#include "RouteInfo.h"
 #include "sql.h"
 #include "configuration.h"
 
@@ -17,7 +17,7 @@ class SegmentDlg : public QDialog
 public:
     SegmentDlg(QWidget *parent = 0);
     ~SegmentDlg();
-    void configure(RouteData *rd, int segmentId, int point=-1);
+    void configure(RouteInfo *rd, int segmentId, int point=-1);
     qint32 SegmentId();
     qint32 newSegmentId();
     QString street();
@@ -51,7 +51,7 @@ private:
     LatLng pi;
     Bearing bearing;
     Configuration *config;
-    RouteData* _rd = nullptr;
+    RouteInfo* _rd = nullptr;
     qint32 normalEnter, normalLeave, reverseEnter, reverseLeave;
     QString strNoRoute;
     bool bNewRouteNbr;
@@ -63,7 +63,7 @@ private:
     QStringList _locations;
     void setPt(int value);
     void setSegmentId(qint32 value);
-    void setRouteData(RouteData* value);
+    void setRouteData(RouteInfo *value);
     void updateOtherRoutes();
     QColor txtSegment_color;
 

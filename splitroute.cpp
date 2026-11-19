@@ -62,7 +62,7 @@ SplitRoute::~SplitRoute()
     delete ui;
 }
 
-bool SplitRoute::setRouteData(RouteData rd)
+bool SplitRoute::setRouteData(RouteInfo rd)
 {
     _rd = rd;
     if (rd.route() < 1)
@@ -71,7 +71,7 @@ bool SplitRoute::setRouteData(RouteData rd)
     if(!cd)
         throw IllegalArgumentException("invalid company");
     maxEndDate = cd->endDate;
-    QDate nextStartDate = sql->getNextStartOrEndDate(_rd.route(), _rd.startDate(), _rd.segmentId(), true);
+    QDate nextStartDate = sql->getNextStartOrEndDate(_rd.route(), _rd.startDate(), /*_rd.segmentId()*/ 0, true);
     if(nextStartDate < maxEndDate)
         maxEndDate = nextStartDate.addDays(-1);
     if(maxEndDate.isValid())
@@ -180,16 +180,16 @@ void SplitRoute::refreshRoutes()
     int ix = -1;
     for(int i = 0; i < routeDataList.count(); i++)
     {
-        RouteData rd = routeDataList.at(i);
+        RouteInfo rd = routeDataList.at(i);
         ui->cbRoutes->addItem(rd.toString());
     }
     //cbRoutes.SelectedText = "";
 }
-RouteData SplitRoute::getRoute()
+RouteInfo SplitRoute::getRoute()
 {
     return _rd;
 }
-RouteData SplitRoute::getNewRoute()
+RouteInfo SplitRoute::getNewRoute()
 {
     return _newRoute;
 }
@@ -379,7 +379,7 @@ bool SplitRoute::checkDate(QString txt, QDateEdit* dt, CompanyData* cd)
 
 void SplitRoute::btnOK_Click()
 {
-    QList<RouteData> routes;
+    QList<RouteInfo> routes;
     ui->lblHelp->setText ("");
     if(ui->dateFrom1->dateTime() > ui->dateFrom2->dateTime())
     {
@@ -488,13 +488,13 @@ void SplitRoute::btnOK_Click()
 
     _routeNbr1 = ui->rnw1->newRoute();
     _routeNbr2 = ui->rnw2->newRoute();
-    routes = sql->getRouteDataForRouteName(_routeNbr1, ui->rnw1->newRouteName());
+    routes = sql->getRouteInfoForRouteName(_routeNbr1, ui->rnw1->newRouteName());
     if (!routes.isEmpty())
     {
      //foreach (routeData rd1 in routes)
      for(int i = 0; i< routes.count(); i++)
      {
-      RouteData rd1 = routes.at(i);
+      RouteInfo rd1 = routes.at(i);
       if (!(ui->dateFrom1->date() > rd1.endDate() || ui->dateTo1->date() < rd1.startDate()))
       {
        if (!ui->chkDeleteOriginal->isChecked())
@@ -521,13 +521,13 @@ void SplitRoute::btnOK_Click()
       return;
      }
     }
-    routes = sql->getRouteDataForRouteName(_routeNbr2, ui->rnw2->newRouteName());
+    routes = sql->getRouteInfoForRouteName(_routeNbr2, ui->rnw2->newRouteName());
     if (!routes.isEmpty())
     {
      //foreach (routeData rd2 in routes)
      for(int i = 0; i <routes.count(); i ++)
      {
-      RouteData rd2 = routes.at(i);
+      RouteInfo rd2 = routes.at(i);
       if (!(ui->dateFrom2->date() > rd2.endDate() || ui->dateTo1->date() < rd2.startDate()))
       {
        if (!ui->chkDeleteOriginal->isChecked())

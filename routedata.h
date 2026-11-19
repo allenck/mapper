@@ -15,7 +15,7 @@ public:
     RouteData(const RouteData&);
     RouteData(const SegmentData&);
     const QString toString();
-    int route() {return _route;}
+    int route()const {return _route;}
     void setRoute(int route) {_route = route;}
     void setRouteId(int routeId) {_routeId = routeId;}
     QString alphaRoute() const {return _alphaRoute;}
@@ -28,7 +28,7 @@ public:
     QDate endDate() const {return _dateEnd;}
     void setEndDate(QDate date) {_dateEnd = date;}
     void setDoubleDate(QDate date) {_doubleDate = date;}
-    qint32 companyKey() {return _companyKey;}
+    qint32 companyKey()const  {return _companyKey;}
     void setCompanyKey(int key) {_companyKey = key;}
     QString companyMnemonic() {return _companyMnemonic;}
     void setCompanyMnemonic(QString mnemonic){_companyMnemonic = mnemonic;}
@@ -59,7 +59,7 @@ public:
     int baseRoute() {return _baseRoute;}
     void setBaseRoute(int baseRoute){_baseRoute = baseRoute;}
     RouteType routeType() {return _routeType;}
-    int routeId(){return _routeId;}
+    int routeId()const{return _routeId;}
     bool operator==(const RouteData &o);
     QString companyName() {return _coName;}
     void setCompanyName(QString name) {_coName = name;}

@@ -8,6 +8,7 @@ namespace Ui {
 class EditSegmentDialog;
 }
 
+class RouteInfo;
 class WebViewBridge;
 class MainWindow;
 class SQL;
@@ -41,7 +42,7 @@ private:
  WebViewBridge* m_bridge;
  QString m_segmentStatus;
  QString m_segmentColor;
- RouteData* rd = nullptr;
+ RouteInfo* rd = nullptr;
  QStringList _locations;
  //void processAdd();
  QList<SegmentInfo> dupSegments;

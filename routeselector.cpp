@@ -57,7 +57,7 @@ void RouteSelector::setSelections(QList<int> *sellist)
  {
   int row = 0;
 
-  for(RouteData* item2 : list->values())
+  for(RouteInfo* item2 : list->values())
   {
    if(route==item2->route())
    {
@@ -80,7 +80,7 @@ void RouteSelector::setSelections(QList<QString> *sellist)
     {
         int row = 0;
 
-        for(RouteData* item2 : aList->values())
+        for(RouteInfo* item2 : aList->values())
         {
             if(alphaRoute==item2->alphaRoute())
             {
@@ -118,12 +118,12 @@ void RouteSelector::selectionChanged(const QItemSelection &selected, const QItem
     emit selections_changed(selected.indexes(), deselected.indexes());
 }
 
-QList<RouteData*> RouteSelector::getList()
+QList<RouteInfo*> RouteSelector::getList()
 {
  return list->values();
 }
 
-void RouteSelector::setAList(QList<RouteData> *routeList)
+void RouteSelector::setAList(QList<RouteInfo> *routeList)
 {
      ((RouteSelectorTableModel*)model())->createList(routeList, QDate());
 }
@@ -153,7 +153,7 @@ QVariant RouteSelectorTableModel::data(const QModelIndex &index, int role) const
  if(role == Qt::DisplayRole)
  {
   //RouteData* routeName = aList->values().at(index.row());
-     RouteData rd = routeList->at(index.row());
+     RouteInfo rd = routeList->at(index.row());
   switch(index.column())
   {
    case ROUTE:
@@ -223,7 +223,7 @@ bool RouteSelectorTableModel::setData(const QModelIndex &index, const QVariant &
 {
  if(role == Qt::EditRole)
  {
-  RouteData* routeName = aList->values().at(index.row());
+  RouteInfo* routeName = aList->values().at(index.row());
   // switch(index.column())
   // {
   //  case ROUTEPREFIX:
@@ -234,7 +234,7 @@ bool RouteSelectorTableModel::setData(const QModelIndex &index, const QVariant &
  return false;
 }
 
-QMultiMap<QString, RouteData*>* RouteSelectorTableModel::createList(QList<RouteData>* rdList, QDate dt)
+QMultiMap<QString, RouteInfo*>* RouteSelectorTableModel::createList(QList<RouteInfo>* rdList, QDate dt)
 {
     beginResetModel();
     //list->clear();
@@ -242,12 +242,12 @@ QMultiMap<QString, RouteData*>* RouteSelectorTableModel::createList(QList<RouteD
     //     aList = SQL::instance()->routeNameAList();
     // else
     //     aList->clear();
-    aList = new QMultiMap<QString, RouteData*>();
-    foreach(RouteData rd, *rdList)
+    aList = new QMultiMap<QString, RouteInfo*>();
+    foreach(RouteInfo rd, *rdList)
     {
         //if(dt >= rd.startDate().addDays(-700) && dt <= rd.endDate())
         {
-            RouteData* rn = new RouteData(rd);
+            RouteInfo* rn = new RouteInfo(rd);
             rn->setRoute(rd.route());
             rn->setRouteName(rd.routeName());
             rn->setRoutePrefix(rd.routePrefix());
@@ -264,7 +264,7 @@ QMultiMap<QString, RouteData*>* RouteSelectorTableModel::createList(QList<RouteD
     return aList;
 }
 
-void RouteSelectorTableModel::setList(QList<RouteData>* routeList)
+void RouteSelectorTableModel::setList(QList<RouteInfo>* routeList)
 {
     beginResetModel();
     this->routeList = routeList;

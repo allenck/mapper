@@ -55,7 +55,11 @@ depend on which version of QT you are using. For example, QT 5.6.1
 comes compiled with MSVC 2013 or MSVC 2015 or MinGw while QT version
 5.4 comes compiled with MSVC 2010 or MSVC 2013 or MinGw. Qt currently requires MSVC 2019.<br>
 <br>
-<h4>Sqlite</h4>
+<h4>Sqlite user defined functions</h4>
+<strong>Note</strong>: Since later versions of Sqlite allow the creation of user defined functions by incorportating existing C++ functions,
+it is no longer necessary to compile special versions of Sqlite libraries incorporating compiled user defined functions as 
+described here. 
+The following information is provided in case it is needed elsewhere.
 <p>
 Although Qt comes with SQLite3 support built-in, Mapper uses some user defined sql functions which requires
 downloading and compiling SQLite3 from source and creating a library. It is reccommended that the same 
@@ -64,7 +68,8 @@ info can be found in sqlite3.h in <i>Qt/6.8.0/Src/qtbase/3rdparty/sqlite</i> whe
 Qt was installed. Also substitute "6.8.0" with the version number of Qt you are using.
 <p>
 The particular SQLite3 Amalgamation source files can be downloaded from: 
-<a href="https://www.sqlite.org/download.html" name="SQLite Amalgamation"></a>
+<a href="https://www.sqlite.org/download.html" name="SQLite Amalgamation"></a> However note that Qt includes 
+the SQLite3 Amalgamation in the 3rdParty Source folders.
 <p>
 On Linux, the SQLite3 lirary can be compiled with this shell script:
 <ul>
@@ -81,19 +86,48 @@ On Linux, the SQLite3 lirary can be compiled with this shell script:
  </ul>
  The resulting <i>libsqlite3.so</i> library should be copied to some place such as /usr/local/lib.
 
-<h4>Google Maps</h4>
+<h4>Google Maps API keys</h4>
 Google requires that programs using the Google Maps API must have an API key which can be obtained at
  <a href="https://developers.google.com/maps/documentation/javascript/get-api-key"> Use API keys</a>
  No API keys for Google Maps can be stored in source files in GitHub. In fact, Google will 
  invalidate them if they are included in files! Several html files dynamically substitute the actual API key 
- contained in the apikey.js file. apikey.js is a one line source file containing your API key as a constant: <i>var apikey="MY_API_KEY";</i>
- 
-  NOTE that git will ignore the apikey.js in the <i>./mapper_app/Resources</i>.
+ contained in the apikey.js file. apikey.js is a source file containing your API key as a
+  constant: <i>var apikey="MY_API_KEY";</i> Similarly, the apikey.js file can contain any other API keys used by MapQuest or 
+  OpenStreetMaps.
+ <p
+  <strong>NOTE</strong> that git must ignore the apikey.js file in the <i>./mapper_app/Resources to prevent
+   publishing your secret keys in GitHub!</i>.
 
 
 <h5>Macintosh</h5>
 QT is available on the Macintosh. As of December 2023, Mapper has also been successfully implemented on MacOS. <br>
 
 <br>
-
+<h5>QtCreator Plugins</h5>
+The source tree for this project contains several QtCreator custom widgets that are used in several windows and dialogs. 
+These plugins, when properly compiled will allow the widget to be displayed in QtCreator's design mode. However, the custom 
+widget will still be compiled into the target window or dialog. 
+<p>
+In short: To make your custom widget appear in Qt Creator’s palette, you must build and install a Qt Widgets Designer plugin
+ that implements the QDesignerCustomWidgetInterface, ensure it’s in the correct plugin directory, 
+ and match the Qt/Compiler build of Qt Creator. Without this, the widget will only work programmatically, not in the designer. 
+<p>
+In order to successfully compile the plugins, the following points should be observed:
+<ol>
+<li>The version of Qt used to compile the plugin must match that of the version of QtCreator
+You can determine the version of Qt that QtCreator was compiled under by clicking on <strong><strong>Help -> About</strong></strong> in CtCreator. 
+For example QtCreator 20.0.2 was compiled with Qt version 6.11.2 and I compiled my plugins using Qt version 6.11.3.
+</li>
+<li>The plugin must be compiled in <strong>Release</strong> mode. </li>
+<li>The compiled plugin's .dll, .so or .dylib file must be copied to the appropriate location for the operating system in use. This 
+can be done manually or by including a copy file deploy step in the project's configuration.
+Qt Creator looks for designer plugins in:
+ <ul>
+ 	<li><strong>Windows</strong>: <QtCreator>\bin\plugins\designer</li>
+    <li><strong>Linux</strong>: <QtCreator>/lib/Qt/plugins/designer</li>
+    <li><strong>macOS</strong>: Qt Creator.app/Contents/PlugIns/designer</li>
+</ul>
+<li>QtCreator must be restarted after copying a new plugin into its location. Whe in QtCreator's design mode, the status of
+the plugin can be determined by clicking on Tools -> Form Editor -> About QtCreator Widgets Drsigner Plugins.</li>
+</ol>
 </body></html>

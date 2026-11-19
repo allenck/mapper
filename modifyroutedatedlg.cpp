@@ -16,9 +16,9 @@ ModifyRouteDateDlg::ModifyRouteDateDlg(QWidget *parent) :
  connect(ui->rbStart, SIGNAL(toggled(bool)), this, SLOT(rbStartToggled(bool)));
  connect(ui->dateTimePicker1, SIGNAL(dateChanged(QDate)), this, SLOT(dateTimePicker1_ValueChanged(QDate)));
 
- _rd = NULL;
- _otherRd = NULL;
- routeList = QList<RouteData>();
+ _ri = NULL;
+ _otherRi = NULL;
+ routeList = QList<RouteInfo>();
  _currentIx= -1;
  sql = SQL::instance();
 }
@@ -33,19 +33,19 @@ ModifyRouteDateDlg::~ModifyRouteDateDlg()
 // config = cfg;
 //}
 
-void ModifyRouteDateDlg::setRouteData(RouteData* rd)
+void ModifyRouteDateDlg::setRouteData(RouteInfo* rd)
 {
 // this->routeList = routeList;
 // _currentIx = currentIx;
 // rd = routeList.at(currentIx);
- _rd = rd;
+ _ri = rd;
 
  ui->lblError->setText("");
- ui->lblRoute->setText(_rd->toString());
+ ui->lblRoute->setText(_ri->toString());
  //ui->dateTimePicker1->setDateTime(_rd->endDate);
  ui->rbEnd->setChecked(true);
  rbStartToggled(false);
- cd = sql->getCompany(_rd->companyKey());
+ cd = sql->getCompany(_ri->companyKey());
  if(cd)
  {
      maxEndDate = cd->endDate;
@@ -53,7 +53,7 @@ void ModifyRouteDateDlg::setRouteData(RouteData* rd)
  else {
      throw IllegalArgumentException("invalid company");
  }
- QDate nextStartDate = sql->getNextStartOrEndDate(_rd->route(), _rd->startDate(), _rd->segmentId(), true);
+ QDate nextStartDate = sql->getNextStartOrEndDate(_ri->route(), _ri->startDate(),  0, true);
  if(nextStartDate.isValid() && nextStartDate < maxEndDate )
  {
      maxEndDate = nextStartDate.addDays(-1);
@@ -63,9 +63,9 @@ void ModifyRouteDateDlg::setRouteData(RouteData* rd)
  }
 }
 
-RouteData* ModifyRouteDateDlg::getRouteData()
+RouteInfo* ModifyRouteDateDlg::getRouteData()
 {
- return _rd;
+ return _ri;
 }
 
 void ModifyRouteDateDlg::dateTimePicker1_ValueChanged(QDate date) //SLOT
@@ -73,7 +73,7 @@ void ModifyRouteDateDlg::dateTimePicker1_ValueChanged(QDate date) //SLOT
  ui->lblError->setText("");
  if (ui->rbStart->isChecked())
  {
-  if (date >= _rd->endDate())
+  if (date >= _ri->endDate())
   {
    ui->lblError->setText(tr("Invalid date"));
    //System.Media.SystemSounds.Exclamation.Play();
@@ -86,7 +86,7 @@ void ModifyRouteDateDlg::dateTimePicker1_ValueChanged(QDate date) //SLOT
  else
  if (ui->rbEnd->isChecked())
  {
-  if (date <= _rd->startDate())
+  if (date <= _ri->startDate())
   {
    ui->lblError->setText(tr("Invalid date"));
    //System.Media.SystemSounds.Exclamation.Play();
@@ -128,7 +128,7 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
 
  if(ui->rbStart->isChecked())
  {
-  if(ui->dateTimePicker1->date() > _rd->endDate())
+  if(ui->dateTimePicker1->date() > _ri->endDate())
   {
       ui->lblError->setText(tr("New start date > route end date!"));
       QApplication::beep();
@@ -137,7 +137,7 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
  }
  else
  {
-  if(ui->dateTimePicker1->date() < _rd->startDate())
+  if(ui->dateTimePicker1->date() < _ri->startDate())
   {
       ui->lblError->setText(tr("New end date < route start date!"));
       QApplication::beep();
@@ -152,8 +152,8 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
    // see if there is a prior route.
    if(_currentIx > 0)
    {
-    oRd  = routeList.at(_currentIx - 1);
-   _otherRd = &oRd;
+    oRi  = routeList.at(_currentIx - 1);
+   _otherRi = &oRi;
    }
   }
   else
@@ -161,46 +161,46 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
    // see if there is a later route
    if(_currentIx < routeList.size() - 1)
    {
-    rd = routeList.at(_currentIx + 1);
-    _otherRd = &rd;
+    ri = routeList.at(_currentIx + 1);
+    _otherRi = &ri;
    }
   }
  }
  else
-  _otherRd = NULL;
+  _otherRi = NULL;
 
  if(ui->rbStart->isChecked())
  {
-  if(ui->dateTimePicker1->date() > _rd->endDate())
+  if(ui->dateTimePicker1->date() > _ri->endDate())
   {
    qDebug() << "can't set start date to later than end date!";
    ui->lblError->setText(tr("can't set start date %1 to later than end date: %2")
                          .arg(ui->dateTimePicker1->date().toString("yyyy/MM/dd"),
-                              rd.endDate().toString("yyy/MM/dd")));
+                              ri.endDate().toString("yyy/MM/dd")));
    return;
   }
  }
  else
  {
-  if(ui->dateTimePicker1->date() < _rd->startDate())
+  if(ui->dateTimePicker1->date() < _ri->startDate())
   {
    qDebug() << "can't set end date to before start date!";
    ui->lblError->setText(tr("can't set end date %1 to before start date:%2")
                          .arg(ui->dateTimePicker1->date().toString("yyyy/MM/dd"),
-                              rd.startDate().toString("yyyy/MM/dd")));
+                              ri.startDate().toString("yyyy/MM/dd")));
 
    return;
   }
  }
 
  setCursor(Qt::WaitCursor);
- if (sql->modifyRouteDate(_rd, ui->rbStart->isChecked(), ui->dateTimePicker1->date()/*,
+ if (sql->modifyRouteDate(_ri, ui->rbStart->isChecked(), ui->dateTimePicker1->date()/*,
                           ui->txtName1->text(), ui->txtName2->text()*/))
  {
   if (ui->rbStart->isChecked())
-   _rd->startDate() = ui->dateTimePicker1->date();
+   _ri->startDate() = ui->dateTimePicker1->date();
   else
-   _rd->endDate() = ui->dateTimePicker1->date();;
+   _ri->endDate() = ui->dateTimePicker1->date();;
 
   this->accept();
   this->close();
@@ -225,35 +225,35 @@ void ModifyRouteDateDlg::rbStartToggled(bool state)
 
  if(state)
  {
-  ui->dateTimePicker1->setDate(_rd->startDate());
+  ui->dateTimePicker1->setDate(_ri->startDate());
   ui->checkBox->setText(tr("Modify prior route end dates"));
   // changing startDate, get the name of the route before this.
   ui->lblName1->setText("PriorName:");
-  ui->txtName1->setText(sql->getPrevRouteName(rd.startDate()));
+  ui->txtName1->setText(sql->getPrevRouteName(ri.startDate()));
   ui->lblName2->setText("CurrentName:");
-  ui->txtName2->setText(rd.routeName());
+  ui->txtName2->setText(ri.routeName());
  }
  else
  {
-  ui->dateTimePicker1->setDate(_rd->endDate());
+  ui->dateTimePicker1->setDate(_ri->endDate());
   ui->checkBox->setText(tr("Modify subsequent route start dates"));
   ui->lblName1->setText("CurrName:");
-  ui->txtName1->setText(rd.routeName());
+  ui->txtName1->setText(ri.routeName());
   ui->lblName2->setText("NextName:");
-  ui->txtName2->setText(sql->getNextRouteName(rd.endDate()));
+  ui->txtName2->setText(sql->getNextRouteName(ri.endDate()));
 
  }
  ui->checkBox->setChecked(false);
  if(ui->rbStart->isChecked() && _currentIx > 0)
  {
-  RouteData rd = routeList.at(_currentIx - 1);
-  if(_rd->startDate().addDays(-1) == rd.endDate())
+  RouteInfo rd = routeList.at(_currentIx - 1);
+  if(_ri->startDate().addDays(-1) == rd.endDate())
    ui->checkBox->setChecked(true);
  }
  if(ui->rbEnd->isChecked() &&  _currentIx < routeList.size()-1)
  {
-  RouteData rd = routeList.at(_currentIx + 1);
-  if(_rd->endDate().addDays(+1) == rd.startDate())
+  RouteInfo rd = routeList.at(_currentIx + 1);
+  if(_ri->endDate().addDays(+1) == rd.startDate())
    ui->checkBox->setChecked(true);
  }
 }

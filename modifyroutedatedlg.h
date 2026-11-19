@@ -20,19 +20,19 @@ public:
     ~ModifyRouteDateDlg();
     //void setConfiguration(Configuration *cfg);
     //void setRouteData(routeData rd);
-    void setRouteData(RouteData* rd);
-    RouteData* getRouteData();
+    void setRouteData(RouteInfo *rd);
+    RouteInfo *getRouteData();
 
 private:
     Ui::ModifyRouteDateDlg *ui;
-    RouteData rd;
-    RouteData* _rd;
-    RouteData oRd;
-    RouteData* _otherRd;
+    RouteInfo ri;
+    RouteInfo* _ri;
+    RouteInfo oRi;
+    RouteInfo* _otherRi;
     Configuration *config;
     SQL* sql;
     int _currentIx;
-    QList<RouteData> routeList;
+    QList<RouteInfo> routeList;
     QDate maxEndDate;
     CompanyData* cd = nullptr;
 

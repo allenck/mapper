@@ -15,17 +15,17 @@ class DialogCopyRoute : public QDialog
     Q_OBJECT
 
 public:
-    DialogCopyRoute(RouteData rd, QWidget *parent = 0);
+    DialogCopyRoute(RouteInfo rd, QWidget *parent = 0);
     ~DialogCopyRoute();
-    void setRouteData(RouteData value);
-    RouteData getRouteData();
+    void setRouteData(RouteInfo value);
+    RouteInfo getRouteData();
     void setConfiguration(Configuration *value);
     void setCompany(int companyKey);
 
 private:
     Ui::DialogCopyRoute *ui;
 
-    QList<RouteData> routeDataList;
+    QList<RouteInfo> routeDataList;
     QList<CompanyData*> _companyList;
     QMap<int, TractionTypeInfo> tractionList;
     SQL* sql;
@@ -33,8 +33,8 @@ private:
     QString _alphaRoute;
     bool bRouteChanged;
     Configuration *config;
-    RouteData _rd;
-    RouteData* _rd2;
+    RouteInfo* _rd;
+    RouteInfo* _rd2;
     QDate maxEndDate;
 
     CompanyData* cd = nullptr;

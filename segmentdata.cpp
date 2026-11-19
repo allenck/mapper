@@ -196,7 +196,7 @@ QString SegmentData::reverseDescription()
     return "reverse: "+ _description;
 }
 
-void SegmentData::updateRouteInfo(RouteData rd){
+void SegmentData::updateRouteInfo(RouteInfo rd){
     _route = rd.route();
     _routeId = rd.routeId();
     _routeName = rd.routeName();

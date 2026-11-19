@@ -8,7 +8,7 @@
 #include "htmltextedit.h"
 #include "mainwindow.h"
 
-RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, QWidget *parent) :
+RouteCommentsDlg::RouteCommentsDlg(QList<RouteInfo> *routeList, int companyKey, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RouteCommentsDlg)
 {
@@ -126,7 +126,7 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteData> *routeList, int companyKey, 
             config->rcd.hiddenColumns.append(logicalIndex);
     });
 
-    connect(MainWindow::instance(), &MainWindow::routeListChanged, this, [=](QList<RouteData>* routeList){
+    connect(MainWindow::instance(), &MainWindow::routeListChanged, this, [=](QList<RouteInfo>* routeList){
         this->routeList = routeList;
         //_sourceModel->createList(routeList, QDate());
         _sourceModel->setList(routeList);
@@ -179,7 +179,7 @@ void RouteCommentsDlg::tablev_customContextMenu( const QPoint& pt)
     QString routeName = rnix.data().toString();
     QModelIndex dtix = _sourceModel->index(six.row(), RouteSelectorTableModel::DATE);
     QDate date = dtix.data().toDate();
-    RouteData* rd = _sourceModel->aList->values().at(six.row());
+    RouteInfo* rd = _sourceModel->aList->values().at(six.row());
     QAction* displayRouteAct = new QAction(tr("display route"));
     connect(displayRouteAct, &QAction::triggered, this, [=]{
         qDebug() << "display " << routeName << " " << date.toString("yyyy/MM/dd") << " row:" << ix.row();
@@ -213,9 +213,9 @@ QMap<QString, RouteData*>* RouteCommentsDlg::createList(QList<RouteData>* rdList
     return aList;
 }
 #endif
-void RouteCommentsDlg::setRouteData(RouteData rd)
+void RouteCommentsDlg::setRouteData(RouteInfo rd)
 {
-    _rd = rd;
+    _ri = rd;
     _ci.date = rd.startDate();
     _ci.route = rd.route();
     _ci.alphaRoute = rd.alphaRoute();
@@ -579,7 +579,7 @@ void RouteCommentsDlg::OnDateLeave()
     ui->lblInfo2->setText(tr("Route <B>%1</B> comment <B><I>0 of 0</I></B>").arg(_ci.alphaRoute));
     _ci.commentKey = -1;
     if(_ci.route < 1)
-        _ci.route = _rd.route();
+        _ci.route = _ri.route();
     ui->txtTags->clear();
     if(currIx >=0)
     {
