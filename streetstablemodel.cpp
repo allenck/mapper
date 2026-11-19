@@ -10,6 +10,7 @@ StreetsTableModel::StreetsTableModel(QObject *parent)
     : QAbstractTableModel{parent}
 {
     config = Configuration::instance();
+    _dtFormat = SQL::instance()->dateFormat();
     setDb();
     //fixDates();
     //streetsList = getStreets();
@@ -110,9 +111,9 @@ QVariant StreetsTableModel::data(const QModelIndex &index, int role) const
         case LENGTH:
             return si.length;
         case STARTDATE:
-            return si.dateStart.toString("yyyy/MM/dd");
+            return si.dateStart.toString(_dtFormat);
         case ENDDATE:
-            return si.dateEnd.toString("yyyy/MM/dd");
+            return si.dateEnd.toString(_dtFormat);
         case SEGMENTS:
             return si.segmentsToString();
         case COMMENT:
@@ -371,7 +372,7 @@ bool StreetsTableModel::getStreetName(StreetInfo* sti )
                           "Bounds,Segments,Comment, StreetId, Seq, startDate, endDate, rowid"
                           " from StreetDef "
                           " where street = '" + sti->street + "' and Location = '" + sti->location + "'"
-                          " and startDate = '" + sti->dateStart.toString("yyyy/MM/dd") +"'";
+                          " and startDate = '" + sti->dateStart.toString(_dtFormat) +"'";
     QSqlQuery query = QSqlQuery(db);
     bool bQuery = query.exec(commandText);
     if(!bQuery)
@@ -411,7 +412,7 @@ StreetInfo* StreetsTableModel::getOlderStreet(int streetid, QString street, QStr
                           " and streetId = " +QString::number(streetid) + ""
                           " and seq > 0 ";
     if(date.isValid())
-        commandText.append(" and '" + date.toString("yyyy/MM/dd") +"' between startDate and endDate");
+        commandText.append(" and '" + date.toString(_dtFormat) +"' between startDate and endDate");
     QSqlQuery query = QSqlQuery(db);
     bool bQuery = query.exec(commandText);
     if(!bQuery)
@@ -523,7 +524,7 @@ bool StreetsTableModel::doesStreetDefExist(StreetInfo* sti)
                       " where street = '" + sti->street + "'"
                       " and Location = '" + sti->location + "'"
                       " and seq = " + QString::number(sti->sequence) +
-                      " and startDate ='" + sti->dateStart.toString("yyyy/MM/dd") +"'";
+                      " and startDate ='" + sti->dateStart.toString(_dtFormat) +"'";
     if(config->currConnection->servertype() == "PostgreSQL")
         commandText= commandText.replace("rowid","0");
 
@@ -578,7 +579,7 @@ int StreetsTableModel::newStreetDef(QString street, QString location, QDate date
     QString commandText = "insert into StreetDef (Street, Location, startDate) values ("
                           "'" + street + "',"
                           "'" + location + "',"
-                          "'" + date.toString("yyyy/MM/dd") +"')";
+                          "'" + date.toString(_dtFormat) +"')";
 
     QSqlQuery query = QSqlQuery(db);
     bool bQuery = query.exec(commandText);
@@ -630,7 +631,7 @@ int StreetsTableModel::newStreetDef(StreetInfo* sti)
         qDebug() << "street size?";
     if(sti->dateEnd.isValid())
     {
-        qDebug() << "newStreetDef end date not null " << sti->dateEnd.toString("yyyy/MM/dd");
+        qDebug() << "newStreetDef end date not null " << sti->dateEnd.toString(_dtFormat);
         if(doesStreetExist(sti))
             return sti->streetId;
     }
@@ -641,7 +642,7 @@ int StreetsTableModel::newStreetDef(StreetInfo* sti)
                           " values ("
                           "'" + sti->street + "',"
                           "'" + sti->location + "',"
-                          "'" + sti->dateStart.toString("yyyy/MM/dd") +"',"
+                          "'" + sti->dateStart.toString(_dtFormat) +"',"
                           " '',"
                           "0," + QString::number(sti->streetId) + ","
                           "'" + sti->segmentsToString()  + "',"
@@ -693,8 +694,8 @@ bool StreetsTableModel::newStreetName(StreetInfo* info)
     if(info->streetId < 1 || info->street.isEmpty() || !info->dateStart.isValid())
         throw IllegalArgumentException(tr("newStreetName: invalid parameters."));
     if(info->dateEnd.isValid() && info->dateStart > info->dateEnd)
-        qDebug() << "newStreetName " <<info->street << " end date " <<info->dateEnd.toString("yyyy/MM/dd")
-                 << " < start date " << info->dateStart.toString("yyyy/MM/dd");
+        qDebug() << "newStreetName " <<info->street << " end date " <<info->dateEnd.toString(_dtFormat)
+                 << " < start date " << info->dateStart.toString(_dtFormat);
 
     int maxSeq = maxStreetDefSeq(info->streetId);
     if(maxSeq > info->sequence)
@@ -708,8 +709,8 @@ bool StreetsTableModel::newStreetName(StreetInfo* info)
                           + QString::number(info->streetId) + ","
                           "'" + info->street.trimmed() + "',"
                           "'" + info->location.trimmed() + "',"
-                          "'" + info->dateStart.toString("yyyy/MM/dd") + "',"
-                          "'" + info->dateEnd.toString("yyyy/MM/dd")  + "',"
+                          "'" + info->dateStart.toString(_dtFormat) + "',"
+                          "'" + info->dateEnd.toString(_dtFormat)  + "',"
                           "'" + info->comment + "',"
                           + QString::number(info->sequence) +","
                           "'" + info->segmentsToString()  + "',"
@@ -762,7 +763,7 @@ StreetInfo* StreetsTableModel::getEarlierStreetName(int streetId, QDate date)
                           "Bounds,Segments,Comment, StreetId, seq, startDate, "
                           "endDate, rowid "
                           " from StreetDef "
-                          " where startDate < '" + date.toString("yyyy/MM/dd") + "' "
+                          " where startDate < '" + date.toString(_dtFormat) + "' "
                           " and streetId = " + QString::number(streetId);
 
     QSqlQuery query = QSqlQuery(db);
@@ -807,8 +808,8 @@ bool StreetsTableModel::newStreet(StreetInfo si)
                           + QString::number(si.startLatLng.lat()) + "," + QString::number(si.startLatLng.lon()) +","
                           + QString::number(si.endLatLng.lat()) + "," + QString::number(si.endLatLng.lon()) + ","
                           + QString::number(si.length)  + ","
-                          + "'" + si.startDate.toString("yyyy/MM/dd") + "',"
-                          + "'" + si.endDate.toString("yyyy/MM/dd") + "',"
+                          + "'" + si.startDate.toString(_dtFormat) + "',"
+                          + "'" + si.endDate.toString(_dtFormat) + "',"
                           + "'" + si.segmentsToString() + "',"
                           + "'" + si.comment+ "')";
     QSqlQuery query = QSqlQuery(db);
@@ -835,8 +836,8 @@ bool StreetsTableModel::updateStreet(StreetInfo si)
                           " EndLat = " + QString::number(si.endLatLng.lat()) +","
                           " EndLon = " + QString::number(si.endLatLng.lon()) + ","
                           " Length = " + QString::number(si.length)  + ","
-                          " StartDate ='" + si.startDate.toString("yyyy/MM/dd") + "',"
-                          " EndDate = '" + si.endDate.toString("yyyy/MM/dd") + "',"
+                          " StartDate ='" + si.startDate.toString(_dtFormat) + "',"
+                          " EndDate = '" + si.endDate.toString(_dtFormat) + "',"
                           " Segments = '" + si.segmentsToString() + "',"
                           " Comment ='" + si.comment + "'"
                           " where Street = '" + si.street + "'";
@@ -874,8 +875,8 @@ bool StreetsTableModel::updateStreetName(StreetInfo si)
     QString commandText = " Update StreetDef set"
                           " Street ='" + si.street+ "',"
                           " Location = '" + si.location+ "',"
-                          " startDate = '" + si.dateStart.toString("yyyy/MM/dd")+ "',"
-                          " endDate = '" + si.dateEnd.toString("yyyy/MM/dd")+ "',"
+                          " startDate = '" + si.dateStart.toString(_dtFormat)+ "',"
+                          " endDate = '" + si.dateEnd.toString(_dtFormat)+ "',"
                           " StartLatLng = '" + si.startLatLng.str() +"',"
                           " EndLatLng = '" + si.endLatLng.str() +"',"
                           " Bounds = '" + si.bounds.toString() + "',"
@@ -922,8 +923,8 @@ bool StreetsTableModel::updateStreetDef(StreetInfo sti)
     commandText = " Update StreetDef set"
                           " Street ='" + sti.street+ "',"
                           " Location = '" + sti.location+ "',"
-                          " startDate = '" + sti.dateStart.toString("yyyy/MM/dd")+ "',"
-                          " endDate = '" + sti.dateEnd.toString("yyyy/MM/dd")+ "',"
+                          " startDate = '" + sti.dateStart.toString(_dtFormat)+ "',"
+                          " endDate = '" + sti.dateEnd.toString(_dtFormat)+ "',"
                           " StartLatLng = '" + sti.startLatLng.str() +"',"
                           " EndLatLng = '" + sti.endLatLng.str() +"',"
                           " Bounds = '" + sti.bounds.toString() + "',"
@@ -1184,7 +1185,7 @@ bool StreetsTableModel::fixDates()
 {
     QStringList names;
     QList<StreetInfo*>* list;
-    QDate maxDate = QDate::fromString("2050/01/01", "yyyy/MM/dd");
+    QDate maxDate = QDate::fromString("2050/01/01", _dtFormat);
     bool bMustUpdate;
     int maxStreetid = getNextStreetId();
 
@@ -1697,8 +1698,8 @@ bool StreetsTableModel::doesStreetExist(StreetInfo* sti)
     QString commandText = "select streetid, seq from streetdef "
                           "where street ='" +sti->street + "' "
                           "and location = '" + sti->location +"' "
-                          "and startDate ='" + sti->dateStart.toString("yyyy/MM/dd") + "' "
-                          "and endDate = '" + sti->dateEnd.toString("yyyy/MM/dd") + "' ";
+                          "and startDate ='" + sti->dateStart.toString(_dtFormat) + "' "
+                          "and endDate = '" + sti->dateEnd.toString(_dtFormat) + "' ";
 
     QSqlQuery query = QSqlQuery(db);
     bool bQuery = query.exec(commandText);

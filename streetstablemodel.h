@@ -93,6 +93,7 @@ private:
     Configuration* config = nullptr;
     void processStreetUpdate(int streetId, SegmentInfo si);
     QSqlDatabase db;// = SQL::instance()->db;
+    QString _dtFormat="yyyy/MM/dd";
 };
 
 #endif // STREETSTABLEMODEL_H

@@ -2,7 +2,7 @@
 #define SEGMENTDLG_H
 
 #include <QDialog>
-#include "RouteInfo.h"
+#include "routeinfo.h"
 #include "sql.h"
 #include "configuration.h"
 
