@@ -369,7 +369,7 @@ SegmentData::SegmentData(int route, QString name, int segmentId,
 void SegmentData::displaySegment(QString date, QString color, QString trackUsage, bool bClearFirst)
 {
     QVariantList points, objArray;
-    QList<RouteData> myArray ;
+    QList<RouteInfo> myArray ;
     QString routeNames = "no route";
     if(date != "")
     {
@@ -381,7 +381,7 @@ void SegmentData::displaySegment(QString date, QString color, QString trackUsage
             //foreach (routeData rd in myArray)
             for(i=0; i<myArray.count(); i++)
             {
-                RouteData rd = (RouteData)myArray.at(i);
+                RouteInfo rd = myArray.at(i);
                 routeNames += rd.routeName();
                 //i++;
                 if (i+1 < myArray.count())
@@ -426,7 +426,7 @@ void SegmentData::displaySegment(QString date, QString color, QString trackUsage
 void SegmentData::displaySegment( QString color,  bool bClearFirst)
 {
     QVariantList points, objArray;
-    QList<RouteData> myArray ;
+    QList<RouteInfo> myArray ;
     QString routeNames = "no route";
     if(_dateBegin.isValid())
     {
@@ -438,8 +438,8 @@ void SegmentData::displaySegment( QString color,  bool bClearFirst)
             //foreach (routeData rd in myArray)
             for(i=0; i<myArray.count(); i++)
             {
-                RouteData rd = (RouteData)myArray.at(i);
-                routeNames += rd.routeName();
+                RouteInfo ri = myArray.at(i);
+                routeNames += ri.routeName();
                 //i++;
                 if (i+1 < myArray.count())
                     routeNames += ",";

@@ -4,7 +4,7 @@
 #include "routeinfo.h"
 #include "segmentdata.h"
 #include <QWidget>
-//#include "sql.h"
+#include <QLabel>
 
 namespace Ui {
  class RouteNameWidget;
@@ -44,7 +44,7 @@ class RouteNameWidget : public QWidget
  signals:
   void routeNameChanged(QString name);
   void routeNumberChange(int route);
-  void rdSelected(RouteData rd);
+  void rdSelected(RouteInfo ri);
 
 
  private:

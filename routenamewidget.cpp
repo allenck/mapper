@@ -50,12 +50,12 @@ void RouteNameWidget::setSegmentData(SegmentData* sd)
  setRouteName(sd->routeName());
 }
 
-void RouteNameWidget::setRouteData(RouteInfo* rd)
+void RouteNameWidget::setRouteData(RouteInfo* ri)
 {
- this->rd = rd;
- ui->txtRouteNbr->setText(rd->alphaRoute());
+ this->rd = ri;
+ ui->txtRouteNbr->setText(ri->alphaRoute());
  //setRouteName(rd->routeName());
- ui->cbRouteName->addItem(rd->toString(), QVariant::fromValue(rd));
+ ui->cbRouteName->addItem(ri->toString(), QVariant::fromValue(ri));
  ui->cbRouteName->setCurrentIndex(-1);
 }
 
@@ -66,12 +66,12 @@ void RouteNameWidget::setRouteName(QString name)
  ui->cbRouteName->setCurrentText(name);
 }
 
-void RouteNameWidget::setRouteName(RouteInfo rd)
+void RouteNameWidget::setRouteName(RouteInfo ri)
 {
 
-    if(ui->cbRouteName->findText(rd.routeName())==-1)
-        ui->cbRouteName->addItem(rd.routeName(), QVariant::fromValue(rd));
-    ui->cbRouteName->setCurrentText(rd.routeName());
+    if(ui->cbRouteName->findText(ri.routeName())==-1)
+        ui->cbRouteName->addItem(ri.routeName(), QVariant::fromValue(ri));
+    ui->cbRouteName->setCurrentText(ri.routeName());
 }
 
 void RouteNameWidget::configure(SegmentData* sd, QLabel *lblHelpText)
@@ -349,9 +349,9 @@ void RouteNameWidget::clear()
 void RouteNameWidget::routeChange(int )
 {
     QVariant v = ui->cbRouteName->currentData();
-    if(v.canConvert<RouteData>())
+    if(v.canConvert<RouteInfo>())
     {
-        emit rdSelected(v.value<RouteData>());
+        emit rdSelected(v.value<RouteInfo>());
     }
 }
 

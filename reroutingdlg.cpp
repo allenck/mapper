@@ -139,8 +139,8 @@ void ReroutingDlg::on_btnOk_clicked()
             return;
         }
 
-        if(!sql->deleteRouteSegment(sd->route(), sd->routeId(), sd->segmentId(), sd->startDate().toString("yyyy/MM/dd"),
-                                                                                             sd->endDate().toString("yyyy/MM/dd")))
+        if(!sql->deleteRouteSegment(sd->route(), sd->routeId(), sd->segmentId(), sd->startDate(),
+                                                                                             sd->endDate()))
         {
             ui->lblHelp->setText(tr("delete failed"));
             //System.Media.SystemSounds.Asterisk.Play();

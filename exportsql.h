@@ -126,6 +126,7 @@ private:
     QString displayQueryValues(QSqlQuery* query);
     QFile* logfile = nullptr;
     QTextStream* stream = nullptr;
+    QString _dtFormat = "yyyy/MM/dd";
 };
 
 class SleeperThread : public QThread

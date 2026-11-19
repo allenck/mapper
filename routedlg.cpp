@@ -348,7 +348,7 @@ void RouteDlg::setSegmentData(RouteInfo ri)
   if(_ri.route() >= 1)
    companyKey = _ri.companyKey();
   else
-   companyKey = sql->getDefaultCompany(_routeNbr, ui->dateEnd->dateTime().toString("yyyy/MM/dd"));
+   companyKey = sql->getDefaultCompany(_routeNbr, ui->dateEnd->date());
   //i = cbCompany.FindString(companyKey.ToString(), -1);
   //cbCompany.SelectedIndex = i;
   for(int i=0;i<_companyList.count();i++)
@@ -774,7 +774,7 @@ void RouteDlg::dateStart_Leave()
     {
         ui->lblHelpText->setText((tr("Warning: date is prior to previous date for this segment.")));
     }
-    QDate dt = sql->getRoutesEarliestDateForSegment(_ri.route(),_ri.routeName(),-1, _ri.startDate().toString("yyyy/MM/dd"));
+    QDate dt = sql->getRoutesEarliestDateForSegment(_ri.route(),_ri.routeName(),-1, _ri.startDate());
     if(dt.isNull() || !dt.isValid())
         dt = _ri.startDate();
 //    if(ui->cbRouteName->currentIndex() == 0)
@@ -1455,7 +1455,7 @@ void RouteDlg::btnDelete_Click()              // SLOT
 //    sql->OpenConnection();
  sql->beginTransaction("deleteSegment");
 
- if (!sql->deleteRouteSegment(_routeNbr, ui->rnw->getRouteId(), _segmentId, ui->dateStart->text(), ui->dateEnd->text()) == true)
+ if (!sql->deleteRouteSegment(_routeNbr, ui->rnw->getRouteId(), _segmentId, ui->dateStart->date(), ui->dateEnd->date()) == true)
  {
   ui->lblHelpText->setText(tr("deleteRoute failed!"));
   //System.Media.SystemSounds.Beep.Play();
@@ -1692,8 +1692,8 @@ void RouteDlg::btnAdd_Click()         // SLOT
         {
             case QMessageBox::Yes:
                 if(!sql->deleteRouteSegment(csd->route(), csd->routeId(), csd->segmentId()
-                                            ,oldSd->startDate().toString("yyyy/MM/dd"),
-                                            oldSd->endDate().toString("yyyy/MM/dd")))
+                                            ,oldSd->startDate(),
+                                            oldSd->endDate()))
                 {
                  ui->lblHelpText->setText(tr("delete failed"));
                  throw  Exception("add/update failed");
@@ -1730,8 +1730,8 @@ void RouteDlg::btnAdd_Click()         // SLOT
      switch (rslt)
      {
       case QMessageBox::Yes:
-      if(!sql->deleteRouteSegment(csd->route(), csd->routeId(), csd->segmentId(), csd->startDate().toString("yyyy/MM/dd"),
-                              csd->endDate().toString("yyyy/MM/dd")))
+      if(!sql->deleteRouteSegment(csd->route(), csd->routeId(), csd->segmentId(), csd->startDate(),
+                              csd->endDate()))
       {
        ui->lblHelpText->setText(tr("delete failed"));
        throw  Exception("add/update failed");
@@ -1863,7 +1863,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
 
   if (ui->chkOtherRoutes->isChecked())
   {
-      QList<RouteIntersects> likeRoutes = sql->updateLikeRoutes(_segmentId, _routeNbr, ui->rnw->alphaRoute(), ui->dateEnd->text());
+      QList<RouteIntersects> likeRoutes = sql->updateLikeRoutes(_segmentId, _routeNbr, ui->rnw->alphaRoute(), ui->dateEnd->date());
       //foreach (routeIntersects ri in likeRoutes)
       for(int i=0; i < likeRoutes.count(); i++)
       {
@@ -2011,7 +2011,7 @@ void RouteDlg::checkDirection(QString routeDirection)
            sd = _segmentDataList.at(ix);
            if (sql->doesRouteSegmentExist(_routeNbr, ui->rnw->alphaRoute(), _segmentId, sd->startDate(), sd->endDate()))
            {
-            if (sql->deleteRouteSegment(_routeNbr, sd->routeId(), _segmentId,  sd->startDate().toString("yyyy/MM/dd"), sd->endDate().toString("yyyy/MM/dd")) != true)
+            if (sql->deleteRouteSegment(_routeNbr, sd->routeId(), _segmentId,  sd->startDate(), sd->endDate()) != true)
             {
                 ui->lblHelpText->setText(tr("Delete Error"));
                 //System.Media.SystemSounds.Beep.Play();
@@ -2104,8 +2104,8 @@ void RouteDlg::checkDirection(QString routeDirection)
                                             _segmentId, sd->startDate(), sd->endDate()))
              {
                  if (sql->deleteRouteSegment(_routeNbr,sd->routeId(),
-                                             _segmentId, sd->startDate().toString("yyyy/MM/dd"),
-                                             sd->endDate().toString("yyyy/MM/dd")) == false)
+                                             _segmentId, sd->startDate(),
+                                             sd->endDate()) == false)
                  {
                      ui->lblHelpText->setText(tr( "route not deleted"));
                      //System.Media.SystemSounds.Beep.Play();

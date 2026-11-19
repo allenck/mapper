@@ -16,10 +16,12 @@ public:
     ~RouteInfo() {}
     //RouteInfo(const RouteData& rd);
     RouteInfo(const RouteInfo& o);
+#ifndef ROUTENAMEWIDGETPLUGIN
     RouteInfo(const SegmentData &o);
+#endif
     const QString toString();
 
-    //QList<segmentGroup> segments;  // array of segmentGroup objects
+    void addSequence(QPair<int, QString> pair) {_seqList.append(pair);}
     void setRouteId(int routeId){_routeId = routeId;}
     int routeId()const {return _routeId;}
     void setRouteName(QString name) {_routeName = name;}
@@ -35,7 +37,7 @@ public:
     void setCompanyKey(int companyKey){_companyKey = companyKey;}
     QString companyName(){return _companyName;}
     void setCompanyName(QString companyName) {_companyName = companyName;}
-    QString routeName(){return _routeName;}
+    QString routeName()const {return _routeName;}
     QString alphaRoute() const {return _alphaRoute;}
     void setAlphaRoute(QString alphaRoute){_alphaRoute = alphaRoute;}
     QString routePrefix() {return _routePrefix;}

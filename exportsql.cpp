@@ -15,6 +15,7 @@ ExportSql::ExportSql( bool bDropTable, QObject *parent) :
  this->bDropTables = bDropTable;
  srcConn = config->currConnection;
  tgtConn = NULL;
+ _dtFormat = SQL::instance()->dateFormat();
 }
 
 ExportSql::~ExportSql()
@@ -225,7 +226,7 @@ bool ExportSql::exportAll()
   sql->beginTransaction("Route");
 
   commandText = "delete from Routes where route=" +  QString("%1").arg(rd.route()) +" and name='"+ rd.routeName()
-    + "' and startDate='" + rd.startDate().toString("yyyy/MM/dd") + "' and endDate='" + rd.endDate().toString("yyyy/MM/dd") +"'";
+    + "' and startDate='" + rd.startDate().toString(_dtFormat) + "' and endDate='" + rd.endDate().toString(_dtFormat) +"'";
   QSqlQuery* query = new QSqlQuery(_targetDb);
   query->prepare(commandText);
   bool bQuery = query->exec();
@@ -252,8 +253,8 @@ bool ExportSql::exportAll()
   query = new QSqlQuery(srcDb);
   query->prepare(commandText);
   query->bindValue(":route", QString::number(rd.route()));
-  query->bindValue(":startDate", rd.startDate().toString("yyyy/MM/dd"));
-  query->bindValue(":endDate",rd.endDate().toString("yyyy/MM/dd"));
+  query->bindValue(":startDate", rd.startDate().toString(_dtFormat));
+  query->bindValue(":endDate",rd.endDate().toString(_dtFormat));
   bQuery = query->exec();
   if(!bQuery)
   {
@@ -298,7 +299,7 @@ bool ExportSql::exportAll()
       commandText = "select route, name, startDate, endDate, lineKey, companyKey,tractionType,"
                     " Direction, next, prev, normalEnter, normalLeave, reverseEnter, ReverseLeave,"
                     " sequence, reverseSeq, lastUpdate"
-                    " from Routes where route = "+QString("%1").arg(route)+" and name='"+name+ "' and startDate='"+startDate.toString("yyyy/MM/dd")+ "' and endDate='"+endDate.toString("yyyy/MM/dd")+"' and lineKey="+ QString("%1").arg(lineKey);
+                    " from Routes where route = "+QString("%1").arg(route)+" and name='"+name+ "' and startDate='"+startDate.toString(_dtFormat)+ "' and endDate='"+endDate.toString(_dtFormat)+"' and lineKey="+ QString("%1").arg(lineKey);
       QSqlQuery* query2 = new QSqlQuery(_targetDb);
       bQuery = query2->exec(commandText);
       if(!bQuery)
@@ -345,7 +346,7 @@ bool ExportSql::exportAll()
           sendProgress();
           continue;
       }
-      //if(route == route2 && name == name2 && startDate.date().toString("yyyy/MM/dd") == startDate2.date() .toString("yyyy/MM/dd")&& endDate.date().toString("yyyy/MM/dd") == endDate2.date().toString("yyyy/MM/dd") && lineKey == lineKey2)
+      //if(route == route2 && name == name2 && startDate.date().toString(_dtFormat) == startDate2.date() .toString(_dtFormat)&& endDate.date().toString(_dtFormat) == endDate2.date().toString(_dtFormat) && lineKey == lineKey2)
       if(bFound)
       {
           if(tgtConn->servertype() != "MsSql")
@@ -358,7 +359,7 @@ bool ExportSql::exportAll()
                 + ",reverseLeave=" + QString("%1").arg(reverseLeave)
                 + ",sequence=" + QString("%1").arg(sequence)
                 + ",reverseSeq=" + QString("%1").arg(reverseSeq)
-                + ",lastUpdate =:lastUpdate where route=" + QString("%1").arg(route) +" and name='"+ name + "' and startDate='" + startDate.toString("yyyy/MM/dd") + "' and endDate='" + endDate.toString("yyyy/MM/dd") + "' and lineKey=" + QString("%1").arg(lineKey);
+                + ",lastUpdate =:lastUpdate where route=" + QString("%1").arg(route) +" and name='"+ name + "' and startDate='" + startDate.toString(_dtFormat) + "' and endDate='" + endDate.toString(_dtFormat) + "' and lineKey=" + QString("%1").arg(lineKey);
           else
               commandText = "update Routes set companyKey=" + QString("%1").arg(companyKey)
                 + ",tractionType=" + QString("%1").arg(tractionType) + ", direction='"+direction
@@ -370,8 +371,8 @@ bool ExportSql::exportAll()
                 + ",sequence=" + QString("%1").arg(sequence)
                 + ",reverseSeq=" + QString("%1").arg(reverseSeq)
                 + ",lastUpdate=:lastUpdate where route=" + QString("%1").arg(route)
-                + " and name='"+ name + "' and startDate='" + startDate.toString("yyyy/MM/dd") + "'"
-                " and endDate='" + endDate.toString("yyyy/MM/dd") + "'"
+                + " and name='"+ name + "' and startDate='" + startDate.toString(_dtFormat) + "'"
+                " and endDate='" + endDate.toString(_dtFormat) + "'"
                 " and lineKey=" + QString("%1").arg(lineKey);
           query2->prepare(commandText);
           query2->bindValue(":lastUpdate", lastUpdate);
@@ -399,7 +400,7 @@ bool ExportSql::exportAll()
                             "ReverseLeave, Sequence, Reve4seSeq,"
                              " lastUpdate) "
                              "values("+QString("%1").arg(route) + ",'"+name+ "','"
-                             +startDate.toString("yyyy/MM/dd")+ "','"+endDate.toString("yyyy/MM/dd")
+                             +startDate.toString(_dtFormat)+ "','"+endDate.toString(_dtFormat)
                              +"',"+QString("%1").arg(lineKey)+","+QString("%1").arg(companyKey)
                              +","+QString("%1").arg(tractionType)+",'"+direction+"',"+QString("%1").arg(next)
                              +","+QString("%1").arg(prev)+","+QString("%1").arg(normalEnter)
@@ -413,7 +414,7 @@ bool ExportSql::exportAll()
                             "tractionType, Direction, next, prev, normalEnter, normalLeave,"
                             " reverseEnter, ReverseLeave, sequence, ReverseSeq,"
                             " lastUpdate) values("+QString("%1").arg(route) + ",'"+name+ "','"
-                            +startDate.toString("yyyy/MM/dd")+ "','"+endDate.toString("yyyy/MM/dd")
+                            +startDate.toString(_dtFormat)+ "','"+endDate.toString(_dtFormat)
                             +"',"+QString("%1").arg(lineKey)+","+QString("%1").arg(companyKey)
                             +","+QString("%1").arg(tractionType)+",'"+direction+"',"
                             +QString("%1").arg(next)+","+QString("%1").arg(prev)
@@ -430,8 +431,8 @@ bool ExportSql::exportAll()
               qDebug()<< "Error#: " +QString("%1").arg(err.nativeErrorCode());
               qDebug() << err.text() + "\n";
               qDebug() << commandText + " line:" + QString("%1").arg(__LINE__) +"\n";
-              qDebug() <<QString("%1").arg(route)+" " +name+" " +startDate.toString("yyyy/MM/dd")+" " +endDate.toString("yyyy/MM/dd")+" " +QString("%1").arg(lineKey);
-              qDebug()<<QString("%1").arg(route2)+" " +name2+" " +startDate2.toString("yyyy/MM/dd")+" " +endDate2.toString("yyyy/MM/dd")+" " +QString("%1").arg(lineKey2);
+              qDebug() <<QString("%1").arg(route)+" " +name+" " +startDate.toString(_dtFormat)+" " +endDate.toString(_dtFormat)+" " +QString("%1").arg(lineKey);
+              qDebug()<<QString("%1").arg(route2)+" " +name2+" " +startDate2.toString(_dtFormat)+" " +endDate2.toString(_dtFormat)+" " +QString("%1").arg(lineKey2);
 
               //db.close();
               //exit(EXIT_FAILURE);
@@ -930,19 +931,58 @@ bool ExportSql::dropRouteComments()
 bool ExportSql::createRouteNameTable(QSqlDatabase db, QString dbType)
 {
     if(dbType == "Sqlite")
-        return SQL::instance()->executeScript(":/sql/create_routeName.sql", db);
+    {
+        QString commandString = "CREATE TABLE RouteName ( \
+        RouteId integer NOT NULL primary key AUTO_INCREMENT, \
+        Name varchar(140) NOT NULL, \
+        Description varchar(1000), \
+        StartDate date, \
+        EndDate date, \
+        canonicalName varchar(140), \
+        lastUpdate timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, \
+        UNIQUE (name startDate));";
+
+        return SQL::instance()->executeCommand(commandString, db);
+    }
     if(dbType == "MySql")
-        return SQL::instance()->executeScript(":/sql/MySql/mySql_create_routeName.sql", db);
+    {
+        QString commandString = "CREATE TABLE RouteName ( \
+        RouteId integer NOT NULL primary key AUTO_INCREMENT, \
+        Name varchar(140) NOT NULL, \
+        Description nvarchar(1000), \
+        StartDate date, \
+        EndDate date, \
+        canonicalName varchar(140), \
+        lastUpdate timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP, \
+        UNIQUE (name startDate));";
+
+        return SQL::instance()->executeCommand(commandString, db);
+
+    }
     if(dbType == "MsSql")
-        return SQL::instance()->executeScript(":/sql/MsSql/mssql_create_routeName.sql", db);
+    {
+        QString commandString = "CREATE TABLE [RouteName] ( \
+            [RouteId] integer NOT NULL primary key IDENTITY(1,1), \
+            [Name] varchar(140) NOT NULL, \
+            [Description] nvarchar(1000), \
+            [StartDate] date, \
+            [EndDate] date, \
+            [canonicalName] varchar(140), \
+            [lastUpdate] datetime NOT NULL DEFAULT CURRENT_TIMESTAMP, \
+            UNIQUE ([Name], [StartDate]));";
+        return SQL::instance()->executeCommand(commandString, db);
+    }
     if(dbType == "PostgreSQL")
     {
         QString commandString = "CREATE TABLE RouteName  (\
            RouteId  integer NOT NULL primary key GENERATED BY DEFAULT AS IDENTITY,\
            Name  varchar(140) NOT NULL,\
+           Description nvarchar(1000), \
+           StartDate date, \
+           EndDate date, \
            canonicalName varchar(140), \
            lastUpdate  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\
-          UNIQUE (Name ));";
+          UNIQUE (Name, StartDate ));";
 
         return SQL::instance()->executeCommand(commandString, db);
 
@@ -957,6 +997,9 @@ bool ExportSql::createRouteNameTable(QSqlDatabase db, QString dbType)
         QString commandString = "CREATE TABLE RouteName  (\
            RouteId  integer DEFAULT NEXT VALUE FOR routename_seq PRIMARY KEY,\
            Name  varchar(140) NOT NULL,\
+           Description nvarchar(1000), \
+           StartDate date, \
+           EndDate date, \
            canonicalName varchar(140), \
            lastUpdate  timestamp NOT NULL DEFAULT LOCALTIMESTAMP,\
           UNIQUE (Name ));";
@@ -2445,7 +2488,7 @@ bool ExportSql::exportTable(QString inTable)
                         // for some reason, the Sqlite startDate column in Segments had a blank type,
                         // so see if it can be converted to a string and is a valid date.
                         QString str =  query->value(i).toString();
-                        if(QDate::fromString(str,"yyyy/MM/dd").isValid())
+                        if(QDate::fromString(str,_dtFormat).isValid())
                             types.replace(i,"date");
                     }
                     QString outStr;

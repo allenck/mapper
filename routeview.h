@@ -95,7 +95,7 @@ private:
     RouteViewSortProxyModel *proxymodel = nullptr;
     QModelIndex currentIndex;
     CheckRoute *chk;
-    RouteData rd;
+    RouteInfo ri;
     MainWindow* myParent;
     void reSequenceRoute(QString whichEnd);
 

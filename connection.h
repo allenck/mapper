@@ -40,7 +40,6 @@ class Connection : public QObject
  QUuid   _uuid;
  bool _dirty;
  bool _connectionValid = false;
- bool _sqlite_user_function_loaded = false; // true for Sqlite only!
  QStringList _tables;
  QString _connectString;
  QString _sslMode;      // for PostgreSQL connection string
@@ -132,6 +131,7 @@ public:
  void setOpen(bool bOpen){this->bOpen = bOpen;}
  QString createSecureVaultKey();
  QString secureVaultKey();
+ bool _sqlite_user_function_loaded = false; // true for Sqlite only!
 
  bool operator==(const Connection& other)const{
      return other._uuid == this->_uuid;

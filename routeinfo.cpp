@@ -1,6 +1,7 @@
 #include "routeinfo.h"
+#ifndef ROUTENAMEWIDGETPLUGIN
 #include "segmentdata.h"
-//#include "routedata.h"
+#endif
 RouteInfo::RouteInfo()
 {
     _route= -1;
@@ -18,6 +19,7 @@ RouteInfo::RouteInfo()
 //     segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(),
 //                                                                rd.companyKey(), rd.endDate());
 // }
+#ifndef ROUTENAMEWIDGETPLUGIN
 RouteInfo::RouteInfo(const SegmentData& sd)
 {
     //this->rd = rd;
@@ -32,7 +34,7 @@ RouteInfo::RouteInfo(const SegmentData& sd)
     // segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd.route(), rd.routeName(),
     //                                                            rd.companyKey(), rd.endDate());
 }
-
+#endif
 RouteInfo::RouteInfo(qint32 route, QString name, QDate startDate, QDate endDate, int companyKey,
                      QString alphaRoute, int routeId)
 {

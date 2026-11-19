@@ -229,9 +229,8 @@ RouteView::RouteView(QObject* parent )
      SegmentData* sd = sourceModel->listOfSegments.at(ix.row());
      SegmentInfo si = SQL::instance()->convertSegment(segmentId, 1);
      if(si.segmentId() > 0 && si.segmentId() != sd->segmentId()){
-      bool ok = SQL::instance()->deleteRouteSegment(sd->route(), sd->routeId(),sd->segmentId(),
-                                                    sd->startDate().toString("yyyy/MM/dd"),
-                                                    sd->endDate().toString("yyyy/MM/dd"));
+      bool ok = SQL::instance()->deleteRouteSegment(sd->route(), sd->routeId(),sd->segmentId(),sd->startDate(),
+                                                    sd->endDate());
       qDebug() << "old segment deleted " << sd->segmentId() << ok;
       sd->setOneWay("N");
       ok = SQL::instance()->addSegmentToRoute(sd);
@@ -478,8 +477,8 @@ void RouteView::updateRouteView()
     endDate = QDate::fromString(myParent->m_currRouteEndDate, "yyyy/MM/dd");
     alphaRoute = myParent->m_alphaRoute;
 
-    rd = myParent->ui->cbRoute->currentData().value<RouteData>();
-    myParent->ui->routeViewLabel->setText(tr("Route segments for route %1").arg(rd.toString()));
+    ri = myParent->ui->cbRoute->currentData().value<RouteInfo>();
+    myParent->ui->routeViewLabel->setText(tr("Route segments for route %1").arg(ri.toString()));
 
 
     ui->setSortingEnabled(false);
@@ -584,7 +583,7 @@ void RouteView::reSequenceRoute(QString whichEnd)
   //bool bOk=false;
   segmentId = this->model()->getList().at(srcIndex.row())->segmentId();
   qint32 endSegment = -1;
-  endSegment = SQL::instance()->sequenceRouteSegments(segmentId, sourceModel->getList(), &rd, whichEnd);
+  endSegment = SQL::instance()->sequenceRouteSegments(segmentId, sourceModel->getList(), &ri, whichEnd);
   sourceModel->bChangesMade = true;
 #if 0
   QList<SegmentData> old = segmentDataList;
@@ -631,7 +630,7 @@ void RouteView::reSequenceRoute(QString whichEnd)
   }
   emit sendRows (startRow, endRow);
  }
- SQL::instance()->saveRouteSequence(rd, segmentId, whichEnd);
+ SQL::instance()->saveRouteSequence(ri, segmentId, whichEnd);
  sourceModel->reset();
  myParent->setCursor(Qt::ArrowCursor);
 }

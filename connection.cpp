@@ -103,7 +103,7 @@ QSqlDatabase Connection::configure(const QString cName)
         QString cn = db.connectionName();
         Q_ASSERT(!cn.isEmpty());
         _connectionName = cn;
-        if(config->currConnection->servertype() != "Sqlite")
+        if(config->currConnection->servertype() == "Sqlite")
         {
 #ifndef NO_UDF
             if(!config->currConnection->_sqlite_user_function_loaded)

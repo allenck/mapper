@@ -36,6 +36,7 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
   setTitle();
   bChanging = false;
   tgtConn = config->currCity->connections.at(config->currCity->curConnectionId);
+  tgtConn->_sqlite_user_function_loaded = false; // force reload of user defined functions
   ui->chkShowOnly->setText(tr("Show only %1 connections").arg(config->currCity->name()));
   connect(ui->chkShowOnly, &QCheckBox::checkStateChanged,this,[=]{
       fill_cbConnections();
@@ -47,6 +48,12 @@ QueryDialog::QueryDialog(Configuration* cfg, QWidget *parent) :
       db = QSqlDatabase::addDatabase(tgtConn->driver(),tgtConn->connectionName());
   db.open();
   qInfo() << "database is " << (db.isOpen()?"open":"not open")  << db.connectionName() << " " << db.driverName() << " " << db.databaseName();
+
+  if(tgtConn->servertype() == "Sqlite")
+  {
+      if(!tgtConn->_sqlite_user_function_loaded)
+          tgtConn->_sqlite_user_function_loaded =SQL::instance()->loadSqlite3Functions(db);
+  }
 
   tgtConn->setConnectionName(db.connectionName());
   connect(ui->editQuery, SIGNAL(textChanged()), this, SLOT(textChanged()));
@@ -1270,14 +1277,14 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   if(tgt== nullptr)
       return;
   this->tgtConn = tgt;
-  if(ui->cbConnections->currentText() == config->currCity->connections.at(config->currCity->curConnectionId)->description())
+  tgtConn->_sqlite_user_function_loaded = false;
+  QSqlDatabase db = QSqlDatabase::database(tgtConn->connectionName()); // restore default connection
+  if(tgtConn->servertype() == "Sqlite")
   {
-   // reverting to default (currrent) database!
-   //
-   // the docs recommend not setting QSqlDatabase as a member of a class but since
-   // this class is always present once created there should be no problem.
-   QSqlDatabase db = QSqlDatabase::database(tgtConn->connectionName()); // restore default connection
+      if(!tgtConn->_sqlite_user_function_loaded)
+          tgtConn->_sqlite_user_function_loaded =SQL::instance()->loadSqlite3Functions(db);
   }
+
 
   for(int i=0; i<config->currCity->connections.count(); i++)
   {
@@ -1291,7 +1298,6 @@ void QueryDialog::slot_queryView_row_DoubleClicked(QModelIndex index)
   }
 
 #if 1
-  QSqlDatabase db;
   //if(tgtConn->connectionName().isEmpty())
   {
       // if(tgtConn->getDb().isOpen())

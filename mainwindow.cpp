@@ -2572,8 +2572,8 @@ void MainWindow::btnDeleteSegment_Click()   //SLOT
                            {
                            SegmentData *sd = new SegmentData(*segmentDataList.at(i));
                            if (sql->deleteRouteSegment(sd->route(), sd->routeId(), sd->segmentId(),
-                                                       sd->startDate().toString("yyyy/MM/dd"),
-                                                       sd->endDate().toString("yyyy/MM/dd")) != true)
+                                                       sd->startDate(),
+                                                       sd->endDate()) != true)
                                {
                                    //infoPanel.Text = "Delete Error";
                                statusBar()->setStyleSheet("color: red");
