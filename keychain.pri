@@ -9,13 +9,13 @@ INCLUDEPATH += $$PWD/QtKeychain
 
 SOURCES += $$PWD/securevault.cpp \
         $$PWD/dsn.cpp \
-        QtKeychain/qtkeychain/keychain.cpp
+#        QtKeychain/qtkeychain/keychain.cpp
 
 HEADERS += $$PWD/securevault.h \
         $$PWD/cleanerrorstring.h \
         $$PWD/dsn.h \
-        QtKeychain/qtkeychain/keychain.h \
-        QtKeychain/qtkeychain/keychain_p.h \
+        # QtKeychain/qtkeychain/keychain.h \
+        # QtKeychain/qtkeychain/keychain_p.h \
         QtKeychain/qtkeychain/gnomekeyring_p.h \
         QtKeychain/qtkeychain/libsecret_p.h \
         QtKeychain/qtkeychain/plaintextstore_p.h
@@ -27,6 +27,11 @@ win32 {
             -ladvapi32
     SOURCES += QtKeychain/qtkeychain/keychain_win.cpp \
         QtKeychain/qtkeychain/plaintextstore.cpp
+        QtKeychain/qtkeychain/keychain.cpp
+    HEADERS += QtKeychain/qtkeychain/keychain.h \
+        QtKeychain/qtkeychain/keychain_p.h \
+        registrywatcher.h
+
 }
 
 unix:!macx {

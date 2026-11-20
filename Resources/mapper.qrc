@@ -83,10 +83,8 @@
         <file>sql/create_routeView.sql</file>
         <file>sql/Sqlite3/sqlite3_recreate_parameters.sql</file>
         <file>sql/create_routeName.sql</file>
-        <file>sql/MySql/mySql_create_routeName.sql</file>
         <file>sql/MySql/mysql_create_streetdef.sql</file>
         <file>sql/MsSql/mssql_create_streetdef.sql</file>
-        <file>sql/MsSql/mssql_create_routeName.sql</file>
         <file>sql/recreate_streetdef.sql</file>
         <file>sql/MySql/mysql_create_stations.sql</file>
         <file>dump_databases.bat</file>

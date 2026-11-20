@@ -97,7 +97,15 @@ SOURCES += main.cpp\
     dialogeditcomments.cpp \
     dialoghtmledit.cpp \
     dialogselectlist.cpp \
-    dialognewconnection.cpp
+    dialognewconnection.cpp \
+    bounds.cpp \
+    bearing.cpp \
+    routedata.cpp\
+    routeinfo.cpp \
+    parameters.cpp \
+    segmentdata.cpp \
+    segmentinfo.cpp
+
 
 HEADERS  += mainwindow.h \
     $$PWD/browsecommentsdialog.h \
@@ -201,61 +209,71 @@ HEADERS  += mainwindow.h \
     dialogeditcomments.h \
     dialoghtmledit.h \
     dialogselectlist.h \
-    dialognewconnection.h
+    dialognewconnection.h \
+    bounds.h \
+    bearing.h \
+    routedata.h \
+    routeinfo.h \
+    routetype.h \
+    parameters.h \
+    segmentdata.h \
+    segmentinfo.h
 
 win32: HEADERS += registrywatcher.h
 
 FORMS += \
-    $$PWD/ui/newquerydialog.ui \
-     ui/dialogchangeroute.ui \
-     ui/modifyroutetractiontypedlg.ui \
-     ui/newcitydialog.ui \
-     ui/removecitydialog.ui \
-     ui/dialogtextedit.ui \
-     ui/dialogeditparameters.ui \
-     ui/routenamewidget.ui \
-     ui/splitcompanyroutesdialog.ui \
-     ui/systemconsole2.ui \
-     ui/mainwindow.ui \
-    $$PWD/ui/modifyroutedialog.ui \
-    $$PWD/ui/splitsegmentdlg.ui \
-    ui/addgeoreferenceddialog.ui \
-    ui/dialogcopyroute.ui \
-    ui/routedlg.ui \
-    ui/segmentdlg.ui \
-    ui/splitroute.ui \
-    ui/modifyroutedatedlg.ui \
-    ui/editstation.ui \
-    ui/exportdlg.ui \
-    ui/editconnectionsdlg.ui \
-    ui/locatestreetdlg.ui \
-    ui/combineroutesdlg.ui \
-    ui/routecommentsdlg.ui \
-    ui/reroutingdlg.ui \
-    ui/createsqlitedatabasedialog.ui \
-    ui/querydialog.ui \
-    ui/exportroutedialog.ui \
-    ui/editcitydialog.ui \
-    ui/editsegmentdialog.ui \
-    ui/editsegmentdialog.ui \
-    ui/browsecommentsdialog.ui \
-    ui/replacesegmentdialog.ui \
-    ui/segmentselectionwidget.ui \
-    ui/dialogeditstreets.ui \
-    ui/dialogpreferences.ui \
-    ui/dialogupdatestreets.ui \
-    ui/findreplacewidget.ui \
-    ui/dialogeditcomments.ui \
-    ui/dialoghtmledit.ui \
-    ui/dialogselectlist.ui \
-    ui/dialognewconnection.ui \
-    ui/dialogeditstreets.ui \
-    ui/dialogpreferences.ui \
-    ui/dialogupdatestreets.ui \
-    ui/dialogeditcomments.ui \
-    ui/dialoghtmledit.ui \
-    ui/dialogselectlist.ui \
-    ui/dialognewconnection.ui
+    $$PWD/newquerydialog.ui \
+     dialogchangeroute.ui \
+     modifyroutetractiontypedlg.ui \
+     newcitydialog.ui \
+     removecitydialog.ui \
+     dialogtextedit.ui \
+     dialogeditparameters.ui \
+     routenamewidget.ui \
+     splitcompanyroutesdialog.ui \
+     systemconsole2.ui \
+     mainwindow.ui \
+    $$PWD/modifyroutedialog.ui \
+    $$PWD/splitsegmentdlg.ui \
+    addgeoreferenceddialog.ui \
+    dialogcopyroute.ui \
+    routedlg.ui \
+    segmentdlg.ui \
+    splitroute.ui \
+    modifyroutedatedlg.ui \
+    editstation.ui \
+    exportdlg.ui \
+    editconnectionsdlg.ui \
+    locatestreetdlg.ui \
+    combineroutesdlg.ui \
+    routecommentsdlg.ui \
+    reroutingdlg.ui \
+    createsqlitedatabasedialog.ui \
+    querydialog.ui \
+    exportroutedialog.ui \
+    editcitydialog.ui \
+    editsegmentdialog.ui \
+    editsegmentdialog.ui \
+    browsecommentsdialog.ui \
+    replacesegmentdialog.ui \
+    segmentselectionwidget.ui \
+    dialogeditstreets.ui \
+    dialogpreferences.ui \
+    dialogupdatestreets.ui \
+    findreplacewidget.ui \
+    dialogeditcomments.ui \
+    dialoghtmledit.ui \
+    dialogselectlist.ui \
+    dialognewconnection.ui \
+    dialogeditstreets.ui \
+    dialogpreferences.ui \
+    dialogupdatestreets.ui \
+    dialogeditcomments.ui \
+    dialoghtmledit.ui \
+    dialogselectlist.ui \
+    dialognewconnection.ui \
+    dialogupdatestreets.ui
+
 
 DISTFILES += \
  $$PWD/Resources/api_key.txt \
