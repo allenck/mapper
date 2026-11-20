@@ -51,7 +51,7 @@ private:
     QList<CommentInfo>* orphans = nullptr;
     QList<CommentInfo>* comments = nullptr;
     int currIx = -1;
-    QMap<QString, RouteData*>* aList = nullptr;
+    QMap<QString, RouteInfo*>* aList = nullptr;
 
     int ixOrphan=-1;
     // int commentsUpdated = 0;

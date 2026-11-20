@@ -32,7 +32,7 @@ private:
     QList<CommentInfo*> *list;
     CommentInfo* info;
     QList<RouteComments*> rcList;
-    QList<RouteData>* routeList = nullptr;
+    QList<RouteInfo>* routeList = nullptr;
     RouteSelectorTableModel* _model = nullptr;
     QList<int>* routes = nullptr;
     QStringList* aRoutes = nullptr;

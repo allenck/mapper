@@ -12,7 +12,7 @@ class QDomElement;
 class QDomDocument;
 class SQL;
 //class RouteInfo;
-class RouteData;
+//class RouteData;
 class Kml : public QObject
 {
  Q_OBJECT

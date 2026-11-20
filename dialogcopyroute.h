@@ -52,7 +52,7 @@ private slots:
     void cbCompany_SelectedIndexChanged(int row);
     void dateEnd_ValueChanged();
     void dateStart_ValueChanged();   //SLOT
-    void on_rdSelected(RouteData);
+    void on_rdSelected(RouteInfo);
 };
 
 #endif // DIALOGCOPYROUTE_H

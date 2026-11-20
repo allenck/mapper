@@ -61,7 +61,7 @@ public:
 
 
 signals:
- void displayRoute(RouteData rd);
+ void displayRoute(RouteInfo rd);
 
 public slots:
  void On_displayRouteAct_triggered(bool);

@@ -211,7 +211,7 @@ public slots:
     void segmentChanged(qint32 changedSegment, qint32 newSegment);
     QMenu* addSegmentMenu(SegmentData* sd);
     QT_DEPRECATED void getArrayResult(QVariant);
-    void selectRoute(RouteData rd);
+    void selectRoute(RouteInfo ri);
     void displayRouteComment(CommentInfo ci);
     void on_selectOverlaySources();
     void setZoom();

@@ -591,8 +591,8 @@ void DialogCopyRoute::btnCancel_Click()      // SLOT
     this->close();
 }
 
-void DialogCopyRoute::on_rdSelected(RouteData rd)
+void DialogCopyRoute::on_rdSelected(RouteInfo ri)
 {
-    ui->dateStart->setDate(rd.startDate());
-    ui->dateEnd->setDate(rd.endDate());
+    ui->dateStart->setDate(ri.startDate());
+    ui->dateEnd->setDate(ri.endDate());
 }

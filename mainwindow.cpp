@@ -426,9 +426,9 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
           {
              //RouteComments rc = comments->at(i);
              CommentInfo ci = comments->at(i);
-             RouteData rd = ui->cbRoute->currentData().value<RouteData>();
-             ci.routeId = rd.routeId();
-             ci.routeName = rd.routeName();
+             RouteInfo ri = ui->cbRoute->currentData().value<RouteInfo>();
+             ci.routeId = ri.routeId();
+             ci.routeName = ri.routeName();
              if(ci.alphaRoute == currCi.alphaRoute && ci.date == currCi.date && ci.commentKey == currCi.commentKey)
              {
                  currIx = i;
@@ -565,9 +565,9 @@ void MainWindow::onCommentChange(CommentInfo ci, SQL::CHANGETYPE t)
         {
            //RouteComments rc = comments->at(i);
            CommentInfo ci = comments->at(i);
-           RouteData rd = ui->cbRoute->currentData().value<RouteData>();
-           ci.routeId = rd.routeId();
-           ci.routeName = rd.routeName();
+           RouteInfo ri = ui->cbRoute->currentData().value<RouteInfo>();
+           ci.routeId = ri.routeId();
+           ci.routeName = ri.routeName();
            if(ci.alphaRoute == currCi.alphaRoute && ci.date == currCi.date && ci.commentKey == currCi.commentKey)
            {
                currIx = i;
@@ -2767,14 +2767,14 @@ void MainWindow::refreshRoutes()
     emit routeListChanged(&routeList);
 }
 
-void MainWindow::selectRoute(RouteData rd)
+void MainWindow::selectRoute(RouteInfo ri)
 {
  //int ix = ui->cbRoute->findData(QVariant::fromValue(rd));
  int ix;
  for(ix=0; ix < ui->cbRoute->count(); ix++)
  {
-  RouteData rd1 = ui->cbRoute->itemData(ix).value<RouteData>();
-  if(rd1 == rd)
+  RouteInfo ri1 = ui->cbRoute->itemData(ix).value<RouteInfo>();
+  if(ri1 == ri)
    break;
  }
  if(ix >= 0)
@@ -3199,9 +3199,9 @@ void MainWindow::loadRouteComment(QDate dtIn)
     CommentInfo ci;
     if(currIx >=0)
         ci = comments->at(currIx);
-    RouteData rd = ui->cbRoute->currentData().value<RouteData>();
-    ci.routeId = rd.routeId();
-    ci.routeName = rd.routeName();
+    RouteInfo ri = ui->cbRoute->currentData().value<RouteInfo>();
+    ci.routeId = ri.routeId();
+    ci.routeName = ri.routeName();
     displayRouteComment(ci);
 }
 
@@ -3221,9 +3221,9 @@ void MainWindow::displayRouteComment(CommentInfo ciIn)
  if(currIx >=0)
  {
      ci = comments->at(currIx);
-     RouteData rd = ui->cbRoute->currentData().value<RouteData>();
-     ci.routeId = rd.routeId();
-     ci.routeName = rd.routeName();
+     RouteInfo ri = ui->cbRoute->currentData().value<RouteInfo>();
+     ci.routeId = ri.routeId();
+     ci.routeName = ri.routeName();
  }
  // if(rc.ci.comments.isEmpty())
  // {
@@ -3340,9 +3340,9 @@ void MainWindow::getInfoWindowComments(double lat, double lon, int route, QStrin
      currIx++;
  }
  ci = comments->at(currIx);
- RouteData rd = ui->cbRoute->currentData().value<RouteData>();
- ci.routeId = rd.routeId();
- ci.routeName = rd.routeName();
+ RouteInfo ri = ui->cbRoute->currentData().value<RouteInfo>();
+ ci.routeId = ri.routeId();
+ ci.routeName = ri.routeName();
  ci.date = dt;
 
  displayRouteComment(ci);

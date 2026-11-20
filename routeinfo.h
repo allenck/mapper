@@ -18,8 +18,9 @@ public:
     RouteInfo(const RouteInfo& o);
 #ifndef ROUTENAMEWIDGETPLUGIN
     RouteInfo(const SegmentData &o);
+    bool operator==(const RouteInfo &o);
 #endif
-    const QString toString();
+    QString toString();
 
     void addSequence(QPair<int, QString> pair) {_seqList.append(pair);}
     void setRouteId(int routeId){_routeId = routeId;}

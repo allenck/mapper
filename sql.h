@@ -126,7 +126,7 @@ public:
     int findNextRouteInRange(QString txt);
     bool updateTerminals(TerminalInfo ti);
     bool updateTerminals(qint32 route, QString name, QDate startDate, QDate endDate, qint32 startSegment, QString startWhichEnd, qint32 endSegment, QString endWhichEnd);
-    QList<RouteData> getRouteInfo(qint32 route);
+    QList<RouteInfo> getRouteInfo(qint32 route);
     RouteSeq getRouteSeq(RouteInfo rd);
     bool deleteRouteSeq(RouteSeq rs);
     bool addRouteSeq(RouteSeq rs);
@@ -167,7 +167,7 @@ public:
     QList<SegmentData *> getSegmentDataList(RouteInfo rd);
     QList<SegmentData*> getSegmentDataList(int route);
     SegmentData* getConflictingSegmentDataForRoute(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate);
-    RouteData getRouteDataForRouteDates(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate);
+    //RouteData getRouteDataForRouteDates(qint32 route, QString name, qint32 segmentId, QString startDate, QString endDate);
     bool deleteRoute(qint32 route, int routeId, QString startDate, QString endDate);
     bool modifyRouteDate(RouteInfo *rd, bool bStartDate, QDate dt);
     //bool modifyCurrentRoute(RouteData *rd, bool bStartDate, QDate dt, QString name1, QString name2);
@@ -269,7 +269,7 @@ public:
     bool updateRouteForStations(int oldRoute, int newRoute);
     bool deleteTerminalInfo(int route);
     bool deleteRoute(SegmentData rd);
-    bool deleteRoute(RouteData rd);
+    //bool deleteRoute(RouteData rd);
     QString currentTransaction;
     bool doesFunctionExist(QString name, QString serverType);
     bool expandRouteName();

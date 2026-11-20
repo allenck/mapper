@@ -202,7 +202,7 @@ RouteView::RouteView(QObject* parent )
 
        if(box->exec() == QMessageBox::Ok)
        {
-        RouteData rd = cbCombo->currentData().value<RouteData>();
+        RouteInfo rd = cbCombo->currentData().value<RouteInfo>();
         if(cbCombo->currentIndex() < 0)
          return;
         for(SegmentData* sd : sourceModel->_selectedSegments)

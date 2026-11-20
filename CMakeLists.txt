@@ -15,7 +15,7 @@ qt_add_executable(mapper WIN32 MACOSX_BUNDLE
 #    $ENV{QTDIR}/../Src/qtbase/src/3rdparty/sqlite/sqlite3.c $ENV{QTDIR}/../Src/qtbase/src/3rdparty/sqlite/sqlite3.h
     ${SQLITE3_SOURCE}
     QtKeychain/qtkeychain/gnomekeyring_p.h
-    QtKeychain/qtkeychain/keychain.cpp QtKeychain/qtkeychain/keychain.h QtKeychain/qtkeychain/keychain_p.h
+#    QtKeychain/qtkeychain/keychain.cpp QtKeychain/qtkeychain/keychain.h QtKeychain/qtkeychain/keychain_p.h
     QtKeychain/qtkeychain/libsecret_p.h
     QtKeychain/qtkeychain/plaintextstore_p.h
     addgeoreferenceddialog.cpp addgeoreferenceddialog.h
@@ -378,7 +378,7 @@ if(release)
     )
 endif()
 
-if(MACOS)
+if(APPLE)
     target_sources(mapper PUBLIC
         QtKeychain/qtkeychain/keychain_apple.mm
     )
@@ -400,7 +400,8 @@ if(WIN32)
         QtKeychain/qtkeychain/keychain_win.cpp
         QtKeychain/qtkeychain/plaintextstore.cpp
         registrywatcher.h
-    )
+        QtKeychain/qtkeychain/keychain.cpp QtKeychain/qtkeychain/keychain.h QtKeychain/qtkeychain/keychain_p.h
+)
 
     target_link_libraries(mapper PRIVATE
         advapi32
@@ -408,7 +409,7 @@ if(WIN32)
     )
 endif()
 
-if(UNIX AND NOT MACOS)
+if(UNIX AND NOT APPLE)
     target_sources(mapper PUBLIC
         QtKeychain/qtkeychain/gnomekeyring.cpp
         QtKeychain/qtkeychain/keychain_unix.cpp

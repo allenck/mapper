@@ -128,9 +128,9 @@ bool OtherRouteView::boolGetItemTableView(QTableView *table)
 
 void OtherRouteView::On_displayRouteAct_triggered(bool)
 {
- RouteData rd = RouteData(*sd);
- MainWindow::instance()->selectRoute(rd);
- emit displayRoute(rd);
+ RouteInfo ri = RouteInfo(*sd);
+ MainWindow::instance()->selectRoute(ri);
+ emit displayRoute(ri);
 }
 
 otherRouteViewSortProxyModel::otherRouteViewSortProxyModel(QObject *parent) :

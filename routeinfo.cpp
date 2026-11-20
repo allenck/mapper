@@ -68,6 +68,15 @@ RouteInfo::RouteInfo(const RouteInfo &o)
     _description = o._description;
 }
 
+bool RouteInfo::operator==(const RouteInfo& o )
+{
+    if(o._route == _route && o._canonicalName == _canonicalName
+        && o._startDate == _startDate)
+        return true;
+    return false;
+}
+
+
 QString RouteInfo::description(){
     return _description;
 }
@@ -76,7 +85,7 @@ void RouteInfo::setDescription(QString description)
     _description = description;
 }
 
-const QString RouteInfo::toString()
+QString RouteInfo::toString()
 {
     bool isNumeric;
     int num = _alphaRoute.toInt(&isNumeric);
