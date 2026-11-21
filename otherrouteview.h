@@ -47,6 +47,7 @@ private:
     SegmentData* sd;
     bool boolGetItemTableView(QTableView *table);
     QModelIndex currentIndex;
+    QString _dtFormat;
 
 private slots:
 
@@ -82,6 +83,6 @@ private:
     int curRow, curCol;
     bool boolGetItemTableView(QTableView *table);
     QModelIndex currentIndex;
-
+    QString _dtFormat;
 };
 #endif // OTHERROUTEVIEW_H

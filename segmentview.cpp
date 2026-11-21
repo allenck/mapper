@@ -1,5 +1,6 @@
 ﻿#include "segmentview.h"
 #include "editsegmentdialog.h"
+#include "myapplication.h"
 #include "webviewbridge.h"
 #include "dupsegmentview.h"
 #include "sql.h"
@@ -10,6 +11,8 @@ SegmentView::SegmentView(Configuration *cfg, QObject *parent) :
     m_parent = parent;
     config = Configuration::instance();
     //sql->setConfig(config)
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
     sql = SQL::instance();
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     ui = myParent->ui->tblSegmentView;
@@ -258,7 +261,7 @@ void SegmentView::addToRoute()
  {
   //SegmentInfo sd = sql->getSegmentInfo(segmentId);
   //parent->displaySegment(segmentId, sd->description(), /*sd->oneWay(),*/ /*sd->oneWay() == "N" ? "#00FF00" :*/ "#045fb4", " ", true);
-     sd->displaySegment(sd->startDate().toString("yyyy/MM/dd"), "#045fb4",sd->trackUsage(), true);
+     sd->displaySegment(sd->startDate().toString(_dtFormat), "#045fb4",sd->trackUsage(), true);
  }
  parent->routeDlg->setSegmentData(sd); // do before setting route!
  int ix = parent->ui->cbRoute->currentIndex();

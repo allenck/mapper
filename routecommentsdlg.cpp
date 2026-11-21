@@ -1,5 +1,6 @@
 #include "routecommentsdlg.h"
 #include "dialogeditcomments.h"
+#include "myapplication.h"
 #include "ui_routecommentsdlg.h"
 #include <QCompleter>
 #include <QFontDialog>
@@ -13,6 +14,8 @@ RouteCommentsDlg::RouteCommentsDlg(QList<RouteInfo> *routeList, int companyKey, 
     ui(new Ui::RouteCommentsDlg)
 {
     ui->setupUi(this);
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
     this->routeList = routeList;
     proxyModel = (QSortFilterProxyModel*)ui->tableView->model();
     _sourceModel = (RouteSelectorTableModel*)proxyModel->sourceModel();
@@ -182,7 +185,7 @@ void RouteCommentsDlg::tablev_customContextMenu( const QPoint& pt)
     RouteInfo* rd = _sourceModel->aList->values().at(six.row());
     QAction* displayRouteAct = new QAction(tr("display route"));
     connect(displayRouteAct, &QAction::triggered, this, [=]{
-        qDebug() << "display " << routeName << " " << date.toString("yyyy/MM/dd") << " row:" << ix.row();
+        qDebug() << "display " << routeName << " " << date.toString(_dtFormat) << " row:" << ix.row();
         MainWindow::instance()->On_displayRoute(rd);
     });
     menu.addAction(displayRouteAct);
@@ -501,7 +504,7 @@ void RouteCommentsDlg::displayComment(CommentInfo newCi)
 void RouteCommentsDlg::onChgDate()
 {
     QDateEdit* de = new QDateEdit(ui->dateEdit->date());
-    de->setDisplayFormat("yyyy/MM/dd");
+    de->setDisplayFormat(_dtFormat);
 
     QMessageBox box = QMessageBox(QMessageBox::Question, tr("Move Date"), tr("Enter a new date for this comment"), QMessageBox::Apply|QMessageBox::Cancel);
     QLayout* layout = box.layout();
@@ -898,7 +901,7 @@ void RouteCommentsDlg::scan()
     // {
     //     if(sql->deleteRouteComment(*rc))
     //     {
-    //         scanLog.append(tr("Delete invalid RouteComments route=%1 date=%2 referencing commentKey=%3").arg(rc->route).arg(rc->date.toString("yyyy/MM/dd").arg(rc->commentKey)));
+    //         scanLog.append(tr("Delete invalid RouteComments route=%1 date=%2 referencing commentKey=%3").arg(rc->route).arg(rc->date.toString(_dtFormat).arg(rc->commentKey)));
     //         invalidRouteComments++;
     //     }
     // }
@@ -1201,7 +1204,7 @@ bool RouteCommentsDlg::processOrphan()
         ui->txtTags->setText(info.tags);
         ui->txtCommentId->setText(QString::number(info.commentKey));
         ui->txtRoutesUsed->clear();
-        ui->dateEdit->setDate(QDate::fromString("1799/12/31","yyyy/MM/dd"));
+        ui->dateEdit->setDate(QDate::fromString("1799/12/31",_dtFormat));
         ui->dateEdit->setStyleSheet("color: red");
         _ci = info;
 

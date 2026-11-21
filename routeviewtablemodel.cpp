@@ -1,5 +1,6 @@
 #include "routeviewtablemodel.h"
 #include <QDebug>
+#include "myapplication.h"
 #include "webviewbridge.h"
 #include "mainwindow.h"
 #include "segmentdescription.h"
@@ -7,6 +8,8 @@
 RouteViewTableModel::RouteViewTableModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
  selectedRow = -1;
  bSelectedRowChanged = false;
  bIsSequenced = false;
@@ -260,11 +263,11 @@ QVariant RouteViewTableModel::data(const QModelIndex &index, int role) const
    case RL:
     return turnMap2.value(sd->reverseLeave());
    case STARTDATE:
-       return sd->startDate().toString("yyyy/MM/dd");
+       return sd->startDate().toString(_dtFormat);
    case DOUBLEDATE:
-       return sd->doubleDate().toString("yyyy/MM/dd");
+       return sd->doubleDate().toString(_dtFormat);
    case ENDDATE:
-       return sd->endDate().toString("yyyy/MM/dd");
+       return sd->endDate().toString(_dtFormat);
    case DISTANCE:
        return sd->length();
    case ANGLES:
@@ -502,7 +505,7 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
     sd->setReverseLeave(value.toInt());
     break;
    case STARTDATE:
-    dt = QDate::fromString(value.toString(), "yyyy/MM/dd");
+    dt = QDate::fromString(value.toString(), _dtFormat);
     if(dt.isValid())
     {
         bSegmentNeedsUpdate = true;
@@ -510,7 +513,7 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
     }
     break;
    case DOUBLEDATE:
-       dt = QDate::fromString(value.toString(), "yyyy/MM/dd");
+       dt = QDate::fromString(value.toString(), _dtFormat);
        if(dt.isValid())
        {
            bSegmentNeedsUpdate = true;
@@ -519,7 +522,7 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
        break;
    case ENDDATE:
     dt = value.toDate();
-    if(dt.isValid())QDate::fromString(value.toString(), "yyyy/MM/dd");
+    if(dt.isValid())QDate::fromString(value.toString(), _dtFormat);
     {
      bSegmentNeedsUpdate = true;
      sd->setEndDate(dt);
@@ -541,7 +544,7 @@ bool RouteViewTableModel::setData(const QModelIndex &index, const QVariant &valu
 
    // display the modified segment
    QString c = MainWindow::instance()->getColor(sd->tractionType());
-   sd->displaySegment(MainWindow::instance()->ui->dateEdit->date().toString("yyyy/MM/dd"),c,sd->trackUsage(), true);
+   sd->displaySegment(MainWindow::instance()->ui->dateEdit->date().toString(_dtFormat),c,sd->trackUsage(), true);
 
    //listOfSegments.replace(row, sd);
    SQL::instance()->updateRoute(oldSd,*sd);
@@ -708,8 +711,8 @@ bool RouteViewTableModel::commitChanges()
     if(rc->bDeleted)
     {
      if(!SQL::instance()->deleteRouteSegment(rc->osd->route(), rc->osd->routeName(),
-                                            rc->osd->segmentId(), rc->osd->startDate().toString("yyyy/MM/dd"),
-                                            rc->osd->endDate().toString("yyyy/MM/dd")))
+                                            rc->osd->segmentId(), rc->osd->startDate().toString(_dtFormat),
+                                            rc->osd->endDate().toString(_dtFormat)))
      {
       SQL::instance()->rollbackTransaction("updateRoute");
       return false;

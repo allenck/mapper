@@ -1,4 +1,5 @@
 #include "exportsql.h"
+#include "myapplication.h"
 #include "qsqlerror.h"
 #include <QMessageBox>
 #include "sql.h"
@@ -15,7 +16,7 @@ ExportSql::ExportSql( bool bDropTable, QObject *parent) :
  this->bDropTables = bDropTable;
  srcConn = config->currConnection;
  tgtConn = NULL;
- _dtFormat = SQL::instance()->dateFormat();
+ _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
 }
 
 ExportSql::~ExportSql()

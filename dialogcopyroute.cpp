@@ -1,4 +1,5 @@
 #include "dialogcopyroute.h"
+#include "myapplication.h"
 #include "ui_dialogcopyroute.h"
 #include "clipboard.h"
 
@@ -10,6 +11,8 @@ DialogCopyRoute::DialogCopyRoute(RouteInfo rd, QWidget *parent) :
     config = Configuration::instance();
     //sql->setConfig(cfg);
     sql = SQL::instance();
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
     ui->setupUi(this);
     bRouteChanged = false;
     fillCompanies();
@@ -332,7 +335,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     }
     if(ui->dateEnd->date() > maxEndDate)
     {
-        ui->lblHelp->setText(tr("Date error. End date must not be ;ater than %1").arg(maxEndDate.toString("yyyy/MM/dd")));
+        ui->lblHelp->setText(tr("Date error. End date must not be later than %1").arg(maxEndDate.toString(_dtFormat)));
         //System.Media.SystemSounds.Asterisk.Play();
         ui->dateStart->setFocus();
         QApplication::beep();
@@ -354,7 +357,7 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     {
         SegmentData* sd = conflicts.at(0);
         ui->lblHelp->setText(tr("dates conflict with route %1 %2 %3-%4").arg(sd->route())
-                                 .arg(sd->routeName(), sd->startDate().toString("yyyy/MM/dd"),
+                                 .arg(sd->routeName(), sd->startDate().toString(_dtFormat),
                                      sd->endDate().toString("yyy/MM/dd")));
         qCritical() << ui->lblHelp->text();
 
@@ -368,14 +371,14 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
     //qint32 ix = ui->cbRoutes->currentIndex();
     //rd = routeDataList.at(ix);
 
-    //myArray = sql->getRouteDatasForDate(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
+    //myArray = sql->getRouteDatasForDate(rd.route(), rd.routeName(), rd.endDate().toString(_dtFormat));
     segmentDataList = sql->getSegmentDataList(*_rd);
 
     int rslt = QMessageBox::question(nullptr, tr("Confirm copy"),
                                      tr("Click on Ok to copy %1 segments from:\n%2 to \n%3 %4-%5")
                                          .arg(segmentDataList.count())
-                                         .arg(_rd->toString(),ui->rnw->newRouteName(),ui->dateStart->date().toString("yyyy/MM/dd"),
-                                             ui->dateEnd->date().toString("yyyy/MM/dd") ),
+                                         .arg(_rd->toString(),ui->rnw->newRouteName(),ui->dateStart->date().toString(_dtFormat),
+                                             ui->dateEnd->date().toString(_dtFormat) ),
                                      QMessageBox::Ok |QMessageBox::Cancel);
     if(rslt == QMessageBox::Cancel)
         this->reject();
@@ -421,8 +424,8 @@ void DialogCopyRoute::btnOK_Click()      // SLOT
                 sd->setEndDate(nextStartDate.addDays(-1));
             SegmentData* sd2 = sql->getConflictingSegmentDataForRoute(_routeNbr,ui->rnw->newRouteName(),
                                                         sd->segmentId(),
-                                                        ui->dateStart->date().toString("yyyy/MM/dd"),
-                                                        ui->dateEnd->date().toString("yyyy/MM/dd"));
+                                                        ui->dateStart->date().toString(_dtFormat),
+                                                        ui->dateEnd->date().toString(_dtFormat));
             if (sd2 == nullptr)
             {
                 if (sql->doesRouteSegmentExist(_routeNbr, ui->rnw->newRouteName(), sd->segmentId(),
@@ -566,13 +569,13 @@ void DialogCopyRoute::dateEnd_ValueChanged()   //SLOT
     cd = _companyList.at(ui->cbNewCompany->currentIndex());
     if(ui->dateStart->dateTime() > ui->dateEnd->dateTime())
     {
-        ui->lblHelp->setText(tr("end date must be after company start date (")+ cd->startDate.toString("yyyy/MM/dd")+")");
+        ui->lblHelp->setText(tr("end date must be after company start date (")+ cd->startDate.toString(_dtFormat)+")");
         QApplication::beep();
         ui->dateStart->setFocus();
     }
     if(ui->dateEnd->date() > cd->endDate)
     {
-        ui->lblHelp->setText(tr("end date is after to company's end date (")+ cd->endDate.toString("yyyy/MM/dd")+")");
+        ui->lblHelp->setText(tr("end date is after to company's end date (")+ cd->endDate.toString(_dtFormat)+")");
         QApplication::beep();
         ui->dateEnd->setFocus();
     }

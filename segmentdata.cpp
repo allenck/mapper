@@ -3,6 +3,7 @@
 #include "routedata.h"
 #include "sql.h"
 #include "webviewbridge.h"
+#include "myapplication.h"
 
 SegmentData::SegmentData()
     : SegmentInfo()
@@ -12,6 +13,7 @@ SegmentData::SegmentData()
     _streetName = "";
     _bearing = _bearingStart = _bearingEnd =Bearing();
     _route = -1;
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
 }
 SegmentData::SegmentData(const SegmentData& o)
 {
@@ -162,7 +164,7 @@ SegmentData::SegmentData(const SegmentInfo& o)
 QString SegmentData::toString2()
 {
     QString str = _description + QString(" Seg=%1").arg(_segmentId)
-    + QString(" (%1-%2) ").arg(startDate().toString("yyyy/MM/dd")).arg(endDate().toString("yyyy/MM/dd"));
+    + QString(" (%1-%2) ").arg(startDate().toString(_dtFormat)).arg(endDate().toString(_dtFormat));
     if(_routeType < 0 || _routeType>= ROUTETYPES.count())
         _routeType = (RouteType)0;
     QString trackType = ROUTETYPES.at(_routeType);
@@ -430,7 +432,7 @@ void SegmentData::displaySegment( QString color,  bool bClearFirst)
     QString routeNames = "no route";
     if(_dateBegin.isValid())
     {
-        myArray = SQL::instance()->getRoutes(_segmentId, _dateBegin.toString("yyyy/MM/dd"));
+        myArray = SQL::instance()->getRoutes(_segmentId, _dateBegin.toString(_dtFormat));
         if (myArray.count()== 0)
         {
             int i = 0;

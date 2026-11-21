@@ -1,4 +1,5 @@
 #include "routedlg.h"
+#include "myapplication.h"
 #include "ui_routedlg.h"
 #include "segmentdescription.h"
 #include <QMessageBox>
@@ -6,11 +7,14 @@
 #include "vptr.h"
 #include "companyview.h"
 
+
 RouteDlg::RouteDlg(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::RouteDlg)
 {
     ui->setupUi(this);
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
     config = Configuration::instance();
     config->changeFonts(this, config->font);
     //sql->setConfig(config);
@@ -160,7 +164,7 @@ void RouteDlg::setSegmentId(qint32 segmentid)
   ui->gbUsage->setVisible(false);
  }
 
- SegmentData* sd = sql->getSegmentData(_routeNbr, segmentid, ui->dateStart->date().toString("yyyy/MM/dd"), ui->dateEnd->date().toString("yyyy/MM/dd"));
+ SegmentData* sd = sql->getSegmentData(_routeNbr, segmentid, ui->dateStart->date().toString(_dtFormat), ui->dateEnd->date().toString(_dtFormat));
  if(! sd || sd->segmentId() < 0)
  {
   ui->btnAdd->setText(tr("Add"));
@@ -786,13 +790,13 @@ void RouteDlg::dateStart_Leave()
 //    {
 //        if(ui->dateStart->date() < dt)
 //        {
-//            ui->lblHelpText->setText(tr("date can't be before route start date (")+ dt.toString("yyyy/MM/dd")+")");
+//            ui->lblHelpText->setText(tr("date can't be before route start date (")+ dt.toString(_dtFormat)+")");
 //            //ui->dateStart->setFocus();
 //            return;
 //        }
 //        if(ui->dateStart->date() > _rd.endDate())
 //        {
-//            ui->lblHelpText->setText(tr("date can't be after route end date (")+ _rd.endDate().toString("yyyy/MM/dd")+")");
+//            ui->lblHelpText->setText(tr("date can't be after route end date (")+ _rd.endDate().toString(_dtFormat)+")");
 //            //ui->dateStart->setFocus();
 //            return;
 //        }
@@ -822,13 +826,13 @@ void RouteDlg::dateEnd_Leave()
 //    {
 //        if(ui->dateEnd->date() < _rd.startDate())
 //        {
-//            ui->lblHelpText->setText(tr("date can't be before route start date (")+ _rd.startDate().toString("yyyy/MM/dd")+")");
+//            ui->lblHelpText->setText(tr("date can't be before route start date (")+ _rd.startDate().toString(_dtFormat)+")");
 //            //ui->dateEnd->setFocus();
 //            return;
 //        }
 //        if(ui->dateEnd->date() > _rd.endDate())
 //        {
-//            ui->lblHelpText->setText(tr("Warning: extending route end date (")+ _rd.endDate().toString("yyyy/MM/dd")+")");
+//            ui->lblHelpText->setText(tr("Warning: extending route end date (")+ _rd.endDate().toString(_dtFormat)+")");
 //            //ui->dateEnd->setFocus();
 //            //return;
 //        }
@@ -906,9 +910,9 @@ void RouteDlg::checkUpdate(QString func)
             {
                 if (!ui->chkLockDate->isChecked())
                 {
-                    QDateTime dt = sql->getRoutesEarliestDateForSegment(_rd.route, _rd.name, _SegmentId, _rd.startDate.toString("yyyy/MM/dd"));
-                    QDateTime dt1 = sql->getRoutesLatestDateForSegment(_rd.route, _rd.name, _SegmentId, _rd.endDate.toString("yyyy/MM/dd"));
-                    QDateTime dt2 = sql->getRoutesNextDateForSegment(_routeNbr, _rd.name, _SegmentId, _rd.endDate.toString("yyyy/MM/dd"));
+                    QDateTime dt = sql->getRoutesEarliestDateForSegment(_rd.route, _rd.name, _SegmentId, _rd.startDate.toString(_dtFormat));
+                    QDateTime dt1 = sql->getRoutesLatestDateForSegment(_rd.route, _rd.name, _SegmentId, _rd.endDate.toString(_dtFormat));
+                    QDateTime dt2 = sql->getRoutesNextDateForSegment(_routeNbr, _rd.name, _SegmentId, _rd.endDate.toString(_dtFormat));
                     if (dt == _rd.endDate)
                     {
                         parameters parms = sql->getParameters();
@@ -954,7 +958,7 @@ void RouteDlg::checkUpdate(QString func)
     }
     else
     {
-        if (sql->doesRouteSegmentExist(_routeNbr, ui->rnw->alphaRoute(), _SegmentId, rd1.startDate.toString("yyyy/MM/dd"), rd1.endDate.toString("yyyy/MM/dd")))
+        if (sql->doesRouteSegmentExist(_routeNbr, ui->rnw->alphaRoute(), _SegmentId, rd1.startDate.toString(_dtFormat), rd1.endDate.toString(_dtFormat)))
         {
 
             {
@@ -968,7 +972,7 @@ void RouteDlg::checkUpdate(QString func)
             ui->btnAdd->setEnabled( true);
             ui->btnAdd->setText(tr( "Add"));
             ui->btnDelete->setEnabled(false);
-//            QDateTime dt = sql->getRoutesEarliestDateForSegment(_rd.route, _rd.name, _SegmentId, _rd.endDate.toString("yyyy/MM/dd"));
+//            QDateTime dt = sql->getRoutesEarliestDateForSegment(_rd.route, _rd.name, _SegmentId, _rd.endDate.toString(_dtFormat));
 //            ui->dateEnd->setMinimumDateTime( _rd.startDate);
 //            ui->dateEnd->setMaximumDateTime(_rd.endDate);
 //            ui->dateEnd->setDateTime( _rd.endDate);
@@ -1017,7 +1021,7 @@ void RouteDlg::checkUpdate(QString func)
 //    else
 //    {
 //        //routeData rd1 = (routeData)_segmentInfoList.at(ui->cbSegments->currentIndex());
-//        if (sql->doesRouteSegmentExist(_routeNbr, ui->rnw->alphaRoute(), _SegmentId, _rd.startDate.toString("yyyy/MM/dd"), _rd.endDate.toString("yyyy/MM/dd")))
+//        if (sql->doesRouteSegmentExist(_routeNbr, ui->rnw->alphaRoute(), _SegmentId, _rd.startDate.toString(_dtFormat), _rd.endDate.toString(_dtFormat)))
 //        {
 //            ui->btnAdd->setText(tr("Update"));
 //            ui->btnDelete->setEnabled(true);
@@ -1069,7 +1073,7 @@ void RouteDlg::checkUpdate(QString func)
     if(ui->dateStart->date() < cd->startDate)
     {
         ui->btnAdd->setEnabled(false);
-        ui->lblHelpText->setText(tr("can not be before company start date (")+ cd->startDate.toString("yyyy/MM/dd")+")");
+        ui->lblHelpText->setText(tr("can not be before company start date (")+ cd->startDate.toString(_dtFormat)+")");
         //ui->cbCompany->setFocus();
         return;
     }
@@ -1077,7 +1081,7 @@ void RouteDlg::checkUpdate(QString func)
     if(ui->dateEnd->date()> cd->endDate)
     {
         ui->btnAdd->setEnabled(false);
-        ui->lblHelpText->setText(tr("can not be after company end date (")+ cd->endDate.toString("yyyy/MM/dd")+")");
+        ui->lblHelpText->setText(tr("can not be after company end date (")+ cd->endDate.toString(_dtFormat)+")");
         //ui->cbCompany->setFocus();
         return;
     }
@@ -1623,7 +1627,7 @@ void RouteDlg::btnAdd_Click()         // SLOT
      QDate nextStartDate = sql->getNextStartOrEndDate(_routeNbr, ui->dateStart->date(), 0, true);
      if(!bAddMode && nextStartDate.isValid() && ui->dateEnd->date() > nextStartDate)
      {
-        ui->lblHelpText->setText( tr("end date must be before %1").arg(nextStartDate.toString("yyyy/MM/dd")));
+        ui->lblHelpText->setText( tr("end date must be before %1").arg(nextStartDate.toString(_dtFormat)));
         return;
      }
   if (ui->dateStart->dateTime() > ui->dateEnd->dateTime())
@@ -1686,8 +1690,8 @@ void RouteDlg::btnAdd_Click()         // SLOT
  //                    "Date conflict", MessageBoxButtons.YesNoCancel);
         QMessageBox::StandardButtons rslt;
         rslt = QMessageBox::warning(this,tr("Date conflict"), tr("This item conflicts with:\n")
-                                    + csd->routeName() + " " + csd->startDate().toString("yyyy/MM/dd")
-                                    + " to " + csd->endDate().toString("yyyy/MM/dd") +                                                                                 " Enter Yes to change it's end date to " + ui->dateStart->date().addDays(1).toString("yyyy/MM/dd"), QMessageBox::Yes | QMessageBox::No|QMessageBox::Cancel);
+                                    + csd->routeName() + " " + csd->startDate().toString(_dtFormat)
+                                    + " to " + csd->endDate().toString(_dtFormat) +                                                                                 " Enter Yes to change it's end date to " + ui->dateStart->date().addDays(1).toString(_dtFormat), QMessageBox::Yes | QMessageBox::No|QMessageBox::Cancel);
         switch (rslt)
         {
             case QMessageBox::Yes:
@@ -1716,9 +1720,9 @@ void RouteDlg::btnAdd_Click()         // SLOT
     {
      QMessageBox::StandardButtons rslt;
      rslt = QMessageBox::warning(this, tr("Date conflict"), tr("This item conflicts with:\n" )
-                                 + csd->routeName() + " " + csd->startDate().toString("yyyy/MM/dd") + " to "
-                                 + csd->endDate().toString("yyyy/MM/dd")
-                                 + tr(" Enter Yes to change it's start date to ") +                                            ui->dateEnd->dateTime().addDays(1).toString("yyyy/MM/dd"), QMessageBox::Yes | QMessageBox::No|QMessageBox::Cancel);
+                                 + csd->routeName() + " " + csd->startDate().toString(_dtFormat) + " to "
+                                 + csd->endDate().toString(_dtFormat)
+                                 + tr(" Enter Yes to change it's start date to ") +                                            ui->dateEnd->dateTime().addDays(1).toString(_dtFormat), QMessageBox::Yes | QMessageBox::No|QMessageBox::Cancel);
      QString trackUsage = " ";
      if(ui->cbOneWay->isChecked() && csd->tracks() ==2)
      {
@@ -1875,14 +1879,14 @@ void RouteDlg::btnAdd_Click()         // SLOT
                   //" with the same data?", "Action required", MessageBoxButtons.YesNo) == DialogResult.Yes)
               QMessageBox::StandardButtons rslt;
               rslt = QMessageBox::warning(this, tr("Action required"), tr("Update route ")+ri.sd.alphaRoute()
-                                          + " " + ri.sd.routeName() + " " + ri.sd.startDate().toString("yyyy/MM/dd")
-                                          + " " + ri.sd.endDate().toString("yyyy/MM/dd") + tr(" with the same data?"),
+                                          + " " + ri.sd.routeName() + " " + ri.sd.startDate().toString(_dtFormat)
+                                          + " " + ri.sd.endDate().toString(_dtFormat) + tr(" with the same data?"),
                                           QMessageBox::Yes | QMessageBox::No);
               switch(rslt)
               {
                   case QMessageBox::Yes:
-                  // sql->updateSegmentToRoute(ri.sd.route(), ri.sd.routeName(), ri.sd.startDate().toString("yyyy/MM/dd"),
-                  //                           ri.sd.endDate().toString("yyyy/MM/dd"), ri.sd.segmentId(), ri.sd.companyKey(),
+                  // sql->updateSegmentToRoute(ri.sd.route(), ri.sd.routeName(), ri.sd.startDate().toString(_dtFormat),
+                  //                           ri.sd.endDate().toString(_dtFormat), ri.sd.segmentId(), ri.sd.companyKey(),
                   //                           ri.sd.tractionType(), sd->normalEnter(), sd->normalLeave(), sd->reverseEnter(),
                   //                           sd->reverseLeave(), ri.sd.oneWay(), ri.sd.newerName());
                       ri.sd.setNormalEnter(sd->normalEnter());
@@ -2242,7 +2246,7 @@ void RouteDlg::rbRToRight_CheckedChanged(bool bChecked)
 }
 void RouteDlg::displayDates(QString str)
 {
-    //qDebug()<< str +": dateStart min-"+ui->dateStart->minimumDateTime().toString("yyyy/MM/dd")+ ",max-"+ui->dateStart->maximumDateTime().toString("yyyy/MM/dd")+",val-"+ui->dateStart->dateTime().toString("yyyy/MM/dd")+": dateEnd min-"+ui->dateEnd->minimumDateTime().toString("yyyy/MM/dd")+ ",max-"+ui->dateEnd->maximumDateTime().toString("yyyy/MM/dd")+",val-"+ui->dateEnd->dateTime().toString("yyyy/MM/dd");
+    //qDebug()<< str +": dateStart min-"+ui->dateStart->minimumDateTime().toString(_dtFormat)+ ",max-"+ui->dateStart->maximumDateTime().toString(_dtFormat)+",val-"+ui->dateStart->dateTime().toString(_dtFormat)+": dateEnd min-"+ui->dateEnd->minimumDateTime().toString(_dtFormat)+ ",max-"+ui->dateEnd->maximumDateTime().toString(_dtFormat)+",val-"+ui->dateEnd->dateTime().toString(_dtFormat);
 }
 
 void RouteDlg::cbCompany_SelectedIndexChanged(int i)
@@ -2274,14 +2278,14 @@ void RouteDlg::cbCompany_SelectedIndexChanged(int i)
 
  if(cd->startDate > _ri.startDate())
  {
-     ui->lblHelpText->setText(tr("company start date (")+ cd->startDate.toString("yyyy/MM/dd") + tr(") is later than route start date"));
+     ui->lblHelpText->setText(tr("company start date (")+ cd->startDate.toString(_dtFormat) + tr(") is later than route start date"));
      QApplication::beep();
      ui->cbCompany->setFocus();
      return;
  }
  if(cd->endDate < _ri.endDate())
  {
-     ui->lblHelpText->setText(tr("company end date (")+cd->endDate.toString("yyyy/MM/dd")+ tr(") is before route's' end date"));
+     ui->lblHelpText->setText(tr("company end date (")+cd->endDate.toString(_dtFormat)+ tr(") is before route's' end date"));
      QApplication::beep();
      ui->cbCompany->setFocus();
      return;
@@ -2303,10 +2307,10 @@ void RouteDlg::CalculateDates()
  minDate = cd->startDate;
  maxDate = cd->endDate;
  //si = sql->getSegmentInfo(_SegmentId);
-// if(QDate::fromString(si.startDate, "yyyy/MM/dd") > minDate)
-//  minDate = QDate::fromString(si.startDate, "yyyy/MM/dd");
-// if(QDate::fromString(si.endDate, "yyyy/MM/dd") < maxDate)
-//  maxDate = QDate::fromString(si.endDate, "yyyy/MM/dd");
+// if(QDate::fromString(si.startDate, _dtFormat) > minDate)
+//  minDate = QDate::fromString(si.startDate, _dtFormat);
+// if(QDate::fromString(si.endDate, _dtFormat) < maxDate)
+//  maxDate = QDate::fromString(si.endDate, _dtFormat);
 
  QDate start = ui->dateStart->date();
 // ui->dateStart->clearMaximumDateTime();

@@ -55,8 +55,8 @@ private:
     qint32 startSegment, endSegment;
     int companyKey;
     QString name;
-    QDate startDate = QDate::fromString("1800/01/01", "yyyy/MM/dd");
-    QDate endDate = QDate::fromString("2050/12/31", "yyyy/MM/dd");
+    QDate startDate = QDate::fromString("1800/01/01", "yyyy-MM-dd");
+    QDate endDate = QDate::fromString("2050/12/31","yyyy-MM-dd");
     QString alphaRoute;
     QStringList headers;
     QTableView* ui;
@@ -89,6 +89,7 @@ private:
     //SQL sql;
     Configuration *config;
     bool bIsSequenced;
+    QString _dtFormat;
 
     bool boolGetItemTableView(QTableView *table);
     RouteViewTableModel *sourceModel = nullptr;

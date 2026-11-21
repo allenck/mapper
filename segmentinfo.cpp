@@ -4,12 +4,16 @@
 #include "sql.h"
 #include "webviewbridge.h"
 #endif
+#include "myapplication.h"
+
 SegmentInfo::SegmentInfo()
 {
     _segmentId = -1;
     _pointList = QList<LatLng>();
     _bounds = Bounds();
     _bNeedsUpdate = false;
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
 }
 
 SegmentInfo::SegmentInfo(const SegmentInfo& o)
@@ -258,7 +262,6 @@ void SegmentInfo::displaySegment(QString date, QString color, QString trackUsage
     }
     int dash = 0;
     int tracks = _tracks;
-    //if(_tracks == 2 && _doubleDate.isValid() &&  QDate::fromString(date, "yyyy/MM/dd") < _doubleDate)
     if(tracks == 2 && _dateDoubled.isValid() && _dateBegin < _dateDoubled)
     {
         tracks = 1;

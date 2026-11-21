@@ -32,6 +32,7 @@ class SplitSegmentDlg : public QDialog
   bool company2Valid();
   bool canBeChanged();
   bool sdSpecified = false;
+  QString _dtFormat;
 };
 
 #endif // SPLITSEGMENTDLG_H

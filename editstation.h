@@ -55,6 +55,7 @@ private:
     void closeEvent(QCloseEvent*);
     StationInfo _sti;
     bool _bStationDeleted = false;
+    QString _dtFormat;
 
 private slots:
     void txtLatLng_Leave();

@@ -1,4 +1,5 @@
 #include "editsegmentdialog.h"
+#include "myapplication.h"
 #include "qpushbutton.h"
 #include "ui_editsegmentdialog.h"
 #include "configuration.h"
@@ -59,6 +60,7 @@ void EditSegmentDialog::common()
 {
  ui->setupUi(this);
  sql = SQL::instance();
+ _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
 
  RouteInfo rd = MainWindow::instance()->routeList.at(MainWindow::instance()->ui->cbRoute->currentIndex());
  this->rd = new RouteInfo(rd);
@@ -438,7 +440,7 @@ void EditSegmentDialog::On_btnSave_clicked()
 //      sd.setRouteName(rd->routeName());
 //      sd.setStartDate(rd->startDate());
 //      sd.setEndDate(rd->endDate());
-//      sd.displaySegment(ui->dtEnd->date().toString("yyyy/MM/dd"),m_segmentColor, "", true);
+//      sd.displaySegment(ui->dtEnd->date().toString(_dtFormat),m_segmentColor, "", true);
 
      }
      break;
@@ -495,7 +497,7 @@ void EditSegmentDialog::On_btnSave_clicked()
 //    if(sd1.route()== rd->route() && sd1.routeName() == rd->routeName()
 //       && sd1.startDate()== rd->startDate())
 //    {
-//     sd1.displaySegment(ui->dtEnd->date().toString("yyyy/MM/dd"),m_segmentColor, sd1.trackUsage(), true);
+//     sd1.displaySegment(ui->dtEnd->date().toString(_dtFormat),m_segmentColor, sd1.trackUsage(), true);
 //     bSegmentDisplayed = true;
 //    }
    //}
@@ -561,7 +563,7 @@ void EditSegmentDialog::On_btnSave_clicked()
 //   if (m_segmentStatus == "Y" && !bSegmentDisplayed)
 //   {
 //    SegmentData sd = SegmentData(si);
-//     sd.displaySegment(ui->dtEnd->date().toString("yyyy/MM/dd"),m_segmentColor, "", true);
+//     sd.displaySegment(ui->dtEnd->date().toString(_dtFormat),m_segmentColor, "", true);
 //   }
    MainWindow::instance()->On_displayRoute(rd);
 }

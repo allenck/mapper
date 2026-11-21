@@ -35,6 +35,7 @@ private:
     QList<RouteInfo> routeList;
     QDate maxEndDate;
     CompanyData* cd = nullptr;
+    QString _dtFormat;
 
 private slots:
     void dateTimePicker1_ValueChanged(QDate date);

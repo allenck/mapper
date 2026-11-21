@@ -1,5 +1,6 @@
 #include "sql.h"
 #include "data.h"
+#include "myapplication.h"
 #include "routeinfo.h"
 #include "sqlite3.h"
 #include <QApplication>
@@ -5415,6 +5416,7 @@ qint32 SQL::getRouteCompany(qint32 route)
     }
     return companyKey;
 }
+#if 0
 /// <summary>
 /// Retrieve the parameters for the web site
 /// </summary>
@@ -5481,7 +5483,53 @@ bool SQL::getParameters(Parameters* parms, QString serverType, QSqlDatabase db)
     }
     return true;
 }
+#else
+bool SQL::getParameters(Parameters* parms, QString serverType, QSqlDatabase db)
+{
+     //Parameters parms = Parameters();
+    QString alphaRoutes;
+    QString commandText = "select * from Parameters";
 
+    try
+    {
+        QSqlQuery query = QSqlQuery(db);
+        bool bQuery = query.exec(commandText);
+        if(!bQuery)
+        {
+            QString errCommand = query.lastQuery() + " line:" + QString("%1").arg(__LINE__) +"\n";
+            qDebug() << errCommand;
+            QSqlError error = query.lastError();
+            SQLERROR(std::move(query));
+            //throw SQLException(error.text() + " " + errCommand);
+            return false;
+        }
+        if (!query.isActive())
+        {
+            return false;
+        }
+        while (query.next())
+        {
+            parms->lat = query.value("lat").toDouble();
+            parms->lon = query.value("lon").toDouble();
+            parms->title = query.value("title").toString();
+            parms->city = query.value("city").toString();
+            parms->minDate = query.value("minDate").toDate();
+            parms->maxDate = query.value("maxDate").toDate();
+            alphaRoutes = query.value("alphaRoutes").toString();
+            parms->bAlphaRoutes = (alphaRoutes == "Y");
+            QString abbreviationsStr = query.value("abbreviationsList").toString();
+            parms->buildList(abbreviationsStr);
+            parms->versionString = query.value("versionString").toString();
+            parms->_dtFormat = query.value("dateFormat").toString();
+        }
+    }
+    catch (Exception e)
+    {
+        myExceptionHandler(e);
+    }
+    return true;
+}
+#endif
 
 bool SQL::insertParameters(Parameters parms, QSqlDatabase db)
 {
@@ -5521,7 +5569,7 @@ bool SQL::updateParameters(Parameters parms, QSqlDatabase db)
     if(!bDateFormatExists)
     {
         addColumn("Parameters", "dateFormat", "text NOT NULL DEFAULT 'yyyy/MM/dd' ");
-        parms._dtFormat = "yyyy/MM/dd";
+        parms._dtFormat = "yyyy-MM-dd";
     }
 
     try
@@ -10598,14 +10646,24 @@ void SQL::checkTables(QSqlDatabase db)
 
   //tableList = getTableList(db, config->currConnection->servertype());
   tableList = db.tables();
+  if(tableList.contains("parameters",Qt::CaseInsensitive))
+  {
+      Parameters p;
+      if(getParameters(&p,config->currConnection->servertype(),db))
+      {
+          ((MyApplication*)QApplication::instance())->setDateFormat(p.dateFormat());
+          _dtFormat = p.dateFormat();
+      }
+  }
   if(!doesColumnExist("Parameters", "versionString",db))
   {
-      addColumn("Parameters", "versionString", "text NOT NULL DEFAULT '1.2.13' ");
+      addColumn("Parameters", "versionString", "text NOT NULL DEFAU_LT '1.2.13' ");
   }
   if(!doesColumnExist("Parameters", "dateFormat",db))
   {
       addColumn("Parameters", "dateFormat", "text NOT NULL DEFAULT 'yyyy/MM/dd' ");
       executeScript(":/sql/Sqlite3/sqlite3_recreate_parameters.sql",db);
+      executeScript(":/sql/Sqlite3/sqlite3_convert_dates.sql");
   }
 
   if(!doesColumnExist("Comments", "jRouteList",db))

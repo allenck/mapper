@@ -59,6 +59,8 @@ public:
     SQL* sql = nullptr;
     QList<CompanyData*> companyList;
     bool bDirty = false;
+    QString _dtFormat;
+
     friend class CompanyView;
 };
 
@@ -99,6 +101,7 @@ private:
     bool bNeedsRefresh;
     static CompanyView* _instance;
     QSortFilterProxyModel* proxyModel;
+    QString _dtFormat;
 
 private slots:
     void Resize (int oldcount,int newcount);

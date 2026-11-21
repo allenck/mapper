@@ -1,4 +1,5 @@
 #include "modifyroutedialog.h"
+#include "myapplication.h"
 #include "ui_modifyroutedialog.h"
 #include "htmltextedit.h"
 #include "routenamewidget.h"
@@ -8,6 +9,8 @@ ModifyRouteDialog::ModifyRouteDialog(QWidget *parent) :
     ui(new Ui::DialogRenameRoute)
 {
     ui->setupUi(this);
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
     config = Configuration::instance();
     //sql->setConfig(config);
     sql = SQL::instance();
@@ -120,13 +123,13 @@ void ModifyRouteDialog::btnOK_Click()
 
     int routeId = sql->getRouteId(ui->rnw->newRouteName());
 
-    //QList<RouteData> myArray = sql->getRouteDatasForDate(rd.route(), rd.routeName(), rd.endDate().toString("yyyy/MM/dd"));
+    //QList<RouteData> myArray = sql->getRouteDatasForDate(rd.route(), rd.routeName(), rd.endDate().toString(_dtFormat));
     QList<SegmentData*> myArray = sql->getSegmentDataList(ri);
     if (myArray.count()==0)
     {
         ui->lblHelp->setText(tr("No data: %1 %2 %3 %4").arg(ri.route()).arg(ri.routeName(),
-                                                            ri.startDate().toString("yyyy/MM/dd"),
-                                                            ri.endDate().toString("yyyy/MM/dd")));
+                                                            ri.startDate().toString(_dtFormat),
+                                                            ri.endDate().toString(_dtFormat)));
         //System.Media.SystemSounds.Asterisk.Play();
         return;
     }
@@ -164,8 +167,8 @@ void ModifyRouteDialog::btnOK_Click()
     {
         qApp->processEvents();
 //        SegmentData d1 = myArray.at(i);
-//        if (!sql->deleteRouteSegment(rd1.route(), rd1.routeName(), rd1.segmentId(),rd1.startDate().toString("yyyy/MM/dd"),
-//                                     rd1.endDate().toString("yyyy/MM/dd")))
+//        if (!sql->deleteRouteSegment(rd1.route(), rd1.routeName(), rd1.segmentId(),rd1.startDate().toString(_dtFormat),
+//                                     rd1.endDate().toString(_dtFormat)))
 //        {
 //            ui->lblHelp->setText(tr("Delete failed"));
 //            //System.Media.SystemSounds.Asterisk.Play();

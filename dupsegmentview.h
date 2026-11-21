@@ -87,6 +87,7 @@ private:
     QAction* deleteDuplicateAct;
     SegmentData currSd;
     qint32 modelRow = -1;
+    QString _dtFormat;
 private slots:
     //void Resize (int oldcount,int newcount);
     void On_selectSegmentAct(bool);

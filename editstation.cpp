@@ -1,4 +1,5 @@
 #include "editstation.h"
+#include "myapplication.h"
 #include "ui_editstation.h"
 #include "editcomments.h"
 #include "webviewbridge.h"
@@ -10,6 +11,8 @@ EditStation::EditStation(StationInfo sti, QWidget *parent) :
     ui(new Ui::editStation)
 {
     ui->setupUi(this);
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
     ui->btnEditText->setVisible(false);
     _sti = sti;
     bDirty = false;
@@ -79,13 +82,13 @@ qint32 EditStation::segmentId()
 //     setRadioButtons();
 // if(ui->dateStart->date() < sd.startDate())
 // {
-//  qDebug() <<"start date change from " << ui->dateStart->date().toString("yyyy/MM/dd") << " to " << sd.startDate();
+//  qDebug() <<"start date change from " << ui->dateStart->date().toString(_dtFormat) << " to " << sd.startDate();
 //  ui->dateStart->setDate(sd.startDate());
 //  bDirty = true;
 // }
 // if(ui->dateEnd->date() > sd.endDate())
 // {
-//  qDebug() <<"end date change from " << ui->dateEnd->date().toString("yyyy/MM/dd") << " to " << sd.endDate();
+//  qDebug() <<"end date change from " << ui->dateEnd->date().toString(_dtFormat) << " to " << sd.endDate();
 //  ui->dateEnd->setDate(sd.endDate());
 //  bDirty = true;
 // }
@@ -136,13 +139,13 @@ void EditStation::setStationId(StationInfo sti)
    {
     if(ui->dateStart->date() < sd.startDate())
     {
-     qDebug() <<"start date change from " << ui->dateStart->date().toString("yyyy/MM/dd") << " to " << sd.startDate();
+     qDebug() <<"start date change from " << ui->dateStart->date().toString(_dtFormat) << " to " << sd.startDate();
      ui->dateStart->setDate(sd.startDate());
      //bDirty = true;
     }
     if(ui->dateEnd->date() > sd.endDate())
     {
-     qDebug() <<"end date change from " << ui->dateEnd->date().toString("yyyy/MM/dd") << " to " << sd.endDate();
+     qDebug() <<"end date change from " << ui->dateEnd->date().toString(_dtFormat) << " to " << sd.endDate();
      ui->dateEnd->setDate(sd.endDate());
      //bDirty = true;
     }
@@ -322,7 +325,7 @@ void EditStation::btnOK_Click()
   if(StationView::instance() != NULL)
    StationView::instance()->changeStation("chg", _sti);
 
-  //sql->updateStation(_stationKey, _infoKey,_stationName, _segmentId, ui->dateStart->dateTime().toString("yyyy/MM/dd"),ui->dateEnd->dateTime().toString("yyyy/MM/dd"),markerType);
+  //sql->updateStation(_stationKey, _infoKey,_stationName, _segmentId, ui->dateStart->dateTime().toString(_dtFormat),ui->dateEnd->dateTime().toString(_dtFormat),markerType);
   sql->updateStation(_sti);
   QVariantList objArray;
   objArray << _stationKey << _sti.markerType;
@@ -330,8 +333,8 @@ void EditStation::btnOK_Click()
  }
  else
  {
- //qint32 stationKey = sql->addStation(_stationName, _latLng, _segmentId, ui->dateStart->dateTime().toString("yyyy/MM/dd"),ui->dateEnd->dateTime().toString("yyyy/MM/dd"), 0, si.routeType, markerType);
-  //qint32 stationKey = sql->addStation(_stationName, _latLng, _segmentId, ui->dateStart->dateTime().toString("yyyy/MM/dd"),ui->dateEnd->dateTime().toString("yyyy/MM/dd"),-1, -1,sd.routeType(),markerType, 0);
+ //qint32 stationKey = sql->addStation(_stationName, _latLng, _segmentId, ui->dateStart->dateTime().toString(_dtFormat),ui->dateEnd->dateTime().toString(_dtFormat), 0, si.routeType, markerType);
+  //qint32 stationKey = sql->addStation(_stationName, _latLng, _segmentId, ui->dateStart->dateTime().toString(_dtFormat),ui->dateEnd->dateTime().toString(_dtFormat),-1, -1,sd.routeType(),markerType, 0);
   qint32 stationKey= sql->addStation(_sti);
   if (stationKey >= 0)
   {

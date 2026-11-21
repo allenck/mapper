@@ -1,4 +1,5 @@
 #include "configuration.h"
+#include "myapplication.h"
 #include "odbcutil.h"
 #include "sql.h"
 #include "overlay.h"
@@ -1104,6 +1105,11 @@ void Configuration::getSettings2()
                         currConnection = ncn;
                         if(SQL::instance()->getParameters(&p,currConnection->servertype(), db))
                         {
+                            // if(currCity && currConnection->cityName() == currCity->name())
+                            // {
+                            //     SQL::instance()->setDateFormat(p.dateFormat());
+                            //     ((MyApplication*)QApplication::instance())->setDateFormat(p.dateFormat());
+                            // }
                             if(!p.city.isEmpty())
                             {
                                 ncn->setCityName(p.city);
@@ -1188,11 +1194,9 @@ void Configuration::getSettings2()
 //                                        << " key: "<< key;;
 //                             return;
 //                         }
-
 //                         // Your asynchronous callback logic continues inside this block
 //                         qDebug() << "Password successfully retrieved! " << key;
 //                         ncn->setPWD(password);
-
 //                         // Example: Initiate your database connection
 //                         // this->initializeDatabaseConnection(password);
 //                     });

@@ -23,7 +23,7 @@ public:
     }
 private:
     QList<QPair<QString, QString>> _abbreviationsList;
-    QString _dtFormat = "yyyy/MM/dd";
+    QString _dtFormat;
     friend class SQL;
 };
 

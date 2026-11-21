@@ -178,9 +178,6 @@ private:
     // QString _newerName;
     // QString _description;
     QString _routePrefix;
-    // QDate _dateBegin = QDate::fromString("1880/01/01", "yyyy/MM/dd");
-    // QDate _dateDoubled;
-    // QDate _dateEnd = QDate::fromString("2050/12/31", "yyyy/MM/dd");
     QDate _segmentDateStart;
     QDate _segmentDateEnd;
     // QString _direction = " ";
@@ -214,6 +211,7 @@ private:
     QString _routeName;
     QString _location;
     QString _alphaRoute;
+    QString _dtFormat;
     int _routeId = -1;
     friend class SQL;
     friend class SegmentInfo;

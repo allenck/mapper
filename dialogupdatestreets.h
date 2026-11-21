@@ -50,7 +50,7 @@ private:
     int indexOfDigit(QString txt, int begin);
     QMapIterator<QString, int>* iter = nullptr;
     void lookupStreet(QTextEdit *edit, QString st);
-
+    QString _dtFormat;
 };
 
 #endif // DIALOGUPDATESTREETS_H

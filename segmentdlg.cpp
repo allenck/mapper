@@ -1,4 +1,5 @@
 #include "segmentdlg.h"
+#include "myapplication.h"
 #include "ui_segmentdlg.h"
 #include "webviewbridge.h"
 #include "mainwindow.h"
@@ -11,6 +12,8 @@ SegmentDlg::SegmentDlg(QWidget *parent) :
     ui(new Ui::SegmentDlg)
 {
  ui->setupUi(this);
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
  myParent = parent;
  config = Configuration::instance();
  sql = SQL::instance();
@@ -308,7 +311,7 @@ void SegmentDlg::setRouteData(RouteInfo* value)
 
     //if (ui->cbCompany->currentIndex() == -1)
     {
-        //qint32 companyKey = sql->getDefaultCompany(_routeNbr, ui->dateEnd->dateTime().toString("yyyy/MM/dd"));
+        //qint32 companyKey = sql->getDefaultCompany(_routeNbr, ui->dateEnd->dateTime().toString(_dtFormat));
         for (i=0;i < _companyList.count(); i++)
         {
             CompanyData* cd = (CompanyData*)_companyList.at(i);
@@ -778,7 +781,7 @@ void SegmentDlg::btnOK_Click()  // SLOT
   {
    if (ui->cbCompany->currentText().length() > 0)
    {
-    companyKey = sql->addCompany(ui->cbCompany->currentText(), _routeNbr, ui->dateStart->dateTime().toString("yyyy/MM/dd"), ui->dateEnd->dateTime().toString("yyyy/MM/dd"));
+    companyKey = sql->addCompany(ui->cbCompany->currentText(), _routeNbr, ui->dateStart->dateTime().toString(_dtFormat), ui->dateEnd->dateTime().toString(_dtFormat));
    }
    else
    {

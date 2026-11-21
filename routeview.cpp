@@ -1,4 +1,5 @@
 #include "routeview.h"
+#include "myapplication.h"
 #include "sql.h"
 #include "mainwindow.h"
 #include "editsegmentdialog.h"
@@ -20,6 +21,8 @@ RouteView::RouteView(QObject* parent )
     _instance = this;
 
     config = Configuration::instance();
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
 
     //sql.setConfig(config);
     myParent = qobject_cast<MainWindow*>(m_parent);
@@ -55,8 +58,8 @@ RouteView::RouteView(QObject* parent )
     // connect(SQL::instance(), &SQL::segmentChanged, this, [=](const SegmentInfo si, SQL::CHANGETYPE t){
     //     // SegmentInfo has changed, refresh the SegmentData record/
     //     SegmentData* sd = SQL::instance()->getSegmentData(rd.route(), si.segmentId(),
-    //                                                       rd.startDate().toString("yyyy/MM/dd"),
-    //                                                       rd.endDate().toString("yyyy/MM/dd"));
+    //                                                       rd.startDate().toString(_dtFormat),
+    //                                                       rd.endDate().toString(_dtFormat));
     //     if(sd  && sd->segmentId()  == si.segmentId())
     //     {
     //         sourceModel->segmentChanged(si.segmentId());
@@ -183,7 +186,7 @@ RouteView::RouteView(QObject* parent )
      for(int i=0; i<routeList.count(); i++)
      {
        RouteInfo rd = routeList.at(i);
-       QString rdStartDate = rd.startDate().toString("yyyy/MM/dd");
+       QString rdStartDate = rd.startDate().toString(_dtFormat);
        cbCombo->addItem(rd.toString(),QVariant::fromValue(rd));
 //          if( rd.toString() == currText)
 //             cbCombo->setCurrentIndex(i);
@@ -465,7 +468,7 @@ void RouteView::updateRouteView()
     //SQL sql;
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     TerminalInfo ti = SQL::instance()->getTerminalInfo(myParent->m_routeNbr, myParent->m_routeName,
-                                                       QDate::fromString(myParent->m_currRouteEndDate, "yyyy/MM/dd"));
+                                                       QDate::fromString(myParent->m_currRouteEndDate, _dtFormat));
     startSegment = ti.startSegment;
     endSegment = ti.endSegment;
     // Check for uncomitted changes
@@ -473,8 +476,8 @@ void RouteView::updateRouteView()
     route = myParent->m_routeNbr;
     name = myParent->m_routeName;
     companyKey = myParent->_ri.companyKey();
-    startDate = QDate::fromString(myParent->m_currRouteStartDate, "yyyy/MM/dd");
-    endDate = QDate::fromString(myParent->m_currRouteEndDate, "yyyy/MM/dd");
+    startDate = QDate::fromString(myParent->m_currRouteStartDate, _dtFormat);
+    endDate = QDate::fromString(myParent->m_currRouteEndDate, _dtFormat);
     alphaRoute = myParent->m_alphaRoute;
 
     ri = myParent->ui->cbRoute->currentData().value<RouteInfo>();
@@ -607,7 +610,7 @@ void RouteView::reSequenceRoute(QString whichEnd)
 #endif
 #if 0
   //populateList();
-  sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, "yyyy/MM/dd"), QDate::fromString(endDate, "yyyy/MM/dd"), segmentDataList);
+  sourceModel = new RouteViewTableModel(route, name, QDate::fromString(startDate, _dtFormat), QDate::fromString(endDate, _dtFormat), segmentDataList);
   myParent->proxyModel->setSourceModel(sourceModel);
   //connect(saveChangesAct, SIGNAL(triggered()), sourceModel, SLOT(commitChanges()));
   connect(saveChangesAct, SIGNAL(triggered(bool)), this, SLOT(commitChanges()));
@@ -701,7 +704,7 @@ void RouteView::EndRoute_S()           // SLOT
 
     TerminalInfo ti = SQL::instance()->getTerminalInfo(route, name, endDate);
     //SQL::instance()->updateTerminals(route, name,ti.route < 0 ? "1800/01/01" : ti.startDate), endDate, ti.route < 0?-1:ti.startSegment, ti.route < 0?"?":ti.startWhichEnd,        segmentId, "S");
-    SQL::instance()->updateTerminals(route, name,ti.route < 0 ? QDate::fromString("1800/01/01", "yyyy/MM/dd") : startDate,
+    SQL::instance()->updateTerminals(route, name,ti.route < 0 ? QDate::fromString("1800/01/01", _dtFormat) : startDate,
                                      endDate, ti.route < 0?-1:ti.startSegment, ti.route < 0?"?":ti.startWhichEnd,        segmentId, "S");
     ti = SQL::instance()->getTerminalInfo(route, name, endDate);
     endSegment = segmentId;
@@ -728,7 +731,7 @@ void RouteView::StartRoute_E()         // SLOT
 
     TerminalInfo ti = SQL::instance()->getTerminalInfo(route, name, endDate);
     //SQL::instance()->updateTerminals(route, name, ti.route < 0?"1800/01/01":ti.startDate), endDate, segmentId, "E", ti.route < 0 ? -1 : ti.endSegment, ti.route < 0 ? "?" : ti.endWhichEnd);
-    SQL::instance()->updateTerminals(route, name, ti.route < 0?QDate::fromString("1800/01/01","yyyy/MM/dd"):startDate,
+    SQL::instance()->updateTerminals(route, name, ti.route < 0?QDate::fromString("1800/01/01",_dtFormat):startDate,
                                      endDate, segmentId, "E", ti.route < 0 ? -1 : ti.endSegment, ti.route < 0 ? "?" : ti.endWhichEnd);
     ti = SQL::instance()->getTerminalInfo(route,myParent-> m_routeName, endDate);
     startSegment = segmentId;

@@ -71,6 +71,8 @@ private:
     RouteType _routeType;
     QList<QPair<int, QString>> _seqList;
     QString _canonicalName;
+    QString _dtFormat;
+
     friend class SQL;
 };
 

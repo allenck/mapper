@@ -63,6 +63,7 @@ public slots:
 
 private:
     QList<StationInfo> listOfStations;
+    QString _dtFormat;
 
 };
 
@@ -99,6 +100,8 @@ private:
     int curCol;
     QMenu menu;
     QModelIndex currentIndex;
+    QString _dtFormat;
+
     static StationView* _instance;
 
 private slots:

@@ -1,4 +1,5 @@
 #include "modifyroutedatedlg.h"
+#include "myapplication.h"
 #include "ui_modifyroutedatedlg.h"
 #include <QPushButton>
 
@@ -8,6 +9,8 @@ ModifyRouteDateDlg::ModifyRouteDateDlg(QWidget *parent) :
 {
  Q_UNUSED(parent)
  ui->setupUi(this);
+ _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
  QPushButton* btnOK = new QPushButton(tr("OK"));
  ui->buttonBox->addButton(btnOK, QDialogButtonBox::ApplyRole);
  this->setWindowTitle(tr("Modify Route dates"));
@@ -59,7 +62,7 @@ void ModifyRouteDateDlg::setRouteData(RouteInfo* rd)
      maxEndDate = nextStartDate.addDays(-1);
      ui->dateTimePicker1->setDate(maxEndDate);
      ui->lblError->setText(tr("Default end date set to %1 because \n"
-                              "routes are already present after that date").arg(maxEndDate.toString("yyyy/MM/dd")));
+                              "routes are already present after that date").arg(maxEndDate.toString(_dtFormat)));
  }
 }
 
@@ -98,7 +101,7 @@ void ModifyRouteDateDlg::dateTimePicker1_ValueChanged(QDate date) //SLOT
   if(maxEndDate.isValid() && date > maxEndDate)
   {
       ui->lblError->setText(tr("Invalid date: must be less or equal than %1")
-                                .arg(maxEndDate.toString("yyyy/MM/dd")));
+                                .arg(maxEndDate.toString(_dtFormat)));
       //System.Media.SystemSounds.Exclamation.Play();
       QApplication::beep();
 
@@ -175,7 +178,7 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
   {
    qDebug() << "can't set start date to later than end date!";
    ui->lblError->setText(tr("can't set start date %1 to later than end date: %2")
-                         .arg(ui->dateTimePicker1->date().toString("yyyy/MM/dd"),
+                         .arg(ui->dateTimePicker1->date().toString(_dtFormat),
                               ri.endDate().toString("yyy/MM/dd")));
    return;
   }
@@ -186,8 +189,8 @@ void ModifyRouteDateDlg::btnOK_Click()      //SLOT
   {
    qDebug() << "can't set end date to before start date!";
    ui->lblError->setText(tr("can't set end date %1 to before start date:%2")
-                         .arg(ui->dateTimePicker1->date().toString("yyyy/MM/dd"),
-                              ri.startDate().toString("yyyy/MM/dd")));
+                         .arg(ui->dateTimePicker1->date().toString(_dtFormat),
+                              ri.startDate().toString(_dtFormat)));
 
    return;
   }

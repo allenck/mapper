@@ -1,4 +1,5 @@
 #include "dialogupdatestreets.h"
+#include "myapplication.h"
 #include "qmenu.h"
 #include "segmentviewtablemodel.h"
 #include "ui_dialogupdatestreets.h"
@@ -13,6 +14,8 @@ DialogUpdateStreets::DialogUpdateStreets(QWidget *parent)
     , ui(new Ui::DialogUpdateStreets)
 {
     ui->setupUi(this);
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
     streetsTableModel = StreetsTableModel::instance();
     config = Configuration::instance();
     ui->groupBox->setVisible(false);
@@ -477,8 +480,8 @@ void DialogUpdateStreets::pbUpdateClicked()
                         {
                             ui->lblInfo->setText(QString("id %1 %2 change older startDate from %3 to %4")
                                             .arg(olderSti->streetId).arg(olderSti->street)
-                                            .arg(olderSti->dateStart.toString("yyyy/MM/dd"))
-                                                     .arg(ui->dateEdit->date().toString("yyyy/MM/dd")));
+                                            .arg(olderSti->dateStart.toString(_dtFormat))
+                                                     .arg(ui->dateEdit->date().toString(_dtFormat)));
                             olderSti->dateStart =  ui->dateEdit->date();
                             streetsTableModel->updateStreetName(*olderSti);
                         }
@@ -488,8 +491,8 @@ void DialogUpdateStreets::pbUpdateClicked()
                             {
                                 ui->lblInfo->setText(QString("id %1 %2 change older endDate from %3 to %4")
                                 .arg(olderSti->streetId).arg(olderSti->street)
-                                    .arg(olderSti->dateEnd.toString("yyyy/MM/dd"))
-                                             .arg(ui->dateEdit->date().toString("yyyy/MM/dd")));
+                                    .arg(olderSti->dateEnd.toString(_dtFormat))
+                                             .arg(ui->dateEdit->date().toString(_dtFormat)));
                                 olderSti->dateEnd = ui->dateEdit->date();
                                 streetsTableModel->updateStreetName(*olderSti);
                             }
@@ -498,8 +501,8 @@ void DialogUpdateStreets::pbUpdateClicked()
                             {
                                 ui->lblInfo->setText(QString("id %1 %2 change current startDate from %3 to %4")
                                 .arg(curSti->streetId).arg(curSti->street)
-                                    .arg(curSti->dateStart.toString("yyyy/MM/dd"))
-                                             .arg(ui->dateEdit->date().addDays(1).toString("yyyy/MM/dd")));
+                                    .arg(curSti->dateStart.toString(_dtFormat))
+                                             .arg(ui->dateEdit->date().addDays(1).toString(_dtFormat)));
                                 curSti->dateStart = ui->dateEdit->date().addDays(1);
                                 streetsTableModel->updateStreetName(*curSti);
                             }
@@ -698,7 +701,7 @@ void DialogUpdateStreets::pbUpdateClicked()
             sti.streetId = curr_streetId;
             sti.street = street;
             sti.dateStart = ui->dateEdit->date();
-            sti.dateEnd = QDate::fromString("2050/01/01", "yyyy/MM/dd");
+            sti.dateEnd = QDate::fromString("2050/01/01", _dtFormat);
             sti.newerName = curStreetSti->street;
             sti.sequence = 1;
             if(!streetsTableModel->addOldStreetName(&sti))

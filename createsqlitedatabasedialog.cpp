@@ -162,8 +162,8 @@ void CreateSqliteDatabaseDialog::on_btnOk_clicked()
  commandString = "insert into Companies ( Description, startDate, endDate) values(:Description, :startDate, :endDate)";
  query.prepare(commandString);
  query.bindValue(":Description", ui->edCompany->text().trimmed());
- query.bindValue("dtCompayStart", ui->dtCompanyStart->date().toString("yyyy/MM/dd"));
- query.bindValue("dtCompayEnd", ui->dtCompanyEnd->date().toString("yyyy/MM/dd"));
+ query.bindValue("dtCompayStart", ui->dtCompanyStart->date().toString("yyyy-MM-dd"));
+ query.bindValue("dtCompayEnd", ui->dtCompanyEnd->date().toString("yyyy-MM-dd"));
  if(!query.exec())
  {
   SQLERROR(query);

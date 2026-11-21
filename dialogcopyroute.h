@@ -43,6 +43,7 @@ private:
     void fillTractionTypes();
     bool bNewRouteNbr=false;
     bool bAddMode=false;
+    QString _dtFormat;
 
 private slots:
     void btnCancel_Click();

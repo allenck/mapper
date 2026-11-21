@@ -1,4 +1,5 @@
 #include "splitsegmentdlg.h"
+#include "myapplication.h"
 #include "ui_splitsegmentdlg.h"
 #include "data.h"
 #include "mainwindow.h"
@@ -24,6 +25,8 @@ SplitSegmentDlg::SplitSegmentDlg(int segmentId, QWidget *parent) :
 
 void SplitSegmentDlg::common(int segmentId)
 {
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
  //refreshSegments();
  ui->dateFrom1->setEnabled(false);
  ui->dateTo2->setEnabled(false);
@@ -307,8 +310,6 @@ bool SplitSegmentDlg::processChanges()
     if( sd1->endDate() > sd->endDate()
         &&  sd1->startDate() < sd->startDate())
     {
-     // if(!SQL::instance()->updateRouteDate(sd->segmentId(), sd1->startDate().toString("yyyy/MM/dd"),
-     //                                      sd->endDate().toString("yyyy/MM/dd")))
         SegmentData sd2 = SegmentData(*sd1);
      sd2.setEndDate(sd->endDate());
      if(!SQL::instance()->updateRoute(*sd1,sd2))
@@ -318,7 +319,7 @@ bool SplitSegmentDlg::processChanges()
      }
     // remainder of route segment > solit date, add new segment to route
 #if 0
-    siNew.endDate = rd.endDate.toString("yyyy/MM/dd");
+    siNew.endDate = rd.endDate.toString(_dtFormat);
     rd.lineKey = siNew.segmentId;
 #else
       sd->setEndDate(sd1->endDate());
@@ -341,9 +342,9 @@ bool SplitSegmentDlg::processChanges()
     // if route segment's start date is after split date, use new segment
     if(sd1->startDate()> sd->endDate())
     {
-     //if(!SQL::instance()->updateRoute(rd.route, rd.name, rd.endDate.toString("yyyy/MM/dd"), newSegmentId, rd.next, rd.prev))
-     // if(!SQL::instance()->updateRouteSegment(sd1->segmentId(), sd1->startDate().toString("yyyy/MM/dd"),
-     //                                         sd1->endDate().toString("yyyy/MM/dd"),newSegmentId))
+     //if(!SQL::instance()->updateRoute(rd.route, rd.name, rd.endDate.toString(_dtFormat), newSegmentId, rd.next, rd.prev))
+     // if(!SQL::instance()->updateRouteSegment(sd1->segmentId(), sd1->startDate().toString(_dtFormat),
+     //                                         sd1->endDate().toString(_dtFormat),newSegmentId))
         SegmentData sd2 = SegmentData(*sd1);
      sd2.setSegmentId(newSegmentId);
      if(!SQL::instance()->updateRoute(*sd1,sd2))

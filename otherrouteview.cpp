@@ -1,4 +1,5 @@
 #include "otherrouteview.h"
+#include "myapplication.h"
 #include "sql.h"
 
 OtherRouteView* OtherRouteView::_instance = NULL;
@@ -9,6 +10,8 @@ OtherRouteView::OtherRouteView( QObject *parent) :
     m_parent = parent;
     config = Configuration::instance();
     //sql->setConfig(config);
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
     sql = SQL::instance();
     MainWindow* myParent = MainWindow::instance();
     ui = myParent->ui->tblOtherRouteView;
@@ -237,9 +240,9 @@ OtherRouteViewTableModel::OtherRouteViewTableModel(QList<SegmentData*> routeInte
          case 1:
              return sd->routeName(); // route name
          case 2:
-             return sd->startDate().toString("yyyy/MM/dd");
+             return sd->startDate().toString(_dtFormat);
          case 3:
-             return sd->endDate().toString("yyyy/MM/dd");
+             return sd->endDate().toString(_dtFormat);
 //         case 4:
 //             return si.description; // segment name
          case 4:

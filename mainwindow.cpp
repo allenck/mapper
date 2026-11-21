@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "dialogeditcomments.h"
 #include "dialogselectlist.h"
+#include "myapplication.h"
 #include "qcompleter.h"
 #include "qforeach.h"
 #include "removecitydialog.h"
@@ -166,7 +167,7 @@ MainWindow::MainWindow(int argc, char * argv[], QWidget *parent) :  QMainWindow(
  m_companyKey = config->currCity->companyKey;
 
  sql = SQL::instance();
- _dtFormat = sql->dateFormat();
+ _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
 
  createBridge();  // create the webViewBridge
  zoomIndicator = new QLabel();
@@ -2397,10 +2398,16 @@ void MainWindow::newCity(QAction* act )
     Q_ASSERT(!db.driverName().isEmpty());
     Q_ASSERT(!db.databaseName().isEmpty());
 
-    if(queryDlg)
+    Parameters p;
+    if(SQL::instance()->getParameters(&p,config->currConnection->servertype(), db))
     {
-        queryDlg->setConnection();
+        SQL::instance()->setDateFormat(p.dateFormat());
+        ((MyApplication*)QApplication::instance())->setDateFormat(p.dateFormat());
+        _dtFormat = p.dateFormat();
     }
+
+    if(queryDlg)
+        queryDlg->setConnection();
 
     reloadMap();
     m_bridge->processScript("showRouteComment", "false");
@@ -2430,14 +2437,14 @@ void MainWindow::newCity(QAction* act )
     config->mapSource = config->currCity->mapSource;
 
     QVariantList objArray;
-    // objArray << m_latitude << m_longitude;
-    // m_bridge->processScript("setCenter", objArray);
-    m_bridge->_latLng = config->currCity->center;
+    objArray << m_latitude << m_longitude;
+    m_bridge->processScript("setCenter", objArray);
+    //m_bridge->_latLng = config->currCity->center;
     //m_bridge->processScript("setCenter", QString("%1").arg(m_latitude,0,'f',8)+ "," + QString("%1").arg(m_longitude,0,'f',8));
-    // objArray.clear();
-    // objArray << m_zoom;
-    // m_bridge->processScript("setZoom", objArray);
-    m_bridge->_zoom = m_zoom;
+    objArray.clear();
+    objArray << m_zoom;
+    m_bridge->processScript("setZoom", objArray);
+    //m_bridge->_zoom = m_zoom;
 
     if(config->currCity->bUserMap)
      m_bridge->processScript("setOptions");
@@ -2866,32 +2873,32 @@ void MainWindow::btnDisplayRouteClicked()
  On_displayRoute(&rd);
 }
 
-void MainWindow::On_displayRoute(RouteInfo* rd)
+void MainWindow::On_displayRoute(RouteInfo* ri)
 {
  m_bridge->processScript("addModeOff");
 
  if(!ui->chkNoClear->isChecked())
   btnClearClicked();
 
- m_currRi = new RouteInfo(*rd);
+ m_currRi = new RouteInfo(*ri);
 
- QList<SegmentData*> segmentDataList = SQL::instance()->getRouteSegmentsInOrder(rd->route(),
-                                            rd->routeName(), rd->companyKey(), rd->endDate());
+ QList<SegmentData*> segmentDataList = SQL::instance()->getRouteSegmentsInOrder(ri->route(),
+                                            ri->routeName(), ri->companyKey(), ri->endDate());
  Bounds bounds = Bounds();
  bool bBoundsValid = false;
  double infoLat=0, infoLon = 0;
  bool bFirst = true;
 
  QVariantList objArray;
- if (rd->route() < 1)
+ if (ri->route() < 1)
   return; // no data
     //string str = (m_routeNbr<10?"0":"")+ m_routeNbr;
- CompanyData* cd = sql->getCompany(rd->companyKey());
+ CompanyData* cd = sql->getCompany(ri->companyKey());
  if(cd)
     m_alphaRoute = sql->getAlphaRoute(m_routeNbr, cd->routePrefix);
  if(bDisplayTerminalMarkers)
  {
-  TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, rd->endDate());
+  TerminalInfo ti = sql->getTerminalInfo(m_routeNbr, m_routeName, ri->endDate());
   if (ti.route >= 1 && ti.startLatLng.lat() > 0 && ti.startLatLng.lon() )
   {
    objArray <<ti.startLatLng.lat() << ti.startLatLng.lon() << //getRouteMarkerImagePath(m_alphaRoute, true) << m_alphaRoute;
@@ -2929,7 +2936,7 @@ void MainWindow::On_displayRoute(RouteInfo* rd)
   }
   bBoundsValid = bounds.updateBounds(sd->bounds());
   int tracks = sd->tracks();
-  if(tracks == 2 && sd->doubleDate().isValid() && rd->endDate() < sd->doubleDate())
+  if(tracks == 2 && sd->doubleDate().isValid() && ri->endDate() < sd->doubleDate())
   {
    tracks = 1;
    sd->setTrackUsage(" ");
@@ -2945,7 +2952,7 @@ void MainWindow::On_displayRoute(RouteInfo* rd)
   if(sd->trackUsage().isEmpty()) // fix for MySql not storing field correctly
    sd->setTrackUsage(" ");
   objArray.clear();
-  objArray <<   sd->segmentId() << rd->routeName() <<  sd->description()
+  objArray <<   sd->segmentId() << ri->routeName() <<  sd->description()
              << sd->oneWay() << config->bDisplaySegmentArrows
              << color << tracks
              << dash << sd->routeType() << sd->trackUsage() << points.count();
@@ -2975,7 +2982,7 @@ void MainWindow::On_displayRoute(RouteInfo* rd)
  foreach(TractionTypeInfo tti,tractionTypeList.values())
  {
   //tractionTypeInfo tti = (tractionTypeInfo)tractionTypeList.at(i);
-  if (tti.tractionType == rd->tractionType())
+  if (tti.tractionType == ri->tractionType())
   {
    switch (tti.routeType)
    {
@@ -3083,7 +3090,7 @@ default:
 
   QDate dt = QDate::fromString(m_currRouteStartDate, _dtFormat);
   dt = sql->getFirstCommentDate(m_routeNbr, dt, _ri.companyKey());
-  m_alphaRoute = rd->alphaRoute();
+  m_alphaRoute = ri->alphaRoute();
 
   loadRouteComment(dt);
 

@@ -23,9 +23,9 @@ public:
     qint32 _segmentId = -1;
     qint32 _points =0;
     double _length = 0;
-    QDate _dateBegin = QDate::fromString("1880/01/01", "yyyy/MM/dd");
+    QDate _dateBegin = QDate::fromString("1880-01-01", "yyyy-MM-dd");
     QDate _dateDoubled;
-    QDate _dateEnd= QDate::fromString("2050/12/31", "yyyy/MM/dd");
+    QDate _dateEnd= QDate::fromString("2050-12-31", "yyyy-MM-dd");
     Bearing _bearing;
     double _startLat, _startLon, _endLat, _endLon;
     QString _direction = " ";
@@ -140,6 +140,8 @@ public:
         return(other._segmentId == _segmentId);
 
     }
+private:
+    QString _dtFormat;
 
     friend class SegmentData;
     friend class SQL;

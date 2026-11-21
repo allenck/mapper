@@ -42,6 +42,7 @@ private:
     CompanyData* cd2 = nullptr;
     bool checkDate(QString txt, QDateEdit *dt, CompanyData* cd);
     QString defaultSS;
+    QString _dtFormat;
 
 private slots:
 //    void txtNewRouteNbr1_TextChanged(QString text);

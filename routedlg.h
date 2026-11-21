@@ -87,6 +87,7 @@ private:
     QDate maxDate;
     void CalculateDates();
     void fillCompanies();
+    QString _dtFormat;
 
 private slots:
     void Form_Load();

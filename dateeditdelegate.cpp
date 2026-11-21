@@ -1,16 +1,20 @@
 #include "dateeditdelegate.h"
+#include "myapplication.h"
 #include "qdatetimeedit.h"
 
 DateEditDelegate::DateEditDelegate(QObject *parent)
     : QItemDelegate{parent}
-{}
+{
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
+}
 
 QWidget *DateEditDelegate::createEditor(QWidget *parent,
                                         const QStyleOptionViewItem &/* option */,
                                         const QModelIndex &/* index */) const
 {
     QDateEdit * editor= new QDateEdit(parent);
-    editor->setDisplayFormat("yyyy/MM/dd");
+    editor->setDisplayFormat(_dtFormat);
 
     return editor;
 }
@@ -21,7 +25,7 @@ void DateEditDelegate::setEditorData(QWidget *editor,
     QString value = index.model()->data(index, Qt::DisplayRole).toString();
 
     QDateEdit *dateEdit = static_cast<QDateEdit*>(editor);
-    dateEdit->setDate(QDate::fromString(value, "yyyy/MM/dd"));
+    dateEdit->setDate(QDate::fromString(value, _dtFormat));
 }
 
 void DateEditDelegate::setModelData(QWidget *editor, QAbstractItemModel *model,

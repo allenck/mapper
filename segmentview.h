@@ -43,7 +43,7 @@ private:
     QList<SegmentInfo> myArray;
     Configuration *config;
     SQL* sql;
-
+    QString _dtFormat;
     bool boolGetItemTableView(QTableView *table);
 
 private slots:

@@ -34,7 +34,7 @@ private:
     void refreshRoutes();
     QList<RouteInfo> routeDataList;
     CompanyData* cd = nullptr;
-
+    QString _dtFormat;
 private slots:
     void cbRoutes_SelectedIndexChanged();
     void btnOK_Click();

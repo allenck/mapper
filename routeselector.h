@@ -32,6 +32,7 @@ class RouteSelector : public QTableView
     QMultiMap<QString, RouteInfo*>* aList = nullptr;
     void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected) override;
     QSortFilterProxyModel* proxyModel = nullptr;
+    QString _dtFormat;
 };
 
 class RouteSelectorTableModel : public QAbstractTableModel
@@ -54,6 +55,7 @@ class RouteSelectorTableModel : public QAbstractTableModel
     QMultiMap<QString, RouteInfo*>* aList = nullptr;
      QList<RouteInfo>* routeList;
      friend class RouteCommentsDlg;
+     QString _dtFormat;
 };
 
 #if 0
@@ -94,6 +96,7 @@ class RouteName : public QObject
   int _route, _baseRoute, _companyKey, _routeId;
   QString _routePrefix, _routeAlpha, _name,_coName;
   QDate _date;
+
 };
 #endif
 #endif // ROUTESELECTOR_H

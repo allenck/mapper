@@ -1,4 +1,5 @@
 #include "dupsegmentview.h"
+#include "myapplication.h"
 #include "sql.h"
 #include <QMessageBox>
 #include "exceptions.h"
@@ -10,6 +11,8 @@ DupSegmentView::DupSegmentView(QObject *parent) :
     m_parent = parent;
     config = Configuration::instance();
     sql = SQL::instance();
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     ui = myParent->ui->tblDupSegments;
     ui->setAlternatingRowColors(true);
@@ -96,7 +99,7 @@ void DupSegmentView::showDupSegments(QList<QPair<SegmentInfo, SegmentInfo>> dupS
       foreach(SegmentData* sd, list)
       {
        detailedText = detailedText + tr("\n%1 %2 %3->%4").arg(sd->route()).arg(sd->routeName(),
-                                    sd->startDate().toString("yyyy/MM/dd"),sd->endDate().toString("yyyy/MM/dd"));
+                                    sd->startDate().toString(_dtFormat),sd->endDate().toString(_dtFormat));
       }
      }
      else
@@ -111,7 +114,7 @@ void DupSegmentView::showDupSegments(QList<QPair<SegmentInfo, SegmentInfo>> dupS
       for(int i=0; i < list.count(); i++)
       {
        detailedText = detailedText + tr("\n%1 %2 %3->%4").arg(list.at(i)->route()).arg(list.at(i)->routeName()).
-         arg(list.at(i)->startDate().toString("yyyy/MM/dd")).arg(list.at(i)->endDate().toString("yyyy/MM/dd"));
+         arg(list.at(i)->startDate().toString(_dtFormat)).arg(list.at(i)->endDate().toString(_dtFormat));
       }
      }
      else

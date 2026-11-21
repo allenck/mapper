@@ -1,4 +1,5 @@
 #include "stationview.h"
+#include "myapplication.h"
 #include "sql.h"
 #include "webviewbridge.h"
 #include <QApplication>
@@ -12,6 +13,8 @@ StationView::StationView(Configuration *cfg, QObject *parent) :
     m_parent = parent;
 //    config = cfg;
 //    sql->setConfig(config);
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
     config = Configuration::instance();
     sql = SQL::instance();
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
@@ -88,7 +91,7 @@ void StationView::showStations(QList<StationInfo> stationList)
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
     //sql->setConfig( myParent->getConfiguration());
     //QList<StationInfo> stationList =   sql->getStations();
-    //QList<StationInfo> stationList =   sql->getStations(myParent->m_alphaRoute, QDate::fromString(myParent->m_currRouteEndDate, "yyyy/MM/dd"));
+    //QList<StationInfo> stationList =   sql->getStations(myParent->m_alphaRoute, QDate::fromString(myParent->m_currRouteEndDate, _dtFormat));
     if(stationList.isEmpty())
         return;
     ui->setSortingEnabled(true);
@@ -252,6 +255,8 @@ QVariant StationViewSortProxyModel::data ( const QModelIndex & index, int role )
 StationViewTableModel::StationViewTableModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
 }
 StationViewTableModel::StationViewTableModel(QList<StationInfo> stationList,  QObject *parent)
      : QAbstractTableModel(parent)
@@ -297,9 +302,9 @@ void StationViewTableModel::setStationList(QList<StationInfo> stationList)
          case ROUTES:
              return sti.routes.join(",");
          case STARTDATE:
-             return sti.startDate.toString("yyyy/MM/dd");
+             return sti.startDate.toString(_dtFormat);
          case ENDDATE:
-             return sti.endDate.toString("yyyy/MM/dd");
+             return sti.endDate.toString(_dtFormat);
          case LATITUDE:
              return QString("%1").arg(sti.latitude, 0, 'f', 8);
          case LONGITUDE:

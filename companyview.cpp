@@ -4,12 +4,14 @@
 #include <QSortFilterProxyModel>
 #include <QDesktopServices>
 #include "dateeditdelegate.h"
+#include "myapplication.h"
 
 CompanyView::CompanyView(QObject *parent) :
     QObject(parent)
 {
     m_parent = parent;
     config = Configuration::instance();
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
     sql = SQL::instance();
     //sql->setConfig(config);
     MainWindow* myParent = qobject_cast<MainWindow*>(m_parent);
@@ -242,9 +244,9 @@ QVariant MyCompanyTableModel::data ( const QModelIndex & index, int role ) const
      case ROUTEPREFIX:
          return cd->routePrefix;
      case STARTDATE:
-         return cd->startDate.toString("yyyy/MM/dd");
+         return cd->startDate.toString(_dtFormat);
      case ENDDATE:
-         return cd->endDate.toString("yyyy/MM/dd");
+         return cd->endDate.toString(_dtFormat);
      case FIRSTROUTE:
          return cd->firstRoute;
      case LASTROUTE:
@@ -317,10 +319,10 @@ bool MyCompanyTableModel::setData(const QModelIndex &mindex, const QVariant &val
          cd->routePrefix = value.toString();
          break;
      case STARTDATE:
-         cd->startDate = QDate::fromString(value.toString(), "yyyy/MM/dd");
+         cd->startDate = QDate::fromString(value.toString(), _dtFormat);
          break;
      case ENDDATE:
-         cd->endDate = QDate::fromString(value.toString(), "yyyy/MM/dd");
+         cd->endDate = QDate::fromString(value.toString(), _dtFormat);
          break;
      case FIRSTROUTE:
          cd->firstRoute = value.toInt();

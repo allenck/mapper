@@ -54,6 +54,7 @@ private:
  QString oneWay = " ";
  SegmentData* _sd = nullptr;
  QString direction = " ";
+ QString _dtFormat;
 
 private slots:
  //void fillSegments();

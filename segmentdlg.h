@@ -66,6 +66,7 @@ private:
     void setRouteData(RouteInfo *value);
     void updateOtherRoutes();
     QColor txtSegment_color;
+    QString _dtFormat;
 
 private slots:
     void fillCompanies();

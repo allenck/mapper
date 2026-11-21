@@ -99,6 +99,7 @@ private:
     bool bNeedsUpdate = false;
     RouteType _routeType;
     QList<QPair<int, QString>> _seqList;
+    QString _dtFormat;
 signals:
 
 public slots:

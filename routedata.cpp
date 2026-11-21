@@ -1,11 +1,14 @@
 #include "routedata.h"
 #include "segmentdata.h"
+#include "myapplication.h"
 RouteData::RouteData()
 {
     _route=-1;
     _companyKey = -1;
     _lineKey = -1;
     _trackUsage = " ";
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
 }
 RouteData::~RouteData()
 {
@@ -94,9 +97,9 @@ const QString RouteData::toString()
     int num = _alphaRoute.toInt(&isNumeric);
     QString str;
     if(isNumeric && _routePrefix.trimmed().isEmpty())
-        str = _companyMnemonic + " " + _alphaRoute + " " + _name + " " + _dateBegin.toString("yyyy/MM/dd")+ "->"+ _dateEnd.toString("yyyy/MM/dd");
+        str = _companyMnemonic + " " + _alphaRoute + " " + _name + " " + _dateBegin.toString(_dtFormat)+ "->"+ _dateEnd.toString(_dtFormat);
     else
-        str = _companyMnemonic + " " + _alphaRoute+"(" +QString::number(_route)+ ") " + _name + " " + _dateBegin.toString("yyyy/MM/dd")+ "->"+ _dateEnd.toString("yyyy/MM/dd");
+        str = _companyMnemonic + " " + _alphaRoute+"(" +QString::number(_route)+ ") " + _name + " " + _dateBegin.toString(_dtFormat)+ "->"+ _dateEnd.toString(_dtFormat);
 
     return str;
 }

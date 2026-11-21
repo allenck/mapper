@@ -95,6 +95,7 @@ private:
      bool bChangesMade = false; // set when changes need to be comitted.
      QList<SegmentData*> _selectedSegments;
      bool bSegmentNeedsUpdate = false;
+     QString _dtFormat;
 
      friend class RouteView;
 };

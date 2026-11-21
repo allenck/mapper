@@ -1,4 +1,5 @@
 #include "splitroute.h"
+#include "myapplication.h"
 #include "ui_splitroute.h"
 #include "data.h"
 #include "routecommentsdlg.h"
@@ -9,6 +10,8 @@ SplitRoute::SplitRoute( QWidget *parent) :
 {
     config = Configuration::instance();
     sql = SQL::instance();
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
     ui->setupUi(this);
     this->setWindowTitle(tr("Split route at date"));
     //fillCompanies();
@@ -82,9 +85,9 @@ bool SplitRoute::setRouteData(RouteInfo rd)
                                   tr("The end date for this route %1\n"
                                      "overlaps a succeding route starting on %2\n"
                                      "This route's end date must be less than or equal to %3")
-                                        .arg(_rd.endDate().toString("yyyy/MM/dd"),
-                                        nextStartDate.toString("yyyy/MM/dd"),
-                                        maxEndDate.toString("yyyy/MM/dd")),QMessageBox::Cancel |
+                                        .arg(_rd.endDate().toString(_dtFormat),
+                                        nextStartDate.toString(_dtFormat),
+                                        maxEndDate.toString(_dtFormat)),QMessageBox::Cancel |
                                           QMessageBox::Ignore) == QMessageBox::Cancel)
 
                 return false;
@@ -363,14 +366,14 @@ bool SplitRoute::checkDate(QString txt, QDateEdit* dt, CompanyData* cd)
     {
         dt->setStyleSheet("background:pink");
         ui->lblHelp->setStyleSheet("color: #FF5B00");
-        ui->lblHelp->setText(tr("Warning: Date %1 %2 is less than company start date %3").arg(txt, dt->date().toString("yy/MM/dd"),cd->startDate.toString("yyyy/MM/dd")));
+        ui->lblHelp->setText(tr("Warning: Date %1 %2 is less than company start date %3").arg(txt, dt->date().toString("yy/MM/dd"),cd->startDate.toString(_dtFormat)));
         return false;
     }
     if(dt->date() > cd->endDate )
     {
         dt->setStyleSheet("background:pink");
         ui->lblHelp->setStyleSheet("color: #FF5B00");
-        ui->lblHelp->setText(tr("Warning: Date %1 %2 is greater than company end date %3").arg(txt, dt->date().toString("yy/MM/dd"),cd->startDate.toString("yyyy/MM/dd")));
+        ui->lblHelp->setText(tr("Warning: Date %1 %2 is greater than company end date %3").arg(txt, dt->date().toString("yy/MM/dd"),cd->startDate.toString(_dtFormat)));
         return false;
     }
     return true;
@@ -433,7 +436,7 @@ void SplitRoute::btnOK_Click()
     {
         ui->lblHelp->setStyleSheet("color: red");
         ui->lblHelp->setText (tr("Company 2 not valid for specified dates! Must be > %1")
-                                 .arg(cd->startDate.toString("yyyy/MM/dd")));
+                                 .arg(cd->startDate.toString(_dtFormat)));
         QApplication::beep();
         ui->dateFrom2->setFocus();
         return;
@@ -457,7 +460,7 @@ void SplitRoute::btnOK_Click()
     if (ui->dateTo2->dateTime().date() > cd->endDate)
     {
         ui->lblHelp->setStyleSheet("color: red");
-        ui->lblHelp->setText (tr("To date 2 %1 > company's enddate %2").arg(ui->dateTo2->date().toString("yyyy/MM/dd"),cd->endDate.toString("yyyy/MM/dd")));
+        ui->lblHelp->setText (tr("To date 2 %1 > company's enddate %2").arg(ui->dateTo2->date().toString(_dtFormat),cd->endDate.toString(_dtFormat)));
         QApplication::beep();
         ui->dateFrom1->setFocus();;
         return;
@@ -543,7 +546,7 @@ void SplitRoute::btnOK_Click()
     }
 
     // QList<RouteData> myArray = sql->getRouteDatasForDate(_rd.route(), _rd.routeName(), _rd.companyKey(),
-    //                                                      _rd.endDate().toString("yyyy/MM/dd"));
+    //                                                      _rd.endDate().toString(_dtFormat));
     QList<SegmentData*> myArray = sql->getSegmentDatasForDate(_rd.route(), _rd.routeName(), _rd.companyKey(),
                                                          _rd.endDate());
     if(!sql->executeCommand(QString("delete from routes where route = %1 and routeid = %2").arg(_rd.route()).arg( myArray.at(0)->routeId())))
@@ -575,8 +578,8 @@ void SplitRoute::btnOK_Click()
          if(ui->chkDeleteOriginal->isChecked())
          {
           // if(!sql->deleteRouteSegment(sd1->route(), sd1->routeId(), sd1->segmentId(),
-          //                             sd1->startDate().toString("yyyy/MM/dd"),
-          //                             sd1->endDate().toString("yyyy/MM/dd")))
+          //                             sd1->startDate().toString(_dtFormat),
+          //                             sd1->endDate().toString(_dtFormat)))
           if(!sql->deleteRouteSegment(*sd1, false))
           {
            ui->lblHelp->setText (tr("delete failed"));

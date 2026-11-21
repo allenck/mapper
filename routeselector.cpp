@@ -1,4 +1,5 @@
 #include "routeselector.h"
+#include "myapplication.h"
 #include "sql.h"
 #include <QItemSelectionModel>
 #include "mainwindow.h"
@@ -7,6 +8,7 @@ RouteSelector::RouteSelector(QWidget *parent) : QTableView(parent)
 {
     // list = SQL::instance()->routeNameList();
     //aList = SQL::instance()->routeNameAList();
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
 
 
     RouteSelectorTableModel* model = new RouteSelectorTableModel(this);
@@ -171,7 +173,7 @@ QVariant RouteSelectorTableModel::data(const QModelIndex &index, int role) const
   case ROUTEID:
       return rd.routeId();
   case DATE:
-      return rd.startDate().toString("yyyy/MM/dd");
+      return rd.startDate().toString(_dtFormat);
   }
  }
  return QVariant();

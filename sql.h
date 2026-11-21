@@ -336,7 +336,7 @@ private:
     int linesRead =0;
     QSqlQuery* query = nullptr;
     static QString _connectionName;
-    QString _dtFormat = "yyyy/MM/dd";
+    QString _dtFormat;
 
     friend class StreetsTableModel;
     friend class ExportSql;

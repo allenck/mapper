@@ -84,6 +84,7 @@ private:
     void resizeEvent(QResizeEvent *e) override;
     QAction* hideColumnAct;
     QAction* showColumnAct;
+    QString _dtFormat;
 
 private slots:
     void btnOK_Clicked();

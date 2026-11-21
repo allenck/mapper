@@ -1,4 +1,5 @@
 #include "routeinfo.h"
+#include "myapplication.h"
 #ifndef ROUTENAMEWIDGETPLUGIN
 #include "segmentdata.h"
 #endif
@@ -7,6 +8,8 @@ RouteInfo::RouteInfo()
     _route= -1;
     length = 0;
     segmentDataList = QList<SegmentData*>();
+    _dtFormat = ((MyApplication*)QApplication::instance())->dateFormat();
+
 }
 
 // RouteInfo::RouteInfo(const RouteData& rd)
@@ -93,7 +96,7 @@ QString RouteInfo::toString()
     if(isNumeric && _routePrefix.trimmed().isEmpty())
         str = _companyMnemonic + " " + _alphaRoute + " " + _routeName + " " + _startDate.toString("yyyy-MM-dd")+ "->"+ _endDate.toString("yyyy-MM-dd");
     else
-        str = _companyMnemonic + " " + _alphaRoute+"(" +QString::number(_route)+ ") " + _routeName + " " + _startDate.toString("yyyy/MM/dd")+ "->"+ _endDate.toString("yyyy-MM-dd");
+        str = _companyMnemonic + " " + _alphaRoute+"(" +QString::number(_route)+ ") " + _routeName + " " + _startDate.toString(_dtFormat)+ "->"+ _endDate.toString("yyyy-MM-dd");
 
     return str;
 }
