@@ -62,6 +62,7 @@ void DialogEditParameters::btnOk()
  parms.title = ui->txtTitle->text();
  parms.bAlphaRoutes = ui->chkAlpha->isChecked()?"Y":"N";
  parms.buildList(ui->txtAbbreviations->text());
+ parms.versionString=MY_VERSION;
  if(SQL::instance()->updateParameters(parms))
   accept();
 }

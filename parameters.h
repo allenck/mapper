@@ -18,8 +18,12 @@ public:
     QString createString();
     QList<QPair<QString, QString>> abbreviationsList(){return _abbreviationsList;}
     void setList(QList<QPair<QString, QString>> al){_abbreviationsList = al;}
+    void setDateFormat(QString dateFormat){_dtFormat = dateFormat;}
+    QString dateFormat() {return _dtFormat;
+    }
 private:
     QList<QPair<QString, QString>> _abbreviationsList;
+    QString _dtFormat = "yyyy/MM/dd";
     friend class SQL;
 };
 

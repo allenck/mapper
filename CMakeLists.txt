@@ -15,7 +15,7 @@ qt_add_executable(mapper WIN32 MACOSX_BUNDLE
 #    $ENV{QTDIR}/../Src/qtbase/src/3rdparty/sqlite/sqlite3.c $ENV{QTDIR}/../Src/qtbase/src/3rdparty/sqlite/sqlite3.h
     ${SQLITE3_SOURCE}
     QtKeychain/qtkeychain/gnomekeyring_p.h
-#    QtKeychain/qtkeychain/keychain.cpp QtKeychain/qtkeychain/keychain.h QtKeychain/qtkeychain/keychain_p.h
+    QtKeychain/qtkeychain/keychain.cpp QtKeychain/qtkeychain/keychain.h QtKeychain/qtkeychain/keychain_p.h
     QtKeychain/qtkeychain/libsecret_p.h
     QtKeychain/qtkeychain/plaintextstore_p.h
     addgeoreferenceddialog.cpp addgeoreferenceddialog.h
@@ -165,7 +165,7 @@ qt_add_executable(mapper WIN32 MACOSX_BUNDLE
     websocketclientwrapper.cpp websocketclientwrapper.h
     websockettransport.cpp websockettransport.h
     webviewbridge.cpp webviewbridge.h
-    mapper.qrc
+    Resources/mapper.qrc
     segmentinfo.h segmentinfo.cpp
     segmentdata.h segmentdata.cpp
     bounds.h bounds.cpp
@@ -174,6 +174,8 @@ qt_add_executable(mapper WIN32 MACOSX_BUNDLE
     routetype.h
     parameters.h parameters.cpp
     routeinfo.h routeinfo.cpp
+    Resources/sql/Sqlite3/sqlite3_convert_dates.sql
+    Resources/sql/Sqlite3/sqlite3_convert_dates.sql
 )
 # Force the executable to be built in the root build folder, matching qmake's directory depth
 set_target_properties(mapper PROPERTIES
@@ -203,7 +205,7 @@ target_compile_definitions(mapper PRIVATE
     VER_MAJOR=1
     VER_MINOR=2
     VER_PATCH=3
-    VER_STRING="\\\"1.2.12\\\""
+    VER_STRING="\\\"1.2.13\\\""
 )
 
 target_link_libraries(mapper PRIVATE

@@ -9,13 +9,13 @@ INCLUDEPATH += $$PWD/QtKeychain
 
 SOURCES += $$PWD/securevault.cpp \
         $$PWD/dsn.cpp \
-#        QtKeychain/qtkeychain/keychain.cpp
+        QtKeychain/qtkeychain/keychain.cpp
 
 HEADERS += $$PWD/securevault.h \
         $$PWD/cleanerrorstring.h \
         $$PWD/dsn.h \
-        # QtKeychain/qtkeychain/keychain.h \
-        # QtKeychain/qtkeychain/keychain_p.h \
+        QtKeychain/qtkeychain/keychain.h \
+        QtKeychain/qtkeychain/keychain_p.h \
         QtKeychain/qtkeychain/gnomekeyring_p.h \
         QtKeychain/qtkeychain/libsecret_p.h \
         QtKeychain/qtkeychain/plaintextstore_p.h
@@ -48,5 +48,5 @@ unix:!macx {
 
 macx {
     LIBS += -framework Security -framework CoreFoundation
-    OBJECTIVE_SOURCES += QtKeychain/qtkeychain/keychain_apple.mm
+    SOURCES += QtKeychain/qtkeychain/keychain_apple.mm
 }

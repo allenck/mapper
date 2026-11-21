@@ -546,7 +546,8 @@ QList<RouteInfo> SQL::getRoutesByStartDate(QDate date, int daysBefore)
  QString  where= " where r.startDate > '" + date.addDays(-daysBefore).toString(_dtFormat) + "' ";
  if(config->currConnection->servertype() == "MySql")
     commandText = "Select distinct a.baseRoute, r.route, n.name, r.startDate, "
-               "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic,r.routeId, c.description  "
+               "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic,r.routeId, c.description, "
+                  "n.canonicalName  "
                "from Routes r "
                "join AltRoute a on r.route =  a.route "
                "join Companies c on r.companyKey = c.`key` "
@@ -557,7 +558,8 @@ QList<RouteInfo> SQL::getRoutesByStartDate(QDate date, int daysBefore)
                " order by a.routeAlpha, n.name, r.endDate ";
  else if(config->currConnection->servertype() == "MsSql")
      commandText = "Select distinct a.baseRoute, r.route, n.name, r.startDate, "
-                   "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic, r.routeId, c.description  "
+                   "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic, r.routeId, "
+                   "c.description,n.canonicalName  "
                    "from Routes r "
                    "join AltRoute a on r.route =  a.route "
                    "join Companies c on r.companyKey = c.[key] "
@@ -568,7 +570,8 @@ QList<RouteInfo> SQL::getRoutesByStartDate(QDate date, int daysBefore)
                    " order by a.routeAlpha, n.name, r.endDate ";
  else
     commandText = "Select distinct a.baseRoute, r.route, n.name, r.startDate, "
-            "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic, r.routeId, c.description  "
+            "r.endDate, r.companyKey, tractionType, a.routeAlpha, c.mnemonic, r.routeId, "
+                  "c.description,n.canonicalName  "
             "from Routes r "
             "join AltRoute a on r.route =  a.route "
             "join Companies c on r.companyKey = c.key "
@@ -604,6 +607,7 @@ QList<RouteInfo> SQL::getRoutesByStartDate(QDate date, int daysBefore)
   ri._companyMnemonic = query.value(8).toString();
   ri._routeId = query.value(9).toInt();
   ri._companyName = query.value(10).toString();
+  ri._canonicalName = query.value(11).toString();
   riList.append(ri);
  }
  return riList;
@@ -5421,21 +5425,21 @@ bool SQL::getParameters(Parameters* parms, QString serverType, QSqlDatabase db)
     QString alphaRoutes;
     QString commandText;
 
-    bool versionStringExists =false;
+    bool dateFormatExists =false;
     if(serverType == "Sqlite")
-        versionStringExists = doesColumnExist("Parameters", "versionString",db);
+        dateFormatExists = doesColumnExist("Parameters", "dateFormat",db);
     try
     {
     //QSqlDatabase  srcDb = QSqlDatabase::database(SQL::connectionName);  if(!dbOpen(db)
      //throw Exception(tr("database not open: %1").arg(__LINE__));
      // db = QSqlDatabase::database();
-        if(versionStringExists)
+        if(dateFormatExists)
             commandText = "select lat, lon, title, city, minDate, maxDate, "
-                              "alphaRoutes, abbreviationsList, versionString "
+                              "alphaRoutes, abbreviationsList, versionString, dateFormat "
                               "from Parameters";
         else
             commandText = "select lat, lon, title, city, minDate, maxDate, "
-                              "alphaRoutes, abbreviationsList "
+                              "alphaRoutes, abbreviationsList, versionString "
                               "from Parameters";
 
         QSqlQuery query = QSqlQuery(db);
@@ -5466,8 +5470,9 @@ bool SQL::getParameters(Parameters* parms, QString serverType, QSqlDatabase db)
                 parms->bAlphaRoutes = true;
             QString abbreviationsStr = query.value(7).toString();
             parms->buildList(abbreviationsStr);
-            if(versionStringExists)
-                parms->versionString = query.value(8).toString();
+            parms->versionString = query.value(8).toString();
+            if(dateFormatExists)
+                parms->_dtFormat = query.value(9).toString();
         }
     }
     catch (Exception e)
@@ -5487,10 +5492,11 @@ bool SQL::insertParameters(Parameters parms, QSqlDatabase db)
         QSqlDatabase db = QSqlDatabase::database(SQL::_connectionName);
 
 
-        QString commandText = QString("insert into Parameters (lat, lon, title, city, minDate, maxDate, alphaRoutes,lastupdate)"
-                              " values (%1, %2, '%3', '%4', '%5', '%6', '%7','%8',CURRENT_TIMESTAMP)")
+        QString commandText = QString("insert into Parameters (lat, lon, title, city, minDate, maxDate, "
+                                      "alphaRoutes,abbreviationsList, dateFormat,lastupdate)"
+                              " values (%1, %2, '%3', '%4', '%5', '%6', '%7','%8','%9','%10',CURRENT_TIMESTAMP)")
                 .arg(parms.lat).arg(parms.lon).arg(parms.title,parms.city,parms.minDate.toString(_dtFormat),
-                    parms.maxDate.toString(_dtFormat), parms.bAlphaRoutes?"Y":"N",parms.createString());
+                    parms.maxDate.toString(_dtFormat), parms.bAlphaRoutes?"Y":"N",parms.createString(), "","yyyy-MM-dd");
         QSqlQuery query = QSqlQuery(db);
         bool bQuery = query.exec(commandText);
         if(!bQuery)
@@ -5511,11 +5517,11 @@ bool SQL::insertParameters(Parameters parms, QSqlDatabase db)
 
 bool SQL::updateParameters(Parameters parms, QSqlDatabase db)
 {
-    bool bVersionStringExists = doesColumnExist("Parameters", "versionString",db);
-    if(!bVersionStringExists)
+    bool bDateFormatExists = doesColumnExist("Parameters", "dateFormat",db);
+    if(!bDateFormatExists)
     {
-        addColumn("Parameters", "versionString", "text NOT NULL DEFAULT '' ");
-        parms.versionString = MY_VERSION;
+        addColumn("Parameters", "dateFormat", "text NOT NULL DEFAULT 'yyyy/MM/dd' ");
+        parms._dtFormat = "yyyy/MM/dd";
     }
 
     try
@@ -5526,10 +5532,10 @@ bool SQL::updateParameters(Parameters parms, QSqlDatabase db)
 
         QString commandText = QString("update Parameters set lat = %1, lon=%2, title='%3', city='%4', "
                               "minDate = '%5', maxDate= '%6', alphaRoutes = '%7',"
-                              "abbreviationsList = '%8', versionString='%9',lastUpdate=CURRENT_TIMESTAMP")
+                              "abbreviationsList = '%8', versionString='%9',dateFormat='%10',lastUpdate=CURRENT_TIMESTAMP")
                 .arg(parms.lat).arg(parms.lon).arg(parms.title,parms.city,parms.minDate.toString(_dtFormat),
                     parms.maxDate.toString(_dtFormat), parms.bAlphaRoutes?"Y":"N", parms.createString(),
-                                                   parms.versionString);
+                                                   parms.versionString, parms._dtFormat);
         QSqlQuery query = QSqlQuery(db);
         QString abbreviationsStr;
         for (QPair<QString,QString> pair: parms.abbreviationsList()) {
@@ -5719,7 +5725,7 @@ QList<RouteInfo> SQL::getRouteInfoForRouteName(qint32 route, QString name)
         if(config->currConnection->servertype() == "MySql")
         {
             commandText = "select min(a.startdate), Max(a.enddate), n.Name, a.route, b.`Key`,"
-                          " tractionType, routeAlpha, a.routeId, n.description"
+                          " tractionType, routeAlpha, a.routeId, n.description, n.canonicalName"
                           " from Routes a"
                           " join Companies b on " + QString("%1").arg(route)
                           + " between firstRoute and lastRoute"
@@ -5732,7 +5738,7 @@ QList<RouteInfo> SQL::getRouteInfoForRouteName(qint32 route, QString name)
         else if(config->currConnection->servertype() == "MsSql")
         {
             commandText = "select min(a.startdate), Max(a.enddate), n.Name, a.route, b.[Key],"
-                          " tractionType, routeAlpha, a.routeId, n.description"
+                          " tractionType, routeAlpha, a.routeId, n.description,n.canonicalName"
                           " from Routes a"
                           " join Companies b on " + QString("%1").arg(route) + " between firstRoute and lastRoute"
                           " join RouteName n on n.routeid = a.routeId"
@@ -5743,7 +5749,7 @@ QList<RouteInfo> SQL::getRouteInfoForRouteName(qint32 route, QString name)
         }
         else // Sqlite && PostgreSQL
             commandText = "select min(a.startdate), Max(a.enddate), n.Name, a.route, b.Key,"
-                          " tractionType, routeAlpha, a.routeId, n.description"
+                          " tractionType, routeAlpha, a.routeId, n.description, n.canonicalName"
                           " from Routes a"
                           " join Companies b on " + QString("%1").arg(route)
                           + " between firstRoute and lastRoute"
@@ -5778,6 +5784,7 @@ QList<RouteInfo> SQL::getRouteInfoForRouteName(qint32 route, QString name)
             ri._alphaRoute = query.value(6).toString();
             ri._routeId = query.value(7).toInt();
             ri._description = query.value(8).toString();
+            ri._canonicalName = query.value(9).toString();
             myArray.append(ri);
         }
         //rd.companyKey = -1;
@@ -10593,7 +10600,12 @@ void SQL::checkTables(QSqlDatabase db)
   tableList = db.tables();
   if(!doesColumnExist("Parameters", "versionString",db))
   {
-      addColumn("Parameters", "versionString", "text NOT NULL DEFAULT '' ");
+      addColumn("Parameters", "versionString", "text NOT NULL DEFAULT '1.2.13' ");
+  }
+  if(!doesColumnExist("Parameters", "dateFormat",db))
+  {
+      addColumn("Parameters", "dateFormat", "text NOT NULL DEFAULT 'yyyy/MM/dd' ");
+      executeScript(":/sql/Sqlite3/sqlite3_recreate_parameters.sql",db);
   }
 
   if(!doesColumnExist("Comments", "jRouteList",db))
@@ -12682,7 +12694,7 @@ QList<RouteInfo> SQL::checkRouteName(QString name, QDate startDate, QDate endDat
 
            commandText = "select distinct r.startDate, r.endDate, n.name, r.route, "
                          "r.companyKey, tractionType, "
-                         "a.routeAlpha, r.routeid "
+                         "a.routeAlpha, r.routeid,n.canonicalName "
                          "from routes r "
                          "join altRoute a on r.route = a.route "
                          "join RouteName n on n.routeid = r.routeid "
@@ -12718,6 +12730,7 @@ QList<RouteInfo> SQL::checkRouteName(QString name, QDate startDate, QDate endDat
            ri._tractionType = query.value(5).toInt();
            ri._alphaRoute = query.value(6).toString();
            ri._routeId = query.value(7).toInt();
+           ri._canonicalName = query.value(8).toString();
            list.append(ri);
        }
    }
@@ -13192,7 +13205,7 @@ RouteInfo SQL::getRouteName(int routeId)
 
     if(!dbOpen(db))
         throw Exception(tr("database not open: %1").arg(__LINE__));
-    QString commandText = "Select name "
+    QString commandText = "Select name, canonicalName, description, startDate, endDate"
                           "from RouteName where routeId = " + QString::number(routeId);
     QSqlQuery query = QSqlQuery(db);
 
@@ -13209,6 +13222,10 @@ RouteInfo SQL::getRouteName(int routeId)
     while (query.next())
     {
         ri._routeName = query.value(0).toString();
+        ri._canonicalName = query.value(1).toString();
+        ri._description = query.value(2).toString();
+        ri._startDate = query.value(3).toDate();
+        ri._endDate = query.value(4).toDate();
     }
     return ri;
 }

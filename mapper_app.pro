@@ -88,9 +88,7 @@ OTHER_FILES += \
     Resources/mapper.icns
 
 RESOURCES += \
-#    Resources/mapper.qrc \
-#    Resources/mapper.qrc \
-    Resources/mapper.qrc
+     Resources/mapper.qrc
 
 
 DISTFILES += \
@@ -164,7 +162,7 @@ DEPENDPATH += $$PWD/.
 
 INCLUDEPATH += $$(QTDIR)/../Src/qtbase/src/3rdparty/sqlite
 
-VERSION=1.2.12
+VERSION=1.2.13
 # Split the version components to use in the numeric portions of the .rc file
 VERSION_MAJOR = 1
 VERSION_MINOR = 2
@@ -257,4 +255,9 @@ CONFIG(debug, debug|release) {
 
      LIBS += -ladvapi32
 
+}
+macx: {
+    LIBS += -F"/Library/Frameworks/" -framework Security -framework CoreFoundation
+    # LIBS += -L/path/to/qtkeychain/lib \
+    #         -lqt6keychain
 }

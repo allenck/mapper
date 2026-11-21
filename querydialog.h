@@ -31,7 +31,7 @@ public:
  static QueryDialog* instance();
  void processSelect(QString table, QString commandLine);
  void show();
-
+ void setConnection();
 public slots:
  void executeQuery(QString commandText);
     

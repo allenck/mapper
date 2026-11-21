@@ -1854,7 +1854,10 @@ void MainWindow::createActions()
 
   expandRouteNameAct = new QAction(tr("Expand RouteName"),this);
   connect(expandRouteNameAct, &QAction::triggered,this,[=]{
-      sql->expandRouteName();
+      if(sql->expandRouteName())
+          sql->commitTransaction("");
+      else
+          sql->rollbackTransaction("");
   });
 }
 
@@ -2394,15 +2397,15 @@ void MainWindow::newCity(QAction* act )
     Q_ASSERT(!db.driverName().isEmpty());
     Q_ASSERT(!db.databaseName().isEmpty());
 
+    if(queryDlg)
+    {
+        queryDlg->setConnection();
+    }
+
     reloadMap();
     m_bridge->processScript("showRouteComment", "false");
 
     qInfo() << city->name() + "/" + connection->description();
-    // close the current database and open the new one
-    // db = QSqlDatabase::database(config->currConnection->connectionName());
-
-    // db.close();
-
     StreetsTableModel::instance()->setDb();
     emit newCitySelected();
 

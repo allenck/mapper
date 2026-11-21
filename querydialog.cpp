@@ -1506,6 +1506,7 @@ QWidgetAction* QueryDialog::createWidgetAction()
     if(dirName == "Sqlite")
      dirName = "Sqlite3";
     cbFile = new QComboBox(this);
+    cbFile->addItem("Select item");
     QDirIterator dirIterator(":/sql/" + dirName, QDirIterator::Subdirectories);
     while (dirIterator.hasNext()) {
         dirIterator.next();
@@ -1518,6 +1519,7 @@ QWidgetAction* QueryDialog::createWidgetAction()
                 cbFile->addItem(fileInfo.fileName(), fileInfo.filePath());
         }
     }
+    cbFile->setCurrentIndex(0);
     cbFile->setVisible(true);
     cbFile->activateWindow();
     cbFile->model()->sort(0, Qt::AscendingOrder);
@@ -1549,4 +1551,10 @@ void QueryDialog::keyPressEvent(QKeyEvent *event)
 void QueryDialog::show()
 {
     this->showNormal();
+}
+
+void QueryDialog::setConnection()
+{
+    tgtConn = config->currCity->connections.at(config->currCity->curConnectionId);
+    tgtConn->_sqlite_user_function_loaded = false; // force reload of user defined functions
 }

@@ -82,6 +82,7 @@ public:
     void commitTransaction (QString name);
     void rollbackTransaction (QString name);
     QString dateFormat(){return _dtFormat;}
+    void setDateFormat(QString dateFormat){_dtFormat = dateFormat;}
 
     Q_DECL_DEPRECATED bool updateSegment(qint32 SegmentId);
     LatLng getPointOnSegment(qint32 pt, qint32 segmentId);
