@@ -28,6 +28,9 @@ EditConnectionsDlg::EditConnectionsDlg( QWidget *parent) :
     ui->lblHelp->setTextInteractionFlags(Qt::TextSelectableByMouse);
     ui->lblHelp->clear();
     ui->btnSave->setEnabled(false);
+#ifndef QTKEYCHAIN_VERSION_6
+    ui->chkSavePwd->hide();
+#endif
     config = Configuration::instance();
     odbcUtil = ODBCUtil::instance();
     currCity = config->currCity;
@@ -724,100 +727,6 @@ void EditConnectionsDlg::cbConnectionsSelectionChanged(int sel)
         ui->txtDefaultDb->setText(_dsn->database);
 
         db.close();
-#if 0
-        db = QSqlDatabase::addDatabase(connection->driver(),_testCN);
-        db.setDatabaseName(connection->dsn());
-
-        // db.setHostName(dsn->server); // ***
-        // db.setUserName(dsn->userId);
-        // db.setPassword(dsn->password);
-
-        // db.setUserName(connection->userId());
-        ui->txtUserId->setText(connection->userId());
-        //db.setPassword(connection->pwd());
-        ui->txtPWD->setText(connection->pwd());
-        ui->txtHost->setText(connection->host());
-        //setCursor(Qt::WaitCursor);
-        checkHost(connection->host());
-
-        if(connection->port()>0)
-        ui->txtPort->setText(QString::number(connection->port()));
-
-        if((connection->servertype() == "PostgreSQL" || connection->servertype() == "MimerSql")
-            && connection->connectionType() == "ODBC" && !connection->database().isEmpty())
-        {
-            if(!connection->connectString().isEmpty())
-              db.setDatabaseName(connection->connectString());
-            else
-              db.setDatabaseName(connection->dsn());
-            db.setConnectOptions(tr("database=%1;").arg(connection->database()));
-            ui->txtUseDb->setText(connection->database());
-            ui->lblSslMode->setVisible(true);
-            ui->lblPwdMethod->setVisible(true);
-            ui->cbPwdMethod->setVisible(true);
-            ui->cbSslMode->setVisible(true);
-            ui->cbPwdMethod->setCurrentText(connection->getPwdMethod());
-            ui->cbSslMode->setCurrentText(connection->getSslMode());
-            ui->txtDefaultDb->setVisible(true);
-            ui->txtUseDb->setVisible(true);
-        }
-        else
-        {
-            ui->lblSslMode->setVisible(false);
-            ui->lblPwdMethod->setVisible(false);
-            ui->cbPwdMethod->setVisible(false);
-            ui->cbSslMode->setVisible(false);
-        }
-        // if(connection->servertype() == "PostgreSQL" && connection->connectionType() == "ODBC" && !connection->connectString().isEmpty())
-        // {
-        //     db.setDatabaseName(connection->connectString());
-        // }
-        setCursor(Qt::ArrowCursor);
-        if(!bDSNCanBeUsed)
-            return;
-        ui->lblHelp->setStyleSheet("QLabel {  color : #FF8000; }");
-        bool bOpen;
-        if(!connection->userId().isEmpty() && !connection->pwd().isEmpty())
-            bOpen = db.open(connection->userId(), connection->pwd());
-        else
-            bOpen = db.open();
-        if(!bOpen)
-        {
-            displayDbInfo(db);
-            if(connection->connectionType() == "ODBC")
-            {
-                QString errCode = db.lastError().nativeErrorCode();
-                if(errCode == "08001")
-                {
-                    setHelp(tr("user credentials required"),"color:#ff8000");
-                }
-                else
-                    setHelp(db.lastError().text(),"color:red");
-            }
-            else
-                setHelp(db.lastError().text(),"color:red");
-        }
-        else
-        {
-            //ui->lblHelp->setStyleSheet("color: green");
-            if(connection->connectionType() == "Sqlite")
-                setHelp(tr("OK! Database %2 has %1 tables").arg(db.tables().count()).arg(connection->sqlite_fileName()),"color:green");
-            else if(connection->connectionType() == "Direct")
-            {
-                ui->lblHelp->clear();
-            }
-            else
-            {
-                displayODBCConnection(db);
-            }
-            if(ui->cbDbType->currentText() != "Sqlite")
-                ui->tbReload->click();
-        }
-        ui->txtUserId->setText(connection->userId());
-        ui->txtPWD->setText(connection->pwd());
-        ui->txtPWD->setEnabled(true);
-        ui->txtUseDb->setText(connection->database());
-#endif
     }
     cb_enable(ui->cbDbType,false);
 
@@ -841,10 +750,15 @@ void EditConnectionsDlg::cbODBCDsn_currentIndex_changed(int ix)
     ui->txtPort->setText("");
     ui->txtUserId->setText("");
     ui->txtUserId->setPlaceholderText(_dsn->userId);
-    ui->txtPWD->setText("");
+    if(!_dsn->userId.isEmpty() && !_dsn->password().isEmpty())
+        ui->txtPWD->setPlaceholderText("********");
+    else
+        ui->txtPWD->setPlaceholderText("enter user password");
     ui->txtUseDb->clear();
 
     QString key = _dsn->createSecureVaultKey();
+#ifdef QTKEYCHAIN_VERSION_6
+
     SecureVault* vault = new SecureVault(this);
     vault->loadPassword(key,[=](const QString &password) {
         if(password.isEmpty())
@@ -855,6 +769,7 @@ void EditConnectionsDlg::cbODBCDsn_currentIndex_changed(int ix)
             _dsn->setPassword(password);
         }
     });
+#endif
     logonInBackground(ui->txtUseDb->text().isEmpty() ? connection->database() : ui->txtUseDb->text(),
                         connection->driver(),
                         _dsn->name,
@@ -995,6 +910,8 @@ void EditConnectionsDlg::cbODBCDsn_contextMenuRequested(QPoint pos)
         odbcUtil->fillDSNCombo(ui->cbODBCDsn, ui->cbDbType->currentText());
     });
     DSN* dsn = odbcUtil->getDsn(ui->cbODBCDsn->currentData().toString());
+#ifndef QTKEYCHAIN_VERSION_6
+
     if(dsn->pwdInDsn.isEmpty() && !ui->txtPWD->text().isEmpty() && !dsn->userId.isEmpty())
     {
         QAction* savePwdAct = new QAction(tr("Save Password"), this);
@@ -1006,6 +923,7 @@ void EditConnectionsDlg::cbODBCDsn_contextMenuRequested(QPoint pos)
         });
         contextMenu->addAction(savePwdAct);
     }
+#endif
     contextMenu->addAction(refreshAct);
     contextMenu->exec(QCursor::pos());
 }
@@ -1556,14 +1474,28 @@ void EditConnectionsDlg::btnSaveClicked()
 
   if(config->currCity->id == currCity->id)
    config->currCity->connections = currCity->connections;
-
-  config->saveSettings();
-  if(ui->chkSavePwd->isChecked())
+#ifdef QTKEYCHAIN_VERSION_6
+  QString pwd = connection->pwd();
+  if(ui->chkSavePwd->isChecked() )
   {
-      QString key = connection->createSecureVaultKey();
+      QString key = connection->createSecureVaultKey(&pwd);
       SecureVault* vault = new SecureVault(this);
       vault->savePassword(key,connection->pwd());
+      vault->loadPassword(key,[=](const QString &password) {
+          if(password.isEmpty())
+              qDebug() << "no saved password for " <<key;
+          else
+          {
+              //connection->setPWD("");
+              qInfo() << "saved password for " <<key;
+
+          }
+      });
+      qApp->processEvents();
+      config->saveSettings();
+
   }
+#endif
   ui->btnNew->setEnabled(true);
 
   this->accept();
@@ -3340,7 +3272,7 @@ void EditConnectionsDlg::logonInBackground(QString database,QString driver, QStr
                                         "\nThere are %4 tables.")
                                          .arg(server, uid, database).arg(results.tables.count()));
                 // ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
-                ui->btnSave->setEnabled(true);
+                ui->btnTest->setEnabled(true);
             }
         } else {
             ui->lblHelp->setStyleSheet("color: red;");

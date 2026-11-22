@@ -129,7 +129,7 @@ public:
  void setVerified(bool verified){_verified = verified;}
  bool verified() {return _verified;}
  void setOpen(bool bOpen){this->bOpen = bOpen;}
- QString createSecureVaultKey();
+ QString createSecureVaultKey(QString *password=nullptr);
  QString secureVaultKey();
  bool _sqlite_user_function_loaded = false; // true for Sqlite only!
 

@@ -415,7 +415,7 @@ void Connection::close(QSqlDatabase db)
     bOpen = false;
 }
 
-QString Connection::createSecureVaultKey()
+QString Connection::createSecureVaultKey(QString *password)
 {
     City* city = config->currCity;
     _key.clear();
@@ -431,7 +431,8 @@ QString Connection::createSecureVaultKey()
             _key.append(city->getLabel() + "|");
             _key.append("MimerSql") + "|";
             _key.append(map.value("Node"));
-            //*password = map.value("Pwd");
+            if(password)
+                *password = map.value("Pwd");
         }
         else if(driver.contains("PostgreSQL") )
         {
@@ -439,7 +440,8 @@ QString Connection::createSecureVaultKey()
             _key.append(city->getLabel() + "|");
             _key.append("PostgreSQL") + "|";
             _key.append(map.value("Server"));
-            //*password = map.value("Password");
+            if(password)
+                *password = map.value("Pwd");
         }
         else
         {

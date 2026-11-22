@@ -361,47 +361,43 @@ void Configuration::saveSettings2()
                 settings->setValue("defaultSqlDatabase", cn->defaultSqlDatabase());
                 //settings->setValue("useSqlDatabase", cn->database());
             }
-// #ifdef QTKEYCHAIN_VERSION_6
-//             QString key;
-//             QString password;
-//             if(!cn->connectString().isEmpty())
-//                 key = createSecureVaultKey(cn->connectString(), c, &password);
-//             else
-//             {
-//                 key = createSecureVaultKey(cn, c);
-//                 password = cn->pwd();
-//             }
-//             qDebug() << "secure vault key: " << key;
-//             vault = new SecureVault(this);
-//             if(!key.isEmpty())
-//             {
-//                 vault->loadPassword(key, [=](const QString &password) {
-//                     if (password.isEmpty()) {
-//                         // qWarning() << "Could not retrieve password or password is empty."
-//                         //            << " key: "<< key;;
-//                         // return;
-//                         vault->savePassword(key, password);
-//                     }
+#ifdef QTKEYCHAIN_VERSION_6
+            QString key;
+            QString pwd = cn->pwd();
+            if(!cn->connectString().isEmpty())
+                key = cn->createSecureVaultKey( &pwd);
+            qDebug() << "secure vault key: " << key;
+            vault = new SecureVault(this);
+            if(!key.isEmpty())
+            {
+                vault->loadPassword(key, [=](const QString &password) {
+                    if (password.isEmpty()) {
+                        // qWarning() << "Could not retrieve password or password is empty."
+                        //            << " key: "<< key;;
+                        // return;
+                        vault->savePassword(key, password);
+                    }
 
-//                     // Your asynchronous callback logic continues inside this block
-//                     qDebug() << "Password successfully retrieved via vault instance!";
-//                     if(cn->pwd() == password)
-//                         cn->setPWD("");
+                    // Your asynchronous callback logic continues inside this block
+                    qDebug() << "Password successfully retrieved via vault instance!";
+                    if(cn->pwd() == password)
+                        cn->setPWD("");
 
-//                     // Example: Initiate your database connection
-//                     // this->initializeDatabaseConnection(password);
-//                 });
-//                 settings->setValue("PWD", "");
+                    // Example: Initiate your database connection
+                    // this->initializeDatabaseConnection(password);
+                });
 
-//                 if(!cn->connectString().isEmpty())
-//                 {
-//                     QString cs = cn->connectString();
-//                     cs.replace(password, "");
-//                     cn->setConnectString(cs);
-//                     settings->setValue("connectString",cs);
-//                 }
-//             }
-// #endif
+                settings->setValue("PWD", "");
+
+                if(!cn->connectString().isEmpty())
+                {
+                    QString cs = cn->connectString();
+                    cs.replace(pwd, "");
+                    cn->setConnectString(cs);
+                    settings->setValue("connectString",cs);
+                }
+            }
+#endif
             settings->endGroup(); // end a single connection
         } // end for connections loop
 

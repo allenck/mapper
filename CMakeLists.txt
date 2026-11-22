@@ -174,8 +174,6 @@ qt_add_executable(mapper WIN32 MACOSX_BUNDLE
     routetype.h
     parameters.h parameters.cpp
     routeinfo.h routeinfo.cpp
-    Resources/sql/Sqlite3/sqlite3_convert_dates.sql
-    Resources/sql/Sqlite3/sqlite3_convert_dates.sql
 )
 # Force the executable to be built in the root build folder, matching qmake's directory depth
 set_target_properties(mapper PROPERTIES
@@ -347,6 +345,7 @@ set(mapper_resource_files
     "Resources/trash.png"
     "Resources/white.png"
     "Resources/yellowblank.png"
+    "Resources/sql/Sqlite3/sqlite3_convert_dates.sql"
 )
 
 qt_add_resources(mapper "mapper"
