@@ -1506,7 +1506,7 @@ QWidgetAction* QueryDialog::createWidgetAction()
     if(dirName == "Sqlite")
      dirName = "Sqlite3";
     cbFile = new QComboBox(this);
-    cbFile->addItem("Select item");
+    //cbFile->addItem("Select item");
     QDirIterator dirIterator(":/sql/" + dirName, QDirIterator::Subdirectories);
     while (dirIterator.hasNext()) {
         dirIterator.next();
@@ -1519,10 +1519,11 @@ QWidgetAction* QueryDialog::createWidgetAction()
                 cbFile->addItem(fileInfo.fileName(), fileInfo.filePath());
         }
     }
-    cbFile->setCurrentIndex(0);
     cbFile->setVisible(true);
     cbFile->activateWindow();
     cbFile->model()->sort(0, Qt::AscendingOrder);
+    cbFile->insertItem(0,"Select item");
+    cbFile->setCurrentIndex(0);
 
     connect(cbFile, &QComboBox::currentIndexChanged,this, [=](int ix){
         ui->editQuery->clear();
